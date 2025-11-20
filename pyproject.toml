@@ -83,14 +83,15 @@ testpaths = [
     "tests"
 ]
 markers = [
-    #"aqua: mark test as AQUA framework",
+    "aqua: mark test as AQUA framework",
     #"slow: tests which are slow",
     #"sbatch: tests which require sbatch",
     #"graphics: tests which deal with graphics",
     #"gsv: mark test that requires ECMWF FDB libraries",
     "diagnostics: single marker for all diagnostics",
     #"catgen: mark test for catalog generator",
-    "ensemble: pytest for ensemble diagnostic"
+    "ensemble: pytest for ensemble diagnostic",
+    "frontier: pytest for frontier diagnostics"
 ]
 
 [tool.coverage.run]
