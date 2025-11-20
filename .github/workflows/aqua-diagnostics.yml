@@ -145,7 +145,7 @@ jobs:
           cd aqua-dvc
           git checkout main
           dvc pull -R data-tests/*
-          mkdir -p ../AQUA-test/AQUA_tests
+          mkdir -p ../AQUA-diagnostics/AQUA_tests
           # Move the entire data-tests folder contents into AQUA_tests
           mv data-tests/* ../AQUA-diagnostics/AQUA_tests
       - name: Set up FDB
