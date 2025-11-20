@@ -1,0 +1,39 @@
+# general
+*.pyc
+__pycache__/
+.ipynb_checkpoints
+*.egg-info
+*.DS_Store
+
+# logfiles
+*.err
+*.out
+*.bal
+*.log
+
+# configuration
+###config/config-aqua.yaml
+
+# documentation
+###docs/sphinx/build/*
+
+# output
+*.nc
+*.png
+*.pdf
+
+# tests
+AQUA_tests/
+AQUA_testsv*
+AQUA_tests_teleconnections*
+*.bak
+.env
+
+# coverage and vscode
+###.coverage
+###coverage.xml
+###coverage/
+.vscode/*
+
+# diagnostic specific
+###diagnostics/ecmean/ECmean4
