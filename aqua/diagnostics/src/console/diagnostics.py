@@ -1,6 +1,9 @@
 """plugin of aqua-diagnostics for AQUA console"""
 from importlib import resources
 
+DIAGNOSTIC_CONFIG_DIRECTORIS = ["analysis", "diagnostics", "tools"]
+DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["diagnostics"]
+
 def get_install_paths():
     """
     Return a dictionary describing what folders should be installed in ~/.aqua.
@@ -8,7 +11,6 @@ def get_install_paths():
     """
     root = resources.files("aqua.diagnostics") / ".."
     return {
-        "diagnostics": root / "diagnostics",
         "templates": root / "templates",
         "config": root / "config",
     }
