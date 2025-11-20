@@ -6,6 +6,9 @@
 Welcome to AQUA-diagnostics' documentation!
 ================================
 
+.. note::
+WORK IN PROGRESS - PLEASE REFER TO THE AQUA Documentation HERE : https://destine-climate-dt.github.io/AQUA/
+
 .. toctree::
    :maxdepth: 4
 
