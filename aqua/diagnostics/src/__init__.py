@@ -1,8 +1,11 @@
+"""AUQA Diagnostics Package"""
+
+from .version import __version__
 from .teleconnections import NAO, ENSO, MJO
 from .teleconnections import PlotNAO, PlotENSO, PlotMJO
 from .timeseries import Gregory, SeasonalCycles, Timeseries
 from .lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
-from .histogram import Histogram
+from .histogram import Histogram, PlotHistogram
 from .global_biases import GlobalBiases, PlotGlobalBiases 
 from .boxplots import Boxplots, PlotBoxplots
 from .ensemble import EnsembleTimeseries, EnsembleLatLon, EnsembleZonal
@@ -18,7 +21,6 @@ __all__ = ["NAO", "ENSO", "MJO",
            "LatLonProfiles", "PlotLatLonProfiles",
            "Histogram", "PlotHistogram",
            "GlobalBiases", "PlotGlobalBiases",
-           "Radiation",
            "reader_retrieve_and_merge", "merge_from_data_files", "load_premerged_ensemble_dataset",
            "EnsembleTimeseries", "EnsembleLatLon", "EnsembleZonal",
            "PlotEnsembleTimeseries", "PlotEnsembleLatLon", "PlotEnsembleZonal",
