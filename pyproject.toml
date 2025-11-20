@@ -40,7 +40,7 @@ dependencies = [
 
 [project.optional-dependencies]
 core = [
-    "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git@aqua-refactor"
+    "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git"
 ]
 docs = [
     "sphinx",
