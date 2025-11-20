@@ -72,7 +72,6 @@ We used the regrid method to interpolate the data to a 1°x1° grid, with prepro
 while initializating the Reader.
 We then used the ``plot_single_map()`` function to plot the first timestep of the data.
 This function has been used as accessor but can also be called as a standalone function.
-See :ref:`accessors` for more information.
 
 We can now calculate the mean global temperature time series on the original grid.
 We will then go back to use the original data, without regridding them,

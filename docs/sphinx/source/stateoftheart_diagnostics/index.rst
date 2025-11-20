@@ -37,7 +37,7 @@ Diagnostics configuration files
 
 Each diagnostic has a corresponding YAML configuration file that specifies the options and parameters for the diagnostic.
 These configuration files are located in the ``config/diagnostics/<diagnostic-name>`` directory of the AQUA package and copied
-to the ``AQUA_CONFIG`` folder during installation (see :ref:`aqua-install`, by default ``$HOME/.aqua/``).
+to the ``AQUA_CONFIG`` folder during installation (by default ``$HOME/.aqua/``).
 
 Each diagnostic has its own configuration file, with a block devoted to the individual diagnostic settings.
 However, general settings common to all the diagnostics have a common structure here described.
