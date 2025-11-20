@@ -15,7 +15,7 @@ __pycache__/
 ###config/config-aqua.yaml
 
 # documentation
-###docs/sphinx/build/*
+docs/sphinx/build/*
 
 # output
 *.nc
