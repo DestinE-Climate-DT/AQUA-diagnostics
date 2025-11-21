@@ -1,7 +1,7 @@
 import os
 import matplotlib
 import pytest
-from aqua.exceptions import NotEnoughDataError
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics.teleconnections import ENSO, PlotENSO
 from conftest import APPROX_REL, LOGLEVEL, DPI
 

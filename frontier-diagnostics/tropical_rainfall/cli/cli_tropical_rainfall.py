@@ -1,7 +1,7 @@
 import sys
 import os
-from aqua.logger import log_configure
-from aqua.util import get_arg
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg
 from src.tropical_rainfall_utils import parse_arguments, validate_arguments, load_configuration
 from src.tropical_rainfall_cli_class import Tropical_Rainfall_CLI
 

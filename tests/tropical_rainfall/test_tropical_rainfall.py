@@ -9,7 +9,7 @@ from os import listdir, remove
 from os.path import isfile, join
 
 from aqua import Reader
-from aqua.util import create_folder
+from aqua.core.util import create_folder
 
 try:
     from tropical_rainfall import Tropical_Rainfall

@@ -4,8 +4,8 @@
 
 """
 from typing import Union, Optional
-from aqua.logger import log_configure
-from aqua.configurer import ConfigPath
+from aqua.core.logger import log_configure
+from aqua.core.configurer import ConfigPath
 
 from .src.tropical_rainfall_tools import ToolsClass
 from .src.tropical_rainfall_plots import PlottingClass

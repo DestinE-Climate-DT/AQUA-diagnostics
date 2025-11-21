@@ -1,5 +1,5 @@
 import argparse
-from aqua.util import load_yaml
+from aqua.core.util import load_yaml
 
 def parse_arguments(args):
     """Parse command line arguments"""

@@ -19,8 +19,8 @@ import matplotlib.figure as figure
 import dask.array as da
 import fast_histogram
 
-from aqua.util import create_folder
-from aqua.logger import log_configure
+from aqua.core.util import create_folder
+from aqua.core.logger import log_configure
 
 from .tropical_rainfall_tools import ToolsClass
 from .tropical_rainfall_plots import PlottingClass

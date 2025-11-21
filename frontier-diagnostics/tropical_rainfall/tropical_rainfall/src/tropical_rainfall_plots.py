@@ -3,8 +3,8 @@ import matplotlib.colors as colors
 from matplotlib.gridspec import GridSpec
 from typing import Union, Tuple, Optional, List  # Any
 
-from aqua.util import create_folder
-from aqua.logger import log_configure
+from aqua.core.util import create_folder
+from aqua.core.logger import log_configure
 from .tropical_rainfall_tools import ToolsClass
 
 import cartopy.crs as ccrs
