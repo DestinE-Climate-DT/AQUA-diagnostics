@@ -3,7 +3,7 @@ import os
 import numpy as np
 import xarray as xr
 from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
-from aqua.exceptions import NoDataError
+from aqua.core.exceptions import NoDataError
 from conftest import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance for numerical comparisons
