@@ -4,7 +4,7 @@ from pathlib import Path
 import xarray as xr
 import matplotlib.pyplot as plt
 from unittest.mock import patch, MagicMock
-from aqua.util import replace_urlpath_jinja, replace_urlpath_wildcard
+from aqua.core.util import replace_urlpath_jinja, replace_urlpath_wildcard
 from aqua.diagnostics.core import OutputSaver
 from conftest import DPI, LOGLEVEL
 

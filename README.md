@@ -1,4 +1,5 @@
 ![maintenance-status](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
+[![codecov](https://codecov.io/gh/DestinE-Climate-DT/AQUA-diagnostics/graph/badge.svg?token=UIJTBR9ID0)](https://codecov.io/gh/DestinE-Climate-DT/AQUA-diagnostics)
 
 # AQUA-diagnostics
 
