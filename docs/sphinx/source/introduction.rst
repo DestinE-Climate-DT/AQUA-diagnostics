@@ -1,40 +1,41 @@
 Introduction
 ============
 
-Overview of AQUA
-----------------
+Overview of AQUA-diagnostics
+----------------------------
 
-AQUA (Climate DT Applications for QUality Assessment)
-is a model evaluation framework designed for running diagnostics on high-resolution climate models,  
-also known as Digital Twins of Earth.
-The package provides a flexible and efficient framework to process and analyze large volumes of climate data. 
-With its modular design, AQUA offers seamless integration of core functions and a wide range of diagnostic 
-tools that can be run in parallel.
+AQUA-diagnostics is a dedicated module of AQUA (Climate DT Applications for QUality Assessment) 
+for running and managing diagnostics on low-resolution and high-resolution climate model data.  
+This module provides all the tools and interfaces needed to configure, launch, and organise 
+diagnostic analyses.
+
+.. note::
+   For detailed information about AQUA's internal mechanisms (data reading, catalog management, 
+   regridding, etc.), please refer to the documentation of `AQUA-core`, which contains all core 
+   functions and base classes.
 
 Purpose
 -------
 
-The purpose of AQUA is to streamline the diagnostic process for high-resolution climate models, 
-making it easier for researchers and scientists to analyze and interpret climate data. 
-AQUA aims to provide a comprehensive toolkit for data preparation 
-and running diagnostics on climate model outputs.
+The purpose of AQUA-diagnostics is to offer users a centralized environment to:
+- Select and configure available diagnostics
+- Run analyses on climate model outputs
+- Easily organize and access diagnostic results
 
 Key Features
 ------------
 
-- Efficient handling of large datasets from high-resolution climate models
-- Support for various data formats, such as GRIB, NetCDF, Zarr, FDB and Parquet access
-- Robust and fast regridding functionality
-- Averaging and aggregation tools for temporal and spatial analyses
-- Metadata and coordinate fixes for data homogenization and comparison
-- Modular design for easy integration of new diagnostics
-- Lazy data access and parallel processing for faster execution of diagnostics, with limited memory usage
+- Wide selection of ready-to-use diagnostics for climate model evaluation
+- Simple and customizable command-line interface
+- Automated management of configuration and analysis parameters
+- Support for parallel execution of diagnostics, including HPC cluster integration
+- Organized output structure for easy result retrieval
+- Integration with AQUA-core for data access and core functionalities
 
 Contributing
 ------------
 
-AQUA is developed under the European Union Contract `DE_340_CSC - Destination Earth Programme
-Climate Adaptation Digital Twin (Climate DT)`.
-Contributions to the project are welcome and can be made through the GitHub repository.
-Please refer to the Contribution Guidelines contained in the ``CONTRIBUTING.md`` file
-in the repository for more information.
+AQUA-diagnostics is developed within the European Union Contract 
+`DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT)`.  
+Contributions are welcome via the GitHub repository.  
+Please refer to the ``CONTRIBUTING.md`` file for guidelines and further information.
