@@ -4,7 +4,7 @@ import os
 import pytest
 
 from aqua.diagnostics.core.cli_base import DiagnosticCLI
-from aqua.util import dump_yaml
+from aqua.core.util import dump_yaml
 
 
 @pytest.fixture
