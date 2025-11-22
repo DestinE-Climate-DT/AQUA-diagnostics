@@ -36,7 +36,8 @@ classifiers = [
 ]
 dependencies = [
     "ECmean4==0.1.15",
-    "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git@aqua-refactor" 
+    "aqua-core==0.20"
+ #   "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git" 
 ]
 
 [project.optional-dependencies]
@@ -70,8 +71,10 @@ issues = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/issues/"
 [tool.setuptools.package-data]
 platforms = ["any"]
 
-[tool.setuptools.package-dir]
-"aqua.diagnostics" = "aqua/diagnostics/src"
+[tool.setuptools.packages.find]
+include = ["aqua*"]
+exclude = ["notebooks*", "tests*", "docs*"]
+namespaces = true
 
 [tool.setuptools.dynamic]
 version = {attr = "aqua.diagnostics.version.__version__"}
@@ -96,7 +99,7 @@ markers = [
 [tool.coverage.run]
 branch = true
 command_line = '-m pytest tests'
-source = ["aqua/diagnostics/src"]
+source = ["aqua/diagnostics"]
 omit = [
     "tests/*", 
     "**/__init__.py",
