@@ -20,7 +20,7 @@ description = "AQUA-diagnostics: the diagnostics set of the AQUA framework for h
 readme = "README.md"
 keywords = ["climate", "modeling", "diagnostics", "high-resolution"]
 license = {file = "LICENSE"}
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
@@ -34,9 +34,10 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython"
 ]
+
 dependencies = [
     "ECmean4==0.1.15",
-    "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git@aqua-refactor" 
+    "aqua-core>=0.20.0",
 ]
 
 [project.optional-dependencies]
@@ -55,6 +56,14 @@ tests = [
     "coverage",
     "cdo"
 ]
+<<<<<<< HEAD
+=======
+dev = [
+    "aqua-diagnostics[docs]",
+    "aqua-diagnostics[notebooks]",
+    "aqua-diagnostics[tests]"
+]
+>>>>>>> bf3deea (AQUA_diagnostics pyproject.toml first version working settings)
 all = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
@@ -81,7 +90,7 @@ version = {attr = "aqua.diagnostics.version.__version__"}
 addopts = "--durations=10 -v --cov=aqua" 
 testpaths = [
     "tests"
-]
+    ]
 markers = [
     #"aqua: mark test as AQUA framework",
     #"slow: tests which are slow",
@@ -100,6 +109,11 @@ source = ["aqua/diagnostics/src"]
 omit = [
     "tests/*", 
     "**/__init__.py",
+<<<<<<< HEAD
     "aqua/diagnostics/src/dummy"
     ]
 
+=======
+    "aqua/diagnostics/dummy"
+]
+>>>>>>> bf3deea (AQUA_diagnostics pyproject.toml first version working settings)
