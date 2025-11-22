@@ -1,4 +1,4 @@
-"""AUQA Diagnostics Package"""
+"""AQUA Diagnostics Package"""
 
 from .version import __version__
 from .teleconnections import NAO, ENSO, MJO
