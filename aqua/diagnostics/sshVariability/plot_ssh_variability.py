@@ -7,7 +7,7 @@ from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection, healpix_resample
 
 # import matplotlib.pyplot as plt
-# from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
+# from aqua.core.exceptions import NoDataError, NoObservationError, NotEnoughDataError
 
 from .base import PlotBaseMixin
 

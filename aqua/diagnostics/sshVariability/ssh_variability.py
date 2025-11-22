@@ -5,7 +5,7 @@ from .base import BaseMixin
 
 # import pandas as pd
 # from aqua.fldstat import AreaSelection
-# from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
+# from aqua.core.exceptions import NoDataError, NoObservationError, NotEnoughDataError
 
 xr.set_options(keep_attrs=True)
 

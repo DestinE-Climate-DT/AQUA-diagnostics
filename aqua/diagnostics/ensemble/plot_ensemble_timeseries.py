@@ -2,8 +2,8 @@ import pandas as pd
 import xarray as xr
 from aqua.core.graphics import plot_timeseries
 
-# from aqua.logger import log_configure
-# from aqua.exceptions import NoDataError
+# from aqua.core.logger import log_configure
+# from aqua.core.exceptions import NoDataError
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
