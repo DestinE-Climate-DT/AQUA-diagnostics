@@ -20,7 +20,7 @@ description = "AQUA-diagnostics: the diagnostics set of the AQUA framework for h
 readme = "README.md"
 keywords = ["climate", "modeling", "diagnostics", "high-resolution"]
 license = {file = "LICENSE"}
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
@@ -34,13 +34,14 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython"
 ]
-
 dependencies = [
-    "ECmean4==0.1.15",
-    "aqua-core>=0.20.0",
+    "ECmean4==0.1.15", 
 ]
 
 [project.optional-dependencies]
+core = [
+    "aqua-core>=0.20.0",
+]
 docs = [
     "sphinx",
     "sphinx-rtd-theme"
@@ -56,7 +57,16 @@ tests = [
     "coverage",
     "cdo"
 ]
+minimal = [
+    "aqua-diagnostics[core]"
+]
+dev = [
+    "aqua-diagnostics[docs]",
+    "aqua-diagnostics[notebooks]",
+    "aqua-diagnostics[tests]"
+]
 all = [
+    "aqua-diagnostics[core]",
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
     "aqua-diagnostics[tests]"
@@ -64,15 +74,20 @@ all = [
 
 [project.urls]
 homepage = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
-documentation = "https://aqua.readthedocs.io/en/latest/index.html"
+documentation = "https://aqua-diagnostics.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 issues = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/issues/"
 
-[tool.setuptools.package-data]
-platforms = ["any"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aqua*"]
 
-[tool.setuptools.package-dir]
-"aqua.diagnostics" = "aqua/diagnostics/src"
+# Include non-Python files inside aqua/config and aqua/templates
+[tool.setuptools.package-data]
+"aqua" = [
+    "diagnostics/config/**/*",
+    "diagnostics/templates/**/*"
+]
 
 [tool.setuptools.dynamic]
 version = {attr = "aqua.diagnostics.version.__version__"}
@@ -82,24 +97,26 @@ version = {attr = "aqua.diagnostics.version.__version__"}
 addopts = "--durations=10 -v --cov=aqua" 
 testpaths = [
     "tests"
-    ]
+]
 markers = [
-    #"aqua: mark test as AQUA framework",
+    "aqua: mark test as AQUA framework",
     #"slow: tests which are slow",
     #"sbatch: tests which require sbatch",
     #"graphics: tests which deal with graphics",
     #"gsv: mark test that requires ECMWF FDB libraries",
     "diagnostics: single marker for all diagnostics",
     #"catgen: mark test for catalog generator",
-    "ensemble: pytest for ensemble diagnostic"
+    "ensemble: pytest for ensemble diagnostic",
+    "frontier: pytest for frontier diagnostics"
 ]
 
 [tool.coverage.run]
 branch = true
 command_line = '-m pytest tests'
-source = ["aqua/diagnostics/src"]
+source = ["aqua/diagnostics"]
 omit = [
     "tests/*", 
     "**/__init__.py",
     "aqua/diagnostics/dummy"
-]
+    ]
+
