@@ -56,14 +56,6 @@ tests = [
     "coverage",
     "cdo"
 ]
-<<<<<<< HEAD
-=======
-dev = [
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]"
-]
->>>>>>> bf3deea (AQUA_diagnostics pyproject.toml first version working settings)
 all = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
@@ -109,11 +101,5 @@ source = ["aqua/diagnostics/src"]
 omit = [
     "tests/*", 
     "**/__init__.py",
-<<<<<<< HEAD
-    "aqua/diagnostics/src/dummy"
-    ]
-
-=======
     "aqua/diagnostics/dummy"
 ]
->>>>>>> bf3deea (AQUA_diagnostics pyproject.toml first version working settings)
