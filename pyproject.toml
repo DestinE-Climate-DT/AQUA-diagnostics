@@ -20,7 +20,7 @@ description = "AQUA-diagnostics: the diagnostics set of the AQUA framework for h
 readme = "README.md"
 keywords = ["climate", "modeling", "diagnostics", "high-resolution"]
 license = {file = "LICENSE"}
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
