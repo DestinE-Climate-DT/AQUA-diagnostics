@@ -10,7 +10,7 @@ ClimateDT workflow modifications:
 
 AQUA-diagnostics complete list:
 - Adapt to new folder structure of AQUA core (fixing imports and removing diagnostics/src folder) (#36, #37)
-- Complete activation of tests for CI/CD (#17)
+- Complete activation of tests for CI/CD and complete coupling with aqua-core (#17)
 - Porting of the AQUA diagnostics documentation (#18)
 - Added GitHub Issues and PR templates (#1)
 - CHANGELOG, LICENSE and README files added (#2)
