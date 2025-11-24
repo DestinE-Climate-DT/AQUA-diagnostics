@@ -109,6 +109,11 @@ markers = [
     "ensemble: pytest for ensemble diagnostic",
     "frontier: pytest for frontier diagnostics"
 ]
+pythonpath = [
+    ".",
+    "frontier-diagnostics/tropical_rainfall",
+    "frontier-diagnostics/tropical_cyclones"
+]
 
 [tool.coverage.run]
 branch = true

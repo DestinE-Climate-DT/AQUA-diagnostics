@@ -11,15 +11,14 @@ from os.path import isfile, join
 from aqua import Reader
 from aqua.core.util import create_folder
 
-#try:
-#    from tropical_rainfall import Tropical_Rainfall
-#except ModuleNotFoundError:
-#    print("The module tropical_rainfall.py is not found.")
+try:
+    from tropical_rainfall import Tropical_Rainfall
+except ModuleNotFoundError:
+    print("The module tropical_rainfall.py is not found.")
 
 from conftest import DPI, LOGLEVEL
 
 
-@pytest.mark.frontier
 @pytest.fixture
 def retrieved_dataarray(ifs_tco79_long_data):
     if os.getenv('INPUT_ARG') is None:
