@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from aqua.graphics import ConfigStyle, plot_gregory_monthly, plot_gregory_annual
-from aqua.util import to_list, time_to_string, get_realizations
+from aqua.core.graphics import ConfigStyle, plot_gregory_monthly, plot_gregory_annual
+from aqua.core.util import to_list, time_to_string, get_realizations
 from .base import PlotBaseMixin
 
 
