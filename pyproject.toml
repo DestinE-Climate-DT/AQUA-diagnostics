@@ -35,11 +35,13 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = [
-    "ECmean4==0.1.15",
-    "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git@aqua-refactor" 
+    "ECmean4==0.1.15", 
 ]
 
 [project.optional-dependencies]
+core = [
+    "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git"
+]
 docs = [
     "sphinx",
     "sphinx-rtd-theme"
@@ -55,7 +57,16 @@ tests = [
     "coverage",
     "cdo"
 ]
+minimal = [
+    "aqua-diagnostics[core]"
+]
+dev = [
+    "aqua-diagnostics[docs]",
+    "aqua-diagnostics[notebooks]",
+    "aqua-diagnostics[tests]"
+]
 all = [
+    "aqua-diagnostics[core]",
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
     "aqua-diagnostics[tests]"
@@ -63,15 +74,20 @@ all = [
 
 [project.urls]
 homepage = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
-documentation = "https://aqua.readthedocs.io/en/latest/index.html"
+documentation = "https://aqua-diagnostics.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 issues = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/issues/"
 
-[tool.setuptools.package-data]
-platforms = ["any"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aqua*"]
 
-[tool.setuptools.package-dir]
-"aqua.diagnostics" = "aqua/diagnostics/src"
+# Include non-Python files inside aqua/config and aqua/templates
+[tool.setuptools.package-data]
+"aqua" = [
+    "diagnostics/config/**/*",
+    "diagnostics/templates/**/*"
+]
 
 [tool.setuptools.dynamic]
 version = {attr = "aqua.diagnostics.version.__version__"}
@@ -83,23 +99,29 @@ testpaths = [
     "tests"
 ]
 markers = [
-    #"aqua: mark test as AQUA framework",
+    "aqua: mark test as AQUA framework",
     #"slow: tests which are slow",
     #"sbatch: tests which require sbatch",
     #"graphics: tests which deal with graphics",
     #"gsv: mark test that requires ECMWF FDB libraries",
     "diagnostics: single marker for all diagnostics",
     #"catgen: mark test for catalog generator",
-    "ensemble: pytest for ensemble diagnostic"
+    "ensemble: pytest for ensemble diagnostic",
+    "frontier: pytest for frontier diagnostics"
+]
+pythonpath = [
+    ".",
+    "frontier-diagnostics/tropical_rainfall",
+    "frontier-diagnostics/tropical_cyclones"
 ]
 
 [tool.coverage.run]
 branch = true
 command_line = '-m pytest tests'
-source = ["aqua/diagnostics/src"]
+source = ["aqua/diagnostics"]
 omit = [
     "tests/*", 
     "**/__init__.py",
-    "aqua/diagnostics/src/dummy"
+    "aqua/diagnostics/dummy"
     ]
 

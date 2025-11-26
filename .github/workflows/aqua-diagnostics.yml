@@ -5,7 +5,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * 1" # run every Monday night at 3AM UTC
@@ -35,7 +34,8 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'ready to merge') ||
       github.actor == 'dependabot[bot]' ||
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'schedule'
+      github.event_name == 'schedule' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     env:
       DEBIAN_FRONTEND: noninteractive
       GRID_DEFINITION_PATH: /tmp
@@ -52,7 +52,7 @@ jobs:
     continue-on-error: false
     container:
       # To run FDB tests we need to use a Docker image with FDB installed.
-      image: ghcr.io/destine-climate-dt/ubuntu24.04-fdb5.17.3-eccodes2.41.0-aqua-diagnostics:aqua-diagnostics-container
+      image: ghcr.io/destine-climate-dt/ubuntu24.04-fdb5.17.3-eccodes2.41.0-aqua:aqua-base-container
       options: --user root
     permissions:
       contents: read
@@ -145,7 +145,7 @@ jobs:
           cd aqua-dvc
           git checkout main
           dvc pull -R data-tests/*
-          mkdir -p ../AQUA-test/AQUA_tests
+          mkdir -p ../AQUA-diagnostics/AQUA_tests
           # Move the entire data-tests folder contents into AQUA_tests
           mv data-tests/* ../AQUA-diagnostics/AQUA_tests
       - name: Set up FDB

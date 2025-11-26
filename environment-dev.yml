@@ -3,7 +3,7 @@
 # or if you really want to use conda
 # conda env create -f environment.yml
 
-name: aqua-diagnostics
+name: aqua-dev
 channels:
   - conda-forge
   - nodefaults
@@ -24,7 +24,8 @@ dependencies:
   - imagemagick
   - healpy
   - pip:
+    - -e ../AQUA
     - -e ./frontier-diagnostics/tropical_cyclones/ # pip install -e of tropical cyclones
     - -e ./frontier-diagnostics/tropical_rainfall/ # pip install -e of tropical_rainfall
     # pip install -e of AQUA itself
-    - -e .[all]
+    - -e .[dev]

@@ -1,4 +1,4 @@
-"""AUQA Diagnostics Package"""
+"""AQUA Diagnostics Package"""
 
 from .version import __version__
 from .teleconnections import NAO, ENSO, MJO
@@ -15,6 +15,9 @@ from .ecmean import PerformanceIndices, GlobalMean
 from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
 from .sshVariability import sshVariabilityCompute, sshVariabilityPlot
 
+DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "diagnostics", "tools"]
+DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["diagnostics"]
+
 __all__ = ["NAO", "ENSO", "MJO",
            "PlotNAO", "PlotENSO", "PlotMJO",
            "Gregory", "SeasonalCycles", "Timeseries",
@@ -29,4 +32,5 @@ __all__ = ["NAO", "ENSO", "MJO",
            "sshVariabilityCompute", "sshVariabilityPlot",
            "Boxplots", "PlotBoxplots", "extract_realizations",
            "GlobalMean", "PerformanceIndices", "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
-           "Boxplots", "PlotBoxplots"]
+           "Boxplots", "PlotBoxplots",
+           "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
