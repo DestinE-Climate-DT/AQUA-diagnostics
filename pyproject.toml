@@ -42,7 +42,6 @@ dependencies = [
 core = [
     "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git"
 ]
-core-in-editable = [] # For local development on lumi - assumes aqua-core is already installed in editable mode
 docs = [
     "sphinx",
     "sphinx-rtd-theme"
@@ -68,13 +67,6 @@ dev = [
 ]
 all = [
     "aqua-diagnostics[core]",
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]"
-]
-# For local development - does NOT pull aqua-core from git
-all-editable = [
-    "aqua-diagnostics[core-in-editable]",
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
     "aqua-diagnostics[tests]"

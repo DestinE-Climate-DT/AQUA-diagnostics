@@ -9,5 +9,5 @@ pip install -e $AQUA/[all]
 pip install -e $AQUA_DIAGNOSTICS/frontier-diagnostics/tropical_cyclones/
 pip install -e $AQUA_DIAGNOSTICS/frontier-diagnostics/tropical_rainfall/
 
-# 3. Install aqua-diagnostics with [all-editable] - does NOT pull aqua-core from git (assumes it's already installed)
-pip install -e $AQUA_DIAGNOSTICS/[all-editable]
+# 3. Install aqua-diagnostics with [dev] - does NOT pull aqua-core from git (assumes it's already installed)
+pip install -e $AQUA_DIAGNOSTICS/[dev]
