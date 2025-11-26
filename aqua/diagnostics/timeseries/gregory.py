@@ -1,10 +1,10 @@
 """Gregory module."""
+
 import xarray as xr
-from aqua.fixer import EvaluateFormula
-from aqua.logger import log_configure
-from aqua.util import convert_data_units
+from aqua.core.fixer import EvaluateFormula
+from aqua.core.logger import log_configure
+from aqua.core.util import convert_data_units, DEFAULT_REALIZATION
 from aqua.diagnostics.core import Diagnostic
-from aqua.util import DEFAULT_REALIZATION
 
 xr.set_options(keep_attrs=True)
 
