@@ -83,20 +83,32 @@ Replace ``<environment_name>`` with the name of the existing environment if this
 HPC Installation
 ----------------
 
-Installation on LUMI HPC - NOT CURRENTLY AVAILABLE
+Installation on LUMI HPC
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 LUMI is currently the main HPC of the DestinE-Climate-DT project, and it is the main platform for the development of AQUA.
 The Lustre filesystem does not support the use of conda environments, so another approach has been developed to install on LUMI,
 based on `container-wrapper <https://docs.lumi-supercomputer.eu/software/installing/container-wrapper/>`_.
 
-First, clone the AQUA-diagnostics repository from GitHub as described in the previous section.
-
-For simpler installation, it is recommended to define an ``$AQUA_DIAGNOSTICS`` environment variable that points to the AQUA-diagnostics directory:
+First, clone both the AQUA (aqua-core) and AQUA-diagnostics repositories from GitHub:
 
 .. code-block:: bash
 
+    git clone git@github.com:DestinE-Climate-DT/AQUA.git
+    git clone git@github.com:DestinE-Climate-DT/AQUA-diagnostics.git
+
+For simpler installation, it is recommended to define the ``$AQUA`` and ``$AQUA_DIAGNOSTICS`` environment variables 
+that point to the respective directories:
+
+.. code-block:: bash
+
+    export AQUA=/path/to/AQUA
     export AQUA_DIAGNOSTICS=/path/to/AQUA-diagnostics
+
+.. note ::
+    Both environment variables are required. The installation script will default to ``$HOME/AQUA`` and ``$HOME/AQUA-diagnostics`` 
+    if these are not set, but setting them explicitly is more recommended.
+
 Then, navigate to the AQUA-diagnostics directory and specifically in the ``cli/lumi-install`` directory:
 
 .. code-block:: bash
@@ -107,12 +119,65 @@ Run the installation script:
 
 .. code-block:: bash
 
-    ./lumi-install.sh
+    bash lumi_install.sh
 
-This installs the AQUA environment into a container, and then set up the correct modules
-via a ``load_aqua-diagnostics.sh`` script that is generated and then called from the ``.bash_profile``.
-The script will actually ask the user if they wish to include ``load_aqua-diagnostics.sh`` in ``.bash_profile`` at the end of the installation.
-If you do not agree, you will need to call ``load_aqua-diagnostics.sh`` manually every time you want to use AQUA-diagnostics.
+This installs the AQUA-diagnostics environment into a container at ``$HOME/mambaforge/aqua-diagnostics``, 
+and then sets up the correct environment variables and helper functions via a ``load_aqua_diagnostics.sh`` script 
+that is generated in your home directory.
+
+What ``load_aqua_diagnostics.sh`` does
+""""""""""""""""""""""""""""""""""""""
+
+The generated ``load_aqua_diagnostics.sh`` script configures your shell environment by:
+
+1. **Setting up FDB5 access**: Adds the FDB5 binary path and libraries to ``PATH`` and ``LD_LIBRARY_PATH``, 
+   enabling access to data stored in FDB databases.
+
+2. **Configuring GSV paths**: Sets environment variables required by the GSV package:
+   
+   - ``GSV_WEIGHTS_PATH``: Path to GSV neural network weights
+   - ``GSV_TEST_FILES``: Path to GSV test files
+   - ``GRID_DEFINITION_PATH``: Path to grid definitions for unstructured grids
+
+3. **Defining AQUA paths**: Sets ``AQUA_DIAGNOSTICS_PATH`` and ``AQUA_CORE_PATH`` variables 
+   pointing to the respective environment binaries.
+
+4. **Adding AQUA-diagnostics to PATH**: Prepends the AQUA-diagnostics binary directory to your ``PATH``, 
+   making the ``aqua`` command and Python environment available.
+
+Why sourcing is required
+""""""""""""""""""""""""
+
+As environment variables and shell functions are only available in the current shell session. When you log out and start a new session, all these settings are lost. 
+
+The script will ask the user if they wish to add ``source ~/load_aqua_diagnostics.sh`` to ``.bash_profile`` at the end of the installation.
+If added to ``.bash_profile``, the script is automatically sourced every time you start a new login shell, 
+so AQUA-diagnostics will be ready to use immediately.
+
+If you choose not to add it to ``.bash_profile``, you will need to manually source the script at the beginning of each session:
+
+.. code-block:: bash
+
+    source ~/load_aqua_diagnostics.sh
+
+.. note ::
+    Both AQUA (aqua-core) and AQUA-diagnostics are installed in **editable mode**. 
+    This means you can modify the source code in both repositories and changes will be reflected immediately without reinstallation.
+
+Switching between AQUA environments
+"""""""""""""""""""""""""""""""""""
+
+The installation script creates two helper functions to manage AQUA environments:
+
+- ``switch_aqua [diagnostics|core]``: Switch between AQUA-diagnostics and AQUA-core environments.
+  Use ``switch_aqua -v diagnostics`` or ``switch_aqua -v core`` for verbose output showing path changes.
+  
+- ``which_aqua``: Check which AQUA environment is currently active (returns ``aqua-diagnostics``, ``aqua-core``, or ``none``).
+
+By default, the AQUA-diagnostics environment is loaded when you source ``load_aqua_diagnostics.sh``.  
+
+.. note ::
+    Comment or delete scripts calls to files like ``source load_aqua.sh`` in your ``.bash_profile`` file to avoid possible conflicts.
 
 .. note ::
     The installation script is designed to be run on the LUMI cluster, and it may require some adjustments to be run on other systems

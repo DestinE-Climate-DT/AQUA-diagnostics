@@ -15,3 +15,6 @@ ClimateDT workflow modifications:
 - Porting of the AQUA diagnostics documentation (#18)
 - Added GitHub Issues and PR templates (#1)
 - CHANGELOG, LICENSE and README files added (#2)
+
+Unreleased in the current development version:
+- Add LUMI installation scripts for AQUA-diagnostics (#40)
