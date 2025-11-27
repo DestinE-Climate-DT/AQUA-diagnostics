@@ -136,7 +136,6 @@ The job section contains the following keys:
 
 - ``max_threads``: the maximum number of diagnostics running in parallel. Leave it to 0 for no limit
 - ``loglevel``: the log level to use for the cli and the diagnostics. Default is ``WARNING``
-- ``run_checker``: a boolean flag to activate the checker diagnostic. Default is ``true``
 - ``outputdir``: the output directory to use. Default is ``$AQUA/cli/aqua-analysis/output``
 - ``catalog``: the catalog to use. Default is ``null``
 - ``model``: the model to use. Default is ``IFS-NEMO``
