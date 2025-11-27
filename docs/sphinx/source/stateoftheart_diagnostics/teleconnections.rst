@@ -33,10 +33,10 @@ There are three other classes to produce the plots:
 File structure
 --------------
 
-- The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
-- The configuration files are located in the ``aqua/diagnostics/config/diagnostics/teleconnections`` directory and contain the default configuration for the diagnostic.
-- Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
-- Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
+* The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-teleconnections.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
+* Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
 
 .. note::
     A command line to evaluate with the bootstrap method the concordance maps of regression and correlation is available in the ``cli_bootstrap.py`` file.

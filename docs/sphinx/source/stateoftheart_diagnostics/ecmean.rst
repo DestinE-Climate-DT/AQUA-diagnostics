@@ -43,7 +43,7 @@ For detailed information on the code, please refer to the `official ECmean4 docu
 File structure
 --------------
 * The diagnostic is located in the ``aqua/diagnostics/ecmean`` directory, which contains the command line interface (CLI) script `cli_ecmean.py`.  
-* The default configuration file is located in ``aqua/diagnostics/config/diagnostics/climate_metrics/config-climate_metrics-ecmean.yaml``.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-ecmean.yaml``
 * The configuration file for ECmean4 specific settings (variables and regions) is located in ``aqua/diagnostics/config/tools/ecmean/ecmean_config_climatedt.yaml``.
 * The interface file to map AQUA variable names to ECmean4 standard names is located in ``aqua/diagnostics/config/tools/ecmean/interface/interface_AQUA_climatedt.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/ecmean`` directory and contain examples of how to use the diagnostic.  

@@ -24,8 +24,7 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/boxplots`` directory, which contains 
   both the source code and the command line interface (CLI) script.
-* The configuration files are located in the ``aqua/diagnostics/config/diagnostics/boxplots`` directory and contain
-  the default configuration for the diagnostic.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-boxplots.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/boxplots`` directory and contain examples 
   of how to use the diagnostic.
 
