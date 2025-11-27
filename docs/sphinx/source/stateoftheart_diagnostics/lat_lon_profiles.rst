@@ -36,24 +36,26 @@ There are two main classes for computing and plotting latitude-longitude profile
     The diagnostic follows a two-step process: **spatial averaging** (zonal/meridional) → 
     **temporal averaging** (seasonal/long-term).
 
-Getting Started
+
+File structure
 ---------------
 
-**File locations:**
+* The diagnostic is located in the ``aqua/diagnostics/lat_lon_profiles/`` directory, which contains both the source code and 
+  the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-lat_lon_profiles.yaml``
+* Region definitions are available in ``config/tools/lat_lon_profiles/definitions/regions.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/lat_lon_profiles/`` directory and contain examples of how to use the diagnostic.
 
-* Diagnostic code: ``src/aqua_diagnostics/lat_lon_profiles/``
-* Region definitions: ``config/tools/lat_lon_profiles/definitions/regions.yaml``
-* Example notebooks: ``notebooks/diagnostics/lat_lon_profiles/``
-* Config template: ``templates/diagnostics/config-lat_lon_profiles.yaml``
 
-**Supported variables:**
+Input variables and datasets
+----------------------------
 
 The diagnostic works with climate variables on regular latitude-longitude grids:
 
 * **Direct variables**: ``2t`` (temperature), ``tprate`` (precipitation), ``psl`` (pressure), etc.
 * **Derived variables**: Using ``EvaluateFormula`` syntax (e.g., ``2t - 273.15`` for °C)
 
-**Supported regions:**
+Supported regions include:
 
 ``global`` (or ``null``), ``tropics``, ``europe``, ``nh`` (Northern Hemisphere), 
 ``sh`` (Southern Hemisphere).
@@ -89,27 +91,7 @@ notebooks below.
     plot = PlotLatLonProfiles(data=[llp.longterm], data_type='longterm')
     plot.run(outputdir='./')
 
-**For seasonal or multi-model comparisons**, see the detailed examples in the section below.
-
-Available demo notebooks
-------------------------
-
-📓 **Single-model analysis** → `single_line_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/lat_lon_profiles/single_line_profiles.ipynb>`_
-
-   Learn the basics: compute profiles, compare with observations, create seasonal plots
-
-📓 **Multi-model comparison** → `multiple_lines_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/lat_lon_profiles/multiple_lines_profiles.ipynb>`_
-
-   Advanced usage: compare different models, historical vs future scenarios, batch processing
-
-**Key concepts covered:**
-
-- Zonal vs meridional profiles: ``mean_type='zonal'`` or ``'meridional'``
-- Seasonal indexing: ``seasonal[0]`` (DJF), ``seasonal[1]`` (MAM), ``seasonal[2]`` (JJA), 
-  ``seasonal[3]`` (SON)
-- Plot types: ``data_type='longterm'`` (single panel) vs ``'seasonal'`` (4 panels)
-- Uncertainty bands: ``ref_data`` and ``ref_std_data`` parameters
-- Regional selection and custom regions
+**For seasonal or multi-model comparisons**, see the demo notebooks below.
 
 CLI usage
 ---------
@@ -122,11 +104,12 @@ For batch processing or automation, the diagnostic can be run via CLI using a co
     cp templates/diagnostics/config-lat_lon_profiles.yaml my_config.yaml
     
     # Run diagnostic
-    python src/aqua_diagnostics/lat_lon_profiles/cli_lat_lon_profiles.py \
+    python aqua/diagnostics/lat_lon_profiles/cli_lat_lon_profiles.py \
         --config my_config.yaml \
         --model ICON \
         --exp historical-1990 \
         --loglevel INFO
+
 
 **Key CLI arguments:**
 
@@ -137,7 +120,7 @@ For the complete list of arguments, run:
 
 .. code-block:: bash
 
-    python src/aqua_diagnostics/lat_lon_profiles/cli_lat_lon_profiles.py --help
+    python aqua/diagnostics/lat_lon_profiles/cli_lat_lon_profiles.py --help
 
 .. note::
 
@@ -235,8 +218,8 @@ reference data, and diagnostic parameters:
 For the complete template with all available options, see 
 ``templates/diagnostics/config-lat_lon_profiles.yaml``.
 
-Outputs
--------
+Output
+------
 
 The diagnostic generates:
 
@@ -259,6 +242,20 @@ The diagnostic generates:
 
 ``lat_lon_profiles_zonal_profile_longterm_tprate_tropics_ICON_historical-1990.png``
 
+
+Reference datasets
+------------------
+
+Common reference datasets:
+
+* **ERA5**: ECMWF's fifth generation reanalysis for global climate
+* **MSWEP**: Multi-Source Weighted-Ensemble Precipitation dataset
+* **BERKELEY-EARTH**: Berkeley Earth Surface Temperature dataset
+
+Standard deviation can be computed over a custom period using ``std_startdate`` and 
+``std_enddate`` to provide ±2σ uncertainty bands in plots.
+
+
 Example plots
 -------------
 
@@ -278,26 +275,35 @@ Example plots
 
    Multi-model comparison: ICON and IFS-NEMO historical and SSP3-7.0 scenarios.
 
-Reference datasets
-------------------
 
-Common reference datasets:
+Available demo notebooks
+------------------------
 
-* **ERA5**: ECMWF's fifth generation reanalysis for global climate
-* **MSWEP**: Multi-Source Weighted-Ensemble Precipitation dataset
-* **BERKELEY-EARTH**: Berkeley Earth Surface Temperature dataset
+📓 **Single-model analysis** → `single_line_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/lat_lon_profiles/single_line_profiles.ipynb>`_
 
-Standard deviation can be computed over a custom period using ``std_startdate`` and 
-``std_enddate`` to provide ±2σ uncertainty bands in plots.
+   Learn the basics: compute profiles, compare with observations, create seasonal plots
+
+📓 **Multi-model comparison** → `multiple_lines_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/lat_lon_profiles/multiple_lines_profiles.ipynb>`_
+
+   Advanced usage: compare different models, historical vs future scenarios, batch processing
+
+**Key concepts covered:**
+
+- Zonal vs meridional profiles: ``mean_type='zonal'`` or ``'meridional'``
+- Seasonal indexing: ``seasonal[0]`` (DJF), ``seasonal[1]`` (MAM), ``seasonal[2]`` (JJA), 
+  ``seasonal[3]`` (SON)
+- Plot types: ``data_type='longterm'`` (single panel) vs ``'seasonal'`` (4 panels)
+- Uncertainty bands: ``ref_data`` and ``ref_std_data`` parameters
+- Regional selection and custom regions
+
 
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Marco Cadau (@mcadau, marco.cadau@polito.it), member of 
-the AQUA team.
+This diagnostic is maintained by Marco Cadau (`@mcadau <https://github.com/mcadau>`_, `marco.cadau@polito.it <mailto:marco.cadau@polito.it>`_).  
+Contributions are welcome — please open an issue or a pull request.  
+For questions or suggestions, contact the AQUA team or the maintainers.
 
-Contributions are welcome — please open an issue or pull request. For questions, contact 
-the AQUA team or the maintainers.
 
 Developer Notes
 ---------------
@@ -363,8 +369,11 @@ For seasonal plots with multiple models:
         [model1_SON, model2_SON, ...]   # SON panel
     ]
 
-API Reference
--------------
+Detailed API
+------------
+
+This section provides a detailed reference for the Application Programming Interface (API) of the ``lat_lon_profiles`` diagnostic,  
+generated from the function docstrings.
 
 .. automodule:: aqua.diagnostics.lat_lon_profiles
     :members:
