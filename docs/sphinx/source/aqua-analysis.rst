@@ -134,13 +134,14 @@ Job
 
 The job section contains the following keys:
 
-- ``max_threads``: the maximum number of diagnostics running in parallel. Leave it to 0 for no limit
-- ``loglevel``: the log level to use for the cli and the diagnostics. Default is ``WARNING``
-- ``outputdir``: the output directory to use. Default is ``$AQUA/cli/aqua-analysis/output``
-- ``catalog``: the catalog to use. Default is ``null``
-- ``model``: the model to use. Default is ``IFS-NEMO``
-- ``exp``: the experiment to use. Default is ``historical-1990``
-- ``source``: the source to use. Default is ``lra-r100-monthly``
+- ``max_threads``: the maximum number of diagnostics running in parallel. Leave it to 0 for no limit.
+- ``loglevel``: the log level to use for the cli and the diagnostics. Default is ``WARNING``.
+- ``run_checker``: a boolean flag to activate the checker diagnostic. Default is ``true``.
+- ``outputdir``: the output directory to use. Default is ``$AQUA/cli/aqua-analysis/output``.
+- ``catalog``: the catalog to use. Default is ``null``.
+- ``model``: the model to use. Default is ``IFS-NEMO``.
+- ``exp``: the experiment to use. Default is ``historical-1990``.
+- ``source``: the source to use. Default is ``lra-r100-monthly``.
 - ``regrid``: the target grid to use for regridding the data. Default is ``null``, which means no regridding will be applied.
 - ``script_path_base``: the base path for the diagnostic scripts. Default is ``${AQUA}/diagnostics``, but it is going to be updated.
 - ``startdate``: the start date to limit the time range for the analysis. Default is ``null``.
