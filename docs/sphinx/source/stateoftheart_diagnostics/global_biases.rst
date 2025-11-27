@@ -105,8 +105,8 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
 
-Config file structure
----------------------
+Configuration file structure
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
@@ -181,8 +181,9 @@ The diagnostic produces four types of plots:
 
 Plots are saved in both PDF and PNG format.
 
-Observations
-------------
+
+Reference datasets
+------------------
 
 The default reference dataset is ERA5, but custom references can be configured.
 

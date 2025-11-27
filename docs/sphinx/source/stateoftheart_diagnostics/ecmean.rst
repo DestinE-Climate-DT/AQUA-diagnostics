@@ -173,8 +173,8 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--source_ocean``: Source of the oceanic data, to be used when oceanic data is in a different source than atmospheric data.
 
 
-Config file structure
----------------------
+Configuration file structure
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
@@ -229,8 +229,8 @@ smaller font, and colorscale which tells how many standard deviations from the i
 The whiter the color, the more reliable is the model output.
 
 
-Observations
-------------
+Reference datasets
+------------------
 
 ECmean4 uses multiple sources as reference climatologies: please refer to the climatology description for `Performance Indices <https://ecmean4.readthedocs.io/en/latest/performanceindices.html#climatologies-available>`_ 
 and for `Global Mean <https://ecmean4.readthedocs.io/en/latest/globalmean.html#climatology-computation>`_ to get more insight. 

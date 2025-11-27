@@ -79,7 +79,7 @@ Additionally the CLI can be run with the following optional arguments:
 - ``--source``: Source to analyse. It can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
 
-Config file structure
+Configuration file structure
 ---------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.

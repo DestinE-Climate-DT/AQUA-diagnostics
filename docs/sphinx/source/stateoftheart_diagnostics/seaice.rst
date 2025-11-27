@@ -130,8 +130,8 @@ A template for the configuration file can be found in ``aqua/diagnostics/templat
 * ``--outputdir``: Output directory for the plots.
 * ``--proj``: Projection type for 2D plots. Choices are 'orthographic' or 'azimuthal_equidistant'. Default is 'orthographic'.
 
-Config file structure 
-----------------------
+Configuration file structure 
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, 
 the output directory and the diagnostic settings.
@@ -270,7 +270,7 @@ The diagnostic produces:
 
 Plots are saved in both PDF and PNG format.
 
-Observations 
+Reference datasets
 ------------
 
 The default reference dataset is OSI-SAF.

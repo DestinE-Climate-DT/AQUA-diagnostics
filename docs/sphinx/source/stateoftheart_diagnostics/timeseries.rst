@@ -69,8 +69,8 @@ Two configuration files are for atmospheric and oceanic timeseries and gregory p
 
 Additionally CLI arguments are described in the :ref:`diagnostics-cli-arguments` section.
 
-Config file structure
----------------------
+Configuration file structure
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
@@ -154,7 +154,7 @@ The diagnostic produces three types of plots (see :ref:`timeseries_examples`):
 
 The timeseries, reference timeseries and standard deviation timeseries are also saved in the output directory as netCDF files.
 
-Observations
+Reference datasets
 ------------
 
 The diagnostic uses the following reference datasets:
