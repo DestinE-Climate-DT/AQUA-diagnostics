@@ -48,9 +48,9 @@ It supports the same data formats as PlotSeaIce, allowing side-by-side evaluatio
 File structure
 --------------
 
-* The diagnostic is located in the ``src/aqua_diagnostics/seaice`` directory, which contains both the source code and the command line interface (CLI) script `cli_seaice.py`.  
-* The default configuration file is located in ``config/diagnostics/seaice/config_seaice.yaml``.  
-* The regional definitions are defined in ``config/diagnostics/seaice/definitions/regions.yaml``.  
+* The diagnostic is located in the ``aqua/diagnostics/seaice`` directory, which contains both the source code and the command line interface (CLI) script `cli_seaice.py`.  
+* The default configuration files are located in ``aqua/diagnostics/config/diagnostics/seaice/``.  
+* The regional definitions are defined in ``aqua/diagnostics/config/tools/seaice/definitions/regions.yaml``.
 * Notebooks are available in ``notebooks/diagnostics/seaice`` directory and contain examples of how to use the diagnostic.  
 
 Input variables and datasets
@@ -118,7 +118,8 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 Additionally, the CLI can be run with the following optional arguments:
 
-* ``--config``, ``-c``: Path to the configuration file. Default is ``config/diagnostics/seaice/config_seaice.yaml`` in the AQUA root directory.
+* ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/diagnostics/seaice/config_seaice-osi.yaml`` and ``config_seaice-psc.yaml``.
+A template for the configuration file can be found in ``aqua/diagnostics/templates/diagnostics/config-seaice.yaml``.
 * ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
 * ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
 * ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
@@ -175,7 +176,7 @@ The reference datasets are defined using YAML anchors (``&ref_osi_nh``) and can 
 
 **Diagnostic Blocks:**
 
-Each diagnostic block in CLI ``config_seaice.yaml``:  
+Each diagnostic block in ``config-seaice-osi.yaml``:  
 
 - ``seaice_timeseries``  
 - ``seaice_seasonal_cycle``  
@@ -320,9 +321,9 @@ Available demo notebooks
 
 Notebooks are stored in `diagnostics/seaice/notebooks`
 
-* `seaice_timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/seaice/seaice_timeseries.ipynb>`_
-* `seaice_seasonalcycle.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/seaice/seaice_seasonalcycle.ipynb>`_
-* `seaice_2d.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/seaice/seaice_2d.ipynb>`_
+* `seaice_timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/seaice/seaice_timeseries.ipynb>`_
+* `seaice_seasonalcycle.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/seaice/seaice_seasonalcycle.ipynb>`_
+* `seaice_2d.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/seaice/seaice_2d.ipynb>`_
 
 Authors and contributors
 ------------------------
