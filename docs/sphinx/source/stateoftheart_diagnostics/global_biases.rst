@@ -33,8 +33,8 @@ There is one class for the analysis and one for the plotting:
 File structure
 --------------
 
-* The diagnostic is located in the ``src/aqua_diagnostics/global_biases`` directory, which contains both the source code and the command line interface (CLI) script.
-* The configuration files are located in the ``config/diagnostics/global_biases`` directory and contain the default configuration for the diagnostic.
+* The diagnostic is located in the ``aqua/diagnostics/global_biases`` directory, which contains both the source code and the command line interface (CLI) script.
+* The configuration files are located in the ``aqua/diagnostics/config/diagnostics/global_biases`` directory and contain the default configuration for the diagnostic.
 * Notebooks are available in the ``notebooks/diagnostics/global_biases`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -42,7 +42,7 @@ Input variables and datasets
 
 By default, the diagnostic compares against the ERA5 dataset, but it can be configured to use any other dataset as a reference.  
 A list of the variables that are compared automatically when running the full diagnostic is provided in the configuration files  
-available in the ``config/diagnostics/global_biases`` directory.
+available in the ``aqua/diagnostics/config/diagnostics/global_biases`` directory.
 
 Some of the variables that are typically used in this diagnostic are:
 
@@ -90,7 +90,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/global_biases
+    cd $AQUA/aqua/diagnostics/global_biases
     python cli_global_biases.py --config_file <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
@@ -220,7 +220,7 @@ Available demo notebooks
 
 Notebooks are stored in the ``notebooks/diagnostics/global_biases`` directory and contain usage examples.
 
-* `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
+* `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
 
 Authors and contributors
 ------------------------
