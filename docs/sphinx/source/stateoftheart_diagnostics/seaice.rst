@@ -255,19 +255,9 @@ The ``seaice_2d_bias`` block includes additional parameters for spatial analysis
     The configuration file uses YAML anchors (``&ref_osi_nh``) and references (``<<: *ref_osi_nh``) to avoid duplication. 
     This allows the same reference dataset definition to be reused across different diagnostic blocks with method-specific assignments.
 
-CLI processing
---------------
 
-The CLI uses separate diagnostic blocks for different types of analysis:  
-
-* ``seaice_timeseries``: for time series analysis of extent and volume  
-* ``seaice_seasonal_cycle``: for seasonal cycle analysis of extent and volume  
-* ``seaice_2d_bias``: for 2D spatial analysis of fraction and thickness biases  
-
-The input parameters can be overridden during the CLI call.
-
-Outputs
--------
+Output
+------
 
 The diagnostic produces:
 
@@ -280,8 +270,8 @@ The diagnostic produces:
 
 Plots are saved in both PDF and PNG format.
 
-Observations (Reference data)
------------------------------
+Observations 
+------------
 
 The default reference dataset is OSI-SAF.
 Details on the reference dataset are available on the website of the Ocean and Sea Ice Satellite Application Facility (OSI-SAF) `here <https://osi-saf.eumetsat.int/>`_.  
@@ -294,7 +284,7 @@ See also:
 * Knowles, K., E. G. Njoku, R. Armstrong, and M. J. Brodzik. 2000. Nimbus-7 SMMR Pathfinder Daily EASE-Grid Brightness Temperatures, Version 1. Boulder, Colorado USA. NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/36SLCSCZU7N6.
 
 
-Example Plot(s)
+Example Plots
 ---------------
 
 .. figure:: figures/seaice_ts_volume_Arctic_Antarctic.png
