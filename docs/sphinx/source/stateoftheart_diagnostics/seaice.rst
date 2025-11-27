@@ -113,7 +113,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/seaice
+    cd $AQUA/aqua/diagnostics/seaice
     python cli_seaice.py --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
