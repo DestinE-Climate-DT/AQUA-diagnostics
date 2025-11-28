@@ -33,8 +33,8 @@ There is one class for the analysis and one for the plotting:
 File structure
 --------------
 
-* The diagnostic is located in the ``src/aqua_diagnostics/global_biases`` directory, which contains both the source code and the command line interface (CLI) script.
-* The configuration files are located in the ``config/diagnostics/global_biases`` directory and contain the default configuration for the diagnostic.
+* The diagnostic is located in the ``aqua/diagnostics/global_biases`` directory, which contains both the source code and the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-global_biases.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/global_biases`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -42,7 +42,7 @@ Input variables and datasets
 
 By default, the diagnostic compares against the ERA5 dataset, but it can be configured to use any other dataset as a reference.  
 A list of the variables that are compared automatically when running the full diagnostic is provided in the configuration files  
-available in the ``config/diagnostics/global_biases`` directory.
+available in the ``aqua/diagnostics/config/diagnostics/global_biases`` directory.
 
 Some of the variables that are typically used in this diagnostic are:
 
@@ -90,7 +90,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/global_biases
+    cd $AQUA/aqua/diagnostics/global_biases
     python cli_global_biases.py --config_file <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
@@ -105,8 +105,8 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
 
-Config file structure
----------------------
+Configuration file structure
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
@@ -116,7 +116,7 @@ Here we describe only the specific settings for the global biases diagnostic.
   Variable-specific parameters override the defaults.
 
     * ``run``: enable/disable the diagnostic.
-    * ``diagnostic_name``: name of the diagnostic. ``globalbiases`` by default, but can be changed when the boxplots CLI is invoked within another ``recipe`` diagnostic, as is currently done for ``Radiation``.
+    * ``diagnostic_name``: name of the diagnostic. ``globalbiases`` by default, but can be changed when the globalbiases CLI is invoked within another ``recipe`` diagnostic, as is currently done for ``Radiation``.
     * ``variables``: list of variables to analyse.
     * ``formulae``: list of formulae to compute new variables from existing ones (e.g., ``tnlwrf+tnswrf``).
     * ``plev``: pressure levels to analyse for 3D variables.
@@ -181,8 +181,9 @@ The diagnostic produces four types of plots:
 
 Plots are saved in both PDF and PNG format.
 
-Observations
-------------
+
+Reference datasets
+------------------
 
 The default reference dataset is ERA5, but custom references can be configured.
 
@@ -220,7 +221,7 @@ Available demo notebooks
 
 Notebooks are stored in the ``notebooks/diagnostics/global_biases`` directory and contain usage examples.
 
-* `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
+* `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
 
 Authors and contributors
 ------------------------

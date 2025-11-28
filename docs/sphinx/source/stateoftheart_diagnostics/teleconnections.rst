@@ -33,10 +33,10 @@ There are three other classes to produce the plots:
 File structure
 --------------
 
-- The diagnostic is located in the ``src/aqua_diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
-- The configuration files are located in the ``config/diagnostics/teleconnections`` directory and contain the default configuration for the diagnostic.
-- Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
-- Interface files to specify custom regions or other variable names for the index evaluation are available in the ``config/diagnostics/teleconnections/interface`` directory.
+* The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-teleconnections.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
+* Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
 
 .. note::
     A command line to evaluate with the bootstrap method the concordance maps of regression and correlation is available in the ``cli_bootstrap.py`` file.
@@ -61,7 +61,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/teleconnections
+    cd $AQUA/aqua/diagnostics/teleconnections
     python cli_teleconnections.py --config <path_to_config_file>
 
 Three configuration files are provided and run when executing the aqua-analysis (see :ref:`aqua_analysis`).
@@ -79,7 +79,7 @@ Additionally the CLI can be run with the following optional arguments:
 - ``--source``: Source to analyse. It can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
 
-Config file structure
+Configuration file structure
 ---------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
@@ -135,10 +135,10 @@ Example Plots
 Available demo notebooks
 ------------------------
 
-- `NAO <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/teleconnections/NAO.ipynb>`_
-- `ENSO <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/teleconnections/ENSO.ipynb>`_
-- `statistical_validation <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/teleconnections/statistical_validation.ipynb>`_
-- `MJO <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/teleconnections/MJO.ipynb>`_
+- `NAO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/NAO.ipynb>`_
+- `ENSO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/ENSO.ipynb>`_
+- `statistical_validation <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/statistical_validation.ipynb>`_
+- `MJO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/MJO.ipynb>`_
 
 Authors and contributors
 ------------------------

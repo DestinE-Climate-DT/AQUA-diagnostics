@@ -40,10 +40,10 @@ There are three other classes to produce the plots:
 File structure
 --------------
 
-* The diagnostic is located in the ``src/aqua_diagnostics/timeseries`` directory, which contains both the source code and the command line interface (CLI) script.
-* The configuration files are located in the ``config/diagnostics/timeseries`` directory and contains the default configuration for the diagnostic.
+* The diagnostic is located in the ``aqua/diagnostics/timeseries`` directory, which contains both the source code and the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-timeseries.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/timeseries`` directory and contain examples of how to use the diagnostic.
-* A list of available regions is available in the ``config/diagnostics/timeseries/interface/regions.yaml`` file.
+* A list of available regions is available in the ``aqua/diagnostics/config/tools/timeseries/definitions/regions.yaml`` file.
 
 Input variables and datasets
 ----------------------------
@@ -61,7 +61,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/timeseries
+    cd $AQUA/aqua/diagnostics/timeseries
     python cli_timeseries.py --config <path_to_config_file>
 
 Three configuration files are provided and run when executing the aqua-analysis (see :ref:`aqua_analysis`).
@@ -69,8 +69,8 @@ Two configuration files are for atmospheric and oceanic timeseries and gregory p
 
 Additionally CLI arguments are described in the :ref:`diagnostics-cli-arguments` section.
 
-Config file structure
----------------------
+Configuration file structure
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
@@ -154,7 +154,7 @@ The diagnostic produces three types of plots (see :ref:`timeseries_examples`):
 
 The timeseries, reference timeseries and standard deviation timeseries are also saved in the output directory as netCDF files.
 
-Observations
+Reference datasets
 ------------
 
 The diagnostic uses the following reference datasets:
@@ -201,9 +201,9 @@ Available demo notebooks
 
 Notebooks are stored in the ``notebooks/diagnostics/timeseries`` directory and contain examples of how to use the diagnostic.
 
-* `timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/timeseries/timeseries.ipynb>`_
-* `seasonalcycles.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/timeseries/seasonalcycles.ipynb>`_
-* `gregory.ipynb <have://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/timeseries/gregory.ipynb>`_
+* `timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/timeseries.ipynb>`_
+* `seasonalcycles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/seasonalcycles.ipynb>`_
+* `gregory.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/gregory.ipynb>`_
 
 Authors and contributors
 ------------------------

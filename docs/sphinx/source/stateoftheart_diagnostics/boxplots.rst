@@ -22,10 +22,9 @@ There is one class for the analysis and one for the plotting:
 File structure
 --------------
 
-* The diagnostic is located in the ``src/aqua_diagnostics/boxplots`` directory, which contains 
+* The diagnostic is located in the ``aqua/diagnostics/boxplots`` directory, which contains 
   both the source code and the command line interface (CLI) script.
-* The configuration files are located in the ``config/diagnostics/boxplots`` directory and contain 
-  the default configuration for the diagnostic.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-boxplots.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/boxplots`` directory and contain examples 
   of how to use the diagnostic.
 
@@ -76,7 +75,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/boxplots
+    cd $AQUA/aqua/diagnostics/boxplots
     python cli_boxplots.py --config_file <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
@@ -91,8 +90,8 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
 
-Config file structure
-^^^^^^^^^^^^^^^^^^^^^
+Configuration file structure
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
@@ -144,7 +143,7 @@ Available demo notebooks
 
 Notebooks are stored in ``notebooks/diagnostics/boxplots``:
 
-* `boxplots.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/boxplots/boxplots.ipynb>`_ 
+* `boxplots.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/boxplots/boxplots.ipynb>`_ 
 
 Detailed API
 ------------
