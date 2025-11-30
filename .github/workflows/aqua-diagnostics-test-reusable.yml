@@ -1,4 +1,4 @@
-name: AQUA Test Runner (Reusable)
+name: AQUA-diagnostics Test Runner (Reusable)
 
 on:
   workflow_call:

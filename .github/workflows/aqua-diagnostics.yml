@@ -1,4 +1,4 @@
-name: AQUA tests
+name: AQUA-diagnostics tests
 # This workflow uses pytest-xdist to run tests in parallel across 4 cores
 
 on:
@@ -45,10 +45,10 @@ jobs:
           echo "result=$SHOULD_RUN" >> $GITHUB_OUTPUT
   
   # Call the reusable workflow
-  aqua-tests:
+  aqua-diagnostics-tests:
     needs: check-trigger
     if: needs.check-trigger.outputs.should-run == 'true'
-    uses: ./.github/workflows/aqua-test-reusable.yml
+    uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-versions: '["3.12"]'
       pytest-markers: 'diagnostics'

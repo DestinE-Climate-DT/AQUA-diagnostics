@@ -1,4 +1,4 @@
-name: AQUA monthly tests
+name: AQUA-diagnostics monthly tests
 
 on:
   workflow_dispatch:
@@ -12,8 +12,8 @@ permissions:
 
 jobs:
   # Call the reusable workflow with multiple Python versions
-  aqua-complete-tests:
-    uses: ./.github/workflows/aqua-test-reusable.yml
+  aqua-diagnostics-complete-tests:
+    uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-versions: '["3.10", "3.11", "3.12"]'
       pytest-markers: 'diagnostics'
