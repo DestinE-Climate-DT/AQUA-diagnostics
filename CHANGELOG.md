@@ -3,10 +3,16 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-
 ## [Unreleased]
 
-ClimateDT workflow modifications:
+Unreleased in the current development version (target v0.22.0):
+
+## [v0.21.0]
+
+Main changes:
+1. Complete refactor of the repository to accomodate for the first release of AQUA-diagnostics, now depending on `aqua-core` package.
+2. `aqua-diagnostics` released on pypi.
+
 
 Complete list:
 - Workflow structure refactore to accomodate for multiple pipelines as in AQUA-core (#47)
@@ -19,6 +25,9 @@ Complete list:
 - Porting of the AQUA diagnostics documentation (#18)
 - Added GitHub Issues and PR templates (#1)
 - CHANGELOG, LICENSE and README files added (#2)
-
-Unreleased in the current development version:
 - Add LUMI installation scripts for AQUA-diagnostics (#40)
+
+## Previous versions
+Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
+
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...HEAD
