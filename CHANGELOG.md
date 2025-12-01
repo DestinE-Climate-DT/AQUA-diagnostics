@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ClimateDT workflow modifications:
 
 Complete list:
+- Workflow structure refactore to accomodate for multiple pipelines as in AQUA-core (#47)
 - Removed `cli_checker` diagnostic tool from diagnostic repository (#46)
 - Timeseries: Timeseries and Gregory correctly work with less that one year of data (#42)
 - Adapt to new folder structure of AQUA core (fixing imports and removing diagnostics/src folder) (#36, #37)
