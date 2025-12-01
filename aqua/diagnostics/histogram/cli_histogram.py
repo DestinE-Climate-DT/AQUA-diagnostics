@@ -14,35 +14,11 @@ from aqua.diagnostics.core.cli_base import DiagnosticCLI
 from aqua.diagnostics.histogram import Histogram, PlotHistogram
 from aqua.diagnostics.histogram.util_cli import load_var_config
 
-
 def parse_arguments(args):
     """Parse command-line arguments for Histogram diagnostic."""
     parser = argparse.ArgumentParser(description='Histogram CLI')
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
-
-
-def get_dataset_args(cli, dataset):
-    """
-    Helper to extract dataset arguments for Histogram diagnostic.
-    
-    Args:
-        cli: DiagnosticCLI instance
-        dataset (dict): Dataset configuration dictionary
-        
-    Returns:
-        dict: Arguments for Histogram class initialization
-    """
-    return {
-        'catalog': dataset.get('catalog'),
-        'model': dataset.get('model'),
-        'exp': dataset.get('exp'),
-        'source': dataset.get('source'),
-        'regrid': dataset.get('regrid', cli.regrid),
-        'startdate': dataset.get('startdate'),
-        'enddate': dataset.get('enddate')
-    }
-
 
 def process_dataset(cli, dataset, var_config, diag_config, region, is_reference=False):
     """
@@ -63,7 +39,7 @@ def process_dataset(cli, dataset, var_config, diag_config, region, is_reference=
                    f"{dataset['model']}/{dataset['exp']}")
     
     # Get dataset arguments
-    dataset_args = get_dataset_args(cli, dataset)
+    dataset_args = cli.dataset_args(dataset)
     
     # Extract variable info
     var_name = var_config.get('name')
@@ -103,7 +79,6 @@ def process_dataset(cli, dataset, var_config, diag_config, region, is_reference=
     )
     
     return histogram
-
 
 def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
     """
@@ -159,7 +134,6 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
         cli.logger.info('Saving PDF plot')
         plot.run(format='pdf', **plot_params)
 
-
 def process_variable(cli, var_config, regions, datasets, references, diag_config):
     """
     Process a single variable or formula across all datasets and regions.
@@ -206,7 +180,6 @@ def process_variable(cli, var_config, regions, datasets, references, diag_config
             cli.logger.error(
                 f"Error running Histogram diagnostic for variable {var_name} "
                 f"in region {region if region else 'global'}: {e}")
-
 
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
