@@ -1,4 +1,4 @@
-name: AQUA PyPI tests
+name: AQUA-diagnostics PyPI tests
 
 on:
   workflow_dispatch:

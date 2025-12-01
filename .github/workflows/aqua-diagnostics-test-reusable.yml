@@ -155,7 +155,7 @@ jobs:
         if: ${{ inputs.install-mode == 'pypi' }}
         run: |
           # Copy environment.yml and remove "- pip:" section
-          sed '/^  - pip:$/,/^    - -e/d' AQUA-diagnostics/environment.yml > /tmp/aqua-pypi-env.yml
+          sed '/^  - pip:$/,$d' AQUA-diagnostics/environment.yml > /tmp/aqua-pypi-env.yml
           
           echo "Generated environment file:"
           cat /tmp/aqua-pypi-env.yml
