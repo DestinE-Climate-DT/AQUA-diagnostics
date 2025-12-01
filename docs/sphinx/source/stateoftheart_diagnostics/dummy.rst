@@ -32,7 +32,7 @@ Classes:
 * DummyDiagnostic: retrieves data, regrids, aggregates, computes derived variables.
 * PlotDummy: generates plots using data prepared by Dummy.
 
-See diagnostic-class_structure/home/costanza/AQUA-diagnostics/docs/sphinx/source/new_diagnostics/guidelines/class_structure.rst (inserire link!!!!!) for design principles.
+See diagnostic-class_structure/docs/sphinx/source/new_diagnostics/guidelines/class_structure.rst for design principles.
 
 File structure
 -----------
@@ -47,10 +47,10 @@ The diagnostic directory consists of the following files:
 
 These files are organized in the following directories:
 
-* Source code: ``AQUA-diagnostics/aqua/diagnostics/dummy/``
-* Configuration files: ``AQUA-diagnostics/aqua/diagnostics/config/diagnostics/dummy/``
-* Notebooks: ``AQUA-diagnostics/notebooks/dummy/``
-
+* Source code and CLI: ``aqua/diagnostics/dummy/``
+* Template configuration file: ``aqua/diagnostics/templates/diagnostics/config-dummy.yaml``
+* Notebooks: ``notebooks/diagnostics/dummy/``
+* Interface files (optional): ``aqua/diagnostics/config/tools/dummy/`` — for custom regions, variable definitions, or other diagnostic-specific settings.
 
 Input variables and datasets
 ------------------------------
@@ -158,7 +158,6 @@ References
 ----------
 
 * E. Empty, D. Dummy et al. (2023) The art of saying nothing. Emptyness, 1: 0-1. `DOI <http://doi.org/00.0000/e-00000-000.xxxx>`_
-
 
 Authors and contributors
 ------------------------
