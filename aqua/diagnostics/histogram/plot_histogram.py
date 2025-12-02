@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list, DEFAULT_REALIZATION
@@ -240,7 +242,7 @@ class PlotHistogram():
     def run(self, outputdir='./', rebuild=True, dpi=300, style=None, 
             format='png', xlogscale=False, ylogscale=True,
             xmax=None, xmin=None, ymax=None, ymin=None,
-            smooth=False, smooth_window=5):
+            smooth=False, smooth_window=5, show=False):
         """
         Run the complete plotting workflow.
         
@@ -258,6 +260,7 @@ class PlotHistogram():
             ymin (float, optional): Minimum y value.
             smooth (bool): Apply smoothing to data.
             smooth_window (int): Window size for smoothing.
+            show (bool): If True, display the plot interactively.
         """
         self.logger.info('Running PlotHistogram')
 
@@ -274,5 +277,9 @@ class PlotHistogram():
 
         self.save_plot(fig, description=description, rebuild=rebuild,
                       outputdir=outputdir, dpi=dpi, format=format)
+        
+        if show:
+            plt.show()
+        plt.close(fig)
         
         self.logger.info('PlotHistogram completed successfully')
