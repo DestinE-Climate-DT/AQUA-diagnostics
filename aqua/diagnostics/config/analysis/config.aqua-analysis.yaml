@@ -34,7 +34,7 @@ job:
     startdate: null
     enddate: null
 
-    script_path_base: "${AQUA}/src/aqua_diagnostics"  # Base directory for the diagnostic scripts
+    script_path_base: "${AQUA}/aqua/diagnostics"  # Base directory for the diagnostic scripts
 
 cluster:  # options for dask cluster (this works well on lumi)
     workers: 32
