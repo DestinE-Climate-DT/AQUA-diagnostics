@@ -124,9 +124,8 @@ if __name__ == '__main__':
                     regs_indomain = filter_region_list(regions_dict, regions, domain_ref, cli.logger)
                     
                     # Get reference args and override specific fields
-                    reference_args = cli.dataset_args(reference)
+                    reference_args = cli.reference_args(reference)
                     reference_args['regions'] = regs_indomain
-                    reference_args['regrid'] = regrid or reference.get('regrid', None)
                     
                     # Integrate by method the reference data and store them in a list
                     seaice_ref = SeaIce(**reference_args,
@@ -228,9 +227,8 @@ if __name__ == '__main__':
                     regs_indomain = filter_region_list(regions_dict, regions, domain_ref, cli.logger)
                     
                     # Get reference args and override specific fields
-                    reference_args = cli.dataset_args(reference)
+                    reference_args = cli.reference_args(reference)
                     reference_args['regions'] = regs_indomain
-                    reference_args['regrid'] = regrid or reference.get('regrid', None)
                     
                     # Integrate by method the reference data and store them in a list.
                     seaice_ref = SeaIce(**reference_args,
@@ -331,9 +329,8 @@ if __name__ == '__main__':
                     regs_indomain = filter_region_list(regions_dict, regions, domain_ref, cli.logger)
                     
                     # Get reference args and override specific fields
-                    reference_args = cli.dataset_args(reference)
+                    reference_args = cli.reference_args(reference)
                     reference_args['regions'] = regs_indomain
-                    reference_args['regrid'] = regrid or reference.get('regrid', None)
                     
                     # Get by method the reference data and store them in a list.
                     seaice_ref = SeaIce(**reference_args,

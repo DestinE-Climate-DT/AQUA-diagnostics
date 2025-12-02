@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
             fldmeans_ref = []
             for reference in references:
-                reference_args = cli.dataset_args(reference)
+                reference_args = cli.reference_args(reference)
 
                 boxplots_ref = Boxplots(**reference_args, diagnostic=cli.diagnostic_name,
                                         save_netcdf=cli.save_netcdf,

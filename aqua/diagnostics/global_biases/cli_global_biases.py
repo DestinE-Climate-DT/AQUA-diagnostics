@@ -54,7 +54,7 @@ if __name__ == '__main__':
         dataset = cli.config_dict['datasets'][0]
         reference = cli.config_dict['references'][0]
         dataset_args = cli.dataset_args(dataset)
-        reference_args = cli.dataset_args(reference)
+        reference_args = cli.reference_args(reference)
 
         variables = tool_dict.get('variables', [])
         formulae = tool_dict.get('formulae', [])

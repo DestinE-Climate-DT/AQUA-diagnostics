@@ -81,7 +81,7 @@ if __name__ == '__main__':
                             ts_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.dataset_args(reference)
+                                reference_args = cli.reference_args(reference)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
@@ -155,7 +155,7 @@ if __name__ == '__main__':
                             ts_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.dataset_args(reference)
+                                reference_args = cli.reference_args(reference)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
@@ -233,7 +233,7 @@ if __name__ == '__main__':
                             sc_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.dataset_args(reference)
+                                reference_args = cli.reference_args(reference)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,

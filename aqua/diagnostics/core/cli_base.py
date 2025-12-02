@@ -55,6 +55,8 @@ class DiagnosticCLI:
         self.private_cluster = None
         self.config_dict = None
         self.regrid = None
+        self.startdate = None
+        self.enddate = None
         self.realization = None
         self.reader_kwargs = None
         self.outputdir = None
@@ -119,6 +121,13 @@ class DiagnosticCLI:
         if self.regrid:
             self.logger.info("Regrid option is set to %s", self.regrid)
 
+        self.startdate = get_arg(self.args, 'startdate', None)
+        self.enddate = get_arg(self.args, 'enddate', None)
+        if self.startdate:
+            self.logger.info("Start date is set to %s", self.startdate)
+        if self.enddate:
+            self.logger.info("End date is set to %s", self.enddate)
+
         # Realization option and reader_kwargs
         self.realization = get_arg(self.args, 'realization', None)
         if self.realization:
@@ -145,9 +154,22 @@ class DiagnosticCLI:
 
         return {'catalog': dataset['catalog'], 'model': dataset['model'],
                 'exp': dataset['exp'], 'source': dataset['source'],
-                'regrid': dataset.get('regrid', self.regrid),
-                'startdate': dataset.get('startdate', None),
-                'enddate': dataset.get('enddate', None)}
+                'regrid': dataset.get('regrid') or self.regrid,
+                'startdate': dataset.get('startdate') or self.startdate,
+                'enddate': dataset.get('enddate') or self.enddate}
+    
+    def reference_args(self, reference):
+        """
+        Helper to extract reference dataset arguments for diagnostics.
+        Only difference from dataset_args is that regrid, startdate, enddate
+        are not overridden by CLI options.
+        """
+
+        return {'catalog': reference['catalog'], 'model': reference['model'],
+                'exp': reference['exp'], 'source': reference['source'],
+                'regrid': reference.get('regrid'),
+                'startdate': reference.get('startdate'),
+                'enddate': reference.get('enddate')}
 
     def open_dask_cluster(self):
         """

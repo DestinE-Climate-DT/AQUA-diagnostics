@@ -84,7 +84,7 @@ if __name__ == '__main__':
                 nao_ref_correlations = {season: [None] * len(config_dict['references']) for season in seasons}
 
                 for i, reference in enumerate(config_dict['references']):
-                    reference_args = cli.dataset_args(reference)
+                    reference_args = cli.reference_args(reference)
                     logger.info(f'Running reference: {reference_args}')
                     nao_ref[i] = NAO(**reference_args, **init_args)
                     nao_ref[i].retrieve()
@@ -205,7 +205,7 @@ if __name__ == '__main__':
                 enso_ref_correlations = {season: [None] * len(config_dict['references']) for season in seasons}
 
                 for i, reference in enumerate(config_dict['references']):
-                    reference_args = cli.dataset_args(reference)
+                    reference_args = cli.reference_args(reference)
                     logger.info(f'Running reference: {reference_args}')
 
                     enso_ref[i] = ENSO(**reference_args, **init_args)
