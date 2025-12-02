@@ -1,3 +1,5 @@
+.. _global_biases:
+
 Global Biases Diagnostic
 ========================
 
@@ -167,7 +169,6 @@ Here we describe only the specific settings for the global biases diagnostic.
             vmin_v: -50
             vmax_v: 50
 
-
 Output
 ------
 
@@ -182,7 +183,7 @@ Plots are saved in both PDF and PNG format.
 Data outputs are saved as NetCDF files.
 
 Observations
-------------------
+-------------
 
 The default reference dataset is ERA5, but custom references can be configured.
 
@@ -217,6 +218,8 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 
 Available demo notebooks
 ------------------------
+
+Notebooks are stored in ``notebooks/diagnostics/global_biases``:
 
 * `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
 

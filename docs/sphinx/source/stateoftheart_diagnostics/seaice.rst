@@ -1,5 +1,5 @@
-Sea ice 
-=======
+Sea ice Diagnostic
+========================
 
 Description
 -----------

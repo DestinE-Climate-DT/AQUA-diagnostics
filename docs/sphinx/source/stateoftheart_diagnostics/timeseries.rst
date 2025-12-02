@@ -1,7 +1,7 @@
 .. _timeseries:
 
-Timeseries
-==========
+Timeseries Diagnostic
+========================
 
 Description
 -----------
@@ -14,7 +14,7 @@ The diagnostic can compare the model time series with a reference dataset, which
 Classes
 -------
 
-There are three classes to compute the netCDF files:
+There are three classes for the analysis:
 
 * **Timeseries**: a class that computes time series of a given variable or formula for a given model or dataset. 
   Comparison with a reference dataset is also possible. It supports hourly, daily, monthly and yearly time series and area selection.
@@ -154,7 +154,7 @@ The diagnostic produces three types of plots (see :ref:`timeseries_examples`):
 
 The timeseries, reference timeseries and standard deviation timeseries are also saved in the output directory as netCDF files.
 
-Reference datasets
+Observations
 ------------
 
 The diagnostic uses the following reference datasets:
@@ -198,8 +198,6 @@ All these plots can be produced by running the notebooks in the ``notebooks`` di
 
 Available demo notebooks
 ------------------------
-
-Notebooks are stored in the ``notebooks/diagnostics/timeseries`` directory and contain examples of how to use the diagnostic.
 
 * `timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/timeseries.ipynb>`_
 * `seasonalcycles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/seasonalcycles.ipynb>`_

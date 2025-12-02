@@ -1,5 +1,5 @@
-LatLonProfiles
-============================
+LatLonProfiles Diagnostic
+=========================
 
 Description
 -----------
@@ -68,8 +68,6 @@ Basic usage
 The recommended way to use this diagnostic is through the Python API, as shown in the 
 notebooks below.
 
-**Minimal example:**
-
 .. code-block:: python
 
     from aqua.diagnostics.lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
@@ -109,7 +107,6 @@ For batch processing or automation, the diagnostic can be run via CLI using a co
         --model ICON \
         --exp historical-1990 \
         --loglevel INFO
-
 
 **Key CLI arguments:**
 
@@ -243,8 +240,8 @@ The diagnostic generates:
 ``lat_lon_profiles_zonal_profile_longterm_tprate_tropics_ICON_historical-1990.png``
 
 
-Reference datasets
-------------------
+Observations
+------------
 
 Common reference datasets:
 

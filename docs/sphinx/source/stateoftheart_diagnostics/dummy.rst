@@ -1,6 +1,6 @@
 :orphan:
 
-Dummy
+Dummy Diagnostic
 ================
 
 Dummy diagnostic provides a template for AQUA diagnostics and includes guidance for developers.
@@ -163,7 +163,7 @@ Authors and contributors
 ------------------------
 
 This diagnostic is maintained by [Name] (`@github_username`_, `email@example.com`_).
-Contributions are welcome — please open an issue or a pull request.
+Contributions are welcome, please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainers.
 
 
