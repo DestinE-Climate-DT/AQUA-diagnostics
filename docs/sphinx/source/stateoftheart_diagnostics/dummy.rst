@@ -44,7 +44,7 @@ Directory locations:
 * Notebooks: ``notebooks/diagnostics/dummy/``
 * Interface files (optional): ``aqua/diagnostics/config/tools/dummy/`` — for custom regions, variable definitions, or other diagnostic-specific settings.
 
-The diagnostic directory consists of the following files:
+The source code directory contains the following files:
 
 * ``dummy.py``: the main Python file containing the Dummy analysis class constructor and methods;
 * ``plot_dummy.py``: a Python file containing the PlotDummy class for visualization;

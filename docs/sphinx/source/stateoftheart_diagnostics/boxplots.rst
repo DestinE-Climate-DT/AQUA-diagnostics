@@ -45,7 +45,8 @@ A higher resolution is not necessary for this diagnostic.
 Basic usage
 -----------
 
-The basic usage of this diagnostic is explained with a working example in the notebook provided in the ``notebooks/diagnostics/boxplots`` directory.  
+The basic usage of this diagnostic is explained with a working example in the notebook
+provided in the ``notebooks/diagnostics/boxplots`` directory.  
 The basic structure of the analysis is the following:
 
 .. code-block:: python
