@@ -446,7 +446,7 @@ class SeaIce(Diagnostic):
             raise ValueError(f"Cannot compute '{stat}' as 'time' dimension not present in data.")
 
         # select time, if None, the whole time will be taken in one or both boundaries
-        computed_data = computed_data.sel(time=slice(self.startdate, self.enddate))
+        #computed_data = computed_data.sel(time=slice(self.startdate, self.enddate))
 
         if stat == 'std':
             return computed_data.groupby(freq_dict[freq]).std('time')
