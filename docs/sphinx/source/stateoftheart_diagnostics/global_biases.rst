@@ -149,8 +149,9 @@ Here we describe only the specific settings for the global biases diagnostic.
                 long_name: "Top net radiation"
 
 * ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.  
-  The default parameters are used if not specified for a specific variable.
-  Refer to 'src/aqua/util/projections.py' for available projections.
+The default parameters are used if not specified for a specific variable.
+Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
+
 
 .. code-block:: yaml
 
