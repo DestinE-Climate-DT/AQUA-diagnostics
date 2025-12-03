@@ -1,0 +1,2 @@
+"""Global Biases CLI tests."""
+
