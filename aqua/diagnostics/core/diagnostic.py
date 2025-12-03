@@ -1,5 +1,6 @@
 import os
 import xarray as xr
+import pandas as pd
 from aqua import Reader
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
@@ -111,8 +112,7 @@ class Diagnostic():
                                 create_catalog_entry=create_catalog_entry, dict_catalog_entry=dict_catalog_entry,
                                 **kwargs)
 
-    @staticmethod
-    def _retrieve(model: str, exp: str, source: str, var: str = None, catalog: str = None,
+    def _retrieve(self, model: str, exp: str, source: str, var: str = None, catalog: str = None,
                   startdate: str = None, enddate: str = None, regrid: str = None,
                   months_required: int | None = None,
                   reader_kwargs: dict = {}, loglevel: str = 'WARNING'):
@@ -150,7 +150,10 @@ class Diagnostic():
         if not data:
             raise ValueError(f"No data found for {model} {exp} {source} with variable {var}")
         
-        data = data.sel(time=slice(startdate, enddate))
+        # FIX: issues with some time selection for pandas using Timestamp. 
+        # see https://github.com/pydata/xarray/issues/10975
+        self.logger.debug(f"Selecting data between {startdate} and {enddate}")
+        data = data.sel(time=slice(pd.Timestamp(startdate), pd.Timestamp(enddate)))
         
         # If there is a month requirement we infer the data frequency,
         # then we check how many months are available in the data
