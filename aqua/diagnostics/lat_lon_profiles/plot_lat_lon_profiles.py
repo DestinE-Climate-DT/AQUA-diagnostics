@@ -376,7 +376,8 @@ class PlotLatLonProfiles():
             rebuild=True, 
             dpi=300,
             style=None,
-            format='png'):
+            format='png',
+            show=False):
         """
         Unified run method that handles all plotting scenarios.
         
@@ -386,17 +387,18 @@ class PlotLatLonProfiles():
             dpi (int): Dots per inch for the plot.
             style (str): Plotting style. Default is the AQUA style.
             format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            show (bool): If True, display the plot interactively.
         """
         self.logger.info('Running PlotLatLonProfiles')
 
         if self.data_type == 'seasonal':
             return self._run_seasonal(outputdir=outputdir, rebuild=rebuild, dpi=dpi, format=format,
-                                      style=style)
+                                      style=style, show=show)
         elif self.data_type == 'longterm':
             return self._run_annual(outputdir=outputdir, rebuild=rebuild, dpi=dpi, format=format,
-                                    style=style)
+                                    style=style, show=show)
 
-    def _run_annual(self, outputdir, rebuild, dpi, format, style):
+    def _run_annual(self, outputdir, rebuild, dpi, format, style, show=False):
         """Private method for annual single variable plotting."""
         data_label = self.set_data_labels()
         ref_label = self.set_ref_label()
@@ -411,11 +413,15 @@ class PlotLatLonProfiles():
 
         self.save_plot(fig, description=description, rebuild=rebuild,
                        outputdir=outputdir, dpi=dpi, format=format, diagnostic=self.diagnostic_name)
+        
+        if show:
+            plt.show()
+            
         plt.close(fig)
 
         self.logger.info('PlotLatLonProfiles completed successfully')
 
-    def _run_seasonal(self, outputdir, rebuild, dpi, format, style):
+    def _run_seasonal(self, outputdir, rebuild, dpi, format, style, show=False):
         """Private method for seasonal single variable plotting."""
         data_labels = self.set_data_labels()
         description = self.set_description()
@@ -427,6 +433,10 @@ class PlotLatLonProfiles():
         self.save_plot(fig, description=description, 
                        rebuild=rebuild, outputdir=outputdir, dpi=dpi, format=format, 
                        diagnostic=self.diagnostic_name)
+        
+        if show:
+            plt.show()
+
         plt.close(fig)
         
         self.logger.info('PlotLatLonProfiles completed successfully')
