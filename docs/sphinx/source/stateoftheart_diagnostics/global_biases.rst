@@ -196,25 +196,25 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
     :align: center
     :width: 100%
 
-    Climatology of specific humidity (q) from IFS-NEMO historical-1990.
+    Climatology of q from IFS-NEMO historical-1990.
 
 .. figure:: figures/global_bias.png
     :align: center
     :width: 100%
 
-    Global bias of specific humidity (q) from IFS-NEMO historical-1990 with respect to ERA5 climatology.
+    Global bias of q from IFS-NEMO historical-1990 with respect to ERA5 climatology.
 
 .. figure:: figures/seasonal_bias.png
     :align: center
     :width: 100%
 
-    Seasonal bias of specific humidity (q) from IFS-NEMO historical-1990 with respect to ERA5 climatology.
+    Seasonal bias of q from IFS-NEMO historical-1990 with respect to ERA5 climatology.
 
 .. figure:: figures/vertical_bias.png
     :align: center
     :width: 100%
 
-    Vertical bias of specific humidity (q) from IFS-NEMO historical-1990 with respect to ERA5 climatology.
+    Vertical bias of q from IFS-NEMO historical-1990 with respect to ERA5 climatology.
 
 Available demo notebooks
 ------------------------

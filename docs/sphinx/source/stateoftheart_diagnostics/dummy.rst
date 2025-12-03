@@ -99,6 +99,7 @@ Common options: ``--model``, ``--exp``, ``--source``, ``--outputdir``, ``--logle
 
 For the complete list, see :ref:`diagnostics-cli-arguments`.
 
+
 Configuration file structure
 ---------------------
 
