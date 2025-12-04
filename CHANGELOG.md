@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.22.0):
 
+- Fix of aqua_path for analysis console (#2542)
 - Updated installation scripts for HPC2020 (#51)
 
 ## [v0.21.0]
