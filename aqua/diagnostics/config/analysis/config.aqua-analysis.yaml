@@ -1,6 +1,6 @@
 # Configuration file for aqua-analysis.sh
 
-# Variables $AQUA, $AQUA_DIAGNOSTICS $AQUA_CONFIG and $OUTPUT can be used to refer to
+# Variables $AQUA_CORE, $AQUA_DIAGNOSTICS $AQUA_CONFIG and $OUTPUT can be used to refer to
 # the directory of the AQUA-core module,
 # the directory of the AQUA-diagnostics module,
 # the config directory (i.e. .aqua) and the output directory respectively.
