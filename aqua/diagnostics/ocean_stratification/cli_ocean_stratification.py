@@ -47,7 +47,7 @@ if __name__ == "__main__":
         references = config_dict["references"]
         logger.info(f"References found: {references}")
         reference = config_dict["references"][0]
-        reference_args = cli.dataset_args(reference)
+        reference_args = cli.reference_args(reference)
 
     if "stratification" in config_dict["diagnostics"]["ocean_stratification"]:
         stratification_config = config_dict["diagnostics"]["ocean_stratification"][
