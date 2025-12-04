@@ -195,7 +195,7 @@ Available regions
 The diagnostic supports predefined ocean regions for analysis:
 
 * ``ls``: Labrador Sea
-* ``is``: Irminger Sea  
+* ``is``: Irminger Sea
 * ``ws``: Weddell Sea
 * ``gs``: Greenland Sea
 * ``ros``: Ross Sea
