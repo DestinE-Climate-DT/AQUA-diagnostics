@@ -127,6 +127,7 @@ class Timeseries(BaseMixin):
             data = None
         else:
             if extend:
+                self.logger.info(f"Extending data for frequency {str_freq}")
                 extended_data = self._extend_data(data=data, freq=str_freq, center_time=center_time)
                 extended_data.attrs = data.attrs.copy()
                 data = extended_data
