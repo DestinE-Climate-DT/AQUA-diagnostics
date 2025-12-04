@@ -12,8 +12,8 @@ import argparse
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
-from aqua.diagnostics.core import template_parse_arguments, open_cluster, close_cluster
-from aqua.diagnostics.core import load_diagnostic_config, merge_config_args
+from aqua.diagnostics.base import template_parse_arguments, open_cluster, close_cluster
+from aqua.diagnostics.base import load_diagnostic_config, merge_config_args
 from aqua.diagnostics.histogram.util_cli import load_var_config, process_variable_or_formula
 
 

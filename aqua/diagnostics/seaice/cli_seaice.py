@@ -12,7 +12,7 @@ import sys
 
 from aqua.core.util import get_arg
 from aqua.diagnostics import SeaIce, PlotSeaIce, Plot2DSeaIce
-from aqua.diagnostics.core import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
 from aqua.diagnostics.seaice.util import filter_region_list
 
 def parse_arguments(args):

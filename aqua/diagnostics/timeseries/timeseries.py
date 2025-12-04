@@ -2,7 +2,7 @@
 import xarray as xr
 import pandas as pd
 from aqua.core.util import to_list, frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.core import round_startdate, round_enddate
+from aqua.diagnostics.base import round_startdate, round_enddate
 from .util import loop_seasonalcycle
 from .base import BaseMixin
 
@@ -73,7 +73,7 @@ class Timeseries(BaseMixin):
             center_time (bool): If True, the time will be centered.
             box_brd (bool): choose if coordinates are comprised or not in area selection.
             outputdir (str): The directory to save the data.
-            rebuild (bool): Ixf True, rebuild the data from the original files.
+            rebuild (bool): If True, rebuild the data from the original files.
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         """

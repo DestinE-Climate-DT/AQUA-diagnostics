@@ -10,8 +10,8 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.diagnostics.core import template_parse_arguments, DiagnosticCLI
-from aqua.diagnostics.core import round_startdate, round_enddate
+from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.base import round_startdate, round_enddate
 from aqua.diagnostics.timeseries.util_cli import load_var_config
 from aqua.diagnostics.timeseries import Timeseries, SeasonalCycles, Gregory
 from aqua.diagnostics.timeseries import PlotTimeseries, PlotSeasonalCycles, PlotGregory

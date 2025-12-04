@@ -8,7 +8,7 @@ single or multiple experiments.
 
 import sys
 import argparse
-from aqua.diagnostics.core import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from aqua.diagnostics.lat_lon_profiles.util_cli import load_var_config
 

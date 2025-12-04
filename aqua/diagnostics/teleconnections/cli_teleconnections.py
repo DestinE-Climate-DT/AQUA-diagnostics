@@ -9,7 +9,7 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.diagnostics.core import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
 from aqua.diagnostics.teleconnections import NAO, ENSO
 from aqua.diagnostics.teleconnections import PlotNAO, PlotENSO
 

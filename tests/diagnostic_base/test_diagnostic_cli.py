@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import os
 import pytest
 
-from aqua.diagnostics.core.cli_base import DiagnosticCLI
+from aqua.diagnostics.base.cli_base import DiagnosticCLI
 from aqua.core.util import dump_yaml
 
 

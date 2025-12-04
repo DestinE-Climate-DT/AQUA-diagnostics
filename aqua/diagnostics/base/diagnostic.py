@@ -156,6 +156,7 @@ class Diagnostic():
         start = pd.Timestamp(startdate) if startdate is not None else None
         end = pd.Timestamp(enddate) if enddate is not None else None
         data = data.sel(time=slice(start, end))
+        self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
         
         # If there is a month requirement we infer the data frequency,
         # then we check how many months are available in the data
