@@ -300,7 +300,7 @@ This process is also described in the relevant HPC2020 `documentation pages <htt
 While basically you could follow the instructions in the ECMWF docs on how to create a tykky environment, a small bug in one of the AQUA dependencies requires a slightly 
 more complex procedure, so that, as for LUMI, a convenience installation script has been created.
 
-First, clone the AQUA repository from GitHub as described in the previous section.
+First, clone the AQUA-diagnostics repository from GitHub as described in the previous section.
 
 The installation process uses considerable resources which may exceed the capacity of the login node.
 For this reason, it is recommended to start an interactive session asking for adequate resources:
@@ -314,17 +314,17 @@ which will ask for a session with 8 cpus, 20 GB of RAM and 30 GB of temporary lo
 .. note ::
     If this is the first time that you run ``ecinteractive``, you should first set up your ssh keys by running the command ``ssh-key-setup``.
 
-It is recommended to define an ``$AQUA`` environment variable that points to the AQUA directory (the script will assume by default ``AQUA=$HPCPERM/AQUA``):
+It is recommended to define an ``$AQUA_DIAGNOSTICS`` environment variable that points to the AQUA_DIAGNOSTICS directory (the script will assume by default that ``AQUA_DIAGNOSTICS`` is located in the current directiry.):
 
 .. code-block:: bash
 
-    export AQUA=/path/to/AQUA
+    export AQUA_DIAGNOSTICS=/path/to/AQUA
 
 Then run the the installation script:
 
 .. code-block:: bash
 
-    cd $AQUA/cli/hpc2020-install
+    cd $AQUA_DIAGNOSTICS/cli/hpc2020-install
     ./hpc2020-install.sh
 
 The script installs by default the AQUA tykky environment in the directory ``$HPCPERM/tykky/aqua``.
@@ -341,11 +341,17 @@ Instead, the recommended way to use AQUA is by loading the environment with a co
 
 You can later also use ``tykky deactivate`` to deactivate the environment.
 
+.. note ::
+        This installs ``aqua-cora`` as a package from pip and ``aqua-diagnostics`` in editable mode. 
+        If you are a developer you can also install using the ``hpc2020_install_dev.sh`` script, which will install both in editable mode, creating the tykky environment ``aqua-dev``.
+
 In case you plan to use Visual Studio Code, you can add a kernel pointing to the containerized AQUA by running also the following command:
 
 .. code-block:: bash
 
     $HPCPERM/tykky/aqua/bin/python3 -m ipykernel install --user --name=<my_containerised_env_name>
+
+
 
 
 Installation and use of the AQUA container
