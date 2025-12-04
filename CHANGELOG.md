@@ -15,6 +15,7 @@ Main changes:
 
 
 Complete list:
+- Timeseries: Extra timestep in Timeseries analysis fix (#57)
 - Notebooks update with new plt.close() pattern (#50)
 - Workflow structure refactore to accomodate for multiple pipelines as in AQUA-core (#47)
 - Removed `cli_checker` diagnostic tool from diagnostic repository (#46)
