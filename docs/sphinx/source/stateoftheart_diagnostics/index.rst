@@ -25,6 +25,7 @@ Currently implemented diagnostics are:
    timeseries
    ocean3d
    seaice
+   stratification
    teleconnections
    ensemble
    lat_lon_profiles
