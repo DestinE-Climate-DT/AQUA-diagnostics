@@ -11,11 +11,11 @@ set -e
 
 # Check if AQUA is set and the file exists
 if [[ -z "$AQUA" ]]; then
+    export AQUA=$(realpath "$(pwd)/../../../AQUA") 
     echo -e "\033[0;31mWarning: The AQUA environment variable is not defined."
-    echo -e "\033[0;31mWarning: We are assuming AQUA is installed in your HPCPERM, i.e. $HPCPERM/AQUA"
+    echo -e "\033[0;31mWarning: We are guessing the position of AQUA from that of this script, i.e. $AQUA"
     echo -e "\x1b[38;2;255;165;0mAlternatively, define the AQUA environment variable with the path to your 'AQUA' directory."
     echo -e "For example: export AQUA=/path/to/aqua\033[0m"
-    AQUA=$HPCPERM/AQUA
 fi
 
 if [[ ! -d  $AQUA ]] ; then
@@ -29,11 +29,11 @@ fi
 
 # Check if AQUA_DIAGNOSTICS is set and the directory exists
 if [[ -z "$AQUA_DIAGNOSTICS" ]]; then
+    export AQUA_DIAGNOSTICS=$(realpath "$(pwd)/../..") 
     echo -e "\033[0;31mWarning: The AQUA_DIAGNOSTICS environment variable is not defined."
-    echo -e "\033[0;31mWarning: We are assuming AQUA-diagnostics is installed in your HOME, i.e. $HOME/AQUA-diagnostics"
+    echo -e "\033[0;31mWarning: We are guessing the position of AQUA-diagnostics from that of this script, i.e. $AQUA_DIAGNOSTICS"
     echo -e "\x1b[38;2;255;165;0mAlternatively, define the AQUA_DIAGNOSTICS environment variable with the path to your 'AQUA-diagnostics' directory."
     echo -e "For example: export AQUA_DIAGNOSTICS=/path/to/AQUA-diagnostics\033[0m"
-    export AQUA_DIAGNOSTICS=$HOME/AQUA-diagnostics
 fi
 
 if [[ ! -d  $AQUA_DIAGNOSTICS ]] ; then

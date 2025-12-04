@@ -11,11 +11,11 @@ set -e
 
 # Check if AQUA is set and the file exists
 if [[ -z "$AQUA_DIAGNOSTICS" ]]; then
-    AQUA_DIAGNOSTICS=$(pwd)/../..
-    echo -e "\033[0;31mWarning: The AQUA:DIAGNOSTICS environment variable is not defined."
-    echo -e "\033[0;31mWarning: We are assuming AQUA-diagnostics is installed in the current directory, i.e. $AQUA_DIAGNOSTICS"
+    export AQUA_DIAGNOSTICS=$(realpath "$(pwd)/../..") 
+    echo -e "\033[0;31mWarning: The AQUA_DIAGNOSTICS environment variable is not defined."
+    echo -e "\033[0;31mWarning: We are guessing the position of AQUA-diagnostics from that of this script, i.e. $AQUA_DIAGNOSTICS"
     echo -e "\x1b[38;2;255;165;0mAlternatively, define the AQUA_DIAGNOSTICS environment variable with the path to your 'AQUA-diagnostics' directory."
-    echo -e "For example: export AQUA_DIAGNOSTICS=/path/to/aqua\033[0m"
+    echo -e "For example: export AQUA_DIAGNOSTICS=/path/to/AQUA-diagnostics\033[0m"
 fi
 
 if [[ ! -d  $AQUA_DIAGNOSTICS ]] ; then
