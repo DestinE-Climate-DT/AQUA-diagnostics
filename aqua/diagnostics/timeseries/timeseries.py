@@ -165,28 +165,59 @@ class Timeseries(BaseMixin):
         if freq == 'monthly' or freq == 'annual':
             class_startdate = round_startdate(pd.Timestamp(self.plt_startdate))
             class_enddate = round_enddate(pd.Timestamp(self.plt_enddate))
-            start_date = round_startdate(pd.Timestamp(data.time[0].values) if data is not None else None)
-            end_date = round_enddate(pd.Timestamp(data.time[-1].values) if data is not None else None)
+            
+            # For annual data, we need to round to the end of YEAR, not month
+            if freq == 'annual':
+                class_startdate = pd.Timestamp(year=class_startdate.year, month=1, day=1, 
+                                               hour=0, minute=0, second=0)
+                class_enddate = pd.Timestamp(year=class_enddate.year, month=12, day=31,
+                                             hour=23, minute=59, second=59)
+            
+            start_date = pd.Timestamp(data.time[0].values) if data is not None else None
+            end_date = pd.Timestamp(data.time[-1].values) if data is not None else None
+            
+            # Round dates based on frequency
+            if freq == 'annual':
+                start_date = pd.Timestamp(year=start_date.year, month=1, day=1,
+                                         hour=0, minute=0, second=0)
+                end_date = pd.Timestamp(year=end_date.year, month=12, day=31,
+                                       hour=23, minute=59, second=59)
+            else:  # monthly
+                start_date = round_startdate(start_date)
+                end_date = round_enddate(end_date)
+
+            self.logger.debug(f'Extension check - Data has {len(data.time)} timesteps before extension')
 
             # Extend the data if needed
             if class_startdate < start_date:
                 self.logger.info('Extending back the start date from %s to %s', start_date, class_startdate)
-                loop = loop_seasonalcycle(data=data, startdate=class_startdate, enddate=start_date,
+                # Use start_date - 1 day as enddate to avoid including start_date itself
+                extend_enddate = start_date - pd.Timedelta(days=1)
+                loop = loop_seasonalcycle(data=data, startdate=class_startdate, enddate=extend_enddate,
                                           freq=freq, center_time=center_time, loglevel=self.loglevel)
+                self.logger.debug(f'Extension - Loop created with {len(loop.time)} timesteps')
                 data = xr.concat([loop, data], dim='time', coords='different', compat='equals')
                 data = data.sortby('time')
             else:
-                self.logger.debug(f'No extension needed for the start date: {start_date} <= {class_startdate}')
+                self.logger.debug(f'No extension needed for the start date: {start_date} >= {class_startdate}')
 
             if class_enddate > end_date:
                 self.logger.info('Extending the end date from %s to %s', end_date, class_enddate)
-                loop = loop_seasonalcycle(data=data, startdate=end_date, enddate=class_enddate,
+                # Start from next period to avoid duplicating end_date
+                if freq == 'annual':
+                    extend_startdate = end_date + pd.DateOffset(years=1)
+                elif freq == 'monthly':
+                    extend_startdate = end_date + pd.DateOffset(months=1)
+                
+                self.logger.debug(f'Extension - Creating loop from {extend_startdate} to {class_enddate}')
+                loop = loop_seasonalcycle(data=data, startdate=extend_startdate, enddate=class_enddate,
                                           freq=freq, center_time=center_time, loglevel=self.loglevel)
                 data = xr.concat([data, loop], dim='time', coords='different', compat='equals')
                 data = data.sortby('time')
             else:
                 self.logger.debug(f'No extension needed for the end date: {class_enddate} >= {end_date}')
 
+            self.logger.debug(f'Extension complete - Final data has {len(data.time)} timesteps')
             return data
         else:
             self.logger.warning(f"The frequency {freq} does not support extension")
