@@ -1,7 +1,7 @@
 import xarray as xr
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
-from aqua.diagnostics.core import OutputSaver
+from aqua.diagnostics.base import OutputSaver
 from .base import BaseMixin
 
 # set default options for xarray

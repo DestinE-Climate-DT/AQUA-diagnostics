@@ -3,9 +3,9 @@ import argparse
 import pandas as pd
 from unittest.mock import patch
 from aqua import Reader
-from aqua.diagnostics.core import template_parse_arguments, load_diagnostic_config
-from aqua.diagnostics.core import open_cluster, close_cluster, merge_config_args
-from aqua.diagnostics.core import start_end_dates
+from aqua.diagnostics.base import template_parse_arguments, load_diagnostic_config
+from aqua.diagnostics.base import open_cluster, close_cluster, merge_config_args
+from aqua.diagnostics.base import start_end_dates
 from conftest import LOGLEVEL
 
 loglevel = LOGLEVEL

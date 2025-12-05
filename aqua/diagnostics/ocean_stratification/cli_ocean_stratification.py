@@ -10,11 +10,11 @@ import argparse
 import sys
 
 from aqua.core.util import to_list
-from aqua.diagnostics.core import template_parse_arguments
+from aqua.diagnostics.base import template_parse_arguments
 from aqua.diagnostics.ocean_stratification.stratification import Stratification
 from aqua.diagnostics.ocean_stratification import PlotStratification
 from aqua.diagnostics.ocean_stratification import PlotMLD
-from aqua.diagnostics.core import DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI
 
 
 def parse_arguments(args):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         references = config_dict["references"]
         logger.info(f"References found: {references}")
         reference = config_dict["references"][0]
-        reference_args = cli.dataset_args(reference)
+        reference_args = cli.reference_args(reference)
 
     if "stratification" in config_dict["diagnostics"]["ocean_stratification"]:
         stratification_config = config_dict["diagnostics"]["ocean_stratification"][

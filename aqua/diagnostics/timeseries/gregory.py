@@ -4,7 +4,7 @@ import xarray as xr
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, DEFAULT_REALIZATION
-from aqua.diagnostics.core import Diagnostic
+from aqua.diagnostics.base import Diagnostic
 
 xr.set_options(keep_attrs=True)
 
