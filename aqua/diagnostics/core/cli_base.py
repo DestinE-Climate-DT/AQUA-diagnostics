@@ -6,7 +6,7 @@ from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
 from aqua.diagnostics.core import open_cluster, close_cluster
 from aqua.diagnostics.core import load_diagnostic_config, merge_config_args
-
+from tests.cli.dry_run_mock import MockDiagnostic, MockPlot
 
 class DiagnosticCLI:
     """
@@ -32,7 +32,7 @@ class DiagnosticCLI:
         cli.close_dask_cluster()
     """
 
-    def __init__(self, args, diagnostic_name, default_config, log_name=None):
+    def __init__(self, args, diagnostic_name, default_config, log_name=None, dry_run=False):
         """
         Initialize the CLI handler.
         
@@ -41,11 +41,13 @@ class DiagnosticCLI:
             diagnostic_name (str): Name of the diagnostic (e.g., 'timeseries', 'seaice')
             default_config (str): Default config file name
             log_name (str, optional): Logger name. Defaults to '{diagnostic_name} CLI'
+            dry_run (bool): If True, use mock classes instead of real ones for testing
         """
         self.args = args
         self.diagnostic_name = diagnostic_name
         self.default_config = default_config
         self.log_name = log_name or f"{diagnostic_name.capitalize()} CLI"
+        self.dry_run = dry_run
         
         # Attributes populated by prepare()
         self.loglevel = None
@@ -148,6 +150,28 @@ class DiagnosticCLI:
                 'regrid': dataset.get('regrid', self.regrid),
                 'startdate': dataset.get('startdate', None),
                 'enddate': dataset.get('enddate', None)}
+    
+    def get_diagnostic_classes(self, real_diagnostic, real_plot):
+        """Get diagnostic classes (real or mock) based on self.dry_run.
+        
+        This method makes the CLI self-aware - it knows its own dry_run state
+        and provides the appropriate classes to diagnostic functions.
+        
+        Args:
+            real_diagnostic: The real diagnostic class (e.g., GlobalBiases)
+            real_plot: The real plot class (e.g., PlotGlobalBiases)
+        
+        Returns:
+            tuple: (DiagnosticClass, PlotClass) - mocks if self.dry_run, real otherwise
+        
+        Example:
+            GlobalBiases, PlotGlobalBiases = cli.get_diagnostic_classes(
+                GlobalBiases, PlotGlobalBiases
+            )
+        """
+        if self.dry_run:
+            return MockDiagnostic, MockPlot
+        return real_diagnostic, real_plot
 
     def open_dask_cluster(self):
         """

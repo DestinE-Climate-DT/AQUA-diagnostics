@@ -8,6 +8,7 @@ from aqua.core.exceptions import NoDataError
 from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
 from aqua.diagnostics.core import template_parse_arguments
 from aqua.diagnostics.core import DiagnosticCLI
+from aqua.diagnostics.core.cli_helpers import get_classes
 
 TOOLNAME='GlobalBiases'
 TOOLNAME_KEY = TOOLNAME.lower()
@@ -20,6 +21,8 @@ def parse_arguments(args):
     """
     parser = argparse.ArgumentParser(description=f'{TOOLNAME} CLI')
     parser = template_parse_arguments(parser)
+    parser.add_argument('--dry-run', dest='dry_run', action='store_true',
+                        help='Run in dry-run mode (for testing, no real data operations)')
     return parser.parse_args(args)
 
 
@@ -46,6 +49,9 @@ def run_global_biases_diagnostic(cli, tool_dict):
         return False
     
     cli.logger.info(f"{TOOLNAME} diagnostic is enabled.")
+    
+    # Get classes (real or mock based on cli.dry_run)
+    GlobalBiases, PlotGlobalBiases = get_classes(cli, GlobalBiases, PlotGlobalBiases)
     
     # Warn about multiple datasets/references
     if len(cli.config_dict['datasets']) > 1:
@@ -173,6 +179,7 @@ if __name__ == '__main__':
         args,
         diagnostic_name=TOOLNAME_KEY,
         default_config='config_global_biases.yaml',
+        dry_run=getattr(args, 'dry_run', False)
     )
     cli.prepare()
     cli.open_dask_cluster()
