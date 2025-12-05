@@ -42,12 +42,14 @@ if __name__ == "__main__":
 
     dataset = cli.config_dict['datasets'][0]
     dataset_args = cli.dataset_args(dataset)
+    cli.logger.debug(f"Dataset args: {dataset_args}")
 
     if config_dict["references"]:
         references = config_dict["references"]
         logger.info(f"References found: {references}")
         reference = config_dict["references"][0]
         reference_args = cli.dataset_args(reference)
+        cli.logger.debug(f"Reference args: {reference_args}")
 
     if "stratification" in config_dict["diagnostics"]["ocean_stratification"]:
         stratification_config = config_dict["diagnostics"]["ocean_stratification"][
