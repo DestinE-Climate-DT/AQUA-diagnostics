@@ -3,7 +3,7 @@
 import pandas as pd
 import xarray as xr
 from aqua.core.logger import log_configure
-from aqua.diagnostics.core import Diagnostic
+from aqua.diagnostics.base import Diagnostic
 from aqua.core.util import to_list
 
 class Boxplots(Diagnostic):

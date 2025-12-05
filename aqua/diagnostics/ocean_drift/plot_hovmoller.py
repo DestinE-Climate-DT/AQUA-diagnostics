@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations
-from aqua.diagnostics.core import OutputSaver
+from aqua.diagnostics.base import OutputSaver
 from .multiple_hovmoller import plot_multi_hovmoller
 from .multiple_timeseries import plot_multi_timeseries
 

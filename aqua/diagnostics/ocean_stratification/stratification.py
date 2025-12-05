@@ -2,7 +2,7 @@ import calendar
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.diagnostics.core import Diagnostic
+from aqua.diagnostics.base import Diagnostic
 from .compute_mld import compute_mld_cont
 from .compute_rho import compute_rho
 from .convert_variables import convert_so, convert_thetao

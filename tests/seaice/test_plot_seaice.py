@@ -1,9 +1,10 @@
+
 import pytest
 import os, glob
 import numpy as np
 import xarray as xr
 from aqua.diagnostics import SeaIce, PlotSeaIce
-from aqua.diagnostics.core import OutputSaver
+from aqua.diagnostics.base import OutputSaver
 from conftest import APPROX_REL, DPI, LOGLEVEL
 
 approx_rel = APPROX_REL

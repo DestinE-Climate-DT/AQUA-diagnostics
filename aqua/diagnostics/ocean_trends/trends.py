@@ -5,7 +5,7 @@ import pandas as pd
 
 from aqua.core.logger import log_configure
 from aqua.core.reader import Trender
-from aqua.diagnostics.core import Diagnostic
+from aqua.diagnostics.base import Diagnostic
 
 xr.set_options(keep_attrs=True)
 

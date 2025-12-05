@@ -3,7 +3,7 @@ from itertools import product
 
 from aqua.core.util import to_list
 from aqua.core.logger import log_configure
-from aqua.diagnostics.core import Diagnostic
+from aqua.diagnostics.base import Diagnostic
 
 xr.set_options(keep_attrs=True)
 
