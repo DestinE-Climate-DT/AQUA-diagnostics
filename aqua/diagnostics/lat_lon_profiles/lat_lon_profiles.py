@@ -171,6 +171,10 @@ class LatLonProfiles(Diagnostic):
 				self.std_startdate = monthly_data.time.min().values
 				self.std_enddate = monthly_data.time.max().values
 
+		# Load data in memory to avoid dask graph issues during groupby
+		self.logger.debug("Loading monthly data in memory for std computation")
+		monthly_data.load()
+
 		if freq == 'seasonal':
 			# Group by season and compute std
 			seasonal_std = monthly_data.groupby('time.season').std('time')
