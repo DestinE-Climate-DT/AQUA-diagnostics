@@ -54,6 +54,7 @@ tests = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",
+    "pytest-mock",
     "coverage",
     "cdo"
 ]
