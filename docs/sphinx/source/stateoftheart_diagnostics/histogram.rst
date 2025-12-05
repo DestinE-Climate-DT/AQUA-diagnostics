@@ -37,17 +37,19 @@ There are two main classes for computing and plotting histograms:
     The diagnostic computes histograms over the **entire temporal period** specified 
     (no seasonal decomposition).
 
-Getting Started
+File structure
 ---------------
 
 **File locations:**
 
-* Diagnostic code: ``src/aqua_diagnostics/histogram/``
-* Region definitions: ``config/tools/histogram/definitions/regions.yaml``
-* Example notebook: ``notebooks/diagnostics/histogram/``
-* Config template: ``templates/diagnostics/config-histogram.yaml``
+* The diagnostic is located in the ``aqua/diagnostics/histogram/`` directory, which contains both the source code and 
+  the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-histogram.yaml``
+* Region definitions are available in ``config/tools/histogram/definitions/regions.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/histogram/`` directory and contain examples of how to use the diagnostic.
 
-**Supported variables:**
+Input variables and datasets
+----------------------------
 
 The diagnostic works with climate variables on regular latitude-longitude grids:
 
@@ -55,10 +57,13 @@ The diagnostic works with climate variables on regular latitude-longitude grids:
   temperature), etc.
 * **Derived variables**: Using ``EvaluateFormula`` syntax (e.g., ``2t - 273.15`` for °C)
 
-**Supported regions:**
+Supported regions include:
 
 ``global`` (or ``null``), ``tropics``, ``europe``, ``nh`` (Northern Hemisphere), 
 ``sh`` (Southern Hemisphere).
+
+Custom regions can be defined in ``config/tools/histogram/definitions/regions.yaml``.
+
 
 Basic usage
 -----------
@@ -89,22 +94,7 @@ notebook below.
     plot = PlotHistogram(data=[hist.histogram_data])
     plot.run(outputdir='./', ylogscale=True)
 
-**For multi-model comparisons or reference data**, see the detailed examples in the section below.
-
-Available demo notebooks
-------------------------
-
-📓 **Single histogram/PDF plot** → `histogram.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/histogram/histogram.ipynb>`_
-
-   Learn the basics: compute histograms/PDFs, compare with observations, customize plots
-
-**Key concepts covered:**
-
-- Histogram vs PDF: ``density=False`` (counts) vs ``density=True`` (probability density)
-- Latitudinal weighting: ``weighted=True`` for area-corrected distributions
-- Bin configuration: ``bins`` (number) and ``range`` (min/max) parameters
-- Plot customization: log scales (``xlogscale``, ``ylogscale``), smoothing, axis limits
-- Regional selection and custom regions
+**For multi-model comparisons or reference data**, see the demo notebooks below.
 
 CLI usage
 ---------
@@ -117,7 +107,7 @@ For batch processing or automation, the diagnostic can be run via CLI using a co
     cp templates/diagnostics/config-histogram.yaml my_config.yaml
     
     # Run diagnostic
-    python src/aqua_diagnostics/histogram/cli_histogram.py \
+    python aqua/diagnostics/histogram/cli_histogram.py \
         --config my_config.yaml \
         --model ICON \
         --exp historical-1990 \
@@ -132,7 +122,7 @@ For the complete list of arguments, run:
 
 .. code-block:: bash
 
-    python src/aqua_diagnostics/histogram/cli_histogram.py --help
+    python aqua/diagnostics/histogram/cli_histogram.py --help
 
 .. note::
 
@@ -245,8 +235,8 @@ reference data, and diagnostic parameters:
 For the complete template with all available options, see 
 ``templates/diagnostics/config-histogram.yaml``.
 
-Outputs
--------
+Output
+------
 
 The diagnostic generates:
 
@@ -271,14 +261,6 @@ The diagnostic generates:
 
 ``histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png``
 
-Example plots
--------------
-
-.. figure:: figures/histogram_tprate_global.png
-   :width: 100%
-
-   Probability density function (PDF) of precipitation rate (mm/day) for the global region, 
-   showing ICON model output compared to ERA5 reference data.
 
 Reference datasets
 ------------------
@@ -289,14 +271,39 @@ Common reference datasets:
 * **MSWEP**: Multi-Source Weighted-Ensemble Precipitation dataset
 * **BERKELEY-EARTH**: Berkeley Earth Surface Temperature dataset
 
-Authors and contributors
+
+Example plots
+-------------
+
+.. figure:: figures/histogram_tprate_global.png
+   :width: 100%
+
+   Probability density function (PDF) of precipitation rate (mm/day) for the global region, 
+   showing ICON model output compared to ERA5 reference data.
+
+
+Available demo notebooks
 ------------------------
 
-This diagnostic is maintained by Marco Cadau (@mcadau, marco.cadau@polito.it), member of 
-the AQUA team.
+📓 **Single histogram/PDF plot** → `histogram.ipynb <https://github.com/DestinE-Climate-DTAQUA-diagnostics/tree/main/notebooks/diagnostics/histogram/histogram.ipynb>`_
 
-Contributions are welcome — please open an issue or pull request. For questions, contact 
-the AQUA team or the maintainer.
+   Learn the basics: compute histograms/PDFs, compare with observations, customize plots
+
+**Key concepts covered:**
+
+- Histogram vs PDF: ``density=False`` (counts) vs ``density=True`` (probability density)
+- Latitudinal weighting: ``weighted=True`` for area-corrected distributions
+- Bin configuration: ``bins`` (number) and ``range`` (min/max) parameters
+- Plot customization: log scales (``xlogscale``, ``ylogscale``), smoothing, axis limits
+- Regional selection and custom regions
+
+
+Authors and contributors
+------------------------
+This diagnostic is maintained by Marco Cadau (`@mcadau <https://github.com/mcadau>`_, `marco.cadau@polito.it <mailto:marco.cadau@polito.it>`_).  
+Contributions are welcome — please open an issue or a pull request.  
+For questions or suggestions, contact the AQUA team or the maintainers.
+
 
 Developer Notes
 ---------------
@@ -367,8 +374,12 @@ Accounts for decreasing grid cell area toward poles:
 
     weights = np.cos(np.radians(lat))
 
-API Reference
--------------
+Detailed API
+------------
+
+This section provides a detailed reference for the Application Programming Interface (API) of the ``lat_lon_profiles`` diagnostic,  
+generated from the function docstrings.
+
 
 .. automodule:: aqua.diagnostics.histogram
     :members:
