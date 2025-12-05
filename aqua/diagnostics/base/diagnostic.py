@@ -152,10 +152,11 @@ class Diagnostic():
         
         # FIX: issues with some time selection for pandas using Timestamp. 
         # see https://github.com/pydata/xarray/issues/10975
-        self.logger.debug(f"Selecting data between {startdate} and {enddate}")
         start = pd.Timestamp(startdate) if startdate is not None else None
         end = pd.Timestamp(enddate) if enddate is not None else None
         data = data.sel(time=slice(start, end))
+        if data.time.size == 0:
+            raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
         
         # If there is a month requirement we infer the data frequency,

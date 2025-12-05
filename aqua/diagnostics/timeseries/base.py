@@ -57,8 +57,6 @@ class BaseMixin(Diagnostic):
         self.std_startdate = self.startdate if std_startdate is None else std_startdate
         self.std_enddate = self.enddate if std_enddate is None else std_enddate
         # Finally we need to set the start and end dates of the data
-        #self.plt_startdate = pd.Timestamp(startdate) if startdate is not None else None
-        #self.plt_enddate = pd.Timestamp(enddate) if enddate is not None else None
         self.plt_startdate = startdate
         self.plt_enddate = enddate
         self.logger.debug(f"Retrieve start date: {self.startdate}, End date: {self.enddate}")
