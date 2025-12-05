@@ -11,7 +11,7 @@ Unreleased in the current development version (target v0.22.0):
 - Introduce call to pd.Timestamp in Global_Bias to accomodate also non-nanoseconds time window (#52)
 - Remove time selection from SeaIce, now centralised in CLI (#52)
 - Rename `core` diagnostic folder to `base` to avoid mixing up with `aqua.core` (#52)
-
+- Updated installation scripts for HPC2020 (#51)
 
 ## [v0.21.0]
 
