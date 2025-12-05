@@ -11,6 +11,7 @@ from aqua.core.logger import log_configure
 from aqua.core.util import plot_box, evaluate_colorbar_limits, cbar_get_label
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.graphics.styles import ConfigStyle
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 def plot_multivars_vertical_profile(
     maps: list[xr.DataArray],
@@ -19,6 +20,7 @@ def plot_multivars_vertical_profile(
     figsize: tuple = None,
     ncols: int = None,
     nrows: int = None,
+    vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
     vmin: float = None,
     vmax: float = None,
     nlevels: int = 12,
@@ -45,6 +47,7 @@ def plot_multivars_vertical_profile(
         extent (list,opt):    extent of the map, default is None
         style (str,opt):      style for the plot, default is the AQUA style
         figsize (tuple,opt):  figure size, default is (6,6) for each map. Here the full figure size is set.
+        vert_coord (str,opt):  name of the vertical dimension coordinate, default is 'level'
         vmin (float,opt):     minimum value for the colorbar, default is None
         vmax (float,opt):     maximum value for the colorbar, default is None
         nlevels (int,opt):    number of levels for the colorbar, default is 11
@@ -93,7 +96,7 @@ def plot_multivars_vertical_profile(
         logger.debug("Plotting map %d", i)
         fig, ax = plot_vertical_profile(
             data=maps[i],
-            lev_name='level',
+            lev_name=vert_coord,
             vmin=vmin,
             vmax=vmax,
             nlevels=nlevels,

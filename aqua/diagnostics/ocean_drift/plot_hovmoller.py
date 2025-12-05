@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.base import OutputSaver
 from .multiple_hovmoller import plot_multi_hovmoller
 from .multiple_timeseries import plot_multi_timeseries
@@ -21,6 +22,7 @@ class PlotHovmoller:
     def __init__(self,
                  data: list[xr.Dataset],
                  diagnostic_name: str = "oceandrift",
+                 vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
                  outputdir: str = ".",
                  loglevel: str = "WARNING"):
         """
@@ -29,6 +31,7 @@ class PlotHovmoller:
         Args:
             data (list[xr.Dataset]): List of xarray datasets containing the data to be plotted
             diagnostic_name (str): Name of the diagnostic, default is "oceandrift"
+            vert_coord (str): Name of the vertical dimension coordinate, default is "level"
             outputdir (str): Directory where the output will be saved, default is current directory
             loglevel (str): Logging level, default is "WARNING"
         """
@@ -38,6 +41,7 @@ class PlotHovmoller:
         self.logger = log_configure(self.loglevel, "PlotHovmoller")
 
         self.diagnostic = diagnostic_name
+        self.vert_coord = vert_coord
         self.vars = list(self.data[0].data_vars)
         self.logger.debug("Variables in data: %s", self.vars)
 
@@ -141,6 +145,7 @@ class PlotHovmoller:
             levels=self.timeseries_labels,
             line_plot_colours=self.line_plot_colours,
             variables=self.vars,
+            vert_coord=self.vert_coord,
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
@@ -164,7 +169,7 @@ class PlotHovmoller:
         Set the levels and corresponding labels for timeseries plots.
         If no levels are provided, use a default set of standard ocean depths.
         """
-        level_unit = self.data[0].level.attrs['units']
+        level_unit = self.data[0][self.vert_coord].attrs['units']
         if self.levels is None:
             self.levels = [0, 100, 300, 600, 1000, 2000, 4000]
         self.timeseries_labels = [f"{level} {level_unit}" for level in self.levels]
@@ -182,11 +187,11 @@ class PlotHovmoller:
                 self.logger.debug("Extracting data for level: %s", level)
                 # Interpolate the data to the specified levels
                 if level == 0:
-                    new_data = data.isel(level=0)
+                    new_data = data.isel({self.vert_coord: 0})
                 else: 
-                    new_data = data.interp(level=level, method='nearest')
+                    new_data = data.interp({self.vert_coord: level}, method='nearest')
                 new_data_level_list.append(new_data)
-            merged_data = xr.concat(new_data_level_list, dim='level', coords='different')
+            merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords='different')
             new_data_list.append(merged_data)
         self.data = new_data_list
 

@@ -42,12 +42,15 @@ if __name__ == "__main__":
 
     dataset = cli.config_dict['datasets'][0]
     dataset_args = cli.dataset_args(dataset)
+    cli.logger.debug(f"Dataset args: {dataset_args}")
 
     if config_dict["references"]:
         references = config_dict["references"]
         logger.info(f"References found: {references}")
         reference = config_dict["references"][0]
         reference_args = cli.reference_args(reference)
+        cli.logger.debug(f"Reference args: {reference_args}")
+        
 
     if "stratification" in config_dict["diagnostics"]["ocean_stratification"]:
         stratification_config = config_dict["diagnostics"]["ocean_stratification"][
@@ -62,6 +65,7 @@ if __name__ == "__main__":
                 "diagnostic_name", "ocean_stratification"
             )
             climatologies = stratification_config.get("climatology", None)
+            vert_coord = stratification_config.get("vert_coord", "level")
             for region, climatology in zip(regions, climatologies):
                     logger.info(f"Processing region: {region}, climatology: {climatology}")
                     var = stratification_config.get("var", None)
@@ -72,6 +76,7 @@ if __name__ == "__main__":
                     model_stratification = Stratification(
                         **dataset_args,
                         diagnostic_name=diagnostic_name,
+                        vert_coord=vert_coord,
                         loglevel=cli.loglevel,
                     )
                     model_stratification.run(
@@ -92,6 +97,7 @@ if __name__ == "__main__":
                         obs_stratification = Stratification(
                             **reference_args,
                             diagnostic_name=diagnostic_name,
+                            vert_coord=vert_coord,
                             loglevel=cli.loglevel,
                         )
                         obs_stratification.run(
@@ -114,6 +120,7 @@ if __name__ == "__main__":
                             else None
                         ),
                         diagnostic_name=diagnostic_name,
+                        vert_coord=vert_coord,
                         outputdir=cli.outputdir,
                         loglevel=cli.loglevel,
                     )
@@ -125,6 +132,7 @@ if __name__ == "__main__":
                     model_stratification = Stratification(
                         **dataset_args,
                         diagnostic_name=diagnostic_name,
+                        vert_coord=vert_coord,
                         loglevel=cli.loglevel,
                     )
                     model_stratification.run(
@@ -145,6 +153,7 @@ if __name__ == "__main__":
                         obs_stratification = Stratification(
                             **reference_args,
                             diagnostic_name=diagnostic_name,
+                            vert_coord=vert_coord,
                             loglevel=cli.loglevel,
                         )
                         obs_stratification.run(
