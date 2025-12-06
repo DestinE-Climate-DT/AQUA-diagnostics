@@ -6,7 +6,6 @@ diagnostic execution without duplicating the underlying diagnostic tests.
 """
 import pytest
 from aqua.diagnostics.global_biases.cli_global_biases import parse_arguments
-from aqua.diagnostics.core.cli_base import DiagnosticCLI
 
 # Mark all tests in this module
 pytestmark = [
@@ -43,7 +42,7 @@ class TestGlobalBiasesCLI:
 
     def test_cli_config_loading_and_extraction(self, prepared_cli, tmp_path):
         """Test CLI loads config and extracts parameters correctly."""
-        cli = prepared_cli
+        cli = prepared_cli()
         
         # Verify config structure
         assert cli.config_dict is not None
@@ -73,11 +72,11 @@ class TestGlobalBiasesCLI:
         assert cli.save_png is True
         assert cli.dpi == 50
 
-    def test_cli_parameter_override(self, cli_args_factory, minimal_config_yaml, tmp_path):
+    def test_cli_parameter_override(self, prepared_cli, cli_args_maker, minimal_config_yaml, tmp_path):
         """Test that CLI args override config file settings."""
         custom_output = str(tmp_path / 'custom_output')
         
-        args = cli_args_factory(
+        args = cli_args_maker(
             minimal_config_yaml,
             loglevel='INFO',
             catalog='override-catalog',
@@ -91,9 +90,7 @@ class TestGlobalBiasesCLI:
             realization='r2i1p1f1'
         )
         
-        cli = DiagnosticCLI(args=args, diagnostic_name='globalbiases',
-                           default_config='config_global_biases.yaml')
-        cli.prepare()
+        cli = prepared_cli(args=args)
         
         # Check CLI args override config
         dataset = cli.config_dict['datasets'][0]
@@ -108,7 +105,7 @@ class TestGlobalBiasesCLI:
 
     def test_diagnostic_parameters(self, prepared_cli):
         """Test diagnostic-specific parameters are correctly loaded."""
-        cli = prepared_cli
+        cli = prepared_cli()
         tool_dict = cli.config_dict['diagnostics']['globalbiases']
         
         # Check diagnostic parameters
@@ -127,35 +124,35 @@ class TestGlobalBiasesCLI:
         assert plot_params['vmin'] == -5
         assert plot_params['vmax'] == 5
         assert plot_params['cmap'] == 'RdBu_r'
-
-    @pytest.mark.parametrize("config_type,expected_seasons,expected_formulae", [
-        ('minimal', False, []),
-        ('seasonal', True, []),
-        ('formula', False, ['tnlwrf+tnswrf']),
-    ])
-    def test_config_variations(self, cli_args_factory, config_type, expected_seasons, expected_formulae, request):
-        """Test different configuration variations (seasonal, formula)."""
-        # Get the appropriate fixture
-        fixture_name = f'minimal_config_yaml{"_with_" + config_type if config_type != "minimal" else ""}'
-        config = request.getfixturevalue(fixture_name)
-        
-        args = cli_args_factory(config)
-        cli = DiagnosticCLI(args=args, diagnostic_name='globalbiases',
-                           default_config='config_global_biases.yaml')
-        cli.prepare()
+    
+    def test_seasonal_config(self, prepared_cli, cli_args_maker, minimal_config_yaml_with_seasons):
+        """Test configuration with seasonal analysis enabled."""
+        args = cli_args_maker(minimal_config_yaml_with_seasons)
+        cli = prepared_cli(args=args)
         
         tool_dict = cli.config_dict['diagnostics']['globalbiases']
         default_params = tool_dict['params']['default']
         
-        assert default_params['seasons'] == expected_seasons
-        assert tool_dict['formulae'] == expected_formulae
+        assert default_params['seasons'] is True
+        assert tool_dict['formulae'] == []
+    
+    def test_formula_config(self, prepared_cli, cli_args_maker, minimal_config_yaml_with_formula):
+        """Test configuration with formula variables."""
+        args = cli_args_maker(minimal_config_yaml_with_formula)
+        cli = prepared_cli(args=args)
         
-        if 'tnlwrf+tnswrf' in expected_formulae:
-            formula_params = tool_dict['params']['tnlwrf+tnswrf']
-            assert formula_params['short_name'] == 'tnr'
-            assert formula_params['long_name'] == 'Top net radiation'
+        tool_dict = cli.config_dict['diagnostics']['globalbiases']
+        default_params = tool_dict['params']['default']
+        
+        assert default_params['seasons'] is False
+        assert tool_dict['formulae'] == ['tnlwrf+tnswrf']
+        
+        # Verify formula-specific parameters
+        formula_params = tool_dict['params']['tnlwrf+tnswrf']
+        assert formula_params['short_name'] == 'tnr'
+        assert formula_params['long_name'] == 'Top net radiation'
 
-    def test_multiple_datasets_handling(self, cli_args_factory, minimal_config_yaml, tmp_path):
+    def test_multiple_datasets_handling(self, prepared_cli, cli_args_maker, minimal_config_yaml, tmp_path):
         """Test CLI handles multiple datasets correctly."""
         from aqua.core.util import load_yaml, dump_yaml
         
@@ -169,47 +166,16 @@ class TestGlobalBiasesCLI:
         multi_config_file = tmp_path / "multi_dataset_config.yaml"
         dump_yaml(outfile=str(multi_config_file), cfg=config)
         
-        args = cli_args_factory(str(multi_config_file))
-        cli = DiagnosticCLI(args=args, diagnostic_name='globalbiases',
-                           default_config='config_global_biases.yaml')
-        cli.prepare()
+        args = cli_args_maker(str(multi_config_file))
+        cli = prepared_cli(args=args)
         
         # Verify config has multiple datasets
         assert len(cli.config_dict['datasets']) == 2
 
     @pytest.mark.parametrize("loglevel", ['DEBUG', 'INFO', 'WARNING', 'ERROR'])
-    def test_loglevel_configuration(self, cli_args_factory, minimal_config_yaml, loglevel):
+    def test_loglevel_configuration(self, prepared_cli, cli_args_maker, minimal_config_yaml, loglevel):
         """Test CLI correctly sets different log levels."""
-        args = cli_args_factory(minimal_config_yaml, loglevel=loglevel)
-        cli = DiagnosticCLI(args=args, diagnostic_name='globalbiases',
-                           default_config='config_global_biases.yaml')
-        cli.prepare()
+        args = cli_args_maker(minimal_config_yaml, loglevel=loglevel)
+        cli = prepared_cli(args=args)
         
         assert cli.loglevel == loglevel
-
-    def test_cli_integration(self, prepared_cli):
-        """Integration test: Verify complete CLI setup workflow."""
-        cli = prepared_cli
-        
-        # Verify all components are ready for diagnostic execution
-        assert cli.logger is not None
-        assert cli.config_dict is not None
-        assert cli.outputdir is not None
-        
-        # Verify diagnostic config
-        tool_dict = cli.config_dict['diagnostics']['globalbiases']
-        assert tool_dict['run'] is True
-        
-        # Verify dataset and reference are configured
-        dataset_args = cli.dataset_args(cli.config_dict['datasets'][0])
-        reference_args = cli.dataset_args(cli.config_dict['references'][0])
-        
-        required_keys = ['catalog', 'model', 'exp', 'source', 'regrid']
-        assert all(key in dataset_args for key in required_keys)
-        assert all(key in reference_args for key in required_keys)
-        
-        # Verify output settings
-        assert cli.save_pdf is True
-        assert cli.save_png is True
-        assert cli.save_netcdf is True
-

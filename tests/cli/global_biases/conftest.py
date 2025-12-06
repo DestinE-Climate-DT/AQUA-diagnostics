@@ -3,16 +3,18 @@
 This module extends the generic fixtures from tests/cli/conftest.py
 with Global Biases-specific configuration and mocks.
 
-Fixtures are organized (for executor tests) into:
-1. Mock CLI extension 
-2. Mock diagnostic instances 
-3. Config YAML files 
-4. Tool configuration 
+Fixtures are organized into:
+1. Mock CLI extension (for executor tests)
+2. Mock diagnostic instances (for executor tests)
+3. Tool configuration (for executor tests)
+4. Config YAML files (for CLI tests)
+5. CLI setup helpers (for CLI tests)
 """
 
 import pytest
-from aqua.core.util import dump_yaml
-
+from aqua.core.util import load_yaml, dump_yaml
+from aqua.diagnostics.core.cli_base import DiagnosticCLI
+from types import SimpleNamespace
 
 # ============================================================================
 # Mock CLI Extension
@@ -20,11 +22,8 @@ from aqua.core.util import dump_yaml
 
 @pytest.fixture
 def mock_cli_global_biases(mock_cli):
-    """Extend the generic mock_cli with Global Biases-specific configuration.
-    
-    This fixture takes the minimal mock_cli from tests/cli/conftest.py
-    and adds Global Biases-specific config_dict and dataset_args.
-    
+    """
+    Extend the generic mock_cli with Global Biases-specific configuration.
     """
     mock_cli.config_dict = {
         'datasets': [{
@@ -59,10 +58,8 @@ def mock_cli_global_biases(mock_cli):
 
 @pytest.fixture
 def patched_global_biases_classes(patch_diagnostic_classes):
-    """Patch GlobalBiases and PlotGlobalBiases classes for testing.
-    
-    Convenience fixture specific to Global Biases that uses the generic
-    patch_diagnostic_classes fixture from tests/cli/conftest.py.
+    """
+    Patch GlobalBiases and PlotGlobalBiases classes for testing.
     
     """
     return patch_diagnostic_classes(
@@ -73,13 +70,9 @@ def patched_global_biases_classes(patch_diagnostic_classes):
 
 @pytest.fixture
 def setup_mock_gb(setup_mock_diagnostic_base, mocker):
-    """Setup mock GlobalBiases instance with data.
-    
-    Convenience fixture specific to Global Biases that uses the generic
-    setup_mock_diagnostic_base fixture from tests/cli/conftest.py.
-    
-    Provides Global Biases-specific defaults options.
-    
+    """
+    Setup mock GlobalBiases instance with data.
+
     """
     def _setup(vars_dict=None, has_plev=False, with_seasonal=False):
         """Setup mock GlobalBiases with specified variables.
@@ -120,11 +113,8 @@ def setup_mock_gb(setup_mock_diagnostic_base, mocker):
 
 @pytest.fixture
 def tool_dict_minimal():
-    """Minimal tool configuration for Global Biases testing.
-    
-    This fixture provides a minimal tool_dict that matches the structure
-    expected by run_global_biases_diagnostic().
-    
+    """
+    Minimal tool configuration for Global Biases testing.
     """
     return {
         'run': True,
@@ -158,7 +148,7 @@ def tool_dict_minimal():
 
 
 # ============================================================================
-# Config YAML Files
+# Config YAML Files (for test_cli_global_biases.py)
 # ============================================================================
 
 def _base_dataset_config():
@@ -187,18 +177,10 @@ def _base_output_config(tmp_path):
     }
 
 
-# ============================================================================
-# Config YAML Files
-# ============================================================================
-
 @pytest.fixture
 def minimal_config_yaml(tmp_path):
-    """Create a minimal config YAML file for Global Biases CLI testing.
-    
-    Uses minimal data loading:
-    - Single variable: '2t' (2-meter temperature)
-    - 1 year of data (1990)
-    - Seasons disabled by default
+    """
+    Create a minimal config YAML file for Global Biases CLI testing.
     """
     config = {
         'datasets': [_base_dataset_config()],
@@ -245,8 +227,6 @@ def minimal_config_yaml(tmp_path):
 @pytest.fixture
 def minimal_config_yaml_with_seasons(minimal_config_yaml, tmp_path):
     """Create config with seasonal analysis enabled (derived from minimal config)."""
-    from aqua.core.util import load_yaml
-    
     config = load_yaml(minimal_config_yaml)
     config['diagnostics']['globalbiases']['params']['default']['seasons'] = True
     config['diagnostics']['globalbiases']['params']['default']['seasons_stat'] = 'mean'
@@ -257,41 +237,37 @@ def minimal_config_yaml_with_seasons(minimal_config_yaml, tmp_path):
 
 
 @pytest.fixture
-def minimal_config_yaml_with_formula(tmp_path):
-    """Create config with formula for testing formula handling."""
-    config = {
-        'datasets': [_base_dataset_config()],
-        'references': [_base_dataset_config()],
-        'setup': {'loglevel': 'DEBUG'},
-        'output': _base_output_config(tmp_path),
-        'diagnostics': {
-            'globalbiases': {
-                'run': True,
-                'diagnostic_name': 'globalbiases',
-                'variables': [],
-                'formulae': ['tnlwrf+tnswrf'],
-                'params': {
-                    'default': {
-                        'seasons': False,
-                        'vertical': False,
-                    },
-                    'tnlwrf+tnswrf': {
-                        'short_name': 'tnr',
-                        'long_name': 'Top net radiation',
-                    }
-                },
-                'plot_params': {
-                    'default': {
-                        'projection': 'robinson',
-                        'projection_params': {},
-                    },
-                    'tnlwrf+tnswrf': {
-                        'vmin': -50,
-                        'vmax': 50,
-                        'cmap': 'RdBu_r',
-                    }
-                }
-            }
+def minimal_config_yaml_with_formula(minimal_config_yaml, tmp_path):
+    """Create config with formula for testing formula handling (derived from minimal config)."""
+    config = load_yaml(minimal_config_yaml)
+    
+    # Update diagnostic config for formula
+    diag_config = config['diagnostics']['globalbiases']
+    diag_config['variables'] = []
+    diag_config['formulae'] = ['tnlwrf+tnswrf']
+    
+    # Update params
+    diag_config['params'] = {
+        'default': {
+            'seasons': False,
+            'vertical': False,
+        },
+        'tnlwrf+tnswrf': {
+            'short_name': 'tnr',
+            'long_name': 'Top net radiation',
+        }
+    }
+    
+    # Update plot_params
+    diag_config['plot_params'] = {
+        'default': {
+            'projection': 'robinson',
+            'projection_params': {},
+        },
+        'tnlwrf+tnswrf': {
+            'vmin': -50,
+            'vmax': 50,
+            'cmap': 'RdBu_r',
         }
     }
     
@@ -305,13 +281,11 @@ def minimal_config_yaml_with_formula(tmp_path):
 # ============================================================================
 
 @pytest.fixture
-def cli_args_factory():
-    """Factory fixture to create SimpleNamespace args for CLI tests.
-    
-    Returns a function that creates args with sensible defaults that can be overridden.
+def cli_args_maker():
     """
-    from types import SimpleNamespace
-    
+    Factory fixture to create SimpleNamespace args for CLI tests.
+    Creates args with defaults that can be overridden.
+    """
     def _create_args(config, **overrides):
         defaults = {
             'config': config,
@@ -335,19 +309,28 @@ def cli_args_factory():
 
 
 @pytest.fixture
-def prepared_cli(cli_args_factory, minimal_config_yaml):
-    """Create and prepare a DiagnosticCLI instance for testing.
-    
-    Returns a prepared CLI that can be used directly in tests.
+def prepared_cli(cli_args_maker, minimal_config_yaml):
     """
-    from aqua.diagnostics.core.cli_base import DiagnosticCLI
+    Create and prepare a DiagnosticCLI instance for testing.
+    """
+    def _prepared_cli(args=None):
+        """Create and prepare a DiagnosticCLI instance.
+        
+        Args:
+            args: Optional SimpleNamespace args. If None, uses defaults.
+        
+        Returns:
+            Prepared DiagnosticCLI instance.
+        """
+        if args is None:
+            args = cli_args_maker(minimal_config_yaml)
+        
+        cli = DiagnosticCLI(
+            args=args,
+            diagnostic_name='globalbiases',
+            default_config='config_global_biases.yaml'
+        )
+        cli.prepare()
+        return cli
     
-    args = cli_args_factory(minimal_config_yaml)
-    cli = DiagnosticCLI(
-        args=args,
-        diagnostic_name='globalbiases',
-        default_config='config_global_biases.yaml'
-    )
-    cli.prepare()
-    return cli
-
+    return _prepared_cli
