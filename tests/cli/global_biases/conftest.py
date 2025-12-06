@@ -72,27 +72,45 @@ def patched_global_biases_classes(patch_diagnostic_classes):
 
 
 @pytest.fixture
-def setup_mock_gb(setup_mock_diagnostic_instance, mocker):
+def setup_mock_gb(setup_mock_diagnostic_base, mocker):
     """Setup mock GlobalBiases instance with data.
     
     Convenience fixture specific to Global Biases that uses the generic
-    setup_mock_diagnostic_instance fixture from tests/cli/conftest.py.
+    setup_mock_diagnostic_base fixture from tests/cli/conftest.py.
     
-    Enhanced to optionally set seasonal_climatology when needed.
+    Provides Global Biases-specific defaults options.
     
     """
     def _setup(vars_dict=None, has_plev=False, with_seasonal=False):
         """Setup mock GlobalBiases with specified variables.
         
         Args:
-            vars_dict: Dict mapping var names to dims lists, or None for default
-            has_plev: If True, all vars get ['plev', 'lat', 'lon'], else use provided dims
-            with_seasonal: If True, sets seasonal_climatology to a mock object
+            vars_dict: Dict mapping var names to dims lists.
+                      Defaults to {'2t': ['lat', 'lon']} if None.
+            has_plev: If True, all vars get ['plev', 'lat', 'lon'] dimensions.
+            with_seasonal: If True, sets seasonal_climatology to a mock object.
+        
+        Returns:
+            Mock GlobalBiases instance with data, climatology, etc.
         """
-        mock_gb = setup_mock_diagnostic_instance(vars_dict, has_plev)
-        if with_seasonal:
-            mock_gb.seasonal_climatology = mocker.Mock()
-        return mock_gb
+        # Default to Global Biases common variable
+        if vars_dict is None:
+            vars_dict = {'2t': ['lat', 'lon']}
+        
+        # Apply has_plev convenience: override all dims to include plev
+        if has_plev:
+            vars_dict = {
+                var: ['plev', 'lat', 'lon']
+                for var in vars_dict.keys()
+            }
+        
+        # Build extra attributes
+        extra_attrs = {
+            'climatology': mocker.Mock(),
+            'seasonal_climatology': mocker.Mock() if with_seasonal else None
+        }
+        
+        return setup_mock_diagnostic_base(vars_dict, **extra_attrs)
     return _setup
 
 

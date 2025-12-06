@@ -71,43 +71,54 @@ def patch_diagnostic_classes(mocker):
 
 
 @pytest.fixture
-def setup_mock_diagnostic_instance(mocker):
-    """Generic helper to set up a mock diagnostic instance with data.
+def setup_mock_diagnostic_base(mocker):
+    """Generic helper to set up a minimal mock diagnostic instance with data.
     
     This fixture returns a factory function that creates mock diagnostic
-    instances with the standard interface (data, climatology, etc.).
+    instances with a minimal standard interface. Diagnostic-specific fixtures
+    should extend this for their needs.
     
     Usage:
-        setup_mock = setup_mock_diagnostic_instance
-        mock_diag = setup_mock({'var1': [], 'var2': ['plev', 'lat', 'lon']}, has_plev=False)
+        setup_mock = setup_mock_diagnostic_base
+        # Basic usage with variables and their dimensions
+        mock_diag = setup_mock({
+            'var': ['plev', 'lat', 'lon']
+        })
+        
+        # With additional attributes
+        mock_diag = setup_mock(
+            {'var2': ['lat', 'lon']},
+            climatology=mocker.Mock(),
+            seasonal_climatology=None
+        )
     """
-    def _setup(vars_dict=None, has_plev=False):
+    def _setup(vars_dict, **extra_attrs):
         """Setup mock diagnostic instance with specified variables.
         
         Args:
-            vars_dict: Dict mapping var names to dims lists, or None for default {'2t': []}
-            has_plev: If True, all vars get ['plev', 'lat', 'lon'], else use provided dims
+            vars_dict: Dict mapping variable names to their dimension lists.
+                      Each variable will be a mock with a 'dims' attribute.
+                      Example: {'2t': ['lat', 'lon'], 't': ['plev', 'lat', 'lon']}
+            **extra_attrs: Additional attributes to set on the mock diagnostic.
+                          Common examples: climatology, seasonal_climatology, logger, etc.
         
         Returns:
-            Mock diagnostic instance with data, climatology, etc.
+            Mock diagnostic instance with:
+            - data: Dict of mock variables with 'dims' attributes
+            - Any additional attributes specified via **extra_attrs
         """
         mock_diag = mocker.Mock()
-        if vars_dict is None:
-            vars_dict = {'2t': []}
         
-        if has_plev:
-            mock_diag.data = {
-                var: mocker.Mock(dims=['plev', 'lat', 'lon'])
-                for var in vars_dict.keys()
-            }
-        else:
-            mock_diag.data = {
-                var: mocker.Mock(dims=dims)
-                for var, dims in vars_dict.items()
-            }
+        # Create data dict with mock variables that have dims attributes
+        mock_diag.data = {
+            var: mocker.Mock(dims=dims)
+            for var, dims in vars_dict.items()
+        }
         
-        mock_diag.climatology = mocker.Mock()
-        mock_diag.seasonal_climatology = None
+        # Set any additional attributes provided
+        for attr_name, attr_value in extra_attrs.items():
+            setattr(mock_diag, attr_name, attr_value)
+        
         return mock_diag
     return _setup
 
