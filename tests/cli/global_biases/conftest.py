@@ -1,122 +1,41 @@
-"""Fixtures for Global Biases CLI tests.
-
-This module extends the generic fixtures from tests/cli/conftest.py
-with Global Biases-specific configuration and mocks.
-
-Fixtures are organized into:
-1. Mock CLI extension (for executor tests)
-2. Mock diagnostic instances (for executor tests)
-3. Tool configuration (for executor tests)
-4. Config YAML files (for CLI tests)
-5. CLI setup helpers (for CLI tests)
-"""
+"""Fixtures for Global Biases CLI tests."""
 
 import pytest
-from aqua.core.util import load_yaml, dump_yaml
-from aqua.diagnostics.core.cli_base import DiagnosticCLI
 from types import SimpleNamespace
+from aqua.core.util import dump_yaml
+from aqua.diagnostics.core.cli_base import DiagnosticCLI
 
 # ============================================================================
-# Mock CLI Extension
+# Test Data Builders & Constants
 # ============================================================================
 
-@pytest.fixture
-def mock_cli_global_biases(mock_cli):
-    """
-    Extend the generic mock_cli with Global Biases-specific configuration.
-    """
-    mock_cli.config_dict = {
-        'datasets': [{
-            'catalog': 'ci',
-            'model': 'ERA5',
-            'exp': 'era5-hpz3',
-            'source': 'monthly',
-            'regrid': 'r100',
-        }],
-        'references': [{
-            'catalog': 'ci',
-            'model': 'ERA5',
-            'exp': 'era5-hpz3',
-            'source': 'monthly',
-            'regrid': 'r100',
-        }]
-    }
-    # Global Biases-specific dataset_args implementation
-    mock_cli.dataset_args = lambda x: {
-        'catalog': x.get('catalog', 'ci'),
-        'model': x.get('model', 'ERA5'),
-        'exp': x.get('exp', 'era5-hpz3'),
-        'source': x.get('source', 'monthly'),
-        'regrid': x.get('regrid', 'r100')
-    }
-    return mock_cli
+DEFAULT_DATASET = {
+    'catalog': 'ci',
+    'model': 'ERA5',
+    'exp': 'era5-hpz3',
+    'source': 'monthly',
+    'regrid': 'r100',
+    'startdate': '1990-01-01',
+    'enddate': '1990-12-31',
+}
 
+DEFAULT_OUTPUT = {
+    'outputdir': '/tmp/output',
+    'rebuild': True,
+    'save_netcdf': True,
+    'save_pdf': True,
+    'save_png': True,
+    'dpi': 50,
+    'create_catalog_entry': False,
+}
 
-# ============================================================================
-# Mock Diagnostic Instances
-# ============================================================================
+def build_dataset_config(**overrides):
+    """Build a dataset configuration dict."""
+    return {**DEFAULT_DATASET, **overrides}
 
-@pytest.fixture
-def patched_global_biases_classes(patch_diagnostic_classes):
-    """
-    Patch GlobalBiases and PlotGlobalBiases classes for testing.
-    
-    """
-    return patch_diagnostic_classes(
-        'aqua.diagnostics.global_biases.cli_global_biases.GlobalBiases',
-        'aqua.diagnostics.global_biases.cli_global_biases.PlotGlobalBiases'
-    )
-
-
-@pytest.fixture
-def setup_mock_gb(setup_mock_diagnostic_base, mocker):
-    """
-    Setup mock GlobalBiases instance with data.
-
-    """
-    def _setup(vars_dict=None, has_plev=False, with_seasonal=False):
-        """Setup mock GlobalBiases with specified variables.
-        
-        Args:
-            vars_dict: Dict mapping var names to dims lists.
-                      Defaults to {'2t': ['lat', 'lon']} if None.
-            has_plev: If True, all vars get ['plev', 'lat', 'lon'] dimensions.
-            with_seasonal: If True, sets seasonal_climatology to a mock object.
-        
-        Returns:
-            Mock GlobalBiases instance with data, climatology, etc.
-        """
-        # Default to Global Biases common variable
-        if vars_dict is None:
-            vars_dict = {'2t': ['lat', 'lon']}
-        
-        # Apply has_plev convenience: override all dims to include plev
-        if has_plev:
-            vars_dict = {
-                var: ['plev', 'lat', 'lon']
-                for var in vars_dict.keys()
-            }
-        
-        # Build extra attributes
-        extra_attrs = {
-            'climatology': mocker.Mock(),
-            'seasonal_climatology': mocker.Mock() if with_seasonal else None
-        }
-        
-        return setup_mock_diagnostic_base(vars_dict, **extra_attrs)
-    return _setup
-
-
-# ============================================================================
-# Tool Configuration
-# ============================================================================
-
-@pytest.fixture
-def tool_dict_minimal():
-    """
-    Minimal tool configuration for Global Biases testing.
-    """
-    return {
+def build_tool_config(**overrides):
+    """Build the 'globalbiases' portion of the config."""
+    defaults = {
         'run': True,
         'diagnostic_name': 'globalbiases',
         'variables': ['2t'],
@@ -145,150 +64,149 @@ def tool_dict_minimal():
             }
         }
     }
+    
+    # Merge for params and plot_params if provided
+    if 'params' in overrides:
+        defaults['params'].update(overrides.pop('params'))
+    if 'plot_params' in overrides:
+        defaults['plot_params'].update(overrides.pop('plot_params'))
+        
+    defaults.update(overrides)
+    return defaults
 
-
-# ============================================================================
-# Config YAML Files (for test_cli_global_biases.py)
-# ============================================================================
-
-def _base_dataset_config():
-    """Base dataset/reference configuration shared across fixtures."""
+def build_full_config(tool_config=None, datasets=None, references=None, output_dir='/tmp/output'):
+    """Build a full configuration dictionary."""
+    if tool_config is None:
+        tool_config = build_tool_config()
+    if datasets is None:
+        datasets = [build_dataset_config()]
+    if references is None:
+        references = [build_dataset_config()]
+        
+    output = {**DEFAULT_OUTPUT, 'outputdir': output_dir}
+        
     return {
-        'catalog': 'ci',
-        'model': 'ERA5',
-        'exp': 'era5-hpz3',
-        'source': 'monthly',
-        'regrid': 'r100',
-        'startdate': '1990-01-01',
-        'enddate': '1990-12-31',
-    }
-
-
-def _base_output_config(tmp_path):
-    """Base output configuration shared across fixtures."""
-    return {
-        'outputdir': str(tmp_path),
-        'rebuild': True,
-        'save_netcdf': True,
-        'save_pdf': True,
-        'save_png': True,
-        'dpi': 50,
-        'create_catalog_entry': False,
-    }
-
-
-@pytest.fixture
-def minimal_config_yaml(tmp_path):
-    """
-    Create a minimal config YAML file for Global Biases CLI testing.
-    """
-    config = {
-        'datasets': [_base_dataset_config()],
-        'references': [_base_dataset_config()],
+        'datasets': datasets,
+        'references': references,
         'setup': {'loglevel': 'DEBUG'},
-        'output': _base_output_config(tmp_path),
+        'output': output,
         'diagnostics': {
-            'globalbiases': {
-                'run': True,
-                'diagnostic_name': 'globalbiases',
-                'variables': ['2t'],
-                'formulae': [],
-                'params': {
-                    'default': {
-                        'seasons': False,
-                        'vertical': False,
-                    },
-                    '2t': {
-                        'standard_name': '2t',
-                        'long_name': '2-meter temperature',
-                        'units': 'K',
-                    }
-                },
-                'plot_params': {
-                    'default': {
-                        'projection': 'robinson',
-                        'projection_params': {},
-                    },
-                    '2t': {
-                        'vmin': -5,
-                        'vmax': 5,
-                        'cmap': 'RdBu_r',
-                    }
-                }
-            }
+            'globalbiases': tool_config
         }
     }
-    
-    config_file = tmp_path / "test_global_biases_config.yaml"
-    dump_yaml(outfile=str(config_file), cfg=config)
-    return str(config_file)
-
-
-@pytest.fixture
-def minimal_config_yaml_with_seasons(minimal_config_yaml, tmp_path):
-    """Create config with seasonal analysis enabled (derived from minimal config)."""
-    config = load_yaml(minimal_config_yaml)
-    config['diagnostics']['globalbiases']['params']['default']['seasons'] = True
-    config['diagnostics']['globalbiases']['params']['default']['seasons_stat'] = 'mean'
-    
-    config_file = tmp_path / "test_global_biases_config_seasonal.yaml"
-    dump_yaml(outfile=str(config_file), cfg=config)
-    return str(config_file)
-
-
-@pytest.fixture
-def minimal_config_yaml_with_formula(minimal_config_yaml, tmp_path):
-    """Create config with formula for testing formula handling (derived from minimal config)."""
-    config = load_yaml(minimal_config_yaml)
-    
-    # Update diagnostic config for formula
-    diag_config = config['diagnostics']['globalbiases']
-    diag_config['variables'] = []
-    diag_config['formulae'] = ['tnlwrf+tnswrf']
-    
-    # Update params
-    diag_config['params'] = {
-        'default': {
-            'seasons': False,
-            'vertical': False,
-        },
-        'tnlwrf+tnswrf': {
-            'short_name': 'tnr',
-            'long_name': 'Top net radiation',
-        }
-    }
-    
-    # Update plot_params
-    diag_config['plot_params'] = {
-        'default': {
-            'projection': 'robinson',
-            'projection_params': {},
-        },
-        'tnlwrf+tnswrf': {
-            'vmin': -50,
-            'vmax': 50,
-            'cmap': 'RdBu_r',
-        }
-    }
-    
-    config_file = tmp_path / "test_global_biases_config_formula.yaml"
-    dump_yaml(outfile=str(config_file), cfg=config)
-    return str(config_file)
-
 
 # ============================================================================
-# CLI Setup Helpers (for test_cli_global_biases.py)
+# Config Fixtures
+# ============================================================================
+
+@pytest.fixture
+def gb_config(tmp_path):
+    """Create a standard Global Biases configuration."""
+    config = build_full_config(output_dir=str(tmp_path))
+    return config
+
+@pytest.fixture
+def gb_config_file(gb_config, tmp_path):
+    """Write the standard configuration to a YAML file."""
+    config_file = tmp_path / "config.yaml"
+    dump_yaml(outfile=str(config_file), cfg=gb_config)
+    return str(config_file)
+
+@pytest.fixture
+def gb_config_seasonal(tmp_path):
+    """Create a seasonal Global Biases configuration."""
+    tool_config = build_tool_config(params={'default': {'seasons': True}})
+    config = build_full_config(tool_config=tool_config, output_dir=str(tmp_path))
+    return config
+
+@pytest.fixture
+def gb_config_seasonal_file(gb_config_seasonal, tmp_path):
+    """Write the seasonal configuration to a YAML file."""
+    config_file = tmp_path / "config_seasonal.yaml"
+    dump_yaml(outfile=str(config_file), cfg=gb_config_seasonal)
+    return str(config_file)
+
+@pytest.fixture
+def gb_config_formula(tmp_path):
+    """Create a Global Biases configuration with formula."""
+    tool_config = build_tool_config(
+        variables=[],
+        formulae=['tnlwrf+tnswrf'],
+        params={
+            'tnlwrf+tnswrf': {'short_name': 'tnr', 'long_name': 'Top net radiation'}
+        }
+    )
+    config = build_full_config(tool_config=tool_config, output_dir=str(tmp_path))
+    return config
+
+@pytest.fixture
+def gb_config_formula_file(gb_config_formula, tmp_path):
+    """Write the formula configuration to a YAML file."""
+    config_file = tmp_path / "config_formula.yaml"
+    dump_yaml(outfile=str(config_file), cfg=gb_config_formula)
+    return str(config_file)
+
+# ============================================================================
+# Mock CLI (for Executor Tests)
+# ============================================================================
+
+@pytest.fixture
+def mock_cli_global_biases(mock_cli, gb_config):
+    """
+    Extend the generic mock_cli with Global Biases-specific configuration.
+    This mimics a DiagnosticCLI that has already loaded the config.
+    """
+    mock_cli.config_dict = gb_config
+    
+    # Simple implementation of dataset_args matching build_dataset_config defaults
+    def _dataset_args(dataset_dict):
+        # In a real CLI, this merges default args, but here we just return the dict
+        # plus ensuring default keys exist if they were omitted in the dict
+        defaults = build_dataset_config()
+        return {**defaults, **dataset_dict}
+        
+    mock_cli.dataset_args = _dataset_args
+    return mock_cli
+
+@pytest.fixture
+def patched_global_biases_classes(patch_diagnostic_classes):
+    """Patch GlobalBiases and PlotGlobalBiases classes."""
+    return patch_diagnostic_classes(
+        'aqua.diagnostics.global_biases.cli_global_biases.GlobalBiases',
+        'aqua.diagnostics.global_biases.cli_global_biases.PlotGlobalBiases'
+    )
+
+@pytest.fixture
+def setup_mock_gb(setup_mock_diagnostic_base, mocker):
+    """Setup mock GlobalBiases instance with data."""
+    def _setup(vars_dict=None, has_plev=False, with_seasonal=False):
+        if vars_dict is None:
+            vars_dict = {'2t': ['lat', 'lon']}
+        
+        if has_plev:
+            vars_dict = {var: ['plev', 'lat', 'lon'] for var in vars_dict}
+            
+        extra_attrs = {
+            'climatology': mocker.Mock(),
+            'seasonal_climatology': mocker.Mock() if with_seasonal else None,
+            # Add retrieve method explicitly if needed, though usually masked by the class mock
+            'retrieve': mocker.Mock(),
+            'compute_climatology': mocker.Mock()
+        }
+        
+        return setup_mock_diagnostic_base(vars_dict, **extra_attrs)
+    return _setup
+
+# ============================================================================
+# CLI Integration Helpers
 # ============================================================================
 
 @pytest.fixture
 def cli_args_maker():
-    """
-    Factory fixture to create SimpleNamespace args for CLI tests.
-    Creates args with defaults that can be overridden.
-    """
-    def _create_args(config, **overrides):
+    """Factory for CLI arguments."""
+    def _make_args(config_file, **overrides):
         defaults = {
-            'config': config,
+            'config': config_file,
             'loglevel': 'DEBUG',
             'catalog': None,
             'model': None,
@@ -300,31 +218,17 @@ def cli_args_maker():
             'enddate': None,
             'realization': None,
             'nworkers': None,
-            'cluster': None,
+            'cluster': None
         }
         defaults.update(overrides)
         return SimpleNamespace(**defaults)
-    
-    return _create_args
-
+    return _make_args
 
 @pytest.fixture
-def prepared_cli(cli_args_maker, minimal_config_yaml):
-    """
-    Create and prepare a DiagnosticCLI instance for testing.
-    """
-    def _prepared_cli(args=None):
-        """Create and prepare a DiagnosticCLI instance.
-        
-        Args:
-            args: Optional SimpleNamespace args. If None, uses defaults.
-        
-        Returns:
-            Prepared DiagnosticCLI instance.
-        """
-        if args is None:
-            args = cli_args_maker(minimal_config_yaml)
-        
+def prepare_cli(cli_args_maker):
+    """Factory to create and prepare a DiagnosticCLI instance."""
+    def _prepare(config_file, **overrides):
+        args = cli_args_maker(config_file, **overrides)
         cli = DiagnosticCLI(
             args=args,
             diagnostic_name='globalbiases',
@@ -332,5 +236,4 @@ def prepared_cli(cli_args_maker, minimal_config_yaml):
         )
         cli.prepare()
         return cli
-    
-    return _prepared_cli
+    return _prepare

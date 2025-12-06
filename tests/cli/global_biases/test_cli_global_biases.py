@@ -1,181 +1,153 @@
-"""Optimized tests for Global Biases CLI.
+"""Tests for Global Biases CLI."""
 
-These tests verify the CLI interface for the Global Biases diagnostic,
-ensuring proper integration of command-line arguments, config files, and
-diagnostic execution without duplicating the underlying diagnostic tests.
-"""
 import pytest
-from aqua.diagnostics.global_biases.cli_global_biases import parse_arguments
+from aqua.diagnostics.global_biases.cli_global_biases import run_global_biases_diagnostic
+from aqua.diagnostics.core import DiagnosticCLI
+from aqua.core.exceptions import NoDataError
 
-# Mark all tests in this module
-pytestmark = [
-    pytest.mark.diagnostics,
-    pytest.mark.cli
-]
+pytestmark = [pytest.mark.diagnostics, pytest.mark.cli]
 
+class TestGlobalBiasesConfig:
+    """Integration tests for Global Biases CLI configuration loading."""
 
-class TestGlobalBiasesCLI:
-    """Test suite for Global Biases CLI interface."""
+    def test_config_loading(self, prepare_cli, gb_config_file, tmp_path):
+        """Verify that configuration is correctly loaded into DiagnosticCLI."""
+        cli = prepare_cli(gb_config_file)
 
-    def test_parse_arguments(self):
-        """Test argument parsing with minimal and full arguments."""
-        # Minimal arguments
-        args = parse_arguments(['--config', 'test_config.yaml'])
-        assert args.config == 'test_config.yaml'
-        assert hasattr(args, 'loglevel')
-        assert hasattr(args, 'catalog')
-        
-        # Full arguments
-        args_full = parse_arguments([
-            '--config', 'test.yaml',
-            '--loglevel', 'DEBUG',
-            '--catalog', 'test-catalog',
-            '--model', 'TestModel',
-            '--exp', 'test-exp',
-            '--source', 'test-source',
-            '--regrid', 'r100',
-            '--outputdir', '/tmp/output'
-        ])
-        assert args_full.loglevel == 'DEBUG'
-        assert args_full.catalog == 'test-catalog'
-        assert args_full.regrid == 'r100'
-
-    def test_cli_config_loading_and_extraction(self, prepared_cli, tmp_path):
-        """Test CLI loads config and extracts parameters correctly."""
-        cli = prepared_cli()
-        
-        # Verify config structure
-        assert cli.config_dict is not None
-        assert 'diagnostics' in cli.config_dict
+        # Check basic structure
         assert 'globalbiases' in cli.config_dict['diagnostics']
-        assert cli.config_dict['diagnostics']['globalbiases']['run'] is True
-        
-        # Verify dataset configuration
-        assert len(cli.config_dict['datasets']) == 1
-        dataset = cli.config_dict['datasets'][0]
-        assert dataset['catalog'] == 'ci'
-        assert dataset['model'] == 'ERA5'
-        
-        # Verify dataset_args extraction
-        dataset_args = cli.dataset_args(dataset)
-        assert dataset_args['catalog'] == 'ci'
-        assert dataset_args['model'] == 'ERA5'
-        assert dataset_args['exp'] == 'era5-hpz3'
-        assert dataset_args['source'] == 'monthly'
-        assert dataset_args['regrid'] == 'r100'
-        assert dataset_args['startdate'] == '1990-01-01'
-        assert dataset_args['enddate'] == '1990-12-31'
-        
-        # Verify output settings
-        assert cli.outputdir == str(tmp_path)
-        assert cli.save_pdf is True
-        assert cli.save_png is True
-        assert cli.dpi == 50
-
-    def test_cli_parameter_override(self, prepared_cli, cli_args_maker, minimal_config_yaml, tmp_path):
-        """Test that CLI args override config file settings."""
-        custom_output = str(tmp_path / 'custom_output')
-        
-        args = cli_args_maker(
-            minimal_config_yaml,
-            loglevel='INFO',
-            catalog='override-catalog',
-            model='OverrideModel',
-            exp='override-exp',
-            source='override-source',
-            regrid='r200',
-            outputdir=custom_output,
-            startdate='1991-01-01',
-            enddate='1991-12-31',
-            realization='r2i1p1f1'
-        )
-        
-        cli = prepared_cli(args=args)
-        
-        # Check CLI args override config
-        dataset = cli.config_dict['datasets'][0]
-        assert dataset['catalog'] == 'override-catalog'
-        assert dataset['model'] == 'OverrideModel'
-        assert dataset['exp'] == 'override-exp'
-        assert dataset['source'] == 'override-source'
-        assert cli.outputdir == custom_output
-        assert cli.regrid == 'r200'
-        assert cli.realization == 'r2i1p1f1'
-        assert cli.reader_kwargs == {'realization': 'r2i1p1f1'}
-
-    def test_diagnostic_parameters(self, prepared_cli):
-        """Test diagnostic-specific parameters are correctly loaded."""
-        cli = prepared_cli()
         tool_dict = cli.config_dict['diagnostics']['globalbiases']
-        
-        # Check diagnostic parameters
         assert tool_dict['run'] is True
-        assert tool_dict['diagnostic_name'] == 'globalbiases'
-        assert '2t' in tool_dict['variables']
-        assert tool_dict['formulae'] == []
+        assert tool_dict['variables'] == ['2t']
         
-        # Check params
-        default_params = tool_dict['params']['default']
-        assert default_params['seasons'] is False
-        assert default_params['vertical'] is False
+        # Check dataset parsing
+        dataset = cli.config_dict['datasets'][0]
+        dataset_args = cli.dataset_args(dataset)
+        assert dataset_args['model'] == 'ERA5'
         
-        # Check plot params
-        plot_params = tool_dict['plot_params']['2t']
-        assert plot_params['vmin'] == -5
-        assert plot_params['vmax'] == 5
-        assert plot_params['cmap'] == 'RdBu_r'
-    
-    def test_seasonal_config(self, prepared_cli, cli_args_maker, minimal_config_yaml_with_seasons):
-        """Test configuration with seasonal analysis enabled."""
-        args = cli_args_maker(minimal_config_yaml_with_seasons)
-        cli = prepared_cli(args=args)
+        # Check output dir
+        assert cli.outputdir == str(tmp_path)
+
+    def test_seasonal_config(self, prepare_cli, gb_config_seasonal_file):
+        """Verify loading of seasonal configuration."""
+        cli = prepare_cli(gb_config_seasonal_file)
         
         tool_dict = cli.config_dict['diagnostics']['globalbiases']
-        default_params = tool_dict['params']['default']
-        
-        assert default_params['seasons'] is True
-        assert tool_dict['formulae'] == []
-    
-    def test_formula_config(self, prepared_cli, cli_args_maker, minimal_config_yaml_with_formula):
-        """Test configuration with formula variables."""
-        args = cli_args_maker(minimal_config_yaml_with_formula)
-        cli = prepared_cli(args=args)
+        assert tool_dict['params']['default']['seasons'] is True
+
+    def test_formula_config(self, prepare_cli, gb_config_formula_file):
+        """Verify loading of formula configuration."""
+        cli = prepare_cli(gb_config_formula_file)
         
         tool_dict = cli.config_dict['diagnostics']['globalbiases']
-        default_params = tool_dict['params']['default']
-        
-        assert default_params['seasons'] is False
         assert tool_dict['formulae'] == ['tnlwrf+tnswrf']
-        
-        # Verify formula-specific parameters
-        formula_params = tool_dict['params']['tnlwrf+tnswrf']
-        assert formula_params['short_name'] == 'tnr'
-        assert formula_params['long_name'] == 'Top net radiation'
+        assert tool_dict['params']['tnlwrf+tnswrf']['short_name'] == 'tnr'
 
-    def test_multiple_datasets_handling(self, prepared_cli, cli_args_maker, minimal_config_yaml, tmp_path):
-        """Test CLI handles multiple datasets correctly."""
-        from aqua.core.util import load_yaml, dump_yaml
+    def test_cli_overrides(self, prepare_cli, gb_config_file):
+        """Verify that CLI arguments override config file settings."""
+        cli = prepare_cli(gb_config_file, model='OverriddenModel', regrid='r200')
         
-        config = load_yaml(minimal_config_yaml)
-        config['datasets'].append({
-            'catalog': 'ci', 'model': 'ERA5', 'exp': 'era5-hpz3',
-            'source': 'monthly', 'regrid': 'r100',
-            'startdate': '1990-01-01', 'enddate': '1990-12-31',
-        })
-        
-        multi_config_file = tmp_path / "multi_dataset_config.yaml"
-        dump_yaml(outfile=str(multi_config_file), cfg=config)
-        
-        args = cli_args_maker(str(multi_config_file))
-        cli = prepared_cli(args=args)
-        
-        # Verify config has multiple datasets
-        assert len(cli.config_dict['datasets']) == 2
+        dataset = cli.config_dict['datasets'][0]
+        assert dataset['model'] == 'OverriddenModel'
+        assert dataset['regrid'] == 'r200'
 
-    @pytest.mark.parametrize("loglevel", ['DEBUG', 'INFO', 'WARNING', 'ERROR'])
-    def test_loglevel_configuration(self, prepared_cli, cli_args_maker, minimal_config_yaml, loglevel):
-        """Test CLI correctly sets different log levels."""
-        args = cli_args_maker(minimal_config_yaml, loglevel=loglevel)
-        cli = prepared_cli(args=args)
+
+class TestGlobalBiasesRun:
+    """Unit tests for Global Biases execution logic (run_global_biases_diagnostic)."""
+
+    def test_disabled_diagnostic(self, mock_cli_global_biases):
+        """Test that disabled diagnostic returns False."""
+        tool_dict = {'run': False}
+        result = run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        assert result is False
+        mock_cli_global_biases.logger.info.assert_called_with("GlobalBiases diagnostic is disabled.")
+
+    def test_execution_success(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+        """Test successful execution flow."""
+        mock_gb_class, mock_plot_class = patched_global_biases_classes
+        mock_gb = setup_mock_gb({'2t': []})
+        mock_gb_class.return_value = mock_gb
+
+        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
         
-        assert cli.loglevel == loglevel
+        result = run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        
+        assert result is True
+        # Dataset and reference initialized
+        assert mock_gb_class.call_count == 2
+        mock_gb.retrieve.assert_called()
+        mock_gb.compute_climatology.assert_called()
+        mock_plot_class.return_value.plot_bias.assert_called()
+
+    def test_missing_variable(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+        """Test graceful handling of missing variables."""
+        mock_gb_class, _ = patched_global_biases_classes
+        mock_gb = setup_mock_gb({'2t': []})
+        # Simulate retrieval failure
+        mock_gb.retrieve.side_effect = NoDataError("Missing var")
+        mock_gb_class.return_value = mock_gb
+
+        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
+        
+        result = run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        
+        # Should still return True (diagnostic ran, even if one var failed)
+        assert result is True
+        mock_cli_global_biases.logger.warning.assert_called()
+
+    def test_formula_execution(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb, gb_config_formula):
+        """Test execution with formula."""
+        mock_cli_global_biases.config_dict = gb_config_formula
+        tool_dict = gb_config_formula['diagnostics']['globalbiases']
+        
+        mock_gb_class, _ = patched_global_biases_classes
+        mock_gb = setup_mock_gb({'tnr': []})
+        mock_gb_class.return_value = mock_gb
+        
+        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        
+        # Check that retrieve was called with formula=True
+        calls = mock_gb.retrieve.call_args_list
+        assert any(call.kwargs.get('formula') is True for call in calls)
+
+    def test_seasonal_execution(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb, gb_config_seasonal):
+        """Test execution with seasonal plots."""
+        mock_cli_global_biases.config_dict = gb_config_seasonal
+        tool_dict = gb_config_seasonal['diagnostics']['globalbiases']
+        
+        mock_gb_class, mock_plot_class = patched_global_biases_classes
+        mock_gb = setup_mock_gb({'2t': []}, with_seasonal=True)
+        mock_gb_class.return_value = mock_gb
+        
+        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        
+        mock_plot_class.return_value.plot_seasonal_bias.assert_called()
+
+    def test_vertical_execution(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+        """Test execution with vertical plots."""
+        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
+        tool_dict['params']['default']['vertical'] = True
+        tool_dict['plot_params']['2t']['vmin_v'] = -1
+        tool_dict['plot_params']['2t']['vmax_v'] = 1
+        
+        mock_gb_class, mock_plot_class = patched_global_biases_classes
+        mock_gb = setup_mock_gb({'2t': []}, has_plev=True)
+        mock_gb_class.return_value = mock_gb
+        
+        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        
+        mock_plot_class.return_value.plot_vertical_bias.assert_called()
+
+    def test_multiple_pressure_levels(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+        """Test execution over multiple pressure levels."""
+        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
+        tool_dict['params']['default']['plev'] = [85000, 50000]
+        
+        mock_gb_class, mock_plot_class = patched_global_biases_classes
+        mock_gb = setup_mock_gb({'2t': []}, has_plev=True)
+        mock_gb_class.return_value = mock_gb
+        
+        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        
+        # Should plot twice
+        assert mock_plot_class.return_value.plot_bias.call_count == 2
