@@ -9,7 +9,7 @@ import argparse
 import sys
 
 from aqua.diagnostics import EnsembleZonal, PlotEnsembleZonal, reader_retrieve_and_merge
-from aqua.diagnostics.core import (
+from aqua.diagnostics.base import (
     close_cluster,
     load_diagnostic_config,
     merge_config_args,

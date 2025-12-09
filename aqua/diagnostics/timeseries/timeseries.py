@@ -2,7 +2,7 @@
 import xarray as xr
 import pandas as pd
 from aqua.core.util import to_list, frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.core import round_startdate, round_enddate
+from aqua.diagnostics.base import round_startdate, round_enddate
 from .util import loop_seasonalcycle
 from .base import BaseMixin
 
@@ -127,6 +127,7 @@ class Timeseries(BaseMixin):
             data = None
         else:
             if extend:
+                self.logger.info(f"Extending data for frequency {str_freq}")
                 extended_data = self._extend_data(data=data, freq=str_freq, center_time=center_time)
                 extended_data.attrs = data.attrs.copy()
                 data = extended_data
@@ -166,11 +167,12 @@ class Timeseries(BaseMixin):
             # Use freq parameter for proper rounding
             class_startdate = round_startdate(pd.Timestamp(self.plt_startdate), freq=freq)
             class_enddate = round_enddate(pd.Timestamp(self.plt_enddate), freq=freq)
+            self.logger.debug(f"Start date of class: {class_startdate}, End date of class: {class_enddate}")
+            self.logger.debug(f"Start date of data: {data.time[0].values}, End date of data: {data.time[-1].values}")
             start_date = round_startdate(pd.Timestamp(data.time[0].values), freq=freq)
             end_date = round_enddate(pd.Timestamp(data.time[-1].values), freq=freq)
+            self.logger.debug(f"Start date of data: {start_date}, End date of data: {end_date}")
 
-            self.logger.debug(f'Extension check - Class range: {class_startdate} to {class_enddate}')
-            self.logger.debug(f'Extension check - Data range: {start_date} to {end_date}')
             self.logger.debug(f'Extension check - Data has {len(data.time)} timesteps before extension')
 
             # Extend the data if needed

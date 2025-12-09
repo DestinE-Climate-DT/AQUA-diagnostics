@@ -8,7 +8,7 @@ defined in a yaml configuration file for multiple models.
 import argparse
 import sys
 from aqua.diagnostics import sshVariabilityCompute, sshVariabilityPlot
-from aqua.diagnostics.core import (
+from aqua.diagnostics.base import (
     close_cluster,
     load_diagnostic_config,
     merge_config_args,

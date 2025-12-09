@@ -11,8 +11,8 @@ import argparse
 import sys
 import pandas as pd 
 
-from aqua.diagnostics.core import template_parse_arguments, DiagnosticCLI
-from aqua.diagnostics.core import round_startdate, round_enddate
+from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.base import round_startdate, round_enddate
 from aqua.diagnostics.timeseries.util_cli import load_var_config
 from aqua.diagnostics.timeseries import Timeseries, SeasonalCycles, Gregory
 from aqua.diagnostics.timeseries import PlotTimeseries, PlotSeasonalCycles, PlotGregory
@@ -48,6 +48,8 @@ if __name__ == '__main__':
 
             diagnostic_name = cli.config_dict['diagnostics']['timeseries'].get('diagnostic_name', 'timeseries')
             center_time = cli.config_dict['diagnostics']['timeseries'].get('center_time', True)
+            exclude_incomplete = cli.config_dict['diagnostics']['timeseries'].get('exclude_incomplete', True)
+            extend = cli.config_dict['diagnostics']['timeseries'].get('extend', False)
 
             for var in cli.config_dict['diagnostics']['timeseries'].get('variables', []):
                 var_config, regions = load_var_config(cli.config_dict, var)
@@ -60,7 +62,7 @@ if __name__ == '__main__':
                         run_args = {'var': var, 'formula': False, 'long_name': var_config.get('long_name'),
                                     'units': var_config.get('units'), 'short_name': var_config.get('short_name'),
                                     'freq': var_config.get('freq'), 'outputdir': cli.outputdir, 'rebuild': cli.rebuild,
-                                    'center_time': center_time}
+                                    'center_time': center_time, 'exclude_incomplete': exclude_incomplete, 'extend': extend}
 
                         # Initialize a list of len from the number of datasets
                         ts = [None] * len(cli.config_dict['datasets'])
@@ -82,7 +84,7 @@ if __name__ == '__main__':
                             ts_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.dataset_args(reference)
+                                reference_args = cli.reference_args(reference)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
@@ -127,6 +129,8 @@ if __name__ == '__main__':
 
                 diagnostic_name = cli.config_dict['diagnostics']['timeseries'].get('diagnostic_name', 'timeseries')
                 center_time = cli.config_dict['diagnostics']['timeseries'].get('center_time', True)
+                exclude_incomplete = cli.config_dict['diagnostics']['timeseries'].get('exclude_incomplete', True)
+                extend = cli.config_dict['diagnostics']['timeseries'].get('extend', False)
 
                 for region in regions:
                     try:
@@ -136,7 +140,7 @@ if __name__ == '__main__':
                         run_args = {'var': var, 'formula': True, 'long_name': var_config.get('long_name'),
                                     'units': var_config.get('units'), 'short_name': var_config.get('short_name'),
                                     'freq': var_config.get('freq'), 'outputdir': cli.outputdir, 'rebuild': cli.rebuild,
-                                    'center_time': center_time}
+                                    'center_time': center_time, 'exclude_incomplete': exclude_incomplete, 'extend': extend}
 
                         # Initialize a list of len from the number of datasets
                         ts = [None] * len(cli.config_dict['datasets'])
@@ -156,7 +160,7 @@ if __name__ == '__main__':
                             ts_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.dataset_args(reference)
+                                reference_args = cli.reference_args(reference)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
@@ -201,6 +205,7 @@ if __name__ == '__main__':
 
             diagnostic_name = cli.config_dict['diagnostics']['seasonalcycles'].get('diagnostic_name', 'seasonalcycles')
             center_time = cli.config_dict['diagnostics']['seasonalcycles'].get('center_time', True)
+            exclude_incomplete = cli.config_dict['diagnostics']['seasonalcycles'].get('exclude_incomplete', True)
 
             for var in cli.config_dict['diagnostics']['seasonalcycles'].get('variables', []):
                 try:
@@ -213,7 +218,8 @@ if __name__ == '__main__':
                         init_args = {'region': region, 'loglevel': cli.loglevel, 'diagnostic_name': diagnostic_name}
                         run_args = {'var': var, 'formula': False, 'long_name': var_config.get('long_name'),
                                     'units': var_config.get('units'), 'short_name': var_config.get('short_name'),
-                                    'outputdir': cli.outputdir, 'rebuild': cli.rebuild, 'center_time': center_time}
+                                    'outputdir': cli.outputdir, 'rebuild': cli.rebuild, 'center_time': center_time,
+                                    'exclude_incomplete': exclude_incomplete}
 
                         # Initialize a list of len from the number of datasets
                         sc = [None] * len(cli.config_dict['datasets'])
@@ -234,7 +240,7 @@ if __name__ == '__main__':
                             sc_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.dataset_args(reference)
+                                reference_args = cli.reference_args(reference)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
@@ -292,6 +298,7 @@ if __name__ == '__main__':
                 for i, dataset in enumerate(cli.config_dict['datasets']):
                     cli.logger.info(f'Running dataset: {dataset}')
                     dataset_args = cli.dataset_args(dataset)
+                    cli.logger.debug(f"Dataset args: {dataset_args}")
 
                     greg[i] = Gregory(**init_args, **dataset_args)
                     greg[i].run(**run_args, **model_args, reader_kwargs=dataset.get('reader_kwargs') or cli.reader_kwargs)
@@ -341,7 +348,7 @@ if __name__ == '__main__':
                                             dpi=cli.dpi, rebuild=cli.rebuild, format='pdf', diagnostic_product='gregory')
                     if cli.save_png:
                         plot_greg.save_plot(fig, description=description, outputdir=cli.outputdir,
-                                            dpi=cli.dpi, rebuild=cli.rebuild, format='png', diagnostic_product='gregory')
+                                                dpi=cli.dpi, rebuild=cli.rebuild, format='png', diagnostic_product='gregory')
             except Exception as e:
                 cli.logger.error(f"Error running Gregory diagnostic: {e}")
 

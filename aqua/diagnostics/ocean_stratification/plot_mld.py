@@ -4,7 +4,7 @@ import cartopy.crs as ccrs
 
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label
-from aqua.diagnostics.core import OutputSaver
+from aqua.diagnostics.base import OutputSaver
 from .mld_profiles import plot_maps
 # from .multivar_vertical_profiles import plot_multivars_vertical_profile
 
