@@ -73,7 +73,7 @@ if __name__ == '__main__':
             for reference in references:
                 reference_args = cli.reference_args(reference)
 
-                boxplots_ref = Boxplots(**reference_args, diagnostic=cli.diagnostic_name,
+                boxplots_ref = Boxplots(**reference_args, diagnostic=diagnostic_name,
                                         save_netcdf=cli.save_netcdf,
                                         outputdir=cli.outputdir, loglevel=cli.loglevel)
                 boxplots_ref.run(var=variables, reader_kwargs=cli.reader_kwargs)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
                 TITLE = "Boxplot of TOA Radiation Fluxes for: " + ", ".join(model_exp_list_unique)
             else:
                 TITLE = None
-            plot = PlotBoxplots(diagnostic=cli.diagnostic_name, save_pdf=cli.save_pdf,
+            plot = PlotBoxplots(diagnostic=diagnostic_name, save_pdf=cli.save_pdf,
                                 save_png=cli.save_png, dpi=cli.dpi, outputdir=cli.outputdir, loglevel=cli.loglevel)
             plot.plot_boxplots(data=fldmeans, data_ref=fldmeans_ref, var=variables, title=TITLE, **plot_kwargs)
 
