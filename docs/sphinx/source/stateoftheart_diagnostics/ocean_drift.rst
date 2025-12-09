@@ -32,11 +32,6 @@ There are two main classes for analysis and plotting:
 * **PlotHovmoller**: provides methods for plotting Hovmöller diagrams and timeseries.  
   It generates multi-panel plots showing different anomaly types and variables.
 
-References
-----------
-
-- Gouretski and Reseghetti (2010): On depth and temperature biases in bathythermograph data: development of a new correction scheme based on analysis of a global ocean database. Deep-Sea Research I, 57, 6. doi: http://dx.doi.org/10.1016/j.dsr.2010.03.011
-- https://www.teos-10.org/
 
 File structure
 --------------
@@ -180,12 +175,6 @@ The diagnostic produces two types of plots:
 
 If not specified otherwise, plots will be saved both in PNG and PDF format.
 Data outputs (containing the computed anomalies over the specified regions) are saved as NetCDF files for further analysis.
-
-References
-----------
-- de Boyer Montégut, C., Madec, G., Fischer, A. S., Lazar, A., and Iudicone, D. (2004): Mixed layer depth over the global ocean: An examination of profile data and a profile-based climatology. J. Geophys. Res., 109, C12003, doi:10.1029/2004JC002378
-- Gouretski and Reseghetti (2010): On depth and temperature biases in bathythermograph data: development of a new correction scheme based on analysis of a global ocean database. Deep-Sea Research I, 57, 6. doi: http://dx.doi.org/10.1016/j.dsr.2010.03.011
-- https://www.teos-10.org/
 
 
 Example Plots
