@@ -6,7 +6,7 @@ import pandas as pd
 from aqua.core.logger import log_configure
 from aqua.core.reader import Trender
 from aqua.diagnostics.base import Diagnostic
-from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD.
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 xr.set_options(keep_attrs=True)
 
@@ -23,7 +23,7 @@ class Trends(Diagnostic):
         startdate: str = None,
         enddate: str = None,
         diagnostic_name: str = "trends",
-        vert_coord: str = DEFAULT_OCEAN_VERT_COORD.,
+        vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
         loglevel: str = "WARNING",
     ):
         """Initialize the Trends class.
