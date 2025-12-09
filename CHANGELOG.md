@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.22.0):
 
 - Vertical coordinate for Ocean3d can be passed as a configuration arguemnt (#60)
 - Fix of aqua_path for analysis console (#56)
+- Lat-lon profiles dask fix (#63)
 - Fix argument passing by common CLI for `regrid`, `startdate` and `enddate` (#52)
 - Introduce call to pd.Timestamp in Global_Bias to accomodate also non-nanoseconds time window (#52)
 - Remove time selection from SeaIce, now centralised in CLI (#52)
