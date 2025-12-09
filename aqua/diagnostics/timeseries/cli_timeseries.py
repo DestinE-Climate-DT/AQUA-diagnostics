@@ -9,6 +9,7 @@ single or multiple experiments.
 """
 import argparse
 import sys
+import pandas as pd 
 
 from aqua.diagnostics.core import template_parse_arguments, DiagnosticCLI
 from aqua.diagnostics.core import round_startdate, round_enddate
@@ -72,8 +73,8 @@ if __name__ == '__main__':
                                       reader_kwargs=dataset.get('reader_kwargs') or cli.reader_kwargs)
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
-                        startdate = round_startdate(min(t.plt_startdate for t in ts))
-                        enddate = round_enddate(max(t.plt_enddate for t in ts))
+                        startdate = round_startdate(pd.Timestamp(min(t.plt_startdate for t in ts)))
+                        enddate = round_enddate(pd.Timestamp(max(t.plt_enddate for t in ts)))
                         cli.logger.info(f"Start date: {startdate}, End date: {enddate}")
 
                         # Initialize a list of len from the number of references
@@ -147,8 +148,8 @@ if __name__ == '__main__':
                                       reader_kwargs=dataset.get('reader_kwargs') or cli.reader_kwargs)
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
-                        startdate = min(t.plt_startdate for t in ts)
-                        enddate = max(t.plt_enddate for t in ts)
+                        startdate = pd.Timestamp(min(t.plt_startdate for t in ts))
+                        enddate = pd.Timestamp(max(t.plt_enddate for t in ts))
 
                         # Initialize a list of len from the number of references
                         if 'references' in cli.config_dict:
@@ -225,8 +226,8 @@ if __name__ == '__main__':
                                       reader_kwargs=dataset.get('reader_kwargs') or cli.reader_kwargs)
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
-                        startdate = min(t.plt_startdate for t in ts)
-                        enddate = max(t.plt_enddate for t in ts)
+                        startdate = pd.Timestamp(min(t.plt_startdate for t in ts))
+                        enddate = pd.Timestamp(max(t.plt_enddate for t in ts))
 
                         # Initialize a list of len from the number of references
                         if 'references' in cli.config_dict:
