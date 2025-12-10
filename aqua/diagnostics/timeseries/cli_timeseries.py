@@ -49,7 +49,7 @@ if __name__ == '__main__':
             diagnostic_name = cli.config_dict['diagnostics']['timeseries'].get('diagnostic_name', 'timeseries')
             center_time = cli.config_dict['diagnostics']['timeseries'].get('center_time', True)
             exclude_incomplete = cli.config_dict['diagnostics']['timeseries'].get('exclude_incomplete', True)
-            extend = cli.config_dict['diagnostics']['timeseries'].get('extend', False)
+            extend = cli.config_dict['diagnostics']['timeseries'].get('extend', True)
 
             for var in cli.config_dict['diagnostics']['timeseries'].get('variables', []):
                 var_config, regions = load_var_config(cli.config_dict, var)
@@ -130,7 +130,7 @@ if __name__ == '__main__':
                 diagnostic_name = cli.config_dict['diagnostics']['timeseries'].get('diagnostic_name', 'timeseries')
                 center_time = cli.config_dict['diagnostics']['timeseries'].get('center_time', True)
                 exclude_incomplete = cli.config_dict['diagnostics']['timeseries'].get('exclude_incomplete', True)
-                extend = cli.config_dict['diagnostics']['timeseries'].get('extend', False)
+                extend = cli.config_dict['diagnostics']['timeseries'].get('extend', True)
 
                 for region in regions:
                     try:
