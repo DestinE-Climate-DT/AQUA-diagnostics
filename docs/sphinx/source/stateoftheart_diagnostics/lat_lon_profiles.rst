@@ -58,7 +58,6 @@ Some of the variables that are typically used in this diagnostic are:
 
 * ``2t`` (2 metre temperature)
 * ``tprate`` (total precipitation rate)
-* ``psl`` (sea level pressure)
 
 Derived variables can be computed using the ``EvaluateFormula`` syntax (e.g., ``2t - 273.15`` for temperature in °C).
 
@@ -79,23 +78,22 @@ The basic structure of the analysis is the following:
 
     from aqua.diagnostics.lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 
-    # Compute zonal profile
-    llp = LatLonProfiles(
+    lonlat_dataset = LatLonProfiles(
         catalog='climatedt-phase1',
         model='ICON',
         exp='historical-1990',
         source='lra-r100-monthly',
         startdate='1990-01-01',
-        enddate='1999-12-31',
+        enddate='1999-12-31'
         region='tropics',
         mean_type='zonal'  # or 'meridional'
     )
-    llp.run(var='tprate', units='mm/day', std=True)
-    
-    # Plot long-term mean
-    plot = PlotLatLonProfiles(data=[llp.longterm], data_type='longterm')
-    plot.run(outputdir='./')
+    lonlat_dataset.run(var='tprate', units='mm/day')
 
+    # Plot long-term mean
+    plot = PlotLatLonProfiles(data=[lonlat_dataset.longterm], data_type='longterm')
+    plot.run(show=True)
+  
 .. note::
 
     Start/end dates and reference dataset can be customized.
@@ -125,33 +123,6 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--startdate``: Start date for the analysis.
 - ``--enddate``: End date for the analysis.
 
-.. note::
-
-    CLI arguments (``--model``, ``--exp``, etc.) override config file values, useful for rapid experimentation.
-    For the complete list of arguments, run ``python cli_lat_lon_profiles.py --help``.
-
-
-Configuration file structure
-----------------------------
-
-The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
-Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
-Here we describe only the specific settings for the lat_lon_profiles diagnostic.
-
-* ``lat_lon_profiles``: a block (nested in the ``diagnostics`` block) containing options for the LatLonProfiles diagnostic.
-  Variable-specific parameters override the defaults.
-
-    * ``run``: enable/disable the diagnostic.
-    * ``diagnostic_name``: name of the diagnostic.
-    * ``mean_type``: type of spatial averaging (``zonal`` or ``meridional``).
-    * ``seasonal``: enable seasonal profiles computation.
-    * ``longterm``: enable long-term mean computation.
-    * ``center_time``: center the time axis.
-    * ``exclude_incomplete``: exclude incomplete time periods.
-    * ``box_brd``: enable box borders in plots.
-    * ``variables``: list of variables to analyse with their regions.
-    * ``formulae``: list of derived variables using formulas.
-
 
 Configuration file structure
 ----------------------------
@@ -169,51 +140,22 @@ Here we describe only the specific settings for the lat_lon_profiles diagnostic.
     * ``seasonal``: enable seasonal profiles computation.
     * ``longterm``: enable long-term mean computation.
     * ``variables``: list of variables to analyse with their regions.
-    * ``formulae``: list of derived variables using formulas.
 
 .. code-block:: yaml
 
     diagnostics:
       lat_lon_profiles:
         run: true
-        mean_type: 'zonal'           # or 'meridional'
-        seasonal: true               # Compute seasonal profiles
-        longterm: true               # Compute long-term mean
+        diagnostic_name: 'atmosphere2d'
+        mean_type: 'zonal'
+        center_time: true
+        exclude_incomplete: true
+        box_brd: true
+        seasonal: true
+        longterm: true
         variables:
-          - name: 'tprate'
-            regions: ['global', 'tropics']
-
-For multi-model comparison, multiple datasets can be specified:
-
-.. code-block:: yaml
-
-    datasets:
-      - catalog: 'climatedt-phase1'
-        model: 'ICON'
-        exp: 'historical-1990'
-        source: 'lra-r100-monthly'
-        startdate: '1990-01-01'
-        enddate: '1999-12-31'
-      
-      - catalog: 'climatedt-phase1'
-        model: 'IFS-NEMO'
-        exp: 'historical-1990'
-        source: 'lra-r100-monthly'
-        startdate: '1990-01-01'
-        enddate: '1999-12-31'
-
-    references:
-      - catalog: 'obs'
-        model: 'ERA5'
-        exp: 'era5'
-        source: 'monthly'
-        std_startdate: '1990-01-01'
-        std_enddate: '1999-12-31'
-
-.. note::
-
-    A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-lat_lon_profiles.yaml``.
-    Copy it and customize with your parameters.
+          - name: '2t'
+            regions: [null, 'tropics']  # global and tropics
 
 Output
 ------
@@ -229,7 +171,7 @@ Data outputs are saved as NetCDF files.
 Observations
 ------------
 
-The default reference datasets typically used are:
+The default reference datasets are:
 
 * ERA5 reanalysis for atmospheric variables
 * MSWEP for precipitation data
@@ -248,16 +190,19 @@ Example plots
 All plots can be reproduced using the notebooks in the ``notebooks`` directory on LUMI HPC.
 
 .. figure:: figures/lat_lon_profiles_zonal_profile_longterm_tprate_Tropics.png
+   :align: center
    :width: 100%
 
    Long-term zonal mean precipitation rate profile for the Tropics region, showing ICON model output compared to ERA5 reference data with ±2σ uncertainty bands.
 
 .. figure:: figures/lat_lon_profiles_zonal_profile_seasonal_tprate_Tropics.png
+   :align: center
    :width: 100%
 
    Seasonal zonal mean precipitation rate profiles (DJF, MAM, JJA, SON) for the Tropics region.
 
 .. figure:: figures/lat_lon_profiles_zonal_profile_longterm_tprate_Tropics_multimodel.png
+   :align: center
    :width: 100%
 
    Multi-model comparison: ICON and IFS-NEMO historical and SSP3-7.0 scenarios.

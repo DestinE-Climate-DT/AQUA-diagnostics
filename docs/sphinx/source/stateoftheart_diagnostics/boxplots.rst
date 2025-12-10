@@ -105,6 +105,7 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
 
+
 Configuration file structure
 ----------------------------
 
@@ -124,8 +125,12 @@ Here we describe only the specific settings for the boxplots diagnostic.
     diagnostics:
       boxplots:
         run: true
-        diagnostic_name: 'radiation'
+        diagnostic_name: 'radiation_toa'
         variables: ['-tnlwrf', 'tnswrf']
+        - vars: ['-tnlwrf', 'tnswrf']
+          add_mean_line: true
+          anomalies: true
+          ref_number: 0 # use ERA5 as reference for anomalies
 
 Output
 ------

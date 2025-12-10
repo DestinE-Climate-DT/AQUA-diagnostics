@@ -115,6 +115,9 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--exp``: Experiment to analyse. Can be defined in the config file.
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
+- ``--startdate``: Start date for the analysis.
+- ``--enddate``: End date for the analysis.
+
 
 Configuration file structure
 ----------------------------
@@ -161,7 +164,6 @@ Here we describe only the specific settings for the global biases diagnostic.
 * ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.  
 The default parameters are used if not specified for a specific variable.
 Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
-
 
 .. code-block:: yaml
 
