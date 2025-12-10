@@ -183,22 +183,22 @@ Trend values for each variable at each grid point are saved as NetCDF files for 
 Example Plots
 -------------
 
-FIGURES NEED TO BE UPDATED!!!
-
 All plots can be reproduced using the notebooks in the ``notebooks`` directory on LUMI HPC.
 
 
-* This is an example of the multi-panel plots of lat-lon  maps of temporal trends in T, S at different levels
+.. figure:: figures/trends.multilevel_trend.climatedt-phase1.IFS-NEMO.historical-1990.r1.indian_ocean.png
+    :width: 18cm
+    :align: center
 
-.. figure:: figures/IFS-NEMO-historical-1990-lra-r100-monthly_multilevel_t_s_trend_atlantic_ocean-1.jpg
+    Multi-level trend maps of sea water potential temperature and sea water practical salinity in the Indian Ocean.
+    Rows show different depth levels (10m, 100m, 500m, 1000m, 3000m, 5000m). Positive values indicate warming trends.
+
+
+.. figure:: figures/trends.zonal_mean.climatedt-phase1.IFS-NEMO.historical-1990.r1.indian_ocean.png
+    :align: center
     :width: 18cm
 
-
-* This is an example of multi-model surface trends of global ocean. 
-
-.. figure:: figures/linear_trend_IFS-NEMO-historical-ICON_historical.png
-    :width: 20cm
-
+    Zonal mean vertical section of potential temperature and practical salinity trends showing the meridional and depth structure.
 
 Available demo notebooks
 ------------------------
