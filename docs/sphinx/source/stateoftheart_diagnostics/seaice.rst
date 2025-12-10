@@ -128,16 +128,18 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 Additionally, the CLI can be run with the following optional arguments:
 
-* ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/diagnostics/seaice/config_seaice-osi.yaml`` and ``config_seaice-psc.yaml``.
-* ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
-* ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
-* ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
-* ``--catalog``: Catalog to use for the analysis. Can be defined in the config file.
-* ``--model``: Model to analyse. Can be defined in the config file.
-* ``--exp``: Experiment to analyse. Can be defined in the config file.
-* ``--source``: Source to analyse. Can be defined in the config file.
-* ``--outputdir``: Output directory for the plots.
-* ``--proj``: Projection type for 2D plots. Choices are 'orthographic' or 'azimuthal_equidistant'. Default is 'orthographic'.
+- ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/diagnostics/seaice/config_seaice-osi.yaml`` and ``config_seaice-psc.yaml``.
+- ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
+- ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
+- ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
+- ``--catalog``: Catalog to use for the analysis. Can be defined in the config file.
+- ``--model``: Model to analyse. Can be defined in the config file.
+- ``--exp``: Experiment to analyse. Can be defined in the config file.
+- ``--source``: Source to analyse. Can be defined in the config file.
+- ``--outputdir``: Output directory for the plots.
+- ``--proj``: Projection type for 2D plots. Choices are 'orthographic' or 'azimuthal_equidistant'. Default is 'orthographic'.
+- ``--startdate``: Start date for the analysis.
+- ``--enddate``: End date for the analysis.
 
 Configuration file structure 
 ----------------------------

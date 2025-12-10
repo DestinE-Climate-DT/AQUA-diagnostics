@@ -238,7 +238,7 @@ Available demo notebooks
 
 Notebooks are stored in ``notebooks/diagnostics/global_biases``:
 
-* `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
+- `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
 
 Authors and contributors
 ------------------------

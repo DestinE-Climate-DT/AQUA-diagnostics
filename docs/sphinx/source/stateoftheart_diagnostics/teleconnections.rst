@@ -16,8 +16,6 @@ The diagnostic is built to evaluate the teleconnections indices and to compute r
 Classes
 -------
 
-There are three classes to compute the netCDF files:
-
 There are three classes for the analysis:
 
 * **NAO**: computes the NAO index based on mean sea level pressure (msl) using the station-based method, and computes regression and correlation maps with respect to the NAO index.
@@ -26,7 +24,7 @@ There are three classes for the analysis:
 
 * **MJO**: computes the MJO Hovmoeller plots based on the top net thermal radiation flux (tnlwrf) variable.
 
-There are three other classes to produce the plots:
+There are three other classes for the plots:
 
 * **PlotNAO**: produces the NAO index time series and the regression and correlation maps.
 
@@ -52,6 +50,7 @@ Input variables and datasets
 By default, the diagnostic compares against the ERA5 dataset, with the index evaluated over the entire available period (1940 to present).
 
 The necessary variables for the default evaluation are:
+
 * ``msl`` (mean sea level pressure) for NAO
 * ``tos`` (sea surface temperature) for ENSO
 * ``tnlwrf`` (top net thermal radiation flux) for MJO
@@ -69,23 +68,36 @@ The basic usage of this diagnostic is explained with working examples in the not
 The basic structure of the analysis is the following:
 
 .. code-block:: python
-
+    
     from aqua.diagnostics import NAO, PlotNAO
 
-    nao = NAO(
+    nao_dataset = NAO(
         catalog='climatedt-phase1',
-        model='IFS-NEMO',
-        exp='historical-1990',
-        source='lra-r100-monthly',
-        loglevel='INFO'
-    )
-    nao.retrieve()
-    nao.compute_index()
-    nao.compute_regression(season='DJF')
+        model='IFS-NEMO', 
+        exp='historical-1990', 
+        source='lra-r100-monthly', 
+        loglevel=loglevel)
 
-    plot = PlotNAO(indexes=nao.index)
-    plot.plot_index()
-    plot.plot_regression()
+    nao_obs = NAO(
+        catalog='obs', 
+        model='ERA5', 
+        exp='era5', 
+        source='monthly', 
+        loglevel=loglevel)
+
+    nao_dataset.retrieve()
+    nao_obs.retrieve()
+
+    nao_dataset.compute_index()
+    nao_obs.compute_index()
+
+    reg_dataset = nao_dataset.compute_regression(season='DJF')
+    reg_obs = nao_obs.compute_regression(season='DJF')
+
+    plot = PlotNAO(loglevel='INFO', indexes=nao_dataset.index,
+               ref_indexes=nao_obs.index)
+
+    fig_index, _ = plot.plot_index()
 
 .. note::
 
@@ -116,9 +128,11 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--exp``: Experiment to analyse. Can be defined in the config file.
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
+- ``--startdate``: Start date for the analysis.
+- ``--enddate``: End date for the analysis.
 
 Configuration file structure
----------------------
+----------------------------
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
@@ -137,11 +151,13 @@ Here we describe only the specific settings for the teleconnections diagnostic.
         teleconnections:
             NAO:
                 run: true
+                diagnostic_name: 'nao'
                 months_window: 3
                 seasons: ['DJF']
                 cbar_range: [-5, 5]
             ENSO:
                 run: true
+                diagnostic_name: 'enso'
                 months_window: 3
                 seasons: ['annual']
                 cbar_range: [-2, 2]
@@ -161,14 +177,22 @@ Data outputs are saved as NetCDF files.
 If a reference dataset is provided, the automatic maps consist of contour lines for the model regression map 
 and filled contour map for the difference between the model and the reference regression map.
 
+Observations
+------------
+
+The default reference dataset is ERA5 reanalysis, provided by ECMWF.
+
+The diagnostic uses ERA5 monthly averages from the AQUA ``obs`` catalog (``model=ERA5``, ``exp=era5``, ``source=monthly``).
+
+Custom reference datasets can be configured in the configuration file.
+
 Example Plots
 -------------
 
 All plots can be reproduced using the notebooks in the ``notebooks`` directory on LUMI HPC.
-+
- .. figure:: figures/teleconnections.png
-+   :align: center
+
 .. figure:: figures/teleconnections.png
+   :align: center
    :width: 100%
 
    ENSO IFS-NEMO ssp370 regression map (avg_tos) compared to ERA5.
@@ -189,7 +213,7 @@ Authors and contributors
 
 This diagnostic is maintained by Matteo Nurisso (`@mnurisso <https://github.com/mnurisso>`_, `m.nurisso@isac.cnr.it <mailto:m.nurisso@isac.cnr.it>`_).
 Contributions are welcome — please open an issue or a pull request.
-If you have any doubt or suggestion, contact the AQUA team or the maintainer.
+For questions or suggestions, contact the AQUA team or the maintainer.
 
 Detailed API
 ------------
