@@ -1,7 +1,7 @@
 .. _timeseries:
 
 Timeseries Diagnostic
-========================
+=====================
 
 Description
 -----------
@@ -16,21 +16,21 @@ Classes
 
 There are three classes for the analysis:
 
-* **Timeseries**: a class that computes time series of a given variable or formula for a given model or dataset. 
+* **Timeseries**: computes time series of a given variable or formula for a given model or dataset. 
   Comparison with a reference dataset is also possible. It supports hourly, daily, monthly and yearly time series and area selection.
   It can also compute the standard deviation of the time series.
-* **SeasonalCycles**: a class that computes the seasonal cycle of a given variable or formula for a given model or dataset.
+* **SeasonalCycles**: computes the seasonal cycle of a given variable or formula for a given model or dataset.
   Comparison with a reference dataset is also possible. It can also compute the standard deviation of the seasonal cycle. It supports area selection.
-* **Gregory**: a class that computes the monthly and annual time series necessary for the Gregory-like plot of net radiation TOA and 2 metre temperature.
+* **Gregory**: computes the monthly and annual time series necessary for the Gregory-like plot of net radiation TOA and 2 metre temperature.
   It can also compute the standard deviation of the time series.
 
-There are three other classes to produce the plots:
+There are three other classes for the plots:
 
-* **PlotTimeseries**: a class that ingests xarrays and produces the plots for the time series.
+* **PlotTimeseries**: ingests xarrays and produces the plots for the time series.
   Info necessary for titles, legends and captions are deduced from the xarray attributes.
-* **PlotSeasonalCycles**: a class that ingests xarrays and produces the plots for the seasonal cycle.
+* **PlotSeasonalCycles**: ingests xarrays and produces the plots for the seasonal cycle.
   Info necessary for titles, legends and captions are deduced from the xarray attributes.
-* **PlotGregory**: a class that ingests xarrays and produces the Gregory-like plot.
+* **PlotGregory**: ingests xarrays and produces the Gregory-like plot.
   Info necessary for titles, legends and captions are deduced from the xarray attributes.
 
 .. warning::
@@ -48,11 +48,45 @@ File structure
 Input variables and datasets
 ----------------------------
 
-By default, the diagnostic compare against the ERA5 dataset, with standard deviation calculated over the period 1990-2020.
-The Gregory-like plot uses the CERES dataset for the Net radiation TOA and the ERA5 dataset for the 2 metre temperature.
+By default, the diagnostic compares against the ERA5 dataset, with standard deviation calculated over the period 1990-2020.
+The Gregory-like plot uses the CERES dataset for the Net radiation TOA and the BERKELEY-EARTH dataset for the 2 metre temperature.
 
 The necessary input variables for the diagnostic are all the variables that are needed to compute the time series, seasonal cycle choosen in the configuration file.
 The Gregory-like plot requires the Net radiation TOA and the 2 metre temperature.
+
+Basic usage
+-----------
+
+The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic structure of the analysis is the following:
+
+.. code-block:: python
+
+    from aqua.diagnostics import Timeseries, PlotTimeseries
+
+    ts_dataset = Timeseries(catalog='climatedt-phase1',
+                model= 'ICON',
+                exp='historical-1990',
+                source= 'lra-r100-monthly')
+
+    ts_obs = Timeseries(catalog='obs',
+                model= 'ERA5',
+                exp= 'era5',
+                source= 'monthly',)
+
+    ts_dataset.run(var= '2t', units= 'degC')
+    ts_obs.run(var= '2t', units= 'degC', std=True)
+
+    plot_dict = {'monthly_data': ts_dataset.monthly,
+                  'annual_data': ts_dataset.annual,
+                  'ref_monthly_data': ts_obs.monthly,
+                  'ref_annual_data': ts_obs.annual,
+                  'std_monthly_data': ts_obs.std_monthly,
+                  'std_annual_data': ts_obs.std_annual,
+                  'loglevel': 'INFO'}
+
+    plot = PlotTimeseries(**plot_dict)
+    fig, _ = plot.plot_timeseries()
 
 CLI usage
 ---------
@@ -106,13 +140,13 @@ Here we describe only the specific settings for the time series diagnostic.
             regions: ['tropics', 'europe'] # regions to plot the time series other than global
 
 
-* ``seasonalcycle``: a block, nested in the ``diagnostics`` block, that contains the details required for the seasonal cycle.
+* ``seasonalcycles``: a block, nested in the ``diagnostics`` block, that contains the details required for the seasonal cycle.
   The parameters specific to a single variable are merged with the default parameters, giving priority to the specific ones.
 
 .. code-block:: yaml
 
     diagnostics:
-      seasonalcycle:
+      seasonalcycles:
         run: true # to enable the seasonal cycle
         diagnostic_name: 'atmosphere'
         variables: ['2t', 'tprate']
@@ -132,6 +166,7 @@ Here we describe only the specific settings for the time series diagnostic.
     diagnostics:
       gregory:
         run: true # to enable the Gregory plot
+        diagnostic_name: 'climate_metrics'
         t2m: '2t' # variable name for the 2 metre temperature
         net_toa_name: 'tnlwrf+tnswrf' # formula or variable name for the Net radiation TOA
         monthly: true
@@ -140,8 +175,8 @@ Here we describe only the specific settings for the time series diagnostic.
         std_startdate: '1990-01-01'
         std_enddate: '2020-12-31'
         # Gregory needs 2 datasets and do not care about the references block above
-        t2m_ref: {'catalog': 'obs', 'model': 'ERA5', 'exp': 'era5', 'source': 'monthly'}
-        net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa42', 'source': 'monthly'}
+        t2m_ref: {'catalog': 'obs', 'model': 'BERKELEY-EARTH', 'exp': 'aqua-filled', 'source': 'r100-monthly'}
+        net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa421', 'source': 'monthly'}    
 
 Output
 ------
@@ -157,16 +192,17 @@ The timeseries, reference timeseries and standard deviation timeseries are also 
 Observations
 ------------
 
-The diagnostic uses the following reference datasets:
+The default reference dataset is ERA5 reanalysis, provided by ECMWF.
 
-* ERA5 as a default reference dataset for the global mean time series and seasonal cycle.
-* ERA5 for the 2m temperature and CERES for the Net radiation TOA in the Gregory-like plot.
+The diagnostic uses ERA5 monthly averages from the AQUA ``obs`` catalog (``model=ERA5``, ``exp=era5``, ``source=monthly``) for the global mean time series and seasonal cycle.
+
+The Gregory-like plot uses BERKELEY-EARTH for the 2m temperature and CERES for the Net radiation TOA.
+
+Custom reference datasets can be configured in the configuration file.
 
 .. note::
 
     Multiple reference time series and seasonal cycles plot are planned for the future.
-
-Custom reference datasets can be used.
 
 .. _timeseries_examples:
 
@@ -199,6 +235,8 @@ All these plots can be produced by running the notebooks in the ``notebooks`` di
 Available demo notebooks
 ------------------------
 
+Notebooks are stored in ``notebooks/diagnostics/timeseries``:
+
 * `timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/timeseries.ipynb>`_
 * `seasonalcycles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/seasonalcycles.ipynb>`_
 * `gregory.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/timeseries/gregory.ipynb>`_
@@ -207,8 +245,8 @@ Authors and contributors
 ------------------------
 
 This diagnostic is maintained by Matteo Nurisso (`@mnurisso <https://github.com/mnurisso>`_, `m.nurisso@isac.cnr.it <mailto:m.nurisso@isac.cnr.it>`_).
-Contributions are welcome, please open an issue or a pull request.
-If you have any doubt or suggestion, please contact the AQUA team or the maintainers.
+Contributions are welcome — please open an issue or a pull request.
+For questions or suggestions, contact the AQUA team or the maintainer.
 
 Detailed API
 ------------

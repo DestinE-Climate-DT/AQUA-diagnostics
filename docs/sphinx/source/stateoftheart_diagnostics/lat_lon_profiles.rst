@@ -134,12 +134,12 @@ Here we describe only the specific settings for the lat_lon_profiles diagnostic.
 * ``lat_lon_profiles``: a block (nested in the ``diagnostics`` block) containing options for the LatLonProfiles diagnostic.
   Variable-specific parameters override the defaults.
 
-    * ``run``: enable/disable the diagnostic.
-    * ``diagnostic_name``: name of the diagnostic.
-    * ``mean_type``: type of spatial averaging (``zonal`` or ``meridional``).
-    * ``seasonal``: enable seasonal profiles computation.
-    * ``longterm``: enable long-term mean computation.
-    * ``variables``: list of variables to analyse with their regions.
+    - ``run``: enable/disable the diagnostic.
+    - ``diagnostic_name``: name of the diagnostic.
+    - ``mean_type``: type of spatial averaging (``zonal`` or ``meridional``).
+    - ``seasonal``: enable seasonal profiles computation.
+    - ``longterm``: enable long-term mean computation.
+    - ``variables``: list of variables to analyse with their regions.
 
 .. code-block:: yaml
 
@@ -213,8 +213,8 @@ Available demo notebooks
 
 Notebooks are stored in ``notebooks/diagnostics/lat_lon_profiles``:
 
-* `single_line_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/lat_lon_profiles/single_line_profiles.ipynb>`_
-* `multiple_lines_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/lat_lon_profiles/multiple_lines_profiles.ipynb>`_
+- `single_line_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/lat_lon_profiles/single_line_profiles.ipynb>`_
+- `multiple_lines_profiles.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/lat_lon_profiles/multiple_lines_profiles.ipynb>`_
 
 Authors and contributors
 ------------------------
