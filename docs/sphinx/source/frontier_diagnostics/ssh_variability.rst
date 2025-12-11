@@ -211,6 +211,7 @@ Here we describe only the specific settings for the **sshVariability** diagnosti
     * ``startdate_ref`` / ``enddate_ref``: time range for the reference dataset.
 
 .. code-block:: yaml
+    
    diagnostics:
        sshVariability:
        run: true
@@ -230,6 +231,7 @@ Here we describe only the specific settings for the **sshVariability** diagnosti
   The default for plotting regrid variable ``tgt_grid_name: 'r360x180'`` with the regridding method ``regrid_method: 'ycon'``. More options for regridding are documented on the topic of `Regridding in AQUA <https://aqua.readthedocs.io/en/latest/regrid.html>_` 
 
 .. code-block:: yaml
+
    plot_params:
        default: 
            projection: 'robinson'
