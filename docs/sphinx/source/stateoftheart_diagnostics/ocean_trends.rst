@@ -66,8 +66,8 @@ Basic usage
 The basic usage of this diagnostic is explained with a working example in the notebook. 
 The basic structure of the analysis is the following:
 
-
 .. code-block:: python
+    
     from aqua.diagnostics import Trends, PlotTrends
 
     trends = Trends(
@@ -88,10 +88,12 @@ The basic structure of the analysis is the following:
     plot_trends = PlotTrends(data = trend.trend_coef)
     plot_trends.plot_multilevel(
             levels=[10, 100, 500, 1000, 3000, 5000],
-            save_pdf=True, 
-            save_png=True, 
+            save_pdf=True,
+            save_png=True,
             dpi=300
         )
+
+
 .. note::
 
     Trend coefficients are automatically adjusted based on the detected temporal frequency of the input data.

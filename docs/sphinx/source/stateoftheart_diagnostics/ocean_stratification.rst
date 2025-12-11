@@ -69,40 +69,42 @@ The basic usage of this diagnostic is explained with a working example in the no
 The basic structure of the analysis is the following:
 
 .. code-block:: python
+
     from aqua.diagnostics import Stratification, PlotStratification
-
+    
     strat = Stratification(
-    catalog='climatedt-phase1',
-    model='IFS-NEMO',
-    exp='historical-1990',
-    source='lra-r100-monthly',
-    loglevel='DEBUG'
-    startdate='01-01-1991',
-    enddate='31-05-1992',
-    loglevel='DEBUG'
+        catalog='climatedt-phase1',
+        model='IFS-NEMO',
+        exp='historical-1990',
+        source='lra-r100-monthly',
+        startdate='01-01-1991',
+        enddate='31-05-1992',
+        loglevel='DEBUG'
     )
-
+    
     strat.run(
-    dim_mean=["lat","lon"],
-    outputdir= ".",
-    var=['thetao', 'so'],
-    region="ls",
-    mld = False,
-    climatology = "January",
+        dim_mean=["lat","lon"],
+        outputdir=".",
+        var=['thetao', 'so'],
+        region="ls",
+        mld=False,
+        climatology="January",
     )
-
-    ps = PlotStratification(data=strat.data[['thetao', 'so', 'rho']],
-                        obs=strat.data[['thetao', 'so', 'rho']]*1.001, # just to have different data for obs
-                        loglevel='DEBUG',
-                        )
+    
+    ps = PlotStratification(
+        data=strat.data[['thetao', 'so', 'rho']],
+        obs=strat.data[['thetao', 'so', 'rho']]*1.001,  # just to have different data for obs
+        loglevel='DEBUG',
+    )
     ps.plot_stratification()
+    
+    ps = PlotMLD(
+        data=strat.data[['mld']],
+        obs=strat.data[['mld']]*1.1,
+        loglevel='DEBUG',
+    )
+    ps.plot_mld()
 
-    ps = PlotMLD(data=strat.data[['mld']],
-              obs=strat.data[['mld']]*1.1,
-              loglevel='DEBUG',
-              )
-    s.plot_mld()
- 
 
 
 CLI usage
@@ -204,7 +206,7 @@ Example Plots
 
 All plots can be reproduced using the notebooks in the ``notebooks`` directory on LUMI HPC.
 
-.. figure:: figures/figures/ocean_stratification.stratification.climatedt-phase1.IFS-NEMO.historical-1990.r1.labrador_sea.png
+.. figure:: figures/ocean_stratification.stratification.climatedt-phase1.IFS-NEMO.historical-1990.r1.labrador_sea.png
     :width: 20cm
     
     Vertical stratification profiles of temperature, salinity, and density in the Labrador Sea (January climatology) from IFS-NEMO historical-1990 experiment compared to EN4 observations.
