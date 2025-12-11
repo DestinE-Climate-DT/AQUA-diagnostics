@@ -111,12 +111,16 @@ The basic structure of the analysis is the following:
     # Compute reference data 
     # For Arctic region:
     si_ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua', 
-                      source='nh-monthly', regrid='r100', loglevel="DEBUG")
+                       source='nh-monthly', regrid='r100', 
+                       regions=['arctic'],
+                       loglevel="DEBUG")
     ref_nh = si_ref_nh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
 
     # For Antarctic region:
     si_ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua', 
-                      source='sh-monthly', regrid='r100', loglevel="DEBUG")
+                       source='sh-monthly', regrid='r100', 
+                       regions=['antarctic'],
+                       loglevel="DEBUG")
     ref_sh = si_ref_sh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
     
     ref = [ref_nh, ref_sh]  # or just ref_nh to plot only Arctic region for example
