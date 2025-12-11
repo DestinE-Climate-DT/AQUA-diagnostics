@@ -64,6 +64,7 @@ The basic usage of this diagnostic is explained with a working example in the no
 The basic structure of the analysis is the following:
 
 .. code-block:: python
+
 <<<<<<< HEAD
 
 =======
