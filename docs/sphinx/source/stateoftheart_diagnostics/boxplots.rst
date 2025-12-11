@@ -104,6 +104,8 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--exp``: Experiment to analyse. Can be defined in the config file.
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
+- ``--startdate``: Start date for the analysis.
+- ``--enddate``: End date for the analysis.
 
 
 Configuration file structure
