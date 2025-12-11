@@ -24,7 +24,7 @@ There are three classes for the analysis:
 * **Gregory**: computes the monthly and annual time series necessary for the Gregory-like plot of net radiation TOA and 2 metre temperature.
   It can also compute the standard deviation of the time series.
 
-There are three other classes for the plots:
+There are three other classes for the plotting:
 
 * **PlotTimeseries**: ingests xarrays and produces the plots for the time series.
   Info necessary for titles, legends and captions are deduced from the xarray attributes.
