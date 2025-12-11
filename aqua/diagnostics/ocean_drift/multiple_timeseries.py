@@ -11,6 +11,7 @@ from aqua.core.graphics import plot_timeseries
 from aqua.core.graphics import ConfigStyle
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, evaluate_colorbar_limits, plot_box
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
 def plot_multi_timeseries(
@@ -19,6 +20,7 @@ def plot_multi_timeseries(
     line_plot_colours: list = None,
     figsize: tuple = None,
     variables: list = None,
+    vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
     fig: plt.Figure = None,
     ax: plt.Axes = None,
     style=None,
@@ -38,6 +40,7 @@ def plot_multi_timeseries(
         line_plot_colours (list, optional): List of colors for the lines in each subplot.
         figsize (tuple, optional): Size of the figure (width, height). If None, it is set automatically.
         variables (list, optional): List of variable names to plot from each dataset.
+        vert_coord (str, optional): Name of the vertical dimension coordinate. Default is DEFAULT_OCEAN_VERT_COORD.
         fig (plt.Figure, optional): Matplotlib Figure to plot on. If None, a new figure is created.
         ax (plt.Axes, optional): Matplotlib Axes to plot on. If None, new axes are created.
         style (str, optional): Plot style to use (default is AQUA style).
@@ -72,7 +75,7 @@ def plot_multi_timeseries(
             logger.debug("Creating subplot for variable %s at (%d, %d)", var, j, i)
 
             fig, ax = plot_timeseries(
-                [maps[j][var].sel(level=level) for level in maps[j][var].level],
+                [maps[j][var].sel({vert_coord: level}) for level in maps[j][var][vert_coord]],
                 data_labels=data_labels if k == 0 else None,
                 title=titles[k] if titles else None,
                 ax=ax,
