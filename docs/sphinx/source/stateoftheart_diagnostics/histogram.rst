@@ -196,7 +196,7 @@ Custom reference datasets can be configured in the configuration file.
 Example Plots
 -------------
 
-.. figure:: figures/histogram_tprate_global.png
+.. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
    :align: center
    :width: 100%
 
