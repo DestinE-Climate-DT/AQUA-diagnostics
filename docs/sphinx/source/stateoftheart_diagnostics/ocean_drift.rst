@@ -1,7 +1,7 @@
 .. _ocean_drift:
 
 Ocean Drift Diagnostic
-=======================
+======================
 
 Description
 -----------
@@ -63,27 +63,28 @@ The basic usage of this diagnostic is explained with a working example in the no
 The basic structure of the analysis is the following:
 
 .. code-block:: python
+
     from aqua.diagnostics import Hovmoller, PlotHovmoller
 
     hov = Hovmoller(
-    catalog='climatedt-phase1',
-    model='IFS-NEMO',
-    exp='historical-1990',
-    source='lra-r100-monthly',
-    startdate='01-01-1991',
-    enddate='31-05-1991',
-    loglevel='INFO'
+        catalog='climatedt-phase1',
+        model='IFS-NEMO',
+        exp='historical-1990',
+        source='lra-r100-monthly',
+        startdate='01-01-1991',
+        enddate='31-05-1991',
+        loglevel='INFO'
     )
+    
 
     hov.run(
-    region='io',
-    dim_mean=['lat', 'lon'],
-    anomaly_ref='t0'
+        region='io',
+        dim_mean=['lat', 'lon'],
+        anomaly_ref='t0'
     )
 
-    hov_plot = PlotHovmoller(data = hov.processed_data_list)
+    hov_plot = PlotHovmoller(data=hov.processed_data_list)
     hov_plot.plot_hovmoller()
-
     hov_plot.plot_timeseries()
 
 .. note::
@@ -113,6 +114,8 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--exp``: Experiment to analyse. Can be defined in the config file.
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
+- ``--startdate``: Start date for the analysis.
+- ``--enddate``: End date for the analysis.
 
 
 Configuration file structure
@@ -132,17 +135,16 @@ Here we describe only the specific settings for the ocean drift diagnostic.
     * ``regions``: list of ocean regions to analyse (e.g., ``['go', 'io', 'ao', 'so', 'arc_o', 'po']``).
     * ``dim_mean``: dimensions over which to compute spatial averages (typically ``['lat', 'lon']``).
 
-
 .. code-block:: yaml
-    diagnostics:
-    ocean_drift:
-        hovmoller:
-        diagnostic_name: 'ocean3d'
-        run: true
-        var: ['thetao', 'so']
-        regions: ['io', 'sss']
-        dim_mean: ['lat', 'lon']
 
+    diagnostics:
+      ocean_drift:
+        hovmoller:
+          diagnostic_name: 'ocean3d'
+          run: true
+          var: ['thetao', 'so']
+          regions: ['io', 'sss']
+          dim_mean: ['lat', 'lon']
 
 The diagnostic supports analysis over predefined ocean regions. Common regions include:
 
@@ -160,22 +162,11 @@ Output
 
 The diagnostic produces two types of plots:
 
-* Vertical stratification profiles showing temperature, salinity, and density as functions of depth
-* Multi-panel Mixed Layer Depth spatial maps
-
-Plots are saved in both PDF and PNG format.
-Data outputs (containing ``rho``, ``mld`` and original variables computed over the specified regions) are saved as NetCDF files for further analysis.
-
-Output
-------
-
-The diagnostic produces two types of plots:
 * Hovmöller diagrams showing the temporal evolution of ocean variables as a function of depth, with separate panels for each transformation type (full values, anomalies, standardized anomalies)
 * Timeseries plots showing the temporal evolution at specific depth levels, with multiple lines representing different depths
 
 If not specified otherwise, plots will be saved both in PNG and PDF format.
 Data outputs (containing the computed anomalies over the specified regions) are saved as NetCDF files for further analysis.
-
 
 Example Plots
 -------------
@@ -183,25 +174,23 @@ Example Plots
 All plots can be reproduced using the notebooks in the ``notebooks`` directory on LUMI HPC.
 
 .. figure:: figures/oceandrift.hovmoller.climatedt-phase1.IFS-NEMO.historical-1990.r1.indian_ocean.png
+    :align: center
     :width: 18cm
 
-Hovmöller diagrams showing ocean temperature drift in the Indian Ocean. Full values, anomalies relative to initial time and standardized anomalies are shown.
-
-
+    Hovmöller diagrams showing ocean temperature drift in the Indian Ocean. Full values, anomalies relative to initial time and standardized anomalies are shown.
 
 .. figure:: figures/oceandrift.timeseries.climatedt-phase1.IFS-NEMO.historical-1990.r1.indian_ocean.png
+    :align: center
     :width: 20cm
 
-Timeseries of ocean temperature at multiple depth levels in the Indian Ocean, showing drift patterns from full values, anomalies relative to t0, and standardized anomalies.
-
+    Timeseries of ocean temperature at multiple depth levels in the Indian Ocean, showing drift patterns from full values, anomalies relative to t0, and standardized anomalies.
 
 Available demo notebooks
 ------------------------
 
 Notebooks are stored in ``notebooks/diagnostics/ocean_drift``:
 
-* `hovmoller.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ocean_drift/hovmoller.ipynb>`_
-
+- `hovmoller.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ocean_drift/hovmoller.ipynb>`_
 
 
 Authors and contributors
@@ -209,16 +198,16 @@ Authors and contributors
 
 This diagnostic is maintained by Supriyo Gosh (`@supriyogosh <https://github.com/supriyogosh>`_, `supriyo.ghosh@bsc.es <mailto:supriyo.ghosh@bsc.es>`_).  
 Contributions are welcome — please open an issue or a pull request.  
-For questions or suggestions, contact the AQUA team or the maintainers.
+For questions or suggestions, contact the AQUA team or the maintainer.
 
 
 Detailed API
 ------------
 
-This section provides a detailed reference for the Application Programming Interface (API) of the "ocean3d" diagnostic,
+This section provides a detailed reference for the Application Programming Interface (API) of the ``Ocean_drift`` diagnostic,
 produced from the diagnostic function docstrings.
 
-.. automodule:: ocean_drift
+.. automodule:: aqua.diagnostics.ocean_drift
     :members:
     :undoc-members:
     :show-inheritance:
