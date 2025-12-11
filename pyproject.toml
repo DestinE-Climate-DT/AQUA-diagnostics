@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 # For setuptools: https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
@@ -40,7 +40,7 @@ dependencies = [
 
 [project.optional-dependencies]
 core = [
-    "aqua-core @ git+https://github.com/DestinE-Climate-DT/AQUA.git"
+    "aqua-core>=0.21.0"
 ]
 docs = [
     "sphinx",

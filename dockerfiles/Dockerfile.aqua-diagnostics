@@ -69,7 +69,7 @@ SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 
 WORKDIR /app/
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER . AQUA
+COPY --chown=$MAMBA_USER:$MAMBA_USER . AQUA-diagnostics
 
 # git for the pip dependencies installed from source
 # gcc for pytdigest (whells not being picked up?)

@@ -1,7 +1,9 @@
 ![maintenance-status](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
+[![PyPI - Version](https://img.shields.io/pypi/v/aqua-diagnostics?style=flat)](https://pypi.org/project/aqua-diagnostics/)
 [![AQUA-diagnostics tests](https://github.com/DestinE-Climate-DT/AQUA-diagnostics/actions/workflows/aqua-diagnostics.yml/badge.svg)](https://github.com/DestinE-Climate-DT/AQUA-diagnostics/actions/workflows/aqua-diagnostics.yml)
 [![Documentation Status](https://readthedocs.org/projects/aqua-diagnostics/badge/?version=latest)](https://aqua-diagnostics.readthedocs.io/en/latest/)
 [![codecov](https://codecov.io/gh/DestinE-Climate-DT/AQUA-diagnostics/graph/badge.svg?token=UIJTBR9ID0)](https://codecov.io/gh/DestinE-Climate-DT/AQUA-diagnostics)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17776618.svg)](https://doi.org/10.5281/zenodo.17776618)
 
 
 # AQUA-diagnostics

@@ -1,7 +1,7 @@
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list, time_to_string
 from aqua.core.fixer import EvaluateFormula
-from aqua.diagnostics.core import Diagnostic, start_end_dates              
+from aqua.diagnostics.base import Diagnostic, start_end_dates              
 
 class LatLonProfiles(Diagnostic):
 	"""
@@ -170,6 +170,10 @@ class LatLonProfiles(Diagnostic):
 		if self.std_startdate is None or self.std_enddate is None:
 				self.std_startdate = monthly_data.time.min().values
 				self.std_enddate = monthly_data.time.max().values
+
+		# Load data in memory to avoid dask graph issues during groupby
+		self.logger.debug("Loading monthly data in memory for std computation")
+		monthly_data.load()
 
 		if freq == 'seasonal':
 			# Group by season and compute std

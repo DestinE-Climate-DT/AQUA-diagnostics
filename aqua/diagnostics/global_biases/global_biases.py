@@ -4,7 +4,7 @@ from aqua.core.logger import log_configure
 from aqua.core.util import select_season, convert_data_units
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.exceptions import NoDataError
-from aqua.diagnostics.core import Diagnostic
+from aqua.diagnostics.base import Diagnostic
 from .util import handle_pressure_level
 
 
@@ -113,8 +113,8 @@ class GlobalBiases(Diagnostic):
         else:
             self.data.attrs['short_name'] = self.var
 
-        self.startdate = pd.to_datetime(self.startdate or self.data.time[0].values).strftime("%Y-%m-%d")
-        self.enddate   = pd.to_datetime(self.enddate   or self.data.time[-1].values).strftime("%Y-%m-%d")
+        self.startdate = pd.Timestamp(self.startdate or self.data.time[0].values).strftime("%Y-%m-%d")
+        self.enddate   = pd.Timestamp(self.enddate   or self.data.time[-1].values).strftime("%Y-%m-%d")
         if plev is not None:
             self.plev = plev
 

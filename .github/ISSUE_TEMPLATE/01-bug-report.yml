@@ -44,11 +44,12 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: version
+    id: version-core
     attributes:
       label: version
       description: Which AQUA version are you using?
       options:
+      - v0.21.0
       - main
       - older -> not compatible with AQUA-diagnostic repository
     validations:

@@ -336,7 +336,77 @@ To use the FDB5 binary library on MN5, set the following environment variable:
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/gpfs/projects/ehpc01/sbeyer/models/DE_CY48R1.0_climateDT_tco399_aerosol_runoff/build/lib"
 
 
-Installation and use of the AQUA-diagnostics container
+.. _installation-hpc2020:
+
+Installation on ECMWF HPC2020
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+HPC2020 is moving to a more container-based approach, so the suggested installation process uses a technology similar to the one used on LUMI.
+In fact, using directly conda or mamba on lustre filesystems (``$PERM`` and ``$HPCPERM``) is not recommended 
+and has been verified to lead to severe performance issues.
+
+The recommended approach is to use the `tykky module <https://docs.csc.fi/computing/containers/tykky/>`_ developed by CSC, and available on HPC2020, which provides
+the same container wrapper technology used for an install on LUMI. 
+This process is also described in the relevant HPC2020 `documentation pages <https://confluence.ecmwf.int/display/UDOC/Moving+away+from+Anaconda+and+Miniconda>`_.
+
+While basically you could follow the instructions in the ECMWF docs on how to create a tykky environment, a small bug in one of the AQUA dependencies requires a slightly 
+more complex procedure, so that, as for LUMI, a convenience installation script has been created.
+
+First, clone the AQUA-diagnostics repository from GitHub as described in the previous section.
+
+The installation process uses considerable resources which may exceed the capacity of the login node.
+For this reason, it is recommended to start an interactive session asking for adequate resources:
+
+.. code-block:: bash
+
+    ecinteractive -c 8 -m 20 -s 30
+
+which will ask for a session with 8 cpus, 20 GB of RAM and 30 GB of temporary local disk storage. This is required only for the installation, not necessarily for using AQUA.
+
+.. note ::
+    If this is the first time that you run ``ecinteractive``, you should first set up your ssh keys by running the command ``ssh-key-setup``.
+
+It is recommended to define an ``$AQUA_DIAGNOSTICS`` environment variable that points to the AQUA_DIAGNOSTICS directory (the script will assume by default that ``AQUA_DIAGNOSTICS`` is located in the current directiry.):
+
+.. code-block:: bash
+
+    export AQUA_DIAGNOSTICS=/path/to/AQUA
+
+Then run the the installation script:
+
+.. code-block:: bash
+
+    cd $AQUA_DIAGNOSTICS/cli/hpc2020-install
+    ./hpc2020-install.sh
+
+The script installs by default the AQUA tykky environment in the directory ``$HPCPERM/tykky/aqua``.
+
+The script will ask the user if they wish to add the AQUA environment  permanently to their ``$PATH`` in the ``.bash_profile`` file at the end of the installation.
+Please note that adding AQUA to your PATH will make you use the aqua environment for all activities on HPC2020, so this is not really recommended.
+
+Instead, the recommended way to use AQUA is by loading the environment with a conda-like syntax:
+
+.. code-block:: bash
+    
+    module load tykky
+    tykky activate aqua
+
+You can later also use ``tykky deactivate`` to deactivate the environment.
+
+.. note ::
+        This installs ``aqua-cora`` as a package from pip and ``aqua-diagnostics`` in editable mode. 
+        If you are a developer you can also install using the ``hpc2020_install_dev.sh`` script, which will install both in editable mode, creating the tykky environment ``aqua-dev``.
+
+In case you plan to use Visual Studio Code, you can add a kernel pointing to the containerized AQUA by running also the following command:
+
+.. code-block:: bash
+
+    $HPCPERM/tykky/aqua/bin/python3 -m ipykernel install --user --name=<my_containerised_env_name>
+
+
+
+
+Installation and use of the AQUA container
 ------------------------------------------
 
 In order to use AQUA-diagnostics in complicate workflows or in a production environment, it is recommended to use the AQUA-diagnostics container.

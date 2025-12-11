@@ -1,0 +1,30 @@
+name: AQUA-diagnostics monthly tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 5 * *" # run every fifth day of the month at 1AM UTC
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Call the reusable workflow with multiple Python versions
+  aqua-diagnostics-complete-tests:
+    uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
+    with:
+      python-versions: '["3.10", "3.11", "3.12"]'
+      pytest-markers: 'diagnostics'
+      enable-parallel: false
+      enable-coverage: false
+      fail-fast: false
+    secrets:
+      AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
+      AQUA_DVC_PAT: ${{ secrets.AQUA_DVC_PAT }}
+      BSC_GITLAB: ${{ secrets.BSC_GITLAB }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

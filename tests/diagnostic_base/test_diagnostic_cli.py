@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import os
 import pytest
 
-from aqua.diagnostics.core.cli_base import DiagnosticCLI
+from aqua.diagnostics.base.cli_base import DiagnosticCLI
 from aqua.core.util import dump_yaml
 
 
@@ -156,7 +156,7 @@ class TestDiagnosticCLI:
             'exp': 'historical',
             'source': 'CMIP6',
             'startdate': '2000-01-01',
-            'enddate': '2010-12-31'
+            'enddate': '2010-12-31',
         }
         
         result = cli.dataset_args(dataset)
@@ -168,6 +168,17 @@ class TestDiagnosticCLI:
         assert result['regrid'] == 'r100'
         assert result['startdate'] == '2000-01-01'
         assert result['enddate'] == '2010-12-31'
+
+        result = cli.reference_args(dataset)
+
+        assert result['catalog'] == 'my-catalog'
+        assert result['model'] == 'MyModel'
+        assert result['exp'] == 'historical'
+        assert result['source'] == 'CMIP6'
+        assert result['regrid'] is None
+        assert result['startdate'] is None
+        assert result['enddate'] is None
+
 
     def test_dataset_args_uses_defaults(self, mock_args):
         """Test that dataset_args uses defaults for missing keys."""
