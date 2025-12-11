@@ -67,7 +67,7 @@ The basic usage of this diagnostic is explained with a working example in the no
 The basic structure of the analysis is the following:
 
 .. code-block:: python
-    
+
     from aqua.diagnostics import Trends, PlotTrends
 
     trends = Trends(
@@ -225,7 +225,7 @@ Detailed API
 This section provides a detailed reference for the Application Programming Interface (API) of the "ocean3d" diagnostic,
 produced from the diagnostic function docstrings.
 
-.. automodule:: ocean_trends
+.. automodule:: aqua.diagnostics.ocean_trends
     :members:
     :undoc-members:
     :show-inheritance:

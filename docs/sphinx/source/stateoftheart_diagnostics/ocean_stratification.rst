@@ -243,7 +243,7 @@ Detailed API
 This section provides a detailed reference for the Application Programming Interface (API) of the "ocean3d" diagnostic,
 produced from the diagnostic function docstrings.
 
-.. automodule:: ocean_stratification
+.. automodule:: aqua.diagnostics.ocean_stratification
     :members:
     :undoc-members:
     :show-inheritance:
