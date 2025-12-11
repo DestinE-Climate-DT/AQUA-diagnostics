@@ -21,6 +21,7 @@ Default regions are the Arctic and the Antarctic regions, but it is possible to 
 can be defined in the configuration file.
 
 Two main components are included:
+
 - A class that performs the computations and prepares the data (including saving NetCDF files).
 - Separate classes for producing 1D (time series) and 2D (maps) visualizations.
 
@@ -68,7 +69,6 @@ The diagnostic supports the following variables (the ``Fixer`` class of AQUA-cor
 
 * ``siconc`` (sea ice concentration, GRIB parameter id 31)  
 * ``sithick`` (sea ice thickness, GRIB parameter id 32)  
-* ``sivol`` (sea ice volume, GRIB parameter id 33)  
 
 The default reference dataset for sea ice concentration is OSI-SAF, but custom references can be provided in the configuration file.
 
@@ -93,7 +93,9 @@ The basic structure of the analysis is the following:
     result = si.compute_seaice(method='extent', var='siconc')
     
     # Plot time series
-    psi = PlotSeaIce(monthly_models=result, loglevel='DEBUG')
+        psi = PlotSeaIce(monthly_models=result, 
+                     catalog=si.catalog, model='IFS-NEMO', exp='historical-1990',
+                     source='lra-r100-monthly', loglevel='DEBUG'loglevel='DEBUG')
     psi.plot_seaice(plot_type='timeseries', save_pdf=True, save_png=True)
 
 **2D Spatial**
@@ -105,11 +107,28 @@ The basic structure of the analysis is the following:
     # Compute sea ice fraction (2D maps calculation)
     si = SeaIce(model='IFS-NEMO', exp='historical-1990', source='lra-r100-monthly', loglevel="DEBUG")
     result = si.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
+
+    # Compute reference data 
+    # For Arctic region:
+    si_ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua', 
+                      source='nh-monthly', regrid='r100', loglevel="DEBUG")
+    ref_nh = si_ref_nh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
+
+    # For Antarctic region:
+    si_ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua', 
+                      source='sh-monthly', regrid='r100', loglevel="DEBUG")
+    ref_sh = si_ref_sh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
     
+    ref = [ref_nh, ref_sh]  # or just ref_nh to plot only Arctic region for example
+
     # Plot 2D maps
-    psi_2d = Plot2DSeaIce(models=result, loglevel='DEBUG')
-    psi_2d.plot_2d_seaice(plot_type='var', method='fraction', months=[3,9], 
-                          projkw={'projname': 'orthographic'}, save_pdf=True, save_png=True)
+    psi_2d = Plot2DSeaIce(models=result, ref=ref, loglevel='DEBUG')
+    psi_2d.plot_2d_seaice(plot_type='var', method='fraction', months=[3,9],
+                          projkw={'projname': 'orthographic',
+                                  'projpars': {'central_longitude': 0.0,
+                                               'central_latitude': 'max_lat_signed'}
+                                  }
+                          save_pdf=True, save_png=True)
 
 .. note::
 
@@ -171,7 +190,7 @@ The sea ice configuration file is organized into several main sections:
       - &ref_osi_nh
         catalog: 'obs'             # mandatory
         model: 'OSI-SAF'           # mandatory
-        exp: 'osi-450'             # mandatory
+        exp: 'osi-saf-aqua'        # mandatory
         source: 'nh-monthly'       # mandatory
         regrid: 'r100'
         domain: "nh"
