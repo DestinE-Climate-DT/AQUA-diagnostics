@@ -69,40 +69,42 @@ The basic usage of this diagnostic is explained with a working example in the no
 The basic structure of the analysis is the following:
 
 .. code-block:: python
-    from aqua.diagnostics import Stratification, PlotStratification
 
+    from aqua.diagnostics import Stratification, PlotStratification, PlotMLD
+    
     strat = Stratification(
-    catalog='climatedt-phase1',
-    model='IFS-NEMO',
-    exp='historical-1990',
-    source='lra-r100-monthly',
-    loglevel='DEBUG'
-    startdate='01-01-1991',
-    enddate='31-05-1992',
-    loglevel='DEBUG'
+        catalog='climatedt-phase1',
+        model='IFS-NEMO',
+        exp='historical-1990',
+        source='lra-r100-monthly',
+        startdate='01-01-1991',
+        enddate='31-05-1992',
+        loglevel='DEBUG'
     )
-
+    
     strat.run(
-    dim_mean=["lat","lon"],
-    outputdir= ".",
-    var=['thetao', 'so'],
-    region="ls",
-    mld = False,
-    climatology = "January",
+        dim_mean=["lat","lon"],
+        outputdir=".",
+        var=['thetao', 'so'],
+        region="ls",
+        mld=False,
+        climatology="January",
     )
-
-    ps = PlotStratification(data=strat.data[['thetao', 'so', 'rho']],
-                        obs=strat.data[['thetao', 'so', 'rho']]*1.001, # just to have different data for obs
-                        loglevel='DEBUG',
-                        )
+    
+    ps = PlotStratification(
+        data=strat.data[['thetao', 'so', 'rho']],
+        obs=strat.data[['thetao', 'so', 'rho']]*1.001,  # just to have different data for obs
+        loglevel='DEBUG',
+    )
     ps.plot_stratification()
+    
+    ps = PlotMLD(
+        data=strat.data[['mld']],
+        obs=strat.data[['mld']]*1.1,
+        loglevel='DEBUG',
+    )
+    ps.plot_mld()
 
-    ps = PlotMLD(data=strat.data[['mld']],
-              obs=strat.data[['mld']]*1.1,
-              loglevel='DEBUG',
-              )
-    s.plot_mld()
- 
 
 
 CLI usage
@@ -126,6 +128,8 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--exp``: Experiment to analyse. Can be defined in the config file.
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
+- ``--startdate``: Start date for the analysis.
+- ``--enddate``: End date for the analysis.
 
 
 Configuration file structure
@@ -149,7 +153,6 @@ Here we describe only the specific settings for the ocean stratification diagnos
 .. note::
 
     The ``regions`` and ``climatology`` parameters are zipped together, so if you want the same region with different climatologies, you need to repeat the region name.
-
 
 .. code-block:: yaml
 
@@ -186,37 +189,38 @@ Plots are saved in both PDF and PNG format.
 Data outputs (containing ``rho``, ``mld`` and original variables computed over the specified regions) are saved as NetCDF files for further analysis.
 
 Observations
--------------
+------------
 
 The default reference dataset is EN4.2.2.g10 (from 1950 to 2022), but custom references can be specified in the configuration file.
 
-
 References
 ----------
-- Potential density calculation is based on polyTEOS-10
-  See: https://github.com/fabien-roquet/polyTEOS/blob/36b9aef6cd2755823b5d3a7349cfe64a6823a73e/polyTEOS10.py#L57
-- de Boyer Montégut, C., Madec, G., Fischer, A. S., Lazar, A., and Iudicone, D. (2004): Mixed layer depth over the global ocean: An examination of profile data and a profile-based climatology. J. Geophys. Res., 109, C12003, doi:10.1029/2004JC002378
-- Gouretski and Reseghetti (2010): On depth and temperature biases in bathythermograph data: development of a new correction scheme based on analysis of a global ocean database. Deep-Sea Research I, 57, 6. doi: http://dx.doi.org/10.1016/j.dsr.2010.03.011
-- https://www.teos-10.org/
+
+* Potential density calculation is based on polyTEOS-10 see: https://github.com/fabien-roquet/polyTEOS/blob/36b9aef6cd2755823b5d3a7349cfe64a6823a73e/polyTEOS10.py#L57
+
+* de Boyer Montégut, C., Madec, G., Fischer, A. S., Lazar, A., and Iudicone, D. (2004): Mixed layer depth over the global ocean: An examination of profile data and a profile-based climatology. J. Geophys. Res., 109, C12003, doi:10.1029/2004JC002378
+
+* Gouretski and Reseghetti (2010): On depth and temperature biases in bathythermograph data: development of a new correction scheme based on analysis of a global ocean database. Deep-Sea Research I, 57, 6. doi: http://dx.doi.org/10.1016/j.dsr.2010.03.011
+
+* https://www.teos-10.org/
+
 
 Example Plots
 -------------
 
 All plots can be reproduced using the notebooks in the ``notebooks`` directory on LUMI HPC.
 
-.. figure:: figures/figures/ocean_stratification.stratification.climatedt-phase1.IFS-NEMO.historical-1990.r1.labrador_sea.png
+.. figure:: figures/ocean_stratification.stratification.climatedt-phase1.IFS-NEMO.historical-1990.r1.labrador_sea.png
+    :align: center
     :width: 20cm
     
     Vertical stratification profiles of temperature, salinity, and density in the Labrador Sea (January climatology) from IFS-NEMO historical-1990 experiment compared to EN4 observations.
 
-
-
 .. figure:: figures/ocean_stratification.mld.climatedt-phase1.IFS-NEMO.historical-1990.r1.labrador_sea.png
+    :align: center
     :width: 20cm
 
     Mixed layer depth spatial distribution for January climatology in the Labrador Sea from IFS-NEMO historical-1990 experiment compared to EN4 observations.
-
-
 
 Available demo notebooks
 ------------------------
@@ -225,14 +229,12 @@ Notebooks are stored in ``notebooks/diagnostics/ocean_stratification``:
 
 * `stratification.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ocean_stratification/stratification.ipynb>`_
 
-
-
 Authors and contributors
 ------------------------
 
 This diagnostic is maintained by Supriyo Gosh (`@supriyogosh <https://github.com/supriyogosh>`_, `supriyo.ghosh@bsc.es <mailto:supriyo.ghosh@bsc.es>`_).  
 Contributions are welcome — please open an issue or a pull request.  
-For questions or suggestions, contact the AQUA team or the maintainers.
+For questions or suggestions, contact the AQUA team or the maintainer.
 
 
 Detailed API
@@ -241,7 +243,7 @@ Detailed API
 This section provides a detailed reference for the Application Programming Interface (API) of the "ocean3d" diagnostic,
 produced from the diagnostic function docstrings.
 
-.. automodule:: ocean_stratification
+.. automodule:: aqua.diagnostics.ocean_stratification
     :members:
     :undoc-members:
     :show-inheritance:

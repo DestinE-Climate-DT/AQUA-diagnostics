@@ -64,7 +64,11 @@ The basic usage of this diagnostic is explained with a working example in the no
 The basic structure of the analysis is the following:
 
 .. code-block:: python
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 69fecb1a0d230ad27009f3531636314d8c70a015
     from aqua.diagnostics import Trends, PlotTrends
 
     trend = Trends(
@@ -85,7 +89,17 @@ The basic structure of the analysis is the following:
 
     # Generate multi-level spatial maps
     plot_trends = PlotTrends(data = trend.trend_coef)
+<<<<<<< HEAD
     plot_trends.plot_multilevel()
+=======
+    plot_trends.plot_multilevel(
+            levels=[10, 100, 500, 1000, 3000, 5000],
+            save_pdf=True,
+            save_png=True,
+            dpi=300
+        )
+
+>>>>>>> 69fecb1a0d230ad27009f3531636314d8c70a015
 
 .. note::
 
@@ -187,7 +201,6 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
     Multi-level trend maps of sea water potential temperature and sea water practical salinity in the Indian Ocean.
     Rows show different depth levels (10m, 100m, 500m, 1000m, 3000m, 5000m). Positive values indicate warming trends.
 
-
 .. figure:: figures/trends.zonal_mean.climatedt-phase1.IFS-NEMO.historical-1990.r1.indian_ocean.png
     :align: center
     :width: 18cm
@@ -199,7 +212,7 @@ Available demo notebooks
 
 Notebooks are stored in ``notebooks/diagnostics/ocean_trends``:
 
-* `trends.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ocean_trends/trends.ipynb>`_
+- `trends.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ocean_trends/trends.ipynb>`_
 
 Authors and contributors
 ------------------------
