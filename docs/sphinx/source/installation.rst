@@ -3,18 +3,76 @@
 Installation
 ============
 
-In this section we will provide a step-by-step guide to install the Python package AQUA-diagnostics.
+In this section we will provide a step-by-step guide to install the Python package ``aqua-diagnostics``.
 AQUA-diagnostics is developed and tested with Python 3.12 and it supports Python 3.9 or later (with the exclusions of 3.13).
 
-We recommend using Mamba/Conda package manager for the installation process.
+AQUA-diagnostics extends the AQUA package (https://github.com/DestinE-Climate-DT/AQUA), which provides 
+the core functionalities required for running diagnostics. When you install AQUA-diagnostics, AQUA 
+will be automatically installed as a dependency, giving you access to both packages.
+
+.. note::
+    If you need to install AQUA in editable mode for development purposes, you must clone the 
+    AQUA repository separately and install it in editable mode before installing AQUA-diagnostics.
+
+.. _installation-pip:
+
+Pip installation
+----------------
+
+AQUA-diagnostics is also available on the Python Package Index (PyPI) repository and can be installed with pip.
+However, some dependencies are not available on PyPI, so you may need to install them manually
+The extra dependencies are listed in the ``environment.yml`` file in the repository and are:
+
+- ``pip``
+- ``cdo>=2.5.0``
+- ``eccodes==2.41.0``
+- ``tempest-extremes``
 
 .. note ::
-    Soon AQUA-diagnostics will be available on the PyPI repository, so you will be able to install it with pip.
-    The installation process will be updated accordingly.
+    If you need to access data written in a local FDB database (not polytope), you need to install the FDB5 library.
+    The FDB5 library is not available in the conda-forge repository, so you need to install it manually.
+    If you are working on a supported HPC, you can check the corresponding section for more information in the :ref:`HPC installation <installation-hpc>` section.
+
+Once the extra dependencies are installed, you can install AQUA with the following command:
+
+.. code-block:: bash
+
+    pip install aqua-diagnostics
+
+
+Extra dependencies
+^^^^^^^^^^^^^^^^^^
+
+Some extra depencencies are defined in the ``pyproject.toml`` file in the repository.
+These are necesassary to compile the documentation, to run test or to run the notebooks.
+You can install them with the following command:
+
+.. code-block:: bash
+
+    pip install aqua-diagnostics[docs]
+    pip install aqua-diagnostics[notebooks]
+    pip install aqua-diagnostics[tests]
+
+Or to install all the extra dependencies:
+
+.. code-block:: bash
+
+    pip install aqua-diagnostics[all]
+
+
+.. _installation-conda:
+
+
+Conda/Mamba installation
+------------------------
+
+It is possible to use Mamba/Conda package manager for the installation process.
+AQUA-diagnostics is not yet available on the conda-forge repository, so the installation process requires the use of an environment file
+that contains all the required dependencies.
+
 
 Prerequisites
--------------
-
+^^^^^^^^^^^^^
 Before installing AQUA-diagnostics, ensure that you have the following software installed:
 
 - `Git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_: AQUA-diagnostics is hosted on GitHub, and you will need Git to clone the repository.
@@ -23,7 +81,7 @@ Before installing AQUA-diagnostics, ensure that you have the following software 
 .. _installation-conda:
 
 Installation with Miniforge
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 First, clone the AQUA-diagnostics repository from GitHub:
 
@@ -34,7 +92,7 @@ Then, navigate to the AQUA-diagnostics directory:
 
 .. code-block:: bash
 
-    cd AQUAA-diagnostics
+    cd AQUA-diagnostics
 
 Create a new environment with Mamba.
 An environment file is provided in the repository, so you can create the environment with the following command:
@@ -43,27 +101,22 @@ An environment file is provided in the repository, so you can create the environ
 
     conda env create -f environment.yml
 
-This will create a new environment called ``aqua`` with all the required dependencies.
+This will create a new environment called ``aqua-diagnostics`` with all the required dependencies.
 
 Finally, activate the environment:
 
 .. code-block:: bash
 
-    conda activate aqua
+    conda activate aqua-diagnostics
 
 At this point, you should have successfully installed the AQUA-diagnostics package and its dependencies 
-in the newly created aqua environment.
+in the newly created aqua-diagnostics environment.
+
 
 .. note ::
-    Together with the environment file, a ``pyproject.toml`` file is provided in the repository.
-    This file contains the required dependencies for the AQUA-diagnostics package and allows you to install the package with the pip package manager.
-    However, we recommend using Conda to install the package and its dependencies, since some dependencies are not available in the PyPI repository.
-    If you want to install the package with pip, please be aware that you may need to install some dependencies manually.
 
-.. note ::
-    If you need to access data written in an FDB database, you need to install the FDB5 library.
-    The FDB5 library is not available in the conda-forge repository, so you need to install it manually.
-    If you are working on a supported HPC, you can check the corresponding section for more information on if and where the FDB5 library is available.
+    By default, the environment file installs the cloned version of AQUA-diagnostics in editable mode with ``pip install -e .[all]``.
+
 
 Update of the environment
 -------------------------
@@ -121,9 +174,8 @@ Run the installation script:
 
     bash lumi_install.sh
 
-This installs the AQUA-diagnostics environment into a container at ``$HOME/mambaforge/aqua-diagnostics``, 
-and then sets up the correct environment variables and helper functions via a ``load_aqua_diagnostics.sh`` script 
-that is generated in your home directory.
+This installs the AQUA environment into a container, and then sets up the correct modules
+via a ``load_aqua_diagnostics.sh`` script that is generated and then called from the ``.bash_profile``.
 
 What ``load_aqua_diagnostics.sh`` does
 """"""""""""""""""""""""""""""""""""""
@@ -186,7 +238,7 @@ By default, the AQUA-diagnostics environment is loaded when you source ``load_aq
 .. warning ::
     This installation script, despite the name, does not install the AQUA package in the traditional sense nor in a pure container.
     It wraps the conda installation in a container, allowing to load LUMI modules and run from command line or batch jobs the AQUA code.
-    Different LUMI module loading or setups may lead to different results, but it's the most flexible way to develop AQUA on LUMI.
+    Different LUMI module loading or setups may lead to different results, but it's the most flexible way to develop AQUA (core and/or diagnostics) on LUMI.
 
 .. note ::
     If you encounter any issues with the installation script, please refer to the :ref:`faq` section.
@@ -357,8 +409,8 @@ In case you plan to use Visual Studio Code, you can add a kernel pointing to the
 Installation and use of the AQUA container
 ------------------------------------------
 
-In order to use AQUA in complicate workflows or in a production environment, it is recommended to use the AQUA container.
-The AQUA container is a Docker container that contains the AQUA package and all its dependencies.
+In order to use AQUA-diagnostics in complicate workflows or in a production environment, it is recommended to use the AQUA-diagnostics container.
+The AQUA container is a Docker container that contains the AQUA-diagnostics package and all its dependencies.
 
 Please refer to the :ref:`container` section for more information on how to deploy and how to use the AQUA container.
 

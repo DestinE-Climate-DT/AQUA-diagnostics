@@ -1,79 +1,86 @@
-Ensemble Statistics
+Ensemble Diagnostic
 ===================
 
 Description
 -----------
+In many areas of climate research, ensemble analysis is a standard approach to assess the robustness of model results and to quantify the uncertainty linked to numerical simulations.
+By combining multiple simulations, whether from different models, parameter choices, or perturbed initial conditions, ensemble methods provide more reliable estimates of the behaviour of the system being studied.
 
-The ``Ensemble`` module is a tool to perform uncertainty quantification and visualising the ensemble statistics namely, mean and standard deviation.
-It is also possible to calculate the weighted mean and standard deviation in case of multi-model ensemble.  
-This module contains three main classes namely, ``EnsembleTimeseries``, ``EnsembleLatLon`` and ``EnsembleZonal``. 
-Additionally, this module also contains three supporting plotting classes namely, ``PlotEnsembleTimeseries``, ``PlotEnsembleLatLon`` and ``PlotEnsembleZonal``. 
+The Ensemble diagnostic offers a set of tools to compute and visualise basic ensemble statistics, such as the mean and standard deviation.
+These metrics help users examine both the typical response of the ensemble and the variability across its members, giving an indication of model agreement and the confidence that can be placed in the simulated fields.
 
-The ``EnsembleTimeseries`` class takes ``1D`` ``xarray.Dataset`` timeseries as input and performs following functionalities:
-- Computes ensemble mean and standard deviation (Point-wise along time axis) for monthly and annual timeseries.
+The ``Ensemble`` diagnostic supports ensemble analysis for 1D time series, 2D ``LatLon`` maps, and zonal sections ``LevLon``, with the option to use weighted statistics for multi-model ensembles.
 
-The ``PlotEnsembleTimeseries`` class takes ``1D`` ``xarray.Dataset`` timeseries as input and performs the following functionalities:
-- Plots the ensemble-mean and 2x ensemble-std ± ensemble-mean along the given timeseries. 
-- Note that the standard deviation is Point-wise along time axis.
-- A reference timeseries can also be plotted. 
+The idea is that timeseries data, 2D spatial maps, and zonal cross-sections should be pre-computed and stored as NetCDF files, which can then be loaded and merged into an ``xarray.Dataset`` for ensemble analysis.
 
-The ``EnsembleLatLon`` class takes ``2D`` ``LatLon`` ``xarray.Dataset`` as input and performs the following functionalities:
-- Compute ensemble mean and standard deviation for ``2D`` Maps.
+Classes
+-------
+This module contains three main analysis classes, namely ``EnsembleTimeseries``, ``EnsembleLatLon`` and ``EnsembleZonal``. 
+Each analysis class is paired with a corresponding plotting class for visualising the computed statistics: 
+``PlotEnsembleTimeseries``, ``PlotEnsembleLatLon`` and ``PlotEnsembleZonal``.
 
-The ``PlotEnsembleLatLon`` class takes ``2D`` ``LatLon`` ``xarray.Dataset`` as input and performs the following functionalities:
-- Plots the ensemble mean and standard deviation separately on two different maps.
+The ``EnsembleTimeseries`` class takes ``1D`` ``xarray.Dataset`` time series as input and computes the ensemble mean and standard deviation point-wise along the time axis, for both monthly and annual data.
 
-The ``EnsembleZonal`` class take zonal-averages ``Lev-Lon`` ``xarray.Dataset`` as input and performs the following functionalities:
-- Computes ensemble mean and standard deviation of the given input.
+The ``PlotEnsembleTimeseries`` class takes ``1D`` ``xarray.Dataset`` time series as input and plots the ensemble mean together with the ±2 standard deviation envelope around the mean.
 
-The ``PlotEnsembleZonal`` class take zonal-averages ``Lev-Lon`` ``xarray.Dataset`` as input and performs the following functionalities:
-- Plots the ensemble mean and standard deviation of the computed statistics. 
+.. note::
+   The standard deviation is computed point-wise along the time axis.  
+   A reference time series can also be added to the plot.
 
-Structure
----------
+The ``EnsembleLatLon`` class takes ``2D`` ``LatLon`` ``xarray.Dataset`` fields as input and computes ensemble mean and standard deviation for spatial maps.
 
-* ``ensembleTimeseries.py``: contains the ``EnsembleTimeseries`` class.
-* ``plot_ensemble_timeseries.py``: contains the ``PlotEnsembleTimeseries`` class.
-* ``ensembleLatLon.py``: contains the ``EnsembleLatLon`` class.
-* ``plot_ensemble_latlon.py``: contains the ``PlotEnsembleLatLon.py`` class.
-* ``ensembleZonal.py``: contains the ``EnsembleZonal`` class.
-* ``plot_ensemble_zonal.py``: contains the ``PlotEnsembleLatLon.py`` class.
-* ``cli_multi_model_timeseries_ensemble``: the command line interfance (CLI) script to run the ensemble-timeseries ``1D`` diagnostic (mulit-model).
-* ``cli_single_model_timeseries_ensemble``: the command line interfance (CLI) script to run the ensemble-timeseries ``1D`` diagnostic (single-model-ensemble).
-* ``cli_global_2D_ensemble.py``: the command line interfance (CLI) script to run the ensemble-2D-maps in ``Lat-Lon`` diagnostic.
-* ``cli_zonal_ensemble.py``: the command line interfance (CLI) script to run the ensemble-zonal ``Lev-Lon`` diagnostic.
-* ``util.py``: contains the ``reader_retrieve_and_merge``, ``merge_from_data_files`` and ``compute_statistics`` functions.
-* ``base.py``: contains the base class which contains functions for saving the output as png, pdf and netcdf.
-* ``config/diagnostics/ensemble/config_global_2D_ensemble.yaml``: config file for ``cli_global_2D_ensemble.py``.
-* ``config/diagnostics/ensemble/config_multi_model_timeseries_ensemble.yaml``: config file for ``ensembleTimeseries.py``.
-* ``config/diagnostics/ensemble/config_single_model_timeseries_ensemble.yaml``: config file for ``ensembleTimeseries.py``.
-* ``config/diagnostics/ensemble/config_zonalmean_ensemble.yaml``: config file for ``ensembleZonal.py``.
+The ``PlotEnsembleLatLon`` class takes ``2D`` ``LatLon`` ``xarray.Dataset`` fields as input and produces separate maps for the ensemble mean and the ensemble standard deviation.
 
-Input variables
----------------
+The ``EnsembleZonal`` class takes zonal-mean ``Lev-Lon`` ``xarray.Dataset`` fields as input and computes ensemble mean and standard deviation for the given cross-sections.
 
-In order to use the ``Ensemble`` module, a pre-processing step is required. To load and to merge the input data via ``Reader`` class use ``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. Additional functionality of this module is to load and merge using the list of paths of data via ``merge_from_data_files``. In this step one has to merge all the given ``1D`` timeseries, ``2D`` ``Lat-Lon`` Map and Zonal-averages ``Lev-Lon`` for ``EnsembleTimeseries``, ``EnsembleLatLon`` and ``EnsembleZonal`` along a pesudo-dimension, respectively. The default dimension is simply named as ``ensemble`` and can be changed. One can load the data directly as ``xarray.Dataset`` or can use the ``aqua`` ``Reader`` class. For example loading and merging a 2D maps ensemble into an ``xarray.Dataset``: 
+The ``PlotEnsembleZonal`` class takes zonal-mean ``Lev-Lon`` ``xarray.Dataset`` fields as input and plots the ensemble mean and standard deviation of the computed statistics.
+
+
+File structure
+--------------
+
+* The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command line interface (CLI) scripts.
+* Default configuration files are available in ``aqua/diagnostics/config/ensemble/config-global_biases.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/ensemble`` directory and contain examples of how to use the diagnostic.
+
+Input variables and datasets
+----------------------------
+
+Before using the ``Ensemble`` module, a preprocessing step is required. Input data must be loaded and merged using the ``Reader`` class via  
+``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. The final merged dataset will contain all the requested ensemble members with appropriate metadata
+Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``. 
+
+In this step, all available datasets, 1D timeseries, 2D latitude-longitude maps, and zonal-mean level-longitude fields, must be merged along a pseudo-dimension.  
+By default, this dimension is named ``ensemble``, but it can be customised.
+
+Data can be loaded directly as ``xarray.Dataset`` objects or through the AQUA  ``Reader`` class.
+
+Example: loading and merging a 2D map ensemble into an ``xarray.Dataset``:
 
 .. code-block:: python
-   
+
    import glob
-   from  aqua.diagnostics import merge_from_data_files
-   
-   file_list = glob.glob('/work/ab0995/a270260/pre_computed_aqua_analysis/*/historical-1990/atmglobalmean/netcdf/atmglobalmean.statistics_maps.2t.*_historical-1990.nc')
+   from aqua.diagnostics import merge_from_data_files
+
+   file_list = glob.glob(
+       '/work/ab0995/a270260/pre_computed_aqua_analysis/*/historical-1990/atmglobalmean/netcdf/atmglobalmean.statistics_maps.2t.*_historical-1990.nc'
+   )
    file_list.sort()
+
    ens_dataset = merge_from_data_files(
-       variable='2t', 
-       model_names= ['IFS-FESOM', 'IFS-NEMO'], 
-       data_path_list=file_list, 
-       log_level = "WARNING",
+       variable='2t',
+       model_names=['IFS-FESOM', 'IFS-NEMO'],
+       data_path_list=file_list,
+       log_level="WARNING",
        ens_dim="ensemble",
    )
 
-A second method:
+
+Example: loading via the AQUA Reader
 
 .. code-block:: python
 
-   from  aqua.diagnostics import reader_retrieve_and_merge
+   from aqua.diagnostics import reader_retrieve_and_merge
 
    ens_dataset = reader_retrieve_and_merge(
        variable='2t',
@@ -85,10 +92,22 @@ A second method:
        ens_dim="ensemble",
    )
 
-Ensemble computation
---------------------
 
-The ensemble statistics is performed on merged ``1D`` timesereies by ``EnsembleTimeseries``, ``2D`` map by ``EnsembleLatLon``, and zonal ``Lev-Lon`` by ``EnsembleZonal`` classes. Note that in the current version we provide ``point-wise`` ``ensemble`` ``mean`` and ``standard-deviation``. 
+Some of the variables that are typically used in this diagnostic are:
+
+* ``2t`` (2 metre temperature)
+* ``tprate`` (total precipitation rate)
+* ``msl`` (mean sea level pressure)
+* ``so`` (sea water practical salinity)
+
+Basic usage
+-----------
+
+The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic structure of the analysis is the following:
+
+The ensemble analysis is performed on merged ``1D`` timeseries by ``EnsembleTimeseries``, ``2D`` map by ``EnsembleLatLon``, and zonal ``Lev-Lon`` by ``EnsembleZonal`` classes.
+Here is an example of how to use the ``EnsembleTimeseries`` class.
 
 .. code-block:: python
 
@@ -107,17 +126,7 @@ The ensemble statistics is performed on merged ``1D`` timesereies by ``EnsembleT
    # Compute statistics and save the results as netcdf                                                    
    ts.run() 
 
-Ensemble Plotting
------------------
-
-The default values for the plotting fuction has been already set as default values. These values can also be by simply defining a python ``dictionary`` e.g., in the case of the ``EnsembleTimeseries``,
-``plot_options = {'plot_ensemble_members': True, 'ensemble_label': 'Multi-model', 'plot_title': 'Ensemble statistics for 2-meter temperature [K]', 'ref_label': 'ERA5', 'figure_size': [12,6]}``.
-
-For ``EnsembleLatLon``, 
-``plot_options = {'figure_size': [15,14], 'cbar_label': '2-meter temperature in K','mean_plot_title': 'Map of 2t for Ensemble Multi-Model mean', 'std_plot_title': 'Map of 2t for Ensemble Multi-Model standard deviation'}``.
-
-For ``EnsembleZonal``, 
-``plot_options = {'figure_size': [12,8], 'plot_label': True, 'plot_std': True, 'unit': None, 'mean_plot_title': 'Mean of Ensemble of Zonal average', 'std_plot_title':  'Standard deviation of Ensemble of Zonal average', 'cbar_label': 'temperature in K', 'dpi': 300}``.
+Plotting is performed by the ``PlotEnsembleTimeseries`` class.
 
 .. code-block:: python
 
@@ -150,31 +159,104 @@ For ``EnsembleZonal``,
        loglevel='WARNING',
    ) 
 
-Ensemble module provides output plots as PDF and PNG. 
 
+CLI usage
+---------
+
+The diagnostic can be run from the command line interface (CLI) by running the following commands:
+
+* ``cli_multi_model_timeseries_ensemble``: the command line interfance (CLI) script to run the ensemble-timeseries ``1D`` diagnostic (mulit-model).
+* ``cli_single_model_timeseries_ensemble``: the command line interfance (CLI) script to run the ensemble-timeseries ``1D`` diagnostic (single-model-ensemble).
+* ``cli_global_2D_ensemble.py``: the command line interfance (CLI) script to run the ensemble-2D-maps in ``Lat-Lon`` diagnostic.
+* ``cli_zonal_ensemble.py``: the command line interfance (CLI) script to run the ensemble-zonal ``Lev-Lon`` diagnostic.
+
+
+.. code-block:: bash
+
+    cd $AQUA/aqua/diagnostics/ensemble
+    python cli_multi_model_timeseries_ensemble.py --config <path_to_config_file>
+
+Additionally, the CLI can be run with the following optional arguments:
+
+- ``--config``, ``-c``: Path to the configuration file.
+- ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
+- ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
+- ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
+- ``--catalog``: Catalog to use for the analysis. Can be defined in the config file.
+- ``--model``: Model to analyse. Can be defined in the config file.
+- ``--exp``: Experiment to analyse. Can be defined in the config file.
+- ``--source``: Source to analyse. Can be defined in the config file.
+- ``--outputdir``: Output directory for the plots.
+
+Output
+------
+The diagnostic produces plots and NetCDF files containing the computed ensemble statistics.
+By default, plots are saved in PNG and PDF format in the current working directory, but this can be customized in the configuration file.   
+
+Plots include:
+- Time series plots with ensemble mean and ±2 standard deviation envelope.
+- 2D spatial maps of ensemble mean and standard deviation.
+- Zonal cross-section plots of ensemble mean and standard deviation.
+
+
+Configuration file structure
+----------------------------
+
+The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
+There are default configuration files available in the ``aqua/diagnostics/config/ensemble/`` directory:
+
+* ``config/diagnostics/ensemble/config_global_2D_ensemble.yaml``: config file for ``cli_global_2D_ensemble.py``.
+* ``config/diagnostics/ensemble/config_multi_model_timeseries_ensemble.yaml``: config file for ``ensembleTimeseries.py``.
+* ``config/diagnostics/ensemble/config_single_model_timeseries_ensemble.yaml``: config file for ``ensembleTimeseries.py``.
+* ``config/diagnostics/ensemble/config_zonalmean_ensemble.yaml``: config file for ``ensembleZonal.py``.
+
+Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
+Here we describe only the specific settings for the ensemble diagnostic.
+
+* ``ensemble``: a block (nested in the ``diagnostics`` block) containing options for the Ensemble diagnostic.  
+  Variable-specific parameters override the defaults.
+
+    * ``run``: enable/disable the diagnostic.
+    * ``diagnostic_name``: name of the diagnostic. ``ensemble`` by default.
+    * ``variables``: list of variables to analyse.
+    * ``region``: region to analyse (e.g., ``global``).
+    * ``formulae``: list of formulae to compute new variables from existing ones (e.g., ``tnlwrf+tnswrf``).
+    * ``startdate_data`` / ``enddate_data``: time range for the dataset.
+    * ``startdate_ref`` / ``enddate_ref``: time range for the reference dataset.
+
+.. code-block:: yaml
+
+    ensemble:
+        run: true
+        diagnostic_name: 'ensemble'
+        variables: ['2t', 'tprate', 'msl', 'so']
+        region: 'global'
+        formulae: []
+        params:
+            default:
+                startdate_data: null
+                enddate_data: null
+                startdate_ref: "1990-01-01"
+                enddate_ref: null
+        plot_params:
+        default:
+            title: 
+            plot_ensemble_members: True
+
+Observations
+------------
+
+The default reference dataset is ERA5, but custom references can be configured.
+
+ 
+Example Plots
+-------------
 .. figure:: figures/ensemble_time_series_timeseries_2t.png
     :align: center
     :width: 100%
     
     Ensemble of multi-model global monthly and annual timeseries and compared with ERA5 global monthly and annual average. Models considered as IFS-NEMO and IFS-FESOM.
 
-
- 
-Basic usage
------------
-
-The basic usage of this diagnostics is explained with working examples in the notebooks provided in ``notebooks/diagnostics/ensemble`` directory. Additionally, a detailed command line interface is also avaiable in ``src/aqua_diagnostics/ensemble`` directory.
-
-Notebooks are stored in ``notebooks/ensemble``:
-
-* ``ensemble_timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/ensemble/ensemble_timeseries.ipynb>`` _
-* ``ensemble_global_2D.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/ensemble/ensemble_global_2D.ipynb>`` _
-* ``ensemble_zonalaverage.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/ensemble/ensemble_zonalaverage.ipynb>`` _
-
-Example Plots
--------------
-
-Other example of ensemble module provides output plots as PDF and PNG. 
 
 .. figure:: figures/2t_LatLon_mean.png
     :align: center
@@ -199,6 +281,24 @@ Other example of ensemble module provides output plots as PDF and PNG.
     :width: 100%
 
     Ensemble-Zonal standard deviation for average Time-mean sea water practical salinity for IFS-NEMO historical-1990.
+
+Available demo notebooks
+-----------------------
+
+Notebooks are stored in the ``notebooks/diagnostics/ensemble`` directory and contain usage examples.
+
+* ``ensemble_timeseries.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ensemble/ensemble_timeseries.ipynb>`` _
+* ``ensemble_global_2D.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ensemble/ensemble_global_2D.ipynb>`` _
+* ``ensemble_zonalaverage.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/ensemble/ensemble_zonalaverage.ipynb>`` _
+
+Authors and contributors
+------------------------
+
+This diagnostic is maintained by Maqsood Mubarak Rajput <maqsoodmubarak.rajput@awi.de>
+ (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <maqsoodmubarak.rajput@awi.de>`_).  
+Contributions are welcome — please open an issue or a pull request.  
+For questions or suggestions, contact the AQUA team or the maintainers.
+
 
 Detailed API
 ------------

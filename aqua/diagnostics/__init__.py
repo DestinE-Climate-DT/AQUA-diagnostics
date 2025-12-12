@@ -3,7 +3,7 @@
 from .version import __version__
 from .teleconnections import NAO, ENSO, MJO
 from .teleconnections import PlotNAO, PlotENSO, PlotMJO
-from .timeseries import Gregory, SeasonalCycles, Timeseries
+from .timeseries import Gregory, SeasonalCycles, Timeseries, PlotTimeseries, PlotSeasonalCycles, PlotGregory
 from .lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from .histogram import Histogram, PlotHistogram
 from .global_biases import GlobalBiases, PlotGlobalBiases 
@@ -14,6 +14,10 @@ from .ensemble import reader_retrieve_and_merge, merge_from_data_files, load_pre
 from .ecmean import PerformanceIndices, GlobalMean
 from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
 from .sshVariability import sshVariabilityCompute, sshVariabilityPlot
+from .ocean_drift import Hovmoller, PlotHovmoller
+from .ocean_stratification import Stratification, PlotStratification, PlotMLD
+from .ocean_trends import Trends, PlotTrends
+
 
 DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "diagnostics", "tools"]
 DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["diagnostics"]
@@ -21,6 +25,7 @@ DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["diagnostics"]
 __all__ = ["NAO", "ENSO", "MJO",
            "PlotNAO", "PlotENSO", "PlotMJO",
            "Gregory", "SeasonalCycles", "Timeseries",
+           "PlotTimeseries", "PlotSeasonalCycles", "PlotGregory",
            "LatLonProfiles", "PlotLatLonProfiles",
            "Histogram", "PlotHistogram",
            "GlobalBiases", "PlotGlobalBiases",
@@ -31,6 +36,6 @@ __all__ = ["NAO", "ENSO", "MJO",
            "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
            "sshVariabilityCompute", "sshVariabilityPlot",
            "Boxplots", "PlotBoxplots", "extract_realizations",
-           "GlobalMean", "PerformanceIndices", "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
-           "Boxplots", "PlotBoxplots",
+           "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
+           "Trends", "PlotTrends",
            "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]

@@ -15,12 +15,10 @@ Welcome to AQUA-diagnostics' documentation!
    introduction
    installation
    getting_started
-   graphics
    container
    stateoftheart_diagnostics/index
    frontier_diagnostics/index
    new_diagnostics/index
-   examples_tutorials
    cli
    api_reference
    troubleshooting_faq/index
