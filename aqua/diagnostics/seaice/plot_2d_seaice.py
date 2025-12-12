@@ -356,6 +356,11 @@ class Plot2DSeaIce:
         cb.set_ticks(cbar_ticks)
         cb.ax.ticklabel_format(style='sci', axis='x', scilimits=(-3, 3))
         units = data.attrs.get('units', '')
+        
+        # For sea ice fraction, use "0-1" as default if units are missing
+        if not units and self.method == 'fraction':
+            units = '0-1'
+        
         if units:
             units_latex = unit_to_latex(units)
             if not (units_latex.startswith('[') and units_latex.endswith(']')):
