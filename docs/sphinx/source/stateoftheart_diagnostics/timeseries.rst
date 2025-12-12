@@ -51,7 +51,7 @@ Input variables and datasets
 By default, the diagnostic compares against the ERA5 dataset, with standard deviation calculated over the period 1990-2020.
 The Gregory-like plot uses the CERES dataset for the Net radiation TOA and the BERKELEY-EARTH dataset for the 2 metre temperature.
 
-The necessary input variables for the diagnostic are all the variables that are needed to compute the time series, seasonal cycle choosen in the configuration file.
+Default variables used for the timeseries and seasonal cycles analyses can be found in the configuration file.
 The Gregory-like plot requires the Net radiation TOA and the 2 metre temperature.
 
 Basic usage
@@ -99,7 +99,6 @@ The diagnostic can be run from the command line interface (CLI) by running the f
     python cli_timeseries.py --config <path_to_config_file>
 
 Three configuration files are provided and run when executing the aqua-analysis (see :ref:`aqua_analysis`).
-Two configuration files are for atmospheric and oceanic timeseries and gregory plots, and the third one is for the seasonal cycles.
 
 Additionally CLI arguments are described in the :ref:`diagnostics-cli-arguments` section.
 
@@ -247,7 +246,7 @@ Notebooks are stored in ``notebooks/diagnostics/timeseries``:
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Matteo Nurisso (`@mnurisso <https://github.com/mnurisso>`_, `m.nurisso@isac.cnr.it <mailto:m.nurisso@isac.cnr.it>`_).
+This diagnostic is maintained by Matteo Nurisso (`@mnurisso <https://github.com/mnurisso>`_, `matteo.nurisso@polito.it <mailto:matteo.nurisso@polito.it>`_).
 Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
 
