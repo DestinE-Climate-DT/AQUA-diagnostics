@@ -6,8 +6,8 @@ import sys
 from aqua.core.util import to_list
 from aqua.core.exceptions import NoDataError
 from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
-from aqua.diagnostics.core import template_parse_arguments
-from aqua.diagnostics.core import DiagnosticCLI
+from aqua.diagnostics.base import template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI
 
 TOOLNAME='GlobalBiases'
 TOOLNAME_KEY = TOOLNAME.lower()

@@ -1,7 +1,9 @@
 # Configuration file for aqua-analysis.sh
 
-# Variables $AQUA, $AQUA_CONFIG and $OUTPUT can be used to refer to the root directory of AQUA,
-# the config directory (i.e. .aqua/diagnostics) and the output directory respectively
+# Variables $AQUA_CORE, $AQUA_DIAGNOSTICS $AQUA_CONFIG and $OUTPUT can be used to refer to
+# the directory of the AQUA-core module,
+# the directory of the AQUA-diagnostics module,
+# the config directory (i.e. .aqua) and the output directory respectively.
 
 job:
     # The max_threads variable serves as a mechanism to control the maximum number of diagnostics being run concurrently
@@ -16,7 +18,7 @@ job:
     #                                              resources, such as a login node
 
     max_threads: 0  # Set to the desired maximum number of threads, or leave it as 0 for no limit
-    loglevel: "WARNING" # DEBUG, IN FO, WARNING, ERROR, CRITICAL
+    loglevel: "WARNING" # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
     # Run a check analysis to test the configuration and the presence of needed data
     # This also rebuild the area files, to avoid error with corrupted files
@@ -34,7 +36,7 @@ job:
     startdate: null
     enddate: null
 
-    script_path_base: "${AQUA}/src/aqua_diagnostics"  # Base directory for the diagnostic scripts
+    script_path_base: "${AQUA_DIAGNOSTICS}"  # Base directory for the diagnostic scripts
 
 cluster:  # options for dask cluster (this works well on lumi)
     workers: 32

@@ -4,7 +4,7 @@ from aqua.core.logger import log_configure
 from aqua.core.configurer import ConfigPath
 from aqua.core.util import load_yaml, select_season, to_list
 from aqua.core.util import convert_data_units, get_realizations
-from aqua.diagnostics.core import Diagnostic, OutputSaver
+from aqua.diagnostics.base import Diagnostic, OutputSaver
 
 xr.set_options(keep_attrs=True)
 
