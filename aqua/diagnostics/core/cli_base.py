@@ -148,7 +148,6 @@ class DiagnosticCLI:
                 'regrid': dataset.get('regrid', self.regrid),
                 'startdate': dataset.get('startdate', None),
                 'enddate': dataset.get('enddate', None)}
-    
 
     def open_dask_cluster(self):
         """
