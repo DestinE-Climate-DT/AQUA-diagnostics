@@ -357,10 +357,6 @@ class Plot2DSeaIce:
         cb.ax.ticklabel_format(style='sci', axis='x', scilimits=(-3, 3))
         units = data.attrs.get('units', '')
         
-        # For sea ice fraction, use "0-1" as default if units are missing
-        if not units and self.method == 'fraction':
-            units = '0-1'
-        
         if units:
             units_latex = unit_to_latex(units)
             if not (units_latex.startswith('[') and units_latex.endswith(']')):
@@ -368,6 +364,7 @@ class Plot2DSeaIce:
             units = ' ' + units_latex
         else:
             units = ''
+        
         cb.set_label(f"Sea-ice {data.attrs.get('AQUA_method', '')}{units}", fontsize=11)
         return cb
 
