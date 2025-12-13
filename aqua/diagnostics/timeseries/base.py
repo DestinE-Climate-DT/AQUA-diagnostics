@@ -5,7 +5,7 @@ import xarray as xr
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string
-from aqua.core.util import time_to_string, strlist_to_phrase
+from aqua.core.util import time_to_string, strlist_to_phrase, unit_to_latex
 from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver
 
 xr.set_options(keep_attrs=True)
@@ -355,7 +355,7 @@ class PlotBaseMixin():
             title += f'of {self.long_name} '
 
         if self.units is not None:
-            title += f'[{self.units}] '
+            title += f'[{unit_to_latex(self.units)}] '
 
         if self.region is not None:
             title += f'[{self.region}] '
@@ -384,8 +384,7 @@ class PlotBaseMixin():
 
         description += f'of {self.long_name} '
         if self.units is not None:
-          units = self.units.replace("**", r"\*\*")
-          description += f'[{units}] '
+          description += f'[{unit_to_latex(self.units)}] '
         if self.short_name is not None:
           description += f'({self.short_name}) '
 
