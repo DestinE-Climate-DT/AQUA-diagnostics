@@ -41,8 +41,10 @@ File structure
 * Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
 
 .. note::
-    A command line to evaluate with the bootstrap method the concordance maps of regression and correlation is available in the ``cli_bootstrap.py`` file.
+    A command line to evaluate, using the bootstrap method, the concordance maps of regression and correlation is available in the ``cli_bootstrap.py`` file.
     This is not included in any automatic run of the diagnostic because it is a time-consuming process.
+    Please note that the bootstrap CLI is **not actively maintained** and has **not yet been tested against recent API changes or imports**.
+
 
 Input variables and datasets
 ----------------------------
@@ -142,8 +144,9 @@ Here we describe only the specific settings for the teleconnections diagnostic.
     It allows to specify which teleconnections to run, the months window for the rolling mean, the seasons to consider, and the color bar range for the plots.
     It contains the following blocks:
     
-        * ``NAO``: a block, nested in the ``teleconnections`` block, that contains the details required for the NAO teleconnection.
-        * ``ENSO``: a block, nested in the ``teleconnections`` block, that contains the details required for the ENSO teleconnection.
+    ``NAO``: a block, nested in the ``teleconnections`` block, that contains the details required for the NAO teleconnection.
+
+    ``ENSO``: a block, nested in the ``teleconnections`` block, that contains the details required for the ENSO teleconnection.
 
 .. code-block:: yaml
 
@@ -211,7 +214,7 @@ Notebooks are stored in ``notebooks/diagnostics/teleconnections``:
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Matteo Nurisso (`@mnurisso <https://github.com/mnurisso>`_, `m.nurisso@isac.cnr.it <mailto:m.nurisso@isac.cnr.it>`_).
+This diagnostic is maintained by Matteo Nurisso (`@mnurisso <https://github.com/mnurisso>`_, `matteo.nurisso@polito.it <mailto:matteo.nurisso@polito.it>`_).
 Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
 
