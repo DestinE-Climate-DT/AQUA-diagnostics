@@ -17,7 +17,7 @@ version = str(project_version)
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', "sphinx.ext.todo"]
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 
@@ -26,7 +26,7 @@ autoclass_content = 'both'
 exclude_patterns = []
 
 # Mock imports for modules that are not available during docs build, can be expanded
-autodoc_mock_imports = ["dummy", "aqua", "aqua.diagnostics"]
+autodoc_mock_imports = ["dummy"]
 
 
 # -- Options for HTML output -------------------------------------------------
