@@ -9,127 +9,211 @@ configuration file for single or multiple experiments.
 
 import sys
 import argparse
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
-from aqua.diagnostics.base import template_parse_arguments, open_cluster, close_cluster
-from aqua.diagnostics.base import load_diagnostic_config, merge_config_args
-from aqua.diagnostics.histogram.util_cli import load_var_config, process_variable_or_formula
+from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.histogram import Histogram, PlotHistogram
+from aqua.diagnostics.histogram.util_cli import load_var_config
 
 
 def parse_arguments(args):
-    """Parse command-line arguments for Histogram diagnostic.
-
-    Args:
-        args (list): list of command-line arguments to parse.
-
-    Returns:
-        argparse.Namespace: Parsed command-line arguments.
-    """
+    """Parse command-line arguments for Histogram diagnostic."""
     parser = argparse.ArgumentParser(description='Histogram CLI')
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
+def process_dataset(cli, dataset, var_config, diag_config, region, is_reference=False):
+    """
+    Process a single dataset for histogram computation.
+    
+    Args:
+        cli: DiagnosticCLI instance with configuration
+        dataset (dict): Dataset configuration
+        var_config (dict): Variable configuration
+        diag_config (dict): Diagnostic configuration
+        region (str): Region to process
+        is_reference (bool): Whether this is a reference dataset
+        
+    Returns:
+        Histogram: Computed histogram object
+    """
+    cli.logger.info("Processing %s: %s/%s",
+                    'reference' if is_reference else 'dataset', dataset['model'], dataset['exp'])
+    
+    # Get dataset arguments
+    if is_reference:
+        dataset_args = cli.reference_args(dataset)
+    else:
+        dataset_args = cli.dataset_args(dataset)
+    
+    # Extract variable info
+    var_name = var_config.get('name')
+    var_units = var_config.get('units')
+    var_long_name = var_config.get('long_name')
+    var_standard_name = var_config.get('standard_name')
+    
+    # Get lon/lat limits from variable config if specified
+    lon_limits = var_config.get('lon_limits')
+    lat_limits = var_config.get('lat_limits')
+    
+    # Create histogram object
+    histogram = Histogram(
+        **dataset_args,
+        region=region,
+        lon_limits=lon_limits,
+        lat_limits=lat_limits,
+        bins=diag_config.get('bins', 100),
+        range=diag_config.get('range'),
+        weighted=diag_config.get('weighted', True),
+        diagnostic_name=diag_config.get('diagnostic_name', 'histogram'),
+        loglevel=cli.loglevel
+    )
+    
+    # Run the diagnostic
+    histogram.run(
+        var=var_name,
+        formula=var_config.get('is_formula', False),
+        long_name=var_long_name,
+        units=var_units,
+        standard_name=var_standard_name,
+        box_brd=diag_config.get('box_brd', True),
+        density=diag_config.get('density', True),
+        outputdir=cli.outputdir,
+        rebuild=cli.rebuild,
+        reader_kwargs=dataset.get('reader_kwargs') or cli.reader_kwargs or {}
+    )
+    
+    return histogram
+
+def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
+    """
+    Create and save histogram plots.
+    
+    Args:
+        cli: DiagnosticCLI instance with configuration
+        histograms (list): List of Histogram objects
+        histogram_ref (Histogram or None): Reference histogram
+        diag_config (dict): Diagnostic configuration
+    """
+    # Check if any output is requested
+    if not (cli.save_png or cli.save_pdf):
+        cli.logger.debug('No plot output requested, skipping plot generation')
+        return
+    
+    cli.logger.info('Creating histogram plots')
+    
+    # Collect histogram data
+    data_list = [h.histogram_data for h in histograms]
+    ref_data = histogram_ref.histogram_data if histogram_ref else None
+    
+    # Create plot object
+    plot = PlotHistogram(
+        data=data_list,
+        ref_data=ref_data,
+        diagnostic_name=diag_config.get('diagnostic_name', 'histogram'),
+        loglevel=cli.loglevel
+    )
+    
+    # Plot parameters
+    plot_params = {
+        'outputdir': cli.outputdir,
+        'rebuild': cli.rebuild,
+        'dpi': cli.dpi,
+        'xlogscale': diag_config.get('xlogscale', False),
+        'ylogscale': diag_config.get('ylogscale', True),
+        'smooth': diag_config.get('smooth', False),
+        'smooth_window': diag_config.get('smooth_window', 5),
+        'xmin': diag_config.get('xmin'),
+        'xmax': diag_config.get('xmax'),
+        'ymin': diag_config.get('ymin'),
+        'ymax': diag_config.get('ymax')
+    }
+    
+    # Save plots
+    if cli.save_png:
+        cli.logger.info('Saving PNG plot')
+        plot.run(format='png', **plot_params)
+    
+    if cli.save_pdf:
+        cli.logger.info('Saving PDF plot')
+        plot.run(format='pdf', **plot_params)
+
+def process_variable(cli, var_config, regions, datasets, references, diag_config):
+    """
+    Process a single variable or formula across all datasets and regions.
+    
+    Args:
+        cli: DiagnosticCLI instance with configuration
+        var_config (dict): Variable configuration
+        regions (list): List of regions to process
+        datasets (list): List of dataset configurations
+        references (list): List of reference dataset configurations
+        diag_config (dict): Diagnostic configuration
+    """
+    var_name = var_config.get('name')
+    is_formula = var_config.get('is_formula', False)
+    
+    cli.logger.info("Running Histogram diagnostic for %s: %s",
+                    "formula" if is_formula else "variable", var_name)
+    
+    # Loop over regions
+    for region in regions:
+        cli.logger.info("Region: %s", region if region else 'global')
+        
+        try:
+            # Process all datasets
+            histograms = []
+            for dataset in datasets:
+                hist = process_dataset(cli, dataset, var_config, diag_config, 
+                                     region, is_reference=False)
+                histograms.append(hist)
+            
+            # Process reference dataset if present
+            histogram_ref = None
+            if references:
+                ref_dataset = references[0]
+                histogram_ref = process_dataset(cli, ref_dataset, var_config, 
+                                              diag_config, region, is_reference=True)
+            
+            # Create and save plots
+            create_and_save_plots(cli, histograms, histogram_ref, diag_config)
+            
+        except Exception as e:
+            cli.logger.error(
+                "Error running Histogram diagnostic for variable %s in region %s: %s",
+                var_name, region if region else 'global', e)
 
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
-
-    loglevel = get_arg(args, 'loglevel', 'WARNING')
-    logger = log_configure(log_level=loglevel, log_name='Histogram CLI')
-    logger.info(f"Running Histogram diagnostic with AQUA version {aqua_version}")
-
-    cluster = get_arg(args, 'cluster', None)
-    nworkers = get_arg(args, 'nworkers', None)
-
-    client, cluster, private_cluster = open_cluster(nworkers=nworkers, cluster=cluster, loglevel=loglevel)
     
-    # Load the configuration file
-    try:
-        config_dict = load_diagnostic_config(diagnostic='histogram', config=args.config,
-                                             default_config='config-histogram.yaml',
-                                             loglevel=loglevel)
-        if config_dict is None:
-            logger.error("Configuration file could not be loaded. Check the config path.")
-            sys.exit(1)
-    except FileNotFoundError as e:
-        logger.error(f"Configuration file not found: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Error loading configuration: {e}")
-        sys.exit(1)
-
-    config_dict = merge_config_args(config=config_dict, args=args, loglevel=loglevel)
-
-    regrid = get_arg(args, 'regrid', None)
-    logger.info(f"Regrid option is set to {regrid}")
-    realization = get_arg(args, 'realization', None)
-    # This reader_kwargs will be used if the dataset corresponding value is None or not present
-    reader_kwargs = config_dict['datasets'][0].get('reader_kwargs') or {}
-    if realization:
-        reader_kwargs['realization'] = realization
-
-    # Output options
-    outputdir = config_dict['output'].get('outputdir', './')
-    rebuild = config_dict['output'].get('rebuild', True)
-    save_pdf = config_dict['output'].get('save_pdf', True)
-    save_png = config_dict['output'].get('save_png', True)
-    dpi = config_dict['output'].get('dpi', 300)
-
-    # Histogram diagnostic
-    if 'histogram' in config_dict['diagnostics']:
-        if config_dict['diagnostics']['histogram']['run']:
-            logger.info("Histogram diagnostic is enabled.")
-
-            # Extract configuration
-            diagnostic_config = config_dict['diagnostics']['histogram']
-            
-            # Common parameters for all variables/formulae
-            common_params = {
-                'config_dict': config_dict,
-                'datasets': config_dict['datasets'],
-                'diagnostic_name': diagnostic_config.get('diagnostic_name', 'histogram'),
-                'regrid': regrid,
-                'bins': diagnostic_config.get('bins', 100),
-                'range_config': diagnostic_config.get('range', None),
-                'weighted': diagnostic_config.get('weighted', True),
-                'density': diagnostic_config.get('density', True),
-                'box_brd': diagnostic_config.get('box_brd', True),
-                'outputdir': outputdir,
-                'rebuild': rebuild,
-                'reader_kwargs': reader_kwargs,
-                'save_pdf': save_pdf,
-                'save_png': save_png,
-                'dpi': dpi,
-                'xlogscale': diagnostic_config.get('xlogscale', False),
-                'ylogscale': diagnostic_config.get('ylogscale', True),
-                'smooth': diagnostic_config.get('smooth', False),
-                'smooth_window': diagnostic_config.get('smooth_window', 5),
-                'xmin': diagnostic_config.get('xmin', None),
-                'xmax': diagnostic_config.get('xmax', None),
-                'ymin': diagnostic_config.get('ymin', None),
-                'ymax': diagnostic_config.get('ymax', None),
-                'loglevel': loglevel
-            }
-
-            # Process variables
-            for var in diagnostic_config.get('variables', []):
-                var_config, regions = load_var_config(config_dict, var)
-                process_variable_or_formula(
-                    var_config=var_config,
-                    regions=regions,
-                    formula=False,
-                    **common_params
-                )
-
-            # Process formulae
-            for var in diagnostic_config.get('formulae', []):
-                var_config, regions = load_var_config(config_dict, var)
-                process_variable_or_formula(
-                    var_config=var_config,
-                    regions=regions,
-                    formula=True,
-                    **common_params
-                )
-
-    close_cluster(client=client, cluster=cluster, private_cluster=private_cluster, loglevel=loglevel)
-    logger.info("Histogram diagnostic completed.")
+    # Initialize and prepare CLI
+    cli = DiagnosticCLI(
+        args,
+        diagnostic_name='histogram',
+        default_config='config-histogram.yaml',
+        log_name='Histogram CLI'
+    ).prepare()
+    
+    cli.open_dask_cluster()
+    
+    # Get diagnostic configuration
+    diag_config = cli.config_dict['diagnostics'].get('histogram', {})
+    
+    if diag_config and diag_config.get('run', False):
+        cli.logger.info("Histogram diagnostic is enabled.")
+        
+        # Get datasets and references
+        datasets = cli.config_dict.get('datasets', [])
+        references = cli.config_dict.get('references', [])
+        
+        # Unification of variables and formulae
+        variables = diag_config.get('variables', [])
+        formulae = diag_config.get('formulae', [])
+        all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
+        
+        for var, is_formula in all_vars:
+            var_config, regions = load_var_config(cli.config_dict, var)
+            var_config['is_formula'] = is_formula
+            process_variable(cli, var_config, regions, datasets, references, diag_config)
+    
+    cli.close_dask_cluster()
+    
+    cli.logger.info("Histogram diagnostic completed.")
