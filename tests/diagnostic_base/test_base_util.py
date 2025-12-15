@@ -5,7 +5,7 @@ from unittest.mock import patch
 from aqua import Reader
 from aqua.diagnostics.base import template_parse_arguments, load_diagnostic_config
 from aqua.diagnostics.base import open_cluster, close_cluster, merge_config_args
-from aqua.diagnostics.base import start_end_dates
+from aqua.diagnostics.base import start_end_dates, round_startdate, round_enddate
 from conftest import LOGLEVEL
 
 loglevel = LOGLEVEL
@@ -36,8 +36,8 @@ def test_template_parse_arguments():
         load_diagnostic_config(diagnostic='pippo', config=args.config, loglevel=loglevel)
 
 @pytest.mark.aqua
-@patch("aqua.diagnostics.core.util.Client")
-@patch("aqua.diagnostics.core.util.LocalCluster")
+@patch("aqua.diagnostics.base.util.Client")
+@patch("aqua.diagnostics.base.util.LocalCluster")
 def test_cluster(mock_cluster, mock_client):
     """Test the cluster functions with mocking"""
 
@@ -126,3 +126,28 @@ def test_start_end_dates():
     assert start_end_dates(startdate="2020-01-01", end_std="2020-01-02") == (
         pd.Timestamp("2020-01-01"), None
     )
+
+@pytest.mark.aqua
+@pytest.mark.parametrize("date,freq,expected", [
+    ('2020-03-15 14:30:00', 'monthly', '2020-03-01 00:00:00'),
+    ('2020-06-15 14:30:00', 'annual', '2020-01-01 00:00:00'),
+])
+def test_round_startdate(date, freq, expected):
+    """Test rounding to start of month/year"""
+    rounded = round_startdate(pd.Timestamp(date), freq=freq)
+    assert rounded == pd.Timestamp(expected)
+
+@pytest.mark.parametrize("date,freq,expected", [
+    ('2020-02-15 14:30:00', 'monthly', '2020-02-29 23:59:59'),
+    ('2020-06-15 14:30:00', 'annual', '2020-12-31 23:59:59'),
+])
+def test_round_enddate(date, freq, expected):
+    """Test rounding to end of month/year"""
+    rounded = round_enddate(pd.Timestamp(date), freq=freq)
+    assert rounded == pd.Timestamp(expected)
+
+@pytest.mark.aqua
+def test_round_invalid_freq():
+    """Test error handling for invalid frequency"""
+    with pytest.raises(ValueError):
+        round_startdate(pd.Timestamp('2020-03-15'), freq='weekly')
