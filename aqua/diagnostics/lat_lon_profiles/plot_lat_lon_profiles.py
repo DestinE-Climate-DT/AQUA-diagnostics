@@ -4,7 +4,7 @@ from aqua.core.graphics import plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list, strlist_to_phrase, DEFAULT_REALIZATION
 from aqua.core.graphics import plot_lat_lon_profiles
-from aqua.diagnostics.core import OutputSaver
+from aqua.diagnostics.base import OutputSaver
 
 class PlotLatLonProfiles():
     """

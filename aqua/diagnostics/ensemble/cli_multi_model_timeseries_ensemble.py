@@ -15,7 +15,7 @@ import sys
 
 import xarray as xr
 from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries, reader_retrieve_and_merge
-from aqua.diagnostics.core import (
+from aqua.diagnostics.base import (
     close_cluster,
     load_diagnostic_config,
     merge_config_args,

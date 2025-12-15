@@ -5,7 +5,7 @@ from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure, log_history
 from aqua.core.util import to_list, merge_attrs
 from aqua.core.fldstat import FldStat
-from aqua.diagnostics.core import Diagnostic
+from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.seaice.util import ensure_istype
 
 xr.set_options(keep_attrs=True)
@@ -446,7 +446,7 @@ class SeaIce(Diagnostic):
             raise ValueError(f"Cannot compute '{stat}' as 'time' dimension not present in data.")
 
         # select time, if None, the whole time will be taken in one or both boundaries
-        computed_data = computed_data.sel(time=slice(self.startdate, self.enddate))
+        #computed_data = computed_data.sel(time=slice(self.startdate, self.enddate))
 
         if stat == 'std':
             return computed_data.groupby(freq_dict[freq]).std('time')

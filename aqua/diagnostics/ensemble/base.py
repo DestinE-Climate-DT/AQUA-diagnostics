@@ -2,7 +2,7 @@ from collections import Counter
 
 import pandas as pd
 import xarray as xr
-from aqua.diagnostics.core import Diagnostic, OutputSaver
+from aqua.diagnostics.base import Diagnostic, OutputSaver
 from aqua.core.logger import log_configure
 from aqua.core.util import pandas_freq_to_string
 

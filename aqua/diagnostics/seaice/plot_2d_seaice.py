@@ -11,7 +11,7 @@ from aqua.core.configurer import ConfigPath
 from aqua.core.util import get_projection, plot_box, to_list, get_realizations
 from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
 from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window
-from aqua.diagnostics.core import OutputSaver
+from aqua.diagnostics.base import OutputSaver
 from .util import extract_dates, _check_list_regions_type
 
 xr.set_options(keep_attrs=True)

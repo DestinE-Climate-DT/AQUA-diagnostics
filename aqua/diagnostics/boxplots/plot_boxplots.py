@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 from aqua.core.util import to_list, extract_attrs, time_to_string, get_realizations
 from aqua.core.logger import log_configure
-from aqua.diagnostics.core import OutputSaver
+from aqua.diagnostics.base import OutputSaver
 import matplotlib as plt
 
 from aqua.core.graphics import boxplot

@@ -10,10 +10,10 @@ import argparse
 import sys
 
 from aqua.core.util import get_arg
-from aqua.diagnostics.core import template_parse_arguments
+from aqua.diagnostics.base import template_parse_arguments
 from aqua.diagnostics.ocean_trends import Trends
 from aqua.diagnostics.ocean_trends import PlotTrends
-from aqua.diagnostics.core import DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI
 
 
 def parse_arguments(args):
