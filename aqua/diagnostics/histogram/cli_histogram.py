@@ -9,13 +9,9 @@ configuration file for single or multiple experiments.
 
 import sys
 import argparse
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
-from aqua.diagnostics.base import DiagnosticCLI
-from aqua.diagnostics.base import template_parse_arguments, open_cluster, close_cluster
-from aqua.diagnostics.base import load_diagnostic_config, merge_config_args
-from aqua.diagnostics.histogram.util_cli import load_var_config, process_variable_or_formula
+from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.histogram import Histogram, PlotHistogram
+from aqua.diagnostics.histogram.util_cli import load_var_config
 
 
 def parse_arguments(args):
@@ -39,11 +35,14 @@ def process_dataset(cli, dataset, var_config, diag_config, region, is_reference=
     Returns:
         Histogram: Computed histogram object
     """
-    cli.logger.info(f"Processing {'reference' if is_reference else 'dataset'}: "
-                   f"{dataset['model']}/{dataset['exp']}")
+    cli.logger.info("Processing %s: %s/%s",
+                    'reference' if is_reference else 'dataset', dataset['model'], dataset['exp'])
     
     # Get dataset arguments
-    dataset_args = cli.dataset_args(dataset)
+    if is_reference:
+        dataset_args = cli.reference_args(dataset)
+    else:
+        dataset_args = cli.dataset_args(dataset)
     
     # Extract variable info
     var_name = var_config.get('name')
@@ -94,7 +93,7 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
         histogram_ref (Histogram or None): Reference histogram
         diag_config (dict): Diagnostic configuration
     """
-    # Check to see if any output is requested
+    # Check if any output is requested
     if not (cli.save_png or cli.save_pdf):
         cli.logger.debug('No plot output requested, skipping plot generation')
         return
@@ -128,12 +127,11 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
         'ymax': diag_config.get('ymax')
     }
     
-    # Save PNG if requested
+    # Save plots
     if cli.save_png:
         cli.logger.info('Saving PNG plot')
         plot.run(format='png', **plot_params)
     
-    # Save PDF if requested
     if cli.save_pdf:
         cli.logger.info('Saving PDF plot')
         plot.run(format='pdf', **plot_params)
@@ -153,15 +151,13 @@ def process_variable(cli, var_config, regions, datasets, references, diag_config
     var_name = var_config.get('name')
     is_formula = var_config.get('is_formula', False)
     
-    cli.logger.info(
-        "Running Histogram diagnostic for %s: %s",
-        "formula" if is_formula else "variable", var_name)
+    cli.logger.info("Running Histogram diagnostic for %s: %s",
+                    "formula" if is_formula else "variable", var_name)
     
     # Loop over regions
     for region in regions:
-        cli.logger.info(f"Region: {region if region else 'global'}")
+        cli.logger.info("Region: %s", region if region else 'global')
         
-        # try-except block to catch errors per region
         try:
             # Process all datasets
             histograms = []
@@ -182,8 +178,8 @@ def process_variable(cli, var_config, regions, datasets, references, diag_config
             
         except Exception as e:
             cli.logger.error(
-                f"Error running Histogram diagnostic for variable {var_name} "
-                f"in region {region if region else 'global'}: {e}")
+                "Error running Histogram diagnostic for variable %s in region %s: %s",
+                var_name, region if region else 'global', e)
 
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
@@ -208,7 +204,7 @@ if __name__ == '__main__':
         datasets = cli.config_dict.get('datasets', [])
         references = cli.config_dict.get('references', [])
         
-        # unification of variables and formulae
+        # Unification of variables and formulae
         variables = diag_config.get('variables', [])
         formulae = diag_config.get('formulae', [])
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
