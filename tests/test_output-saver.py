@@ -156,10 +156,10 @@ def test_create_catalog_entry_new_entry(base_saver, tmp_path):
     mock_config_path.configdir = str(tmp_path)
     mock_catalog_file = {'sources': {}}
     
-    with patch('aqua.diagnostics.core.output_saver.ConfigPath', return_value=mock_config_path), \
-         patch('aqua.diagnostics.core.output_saver.load_yaml', return_value=mock_catalog_file), \
-         patch('aqua.diagnostics.core.output_saver.dump_yaml') as mock_dump_yaml, \
-         patch('aqua.diagnostics.core.output_saver.replace_intake_vars', return_value='/mocked/path/data.nc'):
+    with patch('aqua.diagnostics.base.output_saver.ConfigPath', return_value=mock_config_path), \
+         patch('aqua.diagnostics.base.output_saver.load_yaml', return_value=mock_catalog_file), \
+         patch('aqua.diagnostics.base.output_saver.dump_yaml') as mock_dump_yaml, \
+         patch('aqua.diagnostics.base.output_saver.replace_intake_vars', return_value='/mocked/path/data.nc'):
         
         (tmp_path / 'catalogs' / 'ci' / 'catalog' / 'IFS-NEMO').mkdir(parents=True, exist_ok=True)
 
