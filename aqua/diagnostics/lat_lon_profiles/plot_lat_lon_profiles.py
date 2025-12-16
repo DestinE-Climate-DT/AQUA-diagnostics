@@ -303,72 +303,97 @@ class PlotLatLonProfiles():
     def set_description(self):
         """
         Set the caption for the plot.
-        Specialized for Lat-Lon Profiles diagnostic.
+
+        Returns:
+            description (str): Caption for the plot.
         """
         # Start with data_type info for seasonal plots
         if self.data_type == 'seasonal':
-            description = f'Seasonal {self.mean_type.lower()} profile '
+            description = 'Seasonal '
         else:
-            description = f'{self.mean_type.capitalize()} profile '
+            description = ''
+        
+        # Mean type (zonal/meridional) and variable name
+        description += f"{self.mean_type} profile of "
         
         # Variable name
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
-                description += f'of {name} '
+                description += f"{name}"
                 break
 
         # Units
         if self.units is not None:
-            units = self.units.replace("**", r"\*\*")
-            description += f'[{units}] '
+            description += f" [{self.units}]"
         
-        # Short name in parentheses
-        if self.short_name is not None:
-            description += f'({self.short_name}) '
+        # Short name in parentheses (if different from what was already used)
+        if self.short_name is not None and self.long_name is not None:
+            description += f" ({self.short_name})"
 
         # Region - only if not Global
         if self.region is not None and self.region.lower() != 'global':
-            description += f'over {self.region} '
+            description += f" in {self.region} region"
 
-        # Dataset info
+        # Dataset info with periods
         num_items = min(len(self.catalogs), len(self.models), len(self.exps)) if hasattr(self, 'catalogs') else 0
         
-        description += 'for '
-        dataset_names = [f'{self.catalogs[i]} {self.models[i]} {self.exps[i]}' for i in range(min(self.len_data, num_items))]
-        description += strlist_to_phrase(items=dataset_names)
+        if num_items > 0:
+            description += ' for '
+            dataset_infos = []
+            for i in range(min(self.len_data, num_items)):
+                dataset_info = f'{self.catalogs[i]} {self.models[i]} {self.exps[i]}'
+                
+                # Extract period from data
+                if self.data_type == 'longterm' and self.data and i < len(self.data):
+                    data_item = self.data[i]
+                elif self.data_type == 'seasonal' and self.data and i < len(self.data):
+                    # For seasonal, use first season to get dates
+                    data_item = self.data[0][i] if self.data[0] and i < len(self.data[0]) else None
+                else:
+                    data_item = None
+                
+                if data_item is not None:
+                    startdate = getattr(data_item, 'AQUA_startdate', None)
+                    enddate = getattr(data_item, 'AQUA_enddate', None)
+                    if startdate and enddate:
+                        dataset_info += f' from {startdate} to {enddate}'
+                
+                dataset_infos.append(dataset_info)
+            
+            description += strlist_to_phrase(items=dataset_infos)
 
-        # Reference data description
+        # Reference data description with period
         if self.len_ref > 0 and self.ref_data is not None:
-            # Extract reference info properly
-            if self.data_type == 'seasonal' and isinstance(self.ref_data, list):
-                # For seasonal, ref_data is a list, use first element
+            description += ', compared to '
+            
+            # Get reference data item to extract dates
+            if self.data_type == 'longterm':
+                ref_item = self.ref_data
+            elif self.data_type == 'seasonal' and self.ref_data:
                 ref_item = self.ref_data[0] if self.ref_data else None
             else:
-                # For longterm, ref_data is a single DataArray
-                ref_item = self.ref_data
+                ref_item = None
             
-            if ref_item is not None and hasattr(ref_item, 'AQUA_model'):
-                ref_model = ref_item.AQUA_model
-                ref_exp = ref_item.AQUA_exp
-                ref_catalog = getattr(ref_item, 'AQUA_catalog', None)
+            if ref_item is not None:
+                ref_catalog = getattr(ref_item, 'AQUA_catalog', 'unknown')
+                ref_model = getattr(ref_item, 'AQUA_model', 'unknown')
+                ref_exp = getattr(ref_item, 'AQUA_exp', 'unknown')
+                ref_startdate = getattr(ref_item, 'AQUA_startdate', None)
+                ref_enddate = getattr(ref_item, 'AQUA_enddate', None)
                 
-                # Build reference string
-                if ref_catalog:
-                    description += f' compared to {ref_catalog} {ref_model} {ref_exp}'
-                else:
-                    description += f' compared to {ref_model} {ref_exp}'
-            else:
-                description += ' with reference data'
+                description += f'{ref_catalog} {ref_model} {ref_exp}'
+                if ref_startdate and ref_enddate:
+                    description += f' from {ref_startdate} to {ref_enddate}'
         
-        # Standard deviation info
+        # Standard deviation info with period
         if self.ref_std_data is not None:
             description += ' with ±2σ uncertainty bands'
-            if self.std_startdate is not None and self.std_enddate is not None:
+            if hasattr(self, 'std_startdate') and hasattr(self, 'std_enddate'):
                 description += f' computed over {self.std_startdate} to {self.std_enddate}'
         
         description += '.'
-            
-        self.logger.debug('Description: %s', description)
+        
+        self.logger.warning('Description: %s', description)
         return description
 
     def run(self,
