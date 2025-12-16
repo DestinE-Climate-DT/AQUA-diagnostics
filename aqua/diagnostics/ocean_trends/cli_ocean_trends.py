@@ -30,7 +30,7 @@ def parse_arguments(args):
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
     
-    cli = DiagnosticCLI(args, 'ocean3d', 'config_ocean_trends.yaml', log_name='OceanTrends CLI').prepare()
+    cli = DiagnosticCLI(args, 'ocean3d', 'config-ocean3d-en4-trend-drift.yaml', log_name='OceanTrends CLI').prepare()
     cli.open_dask_cluster()
     
     logger = cli.logger
