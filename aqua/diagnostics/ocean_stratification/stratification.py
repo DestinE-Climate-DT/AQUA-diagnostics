@@ -65,6 +65,8 @@ class Stratification(Diagnostic):
         )
         self.logger = log_configure(log_name="Stratification", log_level=loglevel)
         self.diagnostic_name = diagnostic_name
+        if vert_coord is None:
+            vert_coord = DEFAULT_OCEAN_VERT_COORD
         self.vert_coord = vert_coord
 
     def run(
