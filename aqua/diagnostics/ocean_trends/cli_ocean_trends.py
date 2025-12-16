@@ -57,7 +57,7 @@ if __name__ == '__main__':
             diagnostic_name = trends_config.get('diagnostic_name', 'ocean_trends')
             var = trends_config.get('var', None)
             dim_mean = trends_config.get('dim_mean', None)
-            vert_coord = trends_config.get('vert_coord', 'level')
+            vert_coord = trends_config.get('vert_coord', None)
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
             #     regions.append('go')
