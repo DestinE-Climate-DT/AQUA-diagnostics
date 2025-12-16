@@ -65,7 +65,7 @@ if __name__ == "__main__":
                 "diagnostic_name", "ocean_stratification"
             )
             climatologies = stratification_config.get("climatology", None)
-            vert_coord = stratification_config.get("vert_coord", "level")
+            vert_coord = stratification_config.get("vert_coord", None)
             for region, climatology in zip(regions, climatologies):
                     logger.info(f"Processing region: {region}, climatology: {climatology}")
                     var = stratification_config.get("var", None)
