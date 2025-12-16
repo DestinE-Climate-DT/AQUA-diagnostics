@@ -136,7 +136,7 @@ class PlotHistogram():
                 break
 
         if self.units is not None:
-            description += f'[{unit_to_latex(self.units)}] '
+            description += f'[{self.units}] '
 
         if self.region is not None:
             description += f'for region {self.region} '
