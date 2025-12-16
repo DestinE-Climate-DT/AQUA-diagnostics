@@ -151,3 +151,5 @@ def test_round_invalid_freq():
     """Test error handling for invalid frequency"""
     with pytest.raises(ValueError):
         round_startdate(pd.Timestamp('2020-03-15'), freq='weekly')
+    with pytest.raises(ValueError):
+        round_enddate(pd.Timestamp('2020-03-15'), freq='weekly')
