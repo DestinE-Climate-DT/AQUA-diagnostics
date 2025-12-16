@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.22.0):
 
 - Add LaTeX units formatting to diagnostic labels (#70)
+- Boxplots: hotfix for diagnostic_name (#69)
+- Histogram: CLI refactoring (#49)
 - Lat-lon profiles dask fix (#63)
 - Fix argument passing by common CLI for `regrid`, `startdate` and `enddate` (#52)
 - Introduce call to pd.Timestamp in Global_Bias to accomodate also non-nanoseconds time window (#52)
@@ -15,7 +17,7 @@ Unreleased in the current development version (target v0.22.0):
 - Rename `core` diagnostic folder to `base` to avoid mixing up with `aqua.core` (#52)
 - Fix of aqua_path for analysis console (#56)
 - Updated installation scripts for HPC2020 (#51)
-
+- fixed as suggested in the issue #59 (#80)
 ## [v0.21.0]
 
 Main changes:
@@ -24,6 +26,7 @@ Main changes:
 
 
 Complete list:
+- Timeseries: Extra timestep in Timeseries analysis fix (#57)
 - Notebooks update with new plt.close() pattern (#50)
 - Workflow structure refactore to accomodate for multiple pipelines as in AQUA-core (#47)
 - Removed `cli_checker` diagnostic tool from diagnostic repository (#46)
