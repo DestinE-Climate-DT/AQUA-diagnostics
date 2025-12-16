@@ -230,7 +230,6 @@ class TestPlotLatLonProfilesIntegration:
         filename = png_files[0].name
         assert custom_name in filename, f"Custom diagnostic name '{custom_name}' not in filename: {filename}"
 
-
 @pytest.mark.diagnostics
 class TestPlotLatLonProfilesErrors:
     """Error handling tests"""
@@ -265,3 +264,48 @@ class TestPlotLatLonProfilesRealization:
         png_files = list(tmp_path.rglob('*.png'))
         assert len(png_files) > 0
         assert any('r3' in f.name for f in png_files)
+
+@pytest.mark.diagnostics
+class TestPlotLatLonProfilesDescription:
+    """Test description generation with smart date handling"""
+    
+    @pytest.mark.parametrize("data_dates,ref_dates,std_dates,expected_pattern", [
+        # Case 1: All dates identical - should appear once
+        (("2020-01-01", "2029-12-31"), ("2020-01-01", "2029-12-31"), ("2020-01-01", "2029-12-31"),
+         r"from 2020-01-01 to 2029-12-31 with ±2σ uncertainty bands\."),
+        
+        # Case 2: Data and ref same, std different - show std separately
+        (("2020-01-01", "2029-12-31"), ("2020-01-01", "2029-12-31"), ("1980-01-01", "2019-12-31"),
+         r"from 2020-01-01 to 2029-12-31.*computed over 1980-01-01 to 2019-12-31"),
+        
+        # Case 3: All different - show all three
+        (("2050-01-01", "2059-12-31"), ("1990-01-01", "1999-12-31"), ("1850-01-01", "2014-12-31"),
+         r"from 2050-01-01 to 2059-12-31.*from 1990-01-01 to 1999-12-31.*computed over 1850-01-01 to 2014-12-31"),
+    ])
+    def test_date_display(self, sample_lat_lon_data, data_dates, ref_dates, std_dates, expected_pattern):
+        """Test that duplicate dates are smartly condensed in descriptions"""
+        import re
+        
+        # Create data with specific dates
+        data = sample_lat_lon_data()
+        data.attrs['AQUA_startdate'], data.attrs['AQUA_enddate'] = data_dates
+        
+        ref_data = sample_lat_lon_data()
+        ref_data.attrs['AQUA_startdate'], ref_data.attrs['AQUA_enddate'] = ref_dates
+        
+        std_data = sample_lat_lon_data()
+        std_data.attrs['std_startdate'], std_data.attrs['std_enddate'] = std_dates
+        
+        plotter = PlotLatLonProfiles(
+            data=data,
+            ref_data=ref_data,
+            ref_std_data=std_data,
+            data_type='longterm',
+            loglevel=loglevel
+        )
+        
+        description = plotter.set_description()
+        
+        # Verify pattern matches expected behavior
+        assert re.search(expected_pattern, description), \
+            f"Description doesn't match expected pattern.\nGot: {description}\nExpected pattern: {expected_pattern}"
