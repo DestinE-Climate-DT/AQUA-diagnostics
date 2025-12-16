@@ -141,7 +141,7 @@ if __name__ == "__main__":
             )
 
             if dataset["zoom"]:
-                logger.info(f"zoom option is set to {dataset["zoom"]}")
+                logger.info(f"zoom option is set to {dataset['zoom']}")
                 reader_kwargs.update({"zoom": dataset["zoom"]})
 
             # Initialize SSH Variability for model dataset

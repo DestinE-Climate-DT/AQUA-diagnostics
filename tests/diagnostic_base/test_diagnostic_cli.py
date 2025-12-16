@@ -175,9 +175,9 @@ class TestDiagnosticCLI:
         assert result['model'] == 'MyModel'
         assert result['exp'] == 'historical'
         assert result['source'] == 'CMIP6'
-        assert result['regrid'] is None
-        assert result['startdate'] is None
-        assert result['enddate'] is None
+        assert result['regrid'] is None  # reference doesn't have regrid specified
+        assert result['startdate'] == '2000-01-01'  # Takes from dataset itself
+        assert result['enddate'] == '2010-12-31'    # Takes from dataset itself
 
 
     def test_dataset_args_uses_defaults(self, mock_args):
