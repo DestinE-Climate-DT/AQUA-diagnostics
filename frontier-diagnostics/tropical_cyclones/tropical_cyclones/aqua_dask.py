@@ -1,6 +1,6 @@
 import dask
 from dask.distributed import Client, LocalCluster
-from aqua.logger import log_configure
+from aqua.core.logger import log_configure
 
 
 class AquaDask():
