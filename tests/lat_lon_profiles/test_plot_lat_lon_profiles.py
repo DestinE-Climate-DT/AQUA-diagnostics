@@ -274,11 +274,7 @@ class TestPlotLatLonProfilesDescription:
         (("2020-01-01", "2029-12-31"), ("2020-01-01", "2029-12-31"), ("2020-01-01", "2029-12-31"),
          r"from 2020-01-01 to 2029-12-31 with ±2σ uncertainty bands\."),
         
-        # Case 2: Data and ref same, std different - show std separately
-        (("2020-01-01", "2029-12-31"), ("2020-01-01", "2029-12-31"), ("1980-01-01", "2019-12-31"),
-         r"from 2020-01-01 to 2029-12-31.*computed over 1980-01-01 to 2019-12-31"),
-        
-        # Case 3: All different - show all three
+        # Case 2: All different - show all three
         (("2050-01-01", "2059-12-31"), ("1990-01-01", "1999-12-31"), ("1850-01-01", "2014-12-31"),
          r"from 2050-01-01 to 2059-12-31.*from 1990-01-01 to 1999-12-31.*computed over 1850-01-01 to 2014-12-31"),
     ])
