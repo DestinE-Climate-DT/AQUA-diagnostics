@@ -303,9 +303,6 @@ class PlotLatLonProfiles():
     def set_description(self):
         """
         Set the caption for the plot.
-
-        Returns:
-            description (str): Caption for the plot.
         """
         # Start with data_type info for seasonal plots
         if self.data_type == 'seasonal':
