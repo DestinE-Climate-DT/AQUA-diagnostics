@@ -334,101 +334,41 @@ class PlotLatLonProfiles():
         if self.region is not None and self.region.lower() != 'global':
             description += f"over {self.region} "
 
-        # Dataset info with periods
-        num_items = min(len(self.catalogs), len(self.models), len(self.exps)) if hasattr(self, 'catalogs') else 0
-        
-        # Collect all unique date pairs
-        data_dates = []
-        ref_dates = []
-        std_dates = []
-        
-        if num_items > 0:
-            description += "for "
-            dataset_parts = []
-            for i in range(num_items):
-                catalog = self.catalogs[i] if i < len(self.catalogs) else 'unknown'
-                model = self.models[i] if i < len(self.models) else 'unknown'
-                exp = self.exps[i] if i < len(self.exps) else 'unknown'
-                
-                dataset_str = f"{catalog} {model} {exp}"
-                
-                # Extract dates from data
-                data_items = self.data if self.data_type == 'longterm' else [self.data[0]] if self.data else []
-                if i < len(data_items):
-                    data_item = data_items[i]
-                    data_start = getattr(data_item, 'AQUA_startdate', None)
-                    data_end = getattr(data_item, 'AQUA_enddate', None)
-                    if data_start and data_end:
-                        data_dates.append((data_start, data_end))
-                
-                dataset_parts.append(dataset_str)
-            
-            description += strlist_to_phrase(dataset_parts)
-
-        # Reference data description with period
-        if self.len_ref > 0 and self.ref_data is not None:
-            ref_item = self.ref_data if not isinstance(self.ref_data, list) else self.ref_data[0]
-            
-            ref_catalog = getattr(ref_item, 'AQUA_catalog', 'unknown')
-            ref_model = getattr(ref_item, 'AQUA_model', 'unknown')
-            ref_exp = getattr(ref_item, 'AQUA_exp', 'unknown')
-            
-            # Extract reference dates
-            ref_start = getattr(ref_item, 'AQUA_startdate', None)
-            ref_end = getattr(ref_item, 'AQUA_enddate', None)
-            if ref_start and ref_end:
-                ref_dates.append((ref_start, ref_end))
-            
-            description += f", compared to {ref_catalog} {ref_model} {ref_exp}"
-        
-        # Standard deviation info with period
-        if self.ref_std_data is not None:
-            std_start = getattr(self.ref_std_data, 'std_startdate', None)
-            std_end = getattr(self.ref_std_data, 'std_enddate', None)
-            if std_start and std_end:
-                std_dates.append((std_start, std_end))
-        
-        # Smart date display logic
-        # Check if we have all three date pairs
-        has_data_dates = len(data_dates) > 0
-        has_ref_dates = len(ref_dates) > 0
-        has_std_dates = len(std_dates) > 0
-        
-        # Extract the actual date pairs (assume first entry if multiple)
-        data_pair = data_dates[0] if has_data_dates else (None, None)
-        ref_pair = ref_dates[0] if has_ref_dates else (None, None)
-        std_pair = std_dates[0] if has_std_dates else (None, None)
-        
-        # Case 1: All three are identical
-        if (has_data_dates and has_ref_dates and has_std_dates and 
-            data_pair == ref_pair == std_pair):
-            description += f" from {data_pair[0]} to {data_pair[1]} with ±2σ uncertainty bands"
-        
-        # Case 2: Data and reference are same, std is different (or missing)
-        elif (has_data_dates and has_ref_dates and data_pair == ref_pair):
-            description += f" from {data_pair[0]} to {data_pair[1]}"
-            if has_std_dates and std_pair != data_pair:
-                description += f" with ±2σ uncertainty bands computed over {std_pair[0]} to {std_pair[1]}"
-            elif has_std_dates:
-                description += " with ±2σ uncertainty bands"
-        
-        # Case 3: Reference and std are same, data is different
-        elif (has_ref_dates and has_std_dates and ref_pair == std_pair):
-            if has_data_dates:
-                description += f" from {data_pair[0]} to {data_pair[1]}"
-            description += f", reference period {ref_pair[0]} to {ref_pair[1]} with ±2σ uncertainty bands"
-        
-        # Case 4: All three are different (original behavior)
+        # Get first items to extract dates for comparison
+        if self.data_type == 'longterm' and self.data:
+            data_item = self.data[0]
+        elif self.data_type == 'seasonal' and self.data:
+            data_item = self.data[0][0] if isinstance(self.data[0], list) and self.data[0] else None
         else:
-            if has_data_dates:
+            data_item = None
+
+        if self.data_type == 'longterm':
+            ref_item = self.ref_data
+        elif self.data_type == 'seasonal' and self.ref_data:
+            ref_item = self.ref_data[0] if isinstance(self.ref_data, list) else None
+        else:
+            ref_item = None
+
+        # Smart date display: show dates only once if they are the same
+        data_pair = (getattr(data_item, 'AQUA_startdate', None), 
+                     getattr(data_item, 'AQUA_enddate', None))
+        ref_pair = (getattr(ref_item, 'AQUA_startdate', None),
+                    getattr(ref_item, 'AQUA_enddate', None))
+        std_pair = (self.std_startdate, self.std_enddate) if self.ref_std_data is not None else (None, None)
+
+        if data_pair == ref_pair == std_pair and data_pair != (None, None):
+            description += f"for {self.models[0]}/{self.exps[0]} from {data_pair[0]} to {data_pair[1]} with ±2σ uncertainty bands"        
+        else:
+            # Standard case: list all date ranges
+            if data_pair != (None, None):
                 description += f" from {data_pair[0]} to {data_pair[1]}"
-            if has_ref_dates:
+            if ref_pair != (None, None) and ref_pair != data_pair:
                 description += f", reference from {ref_pair[0]} to {ref_pair[1]}"
-            if has_std_dates:
+            if std_pair != (None, None):
                 description += f" with ±2σ uncertainty bands computed over {std_pair[0]} to {std_pair[1]}"
         
         description += '.'
-        
+
         self.logger.warning('Description: %s', description)
         return description
 
@@ -465,9 +405,6 @@ class PlotLatLonProfiles():
         ref_label = self.set_ref_label()
         description = self.set_description()
         title = self.set_title()
-        
-        if self.ref_std_data is not None:
-            description += " with standard deviation bands"
 
         fig, _ = self.plot(data_labels=data_label, ref_label=ref_label, title=title,
                            style=style)
