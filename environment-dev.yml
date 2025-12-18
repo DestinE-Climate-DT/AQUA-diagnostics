@@ -1,7 +1,7 @@
 # Create the environment:
-# mamba env create -f environment.yml 
+# mamba env create -f environment-dev.yml 
 # or if you really want to use conda
-# conda env create -f environment.yml
+# conda env create -f environment-dev.yml
 
 name: aqua-dev
 channels:
