@@ -53,6 +53,7 @@ cli:
   ecmean: "ecmean/cli_ecmean.py"
   enso: "teleconnections/cli_teleconnections.py"
   gregory: "timeseries/cli_timeseries.py"
+  histogram: "histogram/cli_histogram.py"
   lat_lon_profiles: "lat_lon_profiles/cli_lat_lon_profiles.py"
   nao: "teleconnections/cli_teleconnections.py"
   seaice: "seaice/cli_seaice.py"
@@ -151,6 +152,8 @@ diagnostics:
     timeseries:
       config: "${AQUA_CONFIG}/diagnostics/water_cycle/config-water_cycle-mswep.yaml"
     biases:
+      config: "${AQUA_CONFIG}/diagnostics/water_cycle/config-water_cycle-mswep.yaml"
+    histogram:
       config: "${AQUA_CONFIG}/diagnostics/water_cycle/config-water_cycle-mswep.yaml"
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/diagnostics/water_cycle/config-water_cycle-mswep.yaml"
