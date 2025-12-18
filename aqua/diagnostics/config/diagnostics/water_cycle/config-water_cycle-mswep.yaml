@@ -90,6 +90,22 @@ diagnostics:
       tprate:
         regions: ['nh', 'sh', 'europe']
 
+  histogram:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
+    center_time: true
+    bins: 50              # Override only if different from 100
+    density: true         # already default
+    ylogscale: true       # already default
+    params:
+      default:
+        std_startdate: '19900101'
+        std_enddate: '20201231'
+      tprate:
+        units: 'mm/day'
+        regions: [null, 'tropics']  # global and tropics
+
   lat_lon_profiles:
     run: true
     diagnostic_name: 'water_cycle'
