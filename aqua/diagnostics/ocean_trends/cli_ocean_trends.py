@@ -30,7 +30,7 @@ def parse_arguments(args):
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
     
-    cli = DiagnosticCLI(args, 'ocean3d', 'config_ocean_trends.yaml', log_name='OceanTrends CLI').prepare()
+    cli = DiagnosticCLI(args, 'ocean3d', 'config-ocean3d-en4-trend-drift.yaml', log_name='OceanTrends CLI').prepare()
     cli.open_dask_cluster()
     
     logger = cli.logger
@@ -56,7 +56,8 @@ if __name__ == '__main__':
             regions = trends_config.get('regions', [None])
             diagnostic_name = trends_config.get('diagnostic_name', 'ocean_trends')
             var = trends_config.get('var', None)
-            dim_mean = trends_config.get('dim_mean', None) 
+            dim_mean = trends_config.get('dim_mean', None)
+            vert_coord = trends_config.get('vert_coord', None)
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
             #     regions.append('go')
@@ -67,6 +68,7 @@ if __name__ == '__main__':
                     data_trends = Trends(
                         **dataset_args,
                         diagnostic_name=diagnostic_name,
+                        vert_coord=vert_coord,
                         loglevel=cli.loglevel
                     )
                     data_trends.run(
@@ -80,6 +82,7 @@ if __name__ == '__main__':
                     trends_plot = PlotTrends(
                         data=data_trends.trend_coef,
                         diagnostic_name=diagnostic_name,
+                        vert_coord=vert_coord,
                         outputdir=outputdir,
                         rebuild=rebuild,
                         loglevel=cli.loglevel
@@ -89,6 +92,7 @@ if __name__ == '__main__':
                     zonal_trend_plot = PlotTrends(
                         data=data_trends.trend_coef.mean('lon'),
                         diagnostic_name=diagnostic_name,
+                        vert_coord=vert_coord,
                         outputdir=outputdir,
                         rebuild=rebuild,
                         loglevel=cli.loglevel

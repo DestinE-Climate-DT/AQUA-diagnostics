@@ -1,10 +1,11 @@
 import xarray as xr
 
 from aqua.core.logger import log_configure
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
 
-def compute_mld_cont(rho, loglevel="WARNING"):
+def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING"):
     """
     Compute the Mixed Layer Depth (MLD) from a continuous density profile.
 
@@ -19,7 +20,9 @@ def compute_mld_cont(rho, loglevel="WARNING"):
     Parameters
     ----------
     rho : xarray.DataArray
-        Seawater density (sigma0) with dimensions including 'level' (depth).
+        Seawater density (sigma0) with dimensions including vertical coordinate (depth).
+    vert_coord : str, optional
+        Name of the vertical dimension coordinate. Default is DEFAULT_OCEAN_VERT_COORD.
     loglevel : str, optional
         Logging level (default: "WARNING").
 
@@ -29,14 +32,14 @@ def compute_mld_cont(rho, loglevel="WARNING"):
         Estimated MLD with same horizontal dimensions as `rho`.
     """
     # HACK: ensure level units are in meters, not model layers
-    if rho["level"].attrs["units"] == "NEMO model layers":
-        rho["level"].attrs["units"] = "m"
+    if rho[vert_coord].attrs["units"] == "NEMO model layers":
+        rho[vert_coord].attrs["units"] = "m"
 
     logger = log_configure(loglevel, "compute_mld_cont")
     logger.info("Starting computation of mixed layer depth (MLD) from density field.")
     # Identify the first level to represent the ocean surface
     logger.debug("Identifying surface density.")
-    surf_dens = rho.isel(level=slice(0, 1)).mean("level")
+    surf_dens = rho.isel({vert_coord: slice(0, 1)}).mean(vert_coord)
 
     # Compute the density anomaly between surface and the full water column
     logger.debug("Computing density anomaly between surface and whole field.")
@@ -52,24 +55,24 @@ def compute_mld_cont(rho, loglevel="WARNING"):
 
     # Find the deepest level before the threshold is exceeded
     logger.debug("Finding deepest level before threshold is exceeded.")
-    cutoff_lev1 = dens_diff2.level.where(dens_diff2 > -9999).max(["level"])
+    cutoff_lev1 = dens_diff2[vert_coord].where(dens_diff2 > -9999).max([vert_coord])
 
     # Find the first level after the threshold is exceeded
     logger.debug("Finding first level after threshold is exceeded.")
-    cutoff_lev2 = dens_diff2.level.where(dens_diff2.level > cutoff_lev1).min(["level"])
+    cutoff_lev2 = dens_diff2[vert_coord].where(dens_diff2[vert_coord] > cutoff_lev1).min([vert_coord])
 
     # Identify the last valid ocean level
     logger.debug("Identifying last valid ocean level.")
-    depth = rho.level.where(rho > -9999).max(["level"])
+    depth = rho[vert_coord].where(rho > -9999).max([vert_coord])
 
     # Interpolate to estimate MLD between threshold levels
     ddif = cutoff_lev2 - cutoff_lev1
     logger.debug("Interpolating to estimate MLD between threshold levels.")
-    rdif1 = dens_diff.where(dens_diff.level == cutoff_lev1).max(
-        ["level"]
+    rdif1 = dens_diff.where(dens_diff[vert_coord] == cutoff_lev1).max(
+        [vert_coord]
     )  # Density diff at first level
-    rdif2 = dens_diff.where(dens_diff.level == cutoff_lev2).max(
-        ["level"]
+    rdif2 = dens_diff.where(dens_diff[vert_coord] == cutoff_lev2).max(
+        [vert_coord]
     )  # Density diff at second level
     mld = cutoff_lev1 + ((ddif) * (rdif1)) / (rdif1 - rdif2)
 
