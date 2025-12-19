@@ -11,6 +11,7 @@ the core functionalities required for running diagnostics. When you install AQUA
 will be automatically installed as a dependency, giving you access to both packages.
 
 .. note::
+
     If you need to install AQUA in editable mode for development purposes, you must clone the 
     AQUA repository separately and install it in editable mode before installing AQUA-diagnostics.
 
@@ -28,7 +29,8 @@ The extra dependencies are listed in the ``environment.yml`` file in the reposit
 - ``eccodes==2.41.0``
 - ``tempest-extremes``
 
-.. note ::
+.. note::
+
     If you need to access data written in a local FDB database (not polytope), you need to install the FDB5 library.
     The FDB5 library is not available in the conda-forge repository, so you need to install it manually.
     If you are working on a supported HPC, you can check the corresponding section for more information in the :ref:`HPC installation <installation-hpc>` section.
@@ -113,7 +115,7 @@ At this point, you should have successfully installed the AQUA-diagnostics packa
 in the newly created aqua-diagnostics environment.
 
 
-.. note ::
+.. note::
 
     By default, the environment file installs the cloned version of AQUA-diagnostics in editable mode with ``pip install -e .[all]``.
 
@@ -212,7 +214,8 @@ If you choose not to add it to ``.bash_profile``, you will need to manually sour
 
     source ~/load_aqua_diagnostics.sh
 
-.. note ::
+.. note::
+
     Both AQUA (aqua-core) and AQUA-diagnostics are installed in **editable mode**. 
     This means you can modify the source code in both repositories and changes will be reflected immediately without reinstallation.
 
@@ -228,19 +231,23 @@ The installation script creates two helper functions to manage AQUA environments
 
 By default, the AQUA-diagnostics environment is loaded when you source ``load_aqua_diagnostics.sh``.  
 
-.. note ::
+.. note::
+
     Comment or delete scripts calls to files like ``source load_aqua.sh`` in your ``.bash_profile`` file to avoid possible conflicts.
 
-.. note ::
+.. note::
+
     The installation script is designed to be run on the LUMI cluster, and it may require some adjustments to be run on other systems
     that use the container-wrapper tool. Please refer to the documentation of the container-wrapper tool for more information.
 
-.. warning ::
+.. warning::
+
     This installation script, despite the name, does not install the AQUA package in the traditional sense nor in a pure container.
     It wraps the conda installation in a container, allowing to load LUMI modules and run from command line or batch jobs the AQUA code.
     Different LUMI module loading or setups may lead to different results, but it's the most flexible way to develop AQUA (core and/or diagnostics) on LUMI.
 
-.. note ::
+.. note::
+
     If you encounter any issues with the installation script, please refer to the :ref:`faq` section.
 
 .. _installation-levante:
@@ -276,6 +283,7 @@ Installation on MareNostrum 5 (MN5) HPC at BSC
 To enable internet-dependent operations like git, pip or conda on MN5, you can configure an SSH tunnel and set up proxy environment variables.
 
 .. note::
+
     We recommend using a machine with a stable connection, such as Levante or LUMI, for these configurations, as connections to MN5 from personal computers may be unstable.
 
 Add a ``RemoteForward`` directive with a valid port number under the MN5 section of your ``~/.ssh/config`` file.
@@ -364,6 +372,7 @@ For this reason, it is recommended to start an interactive session asking for ad
 which will ask for a session with 8 cpus, 20 GB of RAM and 30 GB of temporary local disk storage. This is required only for the installation, not necessarily for using AQUA.
 
 .. note ::
+
     If this is the first time that you run ``ecinteractive``, you should first set up your ssh keys by running the command ``ssh-key-setup``.
 
 It is recommended to define an ``$AQUA_DIAGNOSTICS`` environment variable that points to the AQUA_DIAGNOSTICS directory (the script will assume by default that ``AQUA_DIAGNOSTICS`` is located in the current directiry.):
@@ -394,8 +403,9 @@ Instead, the recommended way to use AQUA is by loading the environment with a co
 You can later also use ``tykky deactivate`` to deactivate the environment.
 
 .. note ::
-        This installs ``aqua-cora`` as a package from pip and ``aqua-diagnostics`` in editable mode. 
-        If you are a developer you can also install using the ``hpc2020_install_dev.sh`` script, which will install both in editable mode, creating the tykky environment ``aqua-dev``.
+
+    This installs ``aqua-cora`` as a package from pip and ``aqua-diagnostics`` in editable mode. 
+    If you are a developer you can also install using the ``hpc2020_install_dev.sh`` script, which will install both in editable mode, creating the tykky environment ``aqua-dev``.
 
 In case you plan to use Visual Studio Code, you can add a kernel pointing to the containerized AQUA by running also the following command:
 
@@ -414,7 +424,8 @@ The AQUA container is a Docker container that contains the AQUA-diagnostics pack
 
 Please refer to the :ref:`container` section for more information on how to deploy and how to use the AQUA container.
 
-.. note ::
+.. note::
+
     If you're working on LUMI, Levante or MN5 HPCs, a compact script is available to load the AQUA container,
     mounting the necessary folders and creating the necessary environment variables.
     Please refer to the :ref:`container` section.
