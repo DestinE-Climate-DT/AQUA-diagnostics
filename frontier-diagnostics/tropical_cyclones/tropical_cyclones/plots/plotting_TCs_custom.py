@@ -2,6 +2,111 @@
 # MODIFIED PLOTTING FUNCTIONS FOR DIRECT FORMAT
 # ===========================================
 # plotting_TCs_custom.py
+#
+# This module provides a set of utilities to read, classify,
+# and visualize tropical cyclone (TC) trajectories directly
+# from the filtered trajectory file format (no intermediate
+# conversion required).
+#
+# The main functionalities included are:
+#
+# 1) category_from_slp_pa(slp_pa)
+#    --------------------------------------------------------
+#    Assigns a Saffir–Simpson category based on minimum
+#    sea-level pressure (SLP, in Pa).
+#    Categories:
+#        0 = Tropical Depression (TD)
+#        1–5 = Hurricane Categories 1 to 5
+#
+# 1b) get_basin_ibtracs(lon,lat)
+#
+# 2) getTrajectories_direct(filename)
+#    --------------------------------------------------------
+#    Reads TC trajectories directly from the filtered file.
+#    Returns:
+#        - number of trajectories
+#        - maximum trajectory length
+#        - dictionary with storm-wise data (lon, lat, slp, wind, time)
+#
+# 3) plot_trajectories_direct(trajfile, tdict, max_timesteps=None)
+#    --------------------------------------------------------
+#    Plots all TC trajectories as simple scatter points
+#    (black dots), without intensity or category information.
+#    Useful for quick diagnostics and sanity checks.
+#
+# 4) plot_trajectories_colored(trajfile, tdict,
+#                              color_by='intensity' or 'category',
+#                              max_timesteps=None)
+#    --------------------------------------------------------
+#    Plots TC trajectories as continuous lines using
+#    LineCollection, with:
+#        - one color per cyclone
+#        - color based on minimum SLP (intensity) or
+#          Saffir–Simpson category
+#    Handles dateline crossings to avoid spurious long lines.
+#    Includes a consistent colorbar.
+#
+# 5) plot_trajectories_by_category(trajfile, tdict,
+#                                  category=0–5,
+#                                  max_timesteps=None)
+#    --------------------------------------------------------
+#    Plots ONLY tropical cyclones belonging to a single
+#    Saffir–Simpson category, using continuous colored lines.
+#    The category is determined from the minimum SLP reached
+#    during the cyclone lifetime.
+#
+#
+# 6) plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
+#    --------------------------------------------------------
+# This module provides density-based visualization for tropical cyclone
+# (TC) track data, using Kernel Density Estimation (KDE) to highlight
+# regions of high TC activity.
+# -------------------------------------------------------------------------------
+# Creates a density scatter plot where each TC observation point is colored
+# according to its local density. The function:
+#   - Reads TC trajectories from the filtered file format
+#   - Extracts all lon/lat positions (optionally limited by max_timesteps)
+#   - Computes local density using Gaussian KDE (scipy.stats.gaussian_kde)
+#   - Plots points colored by normalized density (0-1 scale)
+#   - Uses a horizontal colorbar positioned below the map (HighResMIP style)
+#   - Saves output as PDF with standardized naming convention
+#
+# The density scale is normalized (0-1) where:
+#   - 0 = lowest density regions (isolated tracks)
+#   - 1 = highest density regions (major TC formation/transit areas)
+#
+# For computational efficiency, the function automatically samples down to
+# max 50,000 points if the dataset is larger. The KDE bandwidth is automatically
+# selected by Scott's rule.
+#
+# Output follows HighResMIP-PRIMAVERA visualization standards (Page 10, Fig 3)
+# with horizontal colorbar and clean cartographic presentation.
+# ===============================================================================
+#
+# 7) plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None)
+#    --------------------------------------------------------
+# Plot TC track density as transits per month using gridded counts.
+# Divides the globe into regular grid cells (default 2.5° × 2.5°) 
+# and counts how many TC observations fall in each cell. 
+# The counts are then normalized by the time period length to obtain 
+# "transits per month". This follows the HighResMIP-PRIMAVERA methodology (Page 10, Fig 3)
+# and uses a continuous log colorbar typically ranging from 0 to 3+ transits/month,
+# making it ideal for comparing different models or time periods.
+#    Gridded transits-per-month map with logarithmic colorbar.
+#    Normalizes by the time period to get "transits per month"
+#    Uses LOGARITHMIC scale colorbar with DISCRETE levels (better visualization)
+#    Custom colormap: white → brown → yellow → green → blue (HighResMIP style)
+#
+# 8) plot_density_scatter_by_category()
+#    6-panel subplot showing KDE density separately for each Saffir-Simpson
+#    category (TD, Cat 1-5). Reveals how spatial patterns vary with intensity.
+#
+
+# All plotting functions use Cartopy with a PlateCarree
+# projection and are designed to produce publication-ready
+# figures (PDF output).
+# ============================================================
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,7 +117,8 @@ import cartopy.feature as cfeature
 import os
 from matplotlib.collections import LineCollection
 from matplotlib.cm import ScalarMappable
-
+from matplotlib.colors import Normalize, LinearSegmentedColormap, BoundaryNorm, LogNorm
+from scipy.stats import gaussian_kde
 
 
 # ===== def category
@@ -32,6 +138,33 @@ def category_from_slp_pa(slp_pa):
     else:
         return 5
 # ========================================
+
+
+
+# ==== def basins
+def get_basin_ibtracs(lon, lat):
+    """
+    Classification based on IBTrACS (WMO standard)
+    Ref: https://www.ncei.noaa.gov/products/international-best-track-archive
+    """
+    lon_360 = lon if lon >= 0 else lon + 360
+    
+    if (260 <= lon_360 <= 360 or 0 <= lon_360 <= 0) and 0 <= lat <= 70:
+        return 'North Atlantic'
+    if 180 <= lon_360 < 260 and 0 <= lat <= 60:
+        return 'East Pacific'
+    if 100 <= lon_360 < 180 and 0 <= lat <= 60:
+        return 'West Pacific'
+    if 30 <= lon_360 < 100 and 0 <= lat <= 40:
+        return 'North Indian'
+    if 20 <= lon_360 < 135 and -40 <= lat < 0:
+        return 'South Indian'
+    if (135 <= lon_360 <= 360 or 0 <= lon_360 < 240) and -40 <= lat < 0:
+        return 'South Pacific'
+    if (290 <= lon_360 <= 360 or 0 <= lon_360 <= 20) and -40 <= lat < 0:
+        return 'South Atlantic'
+    return 'Other'
+# ==============================================
 
 def getTrajectories_direct(filename):
     """
@@ -162,10 +295,10 @@ def plot_trajectories_direct(trajfile, tdict, max_timesteps=None):
             x=lon_plot,
             y=lat,
             color="black",
-            s=15,
+            s=22,
             linewidths=0.5,
             marker=".",
-            alpha=0.8,
+            alpha=0.9,
             transform=ccrs.PlateCarree()
         )
     
@@ -183,6 +316,7 @@ def plot_trajectories_direct(trajfile, tdict, max_timesteps=None):
     
     print(f"Plot saved to: {save_path}")
     plt.show()
+    plt.close()
 
 
 def plot_trajectories_colored(trajfile, tdict, color_by='intensity', max_timesteps=None):
@@ -319,12 +453,792 @@ def plot_trajectories_colored(trajfile, tdict, color_by='intensity', max_timeste
     startdate = tdict['time']['startdate']
     enddate   = tdict['time']['enddate']
 
+    # Avoid spaces in the name of the figure pdf
+    model_clean = tdict['dataset']['model'].replace(" ", "_")
+    exp_clean = tdict['dataset']['exp'].replace(" ", "_")
+    color_clean = str(color_by).replace(" ", "_")  # se vuoi essere sicuro
+
     save_path = os.path.join(
-      tdict['paths']['plotdir'],
-      f"tracks_colored_{color_by}_{tdict['dataset']['model']}_{tdict['dataset']['exp']}_{startdate}_{enddate}.pdf"
+        tdict['paths']['plotdir'],
+        f"tracks_colored_{color_clean}_{model_clean}_{exp_clean}_{startdate}_{enddate}.pdf"
     )
 
     plt.savefig(save_path, bbox_inches='tight', dpi=350)
-    
+
     print(f"Plot saved to: {save_path}")
     plt.show()
+    plt.close()
+
+
+
+def plot_trajectories_by_category(trajfile, tdict, category=1, max_timesteps=None):
+    """
+    Plot ONLY tropical cyclones belonging to a specific category using continuous lines.
+    
+    Args:
+        trajfile: Path to the filtered trajectory file
+        tdict: Configuration dictionary
+        category: Category to plot (0 = TD, 1–5 = Cat 1–5)
+        max_timesteps: Timestep limit (None = all timesteps)
+    """
+    cat_names = [
+        'TD (≥1005 hPa)',
+        'Cat 1 (990–1004)',
+        'Cat 2 (975–989)',
+        'Cat 3 (960–974)',
+        'Cat 4 (945–959)',
+        'Cat 5 (<945)'
+    ]
+    cat_colors = ['lightgreen', 'gold', 'orange', 'red', 'darkred', 'purple']
+    
+    print(f"Plotting trajectories for {cat_names[category]}...")
+    
+    # Read data
+    nstorms, max_pts, trajectories = getTrajectories_direct(trajfile)
+    
+    # Filter only cyclones of the requested category (based on minimum SLP)
+    filtered_trajectories = {}
+    for storm_id, data in trajectories.items():
+        slp = data['slp']
+        min_slp = np.min(slp)
+        peak_category = category_from_slp_pa(min_slp)
+        
+        if peak_category == category:
+            filtered_trajectories[storm_id] = data
+    
+    n_filtered = len(filtered_trajectories)
+    
+    if n_filtered == 0:
+        print(f"⚠ No trajectories found for {cat_names[category]}")
+        return
+    
+    print(f"✓ Found {n_filtered} trajectories for {cat_names[category]}")
+    
+    # Create figure
+    fig = plt.figure(figsize=(16, 9))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([-180, 180, -50, 50], crs=ccrs.PlateCarree())
+    
+    # Geographic features
+    ax.add_feature(cfeature.LAND, color='lightgrey', zorder=0)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
+    
+    # Gridlines
+    gl = ax.gridlines(
+        crs=ccrs.PlateCarree(),
+        draw_labels=True,
+        linewidth=0.5,
+        color='k',
+        alpha=0.5,
+        linestyle='--'
+    )
+    gl.xlabels_top = False
+    gl.ylabels_left = False
+    gl.xlocator = mticker.FixedLocator([-180, -90, 0, 90, 180])
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    
+    # Plot each trajectory
+    for storm_id, data in filtered_trajectories.items():
+        lon = data['lon']
+        lat = data['lat']
+        
+        # Limit timesteps if requested
+        if max_timesteps is not None:
+            lon = lon[:max_timesteps]
+            lat = lat[:max_timesteps]
+        
+        # Convert longitude
+        lon_plot = np.where(lon > 180, lon - 360, lon)
+        lat_plot = lat.copy()
+
+        # Avoid lon ±180°
+        dlon = np.diff(lon_plot)
+        split_indices = np.where(np.abs(dlon) > 180)[0]
+
+        # Insert NaN where lon crosses +179 <--> -179
+        lon_plot_fixed = lon_plot.copy()
+        lat_plot_fixed = lat_plot.copy()
+        for idx in split_indices:
+            lon_plot_fixed[idx+1] = np.nan
+            lat_plot_fixed[idx+1] = np.nan
+
+        # Plot
+        ax.plot(
+            lon_plot_fixed,
+            lat_plot_fixed,
+            color=cat_colors[category],
+            linewidth=1.5,
+            alpha=0.7,
+            transform=ccrs.PlateCarree()
+        )
+
+    # Title
+    plt.title(
+        f"TC Tracks – {cat_names[category]}\n"
+        f"{tdict['dataset']['model']} - {tdict['dataset']['exp']} "
+        f"({n_filtered} tropical cyclones)",
+        fontsize=14,
+        fontweight='bold'
+    )
+    
+    # Save figure
+    os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
+
+    # Replace spaces from the name of the figure to save it
+    model_clean = tdict['dataset']['model'].replace(" ", "_")
+    exp_clean = tdict['dataset']['exp'].replace(" ", "_")
+    
+    # FIX: Use tdict['time'] instead of tdict['dataset']
+    startdate_clean = tdict['time']['startdate'].replace(" ", "").replace("-", "")
+    enddate_clean = tdict['time']['enddate'].replace(" ", "").replace("-", "")
+
+    # Save the figure with selected start/end date
+    save_filename = (
+        f"tracks_cat{category}_"
+        f"{model_clean}_"
+        f"{exp_clean}_"
+        f"{startdate_clean}_"
+        f"{enddate_clean}.pdf"
+    )
+
+    save_path = os.path.join(tdict['paths']['plotdir'], save_filename)
+
+    plt.savefig(save_path, bbox_inches='tight', dpi=350)
+
+    print(f"✓ Plot saved: {save_path}")
+    plt.show()
+    plt.close() 
+
+
+
+# density scatter plots:
+#
+def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000):
+    """
+    Plot TC track density scatter with KDE-based coloring.
+    
+    Args:
+        trajfile: Path to the filtered trajectory file
+        tdict: Configuration dictionary with dataset info and paths
+        max_timesteps: Optional limit on trajectory length (None = all points)
+        sample_size: Maximum number of points for KDE computation (default 50000)
+    
+    Returns:
+        None (saves plot to file)
+    """
+    print(f"Creating density scatter plot from: {trajfile}")
+    
+    # =========================================================================
+    # 1. READ TRAJECTORIES AND EXTRACT ALL POINTS
+    # =========================================================================
+    lon_all = []
+    lat_all = []
+    
+    with open(trajfile, 'r') as f:
+        for line in f:
+            # Skip header
+            if 'track_id' in line or 'year' in line:
+                continue
+            
+            parts = line.strip().split()
+            if len(parts) != 12:
+                continue
+            
+            lon = float(parts[7])
+            lat = float(parts[8])
+            
+            # Convert longitude from [0, 360] to [-180, 180]
+            if lon > 180:
+                lon -= 360
+            
+            lon_all.append(lon)
+            lat_all.append(lat)
+    
+    lon_all = np.array(lon_all)
+    lat_all = np.array(lat_all)
+    
+    total_points = len(lon_all)
+    print(f"Total TC observation points: {total_points:,}")
+    
+    # =========================================================================
+    # 2. SAMPLE FOR PERFORMANCE IF NEEDED
+    # =========================================================================
+    if total_points > sample_size:
+        print(f"Sampling {sample_size:,} points for KDE computation...")
+        indices = np.random.choice(total_points, sample_size, replace=False)
+        lon_sample = lon_all[indices]
+        lat_sample = lat_all[indices]
+    else:
+        lon_sample = lon_all
+        lat_sample = lat_all
+    
+    # =========================================================================
+    # 3. COMPUTE LOCAL DENSITY USING KDE
+    # =========================================================================
+    print("Computing Kernel Density Estimation...")
+    try:
+        xy = np.vstack([lon_sample, lat_sample])
+        kde = gaussian_kde(xy)
+        density = kde(xy)
+        
+        # Normalize to [0, 1] scale
+        density_normalized = density / density.max()
+        
+        print(f"Density range: {density.min():.6f} - {density.max():.6f}")
+        print(f"KDE bandwidth: {kde.factor:.4f}")
+        
+    except Exception as e:
+        print(f"KDE computation failed: {e}")
+        print("Falling back to uniform coloring")
+        density_normalized = np.ones(len(lon_sample))
+    
+    # =========================================================================
+    # 4. CREATE FIGURE WITH CARTOPY
+    # =========================================================================
+    fig = plt.figure(figsize=(14, 8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([-180, 180, -50, 50], crs=ccrs.PlateCarree())
+    
+    # =========================================================================
+    # 5. PLOT DENSITY SCATTER
+    # =========================================================================
+    scatter = ax.scatter(
+        lon_sample, lat_sample,
+        c=density_normalized,
+        s=8,
+        alpha=0.7,
+        cmap='YlOrRd',
+        norm=Normalize(vmin=0, vmax=1),
+        transform=ccrs.PlateCarree(),
+        edgecolors='none',
+        rasterized=True  # For better PDF performance
+    )
+    
+    # =========================================================================
+    # 6. ADD GEOGRAPHIC FEATURES
+    # =========================================================================
+    ax.add_feature(cfeature.LAND, color='lightgray', zorder=0)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
+    ax.add_feature(cfeature.BORDERS, linewidth=0.3, linestyle=':', alpha=0.5)
+    
+    # =========================================================================
+    # 7. GRIDLINES
+    # =========================================================================
+    gl = ax.gridlines(
+        draw_labels=True,
+        linewidth=0.5,
+        color='gray',
+        alpha=0.5,
+        linestyle='--'
+    )
+    gl.top_labels = False
+    gl.right_labels = False
+    
+    # =========================================================================
+    # 8. HORIZONTAL COLORBAR (HighResMIP style)
+    # =========================================================================
+    cbar = plt.colorbar(
+        scatter,
+        ax=ax,
+        orientation='horizontal',
+        shrink=0.6,
+        aspect=30,
+        pad=0.08
+    )
+    cbar.set_label(
+        'Local Track Density (normalized)',
+        fontsize=11,
+        fontweight='bold'
+    )
+    cbar.ax.tick_params(labelsize=10)
+    
+    # =========================================================================
+    # 9. TITLE
+    # =========================================================================
+    startdate = tdict['time']['startdate']
+    enddate = tdict['time']['enddate']
+    model = tdict['dataset']['model']
+    exp = tdict['dataset']['exp']
+    
+    plt.title(
+        f'TC Track Density Scatter Plot\n'
+        f'{startdate}–{enddate} | {model} {exp} | n={total_points:,} observation points',
+        fontsize=13,
+        fontweight='bold',
+        pad=15
+    )
+    
+    # =========================================================================
+    # 10. SAVE FIGURE
+    # =========================================================================
+    os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
+    
+    # Clean names (remove spaces)
+    model_clean = model.replace(" ", "_")
+    exp_clean = exp.replace(" ", "_")
+    startdate_clean = startdate.replace(" ", "")
+    enddate_clean = enddate.replace(" ", "")
+    
+    save_path = os.path.join(
+        tdict['paths']['plotdir'],
+        f'density_scatter_{model_clean}_{exp_clean}_{startdate_clean}_{enddate_clean}.pdf'
+    )
+    
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    print(f"Density scatter plot saved to: {save_path}")
+    
+    plt.show()
+    plt.close()
+       
+
+
+
+def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
+    """
+    Plot TC track density as transits per month using gridded counts.
+    
+    This function follows the HighResMIP-PRIMAVERA methodology (Page 10, Fig 3 OBS):
+    - Divides the global domain into regular lat/lon grid cells
+    - Counts TC passages through each cell
+    - Normalizes by the time period to get "transits per month"
+    - Uses LOGARITHMIC scale colorbar with DISCRETE levels (better visualization)
+    - Custom colormap: white → brown → yellow → green → blue (HighResMIP style)
+    
+    Args:
+        trajfile: Path to the filtered trajectory file
+        tdict: Configuration dictionary with dataset info and paths
+        grid_size: Grid cell size in degrees (default 2.5°)
+        max_timesteps: Optional limit on trajectory length
+    
+    Returns:
+        None (saves plot to file)
+    """
+    from datetime import datetime
+    
+    print(f"Creating track density grid from: {trajfile}")
+    
+    # =========================================================================
+    # 1. READ TRAJECTORIES AND EXTRACT ALL POINTS
+    # =========================================================================
+    lon_all = []
+    lat_all = []
+    
+    with open(trajfile, 'r') as f:
+        for line in f:
+            if 'track_id' in line or 'year' in line:
+                continue
+            
+            parts = line.strip().split()
+            if len(parts) != 12:
+                continue
+            
+            lon = float(parts[7])
+            lat = float(parts[8])
+            
+            # Convert longitude from [0, 360] to [-180, 180]
+            if lon > 180:
+                lon -= 360
+            
+            lon_all.append(lon)
+            lat_all.append(lat)
+    
+    lon_all = np.array(lon_all)
+    lat_all = np.array(lat_all)
+    
+    total_points = len(lon_all)
+    print(f"Total TC observation points: {total_points:,}")
+    
+    # =========================================================================
+    # 2. CALCULATE TIME PERIOD IN MONTHS
+    # =========================================================================
+    startdate = tdict['time']['startdate']
+    enddate = tdict['time']['enddate']
+    
+    # Parse dates (assuming format YYYYMMDD or YYYY-MM-DD)
+    if '-' in startdate:
+        start = datetime.strptime(startdate, '%Y-%m-%d')
+        end = datetime.strptime(enddate, '%Y-%m-%d')
+    else:
+        start = datetime.strptime(startdate, '%Y%m%d')
+        end = datetime.strptime(enddate, '%Y%m%d')
+    
+    # Calculate months
+    n_months = (end.year - start.year) * 12 + (end.month - start.month) + 1
+    print(f"Time period: {n_months} months ({startdate} to {enddate})")
+    
+    # =========================================================================
+    # 3. CREATE GRID AND COUNT TRANSITS
+    # =========================================================================
+    # Define grid
+    lon_bins = np.arange(-180, 180 + grid_size, grid_size)
+    lat_bins = np.arange(-50, 50 + grid_size, grid_size)
+    
+    # Create 2D histogram
+    counts, lon_edges, lat_edges = np.histogram2d(
+        lon_all, lat_all,
+        bins=[lon_bins, lat_bins]
+    )
+    
+    # Normalize by number of months
+    transits_per_month = counts / n_months
+    
+    # Mask zeros for log scale (set to NaN for white background)
+    transits_per_month_masked = np.where(
+        transits_per_month > 0, 
+        transits_per_month, 
+        np.nan
+    )
+    
+    print(f"Grid resolution: {grid_size}° × {grid_size}°")
+    print(f"Max transits per month: {transits_per_month.max():.2f}")
+    if np.any(transits_per_month > 0):
+        print(f"Min non-zero transits: {transits_per_month[transits_per_month > 0].min():.4f}")
+    
+    # =========================================================================
+    # 4. CREATE CUSTOM COLORMAP (HighResMIP OBS style)
+    # =========================================================================
+    # Colors: white → brown → yellow → green → blue
+    colors = [
+        '#FFFFFF',  # white (0)
+        '#8B4513',  # brown
+        '#D2691E',  # chocolate
+        '#FFD700',  # gold/yellow
+        '#ADFF2F',  # green-yellow
+        '#00FF00',  # green
+        '#00CED1',  # turquoise
+        '#0000FF'   # blue
+    ]
+    
+    n_bins = 256
+    cmap_custom = LinearSegmentedColormap.from_list('tc_density', colors, N=n_bins)
+    
+    # =========================================================================
+    # 5. DETERMINE VMIN/VMAX FOR LOG SCALE
+    # =========================================================================
+    vmin = max(0.01, transits_per_month[transits_per_month > 0].min()) if np.any(transits_per_month > 0) else 0.01
+    vmax = max(3.0, transits_per_month.max())
+    
+    print(f"Value range: {vmin:.4f} - {vmax:.2f} transits/month")
+    
+    # =========================================================================
+    # 6. CREATE FIGURE
+    # =========================================================================
+    fig = plt.figure(figsize=(14, 8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([-180, 180, -50, 50], crs=ccrs.PlateCarree())
+    
+    # =========================================================================
+    # 7. PLOT GRIDDED DENSITY WITH LOG SCALE
+    # =========================================================================
+    mesh = ax.pcolormesh(
+        lon_edges, lat_edges, transits_per_month_masked.T,
+        cmap=cmap_custom,
+        norm=LogNorm(vmin=vmin, vmax=vmax),
+        transform=ccrs.PlateCarree(),
+        shading='auto'
+    )
+    
+    # =========================================================================
+    # 8. ADD GEOGRAPHIC FEATURES
+    # =========================================================================
+    ax.add_feature(cfeature.LAND, color='lightgray', zorder=2, alpha=0.3)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.5, zorder=3)
+    
+    # =========================================================================
+    # 9. GRIDLINES
+    # =========================================================================
+    gl = ax.gridlines(
+        draw_labels=True,
+        linewidth=0.5,
+        color='gray',
+        alpha=0.5,
+        linestyle='--',
+        zorder=4
+    )
+    gl.top_labels = False
+    gl.right_labels = False
+    
+    # =========================================================================
+    # 10. HORIZONTAL COLORBAR (LOG SCALE WITH MORE TICKS)
+    # =========================================================================
+    cbar = plt.colorbar(
+        mesh,
+        ax=ax,
+        orientation='horizontal',
+        shrink=0.6,
+        aspect=30,
+        pad=0.08,
+        extend='max'
+    )
+    cbar.set_label(
+        'TC track density (transits per month, log scale)',
+        fontsize=11,
+        fontweight='bold'
+    )
+    
+    # Define more tick values for better readability
+    tick_values = [0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 2.5, 3.0]
+    tick_values = [v for v in tick_values if vmin <= v <= vmax]
+    
+    if len(tick_values) > 0:
+        cbar.set_ticks(tick_values)
+        cbar.set_ticklabels([f'{v:.2g}' for v in tick_values])
+    
+    cbar.ax.tick_params(labelsize=9)
+    
+    # =========================================================================
+    # 11. TITLE
+    # =========================================================================
+    model = tdict['dataset']['model']
+    exp = tdict['dataset']['exp']
+    
+    plt.title(
+        f'TC Track Density (transits per month, log scale)\n'
+        f'{startdate}–{enddate} | {model} {exp} | Grid: {grid_size}°',
+        fontsize=13,
+        fontweight='bold',
+        pad=15
+    )
+    
+    # =========================================================================
+    # 12. SAVE FIGURE
+    # =========================================================================
+    os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
+    
+    # Clean names (remove spaces)
+    model_clean = model.replace(" ", "_")
+    exp_clean = exp.replace(" ", "_")
+    startdate_clean = startdate.replace(" ", "").replace("-", "")
+    enddate_clean = enddate.replace(" ", "").replace("-", "")
+    
+    save_path = os.path.join(
+        tdict['paths']['plotdir'],
+        f'track_density_grid_{model_clean}_{exp_clean}_{startdate_clean}_{enddate_clean}.pdf'
+    )
+    
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    print(f"Track density grid saved to: {save_path}")
+    
+    plt.show()
+    plt.close()
+
+
+
+
+
+
+
+def plot_density_scatter_by_category(trajfile, tdict, max_timesteps=None, sample_size=10000):
+    """
+    Plot 6-panel density scatter: one subplot per Saffir-Simpson category.
+    
+    This function creates a comprehensive visualization showing spatial density
+    patterns for each TC intensity category separately. The density is computed
+    using Kernel Density Estimation (KDE) for each category independently.
+    
+    KDE METHODOLOGY:
+    - For each category, extract all lon/lat points where TC reached that category
+    - Compute 2D Gaussian KDE using scipy.stats.gaussian_kde
+    - The KDE creates a smooth probability density field by placing a Gaussian
+      "kernel" at each observation point and summing them
+    - Bandwidth automatically selected by Scott's rule: optimal for normal data
+    - Density normalized to [0-1] per category for consistent visualization
+    - Higher values = more TC observations in that location for that category
+    
+    Args:
+        trajfile: Path to the filtered trajectory file
+        tdict: Configuration dictionary with dataset info and paths
+        max_timesteps: Optional limit on trajectory length
+        sample_size: Max points per category for KDE (default 10000)
+    
+    Returns:
+        None (saves 6-panel plot to file)
+    """
+    print(f"Creating 6-panel density scatter by category from: {trajfile}")
+    
+    # =========================================================================
+    # 1. READ TRAJECTORIES AND CLASSIFY BY CATEGORY
+    # =========================================================================
+    points_by_category = {cat: {'lon': [], 'lat': []} for cat in range(6)}
+    
+    with open(trajfile, 'r') as f:
+        for line in f:
+            if 'track_id' in line or 'year' in line:
+                continue
+            
+            parts = line.strip().split()
+            if len(parts) != 12:
+                continue
+            
+            lon = float(parts[7])
+            lat = float(parts[8])
+            slp = float(parts[9])  # Pa
+            
+            # Convert longitude
+            if lon > 180:
+                lon -= 360
+            
+            # Classify by category
+            cat = category_from_slp_pa(slp)
+            
+            points_by_category[cat]['lon'].append(lon)
+            points_by_category[cat]['lat'].append(lat)
+    
+    # Convert to numpy arrays
+    for cat in range(6):
+        points_by_category[cat]['lon'] = np.array(points_by_category[cat]['lon'])
+        points_by_category[cat]['lat'] = np.array(points_by_category[cat]['lat'])
+    
+    # Print statistics
+    print("\nPoints per category:")
+    for cat in range(6):
+        n_pts = len(points_by_category[cat]['lon'])
+        print(f"  Cat {cat}: {n_pts:,} points")
+    
+    # =========================================================================
+    # 2. CREATE 6-PANEL FIGURE
+    # =========================================================================
+    fig = plt.figure(figsize=(18, 12))
+    
+    cat_names = [
+        'TD (≥1005 hPa)',
+        'Cat 1 (990–1004 hPa)',
+        'Cat 2 (975–989 hPa)',
+        'Cat 3 (960–974 hPa)',
+        'Cat 4 (945–959 hPa)',
+        'Cat 5 (<945 hPa)'
+    ]
+    
+    cmaps = ['Greens', 'YlGn', 'YlOrBr', 'Oranges', 'OrRd', 'RdPu']
+    
+    # =========================================================================
+    # 3. PLOT EACH CATEGORY
+    # =========================================================================
+    for cat in range(6):
+        ax = plt.subplot(2, 3, cat + 1, projection=ccrs.PlateCarree())
+        ax.set_extent([-180, 180, -50, 50], crs=ccrs.PlateCarree())
+        
+        lon_cat = points_by_category[cat]['lon']
+        lat_cat = points_by_category[cat]['lat']
+        n_points = len(lon_cat)
+        
+        if n_points == 0:
+            # Empty category - just show base map
+            ax.add_feature(cfeature.LAND, color='lightgray', zorder=0)
+            ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
+            ax.set_title(f'{cat_names[cat]}\n(no observations)', 
+                        fontsize=11, fontweight='bold')
+            continue
+        
+        # Sample if too many points
+        if n_points > sample_size:
+            indices = np.random.choice(n_points, sample_size, replace=False)
+            lon_sample = lon_cat[indices]
+            lat_sample = lat_cat[indices]
+            print(f"  Cat {cat}: Sampled {sample_size:,} from {n_points:,} points")
+        else:
+            lon_sample = lon_cat
+            lat_sample = lat_cat
+        
+        # Compute KDE
+        try:
+            xy = np.vstack([lon_sample, lat_sample])
+            kde = gaussian_kde(xy)
+            density = kde(xy)
+            density_normalized = density / density.max()
+            
+            # Plot scatter with density coloring
+            scatter = ax.scatter(
+                lon_sample, lat_sample,
+                c=density_normalized,
+                s=5,
+                alpha=0.7,
+                cmap=cmaps[cat],
+                norm=Normalize(vmin=0, vmax=1),
+                transform=ccrs.PlateCarree(),
+                edgecolors='none',
+                rasterized=True
+            )
+            
+            # HORIZONTAL COLORBAR below each subplot
+            cbar = plt.colorbar(
+                scatter, 
+                ax=ax, 
+                orientation='horizontal',
+                shrink=0.9,
+                aspect=20,
+                pad=0.05
+            )
+            cbar.set_label('Normalized Density', fontsize=9)
+            cbar.ax.tick_params(labelsize=8)
+            
+        except Exception as e:
+            print(f"  Cat {cat}: KDE failed ({e}), using simple scatter")
+            ax.scatter(
+                lon_sample, lat_sample,
+                s=3, alpha=0.5, color='blue',
+                transform=ccrs.PlateCarree()
+            )
+        
+        
+        # Geographic features
+        ax.add_feature(cfeature.LAND, color='lightgray', zorder=0, alpha=0.3)
+        ax.add_feature(cfeature.COASTLINE, linewidth=0.4)
+        
+        # Gridlines
+        gl = ax.gridlines(
+            draw_labels=True if cat >= 3 else False,  # Labels only bottom row
+            linewidth=0.3,
+            color='gray',
+            alpha=0.5,
+            linestyle='--'
+        )
+        gl.top_labels = False
+        gl.right_labels = False
+        
+        # Title
+        ax.set_title(
+            f'{cat_names[cat]}\n(n={n_points:,} obs)',
+            fontsize=11,
+            fontweight='bold'
+        )
+    
+    # =========================================================================
+    # 4. OVERALL TITLE
+    # =========================================================================
+    startdate = tdict['time']['startdate']
+    enddate = tdict['time']['enddate']
+    model = tdict['dataset']['model']
+    exp = tdict['dataset']['exp']
+    
+    plt.suptitle(
+        f'TC Track Density by Saffir-Simpson Category\n'
+        f'{startdate}–{enddate} | {model} {exp}',
+        fontsize=15,
+        fontweight='bold',
+        y=0.995
+    )
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.985])
+    
+    # =========================================================================
+    # 5. SAVE FIGURE
+    # =========================================================================
+    os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
+    
+    model_clean = model.replace(" ", "_")
+    exp_clean = exp.replace(" ", "_")
+    startdate_clean = startdate.replace(" ", "").replace("-", "")
+    enddate_clean = enddate.replace(" ", "").replace("-", "")
+    
+    save_path = os.path.join(
+        tdict['paths']['plotdir'],
+        f'density_scatter_by_category_{model_clean}_{exp_clean}_{startdate_clean}_{enddate_clean}.pdf'
+    )
+    
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    print(f"\n6-panel density scatter saved to: {save_path}")
+    
+    plt.show()
+    plt.close()
