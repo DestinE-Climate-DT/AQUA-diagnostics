@@ -90,6 +90,7 @@ def test_ensemble_2D_LatLon():
     plot_dict = ens_latlon_plot.plot(**plot_arguments)
     
     assert plot_dict['mean_plot'][0] is not None
+    assert plot_dict['std_plot'][0] is not None
 
     filename1 = f'ensemble.ensemblelatlon.{catalog_list[0]}.{model_list[0]}.{exp_list[0]}.r1.{var}.mean.png'
     file = os.path.join(tmp_path, 'png', filename1)
@@ -106,8 +107,3 @@ def test_ensemble_2D_LatLon():
     filename2 = f'ensemble.ensemblelatlon.{catalog_list[0]}.{model_list[0]}.{exp_list[0]}.r1.{var}.std.pdf'
     file = os.path.join(tmp_path, 'pdf', filename2)
     assert os.path.exists(file)
-
-
-
-
-    
