@@ -18,6 +18,7 @@ Unreleased in the current development version (target v0.22.0):
 - Rename `core` diagnostic folder to `base` to avoid mixing up with `aqua.core` (#52)
 - Updated installation scripts for HPC2020 (#51)
 - fixed as suggested in the issue #59 (#80)
+- Porting ensemble config files as in the issue #78 (#87)
 ## [v0.21.0]
 
 Main changes:
