@@ -23,10 +23,11 @@ Currently implemented diagnostics are:
    global_biases
    ecmean
    timeseries
-   ocean3d
+   ocean_stratification
+   ocean_trends
+   ocean_drift
    seaice
    teleconnections
-   ensemble
    lat_lon_profiles
    histogram
 
