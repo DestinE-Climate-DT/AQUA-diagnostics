@@ -33,6 +33,7 @@ output:
 diagnostics:
   ocean_drift:
     hovmoller:
+      # vert_coord: level # optional, default is 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']
@@ -41,6 +42,7 @@ diagnostics:
 
   ocean_trends:
     multilevel:
+      # vert_coord: level # optional, default is 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']

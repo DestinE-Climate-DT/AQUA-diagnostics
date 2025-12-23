@@ -4,6 +4,7 @@ import xarray as xr
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import Diagnostic
 from .compute_mld import compute_mld_cont
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from .compute_rho import compute_rho
 from .convert_variables import convert_so, convert_thetao
 
@@ -49,6 +50,7 @@ class Stratification(Diagnostic):
         startdate: str = None,
         enddate: str = None,
         diagnostic_name: str = "stratification",
+        vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
         loglevel: str = "WARNING",
     ):
         super().__init__(
@@ -63,6 +65,9 @@ class Stratification(Diagnostic):
         )
         self.logger = log_configure(log_name="Stratification", log_level=loglevel)
         self.diagnostic_name = diagnostic_name
+        if vert_coord is None:
+            vert_coord = DEFAULT_OCEAN_VERT_COORD
+        self.vert_coord = vert_coord
 
     def run(
         self,
@@ -113,7 +118,7 @@ class Stratification(Diagnostic):
         self.logger.info("Starting stratification diagnostic run.")
         super().retrieve(var=var, reader_kwargs=reader_kwargs)
         if "lev" in self.data.dims:
-            self.data = self.data.rename({"lev": "level"})
+            self.data = self.data.rename({"lev": self.vert_coord})
         self.logger.debug(
             f"Variables retrieved: {var}, region: {region}, dim_mean: {dim_mean}"
         )
@@ -271,7 +276,7 @@ class Stratification(Diagnostic):
         None
         """
         self.logger.debug("Computing mixed layer depth (MLD) from density.")
-        mld = compute_mld_cont(self.data[["rho"]], loglevel=self.loglevel)
+        mld = compute_mld_cont(self.data[["rho"]], vert_coord=self.vert_coord, loglevel=self.loglevel)
         self.data["mld"] = mld["mld"]
         self.logger.debug("Added 'mld' (mixed layer depth) to dataset.")
 
