@@ -14,6 +14,7 @@ class PlotHistogram():
     """
     def __init__(self, data=None, ref_data=None,
                  diagnostic_name='histogram',
+                 density=True,
                  loglevel: str = 'WARNING'):
         """
         Initialize the PlotHistogram class.
@@ -22,6 +23,7 @@ class PlotHistogram():
             data: List of histogram DataArrays to plot, or single DataArray.
             ref_data: Reference histogram DataArray.
             diagnostic_name (str): Name of the diagnostic. Default is 'histogram'.
+            density (bool): Whether data represents PDF (True) or counts (False).
             loglevel (str): Logging level. Default is 'WARNING'.
         """
         self.loglevel = loglevel
@@ -30,6 +32,7 @@ class PlotHistogram():
         self.data = to_list(data) if data is not None else []
         self.ref_data = ref_data
         self.diagnostic_name = diagnostic_name
+        self.density = density
 
         self.len_data = len(self.data)
         self.len_ref = 1 if ref_data is not None else 0
@@ -107,15 +110,12 @@ class PlotHistogram():
 
     def set_title(self):
         """Set the title for the plot."""
-        title = "Histogram "
+        title = "PDF " if self.density else "Histogram "
         
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
                 title += f'of {name} '
                 break
-        
-        if self.units is not None:
-            title += f'[{self.units}] '
 
         if self.region is not None:
             title += f'[{self.region}] '
@@ -128,7 +128,7 @@ class PlotHistogram():
 
     def set_description(self):
         """Set the description for the plot."""
-        description = 'Histogram '
+        description = 'PDF ' if self.density else 'Histogram '
         
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
