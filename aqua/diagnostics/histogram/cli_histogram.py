@@ -109,6 +109,7 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
         data=data_list,
         ref_data=ref_data,
         diagnostic_name=diag_config.get('diagnostic_name', 'histogram'),
+        density=diag_config.get('density', True),
         loglevel=cli.loglevel
     )
     
