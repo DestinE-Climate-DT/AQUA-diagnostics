@@ -56,46 +56,63 @@
 #    during the cyclone lifetime.
 #
 #
-# 6) plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
-#    --------------------------------------------------------
-# This module provides density-based visualization for tropical cyclone
-# (TC) track data, using Kernel Density Estimation (KDE) to highlight
-# regions of high TC activity.
-# -------------------------------------------------------------------------------
-# Creates a density scatter plot where each TC observation point is colored
-# according to its local density. The function:
-#   - Reads TC trajectories from the filtered file format
-#   - Extracts all lon/lat positions (optionally limited by max_timesteps)
-#   - Computes local density using Gaussian KDE (scipy.stats.gaussian_kde)
-#   - Plots points colored by normalized density (0-1 scale)
-#   - Uses a horizontal colorbar positioned below the map (HighResMIP style)
-#   - Saves output as PDF with standardized naming convention
+# ==============================================================================
+# Density-based visualizations of tropical cyclone (TC) tracks
+# ==============================================================================
 #
-# The density scale is normalized (0-1) where:
-#   - 0 = lowest density regions (isolated tracks)
-#   - 1 = highest density regions (major TC formation/transit areas)
+# This module provides two complementary approaches to visualize the spatial
+# density of tropical cyclone (TC) tracks:
 #
-# For computational efficiency, the function automatically samples down to
-# max 50,000 points if the dataset is larger. The KDE bandwidth is automatically
-# selected by Scott's rule.
+# 6) plot_density_scatter
+#    --------------------------------------------------------------------------
+#    Produces a point-based density scatter plot where each individual TC
+#    observation (lon/lat) is colored according to its local spatial density,
+#    estimated using Gaussian Kernel Density Estimation (KDE).
 #
-# Output follows HighResMIP-PRIMAVERA visualization standards (Page 10, Fig 3)
-# with horizontal colorbar and clean cartographic presentation.
-# ===============================================================================
+#    Key characteristics:
+#      - All TC track points are extracted from the filtered trajectory file
+#      - Local density is computed using scipy.stats.gaussian_kde
+#      - Density values are normalized to the [0, 1] range
+#      - Points are sorted by density before plotting:
+#            * low-density points are plotted first (background)
+#            * high-density points are plotted last (foreground)
+#        ensuring that hotspots remain visible and are not obscured
+#      - For performance, the KDE is computed on a random subsample
+#        (default: 50,000 points) if the dataset is larger
+#      - A horizontal colorbar is used, following HighResMIP-PRIMAVERA style
 #
-# 7) plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None)
-#    --------------------------------------------------------
-# Plot TC track density as transits per month using gridded counts.
-# Divides the globe into regular grid cells (default 2.5° × 2.5°) 
-# and counts how many TC observations fall in each cell. 
-# The counts are then normalized by the time period length to obtain 
-# "transits per month". This follows the HighResMIP-PRIMAVERA methodology (Page 10, Fig 3)
-# and uses a continuous log colorbar typically ranging from 0 to 3+ transits/month,
-# making it ideal for comparing different models or time periods.
-#    Gridded transits-per-month map with logarithmic colorbar.
-#    Normalizes by the time period to get "transits per month"
-#    Uses LOGARITHMIC scale colorbar with DISCRETE levels (better visualization)
-#    Custom colormap: white → brown → yellow → green → blue (HighResMIP style)
+#    This representation emphasizes fine-scale spatial structures and
+#    overlapping tracks, making it particularly suitable for identifying
+#    preferred genesis regions and major TC corridors.
+#
+#
+# 7) plot_track_density_grid
+#    --------------------------------------------------------------------------
+#    Produces a gridded TC track density map expressed as "transits per month",
+#    following the HighResMIP-PRIMAVERA methodology (e.g. Page 10, Fig. 3).
+#
+#    Key characteristics:
+#      - The domain is divided into regular latitude–longitude grid cells
+#        (default resolution: 2.5° × 2.5°)
+#      - TC observations are counted within each grid cell
+#      - Counts are normalized by the length of the analysis period
+#        to obtain transits per month
+#      - A discrete, logarithmically spaced color scale is used to improve
+#        interpretability across orders of magnitude
+#      - Zero-density grid cells are masked
+#      - A custom HighResMIP-style colormap is applied
+#        (white → brown → yellow → green → blue)
+#      - The colorbar is horizontal and uses labeled discrete intervals
+#
+#    This representation provides a more aggregated, statistically robust view
+#    of TC activity, facilitating quantitative comparisons across models,
+#    experiments, and time periods.
+#
+# Together, these two functions (6-7) offer complementary perspectives:
+#   - the density scatter plot highlights fine-scale clustering and overlap
+#   - the gridded density map emphasizes large-scale, climatological patterns
+#
+# 
 #
 # 8) plot_density_scatter_by_category()
 #    6-panel subplot showing KDE density separately for each Saffir-Simpson
@@ -117,8 +134,10 @@ import cartopy.feature as cfeature
 import os
 from matplotlib.collections import LineCollection
 from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize, LinearSegmentedColormap, BoundaryNorm, LogNorm
+from matplotlib.colors import Normalize, LinearSegmentedColormap, BoundaryNorm,  ListedColormap, LogNorm
 from scipy.stats import gaussian_kde
+from datetime import datetime
+
 
 
 # ===== def category
@@ -616,7 +635,12 @@ def plot_trajectories_by_category(trajfile, tdict, category=1, max_timesteps=Non
 #
 def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000):
     """
-    Plot TC track density scatter with KDE-based coloring.
+    Plot TC track density scatter with KDE-based coloring and point sorting.
+    
+    Points are sorted by density so that:
+    - Low-density points are plotted FIRST (bottom layer)
+    - High-density points are plotted LAST (top layer)
+    This improves visualization by ensuring hotspots are visible on top.
     
     Args:
         trajfile: Path to the filtered trajectory file
@@ -627,6 +651,14 @@ def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
     Returns:
         None (saves plot to file)
     """
+    from scipy.stats import gaussian_kde
+    from matplotlib.colors import Normalize
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    import os
+    
     print(f"Creating density scatter plot from: {trajfile}")
     
     # =========================================================================
@@ -694,18 +726,31 @@ def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
         density_normalized = np.ones(len(lon_sample))
     
     # =========================================================================
-    # 4. CREATE FIGURE WITH CARTOPY
+    # 4. SORT POINTS BY DENSITY (Low to High)
+    # =========================================================================
+    # This ensures high-density points are plotted on top
+    print("Sorting points by density for better visualization...")
+    idx = density_normalized.argsort()  # Indices that would sort the array
+    
+    lon_sorted = lon_sample[idx]
+    lat_sorted = lat_sample[idx]
+    density_sorted = density_normalized[idx]
+    
+    print(f"Point order: lowest density → highest density")
+    
+    # =========================================================================
+    # 5. CREATE FIGURE WITH CARTOPY
     # =========================================================================
     fig = plt.figure(figsize=(14, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.set_extent([-180, 180, -50, 50], crs=ccrs.PlateCarree())
     
     # =========================================================================
-    # 5. PLOT DENSITY SCATTER
+    # 6. PLOT DENSITY SCATTER (SORTED)
     # =========================================================================
     scatter = ax.scatter(
-        lon_sample, lat_sample,
-        c=density_normalized,
+        lon_sorted, lat_sorted,
+        c=density_sorted,
         s=8,
         alpha=0.7,
         cmap='YlOrRd',
@@ -716,14 +761,14 @@ def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
     )
     
     # =========================================================================
-    # 6. ADD GEOGRAPHIC FEATURES
+    # 7. ADD GEOGRAPHIC FEATURES
     # =========================================================================
     ax.add_feature(cfeature.LAND, color='lightgray', zorder=0)
     ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
     ax.add_feature(cfeature.BORDERS, linewidth=0.3, linestyle=':', alpha=0.5)
     
     # =========================================================================
-    # 7. GRIDLINES
+    # 8. GRIDLINES
     # =========================================================================
     gl = ax.gridlines(
         draw_labels=True,
@@ -736,7 +781,7 @@ def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
     gl.right_labels = False
     
     # =========================================================================
-    # 8. HORIZONTAL COLORBAR (HighResMIP style)
+    # 9. HORIZONTAL COLORBAR (HighResMIP style)
     # =========================================================================
     cbar = plt.colorbar(
         scatter,
@@ -754,7 +799,7 @@ def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
     cbar.ax.tick_params(labelsize=10)
     
     # =========================================================================
-    # 9. TITLE
+    # 10. TITLE
     # =========================================================================
     startdate = tdict['time']['startdate']
     enddate = tdict['time']['enddate']
@@ -762,23 +807,23 @@ def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
     exp = tdict['dataset']['exp']
     
     plt.title(
-        f'TC Track Density Scatter Plot\n'
-        f'{startdate}–{enddate} | {model} {exp} | n={total_points:,} observation points',
+        f'TC Track Density Scatter Plot (sorted by density)\n'
+        f'{startdate}–{enddate} | {model} {exp} | n={total_points:,} observations',
         fontsize=13,
         fontweight='bold',
         pad=15
     )
     
     # =========================================================================
-    # 10. SAVE FIGURE
+    # 11. SAVE FIGURE
     # =========================================================================
     os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
     
     # Clean names (remove spaces)
     model_clean = model.replace(" ", "_")
     exp_clean = exp.replace(" ", "_")
-    startdate_clean = startdate.replace(" ", "")
-    enddate_clean = enddate.replace(" ", "")
+    startdate_clean = startdate.replace(" ", "").replace("-", "")
+    enddate_clean = enddate.replace(" ", "").replace("-", "")
     
     save_path = os.path.join(
         tdict['paths']['plotdir'],
@@ -790,7 +835,9 @@ def plot_density_scatter(trajfile, tdict, max_timesteps=None, sample_size=50000)
     
     plt.show()
     plt.close()
-       
+
+
+
 
 
 
@@ -802,7 +849,7 @@ def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
     - Divides the global domain into regular lat/lon grid cells
     - Counts TC passages through each cell
     - Normalizes by the time period to get "transits per month"
-    - Uses LOGARITHMIC scale colorbar with DISCRETE levels (better visualization)
+    - Uses DISCRETE logarithmic colorbar with distinct color bands
     - Custom colormap: white → brown → yellow → green → blue (HighResMIP style)
     
     Args:
@@ -815,6 +862,12 @@ def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
         None (saves plot to file)
     """
     from datetime import datetime
+    from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    import os
     
     print(f"Creating track density grid from: {trajfile}")
     
@@ -883,24 +936,58 @@ def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
     # Normalize by number of months
     transits_per_month = counts / n_months
     
-    # Mask zeros for log scale (set to NaN for white background)
-    transits_per_month_masked = np.where(
-        transits_per_month > 0, 
-        transits_per_month, 
-        np.nan
-    )
-    
     print(f"Grid resolution: {grid_size}° × {grid_size}°")
     print(f"Max transits per month: {transits_per_month.max():.2f}")
     if np.any(transits_per_month > 0):
         print(f"Min non-zero transits: {transits_per_month[transits_per_month > 0].min():.4f}")
     
     # =========================================================================
-    # 4. CREATE CUSTOM COLORMAP (HighResMIP OBS style)
+    # 4. DEFINE DISCRETE BOUNDARIES (LOGARITHMIC SPACING)
     # =========================================================================
-    # Colors: white → brown → yellow → green → blue
-    colors = [
-        '#FFFFFF',  # white (0)
+    # Define discrete levels for transits per month
+   # boundaries = [0.0, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 2.5, 3.0, 5.0]
+   # n_levels = len(boundaries) - 1  # Number of discrete color bands
+    
+   # print(f"Using {n_levels} discrete color levels")
+    
+    # =========================================================================
+    # 4. AUTOMATIC LOGARITHMIC BOUNDARIES
+    # =========================================================================
+    vmax = transits_per_month.max()
+    vmin = transits_per_month[transits_per_month > 0].min() if np.any(transits_per_month > 0) else 0.01
+
+    print(f"Data range: {vmin:.4f} to {vmax:.2f} transits/month")
+
+   # Create 12 logarithmically-spaced boundaries
+    n_levels = 12
+    boundaries = np.logspace(np.log10(max(vmin, 0.01)), np.log10(max(vmax, 1.0)), n_levels + 1)
+    boundaries[0] = 0.0  # Start from zero
+
+    print(f"Automatic boundaries: {boundaries}")
+    print(f"Using {n_levels} discrete color levels")
+ 
+    # =========================================================================
+    # 5. DISCRETIZE DATA INTO BANDS
+    # =========================================================================
+    # Assign each grid cell to a discrete level
+    transits_discrete = np.digitize(transits_per_month, boundaries) - 1
+    
+    # Clip to valid range [0, n_levels-1]
+    transits_discrete = np.clip(transits_discrete, 0, n_levels - 1)
+    
+    # Mask zeros (no transits = white/transparent)
+    transits_discrete_masked = np.where(
+        transits_per_month > 0,
+        transits_discrete,
+        np.nan
+    )
+    
+    # =========================================================================
+    # 6. CREATE DISCRETE COLORMAP
+    # =========================================================================
+    # Base colors: white → brown → yellow → green → blue
+    base_colors = [
+        '#FFFFFF',  # white
         '#8B4513',  # brown
         '#D2691E',  # chocolate
         '#FFD700',  # gold/yellow
@@ -910,43 +997,40 @@ def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
         '#0000FF'   # blue
     ]
     
-    n_bins = 256
-    cmap_custom = LinearSegmentedColormap.from_list('tc_density', colors, N=n_bins)
+    # Create continuous colormap first
+    cmap_continuous = LinearSegmentedColormap.from_list('tc_density', base_colors, N=256)
+    
+    # Sample N discrete colors from the continuous colormap
+    colors_discrete = [cmap_continuous(i / n_levels) for i in range(n_levels)]
+    cmap_discrete = ListedColormap(colors_discrete)
     
     # =========================================================================
-    # 5. DETERMINE VMIN/VMAX FOR LOG SCALE
-    # =========================================================================
-    vmin = max(0.01, transits_per_month[transits_per_month > 0].min()) if np.any(transits_per_month > 0) else 0.01
-    vmax = max(3.0, transits_per_month.max())
-    
-    print(f"Value range: {vmin:.4f} - {vmax:.2f} transits/month")
-    
-    # =========================================================================
-    # 6. CREATE FIGURE
+    # 7. CREATE FIGURE
     # =========================================================================
     fig = plt.figure(figsize=(14, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.set_extent([-180, 180, -50, 50], crs=ccrs.PlateCarree())
     
     # =========================================================================
-    # 7. PLOT GRIDDED DENSITY WITH LOG SCALE
+    # 8. PLOT GRIDDED DENSITY WITH DISCRETE COLORS
     # =========================================================================
     mesh = ax.pcolormesh(
-        lon_edges, lat_edges, transits_per_month_masked.T,
-        cmap=cmap_custom,
-        norm=LogNorm(vmin=vmin, vmax=vmax),
+        lon_edges, lat_edges, transits_discrete_masked.T,
+        cmap=cmap_discrete,
+        vmin=0,
+        vmax=n_levels,
         transform=ccrs.PlateCarree(),
         shading='auto'
     )
     
     # =========================================================================
-    # 8. ADD GEOGRAPHIC FEATURES
+    # 9. ADD GEOGRAPHIC FEATURES
     # =========================================================================
     ax.add_feature(cfeature.LAND, color='lightgray', zorder=2, alpha=0.3)
     ax.add_feature(cfeature.COASTLINE, linewidth=0.5, zorder=3)
     
     # =========================================================================
-    # 9. GRIDLINES
+    # 10. GRIDLINES
     # =========================================================================
     gl = ax.gridlines(
         draw_labels=True,
@@ -960,7 +1044,7 @@ def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
     gl.right_labels = False
     
     # =========================================================================
-    # 10. HORIZONTAL COLORBAR (LOG SCALE WITH MORE TICKS)
+    # 11. HORIZONTAL COLORBAR (DISCRETE BANDS)
     # =========================================================================
     cbar = plt.colorbar(
         mesh,
@@ -972,29 +1056,36 @@ def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
         extend='max'
     )
     cbar.set_label(
-        'TC track density (transits per month, log scale)',
+        'TC track density (transits per month)',
         fontsize=11,
         fontweight='bold'
     )
     
-    # Define more tick values for better readability
-    tick_values = [0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 2.5, 3.0]
-    tick_values = [v for v in tick_values if vmin <= v <= vmax]
+    # Set ticks at the CENTER of each color band
+    tick_positions = np.arange(n_levels) + 0.5
+    cbar.set_ticks(tick_positions)
     
-    if len(tick_values) > 0:
-        cbar.set_ticks(tick_values)
-        cbar.set_ticklabels([f'{v:.2g}' for v in tick_values])
+    # Create labels showing the range for each band
+    tick_labels = []
+    for i in range(n_levels):
+        lower = boundaries[i]
+        upper = boundaries[i + 1]
+        if i == n_levels - 1:  # Last band
+            tick_labels.append(f'>{lower:.2g}')
+        else:
+            tick_labels.append(f'{lower:.2g}–{upper:.2g}')
     
-    cbar.ax.tick_params(labelsize=9)
+    cbar.set_ticklabels(tick_labels)
+    cbar.ax.tick_params(labelsize=8, rotation=45)
     
     # =========================================================================
-    # 11. TITLE
+    # 12. TITLE
     # =========================================================================
     model = tdict['dataset']['model']
     exp = tdict['dataset']['exp']
     
     plt.title(
-        f'TC Track Density (transits per month, log scale)\n'
+        f'TC Track Density (transits per month, discrete scale)\n'
         f'{startdate}–{enddate} | {model} {exp} | Grid: {grid_size}°',
         fontsize=13,
         fontweight='bold',
@@ -1002,7 +1093,7 @@ def plot_track_density_grid(trajfile, tdict, grid_size=2.5, max_timesteps=None):
     )
     
     # =========================================================================
-    # 12. SAVE FIGURE
+    # 13. SAVE FIGURE
     # =========================================================================
     os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
     
