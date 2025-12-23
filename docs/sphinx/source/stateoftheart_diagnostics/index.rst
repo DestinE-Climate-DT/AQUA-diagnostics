@@ -28,7 +28,6 @@ Currently implemented diagnostics are:
    ocean_drift
    seaice
    teleconnections
-   ensemble
    lat_lon_profiles
    histogram
 
