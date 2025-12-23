@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.22.0):
 
 - Histogram: integration in AQUA analysis (#85)
+- General refactoring of AQUA-diagnostics documentation (#34)
+- Add troubleshooting information for Intel compatibility with gdal and rasterio modules (#84)
 - Vertical coordinate for Ocean3d can be passed as a configuration arguemnt (#60)
 - Fix of aqua_path for analysis console (#56)
 - Boxplots: hotfix for diagnostic_name (#69)
