@@ -203,7 +203,7 @@ jobs:
       - name: Checkout the tag for PyPI mode
         if: ${{ inputs.install-mode == 'pypi' }}
         run: |
-          cd AQUA
+          cd AQUA-diagnostics
           PYPI_VERSION=$(python -c "import importlib.metadata; print(importlib.metadata.version('aqua-diagnostics'))")
           git fetch --tags --quiet
           echo "Installed PyPI version: $PYPI_VERSION"
