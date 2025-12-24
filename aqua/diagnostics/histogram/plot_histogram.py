@@ -110,13 +110,12 @@ class PlotHistogram():
 
     def set_title(self):
         """Set the title for the plot."""
-        title = "PDF " if self.density else "Histogram "
+        # Use long_name as-is (already contains "Pdf of" or "Histogram of" from aqua.core.histogram)
+        title = self.long_name or self.standard_name or self.short_name or ""
         
-        for name in [self.long_name, self.standard_name, self.short_name]:
-            if name is not None:
-                title += f'of {name} '
-                break
-
+        if title:
+            title += ' '
+        
         if self.region is not None:
             title += f'[{self.region}] '
 
@@ -128,12 +127,11 @@ class PlotHistogram():
 
     def set_description(self):
         """Set the description for the plot."""
-        description = 'PDF ' if self.density else 'Histogram '
+        # Use long_name as-is (already contains "Pdf of" or "Histogram of" from aqua.core.histogram)
+        description = self.long_name or self.standard_name or self.short_name or ""
         
-        for name in [self.long_name, self.standard_name, self.short_name]:
-            if name is not None:
-                description += f'of {name} '
-                break
+        if description:
+            description += ' '
 
         if self.units is not None:
             description += f'[{self.units}] '
