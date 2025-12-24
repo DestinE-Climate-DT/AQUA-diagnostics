@@ -17,7 +17,7 @@ version = str(project_version)
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', "sphinx.ext.todo"]
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 
@@ -27,6 +27,7 @@ exclude_patterns = []
 
 # Mock imports for modules that are not available during docs build, can be expanded
 autodoc_mock_imports = ["dummy"]
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -39,8 +40,7 @@ html_theme_options = {
     "navigation_depth": 4,
 }
 
-# Add the path to the package to the sys.path
-sys.path.insert(0, os.path.relpath('../../diagnostics'))
-sys.path.insert(0, os.path.relpath('../../diagnostics/teleconnections'))
-sys.path.insert(0, os.path.relpath('../../diagnostics/ocean3d'))
-sys.path.insert(0, os.path.relpath('../../diagnostics/tropical_cyclones'))
+# Add the path to the package root (where 'aqua' folder is located)
+# From: docs/sphinx/source/conf.py
+# To:   root of the project (3 levels up)
+sys.path.insert(0, os.path.abspath('../../..'))

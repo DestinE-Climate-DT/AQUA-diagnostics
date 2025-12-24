@@ -41,3 +41,44 @@ If you are recreating an installation it is possible to encounter an error simil
 This may be due to a previous path added to the ``PATH`` variable in a previous installation and not available anymore.
 In this case please remove manually the ``load_aqua.sh`` file from the previous installation and try again.
 
+Intel compatibility build error
+-------------------------------
+
+On Intel-based macOS, you may encounter an error when pip tries to build `rasterio` from source because it cannot find `gdal` tools.  
+If a similar error appears during the installation:
+
+.. code-block:: text
+
+  Collecting rasterio>=1.3 (from regionmask->aqua-core==0.21.0->-r /path/to/AQUA-diagnostics/condaenv.89sywc42.requirements.txt (line 1))
+    Using cached rasterio-1.4.4.tar.gz (445 kB)
+    ...
+
+  Pip subprocess error:
+    error: subprocess-exited-with-error
+    
+    x Getting requirements to build wheel did not run successfully.
+    │ exit code: 1
+    ╰─> [2 lines of output]
+        WARNING:root:Failed to get options via gdal-config: [Errno 2] No such file or directory: 'gdal-config'
+        ERROR: A GDAL API version must be specified. Provide a path to gdal-config using a GDAL_CONFIG environment variable or use a GDAL_VERSION environment variable.
+        [end of output]
+    
+    note: This error originates from a subprocess, and is likely not a problem with pip.
+  ERROR: Failed to build 'rasterio' when getting requirements to build wheel
+
+  failed
+
+  CondaEnvException: Pip failed
+ 
+you can resolve this issue, by adding the following packages to the ``dependencies`` section in ``environment-dev.yml``:
+
+.. code-block:: yaml
+
+  dependencies:
+    ...
+    - gdal
+    - rasterio
+    - regionmask
+    - geopandas
+
+This ensure that pre-built binaries are used instead of attempting to build from source.

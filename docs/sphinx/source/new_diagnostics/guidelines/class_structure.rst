@@ -63,7 +63,7 @@ Each diagnostic module should also include a dedicated class for eventually comp
 
 In this case, it may not fit the usage of the ``Diagnostic`` class, as it does not support multiple models.
 It should provide methods for dataset comparison and plotting.
-It should as much as possible rely on the available plotting functions (See :ref:`graphic-tools`).
+It should as much as possible rely on the available AQUA plotting functions.
 Details about the plot should be deduced from the xarray attributes, if available.
 
 Command-Line Interface (CLI)
