@@ -184,8 +184,8 @@ class LatLonProfiles(Diagnostic):
 			seasonal_std_list = []
 			for season in seasons:
 				season_data = seasonal_std.sel(season=season)
-				season_data.attrs['std_startdate'] = time_to_string(self.std_startdate)
-				season_data.attrs['std_enddate'] = time_to_string(self.std_enddate)
+				season_data.attrs['AQUA_startdate'] = time_to_string(self.plt_startdate)
+				season_data.attrs['AQUA_enddate'] = time_to_string(self.plt_enddate)
 				seasonal_std_list.append(season_data)
 			
 			self.std_seasonal = seasonal_std_list
@@ -333,20 +333,25 @@ class LatLonProfiles(Diagnostic):
 			self.seasonal = seasonal_data
 
 		elif freq == 'longterm':
-			longterm_data = self.reader.timmean(data, freq=None)  # freq=None for total mean
-			longterm_data = self.reader.fldmean(longterm_data, 
-												box_brd=box_brd, 
-												lon_limits=self.lon_limits, 
-												lat_limits=self.lat_limits,
-												dims=dims)
+			# Field and time average
+			data = self.reader.timmean(data, freq=None, 
+							  		   exclude_incomplete=exclude_incomplete, 
+									   center_time=center_time)
+			data = self.reader.fldmean(data, box_brd=box_brd, 
+							  		   lon_limits=self.lon_limits, lat_limits=self.lat_limits,
+									   dims=dims)
+
+			data.attrs['AQUA_startdate'] = time_to_string(self.plt_startdate)
+			data.attrs['AQUA_enddate'] = time_to_string(self.plt_enddate)
+
 			if self.region is not None:
-				longterm_data.attrs['AQUA_region'] = self.region
-			longterm_data.attrs['AQUA_mean_type'] = self.mean_type
-			self.longterm = longterm_data
+				data.attrs['AQUA_region'] = self.region
+			data.attrs['AQUA_mean_type'] = self.mean_type
 
 			self.logger.debug("Loading data in memory")
-			self.longterm.load()
+			data.load()
 			self.logger.debug("Loaded data in memory")
+			self.longterm = data
 
 	def run(self, var: str, formula: bool = False, long_name: str = None,
 			units: str = None, standard_name: str = None, std: bool = False,
