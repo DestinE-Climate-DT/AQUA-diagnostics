@@ -1,5 +1,5 @@
 Contributing to AQUA-diagnostics
-====================
+================================
 
 We welcome contributions to the AQUA-diagnostics project! 
 Whether you're reporting bugs, suggesting new features, or contributing code, your involvement helps make AQUA-diagnostics better for everyone.
