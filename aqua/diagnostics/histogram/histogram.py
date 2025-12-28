@@ -129,7 +129,7 @@ class Histogram(Diagnostic):
         # Select region if specified
         if self.lon_limits is not None or self.lat_limits is not None:
             data = self.reader.select_area(data, lon=self.lon_limits, 
-                                          lat=self.lat_limits, box_brd=box_brd)
+                                           lat=self.lat_limits, box_brd=box_brd)
 
         # If range is not specified, compute it from the data
         hist_range = self.range
@@ -155,6 +155,15 @@ class Histogram(Diagnostic):
         # Add region metadata
         if self.region is not None:
             hist_data.attrs['AQUA_region'] = self.region
+        
+        # Add date metadata
+        hist_data.attrs['AQUA_startdate'] = str(self.startdate)
+        hist_data.attrs['AQUA_enddate'] = str(self.enddate)
+        
+        # Add others metadata for description
+        hist_data.attrs['AQUA_catalog'] = self.catalog
+        hist_data.attrs['AQUA_model'] = self.model
+        hist_data.attrs['AQUA_exp'] = self.exp
         
         # Copy original variable metadata to center_of_bin for xlabel
         if hasattr(data, 'standard_name'):
