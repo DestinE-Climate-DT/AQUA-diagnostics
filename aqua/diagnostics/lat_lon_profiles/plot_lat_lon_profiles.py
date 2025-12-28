@@ -321,7 +321,7 @@ class PlotLatLonProfiles():
 
         # Units
         if self.units is not None:
-            description += f"[{self.units}] "
+            description += f"[{self.units}]"
         
         # Short name in parentheses (if different from what was already used)
         if self.short_name is not None and self.long_name is not None:
@@ -366,7 +366,7 @@ class PlotLatLonProfiles():
         
         description += '.'
 
-        self.logger.warning('Description: %s', description)
+        self.logger.debug('Description: %s', description)
         return description
 
     def run(self,
