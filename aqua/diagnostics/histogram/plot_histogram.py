@@ -127,24 +127,63 @@ class PlotHistogram():
 
     def set_description(self):
         """Set the description for the plot."""
-        # Use long_name as-is (already contains "Pdf of" or "Histogram of" from aqua.core.histogram)
-        description = self.long_name or self.standard_name or self.short_name or ""
+        description = ""
         
-        if description:
-            description += ' '
-
+        # Start with PDF/Histogram type
+        if self.density:
+            description += "Probability density function (PDF) of "
+        else:
+            description += "Histogram of "
+        
+        # Variable name (long_name preferred)
+        for name in [self.long_name, self.standard_name, self.short_name]:
+            if name is not None:
+                # Remove "Pdf of" or "Histogram of" prefix if present
+                name_clean = name.replace("Pdf of ", "").replace("Histogram of ", "")
+                description += f"{name_clean} "
+                break
+        
+        # Units
         if self.units is not None:
-            description += f'[{self.units}] '
-
-        if self.region is not None:
-            description += f'for region {self.region} '
-
-        num_items = min(len(self.catalogs), len(self.models), len(self.exps))
+            description += f"[{self.units}] "
         
-        for i in range(min(self.len_data, num_items)):
-            description += f'for {self.catalogs[i]} {self.models[i]} {self.exps[i]} '
-            
-        self.logger.debug('Description: %s', description)
+        # Short name in parentheses (if different from what was already used)
+        if self.short_name is not None and self.long_name is not None:
+            description += f"({self.short_name}) "
+        
+        # Region - only if not Global
+        if self.region is not None and self.region.lower() != 'global':
+            description += f"over {self.region} "
+        
+        # Extract dates from data
+        data_item = self.data[0] if self.data else None
+        ref_item = self.ref_data
+        
+        data_pair = (getattr(data_item, 'AQUA_startdate', None), 
+                    getattr(data_item, 'AQUA_enddate', None))
+        ref_pair = (getattr(ref_item, 'AQUA_startdate', None),
+                    getattr(ref_item, 'AQUA_enddate', None))
+        
+        # Smart date display: show dates only once if they are the same
+        if data_pair == ref_pair and data_pair != (None, None):
+            # Same period for model and reference
+            description += f"for {self.models[0]}/{self.exps[0]}"
+            if ref_item is not None:
+                ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                description += f" vs {ref_model}"
+            description += f" from {data_pair[0]} to {data_pair[1]}"
+        else:
+            # Different periods
+            if data_pair != (None, None):
+                description += f"for {self.models[0]}/{self.exps[0]} "
+                description += f"from {data_pair[0]} to {data_pair[1]}"
+            if ref_pair != (None, None):
+                ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
+        
+        description += '.'
+        
+        self.logger.warning('Description: %s', description)
         return description
 
     def plot(self, data_labels=None, ref_label=None, title=None, 
