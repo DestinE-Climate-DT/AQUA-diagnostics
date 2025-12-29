@@ -208,7 +208,7 @@ class PlotHistogram():
         
         description += '.'
         
-        self.logger.warning('Description: %s', description)
+        self.logger.debug('Description: %s', description)
         return description
 
     def plot(self, data_labels=None, ref_label=None, title=None, 
