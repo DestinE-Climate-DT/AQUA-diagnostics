@@ -214,7 +214,7 @@ class PlotHistogram():
     def plot(self, data_labels=None, ref_label=None, title=None, 
              style=None, xlogscale=False, ylogscale=True,
              xmax=None, xmin=None, ymax=None, ymin=None,
-             smooth=False, smooth_window=5):
+             smooth=False, smooth_window=5, labelsize=None):
         """
         Plot histogram data.
         
@@ -250,6 +250,7 @@ class PlotHistogram():
             ymin=ymin,
             smooth=smooth,
             smooth_window=smooth_window,
+            labelsize=labelsize,
             loglevel=self.loglevel
         )
     
@@ -304,7 +305,7 @@ class PlotHistogram():
     def run(self, outputdir='./', rebuild=True, dpi=300, style=None, 
             format='png', xlogscale=False, ylogscale=True,
             xmax=None, xmin=None, ymax=None, ymin=None,
-            smooth=False, smooth_window=5, show=False):
+            smooth=False, smooth_window=5, labelsize=None, show=False):
         """
         Run the complete plotting workflow.
         
@@ -335,7 +336,8 @@ class PlotHistogram():
                           title=title, style=style,
                           xlogscale=xlogscale, ylogscale=ylogscale,
                           xmax=xmax, xmin=xmin, ymax=ymax, ymin=ymin,
-                          smooth=smooth, smooth_window=smooth_window)
+                          smooth=smooth, smooth_window=smooth_window,
+                          labelsize=labelsize)
 
         self.save_plot(fig, description=description, rebuild=rebuild,
                       outputdir=outputdir, dpi=dpi, format=format)
