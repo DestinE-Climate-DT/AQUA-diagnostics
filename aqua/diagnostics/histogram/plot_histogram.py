@@ -119,8 +119,12 @@ class PlotHistogram():
         if self.region is not None:
             title += f'[{self.region}] '
 
+        # Handle multiple datasets
         if self.len_data == 1:
             title += f'for {self.catalogs[0]} {self.models[0]} {self.exps[0]} '
+        elif self.len_data > 1:
+            # For multiple datasets, show comparison
+            title += f'comparison for {self.len_data} datasets '
 
         self.logger.debug('Title: %s', title)
         return title
@@ -155,31 +159,52 @@ class PlotHistogram():
         if self.region is not None and self.region.lower() != 'global':
             description += f"over {self.region} "
         
-        # Extract dates from data
-        data_item = self.data[0] if self.data else None
-        ref_item = self.ref_data
-        
-        data_pair = (getattr(data_item, 'AQUA_startdate', None), 
-                    getattr(data_item, 'AQUA_enddate', None))
-        ref_pair = (getattr(ref_item, 'AQUA_startdate', None),
-                    getattr(ref_item, 'AQUA_enddate', None))
-        
-        # Smart date display: show dates only once if they are the same
-        if data_pair == ref_pair and data_pair != (None, None):
-            # Same period for model and reference
-            description += f"for {self.models[0]}/{self.exps[0]}"
-            if ref_item is not None:
-                ref_model = getattr(ref_item, 'AQUA_model', 'reference')
-                description += f" vs {ref_model}"
-            description += f" from {data_pair[0]} to {data_pair[1]}"
+        # Handle multiple datasets
+        if self.len_data == 1:
+            # Single dataset
+            data_item = self.data[0] if self.data else None
+            ref_item = self.ref_data
+            
+            data_pair = (getattr(data_item, 'AQUA_startdate', None), 
+                        getattr(data_item, 'AQUA_enddate', None))
+            ref_pair = (getattr(ref_item, 'AQUA_startdate', None),
+                        getattr(ref_item, 'AQUA_enddate', None))
+            
+            # Smart date display: show dates only once if they are the same
+            if data_pair == ref_pair and data_pair != (None, None):
+                # Same period for model and reference
+                description += f"for {self.models[0]}/{self.exps[0]}"
+                if ref_item is not None:
+                    ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                    description += f" vs {ref_model}"
+                description += f" from {data_pair[0]} to {data_pair[1]}"
+            else:
+                # Different periods
+                if data_pair != (None, None):
+                    description += f"for {self.models[0]}/{self.exps[0]} "
+                    description += f"from {data_pair[0]} to {data_pair[1]}"
+                if ref_pair != (None, None):
+                    ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                    description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
         else:
-            # Different periods
-            if data_pair != (None, None):
-                description += f"for {self.models[0]}/{self.exps[0]} "
-                description += f"from {data_pair[0]} to {data_pair[1]}"
-            if ref_pair != (None, None):
-                ref_model = getattr(ref_item, 'AQUA_model', 'reference')
-                description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
+            # Multiple datasets
+            description += f"comparing {self.len_data} datasets: "
+            model_exp_pairs = [f"{self.models[i]}/{self.exps[i]}" for i in range(min(3, len(self.models)))]
+            description += ", ".join(model_exp_pairs)
+            
+            if len(self.models) > 3:
+                description += f", and {len(self.models) - 3} more"
+            
+            if self.ref_data is not None:
+                ref_model = getattr(self.ref_data, 'AQUA_model', 'reference')
+                description += f" vs {ref_model}"
+            
+            # Add common date range if all datasets share it
+            if self.data:
+                first_dates = (getattr(self.data[0], 'AQUA_startdate', None),
+                            getattr(self.data[0], 'AQUA_enddate', None))
+                if first_dates != (None, None):
+                    description += f" from {first_dates[0]} to {first_dates[1]}"
         
         description += '.'
         
