@@ -293,7 +293,10 @@ class PlotHistogram():
         outputsaver = OutputSaver(diagnostic=self.diagnostic_name, outputdir=outputdir,
                                   loglevel=self.loglevel, **metadata)
         
-        diagnostic_product = f"{self.diagnostic_name}_pdf"
+        if self.density:
+            diagnostic_product = "pdf"
+        else:
+            diagnostic_product = "histogram"
            
         if format == 'png':
             outputsaver.save_png(fig, diagnostic_product, extra_keys=extra_keys, 
