@@ -2,23 +2,23 @@
 
 import pytest
 from aqua.diagnostics.global_biases.cli_global_biases import run_global_biases_diagnostic
-from aqua.diagnostics.core import DiagnosticCLI
-from aqua.core.exceptions import NoDataError
+from conftest import build_config
+from ..conftest import make_cli
 
 pytestmark = [pytest.mark.diagnostics, pytest.mark.cli]
 
 class TestGlobalBiasesConfig:
-    """Integration tests for Global Biases CLI configuration loading."""
+    """Integration tests for Global Biases CLI configuration loading using real DiagnosticCLI."""
 
-    def test_config_loading(self, prepare_cli, gb_config_file, tmp_path):
-        """Verify that configuration is correctly loaded into DiagnosticCLI."""
-        cli = prepare_cli(gb_config_file)
-
-        # Check basic structure
-        assert 'globalbiases' in cli.config_dict['diagnostics']
-        tool_dict = cli.config_dict['diagnostics']['globalbiases']
-        assert tool_dict['run'] is True
-        assert tool_dict['variables'] == ['2t']
+    def test_config_loading(self, tmp_path):
+        """Verify standard config loading."""
+        config = build_config(output_dir=str(tmp_path))
+        cli = make_cli(config, tmp_path)
+        
+        # Check tool config
+        tool_conf = cli.config_dict['diagnostics']['globalbiases']
+        assert tool_conf['run'] is True
+        assert tool_conf['variables'] == ['2t']
         
         # Check dataset parsing
         dataset = cli.config_dict['datasets'][0]
@@ -28,24 +28,32 @@ class TestGlobalBiasesConfig:
         # Check output dir
         assert cli.outputdir == str(tmp_path)
 
-    def test_seasonal_config(self, prepare_cli, gb_config_seasonal_file):
-        """Verify loading of seasonal configuration."""
-        cli = prepare_cli(gb_config_seasonal_file)
+    def test_seasonal_config(self, tmp_path):
+        """Verify seasonal configuration loading."""
+        config = build_config(tool_overrides={'params': {'default': {'seasons': True}}})
+        cli = make_cli(config, tmp_path)
         
-        tool_dict = cli.config_dict['diagnostics']['globalbiases']
-        assert tool_dict['params']['default']['seasons'] is True
+        assert cli.config_dict['diagnostics']['globalbiases']['params']['default']['seasons'] is True
 
-    def test_formula_config(self, prepare_cli, gb_config_formula_file):
-        """Verify loading of formula configuration."""
-        cli = prepare_cli(gb_config_formula_file)
+    def test_formula_config(self, tmp_path):
+        """Verify formula configuration loading."""
+        overrides = {
+            'variables': [],
+            'formulae': ['tnlwrf+tnswrf'],
+            'params': {'tnlwrf+tnswrf': {'short_name': 'tnr'}}
+        }
+        config = build_config(tool_overrides=overrides)
+        cli = make_cli(config, tmp_path)
         
-        tool_dict = cli.config_dict['diagnostics']['globalbiases']
-        assert tool_dict['formulae'] == ['tnlwrf+tnswrf']
-        assert tool_dict['params']['tnlwrf+tnswrf']['short_name'] == 'tnr'
+        tool_conf = cli.config_dict['diagnostics']['globalbiases']
+        assert tool_conf['formulae'] == ['tnlwrf+tnswrf']
+        assert tool_conf['params']['tnlwrf+tnswrf']['short_name'] == 'tnr'
 
-    def test_cli_overrides(self, prepare_cli, gb_config_file):
+    def test_cli_overrides(self, tmp_path):
         """Verify that CLI arguments override config file settings."""
-        cli = prepare_cli(gb_config_file, model='OverriddenModel', regrid='r200')
+        config = build_config()
+        # Pass overrides as kwargs to make_cli
+        cli = make_cli(config, tmp_path, model='OverriddenModel', regrid='r200')
         
         dataset = cli.config_dict['datasets'][0]
         assert dataset['model'] == 'OverriddenModel'
@@ -53,101 +61,99 @@ class TestGlobalBiasesConfig:
 
 
 class TestGlobalBiasesRun:
-    """Unit tests for Global Biases execution logic (run_global_biases_diagnostic)."""
+    """Unit tests for Global Biases execution logic using mocks."""
 
-    def test_disabled_diagnostic(self, mock_cli_global_biases):
-        """Test that disabled diagnostic returns False."""
-        tool_dict = {'run': False}
-        result = run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
-        assert result is False
-        mock_cli_global_biases.logger.info.assert_called_with("GlobalBiases diagnostic is disabled.")
-
-    def test_execution_success(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+    def test_execution_success(self, mock_cli, mock_gb):
         """Test successful execution flow."""
-        mock_gb_class, mock_plot_class = patched_global_biases_classes
-        mock_gb = setup_mock_gb({'2t': []})
-        mock_gb_class.return_value = mock_gb
-
-        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
+        # mock_gb fixture has already set up classes and instance defaults
+        config = build_config()
+        mock_cli.config_dict = config
         
-        result = run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        tool_dict = config['diagnostics']['globalbiases']
+        
+        result = run_global_biases_diagnostic(mock_cli, tool_dict)
         
         assert result is True
-        # Dataset and reference initialized
-        assert mock_gb_class.call_count == 2
-        mock_gb.retrieve.assert_called()
-        mock_gb.compute_climatology.assert_called()
-        mock_plot_class.return_value.plot_bias.assert_called()
+        # Should initiate one GlobalBiases for dataset and one for reference
+        assert mock_gb.cls.call_count == 2 
+        mock_gb.instance.retrieve.assert_called()
+        mock_gb.instance.compute_climatology.assert_called()
+        mock_gb.plot_cls.return_value.plot_bias.assert_called()
 
-    def test_missing_variable(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+    def test_disabled_diagnostic(self, mock_cli):
+        """Test that disabled diagnostic returns False."""
+        assert run_global_biases_diagnostic(mock_cli, {'run': False}) is False
+        mock_cli.logger.info.assert_called_with("GlobalBiases diagnostic is disabled.")
+
+    def test_missing_variable(self, mock_cli, mock_gb):
         """Test graceful handling of missing variables."""
-        mock_gb_class, _ = patched_global_biases_classes
-        mock_gb = setup_mock_gb({'2t': []})
         # Simulate retrieval failure
-        mock_gb.retrieve.side_effect = NoDataError("Missing var")
-        mock_gb_class.return_value = mock_gb
-
-        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
+        mock_gb.instance.retrieve.side_effect = Exception()
         
-        result = run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        config = build_config()
+        mock_cli.config_dict = config
+        
+        result = run_global_biases_diagnostic(mock_cli, config['diagnostics']['globalbiases'])
         
         # Should still return True (diagnostic ran, even if one var failed)
         assert result is True
-        mock_cli_global_biases.logger.warning.assert_called()
+        mock_cli.logger.warning.assert_called()
 
-    def test_formula_execution(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb, gb_config_formula):
+    def test_seasonal_execution(self, mock_cli, mock_gb):
+        """Test execution with seasonal plots."""
+        # Update mock behavior for this test
+        mock_gb.instance.seasonal_climatology = "exists" 
+        
+        config = build_config(tool_overrides={'params': {'default': {'seasons': True}}})
+        mock_cli.config_dict = config
+        
+        run_global_biases_diagnostic(mock_cli, config['diagnostics']['globalbiases'])
+        
+        mock_gb.plot_cls.return_value.plot_seasonal_bias.assert_called()
+
+    def test_formula_execution(self, mock_cli, mock_gb):
         """Test execution with formula."""
-        mock_cli_global_biases.config_dict = gb_config_formula
-        tool_dict = gb_config_formula['diagnostics']['globalbiases']
+        overrides = {
+            'variables': [],
+            'formulae': ['tnlwrf+tnswrf'],
+            'params': {'tnlwrf+tnswrf': {'short_name': 'tnr'}}
+        }
+        config = build_config(tool_overrides=overrides)
+        mock_cli.config_dict = config
         
-        mock_gb_class, _ = patched_global_biases_classes
-        mock_gb = setup_mock_gb({'tnr': []})
-        mock_gb_class.return_value = mock_gb
+        # Ensure mock data has the formula variable
+        mock_gb.instance.data = {'tnr': []}
         
-        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        run_global_biases_diagnostic(mock_cli, config['diagnostics']['globalbiases'])
         
-        # Check that retrieve was called with formula=True
-        calls = mock_gb.retrieve.call_args_list
+        # Verify retrieve was called with formula=True
+        calls = mock_gb.instance.retrieve.call_args_list
         assert any(call.kwargs.get('formula') is True for call in calls)
 
-    def test_seasonal_execution(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb, gb_config_seasonal):
-        """Test execution with seasonal plots."""
-        mock_cli_global_biases.config_dict = gb_config_seasonal
-        tool_dict = gb_config_seasonal['diagnostics']['globalbiases']
-        
-        mock_gb_class, mock_plot_class = patched_global_biases_classes
-        mock_gb = setup_mock_gb({'2t': []}, with_seasonal=True)
-        mock_gb_class.return_value = mock_gb
-        
-        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
-        
-        mock_plot_class.return_value.plot_seasonal_bias.assert_called()
-
-    def test_vertical_execution(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+    def test_vertical_execution(self, mock_cli, mock_gb):
         """Test execution with vertical plots."""
-        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
-        tool_dict['params']['default']['vertical'] = True
-        tool_dict['plot_params']['2t']['vmin_v'] = -1
-        tool_dict['plot_params']['2t']['vmax_v'] = 1
+        overrides = {
+            'params': {'default': {'vertical': True}},
+            'plot_params': {'2t': {'vmin_v': -1, 'vmax_v': 1}}
+        }
+        config = build_config(tool_overrides=overrides)
+        mock_cli.config_dict = config
         
-        mock_gb_class, mock_plot_class = patched_global_biases_classes
-        mock_gb = setup_mock_gb({'2t': []}, has_plev=True)
-        mock_gb_class.return_value = mock_gb
+        # Mock data having plev dim
+        mock_gb.instance.data['2t'].dims = ['plev', 'lat', 'lon']
         
-        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        run_global_biases_diagnostic(mock_cli, config['diagnostics']['globalbiases'])
         
-        mock_plot_class.return_value.plot_vertical_bias.assert_called()
+        mock_gb.plot_cls.return_value.plot_vertical_bias.assert_called()
 
-    def test_multiple_pressure_levels(self, mock_cli_global_biases, patched_global_biases_classes, setup_mock_gb):
+    def test_multiple_pressure_levels(self, mock_cli, mock_gb):
         """Test execution over multiple pressure levels."""
-        tool_dict = mock_cli_global_biases.config_dict['diagnostics']['globalbiases']
-        tool_dict['params']['default']['plev'] = [85000, 50000]
+        config = build_config(tool_overrides={'params': {'default': {'plev': [85000, 50000]}}})
+        mock_cli.config_dict = config
         
-        mock_gb_class, mock_plot_class = patched_global_biases_classes
-        mock_gb = setup_mock_gb({'2t': []}, has_plev=True)
-        mock_gb_class.return_value = mock_gb
+        mock_gb.instance.data['2t'].dims = ['plev', 'lat', 'lon']
         
-        run_global_biases_diagnostic(mock_cli_global_biases, tool_dict)
+        run_global_biases_diagnostic(mock_cli, config['diagnostics']['globalbiases'])
         
-        # Should plot twice
-        assert mock_plot_class.return_value.plot_bias.call_count == 2
+        # Should plot twice (once for each level)
+        assert mock_gb.plot_cls.return_value.plot_bias.call_count == 2
