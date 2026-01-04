@@ -3,8 +3,7 @@ import pandas as pd
 import xarray as xr
 import pytest
 
-from ensemble.util import merge_from_data_files
-
+from aqua.diagnostics.ensemble.util import merge_from_data_files
 
 @pytest.mark.ensemble
 def test_merge_from_data_files_timeseries(tmp_path):
