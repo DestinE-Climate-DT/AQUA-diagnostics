@@ -36,6 +36,12 @@ __all__ = ["NAO", "ENSO", "MJO",
            "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
            "sshVariabilityCompute", "sshVariabilityPlot",
            "Boxplots", "PlotBoxplots", "extract_realizations",
+<<<<<<< HEAD
+           "GlobalMean", "PerformanceIndices", "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
+           "Boxplots", "PlotBoxplots",
+           "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
+=======
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
            "Trends", "PlotTrends",
            "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
+>>>>>>> main
