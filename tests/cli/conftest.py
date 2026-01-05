@@ -6,7 +6,7 @@ Diagnostic-specific fixtures should extend these in their own conftest.py files.
 import pytest
 from types import SimpleNamespace
 from aqua.core.util import dump_yaml
-from aqua.diagnostics.core.cli_base import DiagnosticCLI
+from aqua.diagnostics.base.cli_base import DiagnosticCLI
 
 
 @pytest.fixture
