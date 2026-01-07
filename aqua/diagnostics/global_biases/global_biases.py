@@ -87,7 +87,7 @@ class GlobalBiases(Diagnostic):
         if var is not None:
             self.var = var   
         if formula:
-            super().retrieve()
+            super().retrieve(reader_kwargs=reader_kwargs)
             self.logger.info("Evaluating formula: %s", self.var)
             formula_values = EvaluateFormula(data=self.data, formula=self.var, long_name=long_name,
                                              short_name=short_name, units=units,
