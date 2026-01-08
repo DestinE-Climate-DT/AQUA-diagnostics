@@ -7,7 +7,8 @@
 
 from .tempest_utils import getTrajectories, getNodes
 from .tcs_utils import clean_files, lonlatbox, write_fullres_field
+from .TCs_filter import filter_STJ_Bourdin250_monthly
 
 # This specifies which methods are exported publicly, used by "from dummy import *"
 __all__ = ["getTrajectories", "getNodes", "clean_files",
-           "lonlatbox", "write_fullres_field"]
+           "lonlatbox", "write_fullres_field","filter_STJ_Bourdin250_monthly"]
