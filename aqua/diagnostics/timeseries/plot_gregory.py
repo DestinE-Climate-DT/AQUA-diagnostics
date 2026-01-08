@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from aqua.core.graphics import ConfigStyle, plot_gregory_monthly, plot_gregory_annual
 from aqua.core.util import to_list, time_to_string, get_realizations
+from aqua.core.util.title import TitleBuilder
 from .base import PlotBaseMixin
 
 
@@ -120,13 +121,10 @@ class PlotGregory(PlotBaseMixin):
 
     def set_title(self):
         """Set the title for the plot"""
-        title = 'Gregory Plot '
-
-        for i, model in enumerate(self.models):
-            title += f'{model}'
-            title += f' {self.exps[i]}'
-
-        return title
+        title_build = TitleBuilder(diagnostic='Gregory Plot', 
+                                   models=self.models, 
+                                   exps=self.exps)
+        return title_build.generate()
 
     def set_ref_label(self):
         """Set the reference label for the plot"""
