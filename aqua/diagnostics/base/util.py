@@ -201,3 +201,13 @@ def merge_config_args(config: dict, args: argparse.Namespace,
             logger.debug(f"  - {ref['catalog']} {ref['model']} {ref['exp']} {ref['source']}")
 
     return config
+
+def deep_update(dst, src):
+    """
+    Recursively merge dictionary src into dst.
+    """
+    for k, v in src.items():
+        if isinstance(v, dict) and isinstance(dst.get(k), dict):
+            deep_update(dst[k], v)
+        else:
+            dst[k] = v
