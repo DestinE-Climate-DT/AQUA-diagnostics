@@ -55,7 +55,7 @@ def _create_plot(cli, profiles, profile_ref, freq_type, diagnostic_name):
         ref_data = profile_ref.seasonal if profile_ref else None
         ref_std_data = profile_ref.std_seasonal if profile_ref and profile_ref.std_seasonal else None
     
-    # Create and run plot
+    # Create plot instance
     plot = PlotLatLonProfiles(
         data=data_list,
         ref_data=ref_data,
@@ -65,12 +65,22 @@ def _create_plot(cli, profiles, profile_ref, freq_type, diagnostic_name):
         loglevel=cli.loglevel
     )
     
-    plot.run(
-        outputdir=cli.outputdir,
-        rebuild=cli.rebuild,
-        dpi=cli.dpi,
-        format='png' if cli.save_png else 'pdf' if cli.save_pdf else 'png'
-    )
+    # Save in requested formats
+    if cli.save_pdf:
+        plot.run(
+            outputdir=cli.outputdir,
+            rebuild=cli.rebuild,
+            dpi=cli.dpi,
+            format='pdf'
+        )
+    
+    if cli.save_png:
+        plot.run(
+            outputdir=cli.outputdir,
+            rebuild=cli.rebuild,
+            dpi=cli.dpi,
+            format='png'
+        )
 
 def process_variable(cli, var_config, regions, datasets, references,
                      mean_type, diagnostic_name, freq, compute_std,
