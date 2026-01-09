@@ -145,6 +145,7 @@ Here we describe only the specific settings for the ocean stratification diagnos
 
     * ``run``: enable/disable the diagnostic.
     * ``diagnostic_name``: name of the diagnostic. ``ocean3d`` by default.
+    * ``vert_coord``: vertical coordinate for the analysis (e.g., ``level``).
     * ``var``: list of variables to analyse (typically ``['thetao', 'so']``).
     * ``regions``: list of ocean regions to analyse (e.g., ``['ls', 'is', 'ws', 'gs', 'ros']``).
     * ``climatology``: list of climatology periods corresponding to each region (e.g., ``['DJF', 'JJA', 'JJA', 'DJF', 'DJF']``).
@@ -160,6 +161,7 @@ Here we describe only the specific settings for the ocean stratification diagnos
       ocean_stratification:
         stratification:
           diagnostic_name: 'ocean3d'
+          vert_coord: level
           run: true
           var: ['thetao', 'so']
           regions: ['ls', 'is', 'ws', 'gs', 'ros']
@@ -232,7 +234,7 @@ Notebooks are stored in ``notebooks/diagnostics/ocean_stratification``:
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Supriyo Gosh (`@supriyogosh <https://github.com/supriyogosh>`_, `supriyo.ghosh@bsc.es <mailto:supriyo.ghosh@bsc.es>`_).  
+This diagnostic is maintained by Supriyo Gosh (`@ghossh <https://github.com/ghossh>`_, `supriyo.ghosh@bsc.es <mailto:supriyo.ghosh@bsc.es>`_).  
 Contributions are welcome — please open an issue or a pull request.  
 For questions or suggestions, contact the AQUA team or the maintainer.
 

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.22.0):
 
 - LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
+- Porting ensemble config files as in the issue #78 (#87)
 - General refactoring of AQUA-diagnostics documentation (#34)
 - Add troubleshooting information for Intel compatibility with gdal and rasterio modules (#84)
 - Vertical coordinate for Ocean3d can be passed as a configuration arguemnt (#60)
@@ -20,6 +21,7 @@ Unreleased in the current development version (target v0.22.0):
 - Rename `core` diagnostic folder to `base` to avoid mixing up with `aqua.core` (#52)
 - Updated installation scripts for HPC2020 (#51)
 - fixed as suggested in the issue #59 (#80)
+
 ## [v0.21.0]
 
 Main changes:
