@@ -5,7 +5,7 @@ import cartopy.crs as ccrs
 from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
 from aqua.core.util import get_projection, get_realizations
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .util import handle_pressure_level
 
 class PlotGlobalBiases: 
@@ -105,8 +105,14 @@ class PlotGlobalBiases:
         realization = get_realizations(data)
         proj = get_projection(proj, **proj_params)
         
-        title = (f"Climatology of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}" 
-                + (f" at {int(plev / 100)} hPa" if plev else ""))
+        extra_info = f"at {int(plev / 100)} hPa" if plev else None
+        title = TitleBuilder(
+            diagnostic="Climatology",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            extra_info=extra_info
+        ).generate()
 
         fig, ax = plot_single_map(
             data[var],
@@ -160,9 +166,17 @@ class PlotGlobalBiases:
 
         proj = get_projection(proj, **proj_params)
 
-        title = (f"Global bias of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}\n"
-                 f"relative to {data_ref.AQUA_model} climatology"
-                 + (f" at {int(plev / 100)} hPa" if plev else ""))
+        extra_info = f"at {int(plev / 100)} hPa" if plev else None
+        title = TitleBuilder(
+            diagnostic="Global bias",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            comparison="\nrelative to ",
+            ref_model=f"{data_ref.AQUA_model} ",
+            timeseason="climatology ",
+            extra_info=extra_info
+        ).generate()
 
         fig, ax = plot_single_map_diff(
             data=data[var], 
@@ -222,9 +236,17 @@ class PlotGlobalBiases:
         season_list = ['DJF', 'MAM', 'JJA', 'SON']
         sym = vmin is None or vmax is None
 
-        title = (f"Seasonal bias of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}\n"
-                 f"relative to {data_ref.AQUA_model} climatology"
-                 + (f" at {int(plev / 100)} hPa" if plev else ""))
+        extra_info = f"at {int(plev / 100)} hPa" if plev else None
+        title = TitleBuilder(
+            diagnostic="Seasonal bias",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            comparison="\nrelative to ",
+            ref_model=f"{data_ref.AQUA_model} ",
+            timeseason="climatology ",
+            extra_info=extra_info
+        ).generate()
 
         plot_kwargs = {
             'maps': [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
@@ -283,10 +305,15 @@ class PlotGlobalBiases:
 
         realization = get_realizations(data)
 
-        title = (
-            f"Vertical bias of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}\n"
-            f"relative to {data_ref.AQUA_model} climatology\n"
-        )
+        title = TitleBuilder(
+            diagnostic="Vertical bias",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            comparison="\nrelative to "
+            ref_model=f"{data_ref.AQUA_model} ",
+            timeseason="climatology ",
+        ).generate()
 
         description = (
             f"Vertical bias plot of {data[var].attrs.get('long_name', var)} across pressure levels from {data.startdate} to {data.enddate}"
