@@ -15,10 +15,12 @@ class TitleBuilder:
         diagnostic (str, optional): Name of the diagnostic (e.g., 'Seasonal cycle', 'Global bias').
         variable (str, optional): Long name of the variable (e.g., 'Total precipitation rate').
         regions (str or list, optional): Region name(s) (e.g., 'global', 'North Atlantic').
+        catalog (str or list, optional): Catalog name(s).
         models (str or list, optional): Model name(s).
         exps (str or list, optional): Experiment name(s).
         realizations (str or list, optional): Realization name(s).
         comparison (str, optional): Formulation for the comparison. Default is 'relative to'.
+        ref_catalog (str or list, optional): Reference catalog name.
         ref_model (str or list, optional): Reference model name.
         ref_exp (str or list, optional): Reference experiment name.
         timeseason (str, optional): Season or month (e.g., 'JJA', 'March').
@@ -36,13 +38,14 @@ class TitleBuilder:
                  variable: Optional[str] = None,
                  regions: Optional[Union[str, list]] = None,
                  conjunction: Optional[str] = None,
-                 catalog: Optional[str] = None,
+                 catalog: Optional[Union[str, list]] = None,
                  models: Optional[Union[str, list]] = None, 
                  exps: Optional[Union[str, list]] = None,
                  realizations: Optional[Union[str, list]] = None,
                  comparison: Optional[str] = None,
-                 ref_model: Optional[str] = None, 
-                 ref_exp: Optional[str] = None,
+                 ref_catalog: Optional[Union[str, list]] = None,
+                 ref_model: Optional[Union[str, list]] = None, 
+                 ref_exp: Optional[Union[str, list]] = None,
                  timeseason: Optional[str] = None,
                  startyear: Optional[int | str] = None,
                  endyear: Optional[int | str] = None,
@@ -54,44 +57,53 @@ class TitleBuilder:
         self.variable = variable
         self.regions = regions
         self.conjunction = conjunction
-        self.catalog = catalog
-        self.models = to_list(models) if models is not None else []
-        self.exps = to_list(exps) if exps is not None else []
-        self.realizations = to_list(realizations) if realizations is not None else []
+        self.catalog = to_list(catalog) if catalog else []
+        self.models = to_list(models) if models else []
+        self.exps = to_list(exps) if exps else []
+        self.realizations = to_list(realizations) if realizations else []
         self.comparison = comparison
-        self.ref_model = ref_model
-        self.ref_exp = ref_exp
+        self.ref_catalog = to_list(ref_catalog) if ref_catalog else []
+        self.ref_model = to_list(ref_model) if ref_model else []
+        self.ref_exp = to_list(ref_exp) if ref_exp else []
         self.timeseason = timeseason
         self.startyear = str(startyear) if isinstance(startyear, int) else startyear
         self.endyear = str(endyear) if isinstance(endyear, int) else endyear
         self.extra_info = extra_info
 
+    @staticmethod
+    def _harmonize_lists(*lists, sep: str = " ") -> list:
+        """
+        Combines multiple lists element-wise, skipping empty/None values.
+        """
+        combined = [sep.join(filter(None, map(str, row))).strip() 
+                    for row in zip(*lists)]
+        return [item for item in combined if item]
 
     def _format_models(self) -> str | None:
         """
         Generate the models
         """
-        if self.models or self.exps:
-            if len(self.models) > 1 or len(self.exps) > 1:
+        listpart = list(filter(None, [self.catalog, self.models, self.exps]))
+        listpart = self._harmonize_lists(*listpart)
+        
+        if listpart:
+            if len(listpart) > 1:
                 return "Multi-model "
-            parts = ''
-            parts += f"{self.models[0]} " if len(self.models) > 0 else ''
-            parts += f"{self.exps[0]} " if len(self.exps) > 0 else ''
-            return parts
+            return listpart[0]
         return None
 
-    def _format_ref(self) -> str | None:
+    def _format_refs(self) -> str | None:
         """
         Generate the reference
         """
-        if self.ref_model or self.ref_exp:
-            parts = ''
-            parts += f"{self.catalog} " if self.catalog else ''
-            parts += f"{self.ref_model} " if self.ref_model else ''
-            parts += f"{self.ref_exp} " if self.ref_exp else ''
-            return parts
+        ref_listpart = list(filter(None, [self.ref_catalog, self.ref_model, self.ref_exp]))
+        ref_listpart = self._harmonize_lists(*ref_listpart)
+
+        if ref_listpart:
+            ref_list_unique = list(dict.fromkeys(ref_listpart))
+            return ", ".join(ref_list_unique)
         return None
-    
+        
     def _format_years(self) -> str | None:
         """
         Generate the years
@@ -137,11 +149,11 @@ class TitleBuilder:
             else:
                 title += f"{self.realizations[0]} "
 
-        ref_part = self._format_ref()
-        if ref_part:
+        refs_part = self._format_refs()
+        if refs_part:
             if self.variable:
                 title += self.comparison if self.comparison else 'relative to '
-            title += ref_part
+            title += refs_part
 
         if self.timeseason:
             title += f" {self.timeseason}"
