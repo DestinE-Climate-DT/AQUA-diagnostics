@@ -4,6 +4,7 @@ Title generation class and utilities for AQUA plots.
 
 from typing import Optional, Union
 from aqua.core.util import to_list, strlist_to_phrase
+from .utils import harmonize_lists
 
 
 class TitleBuilder:
@@ -70,21 +71,12 @@ class TitleBuilder:
         self.endyear = str(endyear) if isinstance(endyear, int) else endyear
         self.extra_info = extra_info
 
-    @staticmethod
-    def _harmonize_lists(*lists, sep: str = " ") -> list:
-        """
-        Combines multiple lists element-wise, skipping empty/None values.
-        """
-        combined = [sep.join(filter(None, map(str, row))).strip() 
-                    for row in zip(*lists)]
-        return [item for item in combined if item]
-
     def _format_models(self) -> str | None:
         """
         Generate the models
         """
         listpart = list(filter(None, [self.catalog, self.models, self.exps]))
-        listpart = self._harmonize_lists(*listpart)
+        listpart = harmonize_lists(*listpart)
         
         if listpart:
             if len(listpart) > 1:
@@ -97,7 +89,7 @@ class TitleBuilder:
         Generate the reference
         """
         ref_listpart = list(filter(None, [self.ref_catalog, self.ref_model, self.ref_exp]))
-        ref_listpart = self._harmonize_lists(*ref_listpart)
+        ref_listpart = harmonize_lists(*ref_listpart)
 
         if ref_listpart:
             ref_list_unique = list(dict.fromkeys(ref_listpart))
