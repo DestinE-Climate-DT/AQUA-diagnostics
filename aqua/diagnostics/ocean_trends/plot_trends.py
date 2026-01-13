@@ -4,7 +4,7 @@ import cartopy.crs as ccrs
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .multiple_maps import plot_maps
 from .multivar_vertical_profiles import plot_multivars_vertical_profile
 
@@ -193,9 +193,12 @@ class PlotTrends:
 
     def set_suptitle(self, plot_type = None):
         """Set the title for the plot."""
-        if plot_type is None:
-            plot_type = ""
-        self.suptitle = f"{plot_type} in {self.region} - {self.catalog} {self.model} {self.exp}"
+        self.suptitle = TitleBuilder(
+            diagnostic=plot_type,
+            regions=self.region,
+            catalog=self.catalog,
+            models=self.model,
+            exps=self.exp).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):

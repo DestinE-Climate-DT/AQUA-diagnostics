@@ -11,7 +11,7 @@ from aqua.core.configurer import ConfigPath
 from aqua.core.util import get_projection, plot_box, to_list, get_realizations
 from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
 from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .util import extract_dates, _check_list_regions_type
 
 xr.set_options(keep_attrs=True)
@@ -141,8 +141,10 @@ class Plot2DSeaIce:
 
                 axs = subfig.subplots(1, 3, subplot_kw={'projection': self.proj})
 
-                subfig.suptitle(f"{set_map_title(reg_ref, put_model_name=False, put_exp_name=False)}. "
-                                f"Month: {int_month_name(month)}", fontsize=14, y=1.02)
+                title = TitleBuilder(diagnostic=f"Sea ice {self.method}",
+                                     regions=reg_ref.attrs.get('AQUA_region'),
+                                     timeseason=f"Month: {int_month_name(month)}").generate()
+                subfig.suptitle(title, fontsize=14, y=1.02)
 
                 # plot ref
                 setup = self._get_cmap(monref)

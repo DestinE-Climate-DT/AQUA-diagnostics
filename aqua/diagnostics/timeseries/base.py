@@ -6,7 +6,7 @@ from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string
 from aqua.core.util import time_to_string, strlist_to_phrase
-from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver
+from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
 
@@ -350,18 +350,18 @@ class PlotBaseMixin():
         Returns:
             title (str): Title for the plot.
         """
-        title = f'{diagnostic} '
-        if self.long_name is not None:
-            title += f'of {self.long_name} '
-
-        if self.units is not None:
-            title += f'[{self.units}] '
-
-        if self.region is not None:
-            title += f'[{self.region}] '
-
-        if self.len_data == 1:
-            title += f'for {self.catalogs[0]} {self.models[0]} {self.exps[0]} '
+        
+        title = TitleBuilder(
+            diagnostic=diagnostic,
+            variable=self.long_name,
+            regions=self.region,
+            catalog=self.catalogs,
+            models=self.models,
+            exps=self.exps,
+            ref_catalog=self.ref_catalogs if self.ref_catalogs else None,
+            ref_model=self.ref_models if self.ref_models else None,
+            ref_exp=self.ref_exps if self.ref_exps else None
+        ).generate()
 
         self.logger.debug('Title: %s', title)
         return title

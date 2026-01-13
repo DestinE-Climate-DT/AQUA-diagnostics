@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .multiple_hovmoller import plot_multi_hovmoller
 from .multiple_timeseries import plot_multi_timeseries
 
@@ -205,7 +205,12 @@ class PlotHovmoller:
 
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
-        self.suptitle = f"{content} plot in the {self.region} - {self.catalog} {self.model} {self.exp}"
+        self.suptitle = TitleBuilder(
+            diagnostic=f"{content} plot",
+            regions=self.region,
+            catalog=self.catalog,
+            models=self.model,
+            exps=self.exp).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):

@@ -173,7 +173,8 @@ class PlotGlobalBiases:
             models=data.AQUA_model,
             exps=data.AQUA_exp,
             comparison="\nrelative to ",
-            ref_model=f"{data_ref.AQUA_model} ",
+            ref_model=data_ref.AQUA_model,
+            ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
             extra_info=extra_info
         ).generate()
@@ -243,7 +244,8 @@ class PlotGlobalBiases:
             models=data.AQUA_model,
             exps=data.AQUA_exp,
             comparison="\nrelative to ",
-            ref_model=f"{data_ref.AQUA_model} ",
+            ref_model=data_ref.AQUA_model,
+            ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
             extra_info=extra_info
         ).generate()
@@ -311,7 +313,8 @@ class PlotGlobalBiases:
             models=data.AQUA_model,
             exps=data.AQUA_exp,
             comparison="\nrelative to ",
-            ref_model=f"{data_ref.AQUA_model} ",
+            ref_model=data_ref.AQUA_model,
+            ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
         ).generate()
 

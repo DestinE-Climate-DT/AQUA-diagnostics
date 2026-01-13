@@ -42,14 +42,16 @@ class TitleBuilder:
                  catalog: Optional[Union[str, list]] = None,
                  models: Optional[Union[str, list]] = None, 
                  exps: Optional[Union[str, list]] = None,
+                 startyear: Optional[int | str] = None,
+                 endyear: Optional[int | str] = None,
                  realizations: Optional[Union[str, list]] = None,
                  comparison: Optional[str] = None,
                  ref_catalog: Optional[Union[str, list]] = None,
                  ref_model: Optional[Union[str, list]] = None, 
                  ref_exp: Optional[Union[str, list]] = None,
                  timeseason: Optional[str] = None,
-                 startyear: Optional[int | str] = None,
-                 endyear: Optional[int | str] = None,
+                 ref_startyear: Optional[int | str] = None,
+                 ref_endyear: Optional[int | str] = None,
                  extra_info: Optional[Union[str, list]] = None,
                  ):
 
@@ -61,14 +63,16 @@ class TitleBuilder:
         self.catalog = to_list(catalog) if catalog else []
         self.models = to_list(models) if models else []
         self.exps = to_list(exps) if exps else []
+        self.startyear = str(startyear) if isinstance(startyear, int) else startyear
+        self.endyear = str(endyear) if isinstance(endyear, int) else endyear
         self.realizations = to_list(realizations) if realizations else []
         self.comparison = comparison
         self.ref_catalog = to_list(ref_catalog) if ref_catalog else []
         self.ref_model = to_list(ref_model) if ref_model else []
         self.ref_exp = to_list(ref_exp) if ref_exp else []
         self.timeseason = timeseason
-        self.startyear = str(startyear) if isinstance(startyear, int) else startyear
-        self.endyear = str(endyear) if isinstance(endyear, int) else endyear
+        self.ref_startyear = str(ref_startyear) if isinstance(ref_startyear, int) else ref_startyear
+        self.ref_endyear = str(ref_endyear) if isinstance(ref_endyear, int) else ref_endyear
         self.extra_info = extra_info
 
     def _format_models(self) -> str | None:
@@ -96,16 +100,16 @@ class TitleBuilder:
             return ", ".join(ref_list_unique)
         return None
         
-    def _format_years(self) -> str | None:
+    def _format_years(self, startyear = None, endyear = None) -> str | None:
         """
         Generate the years
         """
-        if self.startyear and self.endyear:
-            return f"{self.startyear}-{self.endyear}"
-        if self.startyear:
-            return self.startyear
-        if self.endyear:
-            return self.endyear
+        if startyear and endyear:
+            return f"{startyear}-{endyear}"
+        if startyear:
+            return startyear
+        if endyear:
+            return endyear
         return None
 
     def generate(self) -> str:
@@ -141,18 +145,22 @@ class TitleBuilder:
             else:
                 title += f"{self.realizations[0]} "
 
+        years = self._format_years(startyear=self.startyear, endyear=self.endyear)
+        if years:
+            title += f" {years}"
+
         refs_part = self._format_refs()
         if refs_part:
             if title:
                 title += self.comparison if self.comparison else 'relative to '
             title += refs_part
 
+        ref_years = self._format_years(startyear=self.ref_startyear, endyear=self.ref_endyear)
+        if ref_years:
+            title += f" {ref_years}"
+
         if self.timeseason:
             title += f" {self.timeseason}"
-
-        years = self._format_years()
-        if years:
-            title += f" {years}"
 
         if self.extra_info:
             title += f" {' '.join(to_list(self.extra_info))}"

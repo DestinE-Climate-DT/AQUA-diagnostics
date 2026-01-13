@@ -4,7 +4,7 @@ from aqua.core.graphics import plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list, strlist_to_phrase, DEFAULT_REALIZATION
 from aqua.core.graphics import plot_lat_lon_profiles
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 
 class PlotLatLonProfiles():
     """
@@ -281,21 +281,19 @@ class PlotLatLonProfiles():
         Returns:
             title (str): Title for the plot.
         """
-        title = f"{self.mean_type.capitalize()} profile "
-
-
+        variable = None
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
-                title += f'for {name} '
-                break
-        if self.units is not None:
-            title += f'[{self.units}] '
+                variable = name
+                break        
 
-        if self.region is not None:
-            title += f'[{self.region}] '
-
-        if self.len_data == 1:
-            title += f'for {self.catalogs[0]} {self.models[0]} {self.exps[0]} '
+        title = TitleBuilder(
+            diagnostic=f"{self.mean_type.capitalize()} profile" if self.mean_type else "Profile",
+            variable=variable,
+            regions=self.region,
+            catalog=self.catalogs,
+            models=self.models,
+            exps=self.exps).generate()
 
         self.logger.debug('Title: %s', title)
         return title
