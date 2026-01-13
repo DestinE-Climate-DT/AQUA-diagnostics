@@ -310,7 +310,7 @@ class PlotGlobalBiases:
             variable=data[var].attrs.get('long_name', var),
             models=data.AQUA_model,
             exps=data.AQUA_exp,
-            comparison="\nrelative to "
+            comparison="\nrelative to ",
             ref_model=f"{data_ref.AQUA_model} ",
             timeseason="climatology ",
         ).generate()

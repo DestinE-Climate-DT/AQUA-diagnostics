@@ -131,7 +131,7 @@ class TitleBuilder:
         
         models_part = self._format_models()
         if models_part:
-            if self.variable:
+            if title:
                 title += f"{self.conjunction} " if self.conjunction else 'for '
             title += f"{models_part} "
 
@@ -143,7 +143,7 @@ class TitleBuilder:
 
         refs_part = self._format_refs()
         if refs_part:
-            if self.variable:
+            if title:
                 title += self.comparison if self.comparison else 'relative to '
             title += refs_part
 

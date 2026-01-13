@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 from aqua.core.util import to_list, extract_attrs, time_to_string, get_realizations
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 import matplotlib as plt
 
 from aqua.core.graphics import boxplot
@@ -129,6 +129,8 @@ class PlotBoxplots:
         fldmeans = data + data_ref if data_ref else data
         model_names = extract_attrs(fldmeans, 'AQUA_model')
         exp_names = extract_attrs(fldmeans, 'AQUA_exp')
+        model_names_ref = extract_attrs(data_ref, 'AQUA_model') if data_ref else []
+        exp_names_ref = extract_attrs(data_ref, 'AQUA_exp') if data_ref else []
 
         base_vars = []
         long_names = []
@@ -152,9 +154,13 @@ class PlotBoxplots:
             fldmeans = [ds - ref.mean('time') for ds in fldmeans]
 
         if not title:
-            model_exp_list = [f"{m} ({e})" for m, e in zip(model_names, exp_names)]
-            model_exp_list_unique = list(dict.fromkeys(model_exp_list))
-            title = "Boxplot for: " + ", ".join(model_exp_list_unique)
+            title = TitleBuilder(
+                diagnostic="Boxplot",
+                models=model_names,
+                exps=exp_names,
+                ref_model=model_names_ref if model_names_ref else None,
+                ref_exp=exp_names_ref if exp_names_ref else None
+            ).generate()
 
         # Plot boxplot 
         fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names, variables=var, variable_names=long_names, title=title, 
@@ -191,7 +197,6 @@ class PlotBoxplots:
                                 ha='center', va='bottom',
                                 color='black', fontweight='bold'
                             )
-
 
         if self.save_pdf:
             self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var, diagnostic_product='boxplot', format='pdf')
