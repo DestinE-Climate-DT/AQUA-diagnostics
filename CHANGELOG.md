@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.22.0):
 
+- GlobalBiases: few small bugs fixed (#98) 
 - Remove intake-esm dependency (#100) 
 - Porting ensemble config files as in the issue #78 (#87)
 - General refactoring of AQUA-diagnostics documentation (#34)
