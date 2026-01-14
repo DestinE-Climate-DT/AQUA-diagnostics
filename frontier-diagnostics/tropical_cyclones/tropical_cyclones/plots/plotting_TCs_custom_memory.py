@@ -1,5 +1,5 @@
 # plotting_TCs_custom_memory.py
-#
+# 
 # TROPICAL CYCLONE VISUALIZATION - MEMORY-OPTIMIZED VERSION
 # ==========================================================
 #
@@ -79,12 +79,12 @@ def _get_data_from_input(data_or_file):
     """
     # Check if it's a TCDataManager object
     if hasattr(data_or_file, 'get_all_points'):
-        print("✓ Using data from memory (fast!)")
+        print("Using data from memory (fast)")
         trajectories = data_or_file.get_trajectories()
         data_dict = data_or_file.get_all_data()
         return trajectories, data_dict
     else:
-        print("⚠ Reading from file (slow)...")
+        print("Reading from file (slow)...")
         _, _, trajectories = getTrajectories_direct(data_or_file)
         return trajectories, None
 
