@@ -122,28 +122,28 @@ class TitleBuilder:
 
         title = ''
         if self.diagnostic:
-            title += f"{self.diagnostic} "
+            title += f"{self.diagnostic}"
 
         if self.variable:
-            title += f"of {self.variable} " if self.diagnostic else f"{self.variable} "
+            title += f" of {self.variable}" if self.diagnostic else f" {self.variable}"
 
         if self.regions:
             regions_list = to_list(self.regions)
             regions_str = strlist_to_phrase(regions_list)
             if regions_str:
-                title += f"[{regions_str}] "
+                title += f" [{regions_str}]"
         
         models_part = self._format_models()
         if models_part:
             if title:
-                title += f"{self.conjunction} " if self.conjunction else 'for '
-            title += f"{models_part} "
+                title += f" {self.conjunction}" if self.conjunction else ' for'
+            title += f" {models_part}"
 
         if self.realizations:
             if len(self.realizations) > 1:
-                title += f"Multi-realization "
+                title += f" Multi-realization"
             else:
-                title += f"{self.realizations[0]} "
+                title += f" {self.realizations[0]}"
 
         years = self._format_years(startyear=self.startyear, endyear=self.endyear)
         if years:
@@ -152,8 +152,8 @@ class TitleBuilder:
         refs_part = self._format_refs()
         if refs_part:
             if title:
-                title += self.comparison if self.comparison else 'relative to '
-            title += refs_part
+                title += f" {self.comparison}" if self.comparison else ' relative to'
+            title += f" {refs_part}"
 
         ref_years = self._format_years(startyear=self.ref_startyear, endyear=self.ref_endyear)
         if ref_years:
