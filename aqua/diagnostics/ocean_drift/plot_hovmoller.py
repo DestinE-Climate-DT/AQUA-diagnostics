@@ -2,7 +2,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations
+from aqua.core.util import get_realizations, unit_to_latex
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.base import OutputSaver
 from .multiple_hovmoller import plot_multi_hovmoller
@@ -217,7 +217,9 @@ class PlotHovmoller:
         for j in range(len(self.data)):
             for _, var in enumerate(self.vars):
                 if j == 0:
-                    title = f"{var} ({self.data[j][var].attrs.get('units')})"
+                    units = self.data[j][var].attrs.get('units', '')
+                    units_latex = unit_to_latex(units) if units else ''
+                    title = f"{var} ({units_latex})"
                 else:
                     title = None
                 self.title_list.append(title)
