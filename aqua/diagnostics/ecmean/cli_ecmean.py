@@ -19,7 +19,7 @@ from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.diagnostics import PerformanceIndices, GlobalMean
 from aqua.diagnostics.base import load_diagnostic_config, merge_config_args, get_diagnostic_configpath
 from aqua.diagnostics.base import template_parse_arguments, OutputSaver
-from aqua.core.util import strlist_to_phrase, lat_to_phrase
+from aqua.core.util import strlist_to_phrase, lat_to_phrase, TitleBuilder
 from aqua.core.configurer import ConfigPath
 
 
@@ -152,6 +152,32 @@ def time_check(mydata, y1, y2, logger=None):
 
     return y1, y2
 
+def set_title(diagnostic: str, model: str, exp: str, 
+              year1: int | None, year2: int | None) -> str:
+    """
+    Generate a standardized title for ECmean plots using TitleBuilder.
+    
+    Args:
+        diagnostic (str): The diagnostic type.
+        model (str): Model name.
+        exp (str): Experiment identifier.
+        year1 (int | None): Start year.    
+        year2 (int | None): End year.
+    Returns:
+        str: The generated title.
+    """
+    if diagnostic == 'performance_indices':
+        diag_name = 'Performance Indices'
+    if diagnostic == 'global_mean':
+        diag_name = 'Global Mean Bias'
+        
+    builder = TitleBuilder(
+        diagnostic=diag_name,
+        models=model, exps=exp,
+        startyear=year1, endyear=year2
+    )
+
+    return builder.generate()
 
 def set_description(diagnostic, model, exp, year1, year2, config):
     """
@@ -309,16 +335,18 @@ if __name__ == '__main__':
                                                    metadata={'Description': description})
 
             # performance indices
+            title = set_title(diagnostic, model, exp, year1, year2)
+
             if diagnostic == 'performance_indices':
                 logger.info('Launching ECmean performance indices...')
                 ecmean = PerformanceIndices(exp, year1, year2, numproc=numproc, config=config,
                                             interface=interface, loglevel=loglevel,
-                                            outputdir=outputdir, xdataset=data)
+                                            outputdir=outputdir, xdataset=data, title=title)
             elif diagnostic == 'global_mean':
                 logger.info('Launching ECmean global mean...')
                 ecmean = GlobalMean(exp, year1, year2, numproc=numproc, config=config,
                                     interface=interface, loglevel=loglevel,
-                                    outputdir=outputdir, xdataset=data)
+                                    outputdir=outputdir, xdataset=data, title=title)
             else:
                 logger.error('Unknown diagnostic %s, exiting...', diagnostic)
                 sys.exit()
@@ -330,6 +358,7 @@ if __name__ == '__main__':
             elif diagnostic == 'global_mean':
                 ecmean.store(yamlfile=filename_dict['yml'], tablefile=filename_dict['txt'])
             ecmean_fig = ecmean.plot(diagname=diagnostic, returnfig=True, storefig=False)
+
             if save_pdf:
                 logger.info('Saving PDF %s plot...', diagnostic)
                 outputsaver.save_pdf(fig=ecmean_fig, diagnostic_product=diagnostic,

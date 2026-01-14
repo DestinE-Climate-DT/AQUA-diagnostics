@@ -4,6 +4,7 @@ import xarray as xr
 from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection
+from aqua.diagnostics.base import TitleBuilder
 
 from .base import BaseMixin
 
@@ -168,30 +169,17 @@ class PlotEnsembleLatLon(BaseMixin):
         self.logger.info("Plotting the ensemble computation")
         if (dataset_mean is None) or (dataset_std is None):
             raise NoDataError("No data given to the plotting function")
-        if units is None:
-            units = dataset_mean.attrs.get("units", None)
-            # units = dataset_mean[var].units
-        if cbar_label is None and units is not None:
-            cbar_label = var + " in " + units
 
-        if isinstance(self.model, list):
-            model_str = " ".join(str(x) for x in self.model)
-        else:
-            model_str = str(self.model)
+        if cbar_label is None:
+            cbar_label = var
+
         if long_name is None:
-            long_name = dataset_mean.attrs.get("long_name", None)
-            if long_name is None:
-                long_name = var
-        if units is not None:
-            if title_mean is None:
-                title_mean = "Ensemble mean of " + model_str + " for " + long_name + " " + units
-            if title_std is None:
-                title_std = "Ensemble standard deviation of " + model_str + " for " + long_name + " " + units
-        else:
-            if title_mean is None:
-                title_mean = "Ensemble mean of " + model_str + " for " + long_name
-            if title_std is None:
-                title_std = "Ensemble standard deviation of " + model_str + " for " + long_name
+            long_name = dataset_mean.attrs.get("long_name") or var
+
+        if title_mean is None:
+            title_mean = TitleBuilder(diagnostic="Ensemble mean",variable=long_name, models=self.model).generate()
+        if title_std is None:
+            title_std = TitleBuilder(diagnostic="Ensemble standard deviation",variable=long_name, models=self.model).generate()
 
         proj = get_projection(proj, **proj_params)
 
@@ -204,6 +192,7 @@ class PlotEnsembleLatLon(BaseMixin):
             vmin_mean = dataset_mean.values.min()
         if vmax_mean is None:
             vmax_mean = dataset_mean.values.max()
+            
         fig1, ax1 = plot_single_map(
             dataset_mean,
             proj=proj,
