@@ -10,8 +10,8 @@ from aqua.core.logger import log_configure, log_history
 from aqua.core.configurer import ConfigPath
 from aqua.core.util import get_projection, plot_box, to_list, get_realizations
 from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
-from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window, unit_to_latex
 from .util import extract_dates, _check_list_regions_type
 
 xr.set_options(keep_attrs=True)
@@ -358,10 +358,15 @@ class Plot2DSeaIce:
         cb.set_ticks(cbar_ticks)
         cb.ax.ticklabel_format(style='sci', axis='x', scilimits=(-3, 3))
         units = data.attrs.get('units', '')
-        if units and not (units.startswith('[') and units.endswith(']')):
-            units = f'[{units}]'
+        
         if units:
-            units = ' ' + units
+            units_latex = unit_to_latex(units)
+            if not (units_latex.startswith('[') and units_latex.endswith(']')):
+                units_latex = f'[{units_latex}]'
+            units = ' ' + units_latex
+        else:
+            units = ''
+        
         cb.set_label(f"Sea-ice {data.attrs.get('AQUA_method', '')}{units}", fontsize=11)
         return cb
 

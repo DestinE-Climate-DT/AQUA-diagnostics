@@ -15,7 +15,7 @@ class SeaIce(Diagnostic):
     Sea ice diagnostic class for computing and analyzing sea ice metrics.
     
     This class provides methods to compute sea ice extent (million km²), volume (thousand km³), 
-    fraction ([0-1]) and thickness (m) over specified regions (e.g., Arctic, Antarctic). 
+    fraction (dimensionless, 1) and thickness (m) over specified regions (e.g., Arctic, Antarctic). 
     It supports both time series (integrated), with options for computing standard deviations, 
     seasonal cycles, and 2D monthly climatologies.
 
@@ -501,7 +501,7 @@ class SeaIce(Diagnostic):
         # set attributes: 'method','unit'  
         units_dict = {"extent": "million km^2",
                       "volume": "thousands km^3",
-                      "fraction": "[0-1]",
+                      "fraction": "1",
                       "thickness": "m"}
 
         if self.method not in units_dict:

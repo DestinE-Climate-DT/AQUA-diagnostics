@@ -2,7 +2,7 @@ import xarray as xr
 import cartopy.crs as ccrs
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations
+from aqua.core.util import get_realizations, unit_to_latex
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .multiple_maps import plot_maps
@@ -210,7 +210,9 @@ class PlotTrends:
         for j in range(len(self.data_list)):
             for var in self.vars:
                 if j == 0:
-                    title = f"{self.data[var].attrs.get('long_name', var)} ({self.data[var].attrs.get('units')})"
+                    units = self.data[var].attrs.get('units', '')
+                    units_latex = unit_to_latex(units) if units else ''
+                    title = f"{self.data[var].attrs.get('long_name', var)} ({units_latex})"
                     self.title_list.append(title)
                 else:
                     self.title_list.append(" ")
@@ -224,7 +226,9 @@ class PlotTrends:
         self.cbar_labels = []
         for _ in range(len(self.data_list)):
             for var in self.vars:
-                cbar_label = f"{self.data[var].attrs.get('short_name', var)} ({self.data[var].attrs.get('units')})"
+                units = self.data[var].attrs.get('units', '')
+                units_latex = unit_to_latex(units) if units else ''
+                cbar_label = f"{self.data[var].attrs.get('short_name', var)} ({units_latex})"
                 self.cbar_labels.append(cbar_label)
         self.logger.debug("Colorbar labels set to: %s", self.cbar_labels)
 

@@ -1,6 +1,6 @@
 import xarray as xr
 import numpy as np
-from aqua.core.util import to_list, extract_attrs, time_to_string, get_realizations
+from aqua.core.util import to_list, extract_attrs, time_to_string, get_realizations, unit_to_latex
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
 import matplotlib as plt
@@ -167,7 +167,7 @@ class PlotBoxplots:
                           add_mean_line=add_mean_line, loglevel=self.loglevel)
 
         if self.anomalies and data_ref:
-            ax.set_ylabel("Anomalies with respect to observation mean (W/m2)")
+            ax.set_ylabel(f"Anomalies with respect to observation mean ({unit_to_latex('W/m2')})")
 
             if add_mean_line:
                 # Annotate absolute median values on the boxplots

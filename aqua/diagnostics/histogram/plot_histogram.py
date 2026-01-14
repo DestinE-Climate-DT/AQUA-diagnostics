@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list, DEFAULT_REALIZATION
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.core.util import to_list, unit_to_latex, DEFAULT_REALIZATION
 
 
 class PlotHistogram():
