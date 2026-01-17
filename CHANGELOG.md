@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.22.0):
 
+- Add missing netcdf4 debendency in development environment (#104)
 - Add LaTeX units formatting to diagnostic labels (#70)
 - GlobalBiases: few small bugs fixed (#98) 
 - Remove intake-esm dependency (#100) 
