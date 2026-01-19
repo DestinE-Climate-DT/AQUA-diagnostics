@@ -79,35 +79,38 @@ class Trends(Diagnostic):
         super().retrieve(var=var, reader_kwargs=reader_kwargs)
         # self.data = self.data.chunk(chunks={"time": 12, "level": 1})  # this is needed to avoid a too large graph
 
-        # If a region is specified, apply area selection to self.data
-        if region:
-            self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
-            res_dict = super()._select_region(
-                data=self.data, region=region, diagnostic="ocean3d", drop=True
-            )
-            self.lat_limits = res_dict["lat_limits"]
-            self.lon_limits = res_dict["lon_limits"]
-            self.region = res_dict["region"]
-        else:
-            self.logger.debug("No region specified, using global data")
-            self.region = 'global'
-            self.lat_limits = None
-            self.lon_limits = None
-
-        # If a dimension mean is specified, compute the mean over that dimension
-        # otherwise use the data as is, with a region selection if applied
-        if dim_mean:
-            self.logger.debug("Averaging data over dimension: %s", dim_mean)
-            self.data = self.reader.fldmean(self.data, dim=dim_mean,
-                                            lat=self.lat_limits, lon=self.lon_limits)
-        else:
-            self.data = res_dict.get("data", self.data) if 'res_dict' in locals() else self.data
+        self.data, self.region = self.select_region(data=self.data, region=region, dim_mean=dim_mean)
 
         self.logger.info("Computing trend coefficients")
         self.trend_coef = self.compute_trend(data=self.data)
         self.logger.info("Saving results to NetCDF")
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
         self.logger.info("Trend analysis workflow completed")
+
+    def select_region(self, data, region=None,  drop=True, dim_mean=None):
+        # If a region is specified, apply area selection to self.data
+        if region:
+            self.logger.info(f"Selecting region: {region}.")
+            res_dict = super()._select_region(
+                data=data, region=region, diagnostic="ocean3d", drop=True
+            )
+            lat_limits = res_dict["lat_limits"]
+            lon_limits = res_dict["lon_limits"]
+            data = res_dict["data"]
+            region = res_dict["region"]
+        else:
+            self.logger.debug("No region specified, using global data")
+            region = 'global'
+            lat_limits = None
+            lon_limits = None
+
+        # If a dimension mean is specified, compute the mean over that dimension
+        # otherwise use the data as is, with a region selection if applied
+        if dim_mean:
+            self.logger.debug("Averaging data over dimension: %s", dim_mean)
+            data = self.reader.fldmean(data, dim=dim_mean,
+                                        lat=lat_limits, lon=lon_limits)
+        return data, region
 
     def adjust_trend_for_time_frequency(self, trend, y_array):
         """Adjust trend values based on the time frequency of the data.
