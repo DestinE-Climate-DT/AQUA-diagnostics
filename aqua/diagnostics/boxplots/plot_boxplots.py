@@ -127,10 +127,12 @@ class PlotBoxplots:
         data_ref = to_list(data_ref) if data_ref is not None else []
 
         fldmeans = data + data_ref if data_ref else data
-        model_names = extract_attrs(fldmeans, 'AQUA_model')
-        exp_names = extract_attrs(fldmeans, 'AQUA_exp')
+        model_names = extract_attrs(data, 'AQUA_model')
+        exp_names = extract_attrs(data, 'AQUA_exp')
         model_names_ref = extract_attrs(data_ref, 'AQUA_model') if data_ref else []
         exp_names_ref = extract_attrs(data_ref, 'AQUA_exp') if data_ref else []
+        model_names_plot = extract_attrs(fldmeans, 'AQUA_model')
+        exp_names_plot = extract_attrs(fldmeans, 'AQUA_exp')
 
         base_vars = []
         long_names = []
@@ -163,7 +165,7 @@ class PlotBoxplots:
             ).generate()
 
         # Plot boxplot 
-        fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names, variables=var, variable_names=long_names, title=title, 
+        fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names_plot, variables=var, variable_names=long_names, title=title, 
                           add_mean_line=add_mean_line, loglevel=self.loglevel)
 
         if self.anomalies and data_ref:
