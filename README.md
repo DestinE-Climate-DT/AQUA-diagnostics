@@ -45,14 +45,13 @@ Refer to the Container chapter in the AQUA documentation for details.
 
 ## Documentation
 
-Documentation for the diagnostics is part of the AQUA main documentation:
-📘 https://aqua.readthedocs.io/en/latest/
+Full [AQUA Documentation](https://aqua-diagnostics.readthedocs.io/en/latest/) is available on ReadTheDocs.
 
 This includes:
-	•	Usage examples for each diagnostic
-	•	Configuration files (YAML)
-	•	How to run the analysis wrapper (aqua analysis)
-	•	Guidance for writing custom diagnostics
+- Usage examples for each diagnostic
+- Configuration files (YAML)
+- How to run the analysis wrapper (aqua analysis)
+- Guidance for writing custom diagnostics
 
 ## Examples
 

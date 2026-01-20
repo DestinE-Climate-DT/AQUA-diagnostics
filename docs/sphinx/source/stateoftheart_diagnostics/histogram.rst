@@ -1,79 +1,68 @@
-Histogram
-=========
+.. _histogram:
+
+Histogram Diagnostic
+====================
 
 Description
 -----------
 
-The Histogram diagnostic computes and plots histograms or probability density functions (PDFs) 
-of climate variables over specified regions.
-The diagnostic supports both **raw histograms** (counts per bin) and **normalized PDFs** 
-(probability density functions with integral = 1).
-Histograms can be computed over specific geographic regions, with default regions available or 
-custom regions definable in the configuration file.
-Optional latitudinal weighting accounts for grid cell area variations.
+The **Histogram** diagnostic is a set of tools for computing and visualizing histograms or probability density functions (PDFs) of climate variables.
+It supports comparative analysis between a target dataset (typically a climate model) and a reference dataset, commonly an observational or reanalysis product such as ERA5.
+
+Histogram provides tools to plot:
+
+- Raw histograms (counts per bin)
+- Normalized PDFs (probability density functions)
+- Multi-model comparisons with reference data overlay
 
 Classes
 -------
 
-There are two main classes for computing and plotting histograms:
+There is one class for the analysis and one for the plotting:
 
-* **Histogram**: Computes histograms or PDFs of climate variables.
-  
-  - Supports **raw histograms** (counts) and **normalized PDFs** (``density=True``)
-  - Optional **latitudinal weighting** to account for grid cell area
-  - Customizable **bin count** and **range** for histogram computation
-  - Regional analysis with predefined or custom regions
+* **Histogram**: retrieves the data and computes histograms or PDFs over specified regions.
+  It handles latitudinal weighting, bin configuration, and regional selection.
+  Results are saved as class attributes and as NetCDF files.
 
-* **PlotHistogram**: Produces publication-quality line plots of computed histograms/PDFs.
-  
-  - Single or multi-model comparison plots
-  - Optional reference dataset overlay
-  - Logarithmic scales for x and y axes
-  - Optional smoothing with configurable window size
-  - Customizable axis limits
+* **PlotHistogram**: provides methods for plotting histograms and PDFs.
+  It generates plots with optional logarithmic scales, smoothing, and customizable axis limits.
 
 .. note::
 
     The diagnostic computes histograms over the **entire temporal period** specified 
     (no seasonal decomposition).
 
-Getting Started
----------------
+File structure
+--------------
 
-**File locations:**
+* The diagnostic is located in the ``aqua/diagnostics/histogram/`` directory, which contains both the source code and the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-histogram.yaml``
+* Region definitions are available in ``aqua/diagnostics/config/tools/histogram/definitions/regions.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/histogram/`` directory and contain examples of how to use the diagnostic.
 
-* Diagnostic code: ``src/aqua_diagnostics/histogram/``
-* Region definitions: ``config/tools/histogram/definitions/regions.yaml``
-* Example notebook: ``notebooks/diagnostics/histogram/``
-* Config template: ``templates/diagnostics/config-histogram.yaml``
-
-**Supported variables:**
+Input variables and datasets
+----------------------------
 
 The diagnostic works with climate variables on regular latitude-longitude grids:
+Some of the variables that are typically used in this diagnostic are:
 
-* **Direct variables**: ``tprate`` (precipitation), ``2t`` (temperature), ``sst`` (sea surface 
-  temperature), etc.
-* **Derived variables**: Using ``EvaluateFormula`` syntax (e.g., ``2t - 273.15`` for °C)
+* ``2t`` (2 metre temperature)
+* ``tprate`` (total precipitation rate)
+* ``sst`` (sea surface temperature)
 
-**Supported regions:**
-
-``global`` (or ``null``), ``tropics``, ``europe``, ``nh`` (Northern Hemisphere), 
-``sh`` (Southern Hemisphere).
+It also supports derived variables using ``EvaluateFormula`` syntax (e.g., ``2t - 273.15`` for temperature in °C).
 
 Basic usage
 -----------
 
-The recommended way to use this diagnostic is through the Python API, as shown in the 
-notebook below.
-
-**Minimal example:**
+The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic structure of the analysis is the following:
 
 .. code-block:: python
 
-    from aqua.diagnostics.histogram import Histogram, PlotHistogram
+    from aqua.diagnostics import Histogram, PlotHistogram
 
-    # Compute histogram/PDF
-    hist = Histogram(
+    hist_dataset = Histogram(
         catalog='climatedt-phase1',
         model='ICON',
         exp='historical-1990',
@@ -81,294 +70,154 @@ notebook below.
         startdate='1990-01-01',
         enddate='1999-12-31',
         bins=100,
-        weighted=True
+        weighted=True,
+        loglevel='INFO'
     )
-    hist.run(var='tprate', units='mm/day', density=True)
-    
-    # Plot PDF
-    plot = PlotHistogram(data=[hist.histogram_data])
-    plot.run(outputdir='./', ylogscale=True)
 
-**For multi-model comparisons or reference data**, see the detailed examples in the section below.
+    hist_obs = Histogram(
+        catalog='obs',
+        model='ERA5',
+        exp='era5',
+        source='monthly',
+        startdate='1990-01-01',
+        enddate='1999-12-31',
+        bins=100,
+        weighted=True,
+        loglevel='INFO'
+    )
 
-Available demo notebooks
-------------------------
+    hist_dataset.run(var='tprate', units='mm/day', density=True)
+    hist_obs.run(var='tprate', units='mm/day', density=True)
 
-📓 **Single histogram/PDF plot** → `histogram.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/histogram/histogram.ipynb>`_
+    plot = PlotHistogram(
+        data=[hist_dataset.histogram_data],
+        ref_data=hist_obs.histogram_data,
+        loglevel='INFO'
+    )
 
-   Learn the basics: compute histograms/PDFs, compare with observations, customize plots
+    plot.run(ylogscale=True, xlogscale=False, smooth=False)
 
-**Key concepts covered:**
+.. note::
 
-- Histogram vs PDF: ``density=False`` (counts) vs ``density=True`` (probability density)
-- Latitudinal weighting: ``weighted=True`` for area-corrected distributions
-- Bin configuration: ``bins`` (number) and ``range`` (min/max) parameters
-- Plot customization: log scales (``xlogscale``, ``ylogscale``), smoothing, axis limits
-- Regional selection and custom regions
+    Start/end dates and reference dataset can be customized.
+    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
 
 CLI usage
 ---------
 
-For batch processing or automation, the diagnostic can be run via CLI using a configuration file:
+The diagnostic can be run from the command line interface (CLI) by running the following command:
 
 .. code-block:: bash
 
-    # Copy and customize the template
-    cp templates/diagnostics/config-histogram.yaml my_config.yaml
-    
-    # Run diagnostic
-    python src/aqua_diagnostics/histogram/cli_histogram.py \
-        --config my_config.yaml \
-        --model ICON \
-        --exp historical-1990 \
-        --loglevel INFO
+    cd $AQUA/aqua/diagnostics/histogram
+    python cli_histogram.py --config <path_to_config_file>
 
-**Key CLI arguments:**
+Additionally, the CLI can be run with the following optional arguments:
 
-``--config``, ``--model``, ``--exp``, ``--catalog``, ``--source``, ``--regrid``, 
-``--realization``, ``--outputdir``, ``--startdate``, ``--enddate``, ``--loglevel``, ``--nworkers``
-
-For the complete list of arguments, run:
-
-.. code-block:: bash
-
-    python src/aqua_diagnostics/histogram/cli_histogram.py --help
-
-.. note::
-
-    **Suggested workflow**: Copy the template 
-    (``cp templates/diagnostics/config-histogram.yaml my_config.yaml``), customize it with 
-    your parameters, and run with ``--config my_config.yaml``.
-    
-    **Quick testing**: CLI arguments (``--model``, ``--exp``, etc.) can override config file 
-    values without editing the file, useful for rapid experimentation.
-    
-    For most use cases, we recommend the **programmatic approach** (notebooks) rather than CLI.
+- ``--config``, ``-c``: Path to the configuration file.
+- ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
+- ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
+- ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
+- ``--catalog``: Catalog to use for the analysis. Can be defined in the config file.
+- ``--model``: Model to analyse. Can be defined in the config file.
+- ``--exp``: Experiment to analyse. Can be defined in the config file.
+- ``--source``: Source to analyse. Can be defined in the config file.
+- ``--outputdir``: Output directory for the plots.
+- ``--startdate``: Start date for the analysis.
+- ``--enddate``: End date for the analysis.
 
 Configuration file structure
 ----------------------------
 
-The template (``templates/diagnostics/config-histogram.yaml``) defines datasets, 
-reference data, and diagnostic parameters:
+The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
+Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
+Here we describe only the specific settings for the histogram diagnostic.
 
-**Basic structure:**
+* ``histogram``: a block (nested in the ``diagnostics`` block) containing options for the Histogram diagnostic.
+  Variable-specific parameters override the defaults.
+
+    * ``run``: enable/disable the diagnostic.
+    * ``diagnostic_name``: name of the diagnostic. ``histogram`` by default.
+    * ``variables``: list of variables to analyse with their regions.
+    * ``formulae``: list of formulae to compute new variables from existing ones.
+    * ``bins``: number of bins for histogram computation.
+    * ``range``: range for histogram bins as [min, max], or null for auto.
+    * ``weighted``: use latitudinal weights to account for grid cell area.
+    * ``density``: if true, compute probability density function (PDF) instead of counts.
+    * ``box_brd``: apply box boundaries for region selection.
+    * ``xlogscale`` / ``ylogscale``: use logarithmic scale for x/y axes in plots.
+    * ``smooth``: apply smoothing to histogram.
+    * ``smooth_window``: window size for smoothing.
 
 .. code-block:: yaml
 
-    # Dataset(s) to analyze
-    datasets:
-      - catalog: 'climatedt-phase1'
-        model: 'ICON'
-        exp: 'historical-1990'
-        source: 'lra-r100-monthly'
-        startdate: '1990-01-01'
-        enddate: '1999-12-31'
-    
-    # Reference dataset (optional)
-    references:
-      - catalog: 'obs'
-        model: 'ERA5'
-        exp: 'era5'
-        source: 'monthly'
-        startdate: '1990-01-01'
-        enddate: '1999-12-31'
-    
-    # Output settings
-    output:
-      outputdir: "./"
-      save_pdf: true
-      save_png: true
-      dpi: 300
-    
-    # Diagnostic configuration
-    diagnostics:
-      histogram:
+    histogram:
         run: true
-        bins: 100                    # Number of bins
-        range: null                  # [min, max] or null for auto
-        weighted: true               # Use latitudinal weights
-        density: true                # Compute PDF (normalized)
-        xlogscale: false             # Log scale for x-axis
-        ylogscale: true              # Log scale for y-axis
-        smooth: false                # Apply smoothing
+        diagnostic_name: 'histogram'
+        bins: 100
+        range: null
+        weighted: true
+        density: true
+        box_brd: true
+        xlogscale: false
+        ylogscale: true
+        smooth: false
+        smooth_window: 5
         variables:
-          - name: 'tprate'
-            units: 'mm/day'
-            regions: ['global', 'tropics']
+          - name: '2t'
+            regions: [null, 'tropics']
 
-**Multiple datasets example** (for multi-model comparison):
+Output
+------
 
-.. code-block:: yaml
+The diagnostic produces the following outputs:
 
-    datasets:
-      - catalog: 'climatedt-phase1'
-        model: 'ICON'
-        exp: 'historical-1990'
-        source: 'lra-r100-monthly'
-        startdate: '1990-01-01'
-        enddate: '1999-12-31'
-      
-      - catalog: 'climatedt-phase1'
-        model: 'IFS-NEMO'
-        exp: 'historical-1990'
-        source: 'lra-r100-monthly'
-        startdate: '1990-01-01'
-        enddate: '1999-12-31'
+* Histogram/PDF line plots
+* Multi-model comparisons with reference data
+* Optional smoothing and custom axis limits
 
-**Variable-specific parameters:**
+Plots are saved in both PDF and PNG format.
+Data outputs are saved as NetCDF files.
 
-.. code-block:: yaml
+Observations
+------------------
 
-    diagnostics:
-      histogram:
-        variables:
-          - name: 'tprate'
-            regions: ['global']
-            range: [0, 20]           # Custom range for this variable
-            bins: 50                 # Override global bins setting
-            lon_limits: [-180, 180]  # Optional spatial constraints
-            lat_limits: [-60, 60]
+The default reference dataset is ERA5 reanalysis, provided by ECMWF.
 
-**Derived variables** (using formulas):
+Other common reference datasets include MSWEP (Multi-Source Weighted-Ensemble Precipitation) and BERKELEY-EARTH (Berkeley Earth Surface Temperature).
 
-.. code-block:: yaml
+Custom reference datasets can be configured in the configuration file.
 
-    diagnostics:
-      histogram:
-        formulae:
-          - name: 'temp_celsius'
-            formula: '2t - 273.15'
-            units: '°C'
-            long_name: 'Temperature in Celsius'
-            regions: ['global', 'tropics']
-
-For the complete template with all available options, see 
-``templates/diagnostics/config-histogram.yaml``.
-
-Outputs
--------
-
-The diagnostic generates:
-
-📊 **Plots** (PDF and/or PNG):
-
-  - Histogram/PDF line plots
-  - Multi-model comparisons with reference data
-  - Optional smoothing and custom axis limits
-
-📁 **NetCDF files**:
-
-  - Computed histogram data with bin centers and counts/densities
-  - Metadata preserved from original variables
-
-**Naming convention:**
-
-``histogram.<diagnostic>.<catalog>.<model>.<exp>.<realization>.<var>.nc``
-
-``histogram.<diagnostic>_pdf.<catalog>.<model>.<exp>.<realization>.<var>.<format>``
-
-**Example:**
-
-``histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png``
-
-Example plots
+Example Plots
 -------------
 
-.. figure:: figures/histogram_tprate_global.png
+.. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
+   :align: center
    :width: 100%
 
    Probability density function (PDF) of precipitation rate (mm/day) for the global region, 
    showing ICON model output compared to ERA5 reference data.
 
-Reference datasets
-------------------
 
-Common reference datasets:
+Available demo notebooks
+------------------------
 
-* **ERA5**: ECMWF's fifth generation reanalysis for global climate
-* **MSWEP**: Multi-Source Weighted-Ensemble Precipitation dataset
-* **BERKELEY-EARTH**: Berkeley Earth Surface Temperature dataset
+Notebooks are stored in ``notebooks/diagnostics/histogram``:
+
+- `histogram.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/histogram/histogram.ipynb>`_
 
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Marco Cadau (@mcadau, marco.cadau@polito.it), member of 
-the AQUA team.
+This diagnostic is maintained by Marco Cadau (`@mcadau <https://github.com/mcadau>`_, `marco.cadau@polito.it <mailto:marco.cadau@polito.it>`_).  
+Contributions are welcome — please open an issue or a pull request.
+For questions or suggestions, contact the AQUA team or the maintainer.
 
-Contributions are welcome — please open an issue or pull request. For questions, contact 
-the AQUA team or the maintainer.
+Detailed API
+------------
 
-Developer Notes
----------------
-
-**Internal structure:**
-
-The diagnostic uses a three-step process:
-
-1. **Data retrieval** via ``Reader`` from catalog:
-   
-   - Applies temporal and spatial selection
-   - Handles unit conversion if needed
-
-2. **Histogram computation** via ``aqua.histogram.histogram()``:
-   
-   - Optional latitudinal weighting: ``weights = cos(lat)``
-   - Bin calculation: NumPy or Dask histogram
-   - Normalization: if ``density=True``, integrates to 1
-
-3. **Storage** as xarray DataArray:
-   
-   - Dimension: ``center_of_bin`` (bin centers)
-   - Coordinate: ``width`` (bin widths)
-   - Attributes: preserves original variable metadata
-
-**Data attributes:**
-
-Metadata attached to histogram DataArrays:
-
-- ``AQUA_catalog``, ``AQUA_model``, ``AQUA_exp``: Data provenance
-- ``AQUA_region``: Selected region name
-- ``size_of_the_data``: Original data size
-- ``units``: ``'counts'`` or ``'probability density'``
-- Standard CF attributes: ``long_name``, ``standard_name``
-
-**Graphics function:**
-
-* ``plot_histogram()``: Line plot with flexible styling
-  
-  - Handles single or multiple DataArrays
-  - Supports reference data overlay
-  - Optional smoothing with moving average
-  - Logarithmic scales for both axes
-  - Auto-detects bin centers and values
-
-**Data flow:**
-
-1. ``Histogram.retrieve()`` → Get data from catalog
-2. ``Histogram.compute_histogram()`` → Call ``aqua.histogram.histogram()``
-3. ``Histogram.save_netcdf()`` → Save processed data
-4. ``PlotHistogram.__init__()`` → Load data and metadata
-5. ``PlotHistogram.run()`` → Create and save plots
-
-**Smoothing algorithm:**
-
-Simple moving average with edge handling:
-
-.. code-block:: python
-
-    kernel = np.ones(window_size) / window_size
-    smoothed = np.convolve(data, kernel, mode='same')
-
-**Latitudinal weighting:**
-
-Accounts for decreasing grid cell area toward poles:
-
-.. code-block:: python
-
-    weights = np.cos(np.radians(lat))
-
-API Reference
--------------
+This section provides a detailed reference for the Application Programming Interface (API) of the ``histogram`` diagnostic,  
+generated from the function docstrings.
 
 .. automodule:: aqua.diagnostics.histogram
     :members:

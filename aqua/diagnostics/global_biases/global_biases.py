@@ -87,7 +87,7 @@ class GlobalBiases(Diagnostic):
         if var is not None:
             self.var = var   
         if formula:
-            super().retrieve()
+            super().retrieve(reader_kwargs=reader_kwargs)
             self.logger.info("Evaluating formula: %s", self.var)
             formula_values = EvaluateFormula(data=self.data, formula=self.var, long_name=long_name,
                                              short_name=short_name, units=units,
@@ -114,7 +114,7 @@ class GlobalBiases(Diagnostic):
             self.data.attrs['short_name'] = self.var
 
         self.startdate = pd.Timestamp(self.startdate or self.data.time[0].values).strftime("%Y-%m-%d")
-        self.enddate   = pd.Timestamp(self.enddate   or self.data.time[-1].values).strftime("%Y-%m-%d")
+        self.enddate = pd.Timestamp(self.enddate or self.data.time[-1].values).strftime("%Y-%m-%d")
         if plev is not None:
             self.plev = plev
 
@@ -249,7 +249,7 @@ class GlobalBiases(Diagnostic):
             if save_netcdf:
                 extra_keys = {k: v for k, v in [('var', var), ('plev', plev)] if v is not None}
                 self.savenetcdf(
-                    data=self.climatology,
+                    data=self.seasonal_climatology,
                     diagnostic_product='seasonal_climatology',
                     create_catalog_entry=create_catalog_entry,
                     extra_keys=extra_keys
