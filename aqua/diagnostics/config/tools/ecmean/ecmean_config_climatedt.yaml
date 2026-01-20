@@ -6,9 +6,9 @@ model:
 
 # this block is not necessary within the AQUA integration
 dirs:
-  exp: null
-  tab: null
-  fig: null
+  exp: null # directory for the output
+  tab: null # directory for the tables
+  fig: null # directory for the figures
 
 global_mean:
   variables:
