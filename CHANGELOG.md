@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.22.0):
 
+- Timeseries: CLI correctly works if `reference` is not provided (#109)
 - Ocean3D: wrong import fixed (#107)
 - Ocean3D: added realization key in plot MLD
 - Add missing netcdf4 dependency in development environment (#104)
