@@ -20,6 +20,7 @@ dependencies:
   - hdf5 #explicitly to avoid issues with pypi version
   - tempest-extremes # for TCs
   - xesmf # for ECmean
+  - netcdf4
   - imagemagick
   - healpy
   - pip:

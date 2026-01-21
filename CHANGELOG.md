@@ -5,8 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Unreleased in the current development version (target v0.22.0):
+Unreleased in the current development version (target v0.23.0):
 
+## [v0.22.0]
+
+Main changes:
+1. Remove intake-esm dependency
+2. Refactoring of the documentation following the new repository structure
+
+Complete list:
+- Ocean3D: wrong import fixed (#107)
+- Ocean3D: added realization key in plot MLD
+- Add missing netcdf4 dependency in development environment (#104)
 - Add LaTeX units formatting to diagnostic labels (#70)
 - GlobalBiases: few small bugs fixed (#98) 
 - Remove intake-esm dependency (#100) 
@@ -50,4 +60,5 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...HEAD
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...HEAD
+[v0.22.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...v0.22.0
