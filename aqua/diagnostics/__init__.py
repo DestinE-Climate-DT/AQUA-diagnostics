@@ -19,8 +19,8 @@ from .ocean_stratification import Stratification, PlotStratification, PlotMLD
 from .ocean_trends import Trends, PlotTrends
 
 
-DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "diagnostics", "recipes"]
-DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["recipes"]
+DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections"]
+DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["collections"]
 
 __all__ = ["NAO", "ENSO", "MJO",
            "PlotNAO", "PlotENSO", "PlotMJO",

@@ -116,13 +116,13 @@ def close_cluster(client, cluster, private_cluster, loglevel: str = 'WARNING'):
         cluster.close()
         logger.debug("Dask cluster closed.")
 
-def get_diagnostic_configpath(diagnostic: str, folder="recipes", loglevel='WARNING') -> str:
+def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel='WARNING') -> str:
     """
     Get the path to the diagnostic configuration directory.
 
     Args:
         diagnostic (str): diagnostic name
-        folder (str): folder name. Default is "recipes". Can be "diagnostics" as well.
+        folder (str): folder name. Default is "collections". Can be "diagnostics" as well.
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:
@@ -130,16 +130,16 @@ def get_diagnostic_configpath(diagnostic: str, folder="recipes", loglevel='WARNI
     """
     configdir = ConfigPath(loglevel=loglevel).configdir
     if folder == "templates":
-        return os.path.join(configdir, folder, "recipes")
-    if folder in ["recipes", "diagnostics"]:
+        return os.path.join(configdir, folder, "collections")
+    if folder in ["collections", "tools"]:
         return os.path.join(configdir, folder, diagnostic)
-    raise ValueError(f"Invalid folder name: {folder}. Must be 'recipes', 'diagnostics', or 'templates'.")
+    raise ValueError(f"Invalid folder name: {folder}. Must be 'collections', 'tools', or 'templates'.")
 
 
 def load_diagnostic_config(diagnostic: str,
                            config: str = None,
                            default_config: str = None,
-                           folder = "recipes",
+                           folder = "collections",
                            loglevel: str = 'WARNING'):
     """
     Load the diagnostic configuration file and return the configuration dictionary.
@@ -147,7 +147,7 @@ def load_diagnostic_config(diagnostic: str,
     Args:
         diagnostic (str): diagnostic name
         config (str): config argument can modify the default configuration file.
-        folder (str): folder name. Default is "recipes". Can be "diagnostics" or "templates" as well.
+        folder (str): folder name. Default is "collections". Can be "tools" or "templates" as well.
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:
