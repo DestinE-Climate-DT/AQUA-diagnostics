@@ -102,9 +102,9 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
    Configuration file templates for all available diagnostics are provided in `aqua/diagnostics/templates`, serving as starting points that users can customize according to their specific requirements.
    This approach ensures reproducibility, as the configuration file documents all analysis settings and can be version-controlled alongside results.Example workflow:
 
-3. **Level 3: Diagnostic Suites via AQUA Analysis Wrapper**
+3. **Level 3: Diagnostic Recipes via AQUA Analysis Wrapper**
 
-   For comprehensive model evaluation involving multiple diagnostics, AQUA provides the `aqua-analysis` wrapper, which orchestrates the execution of **diagnostic-suites**. 
+   For comprehensive model evaluation involving multiple diagnostics, AQUA provides the `aqua-analysis` wrapper, which orchestrates the execution of **diagnostic-recipes**. 
    Users construct a master configuration file that combines multiple diagnostics, defining which analyses to run and how they should be coordinated.
    This approach enables:
 
