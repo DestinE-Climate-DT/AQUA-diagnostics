@@ -7,65 +7,67 @@
 # BOTH file paths (backward compatible) AND TCDataManager objects (memory-
 # optimized, 100-1000x faster for multiple plots).
 #
+# All functions save outputs in both PDF and NetCDF formats where applicable.
+#
 # MAIN FUNCTIONS:
 # ---------------
 # 1. plot_trajectories_direct(data_or_file, tdict, max_timesteps)
-#    Simple scatter plot of all TC tracks (black dots). Quick diagnostic view.
+#    Simple scatter plot of all TC tracks (black dots). Quick diagnostic view
+#    showing spatial distribution. Saves PDF + NetCDF with point coordinates.
 #
-# 2. plot_trajectories_colored(data_or_file, tdict, color_by, max_timesteps)
-#    TC tracks as continuous lines colored by intensity (SLP) or Saffir-Simpson
-#    category. Handles dateline crossings.
-#    OR plot a specified category: 
-#    plot_trajectories_colored(data_or_file, tdict, color_by,category=None, max_timesteps=None)
-#    Categories 0=TD, 1-5=Cat 1-5 based on peak intensity during lifetime.
+# 2. plot_trajectories_colored(data_or_file, tdict, color_by, category, max_timesteps)
+#    TC tracks as continuous lines colored by Saffir-Simpson category. Can plot
+#    ALL storms (category=None) or filter by specific category (0-5 for TD through
+#    Cat 5). Storms sorted by intensity for optimal visualization. Handles dateline
+#    crossings. Saves PDF + NetCDF with trajectory data and categories.
 #
 # 3. plot_density_scatter(data_or_file, tdict, max_timesteps, sample_size)
-#    KDE-based density scatter where each point is colored by local density
-#    (normalized 0-1). Points sorted by density for better visualization.
+#    KDE-based density scatter where each point is colored by local track density
+#    (normalized 0-1). Points sorted by density for better visualization. Useful
+#    for identifying TC activity hotspots. Saves PDF only.
 #
-# 4. plot_track_density_grid(data_or_file, tdict, grid_size, max_timesteps)
-#    Gridded density map showing "transits per month" following HighResMIP-
-#    PRIMAVERA standards. Discrete logarithmic colorbar, custom colormap.
+# 4. plot_track_density_grid(data_or_file, tdict, grid_size, max_timesteps, category)
+#    Gridded density map showing "transits per month" following HighResMIP-PRIMAVERA
+#    standards. Discrete logarithmic colorbar with adaptive boundaries. Can plot ALL
+#    TCs (category=None) or filter by category (0-5) to show spatial distribution of
+#    specific intensity ranges (e.g., category=3 for major hurricanes only). Saves
+#    PDF + NetCDF with gridded density fields and metadata.
 #
 # 5. plot_density_scatter_by_category(data_or_file, tdict, max_timesteps, sample_size)
-#    6-panel subplot with KDE density for each Saffir-Simpson category
-#    (TD through Cat 5). Horizontal colorbars.
+#    6-panel subplot showing KDE density for each Saffir-Simpson category (TD through
+#    Cat 5). Each panel uses category-specific colormap. Enables comparison of spatial
+#    patterns across intensity ranges. Saves PDF only.
+#
+# 6. plot_tc_duration_distribution(data_or_file, tdict)
+#    Histogram + KDE showing distribution of TC lifetimes with mean and median reference
+#    lines. Computes duration statistics (mean, median, std, min, max) for all storms.
+#    Saves PDF only.
+#
+# 7. plot_tc_duration_by_category(data_or_file, tdict)
+#    Normalized histograms (PDFs) of TC durations separated by Saffir-Simpson category.
+#    All curves normalized for direct comparison regardless of sample size. Shows how
+#    duration varies with intensity. Saves PDF only.
+#
+# 8. plot_tc_basin_doughnut(data_or_file, tdict, reference_freq)
+#    Doughnut chart showing annual TC frequency for each ocean basin following Roberts
+#    et al. (2020) methodology. Includes NH/SH totals, seasonal filtering (NH: May-Nov,
+#    SH: Oct-May), and comparison bar chart with literature values. Uses IBTrACS basin
+#    definitions. Saves two PDFs (doughnut + comparison chart).
 #
 # USAGE:
 # ------
-# Option 1 (traditional, slow):
+# Option 1 (traditional, slow - reads from disk each time):
 #   plot_trajectories_direct("filtered_file.txt", config)
 #
-# Option 2 (memory-optimized, fast):
+# Option 2 (memory-optimized, fast - loads once, reuses):
 #   from tc_data_manager import TCDataManager
 #   tc_data = TCDataManager("filtered_file.txt")  # Load once
 #   plot_trajectories_direct(tc_data, config)      # Instant!
 #   plot_density_scatter(tc_data, config)          # Instant!
 #   plot_track_density_grid(tc_data, config)       # Instant!
 #
-# All functions produce publication-ready PDF outputs with Cartopy PlateCarree
-# projection and standardized naming conventions. Saves both PDF figure and NetCDF data file
-# ===============================================================================
-# STATISTICAL ANALYSIS FUNCTIONS
-# ===============================================================================
-# 
-# 6. plot_tc_duration_distribution(data_or_file, tdict)
-#    Creates a histogram + KDE plot showing the distribution of TC lifetimes.
-#    Displays mean and median durations with reference lines.
-#
-# 7. plot_tc_duration_by_category(data_or_file, tdict)
-#    Produces a normalized histogram (PDF) of TC durations separated by 
-#    Saffir-Simpson category. All curves are normalized to show relative
-#    frequency distributions, making categories directly comparable.
-#
-# 8. plot_tc_basin_doughnut(data_or_file, tdict)
-#    Creates a doughnut chart showing TC frequency by ocean basin following
-#    Roberts et al. (2020) methodology. Includes comparison bar chart with
-#    literature values. Accounts for cyclone season timing (NH: May-Nov,
-#    SH: Oct-May).
-#
-# All statistical functions accept TCDataManager objects for fast in-memory
-# processing and save publication-ready PDF figures.
+# All functions produce publication-ready outputs with Cartopy PlateCarree
+# projection and standardized naming conventions.
 # ===============================================================================
 
 import numpy as np
@@ -79,7 +81,6 @@ from matplotlib.collections import LineCollection
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize, LinearSegmentedColormap, ListedColormap, LogNorm
 from scipy.stats import gaussian_kde
-from datetime import datetime
 from datetime import datetime
 import xarray as xr
 
@@ -96,10 +97,9 @@ def _get_data_from_input(data_or_file):
         data_or_file: Either a file path (string) or TCDataManager object
     
     Returns:
-        trajectories_dict: Dictionary of trajectories by storm_id
+        trajectories: List of storm dictionaries
         data_dict: Full data dictionary (or None if from file)
     """
-    # Check if it's a TCDataManager object
     if hasattr(data_or_file, 'get_all_points'):
         print("Using data from memory (fast)")
         trajectories = data_or_file.get_trajectories()
@@ -112,7 +112,15 @@ def _get_data_from_input(data_or_file):
 
 
 def category_from_slp_pa(slp_pa):
-    """Saffir-Simpson Category from SLP Pascal"""
+    """
+    Convert SLP in Pascals to Saffir-Simpson category.
+    
+    Args:
+        slp_pa: Sea level pressure in Pascals
+    
+    Returns:
+        int: Category 0-5 (0=TD, 1-5=Cat 1-5)
+    """
     slp_hpa = slp_pa / 100.0
     if slp_hpa >= 1005:
         return 0
@@ -129,9 +137,21 @@ def category_from_slp_pa(slp_pa):
 
 
 def get_basin_ibtracs(lon, lat):
-    """Classification based on IBTrACS (WMO standard)"""
+    """
+    Classify TC location into ocean basin using IBTrACS (WMO) standards.
+    
+    Args:
+        lon: Longitude in degrees (-180 to 180 or 0 to 360)
+        lat: Latitude in degrees
+    
+    Returns:
+        str: Basin name ('North Atlantic', 'East Pacific', 'West Pacific',
+             'North Indian', 'South Indian', 'South Pacific', 'South Atlantic', 'Other')
+    """
+    # Convert to 0-360 range for easier basin boundaries
     lon_360 = lon if lon >= 0 else lon + 360
     
+    # Northern Hemisphere basins
     if (260 <= lon_360 <= 360 or 0 <= lon_360 <= 0) and 0 <= lat <= 70:
         return 'North Atlantic'
     if 180 <= lon_360 < 260 and 0 <= lat <= 60:
@@ -140,25 +160,34 @@ def get_basin_ibtracs(lon, lat):
         return 'West Pacific'
     if 30 <= lon_360 < 100 and 0 <= lat <= 40:
         return 'North Indian'
+    
+    # Southern Hemisphere basins
     if 20 <= lon_360 < 135 and -40 <= lat < 0:
         return 'South Indian'
     if (135 <= lon_360 <= 360 or 0 <= lon_360 < 240) and -40 <= lat < 0:
         return 'South Pacific'
     if (290 <= lon_360 <= 360 or 0 <= lon_360 <= 20) and -40 <= lat < 0:
         return 'South Atlantic'
+    
     return 'Other'
 
 
 def getTrajectories_direct(filename):
     """
     Read trajectories directly from file (fallback for file input).
+    Returns list of storm dictionaries for consistency with TCDataManager.
+    
+    Args:
+        filename: Path to trajectory file
     
     Returns:
-        numtraj, maxNumPts, trajectories
+        numtraj: Number of trajectories
+        maxNumPts: Maximum points in any trajectory
+        trajectories: List of storm dictionaries
     """
     print(f"Reading trajectories from file: {filename}")
     
-    trajectories = {}
+    trajectories_dict = {}
     
     with open(filename, 'r') as f:
         for line in f:
@@ -172,44 +201,55 @@ def getTrajectories_direct(filename):
             storm_id = parts[0]
             year = int(parts[1])
             month = int(parts[2])
+            day = int(parts[3])
+            hour = int(parts[4])
             lon = float(parts[7])
             lat = float(parts[8])
             slp = float(parts[9])
             wind = float(parts[10])
             
-            if storm_id not in trajectories:
-                trajectories[storm_id] = {
+            if storm_id not in trajectories_dict:
+                trajectories_dict[storm_id] = {
+                    'id': storm_id,
                     'lon': [],
                     'lat': [],
                     'slp': [],
                     'wind': [],
                     'year': [],
-                    'month': []
+                    'month': [],
+                    'day': [],
+                    'hour': []
                 }
             
-            trajectories[storm_id]['lon'].append(lon)
-            trajectories[storm_id]['lat'].append(lat)
-            trajectories[storm_id]['slp'].append(slp)
-            trajectories[storm_id]['wind'].append(wind)
-            trajectories[storm_id]['year'].append(year)
-            trajectories[storm_id]['month'].append(month)
+            trajectories_dict[storm_id]['lon'].append(lon)
+            trajectories_dict[storm_id]['lat'].append(lat)
+            trajectories_dict[storm_id]['slp'].append(slp)
+            trajectories_dict[storm_id]['wind'].append(wind)
+            trajectories_dict[storm_id]['year'].append(year)
+            trajectories_dict[storm_id]['month'].append(month)
+            trajectories_dict[storm_id]['day'].append(day)
+            trajectories_dict[storm_id]['hour'].append(hour)
     
-    # Convert to numpy
-    for storm_id in trajectories:
-        for key in trajectories[storm_id]:
-            trajectories[storm_id][key] = np.array(trajectories[storm_id][key])
+    # Convert to numpy and create list
+    trajectories_list = []
+    for storm_id in sorted(trajectories_dict.keys(), key=lambda x: int(x) if x.isdigit() else x):
+        storm_data = trajectories_dict[storm_id]
+        for key in ['lon', 'lat', 'slp', 'wind', 'year', 'month', 'day', 'hour']:
+            storm_data[key] = np.array(storm_data[key])
+        trajectories_list.append(storm_data)
     
-    numtraj = len(trajectories)
-    maxNumPts = max([len(t['lon']) for t in trajectories.values()])
+    numtraj = len(trajectories_list)
+    maxNumPts = max([len(t['lon']) for t in trajectories_list])
     
     print(f"Found {numtraj} trajectories")
     
-    return numtraj, maxNumPts, trajectories
+    return numtraj, maxNumPts, trajectories_list
 
 
 # ===============================================================================
 # PLOTTING FUNCTIONS
 # ===============================================================================
+
 def plot_trajectories_direct(data_or_file, tdict, max_timesteps=None):
     """
     Plot all TC trajectories as simple scatter points.
@@ -221,9 +261,6 @@ def plot_trajectories_direct(data_or_file, tdict, max_timesteps=None):
         tdict: Configuration dictionary
         max_timesteps: Optional timestep limit
     """
-    import xarray as xr
-    
-    # Get data (from memory OR file)
     trajectories, data_dict = _get_data_from_input(data_or_file)
     
     nstorms = len(trajectories)
@@ -268,9 +305,10 @@ def plot_trajectories_direct(data_or_file, tdict, max_timesteps=None):
     all_timesteps = []
     
     # Plot each trajectory
-    for storm_id, data in trajectories.items():
-        lon = data['lon']
-        lat = data['lat']
+    for storm_data in trajectories:
+        storm_id = storm_data['id']
+        lon = storm_data['lon']
+        lat = storm_data['lat']
         
         if max_timesteps is not None:
             lon = lon[:max_timesteps]
@@ -310,9 +348,7 @@ def plot_trajectories_direct(data_or_file, tdict, max_timesteps=None):
     plt.show()
     plt.close()
     
-    # =========================================================================
-    # SAVE NETCDF
-    # =========================================================================
+    # Save NetCDF
     try:
         ds = xr.Dataset(
             {
@@ -343,7 +379,6 @@ def plot_trajectories_direct(data_or_file, tdict, max_timesteps=None):
         print(f"⚠ Failed to save NetCDF: {e}")
 
 
-
 def plot_trajectories_colored(data_or_file, tdict, color_by='category', category=None, max_timesteps=None):
     """
     Plot TC trajectories colored by category.
@@ -364,14 +399,12 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
         category: If specified (0-5), plot only this category; if None, plot all
         max_timesteps: Optional timestep limit
     """
-    
     trajectories, data_dict = _get_data_from_input(data_or_file)
     
     # =========================================================================
     # CATEGORY FILTERING (if requested)
     # =========================================================================
     if category is not None:
-        # Filter mode: plot only one category
         cat_names = [
             'TD (≥1005 hPa)', 'Cat 1 (990–1004)', 'Cat 2 (975–989)',
             'Cat 3 (960–974)', 'Cat 4 (945–959)', 'Cat 5 (<945)'
@@ -380,13 +413,13 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
         
         print(f"Filtering for {cat_names[category]}...")
         
-        filtered_trajectories = {}
-        for storm_id, data in trajectories.items():
-            min_slp = np.min(data['slp'])
+        filtered_trajectories = []
+        for storm_data in trajectories:
+            min_slp = np.min(storm_data['slp'])
             peak_category = category_from_slp_pa(min_slp)
             
             if peak_category == category:
-                filtered_trajectories[storm_id] = data
+                filtered_trajectories.append(storm_data)
         
         trajectories = filtered_trajectories
         nstorms = len(trajectories)
@@ -397,12 +430,10 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
         
         print(f"✓ Found {nstorms} trajectories for {cat_names[category]}")
         
-        # Single color mode
         plot_color = cat_colors[category]
         use_colormap = False
         
     else:
-        # All trajectories mode: use colormap
         nstorms = len(trajectories)
         use_colormap = True
         print(f"Plotting all {nstorms} storms colored by {color_by}")
@@ -436,35 +467,14 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
         vmin, vmax = 0, 5
         label = 'Saffir–Simpson Category'
     
-    # Colormap settings (only for all-trajectories mode)
-    #if use_colormap:
-        #if color_by == 'intensity':
-        #    cmap = plt.cm.YlOrRd
-        #    vmin, vmax = 920, 1010
-        #    label = 'SLP (hPa)'
-       # else:
-       #     cmap = plt.cm.RdYlGn_r
-       #     vmin, vmax = 0, 5
-       #     label = 'Saffir–Simpson Category'
-    
     # =========================================================================
     # SORT TRAJECTORIES BY INTENSITY (weak → strong for plotting order)
     # =========================================================================
     if use_colormap:
-        storm_intensities = {}
-        for storm_id, data in trajectories.items():
-            min_slp = np.nanmin(data['slp'] / 100.0)
-            storm_intensities[storm_id] = min_slp
-        
-        # Sort: weak (high SLP) first → strong (low SLP) last
-        sorted_storm_ids = sorted(storm_intensities.keys(), 
-                                 key=lambda sid: storm_intensities[sid], 
-                                 reverse=True)  # High SLP first (weak)
-        
+        trajectories = sorted(trajectories, 
+                            key=lambda s: np.nanmin(s['slp']), 
+                            reverse=True)
         print(f"Plotting storms ordered: weak (background) → strong (foreground)")
-    else:
-        # For single category, no need to sort
-        sorted_storm_ids = list(trajectories.keys())
     
     # Collect data for NetCDF
     nc_data = {
@@ -479,12 +489,12 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
     # =========================================================================
     # PLOT TRAJECTORIES
     # =========================================================================
-    for storm_id in sorted_storm_ids:
-        data = trajectories[storm_id]
+    for storm_data in trajectories:
+        storm_id = storm_data['id']
         
-        lon = data['lon']
-        lat = data['lat']
-        slp = data['slp'] / 100.0
+        lon = storm_data['lon']
+        lat = storm_data['lat']
+        slp = storm_data['slp'] / 100.0
         
         if max_timesteps is not None:
             lon = lon[:max_timesteps]
@@ -497,7 +507,7 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
             continue
         
         if use_colormap:
-            # LineCollection mode (colored by intensity/category)
+            # LineCollection mode
             dlon = np.abs(np.diff(lon_plot))
             valid = dlon < 180
             
@@ -511,7 +521,7 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
             segments = segments[valid]
             values = values[valid]
             
-            linewidth = 0.8 + (5 - cat) * 0.15  # Cat 5 thicker
+            linewidth = 0.8 + (5 - cat) * 0.15
             zorder = 10 + (5 - cat)
             
             lc = LineCollection(
@@ -527,15 +537,12 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
             ax.add_collection(lc)
             
         else:
-            # Simple line plot mode (single category)
-            lat_plot = lat.copy()
-            
-            # Handle dateline crossings
+            # Simple line plot mode
             dlon = np.diff(lon_plot)
             split_indices = np.where(np.abs(dlon) > 180)[0]
             
             lon_plot_fixed = lon_plot.copy()
-            lat_plot_fixed = lat_plot.copy()
+            lat_plot_fixed = lat.copy()
             for idx in split_indices:
                 lon_plot_fixed[idx+1] = np.nan
                 lat_plot_fixed[idx+1] = np.nan
@@ -559,7 +566,7 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
             nc_data['timestep'].append(i)
     
     # =========================================================================
-    # COLORBAR (only for all-trajectories mode)
+    # COLORBAR
     # =========================================================================
     if use_colormap:
         sm = ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
@@ -599,10 +606,8 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
     enddate_clean = enddate.replace(" ", "").replace("-", "")
     
     if category is not None:
-        # Single category filename
         base_filename = f"tracks_cat{category}_{model_clean}_{exp_clean}_{startdate_clean}_{enddate_clean}"
     else:
-        # All trajectories filename
         color_clean = str(color_by).replace(" ", "_")
         base_filename = f"tracks_colored_{color_clean}_{model_clean}_{exp_clean}_{startdate_clean}_{enddate_clean}"
     
@@ -614,9 +619,7 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
     plt.show()
     plt.close()
     
-    # =========================================================================
-    # SAVE NETCDF
-    # =========================================================================
+    # Save NetCDF
     try:
         if category is not None:
             title_nc = f'Tropical Cyclone Trajectories - Category {category}'
@@ -658,8 +661,6 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category', category
         print(f"⚠ Failed to save NetCDF: {e}")
 
 
-
-
 def plot_density_scatter(data_or_file, tdict, max_timesteps=None, sample_size=50000):
     """
     Plot TC track density scatter with KDE coloring and point sorting.
@@ -675,7 +676,7 @@ def plot_density_scatter(data_or_file, tdict, max_timesteps=None, sample_size=50
     # Extract all points
     lon_all = []
     lat_all = []
-    for storm_data in trajectories.values():
+    for storm_data in trajectories:
         lon_all.extend(storm_data['lon'])
         lat_all.extend(storm_data['lat'])
     
@@ -790,27 +791,105 @@ def plot_density_scatter(data_or_file, tdict, max_timesteps=None, sample_size=50
     plt.close()
 
 
-def plot_track_density_grid(data_or_file, tdict, grid_size=2.5, max_timesteps=None):
+
+def plot_track_density_grid(data_or_file, tdict, grid_size=1, max_timesteps=None, category=None):
     """
     Plot TC track density as transits per month with discrete colorbar.
     
-    Saves both PDF figure and NetCDF data file with gridded density information.
-    The colorbar range adapts automatically to the actual data range.
+    This function creates a gridded density map of tropical cyclone tracks, showing how frequently
+    TCs pass through each grid cell. The density is normalized by the time period (transits per month).
+    Results are saved as both a PDF figure and a NetCDF file with gridded data.
+    
+    The function can optionally filter tracks by Saffir-Simpson category equivalent based on
+    minimum sea level pressure (SLP), allowing analysis of specific intensity ranges.
+    
+    Category definitions (based on minimum SLP):
+        0: Tropical Depression (≥1005 hPa)
+        1: Category 1 (990-1004 hPa)
+        2: Category 2 (975-989 hPa)
+        3: Category 3 (960-974 hPa)
+        4: Category 4 (945-959 hPa)
+        5: Category 5 (<945 hPa)
     
     Args:
         data_or_file: TCDataManager object OR file path
-        tdict: Configuration dictionary
-        grid_size: Grid cell size in degrees (default 2.5)
-        max_timesteps: Optional timestep limit
+        tdict: Configuration dictionary containing:
+            - time: startdate, enddate
+            - dataset: model, exp
+            - paths: plotdir
+        grid_size: Grid cell size in degrees (default 1)
+        max_timesteps: Optional timestep limit (not used in density calculation)
+        category: Optional integer (0-5) to filter by Saffir-Simpson category equivalent.
+                 If None, uses all TC observations.
+                 If specified, only includes points where the storm's PEAK intensity
+                 reached or exceeded this category.
+    
+    Returns:
+        None. Saves PDF figure and NetCDF data file to tdict['paths']['plotdir']
+    
+    Example:
+        # Plot all TCs
+        plot_track_density_grid(data, tdict, grid_size=2.5)
+        
+        # Plot only Category 3+ (major hurricanes, SLP < 975 hPa)
+        plot_track_density_grid(data, tdict, grid_size=2.5, category=3)
     """
     import xarray as xr
     
+    def category_from_slp_pa(slp_pa):
+        """Convert SLP in Pa to Saffir-Simpson category."""
+        slp_hpa = slp_pa / 100.0
+        if slp_hpa >= 1005:
+            return 0
+        elif slp_hpa >= 990:
+            return 1
+        elif slp_hpa >= 975:
+            return 2
+        elif slp_hpa >= 960:
+            return 3
+        elif slp_hpa >= 945:
+            return 4
+        else:
+            return 5
+    
     trajectories, data_dict = _get_data_from_input(data_or_file)
     
-    # Extract all points
+    # Category names for output
+    cat_names = [
+        'TD (≥1005 hPa)', 'Cat 1 (990–1004 hPa)', 'Cat 2 (975–989 hPa)',
+        'Cat 3 (960–974 hPa)', 'Cat 4 (945–959 hPa)', 'Cat 5 (<945 hPa)'
+    ]
+    
+    # =========================================================================
+    # CATEGORY FILTERING (if requested)
+    # =========================================================================
+    if category is not None:
+        print(f"Filtering for {cat_names[category]} and stronger...")
+        
+        filtered_trajectories = []  # LISTA
+        for storm_data in trajectories:  # CAMBIATO
+            # Get peak intensity (minimum SLP) for this storm
+            min_slp = np.min(storm_data['slp'])
+            peak_category = category_from_slp_pa(min_slp)
+            
+            # Include storm if its peak intensity >= requested category
+            if peak_category >= category:
+                filtered_trajectories.append(storm_data)  # CAMBIATO
+        
+        trajectories = filtered_trajectories
+        n_storms = len(trajectories)
+        
+        if n_storms == 0:
+            print(f"⚠ No storms found for {cat_names[category]}+")
+            return
+        
+        print(f"✓ Found {n_storms} storms with peak intensity ≥ {cat_names[category]}")
+    
+    # Extract all points from selected storms
     lon_all = []
     lat_all = []
-    for storm_data in trajectories.values():
+    
+    for storm_data in trajectories:  # CAMBIATO (era .values())
         lon_all.extend(storm_data['lon'])
         lat_all.extend(storm_data['lat'])
     
@@ -822,6 +901,10 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=2.5, max_timesteps=No
     
     total_points = len(lon_all)
     print(f"Total TC observation points: {total_points:,}")
+    
+    if total_points == 0:
+        print(f"No observations found")
+        return
     
     # Calculate time period
     startdate = tdict['time']['startdate']
@@ -965,8 +1048,13 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=2.5, max_timesteps=No
     model = tdict['dataset']['model']
     exp = tdict['dataset']['exp']
     
+    if category is not None:
+        category_str = f' – {cat_names[category]}+'
+    else:
+        category_str = ''
+    
     plt.title(
-        f'TC Track Density (transits per month)\n'
+        f'TC Track Density (transits per month){category_str}\n'
         f'{startdate}–{enddate} | {model} {exp} | Grid: {grid_size}°',
         fontsize=13,
         fontweight='bold',
@@ -981,7 +1069,8 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=2.5, max_timesteps=No
     startdate_clean = startdate.replace(" ", "").replace("-", "")
     enddate_clean = enddate.replace(" ", "").replace("-", "")
     
-    base_filename = f'track_density_grid_{model_clean}_{exp_clean}_{startdate_clean}_{enddate_clean}'
+    category_suffix = f'_cat{category}plus' if category is not None else ''
+    base_filename = f'track_density_grid_{model_clean}_{exp_clean}_{startdate_clean}_{enddate_clean}{category_suffix}'
     
     # =========================================================================
     # SAVE PDF
@@ -1021,6 +1110,8 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=2.5, max_timesteps=No
                 'n_months': n_months,
                 'grid_size_degrees': grid_size,
                 'total_observations': total_points,
+                'category_filter': cat_names[category] if category is not None else 'all',
+                'category_definition': 'Saffir-Simpson equivalent based on minimum SLP',
                 'max_transits_per_month': float(vmax_data),
                 'min_transits_per_month': float(vmin_data),
                 'colorbar_min': float(vmin_plot),
@@ -1064,11 +1155,15 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=2.5, max_timesteps=No
         import traceback
         traceback.print_exc()
 
-        
 
 def plot_density_scatter_by_category(data_or_file, tdict, max_timesteps=None, sample_size=10000):
     """
     Plot 6-panel density scatter by Saffir-Simpson category.
+    
+    Creates a subplot grid showing KDE-based density scatter for each category
+    (TD through Cat 5). Each panel uses a category-specific colormap and shows
+    the number of observations. Enables visual comparison of spatial distribution
+    patterns across different intensity ranges.
     
     Args:
         data_or_file: TCDataManager object OR file path
@@ -1081,7 +1176,7 @@ def plot_density_scatter_by_category(data_or_file, tdict, max_timesteps=None, sa
     # Classify points by category
     points_by_category = {cat: {'lon': [], 'lat': []} for cat in range(6)}
     
-    for storm_data in trajectories.values():
+    for storm_data in trajectories:  # CAMBIATO (era .values())
         for i in range(len(storm_data['lon'])):
             lon = storm_data['lon'][i]
             lat = storm_data['lat'][i]
@@ -1225,8 +1320,9 @@ def plot_density_scatter_by_category(data_or_file, tdict, max_timesteps=None, sa
     plt.close()
 
 
-
-
+# ===============================================================================
+# STATISTICAL ANALYSIS FUNCTIONS
+# ===============================================================================
 
 def plot_tc_duration_distribution(data_or_file, tdict):
     """
@@ -1234,6 +1330,7 @@ def plot_tc_duration_distribution(data_or_file, tdict):
     
     Creates a histogram + kernel density estimate showing the distribution
     of tropical cyclone lifetimes, with mean and median reference lines.
+    Computes and displays duration statistics for all storms.
     
     Args:
         data_or_file: TCDataManager object OR file path
@@ -1247,7 +1344,7 @@ def plot_tc_duration_distribution(data_or_file, tdict):
     
     durations_days = []
     
-    for storm_id, storm_data in trajectories.items():
+    for storm_data in trajectories:  # CAMBIATO (era .items())
         years = storm_data['year']
         months = storm_data['month']
         days = storm_data['day']
@@ -1326,7 +1423,8 @@ def plot_tc_duration_by_category(data_or_file, tdict):
     
     Creates overlaid normalized histograms (PDFs) showing duration distributions
     for each intensity category. Normalization allows direct comparison between
-    categories regardless of sample size.
+    categories regardless of sample size. Shows how storm lifetime varies with
+    peak intensity.
     
     Args:
         data_or_file: TCDataManager object OR file path
@@ -1338,7 +1436,7 @@ def plot_tc_duration_by_category(data_or_file, tdict):
     
     durations_by_cat = {cat: [] for cat in range(6)}
     
-    for storm_id, storm_data in trajectories.items():
+    for storm_data in trajectories:  # CAMBIATO (era .items())
         years = storm_data['year']
         months = storm_data['month']
         days = storm_data['day']
@@ -1450,7 +1548,8 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0):
     basin_counts = {basin: set() for basin in nh_basins + sh_basins}
     years_tracked = set()
     
-    for storm_id, storm_data in trajectories.items():
+    for storm_data in trajectories:  # CAMBIATO (era .items())
+        storm_id = storm_data['id']  # AGGIUNGI questa linea
         year = storm_data['year'][0]
         month = storm_data['month'][0]
         lon = storm_data['lon'][0]
@@ -1486,7 +1585,7 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0):
     # =========================================================================
     # DOUGHNUT CHART (COMPACT)
     # =========================================================================
-    fig, ax = plt.subplots(figsize=(9, 9))  # Slightly smaller
+    fig, ax = plt.subplots(figsize=(9, 9))
     
     colors = {
         'North Atlantic': '#3498db',
@@ -1505,7 +1604,6 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0):
     
     scale_factor = nh_total / reference_freq
     
-    # COMPACT: smaller radii
     inner_radius = 0.20
     outer_radius = 0.20 + (0.28 * scale_factor)
     
@@ -1542,7 +1640,7 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0):
     circle = Circle((0, 0), inner_radius, color='white', zorder=10)
     ax.add_artist(circle)
     
-    # Center text - LARGER NH/SH labels
+    # Center text
     ax.text(0, 0.08, f'{nh_total:.1f}', 
            ha='center', va='center', fontsize=32, fontweight='bold',
            color='black', zorder=11)
@@ -1566,7 +1664,6 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0):
              loc='center left', bbox_to_anchor=(1, 0, 0.5, 1),
              fontsize=10, frameon=True, fancybox=True, shadow=True)
     
-    # NO caption/note (removed as requested)
     ax.axis('equal')
     
     plt.tight_layout()
@@ -1646,4 +1743,4 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0):
     plt.show()
     plt.close()
     
-    print("✓ Basin analysis complete!")    
+    print("✓ Basin analysis complete!")
