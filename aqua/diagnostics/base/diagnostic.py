@@ -223,7 +223,7 @@ class Diagnostic():
             str: The path to the regions file.
         """
         regions_file = ConfigPath().get_config_dir()
-        regions_file = os.path.join(regions_file, 'tools', diagnostic, 'definitions', 'regions.yaml')
+        regions_file = os.path.join(regions_file, 'diagnostics', diagnostic, 'definitions', 'regions.yaml')
         if os.path.exists(regions_file):
             return regions_file
         else:
