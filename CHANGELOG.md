@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.23.0):
 
+- Timeseries: CLI correctly works if `reference` is not provided (#109)
+
 ## [v0.22.0]
 
 Main changes:
