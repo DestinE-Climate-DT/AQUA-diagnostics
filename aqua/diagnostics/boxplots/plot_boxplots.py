@@ -169,7 +169,7 @@ class PlotBoxplots:
                           add_mean_line=add_mean_line, loglevel=self.loglevel)
 
         if self.anomalies and data_ref:
-            ax.set_ylabel(f"Anomalies with respect to observation mean ({unit_to_latex('W/m2')})")
+            ax.set_ylabel(f"Anomalies with respect to observation mean [{unit_to_latex('W/m2')}]")
 
             if add_mean_line:
                 # Annotate absolute median values on the boxplots
