@@ -32,8 +32,8 @@ def test_template_parse_arguments():
     assert args.cluster == "test_cluster"
     assert args.nworkers == 2
 
-    with pytest.raises(ValueError):
-        load_diagnostic_config(diagnostic='pippo', config=args.config, loglevel=loglevel)
+    with pytest.raises(FileNotFoundError):
+        load_diagnostic_config(diagnostic='pippo', config=None, loglevel=loglevel)
 
 @pytest.mark.aqua
 @patch("aqua.diagnostics.base.util.Client")
