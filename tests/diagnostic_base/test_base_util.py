@@ -1,17 +1,18 @@
+import os
 import pytest
 import argparse
 import pandas as pd
 from unittest.mock import patch
-from aqua import Reader
 from aqua.diagnostics.base import template_parse_arguments, load_diagnostic_config
 from aqua.diagnostics.base import open_cluster, close_cluster, merge_config_args
 from aqua.diagnostics.base import start_end_dates, round_startdate, round_enddate
+from aqua.core.util import dump_yaml
 from conftest import LOGLEVEL
 
 loglevel = LOGLEVEL
 
+pytestmark = pytest.mark.aqua
 
-@pytest.mark.aqua
 def test_template_parse_arguments():
     """Test the template_parse_arguments function"""
     parser = argparse.ArgumentParser()
@@ -35,7 +36,29 @@ def test_template_parse_arguments():
     with pytest.raises(FileNotFoundError):
         load_diagnostic_config(diagnostic='pippo', config=None, loglevel=loglevel)
 
-@pytest.mark.aqua
+
+def test_load_diagnostic_config_from_args(tmp_path):
+    """Test loading configuration from a file specified in arguments."""
+
+    # Create a minimal config file
+    config_data = {
+        'datasets': [{'model': 'TestModel', 'exp': 'test-exp'}],
+        'output': {'outputdir': str(tmp_path / 'output')}
+    }
+    config_file = os.path.join(str(tmp_path), "test_config_args.yaml")
+    dump_yaml(outfile=config_file, cfg=config_data)
+
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser = template_parse_arguments(parser)
+    args = parser.parse_args(["--config", config_file, "--loglevel", "DEBUG"])
+
+    result = load_diagnostic_config(diagnostic='ignored_name', config=args.config, loglevel=loglevel)
+    
+    assert result['datasets'][0]['model'] == 'TestModel'
+    assert result['output']['outputdir'] == str(tmp_path / 'output')
+
+
 @patch("aqua.diagnostics.base.util.Client")
 @patch("aqua.diagnostics.base.util.LocalCluster")
 def test_cluster(mock_cluster, mock_client):
@@ -63,7 +86,6 @@ def test_cluster(mock_cluster, mock_client):
     close_cluster(client, cluster, private_cluster)
 
 
-@pytest.mark.aqua
 def test_load_diagnostic_config():
     """Test the load_diagnostic_config function"""
     parser = argparse.ArgumentParser()
@@ -78,7 +100,6 @@ def test_load_diagnostic_config():
                                     'regrid': None, 'reader_kwargs': None}]
 
 
-@pytest.mark.aqua
 def test_merge_config_args():
     """Test the merge_config_args function"""
     parser = argparse.ArgumentParser()
@@ -97,7 +118,6 @@ def test_merge_config_args():
     assert merged_config['output']['outputdir'] == 'test_outputdir'
 
 
-@pytest.mark.aqua
 def test_start_end_dates():
     # All None inputs
     assert start_end_dates() == (None, None)
@@ -127,7 +147,6 @@ def test_start_end_dates():
         pd.Timestamp("2020-01-01"), None
     )
 
-@pytest.mark.aqua
 @pytest.mark.parametrize("date,freq,expected", [
     ('2020-03-15 14:30:00', 'monthly', '2020-03-01 00:00:00'),
     ('2020-06-15 14:30:00', 'annual', '2020-01-01 00:00:00'),
@@ -146,7 +165,6 @@ def test_round_enddate(date, freq, expected):
     rounded = round_enddate(pd.Timestamp(date), freq=freq)
     assert rounded == pd.Timestamp(expected)
 
-@pytest.mark.aqua
 def test_round_invalid_freq():
     """Test error handling for invalid frequency"""
     with pytest.raises(ValueError):
