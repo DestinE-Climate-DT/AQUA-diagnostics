@@ -41,14 +41,12 @@ def test_load_diagnostic_config_from_args(tmp_path):
     """Test loading configuration from a file specified in arguments."""
 
     # Create a minimal config file
-    config_data = {
-        'datasets': [{'model': 'TestModel', 'exp': 'test-exp'}],
-        'output': {'outputdir': str(tmp_path / 'output')}
-    }
+    config_data = {'datasets': [{'model': 'TestModel', 'exp': 'test-exp'}],
+                   'output': {'outputdir': str(tmp_path / 'output')}}
+
     config_file = os.path.join(str(tmp_path), "test_config_args.yaml")
     dump_yaml(outfile=config_file, cfg=config_data)
 
-    # Parse arguments
     parser = argparse.ArgumentParser()
     parser = template_parse_arguments(parser)
     args = parser.parse_args(["--config", config_file, "--loglevel", "DEBUG"])
