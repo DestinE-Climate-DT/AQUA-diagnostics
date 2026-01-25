@@ -235,13 +235,13 @@ if __name__ == '__main__':
     interface_file = get_arg(args, 'interface', ecmean_config.get('interface_file'))
 
     # define the interface file
-    ecmeandir = get_diagnostic_configpath('ecmean', folder="tools", loglevel=loglevel)
+    ecmeandir = get_diagnostic_configpath('ecmean', folder="diagnostics", loglevel=loglevel)
     interface = os.path.join(ecmeandir, "interface", interface_file)
 
     # define the ecmean configuration file, using the default as a trick
     config = load_diagnostic_config(
         diagnostic='ecmean',
-        folder="tools",
+        folder="diagnostics",
         config=None,
         default_config=ecmean_config.get('config_file'),
         loglevel=loglevel

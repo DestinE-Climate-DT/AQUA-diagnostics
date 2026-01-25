@@ -226,8 +226,7 @@ class Diagnostic():
         regions_file = os.path.join(regions_file, 'tools', diagnostic, 'definitions', 'regions.yaml')
         if os.path.exists(regions_file):
             return regions_file
-        else:
-            raise FileNotFoundError(f'Region file path not found at: {regions_file}')
+        raise FileNotFoundError(f'Region file path not found at: {regions_file}')
 
     def _read_regions_file(self, regions_file: str):
         """

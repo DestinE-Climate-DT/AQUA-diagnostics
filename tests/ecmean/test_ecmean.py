@@ -12,10 +12,10 @@ def common_setup(tmp_path):
     loglevel = 'warning'
     config = load_diagnostic_config(diagnostic='ecmean',
                            default_config='ecmean_config_climatedt.yaml',
-                           folder="tools",
+                           folder="diagnostics",
                            loglevel=loglevel
                         )
-    ecmeandir = get_diagnostic_configpath('ecmean', folder="tools", loglevel=loglevel)
+    ecmeandir = get_diagnostic_configpath('ecmean', folder="diagnostics", loglevel=loglevel)
     interface = os.path.join(ecmeandir, "interface", "interface_AQUA_climatedt.yaml")
     config['dirs']['exp'] = ecmeandir
 
