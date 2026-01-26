@@ -10,8 +10,8 @@ from aqua.core.logger import log_configure, log_history
 from aqua.core.configurer import ConfigPath
 from aqua.core.util import get_projection, plot_box, to_list, get_realizations
 from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window, unit_to_latex
-from aqua.diagnostics.base import OutputSaver
 from .util import extract_dates, _check_list_regions_type
 
 xr.set_options(keep_attrs=True)
@@ -141,8 +141,10 @@ class Plot2DSeaIce:
 
                 axs = subfig.subplots(1, 3, subplot_kw={'projection': self.proj})
 
-                subfig.suptitle(f"{set_map_title(reg_ref, put_model_name=False, put_exp_name=False)}. "
-                                f"Month: {int_month_name(month)}", fontsize=14, y=1.02)
+                title = TitleBuilder(diagnostic=f"Sea ice {self.method}",
+                                     regions=reg_ref.attrs.get('AQUA_region'),
+                                     timeseason=f"Month: {int_month_name(month)}").generate()
+                subfig.suptitle(title, fontsize=14, y=1.02)
 
                 # plot ref
                 setup = self._get_cmap(monref)
@@ -218,7 +220,10 @@ class Plot2DSeaIce:
             )
         self._save_plots(fig=fig, data=monmod, data_ref=monref, diagnostic_product='bias', 
                          description=description, extra_keys={'method': self.method, 'region': region})
-        plt.close(fig)
+        if not self.save_pdf and not self.save_png:
+            plt.show()  # Display in notebook if not saving
+        else:
+            plt.close(fig)
 
     def _plot_var_map(self, region, **kwargs):
         """
@@ -293,7 +298,10 @@ class Plot2DSeaIce:
         )
         self._save_plots(fig=fig, data=mondat, data_ref=None, 
                          diagnostic_product='varmap', description=description, extra_keys={'method': self.method, 'region': region})
-        plt.close(fig)
+        if not self.save_pdf and not self.save_png:
+            plt.show()  # Display in notebook if not saving
+        else:
+            plt.close(fig)
         
     def _get_colorbar_ticks(self, data, vmin=None, vmax=None, norm=None,
                             boundaries=None, sym=False, ticks_rounding=1):
