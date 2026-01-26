@@ -49,6 +49,7 @@ body:
       label: version
       description: Which AQUA version are you using?
       options:
+      - v0.22.0
       - v0.21.0
       - main
       - older -> not compatible with AQUA-diagnostic repository

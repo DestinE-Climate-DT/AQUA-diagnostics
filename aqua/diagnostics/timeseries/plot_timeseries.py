@@ -120,6 +120,8 @@ class PlotTimeseries(PlotBaseMixin):
                 self.short_name = data[0].short_name if hasattr(data[0], 'short_name') else None
                 self.long_name = data[0].long_name if hasattr(data[0], 'long_name') else None
                 self.units = data[0].units if hasattr(data[0], 'units') else None
+                if self.units is not None:
+                    self.units = str(self.units)
                 break
         self.realizations = get_realizations(self.monthly_data)
         self.logger.debug(f'Catalogs: {self.catalogs}')
