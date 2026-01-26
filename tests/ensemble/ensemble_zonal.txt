@@ -107,3 +107,9 @@ def test_ensemble_zonal():
     filename2 = f'ensemble.ensemblezonal.{catalog_list[0]}.{model_list[0]}.{exp_list[0]}.r1.{var}.std.pdf'
     file = os.path.join(tmp_path, 'pdf', filename2)
     assert os.path.exists(file)
+
+
+
+
+
+
