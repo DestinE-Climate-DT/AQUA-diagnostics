@@ -12,7 +12,7 @@ loglevel = LOGLEVEL
 
 # pytestmark groups tests
 pytestmark = [
-    pytest.mark.ensemble
+    pytest.mark.diagnostics
 ]
 
 # Module-level fixtures
