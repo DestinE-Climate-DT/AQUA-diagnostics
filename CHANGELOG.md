@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
+- LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
 
 ## [v0.22.0]
@@ -30,7 +31,6 @@ Complete list:
 - Fix of aqua_path for analysis console (#56)
 - Boxplots: hotfix for diagnostic_name (#69)
 - Histogram: CLI refactoring (#49)
-- Lat-lon profiles dask fix (#63)
 - Fix argument passing by common CLI for `regrid`, `startdate` and `enddate` (#52)
 - Introduce call to pd.Timestamp in Global_Bias to accomodate also non-nanoseconds time window (#52)
 - Remove time selection from SeaIce, now centralised in CLI (#52)
