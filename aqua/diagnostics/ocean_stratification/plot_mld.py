@@ -3,10 +3,9 @@ import math
 import cartopy.crs as ccrs
 
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label
+from aqua.core.util import cbar_get_label, get_realizations
 from aqua.diagnostics.base import OutputSaver
 from .mld_profiles import plot_maps
-# from .multivar_vertical_profiles import plot_multivars_vertical_profile
 
 
 xr.set_options(keep_attrs=True)
@@ -45,6 +44,7 @@ class PlotMLD:
         self.catalog = self.data[self.vars[0]].AQUA_catalog
         self.model = self.data[self.vars[0]].AQUA_model
         self.exp = self.data[self.vars[0]].AQUA_exp
+        self.realizations = get_realizations(self.data[self.vars[0]])
         self.region = self.data.attrs.get("AQUA_region", "global")
 
         self.outputsaver = OutputSaver(
@@ -53,6 +53,7 @@ class PlotMLD:
             model=self.model,
             exp=self.exp,
             outputdir=outputdir,
+            realization=self.realizations,
             loglevel=self.loglevel,
         )
 
