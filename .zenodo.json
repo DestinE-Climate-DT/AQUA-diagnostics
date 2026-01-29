@@ -1,14 +1,14 @@
 {
     "creators": [
       {
-        "affiliation": "CNR-ISAC, Italy",
-        "name": "Nurisso, Matteo",
-        "orcid": "0000-0002-5962-0680"
-      },
-      {
         "affiliation": "Politecnico di Torino, Italy",
         "name": "Caprioli, Silvia",
         "orcid": "0009-0005-6746-9473"
+      },
+      {
+        "affiliation": "Politecnico di Torino, Italy",
+        "name": "Nurisso, Matteo",
+        "orcid": "0000-0002-5962-0680"
       },
       {
         "affiliation": "CNR-ISAC, Italy",
@@ -24,6 +24,11 @@
         "name": "Nazarova, Natalia",
         "affiliation": "Politecnico di Torino, Italy",
         "orcid": "0000-0002-3905-2620"
+      },
+      { 
+        "name": "Anerdi, Costanza",
+        "affiliation": "Politecnico di Torino, Italy",
+        "orcid": "0000-0002-2322-9743"
       },
       {
         "affiliation": "BSC, Spain",
