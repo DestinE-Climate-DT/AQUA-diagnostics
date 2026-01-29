@@ -122,7 +122,7 @@ def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel='W
 
     Args:
         diagnostic (str): diagnostic name
-        folder (str): folder name. Default is "collections". Can be "diagnostics" as well.
+        folder (str): folder name. Default is "collections". Can be "tools" as well.
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:
