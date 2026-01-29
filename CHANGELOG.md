@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
-- Base diagnostic cli does not forget config file reader_kwargs (#115)
+- Base diagnostic cli should not forget config file reader_kwargs (#115)
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
 
 ## [v0.22.0]
