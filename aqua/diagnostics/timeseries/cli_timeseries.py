@@ -101,10 +101,10 @@ if __name__ == '__main__':
                             cli.logger.info(f"Plotting Timeseries diagnostic for variable {var} in region {region if region else 'global'}") # noqa
                             plot_args = {'monthly_data': [t.monthly for t in ts],
                                         'annual_data': [t.annual for t in ts],
-                                        'ref_monthly_data': [t.monthly for t in ts_ref],
-                                        'ref_annual_data': [t.annual for t in ts_ref],
-                                        'std_monthly_data': [t.std_monthly for t in ts_ref],
-                                        'std_annual_data': [t.std_annual for t in ts_ref],
+                                        'ref_monthly_data': [t.monthly for t in ts_ref] if 'references' in cli.config_dict else None,
+                                        'ref_annual_data': [t.annual for t in ts_ref] if 'references' in cli.config_dict else None,
+                                        'std_monthly_data': [t.std_monthly for t in ts_ref] if 'references' in cli.config_dict else None,
+                                        'std_annual_data': [t.std_annual for t in ts_ref] if 'references' in cli.config_dict else None,
                                         'diagnostic_name': diagnostic_name,
                                         'loglevel': cli.loglevel}
                             plot_ts = PlotTimeseries(**plot_args)
@@ -176,10 +176,10 @@ if __name__ == '__main__':
                             cli.logger.info(f"Plotting Timeseries diagnostic for variable {var} in region {region if region else 'global'}") # noqa
                             plot_args = {'monthly_data': [t.monthly for t in ts],
                                         'annual_data': [t.annual for t in ts],
-                                        'ref_monthly_data': [t.monthly for t in ts_ref],
-                                        'ref_annual_data': [t.annual for t in ts_ref],
-                                        'std_monthly_data': [t.std_monthly for t in ts_ref],
-                                        'std_annual_data': [t.std_annual for t in ts_ref],
+                                        'ref_monthly_data': [t.monthly for t in ts_ref] if 'references' in cli.config_dict else None,
+                                        'ref_annual_data': [t.annual for t in ts_ref] if 'references' in cli.config_dict else None,
+                                        'std_monthly_data': [t.std_monthly for t in ts_ref] if 'references' in cli.config_dict else None,
+                                        'std_annual_data': [t.std_annual for t in ts_ref] if 'references' in cli.config_dict else None,
                                         'diagnostic_name': diagnostic_name,
                                         'loglevel': cli.loglevel}
                             plot_ts = PlotTimeseries(**plot_args)
@@ -255,8 +255,8 @@ if __name__ == '__main__':
                         if cli.save_pdf or cli.save_png:
                             cli.logger.info(f"Plotting SeasonalCycles diagnostic for variable {var} in region {region if region else 'global'}") # noqa
                             plot_args = {'monthly_data': [sc[i].monthly for i in range(len(sc))],
-                                        'ref_monthly_data': [sc_ref[i].monthly for i in range(len(sc_ref))],
-                                        'std_monthly_data': [sc_ref[i].std_monthly for i in range(len(sc_ref))],
+                                        'ref_monthly_data': [sc_ref[i].monthly for i in range(len(sc_ref))] if 'references' in cli.config_dict else None,
+                                        'std_monthly_data': [sc_ref[i].std_monthly for i in range(len(sc_ref))] if 'references' in cli.config_dict else None,
                                         'loglevel': cli.loglevel, 'diagnostic_name': diagnostic_name}
                             plot_sc = PlotSeasonalCycles(**plot_args)
                             data_label = plot_sc.set_data_labels()
