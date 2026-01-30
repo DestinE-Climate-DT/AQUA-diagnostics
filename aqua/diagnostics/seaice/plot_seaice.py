@@ -9,7 +9,7 @@ from aqua.core.logger import log_configure, log_history
 from aqua.core.graphics import plot_timeseries, plot_seasonalcycle, ConfigStyle
 from aqua.core.configurer import ConfigPath
 from aqua.core.util import get_realizations
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 
 from .util import defaultdict_to_dict, extract_dates, _check_list_regions_type
 
@@ -432,7 +432,8 @@ class PlotSeaIce:
 
             self._update_description(self.method, region, data_dict, region_idx)
 
-            ax.set_title(f"Sea ice {self.method}: region {region}")
+            title = TitleBuilder(diagnostic=f"Sea ice {self.method}", regions=region).generate()
+            ax.set_title(title)
 
         return fig, axes
 
