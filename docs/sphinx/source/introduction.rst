@@ -94,13 +94,14 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
 
   For users interested in performing targeted analyses—such as examining biases in a specific variable—individual diagnostic modules can be imported directly into Python notebooks or scripts. 
   This approach offers maximum flexibility, allowing users to call specific functions from particular diagnostics and generate customized plots. 
+  Diagnostics tool might have specific configuration files, available in `aqua/diagnostics/config/tools`, which can be adapted to control the behavior of the analysis.
  
 2. **Command-Line Interface with Configuration Files:**
 
    Each diagnostic in AQUA includes a dedicated command-line interface (CLI) that enables execution of the complete diagnostic workflow. 
    Users configure the analysis by providing a configuration file that specifies all necessary parameters, including dataset selection, temporal ranges, spatial domains, and output options.
    Configuration file templates for all available diagnostics are provided in `aqua/diagnostics/templates`, serving as starting points that users can customize according to their specific requirements.
-   This approach ensures reproducibility, as the configuration file documents all analysis settings and can be version-controlled alongside results.Example workflow:
+   This approach ensures reproducibility, as the configuration file documents all analysis settings and can be version-controlled alongside results.
 
 3. **Level 3: Diagnostic collections via AQUA Analysis Wrapper**
 
@@ -108,12 +109,12 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
    Users construct a master configuration file that combines multiple diagnostics, defining which analyses to run and how they should be coordinated.
    This approach enables:
 
-   - Thematic evaluation campaigns addressing specific climate system components (e.g. atmosphere, ocean, radiative-balance)
+   - Thematic evaluation addressing specific climate system components (e.g. atmosphere, ocean, radiative-balance)
    - Automated multi-diagnostic workflows with dependency management
    - Coordinated parallel execution optimizing computational resources
    - Integrated result organization consolidating outputs from multiple diagnostics
 
-Examples of diagnostic-suite configuration files are provided in `aqua/diagnostics/config/diagnostics`.
+Examples of diagnostic-collections configuration files are provided in `aqua/diagnostics/config/collections`.
 The aqua-analysis functionality is fully documented at ref:`aqua_analysis`.
  
 
