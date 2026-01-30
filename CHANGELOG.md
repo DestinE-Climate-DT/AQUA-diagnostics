@@ -9,6 +9,8 @@ Unreleased in the current development version (target v0.23.0):
 
 Complete list:
 - Base diagnostic cli should not forget config file reader_kwargs (#115)
+- Optimization in region computation Ocean trend CLI (#105)
+- Remove pandas from environment files (#117)
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
 
 ## [v0.22.0]
