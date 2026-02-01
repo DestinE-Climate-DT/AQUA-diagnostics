@@ -37,7 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "ECmean4<=0.1.15", 
-    "cartopy<=0.24.1"
+    "cartopy<=0.25.0"
 ]
 
 [project.optional-dependencies]
