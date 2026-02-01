@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
+- Rename tools/diagnostics with tools/collections (#111, #121)
 - Timeseries: CLI correctly works if `reference` is not provided (#109)
 - Base diagnostic cli should not forget config file reader_kwargs (#115)
 - Optimization in region computation Ocean trend CLI (#105)
