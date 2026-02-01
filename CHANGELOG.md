@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.23.0):
 
 Complete list:
 - Ocean3D Drift: optimize load in memory (#120)
+- Rename tools/diagnostics with tools/collections (#111, #121)
 - Timeseries: CLI correctly works if `reference` is not provided (#109)
 - Base diagnostic cli should not forget config file reader_kwargs (#115)
 - Ocean3d trend: optimization of region computation in CLI (#105)
