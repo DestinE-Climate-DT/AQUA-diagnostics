@@ -8,7 +8,7 @@ datasets:
     exp: hpz3
     source: monthly-3d
     regrid: r100
-    reader_kwargs: null # it can be a dictionary with reader kwargs
+    reader_kwargs: {chunks: {"time": 12, "level": 1}}  # recommended for DE
     # startdate: 1990-01
     # enddate: 1990-12
 
@@ -23,6 +23,7 @@ output:
 diagnostics:
   ocean_drift:
     hovmoller:
+      vert_coord: depth  # optional, default is 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']
