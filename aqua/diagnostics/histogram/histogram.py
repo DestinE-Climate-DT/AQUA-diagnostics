@@ -1,3 +1,5 @@
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.histogram import histogram
@@ -104,7 +106,10 @@ class Histogram(Diagnostic):
 
         # Customize data attributes
         if units is not None:
-            self.data = self._check_data(data=self.data, var=var, units=units)
+            if isinstance(self.data, xr.Dataset):
+                self.data[var] = self._check_data(data=self.data[var], var=var, units=units)
+            else:
+                self.data = self._check_data(data=self.data, var=var, units=units)
         if long_name is not None:
             self.data.attrs['long_name'] = long_name
         if standard_name is not None:
