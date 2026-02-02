@@ -104,7 +104,7 @@ diagnostics:
         std_enddate: '20201231'
       tprate:
         units: 'mm/day'
-        regions: [null, 'tropics']  # global and tropics
+        regions: [null, 'tropics']  # global and tropics; MUST be a list
 
   lat_lon_profiles:
     run: true
@@ -121,4 +121,5 @@ diagnostics:
         std_enddate: '20201231'
     variables:
       - name: 'tprate'
+        units: 'mm/day'
         regions: [null, 'tropics']  # global and tropics
