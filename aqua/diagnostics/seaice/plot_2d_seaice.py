@@ -135,7 +135,7 @@ class Plot2DSeaIce:
         for reg_mod in reg_models:
 
             nrows, ncols = len(self.months), 3
-            fig = plt.figure(figsize=(ncols * 5, nrows * 4.7))
+            fig = plt.figure(figsize=(ncols * 5.1, nrows * 4.8))
             subfigs = fig.subfigures(nrows=nrows, ncols=1)
 
             for jmon, (month, subfig) in enumerate(zip(self.months, subfigs)):
@@ -198,6 +198,7 @@ class Plot2DSeaIce:
                                      vmin_fill=vmin, vmax_fill=vmax,
                                      sym=False, # set False to later override with symmetric min-max values
                                      cbar=False, loglevel=self.loglevel,
+                                     gridlines=gridlines,
                                      **kwargs)
 
                 cbar_diff = self._add_colorbar(fig, monref, ax=axs[2], orientation='vertical',
