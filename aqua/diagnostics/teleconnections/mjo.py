@@ -59,7 +59,7 @@ class MJO(BaseMixin):
         super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
         self.data = self.data[self.var]
 
-        self.reader.timmean(self.data, freq='D')
+        self.data = self.reader.timmean(self.data, freq='D')
 
     def compute_hovmoller(self, day_window: int = None):
         """
