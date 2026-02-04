@@ -1,9 +1,12 @@
 name: AQUA-diagnostics Cross-Check
 
 # This workflow tests aqua-diagnostics against aqua-core (default: main)
-# instead of the PyPI release, to catch integration issues early.
-# Similar to environment-dev.yml setup but in CI.
-# Manual dispatch allows specifying a custom aqua-core ref (branch/tag/commit).
+# instead of the PyPI release, to catch integration issues early. Similar to environment-dev.yml setup but in CI.
+
+# Manual dispatch allows specifying a custom aqua-core ref (branch/tag/commit):
+# First, add 'cross-check' label to PR,
+#   If commit is pushed: will automatically test against the aqua-core main branch by default
+#   For manual setting: Stop the running job, then go to Actions > Run workflow > enter the specific aqua-core branch/tag/SHA
 
 on:
   pull_request:
