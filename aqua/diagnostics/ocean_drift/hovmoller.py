@@ -244,6 +244,9 @@ class Hovmoller(Diagnostic):
                 processed_data = self._get_std_anomaly(
                     self.data, anomaly_ref, standardise, dim="time"
                 )
+                self.logger.info("Loading data in memory")
+                processed_data.load()
+                self.logger.info("Loaded data in memory")
                 self.processed_data_list.append(processed_data)
         self.processed_data_list = sorted(self.processed_data_list, key=self.sort_key)
 
