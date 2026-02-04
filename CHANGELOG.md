@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.23.0):
 
 Complete list:
 - Add cross-check workflow for testing against aqua-core main or tag/branch (#126)
+- Add gridlines in sea ice maps (#125)
 - Ocean3D Drift: optimize load in memory (#120)
 - Rename tools/diagnostics with tools/collections (#111, #121)
 - Timeseries: CLI correctly works if `reference` is not provided (#109)
