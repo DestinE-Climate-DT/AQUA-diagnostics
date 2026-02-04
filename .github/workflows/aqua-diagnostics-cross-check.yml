@@ -136,9 +136,8 @@ jobs:
       # ========================================
       - name: Create cross-check environment file
         run: |
-          # Create an environment file that installs aqua-core from local checkout
-          # This mirrors the environment-dev.yml setup
-          cat > /tmp/environment-cross-check.yml << 'EOF'
+          # Created at workspace root so pip paths (./AQUA, ./AQUA-diagnostics) resolve correctly
+          cat > ./environment-cross-check.yml << 'EOF'
           name: aqua-cross-check
           channels:
             - conda-forge
@@ -163,13 +162,13 @@ jobs:
           EOF
           
           echo "Generated cross-check environment file:"
-          cat /tmp/environment-cross-check.yml
+          cat ./environment-cross-check.yml
 
       - name: Set up Micromamba
         uses: mamba-org/setup-micromamba@v2
         with:
           micromamba-version: 'latest'
-          environment-file: /tmp/environment-cross-check.yml
+          environment-file: ./environment-cross-check.yml
           environment-name: aqua-cross-check
           cache-downloads: true
           cache-environment: false
