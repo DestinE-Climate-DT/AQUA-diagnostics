@@ -263,7 +263,7 @@ if __name__ == '__main__':
     # define the interface file
     ecmeandir = get_diagnostic_configpath('ecmean', folder="tools", loglevel=loglevel)
     interface = os.path.join(ecmeandir, "interface", interface_file)
-
+    
     # define the ecmean configuration file, using the default as a trick
     config = load_diagnostic_config(
         diagnostic='ecmean',

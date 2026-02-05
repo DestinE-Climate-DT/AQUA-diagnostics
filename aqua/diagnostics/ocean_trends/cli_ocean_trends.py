@@ -61,26 +61,31 @@ if __name__ == '__main__':
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
             #     regions.append('go')
+            
+            # Calculating Trend on whole dataset
+            
+            data_trends = Trends(
+                **dataset_args,
+                diagnostic_name=diagnostic_name,
+                vert_coord=vert_coord,
+                loglevel=cli.loglevel
+            )
+            data_trends.run(
+                # region=region,
+                var=var,
+                # dim_mean=dim_mean,
+                outputdir=outputdir,
+                rebuild=rebuild,
+                reader_kwargs=reader_kwargs
+            )
+            
             for region in regions:
-                cli.logger.info("Processing region: %s", region)
-
                 try:
-                    data_trends = Trends(
-                        **dataset_args,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        loglevel=cli.loglevel
-                    )
-                    data_trends.run(
-                        region=region,
-                        var=var,
-                        # dim_mean=dim_mean,
-                        outputdir=outputdir,
-                        rebuild=rebuild,
-                        reader_kwargs=reader_kwargs
-                    )
+                    cli.logger.info("Processing region: %s", region)
+                    data_trends_region, region = data_trends.select_region(data=data_trends.trend_coef, region=region)
+
                     trends_plot = PlotTrends(
-                        data=data_trends.trend_coef,
+                        data=data_trends_region,
                         diagnostic_name=diagnostic_name,
                         vert_coord=vert_coord,
                         outputdir=outputdir,
@@ -90,7 +95,7 @@ if __name__ == '__main__':
                     trends_plot.plot_multilevel(save_pdf=save_pdf, save_png=save_png, dpi=dpi)
 
                     zonal_trend_plot = PlotTrends(
-                        data=data_trends.trend_coef.mean('lon'),
+                        data=data_trends_region.mean('lon'),
                         diagnostic_name=diagnostic_name,
                         vert_coord=vert_coord,
                         outputdir=outputdir,

@@ -3,7 +3,7 @@
 AQUA analysis wrapper
 =====================
 
-A wrapper containing calls to all the state-of-the-art diagnostic available in AQUA.
+A wrapper containing calls to all the state-of-the-art diagnostic available in AQUA, orchestrating the different collections of diagnostics.
 
 .. note::
 

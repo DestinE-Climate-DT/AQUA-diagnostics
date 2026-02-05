@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.23.0):
 
+Complete list:
+- Ocean3D: adapt config files for new working datamodel (#122)
+- Add gridlines in sea ice maps (#125)
+- Ocean3D Drift: optimize load in memory (#120)
+- Rename tools/diagnostics with tools/collections (#111, #121)
+- Timeseries: CLI correctly works if `reference` is not provided (#109)
+- Base diagnostic cli should not forget config file reader_kwargs (#115)
+- Ocean3d trend: optimization of region computation in CLI (#105)
+- Remove pandas from environment files (#117)
+- Increase seaice tests approximation tolerance and fix base util tests (#112)
+
 ## [v0.22.0]
 
 Main changes:
