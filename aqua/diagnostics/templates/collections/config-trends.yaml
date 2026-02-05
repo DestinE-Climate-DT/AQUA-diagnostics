@@ -8,7 +8,7 @@ datasets:
     exp: hpz3
     source: monthly-3d
     regrid: null
-    reader_kwargs: null
+    reader_kwargs: {chunks: {"time": 12, "level": 1}}  # recommended for DE
 
 output:
   outputdir: "./"
@@ -21,6 +21,7 @@ output:
 diagnostics:
   ocean_trends:
     multilevel:
+      vert_coord: depth  # optional, default is 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']
