@@ -6,7 +6,7 @@ from .teleconnections import PlotNAO, PlotENSO, PlotMJO
 from .timeseries import Gregory, SeasonalCycles, Timeseries, PlotTimeseries, PlotSeasonalCycles, PlotGregory
 from .lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from .histogram import Histogram, PlotHistogram
-from .global_biases import GlobalBiases, PlotGlobalBiases 
+from .global_biases import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
 from .boxplots import Boxplots, PlotBoxplots
 from .ensemble import EnsembleTimeseries, EnsembleLatLon, EnsembleZonal
 from .ensemble import PlotEnsembleTimeseries, PlotEnsembleLatLon, PlotEnsembleZonal
@@ -28,7 +28,7 @@ __all__ = ["NAO", "ENSO", "MJO",
            "PlotTimeseries", "PlotSeasonalCycles", "PlotGregory",
            "LatLonProfiles", "PlotLatLonProfiles",
            "Histogram", "PlotHistogram",
-           "GlobalBiases", "PlotGlobalBiases",
+           "GlobalBiases", "PlotGlobalBiases", "StatGlobalBiases",
            "reader_retrieve_and_merge", "merge_from_data_files", "load_premerged_ensemble_dataset",
            "EnsembleTimeseries", "EnsembleLatLon", "EnsembleZonal",
            "PlotEnsembleTimeseries", "PlotEnsembleLatLon", "PlotEnsembleZonal",
