@@ -132,43 +132,13 @@ jobs:
           git checkout tags/v2.1.0
       
       # ========================================
-      # 3. SETUP PYTHON ENVIRONMENT (environment-dev.yml style)
+      # 3. SETUP PYTHON ENVIRONMENT
       # ========================================
-      - name: Create cross-check environment file
-        run: |
-          # Created at workspace root so pip paths (./AQUA, ./AQUA-diagnostics) resolve correctly
-          cat > ./environment-cross-check.yml << 'EOF'
-          name: aqua-cross-check
-          channels:
-            - conda-forge
-            - nodefaults
-          dependencies:
-            - python>=3.10,<3.13
-            - cdo>=2.5.0
-            - eccodes==2.41.0
-            - cartopy_offlinedata
-            - pip
-            - hdf5
-            - tempest-extremes
-            - xesmf
-            - netcdf4
-            - imagemagick
-            - healpy
-            - pip:
-              - -e ./AQUA[all]
-              - -e ./AQUA-diagnostics/frontier-diagnostics/tropical_cyclones/
-              - -e ./AQUA-diagnostics/frontier-diagnostics/tropical_rainfall/
-              - -e ./AQUA-diagnostics[dev]
-          EOF
-          
-          echo "Generated cross-check environment file:"
-          cat ./environment-cross-check.yml
-
       - name: Set up Micromamba
         uses: mamba-org/setup-micromamba@v2
         with:
           micromamba-version: 'latest'
-          environment-file: ./environment-cross-check.yml
+          environment-file: AQUA-diagnostics/environment-dev.yml
           environment-name: aqua-cross-check
           cache-downloads: true
           cache-environment: false
