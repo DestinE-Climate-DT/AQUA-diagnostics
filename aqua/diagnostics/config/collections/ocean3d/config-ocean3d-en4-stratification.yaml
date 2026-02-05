@@ -33,7 +33,7 @@ output:
 diagnostics:
   ocean_stratification:
     stratification:
-      # vert_coord: level # optional, default is 'level'
+      vert_coord: depth  # optional, default is 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']

@@ -9,6 +9,8 @@ Unreleased in the current development version (target v0.23.0):
 
 Complete list:
 - LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
+- Ocean3D: adapt config files for new working datamodel (#122)
+- Add gridlines in sea ice maps (#125)
 - Ocean3D Drift: optimize load in memory (#120)
 - Rename tools/diagnostics with tools/collections (#111, #121)
 - Timeseries: CLI correctly works if `reference` is not provided (#109)
