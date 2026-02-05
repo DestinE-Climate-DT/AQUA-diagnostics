@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
+- Teleconnections: fix timmean assignment in ENSO, NAO, MJO diagnostics (#129)
+- Seaice: Add gridlines in maps (#125)
 - Add cross-check workflow for testing against aqua-core main or tag/branch (#126)
 - Ocean3D: adapt config files for new working datamodel (#122)
 - Add gridlines in sea ice maps (#125)
