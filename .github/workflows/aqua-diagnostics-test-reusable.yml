@@ -308,7 +308,7 @@ jobs:
         run: |
           echo "=========================================="
           echo "Cross-check: aqua-diagnostics vs aqua-core"
-          echo "aqua-core ref: ${{ inputs.aqua-core-ref }}"
+          echo "aqua-core ref branch-tag-commitSHA: ${{ inputs.aqua-core-ref }}"
           echo "=========================================="
           echo ""
           echo "aqua-core version:"
