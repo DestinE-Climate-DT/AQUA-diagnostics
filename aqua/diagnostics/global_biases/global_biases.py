@@ -30,7 +30,7 @@ class GlobalBiases(Diagnostic):
         enddate (str): End date for data selection.
         var (str): Variable name to analyze.
         plev (float): Pressure level to select (if applicable).
-        areas: if True, save area weights for statistics computation.
+        areas (bool): if True, save area weights for statistics computation.
         diagnostic (str): Name of the diagnostic.
         save_netcdf (bool): If True, saves output climatologies.
         outputdir (str): Output directory for NetCDF files.
@@ -38,7 +38,7 @@ class GlobalBiases(Diagnostic):
     """
     def __init__(self, catalog=None, model=None, exp=None, source=None,
                  regrid=None, startdate=None, enddate=None,
-                 var=None, plev=None, areas=False,
+                 var=None, plev=None, areas=True,
                  diagnostic='globalbiases',
                  save_netcdf=True, outputdir='./', loglevel='WARNING'):
 

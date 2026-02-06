@@ -14,15 +14,12 @@ class StatGlobalBiases:
     It works directly with xarray datasets.
 
     Args:
-        area (xr.DataArray, optional): Grid cell areas for weighted statistics.
-            If None, unweighted statistics will be computed.
         loglevel (str): Log level. Default is 'WARNING'.
     """
-    def __init__(self, area: xr.DataArray = None, loglevel: str = 'WARNING'):
+    def __init__(self, loglevel: str = 'WARNING'):
 
         self.logger = log_configure(log_level=loglevel, log_name='Bias Statistics')
         self.loglevel = loglevel
-        self.area = area
 
     def compute_bias_statistics(self,
                                 data: xr.Dataset,
@@ -38,12 +35,12 @@ class StatGlobalBiases:
             data_ref (xr.Dataset): Reference climatology dataset.
             var (str): Variable name.
             area (xr.DataArray, optional): Grid cell areas for weighted statistics.
-        Returns:
+                                            If None, unweighted statistics will be computed.
+        Returns: 
+            xr.Dataset: Dataset containing mean bias and RMSE.
 
         """
         self.logger.info(f'Computing bias statistics for variable {var}.')
-
-        area = area or self.area
 
         if data is None or data_ref is None:
             raise ValueError("Data or reference data is None after pressure level handling.")
