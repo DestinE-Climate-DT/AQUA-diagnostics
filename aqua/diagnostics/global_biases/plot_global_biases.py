@@ -197,12 +197,10 @@ class PlotGlobalBiases:
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
             units = data[var].attrs.get('units', '')
-                        # Format statistics text
-            stats_text = f"Mean: {mean_bias:{'.2f'}}   RMSE: {rmse:{'.2f'}}"
-     
-            
-            x, y, ha, va = (0.98, 0.02, 'right', 'bottom')
-            
+            stats_text = f"Mean: {mean_bias:{'.2f'}}" + (f" {units}" if units else "")
+            stats_text += f"\nRMSE: {rmse:{'.2f'}}" + (f" {units}" if units else "")
+
+            x, y, ha, va = (0.02, 0.87, 'left', 'center')
             # Add text to figure
             fig.text(x, y, stats_text,
                     fontsize=14,
