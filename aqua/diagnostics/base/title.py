@@ -4,7 +4,7 @@ Title generation class and utilities for AQUA plots.
 
 from typing import Optional, Union
 from aqua.core.util import to_list, strlist_to_phrase
-from .utils import harmonize_lists
+from .strings import harmonize_lists
 
 
 class TitleBuilder:
@@ -16,7 +16,7 @@ class TitleBuilder:
         diagnostic (str, optional): Name of the diagnostic (e.g., 'Seasonal cycle', 'Global bias').
         variable (str, optional): Long name of the variable (e.g., 'Total precipitation rate').
         regions (str or list, optional): Region name(s) (e.g., 'global', 'North Atlantic').
-        catalog (str or list, optional): Catalog name(s).
+        catalogs (str or list, optional): Catalog name(s).
         models (str or list, optional): Model name(s).
         exps (str or list, optional): Experiment name(s).
         realizations (str or list, optional): Realization name(s).
@@ -39,7 +39,7 @@ class TitleBuilder:
                  variable: Optional[str] = None,
                  regions: Optional[Union[str, list]] = None,
                  conjunction: Optional[str] = None,
-                 catalog: Optional[Union[str, list]] = None,
+                 catalogs: Optional[Union[str, list]] = None,
                  models: Optional[Union[str, list]] = None, 
                  exps: Optional[Union[str, list]] = None,
                  startyear: Optional[int | str] = None,
@@ -60,7 +60,7 @@ class TitleBuilder:
         self.variable = variable
         self.regions = regions
         self.conjunction = conjunction
-        self.catalog = to_list(catalog) if catalog else []
+        self.catalogs = to_list(catalogs) if catalogs else []
         self.models = to_list(models) if models else []
         self.exps = to_list(exps) if exps else []
         self.startyear = str(startyear) if isinstance(startyear, int) else startyear
@@ -76,10 +76,12 @@ class TitleBuilder:
         self.extra_info = extra_info
 
     def _format_models(self) -> str | None:
+        """Format catalogs, models, and exps into a single models phrase.
+
+        Returns:
+            str or None: E.g. A single model string, 'Multi-model ', or None (if empty).
         """
-        Generate the models
-        """
-        listpart = list(filter(None, [self.catalog, self.models, self.exps]))
+        listpart = list(filter(None, [self.catalogs, self.models, self.exps]))
         listpart = harmonize_lists(*listpart)
         
         if listpart:
@@ -89,8 +91,10 @@ class TitleBuilder:
         return None
 
     def _format_refs(self) -> str | None:
-        """
-        Generate the reference
+        """Format ref_catalog, ref_model, and ref_exp into a single reference phrase.
+
+        Returns:
+            str or None: Comma-separated reference string or None (if empty).
         """
         ref_listpart = list(filter(None, [self.ref_catalog, self.ref_model, self.ref_exp]))
         ref_listpart = harmonize_lists(*ref_listpart)
@@ -100,9 +104,15 @@ class TitleBuilder:
             return ", ".join(ref_list_unique)
         return None
         
-    def _format_years(self, startyear = None, endyear = None) -> str | None:
-        """
-        Generate the years
+    def _format_years(self, startyear=None, endyear=None) -> str | None:
+        """Format start and end year into a year range string.
+
+        Args:
+            startyear (str or int, optional): Start year.
+            endyear (str or int, optional): End year.
+
+        Returns:
+            str or None: E.g. '1990-2000', a single year, or None (if both missing).
         """
         if startyear and endyear:
             return f"{startyear}-{endyear}"
@@ -113,8 +123,10 @@ class TitleBuilder:
         return None
 
     def generate(self) -> str:
-        """
-        Generate the whole title
+        """Build the full title from configured components.
+
+        Returns:
+            str: The assembled title string (stripped).
         """
 
         if self.title:
