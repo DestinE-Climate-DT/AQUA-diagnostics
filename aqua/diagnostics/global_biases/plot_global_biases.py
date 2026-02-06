@@ -135,7 +135,7 @@ class PlotGlobalBiases:
                           data=data, description=description, var=var, plev=plev, realization=realization)
 
 
-    def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None, area=None, show_stats=True):
+    def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None, area=None, show_stats=False):
         """
         Plots the bias map between two datasets.
 
@@ -186,13 +186,16 @@ class PlotGlobalBiases:
         ax.set_ylabel("Latitude")
 
         #  Add statistics to the plot if requested
-        if show_stats and area is not None:
+        if show_stats:
             self.logger.debug('Computing bias statistics.')
-            bs = StatGlobalBiases(area=area, loglevel=self.loglevel)
+            if area is None:
+                self.logger.warning('Grid areas not provided, unweighted statistics will be computed.')
+            bs = StatGlobalBiases(loglevel=self.loglevel)
             stats = bs.compute_bias_statistics(
                 data=data,
                 data_ref=data_ref,
                 var=var,
+                area=area
             )
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
