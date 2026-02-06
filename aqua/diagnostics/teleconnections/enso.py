@@ -52,7 +52,7 @@ class ENSO(BaseMixin):
         # Assign self.data, self.reader, self.catalog
         super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
 
-        self.reader.timmean(self.data, freq='MS')
+        self.data = self.reader.timmean(self.data, freq='MS')
     
     def compute_index(self, months_window: int = 3, box_brd: bool = True,
                        rebuild: bool = False):
