@@ -154,7 +154,6 @@ class GlobalBiases(Diagnostic):
                 dict_catalog_entry=dict_catalog_entry,
                 extra_keys=extra_keys)
 
-    
     def compute_climatology(self,
                             data: xr.Dataset = None,
                             var: str = None,
@@ -204,7 +203,7 @@ class GlobalBiases(Diagnostic):
         if areas:
             if self.regrid:
                 self.logger.info("Adding cell area from regridded grid.")
-                self.climatology['cell_area'] = self.regridder.target_grid.cell_area
+                self.climatology['cell_area'] = self.reader.tgt_grid_area.cell_area
             else:
                 self.logger.info("Adding cell area from source grid.")
                 self.climatology['cell_area'] = self.reader.src_grid_area.cell_area
