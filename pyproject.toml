@@ -8,13 +8,14 @@ name = "aqua-diagnostics"
 dynamic = ["version"]
 authors = [ # AQUA core team reported here
     {name = "Paolo Davini", email = "paolo.davini@cnr.it"},
-    {name = "Matteo Nurisso", email = "m.nurisso@isac.cnr.it"},
+    {name = "Matteo Nurisso", email = "matteo.nurisso@polito.it"},
     {name = "Silvia Caprioli", email = "silvia.caprioli@polito.it"},
     {name = "Jost von Hardenberg", email = "jost.hardenberg@polito.it"},
     {name = "Emanuele Tovazzi", email = "emanueletovazzi@cnr.it"},
     {name = "Marco Cadau", email = "marco.cadau@polito.it"},
     {name = "Supriyo Ghosh", email = "supriyo.ghosh@bsc.es"},
-    {name = "Maqsood Mubarak Rajput", email = "maqsoodmubarak.rajput@awi.de"}
+    {name = "Maqsood Mubarak Rajput", email = "maqsoodmubarak.rajput@awi.de"},
+    {name = "Costanza Anerdi", email = "costanza.anerdi@polito.it"}
 ]
 description = "AQUA-diagnostics: the diagnostics set of the AQUA framework for high-resolution climate model evaluation"
 readme = "README.md"
@@ -35,12 +36,13 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = [
-    "ECmean4==0.1.15", 
+    "ECmean4<=0.1.16", 
+    "cartopy<=0.24.1"
 ]
 
 [project.optional-dependencies]
 core = [
-    "aqua-core>=0.21.0"
+    "aqua-core>=1.0.0a2"
 ]
 docs = [
     "sphinx",

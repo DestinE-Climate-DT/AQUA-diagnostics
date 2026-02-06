@@ -65,11 +65,7 @@ The basic structure of the analysis is the following:
 
 .. code-block:: python
 
-<<<<<<< HEAD
-
-=======
     
->>>>>>> 69fecb1a0d230ad27009f3531636314d8c70a015
     from aqua.diagnostics import Trends, PlotTrends
 
     trend = Trends(
@@ -90,9 +86,6 @@ The basic structure of the analysis is the following:
 
     # Generate multi-level spatial maps
     plot_trends = PlotTrends(data = trend.trend_coef)
-<<<<<<< HEAD
-    plot_trends.plot_multilevel()
-=======
     plot_trends.plot_multilevel(
             levels=[10, 100, 500, 1000, 3000, 5000],
             save_pdf=True,
@@ -100,7 +93,6 @@ The basic structure of the analysis is the following:
             dpi=300
         )
 
->>>>>>> 69fecb1a0d230ad27009f3531636314d8c70a015
 
 .. note::
 
@@ -153,6 +145,7 @@ Here we describe only the specific settings for the ocean trends diagnostic.
 
     * ``run``: enable/disable the diagnostic.
     * ``diagnostic_name``: name of the diagnostic. ``ocean3d`` by default.
+    * ``vert_coord``: vertical coordinate for the analysis (e.g., ``level``).
     * ``var``: list of variables to analyse (typically ``['thetao', 'so']``).
     * ``regions``: list of ocean regions to analyse (e.g., ``['go', 'io', 'ao', 'so', 'arc_o', 'po']``).
     * ``dim_mean``: dimensions over which to compute spatial averages (optional, typically not used for trend maps).
@@ -163,6 +156,7 @@ Here we describe only the specific settings for the ocean trends diagnostic.
       ocean_trends:
         multilevel:
           diagnostic_name: 'ocean3d'
+          vert_coord: level
           run: true
           var: ['thetao', 'so']
           regions: ['io', 'ao', 'so', 'arc_o', 'po', 'go']
@@ -218,7 +212,7 @@ Notebooks are stored in ``notebooks/diagnostics/ocean_trends``:
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Supriyo Gosh (`@supriyogosh <https://github.com/supriyogosh>`_, `supriyo.ghosh@bsc.es <mailto:supriyo.ghosh@bsc.es>`_).  
+This diagnostic is maintained by Supriyo Gosh (`@ghossh <https://github.com/ghossh>`_, `supriyo.ghosh@bsc.es <mailto:supriyo.ghosh@bsc.es>`_).  
 Contributions are welcome — please open an issue or a pull request.  
 For questions or suggestions, contact the AQUA team or the maintainer.
 

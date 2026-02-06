@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list, DEFAULT_REALIZATION
+from aqua.core.util import to_list, unit_to_latex, DEFAULT_REALIZATION
 from aqua.diagnostics.base import OutputSaver
 
 
@@ -116,6 +116,9 @@ class PlotHistogram():
         if title:
             title += ' '
         
+        if self.units is not None:
+            title += f'[{unit_to_latex(self.units)}] '
+
         if self.region is not None:
             title += f'[{self.region}] '
 

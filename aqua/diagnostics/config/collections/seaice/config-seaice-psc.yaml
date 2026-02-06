@@ -1,0 +1,138 @@
+# =======  Dataset Configuration  =======
+# Template according to #1613
+# The first model in this block can be overridden
+# in the command line by using:
+# --model, --exp, --source, --outputdir, --catalog
+
+# Datasets holds the models, adding more than one "-"
+# will create a list of dict
+datasets:
+  - catalog: null              # mandatory as null
+    model: 'IFS-NEMO'          # mandatory
+    exp: 'historical-1990'     # mandatory
+    source: 'lra-r100-monthly' # mandatory
+    regrid: null               # if the diagnostic supports it
+    reader_kwargs: null        # it can be a dictionary with reader kwargs
+    startdate: null            # e.g. '1990-01-01'
+    enddate: null              # e.g. '2000-12-31'
+
+# =======  Reference Datasets  =======
+references:
+  # ---- Volume in NH ----
+  - &ref_psc_nh
+    catalog: 'obs'
+    model: 'PSC'
+    exp: 'PIOMAS'
+    source: 'monthly'
+    regrid: 'r100'
+    domain: "nh"
+    startdate: '1990-01-01'
+    enddate: '2020-12-31'
+
+  # ---- Volume in SH ----
+  - &ref_psc_sh
+    catalog: 'obs'
+    model: 'PSC'
+    exp: 'GIOMAS'
+    source: 'monthly'
+    regrid: 'r100'
+    domain: "sh"
+    startdate: '1990-01-01'
+    enddate: '2020-12-31'
+
+# =======  Setup Configuration  =======
+setup:
+  loglevel: 'WARNING'
+
+# =======  Output Configuration  =======
+output:
+  outputdir: "./" # mandatory
+  rebuild: true
+  save_netcdf: true # mandatory
+  save_pdf: true    # mandatory
+  save_png: true    # mandatory
+  dpi: 300
+  create_catalog_entry: false
+
+# =======  Diagnostics Configuration  =======
+diagnostics:
+  # =======  Config for timeseries Sea Ice  =======
+  # ===============================================
+  seaice_timeseries:
+    run: true
+    # List of methods to plot.
+    methods: ["volume"]
+    # List of regions to plot. The default regions are defined in config/diagnostics/seaice
+    regions: ['arctic','antarctic']
+    calc_ref_std: true
+    ref_std_freq: 'monthly' # set to 'monthly' 'annual'
+    varname:
+      volume: 'sithick'
+  
+    # ====  Update Datasets and reference entries  ====
+    references:
+    # -- PSC for "volume" in NH --
+    - <<: *ref_psc_nh
+      use_for_method: "volume"
+  
+    # -- PSC for "volume" in SH --
+    - <<: *ref_psc_sh
+      use_for_method: "volume"
+
+  # =======  Config for seasonal cycle Sea Ice  =======
+  # ===================================================
+  seaice_seasonal_cycle:
+    run: true
+    methods: ["volume"]
+    regions: ['arctic','antarctic']
+    calc_ref_std: true
+    ref_std_freq: 'monthly' # set to 'monthly' 'annual'
+    varname:
+      volume: 'sithick'
+  
+    # ====  Update Datasets and reference entries  ====
+    references:
+    # -- PSC for "volume" in NH --
+    - <<: *ref_psc_nh
+      use_for_method: "volume"
+  
+    # -- PSC for "volume" in SH --
+    - <<: *ref_psc_sh
+      use_for_method: "volume"
+
+  # =======  Config for 2d bias maps =======
+  # =========================================
+  seaice_2d_bias:
+    run: true
+    methods: ["thickness"]
+    regions: ['arctic','antarctic']
+    # List of months to plot (e.g., [3, 9] for March and September)
+    months: [3, 9]
+    # List of projections to use
+    projections:
+      orthographic:
+        projname: "orthographic"
+        projpars:
+          central_longitude: 0.0
+          central_latitude: "max_lat_signed"
+      azimuthal_equidistant:
+        projname: "azimuthal_equidistant"
+        projpars:
+          central_longitude: 0.0
+          central_latitude: "max_lat_signed"
+        extent_regions:
+          Arctic: [-180, 180, 50, 90]
+          Antarctic: [-180, 180, -50, -90]
+    varname:
+      thickness: 'sithick'
+  
+    # ====  Update Datasets and reference entries  ====
+    references:
+    # -- PSC for thickness in NH --
+    - <<: *ref_psc_nh
+      use_for_method: "thickness"
+  
+    # -- PSC for thickness in SH --
+    - <<: *ref_psc_sh
+      use_for_method: "thickness"
+
