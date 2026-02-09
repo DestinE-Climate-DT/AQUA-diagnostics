@@ -200,18 +200,18 @@ class PlotGlobalBiases:
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
             units = data[var].attrs.get('units', '')
-            stats_text = f"Mean: {mean_bias:{'.2f'}}" + (f" {units}" if units else "")
-            stats_text += f"\nRMSE: {rmse:{'.2f'}}" + (f" {units}" if units else "")
+            stats_text = f"Mean: {mean_bias:{'.2g'}}" + (f" {units}" if units else "")
+            stats_text += f"\nRMSE: {rmse:{'.2g'}}" + (f" {units}" if units else "")
 
             x, y, ha, va = (0.02, 0.87, 'left', 'center')
             # Add text to figure
             fig.text(x, y, stats_text,
-                    fontsize=14,
+                    fontsize=12,
                     ha=ha, va=va,
                     transform=fig.transFigure,
                     bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black'))
             
-            self.logger.info(f'Added statistics to plot: Mean={mean_bias:{'.2f'}}, RMSE={rmse:{'.2f'}}')
+            self.logger.info(f'Added statistics to plot: Mean={mean_bias:{'.2g'}}, RMSE={rmse:{'.2g'}}')
 
         description = (
             f"Spatial map of global bias of {data[var].attrs.get('long_name', var)}"
