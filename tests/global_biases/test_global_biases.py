@@ -78,12 +78,11 @@ class TestGlobalBiases:
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
+
+        gb.compute_climatology(var=var, seasonal=True, areas=True)        
+        assert 'cell_area' in gb.climatology
         
-        # Ensure climatology is computed (may be from previous test or run it)
-        if not hasattr(gb, 'climatology'):
-            gb.compute_climatology(var=var, seasonal=True)
-        
-        plotgb.plot_bias(data=gb.climatology, data_ref=gb.climatology, var=var, plev=85000)
+        plotgb.plot_bias(data=gb.climatology, data_ref=gb.climatology, var=var, plev=85000, show_stats=True)
         pdf = os.path.join(tmp_path_str, 'pdf', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf')
         assert os.path.exists(pdf)
         png = os.path.join(tmp_path_str, 'png', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png')
