@@ -174,6 +174,7 @@ class GlobalBiases(Diagnostic):
             save_netcdf (bool, optional): If True, save output to NetCDF.
             seasonal (bool): If True, compute seasonal climatology (DJF, MAM, JJA, SON).
             seasons_stat (str): Aggregation statistic: 'mean', 'std', 'max', 'min'.
+            areas (bool): If True, include cell area in the output dataset.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         Raises:
             ValueError: If `seasons_stat` is invalid.
