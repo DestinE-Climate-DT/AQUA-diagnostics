@@ -71,12 +71,13 @@ if __name__ == '__main__':
                                         outputdir=cli.outputdir, loglevel=cli.loglevel)
 
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
+        
+        all_plot_params = tool_dict.get('plot_params', {})
+        default_params = all_plot_params.get('default', {})
 
         for var, is_formula in all_vars:
             cli.logger.info("Running Global Biases diagnostic for %s: %s",
                         "formula" if is_formula else "variable", var)
-            all_plot_params = tool_dict.get('plot_params', {})
-            default_params = all_plot_params.get('default', {})
             var_params = all_plot_params.get(var, {})
             plot_params = {**default_params, **var_params}
 
@@ -96,8 +97,9 @@ if __name__ == '__main__':
                 cli.logger.warning("Variable '%s' not found in dataset. Skipping. (%s)", var, e)
                 continue
 
-            biases_dataset.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, create_catalog_entry=cli.create_catalog_entry)
-            biases_reference.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat)
+            show_stats = default_params.get('show_stats', False)
+            biases_dataset.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, create_catalog_entry=cli.create_catalog_entry, areas=bool(show_stats))
+            biases_reference.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, areas = bool(show_stats))
 
             if short_name is not None:
                 var = short_name
@@ -112,15 +114,22 @@ if __name__ == '__main__':
 
                 proj = plot_params.get('projection', 'robinson')
                 proj_params = plot_params.get('projection_params', {})
-                cmap= plot_params.get('cmap', 'RdBu_r')
+                cmap = plot_params.get('cmap', 'RdBu_r')
 
                 cli.logger.debug("Using projection: %s for variable: %s", proj, var)
+
+                if show_stats:
+                    cli.logger.info("Calculating and displaying global bias statistics for variable: %s", var)
+                    area = biases_dataset.climatology['cell_area']
+
                 plot_biases = PlotGlobalBiases(diagnostic=diagnostic_name, save_pdf=cli.save_pdf, save_png=cli.save_png,
                                             dpi=cli.dpi, outputdir=cli.outputdir, cmap=cmap, loglevel=cli.loglevel)
                 plot_biases.plot_bias(data=biases_dataset.climatology, data_ref=biases_reference.climatology,
                                         var=var, plev=p,
                                         proj=proj, proj_params=proj_params,
-                                        vmin=vmin, vmax=vmax)
+                                        vmin=vmin, vmax=vmax,
+                                        area=area if show_stats else None,
+                                        show_stats=show_stats)
                 if seasons:
                     plot_biases.plot_seasonal_bias(data=biases_dataset.seasonal_climatology,
                                                     data_ref=biases_reference.seasonal_climatology,
