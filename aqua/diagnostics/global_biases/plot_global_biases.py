@@ -261,7 +261,6 @@ class PlotGlobalBiases:
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
 
-
         # Add significance stippling if requested
         if show_significance and data_timeseries is not None:
 
@@ -284,12 +283,12 @@ class PlotGlobalBiases:
             pct_sig = significance_mask.attrs.get('percent_significant', 0)
             n_samples = significance_mask.attrs.get('n_samples_model', 'unknown')
             self.logger.info(f'Added significance stippling: {pct_sig:.1f}% of points are significant.')
-
+            
             ax.text(
                 0.99, 0.01,
                 f"Stippling: p < {significance_alpha}\n"
-                f"Welch t-test, N = {n_samples}",
-                f"Significance: {pct_sig:.1f}% of points",
+                f"Welch t-test, N = {n_samples}\n"
+                f"Significant points: {pct_sig:.1f}%",
                 transform=ax.transAxes,
                 ha="right", va="bottom",
                 fontsize=9,
