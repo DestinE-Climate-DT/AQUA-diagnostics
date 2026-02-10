@@ -282,6 +282,7 @@ class PlotGlobalBiases:
             )
            
             pct_sig = significance_mask.attrs.get('percent_significant', 0)
+            n_samples = significance_mask.attrs.get('n_samples_model', 'unknown')
             self.logger.info(f'Added significance stippling: {pct_sig:.1f}% of points are significant.')
 
             ax.text(
