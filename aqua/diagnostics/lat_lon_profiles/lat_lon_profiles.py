@@ -83,7 +83,7 @@ class LatLonProfiles(Diagnostic):
 		self.mean_type = mean_type
 
 	def retrieve(self, var: str, formula: bool = False, long_name: str = None, 
-				 units: str = None, standard_name: str = None,
+			  	 units: str = None, standard_name: str = None,
 				 reader_kwargs: dict = {}):
 		"""
 		Retrieve the data for the specified variable and apply any formula if required.
@@ -97,10 +97,14 @@ class LatLonProfiles(Diagnostic):
 			reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
 		"""
 		self.logger.info('Retrieving data for variable %s', var)
-		# If the user requires a formula the evaluation requires the retrieval
-        # of all the variables
+		
+		# Determine minimum months required based on computation needs
+		# This is set during run() based on freq parameter
+		months_required = getattr(self, '_months_required', 1)
+		
+		# If a formula is required the evaluation requires the retrieval of all the variables
 		if formula:
-			super().retrieve(reader_kwargs=reader_kwargs, months_required=12)
+			super().retrieve(reader_kwargs=reader_kwargs, months_required=months_required)
 			self.logger.debug("Evaluating formula %s", var)
 			self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
 										short_name=standard_name, units=units,
@@ -109,7 +113,7 @@ class LatLonProfiles(Diagnostic):
 				raise ValueError(f'Error evaluating formula {var}. '
 									'Check the variable names and the formula syntax.')
 		else:
-			super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=12)
+			super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=months_required)
 			if self.data is None:
 				raise ValueError(f'Variable {var} not found in the data. '
 									'Check the variable name and the data source.')
@@ -375,6 +379,15 @@ class LatLonProfiles(Diagnostic):
 				reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
 			"""
 			self.logger.info('Running LatLonProfiles for %s', var)
+        
+			# Determine minimum months based on requested frequencies
+			freq = to_list(freq)
+			if 'seasonal' in freq:
+				self._months_required = 12  # Need full year for seasonal
+				self.logger.debug('Seasonal frequency requested: requiring 12 months')
+			else:
+				self._months_required = 1   # Any number of months ok for longterm only
+				self.logger.debug('Only longterm frequency: requiring at least 1 month')
 			
 			# Retrieve the data
 			self.retrieve(var=var, formula=formula, long_name=long_name, 
