@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.23.0):
 
 Complete list:
 - LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
+- Global Biases: add mean value and RMSE to global bias plot (#132)
 - Teleconnections: fix timmean assignment in ENSO, NAO, MJO diagnostics (#129)
 - Seaice: Add gridlines in maps (#125)
 - Add cross-check workflow for testing against aqua-core main or tag/branch (#126)

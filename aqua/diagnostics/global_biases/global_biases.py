@@ -30,6 +30,7 @@ class GlobalBiases(Diagnostic):
         enddate (str): End date for data selection.
         var (str): Variable name to analyze.
         plev (float): Pressure level to select (if applicable).
+        areas (bool): if True, save area weights for statistics computation.
         diagnostic (str): Name of the diagnostic.
         save_netcdf (bool): If True, saves output climatologies.
         outputdir (str): Output directory for NetCDF files.
@@ -37,7 +38,7 @@ class GlobalBiases(Diagnostic):
     """
     def __init__(self, catalog=None, model=None, exp=None, source=None,
                  regrid=None, startdate=None, enddate=None,
-                 var=None, plev=None,
+                 var=None, plev=None, areas=True,
                  diagnostic='globalbiases',
                  save_netcdf=True, outputdir='./', loglevel='WARNING'):
 
@@ -48,6 +49,7 @@ class GlobalBiases(Diagnostic):
         self.logger = log_configure(log_level=loglevel, log_name='Global Biases')
         self.var = var
         self.plev = plev
+        self.areas = areas
         self.save_netcdf = save_netcdf
         self.outputdir = outputdir
         self.startdate = startdate
@@ -152,7 +154,6 @@ class GlobalBiases(Diagnostic):
                 dict_catalog_entry=dict_catalog_entry,
                 extra_keys=extra_keys)
 
-    
     def compute_climatology(self,
                             data: xr.Dataset = None,
                             var: str = None,
@@ -160,6 +161,7 @@ class GlobalBiases(Diagnostic):
                             save_netcdf: bool = None,
                             seasonal: bool = False,
                             seasons_stat: str = 'mean',
+                            areas = False,
                             create_catalog_entry: bool = False
                             ) -> None:
         """
@@ -172,12 +174,14 @@ class GlobalBiases(Diagnostic):
             save_netcdf (bool, optional): If True, save output to NetCDF.
             seasonal (bool): If True, compute seasonal climatology (DJF, MAM, JJA, SON).
             seasons_stat (str): Aggregation statistic: 'mean', 'std', 'max', 'min'.
+            areas (bool): If True, include cell area in the output dataset.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         Raises:
             ValueError: If `seasons_stat` is invalid.
         """
         data = data or self.data
         var = var or self.var
+        areas = areas or self.areas
 
         if save_netcdf is None:
             save_netcdf = self.save_netcdf
@@ -196,6 +200,14 @@ class GlobalBiases(Diagnostic):
             'startdate': str(self.startdate),
             'enddate': str(self.enddate)
         })
+
+        if areas:
+            if self.regrid:
+                self.logger.info("Adding cell area from regridded grid.")
+                self.climatology['cell_area'] = self.reader.tgt_grid_area.cell_area
+            else:
+                self.logger.info("Adding cell area from source grid.")
+                self.climatology['cell_area'] = self.reader.src_grid_area.cell_area
 
         # Load data in memory for faster plot
         self.logger.debug(f"Loading climatology data in memory")
