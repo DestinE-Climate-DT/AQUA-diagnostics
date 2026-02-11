@@ -241,30 +241,37 @@ if __name__ == '__main__':
                 "Running LatLonProfiles diagnostic for %s: %s",
                 "formula" if is_formula else "variable", var)
             
-            var_config, regions = load_var_config(
-                cli.config_dict, 
-                var, 
-                diagnostic='lat_lon_profiles'
-            )
-            
-            process_variable(
-                cli=cli,
-                var_config=var_config,
-                regions=regions,
-                datasets=datasets,
-                references=references,
-                mean_type=mean_type,
-                diagnostic_name=diagnostic_name,
-                freq=freq,
-                compute_std=compute_std,
-                exclude_incomplete=exclude_incomplete,
-                center_time=center_time,
-                box_brd=box_brd,
-                compute_longterm=compute_longterm,
-                compute_seasonal=compute_seasonal,
-                regions_file_path=regions_file_path,
-                formula=is_formula
-            )
+            try:
+                var_config, regions = load_var_config(
+                    cli.config_dict, 
+                    var, 
+                    diagnostic='lat_lon_profiles'
+                )
+                
+                process_variable(
+                    cli=cli,
+                    var_config=var_config,
+                    regions=regions,
+                    datasets=datasets,
+                    references=references,
+                    mean_type=mean_type,
+                    diagnostic_name=diagnostic_name,
+                    freq=freq,
+                    compute_std=compute_std,
+                    exclude_incomplete=exclude_incomplete,
+                    center_time=center_time,
+                    box_brd=box_brd,
+                    compute_longterm=compute_longterm,
+                    compute_seasonal=compute_seasonal,
+                    regions_file_path=regions_file_path,
+                    formula=is_formula
+                )
+            except Exception as e:
+                cli.logger.error(
+                    "Error running LatLonProfiles for %s '%s': %s",
+                    "formula" if is_formula else "variable", var, str(e)
+                )
+                continue
     
     cli.close_dask_cluster()
     cli.logger.info("LatLonProfiles diagnostic completed.")
