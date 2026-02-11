@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.23.0):
 
+- Histogram: integration in AQUA analysis (#85)
+
 Complete list:
 - LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
 - Global Biases: add mean value and RMSE to global bias plot (#132)

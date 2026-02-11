@@ -1,3 +1,5 @@
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.histogram import histogram
@@ -104,7 +106,10 @@ class Histogram(Diagnostic):
 
         # Customize data attributes
         if units is not None:
-            self.data = self._check_data(data=self.data, var=var, units=units)
+            if isinstance(self.data, xr.Dataset):
+                self.data[var] = self._check_data(data=self.data[var], var=var, units=units)
+            else:
+                self.data = self._check_data(data=self.data, var=var, units=units)
         if long_name is not None:
             self.data.attrs['long_name'] = long_name
         if standard_name is not None:
@@ -129,7 +134,7 @@ class Histogram(Diagnostic):
         # Select region if specified
         if self.lon_limits is not None or self.lat_limits is not None:
             data = self.reader.select_area(data, lon=self.lon_limits, 
-                                          lat=self.lat_limits, box_brd=box_brd)
+                                           lat=self.lat_limits, box_brd=box_brd)
 
         # If range is not specified, compute it from the data
         hist_range = self.range
@@ -143,7 +148,6 @@ class Histogram(Diagnostic):
             hist_range = (data_min - buffer, data_max + buffer)
             self.logger.debug(f'Computed range: {hist_range}')
 
-        # Compute histogram using the histogram function directly
         hist_data = histogram(
             data,
             bins=self.bins,
@@ -156,6 +160,23 @@ class Histogram(Diagnostic):
         # Add region metadata
         if self.region is not None:
             hist_data.attrs['AQUA_region'] = self.region
+        
+        # Add date metadata
+        hist_data.attrs['AQUA_startdate'] = str(self.startdate)
+        hist_data.attrs['AQUA_enddate'] = str(self.enddate)
+        
+        # Add others metadata for description
+        hist_data.attrs['AQUA_catalog'] = self.catalog
+        hist_data.attrs['AQUA_model'] = self.model
+        hist_data.attrs['AQUA_exp'] = self.exp
+        
+        # Copy original variable metadata to center_of_bin for xlabel
+        if hasattr(data, 'standard_name'):
+            hist_data.center_of_bin.attrs['standard_name'] = data.standard_name
+        if hasattr(data, 'long_name'):
+            hist_data.center_of_bin.attrs['long_name'] = data.long_name
+        if hasattr(data, 'units'):
+            hist_data.center_of_bin.attrs['units'] = data.units
         
         self.histogram_data = hist_data
 
