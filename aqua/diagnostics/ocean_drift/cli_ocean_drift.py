@@ -57,15 +57,17 @@ if __name__ == '__main__':
             # Add the global region if not present
             # if regions != [None]:
             #    regions.append(None)
+
+            data_hovmoller = Hovmoller(
+                **dataset_args,
+                diagnostic_name=diagnostic_name,
+                vert_coord=vert_coord,
+                loglevel=cli.loglevel
+            )
+            
             for region in regions:
                 logger.info("Processing region: %s", region)
                 try:
-                    data_hovmoller = Hovmoller(
-                        **dataset_args,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        loglevel=cli.loglevel
-                    )
                     data_hovmoller.run(
                         region=region,
                         var=var,
@@ -78,10 +80,6 @@ if __name__ == '__main__':
                 except Exception as e:
                     logger.error("Error processing region %s: %s", region, e)
                 try:
-                    logger.info("Loading data in memory")
-                    for processed_data in data_hovmoller.processed_data_list:
-                        processed_data.load()
-                    logger.info("Loaded data in memory")
                     hov_plot = PlotHovmoller(
                         diagnostic_name=diagnostic_name,
                         data=data_hovmoller.processed_data_list,

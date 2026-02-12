@@ -6,7 +6,7 @@ from .teleconnections import PlotNAO, PlotENSO, PlotMJO
 from .timeseries import Gregory, SeasonalCycles, Timeseries, PlotTimeseries, PlotSeasonalCycles, PlotGregory
 from .lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from .histogram import Histogram, PlotHistogram
-from .global_biases import GlobalBiases, PlotGlobalBiases 
+from .global_biases import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
 from .boxplots import Boxplots, PlotBoxplots
 from .ensemble import EnsembleTimeseries, EnsembleLatLon, EnsembleZonal
 from .ensemble import PlotEnsembleTimeseries, PlotEnsembleLatLon, PlotEnsembleZonal
@@ -19,8 +19,8 @@ from .ocean_stratification import Stratification, PlotStratification, PlotMLD
 from .ocean_trends import Trends, PlotTrends
 
 
-DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "diagnostics", "tools"]
-DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["diagnostics"]
+DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections"]
+DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["collections"]
 
 __all__ = ["NAO", "ENSO", "MJO",
            "PlotNAO", "PlotENSO", "PlotMJO",

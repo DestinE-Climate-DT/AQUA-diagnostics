@@ -29,10 +29,15 @@ on:
         type: boolean
         default: false
       install-mode:
-        description: 'Installation mode: "local" (from checkout) or "pypi" (from PyPI)'
+        description: 'Installation mode: "local", "pypi" (from PyPI), or "cross-check" (test against aqua-core branch)'
         required: false
         type: string
         default: 'local'
+      aqua-core-ref:
+        description: 'aqua-core branch/tag/commit-SHA for cross-check mode (default: main)'
+        required: false
+        type: string
+        default: 'main'
     secrets:
       AQUA_GITHUB_PAT:
         required: true
@@ -101,6 +106,15 @@ jobs:
         with:
           path: AQUA-diagnostics
       
+      - name: Checkout aqua-core (cross-check mode)
+        if: ${{ inputs.install-mode == 'cross-check' }}
+        uses: actions/checkout@v5
+        with:
+          repository: DestinE-Climate-DT/AQUA
+          ref: ${{ inputs.aqua-core-ref }} # checkout aqua-core at specified ref
+          path: AQUA
+          token: ${{ secrets.AQUA_GITHUB_PAT }}
+      
       - name: Checkout Climate-DT-catalog repository
         uses: actions/checkout@v5
         with:
@@ -151,6 +165,21 @@ jobs:
           create-args: >-
             python=${{ matrix.python-version }}
       
+      - name: Set up Micromamba (cross-check mode)
+        if: ${{ inputs.install-mode == 'cross-check' }}
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          micromamba-version: 'latest'
+          environment-file: AQUA-diagnostics/environment-dev.yml
+          environment-name: aqua-cross-check
+          cache-downloads: true
+          cache-environment: false
+          condarc: |
+            channels:
+              - conda-forge
+          create-args: >-
+            python=${{ matrix.python-version }}
+      
       - name: Create environment file for PyPI mode
         if: ${{ inputs.install-mode == 'pypi' }}
         run: |
@@ -179,7 +208,7 @@ jobs:
         run: python -m pip install flake8
       
       - name: Lint with flake8
-        if: ${{ inputs.install-mode == 'local' }}
+        if: ${{ inputs.install-mode == 'local' || inputs.install-mode == 'cross-check' }}
         run: |
           # compile code to check for syntax errors
           python -W error -m compileall -f -q AQUA-diagnostics/aqua
@@ -272,7 +301,25 @@ jobs:
           EOF
       
       # ========================================
-      # 9. SAVE ENVIRONMENT INFO
+      # 9. VERIFY INSTALLATIONS (cross-check mode)
+      # ========================================
+      - name: Verify aqua-core and aqua-diagnostics versions
+        if: ${{ inputs.install-mode == 'cross-check' }}
+        run: |
+          echo "=========================================="
+          echo "Cross-check: aqua-diagnostics vs aqua-core"
+          echo "aqua-core ref branch-tag-commitSHA: ${{ inputs.aqua-core-ref }}"
+          echo "=========================================="
+          echo ""
+          echo "aqua-core version:"
+          python -c "import aqua.core.version; print(aqua.core.version.__version__)"
+          echo ""
+          echo "aqua-diagnostics version:"
+          python -c "import aqua.diagnostics.version; print(aqua.diagnostics.version.__version__)"
+          echo ""
+      
+      # ========================================
+      # 10. SAVE ENVIRONMENT INFO
       # ========================================
       - name: Save environment information
         run: |
@@ -281,7 +328,7 @@ jobs:
           pip freeze > pip_freeze.txt
       
       # ========================================
-      # 10. RUN TESTS
+      # 11. RUN TESTS
       # ========================================
       - name: Run tests (parallel with coverage)
         if: ${{ inputs.enable-parallel && inputs.enable-coverage }}
@@ -360,7 +407,7 @@ jobs:
             -m "${{ inputs.pytest-markers }}"
       
       # ========================================
-      # 11. UPLOAD COVERAGE (if enabled)
+      # 12. UPLOAD COVERAGE (if enabled)
       # ========================================
       - name: Upload coverage reports to Codecov
         if: ${{ inputs.enable-coverage && github.actor != 'dependabot[bot]' && !cancelled() }}
@@ -379,7 +426,7 @@ jobs:
           files: AQUA-diagnostics/junit.xml
       
       # ========================================
-      # 12. UPLOAD ARTIFACTS
+      # 13. UPLOAD ARTIFACTS
       # ========================================
       - name: Upload test artifacts
         if: ${{ !cancelled() }}

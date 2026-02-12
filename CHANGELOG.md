@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
+- LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
+- Global Biases: add mean value and RMSE to global bias plot (#132)
+- Teleconnections: fix timmean assignment in ENSO, NAO, MJO diagnostics (#129)
+- Seaice: Add gridlines in maps (#125)
+- Add cross-check workflow for testing against aqua-core main or tag/branch (#126)
+- Ocean3D: adapt config files for new working datamodel (#122)
+- Add gridlines in sea ice maps (#125)
+- Ocean3D Drift: optimize load in memory (#120)
+- Rename tools/diagnostics with tools/collections (#111, #121)
+- Timeseries: CLI correctly works if `reference` is not provided (#109)
+- Base diagnostic cli should not forget config file reader_kwargs (#115)
+- Ocean3d trend: optimization of region computation in CLI (#105)
+- Remove pandas from environment files (#117)
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
 
 ## [v0.22.0]
@@ -30,7 +43,6 @@ Complete list:
 - Fix of aqua_path for analysis console (#56)
 - Boxplots: hotfix for diagnostic_name (#69)
 - Histogram: CLI refactoring (#49)
-- Lat-lon profiles dask fix (#63)
 - Fix argument passing by common CLI for `regrid`, `startdate` and `enddate` (#52)
 - Introduce call to pd.Timestamp in Global_Bias to accomodate also non-nanoseconds time window (#52)
 - Remove time selection from SeaIce, now centralised in CLI (#52)
