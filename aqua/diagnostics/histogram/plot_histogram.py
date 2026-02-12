@@ -116,7 +116,7 @@ class PlotHistogram():
             diagnostic="Histogram",
             variable=variable,
             regions=self.region,
-            catalog=self.catalogs,
+            catalogs=self.catalogs,
             models=self.models,
             exps=self.exps).generate()
 

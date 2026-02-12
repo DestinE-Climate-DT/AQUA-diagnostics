@@ -162,7 +162,7 @@ class PlotStratification:
         self.suptitle = TitleBuilder(
             diagnostic="Stratification",
             regions=self.region,
-            catalog=self.catalog,
+            catalogs=self.catalog,
             models=self.model,
             exps=self.exp,
             timeseason=f"{self.clim_time} climatology"

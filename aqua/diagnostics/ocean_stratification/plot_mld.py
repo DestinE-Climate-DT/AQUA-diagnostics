@@ -227,7 +227,7 @@ class PlotMLD:
     def set_suptitle(self, plot_type=None):
         """Set the title for the MLD plot."""
         self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region, 
-                             catalog=self.catalog, models=self.model, exps=self.exp, 
+                             catalogs=self.catalog, models=self.model, exps=self.exp, 
                              timeseason=f"{self.clim_time} climatology").generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 

@@ -45,7 +45,7 @@ def test_title_complex():
     result = TitleBuilder(
         diagnostic="Stratification",
         regions="global",
-        catalog="ci",
+        catalogs="ci",
         models="ERA5",
         exps="era5-hpz3",
         realizations="r1",
@@ -68,7 +68,7 @@ def test_title_realizations():
 
 def test_title_models_edge_cases():
     """Test edge cases for models and extra_info."""
-    result1 = TitleBuilder(diagnostic="Bias", catalog=["ci", "ci"], models=["IFS", "FESOM"], exps=["exp1", "exp2"]).generate()
+    result1 = TitleBuilder(diagnostic="Bias", catalogs=["ci", "ci"], models=["IFS", "FESOM"], exps=["exp1", "exp2"]).generate()
     assert "Bias for Multi-model" == result1
     result2 = TitleBuilder(diagnostic="Bias", extra_info=["info1", "info2"]).generate()
     assert "info1 info2" in result2

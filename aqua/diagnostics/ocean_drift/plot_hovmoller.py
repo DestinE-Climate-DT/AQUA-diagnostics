@@ -208,7 +208,7 @@ class PlotHovmoller:
         self.suptitle = TitleBuilder(
             diagnostic=f"{content} plot",
             regions=self.region,
-            catalog=self.catalog,
+            catalogs=self.catalog,
             models=self.model,
             exps=self.exp).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")

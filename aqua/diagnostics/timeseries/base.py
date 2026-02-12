@@ -355,7 +355,7 @@ class PlotBaseMixin():
             diagnostic=diagnostic,
             variable=self.long_name,
             regions=self.region,
-            catalog=self.catalogs,
+            catalogs=self.catalogs,
             models=self.models,
             exps=self.exps,
             ref_catalog=self.ref_catalogs if self.ref_catalogs else None,
