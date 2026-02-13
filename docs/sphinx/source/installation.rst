@@ -22,25 +22,18 @@ Pip installation
 
 AQUA-diagnostics is also available on the Python Package Index (PyPI) repository and can be installed with pip.
 However, some dependencies are not available on PyPI, so you may need to install them manually
-The extra dependencies are listed in the ``environment.yml`` file in the repository and are:
+The full set of dependencies are listed in the ``environment.yml`` file in the repository and are:
 
-- ``pip``
-- ``cdo>=2.5.0``
-- ``eccodes==2.41.0``
-- ``tempest-extremes``
+.. code-block:: bash
+    mamba create -n aquarium -c conda-forge python=3.12 cdo eccodes=2.41.0 esmpy
+    mamba activate aquarium
+    pip install aqua-diagnostics[core]
 
-.. note::
+The same environment is available in the repo in the ``min-environment.yml`` file.
 
     If you need to access data written in a local FDB database (not polytope), you need to install the FDB5 library.
     The FDB5 library is not available in the conda-forge repository, so you need to install it manually.
     If you are working on a supported HPC, you can check the corresponding section for more information in the :ref:`HPC installation <installation-hpc2020>` section.
-
-Once the extra dependencies are installed, you can install AQUA with the following command:
-
-.. code-block:: bash
-
-    pip install aqua-diagnostics
-
 
 Extra dependencies
 ^^^^^^^^^^^^^^^^^^
