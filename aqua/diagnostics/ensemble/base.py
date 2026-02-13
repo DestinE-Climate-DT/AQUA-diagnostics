@@ -283,8 +283,6 @@ class BaseMixin(Diagnostic):
             self.catalog is not None
             and self.model is not None
             and self.exp is not None
-            #and str(self.catalog) != str(self.None_catalog)
-            #and str(self.catalog) != str(self.multi_catalog)
         ):
             outputsaver = OutputSaver(
                 diagnostic=self.diagnostic_name,
@@ -306,25 +304,6 @@ class BaseMixin(Diagnostic):
             )
         else:
             self.logger.info(f"Output is not saved, please check {self.catalog}, {self.model} and {self.exp}")
-
-            #data.attrs = {
-            #    "AQUA diagnostic": self.diagnostic_product,
-            #    "AQUA catalog": self.catalog_list,
-            #    "model": self.model_list,
-            #    "experiment": self.exp_list,
-            #    "description": description,
-            #}
-
-            #catalog_str = "_".join(self.catalog_list)
-            #model_str = "_".join(self.model_list)
-            #exp_str = "_".join(self.exp_list)
-
-            #filename = f"{self.outputdir}/{catalog_str}_{model_str}_{exp_str}_{data_name}_{var}.nc"
-            #
-            #data.to_netcdf(filename)
-            #self.logger.info(
-            #    f"Saving the output without the OutputSaver to {self.outputdir}/{self.catalog_list}_{self.model_list}_{self.exp_list}_{data_name}_{var}.nc"
-            #)
 
     # Save figure
     def save_figure(self, var, fig=None, fig_std=None, startdate=None, enddate=None, description=None, format="png", dpi=300):    
@@ -387,8 +366,6 @@ class BaseMixin(Diagnostic):
             self.catalog is not None
             and self.model is not None
             and self.exp is not None
-            #and str(self.catalog) != str(self.None_catalog)
-            #and str(self.catalog) != str(self.multi_catalog)
         ):
             if fig is not None:
                 outputsaver = OutputSaver(
@@ -403,10 +380,6 @@ class BaseMixin(Diagnostic):
                     loglevel=self.loglevel,
                 )
                 extra_keys = {}
-                # if fig_std is not None:
-                #    data = "std"
-                # else:
-                #    data = "mean"
                 data = "mean"
                 if var is not None:
                     extra_keys.update({"var": var, "data": data})
@@ -449,8 +422,6 @@ class BaseMixin(Diagnostic):
                         loglevel=self.loglevel,
                     )
                     extra_keys = {}
-                    # if fig_std is not None:
-                    #    data = "std"
                     data = "std"
                     if var is not None:
                         extra_keys.update({"var": var, "data": data})
@@ -476,27 +447,3 @@ class BaseMixin(Diagnostic):
                         raise ValueError(f"Format {format} not supported. Use png or pdf.")
         else:
             self.logger.info(f"Output plot is not saved, please check {self.catalog}, {self.model} and {self.exp}")
-            #if fig:
-            #    extra_keys = {"statistics": "mean"}
-            #    extra_keys.update(metadata)
-            #    extra_keys = {k: str(v) for k, v in extra_keys.items()}
-            #    fig.savefig(
-            #        f"{self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_mean.png",
-            #        bbox_inches="tight",
-            #        metadata=extra_keys,
-            #    )
-            #    self.logger.info(
-            #        f"Saving the figure without the OutputSaver to {self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_mean.png"
-            #    )
-            #if fig_std:
-            #    extra_keys = {"statistics": "standard deviation"}
-            #    extra_keys.update(metadata)
-            #    extra_keys = {k: str(v) for k, v in extra_keys.items()}
-            #    fig_std.savefig(
-            #        f"{self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_STD.png",
-            #        bbox_inches="tight",
-            #        metadata=extra_keys,
-            #    )
-            #    self.logger.info(
-            #        f"Saving the STD figure without the OutputSaver to {self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_STD.png"
-            #    )
