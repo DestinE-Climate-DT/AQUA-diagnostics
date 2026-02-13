@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
-from aqua.core.util import get_projection, get_realizations
+from aqua.core.util import get_projection, get_realizations, unit_to_latex
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .stat_global_biases import StatGlobalBiases
 from .util import handle_pressure_level
@@ -222,7 +222,7 @@ class PlotGlobalBiases:
             )
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
-            units = data[var].attrs.get('units', '')
+            units = unit_to_latex(data[var].attrs.get('units', ''))
             stats_text = f"Mean: {mean_bias:{'.2g'}}" + (f" {units}" if units else "")
             stats_text += f"\nRMSE: {rmse:{'.2g'}}" + (f" {units}" if units else "")
 
