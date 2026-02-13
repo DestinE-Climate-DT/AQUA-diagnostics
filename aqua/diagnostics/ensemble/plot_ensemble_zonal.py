@@ -3,6 +3,7 @@ import xarray as xr
 from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.logger import log_configure
+from aqua.diagnostics.base import TitleBuilder
 
 from .base import BaseMixin
 
@@ -151,8 +152,10 @@ class PlotEnsembleZonal(BaseMixin):
         """
         self.logger.info("Plotting the ensemble computation of Zonal-averages as mean and STD in Lev-Lon of var {self.var}")
 
-        title_mean = "Ensemble mean of " + self.model if title_mean is None else title_mean
-        title_std = "Ensemble standard deviation of " + self.model if title_std is None else title_std
+        if title_mean is None:
+            title_mean = TitleBuilder(diagnostic="Ensemble mean", models=self.model).generate()
+        if title_std is None:
+            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", models=self.model).generate()
 
         if (dataset_mean is None) or (dataset_std is None):
             raise NoDataError("No data given to the plotting function")

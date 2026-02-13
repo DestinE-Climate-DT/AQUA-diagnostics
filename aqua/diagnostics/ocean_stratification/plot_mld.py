@@ -4,7 +4,7 @@ import cartopy.crs as ccrs
 
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, get_realizations
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .mld_profiles import plot_maps
 
 
@@ -226,9 +226,9 @@ class PlotMLD:
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the MLD plot."""
-        if plot_type is None:
-            plot_type = ""
-        self.suptitle = f"MLD in {self.region} - {self.clim_time} climatology - {self.catalog} {self.model} {self.exp}"
+        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region, 
+                             catalogs=self.catalog, models=self.model, exps=self.exp, 
+                             timeseason=f"{self.clim_time} climatology").generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):

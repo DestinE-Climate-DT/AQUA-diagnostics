@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
-from aqua.core.util import get_projection, get_realizations
-from aqua.diagnostics.base import OutputSaver
+from aqua.core.util import get_projection, get_realizations, unit_to_latex
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .stat_global_biases import StatGlobalBiases
 from .util import handle_pressure_level
 
@@ -15,6 +15,7 @@ class PlotGlobalBiases:
                  save_pdf=True, save_png=True, 
                  dpi=300, outputdir='./',
                  cmap='RdBu_r',
+                 return_fig: bool = False,
                  loglevel='WARNING'):
         """
         Initialize the PlotGlobalBiases class.
@@ -26,6 +27,7 @@ class PlotGlobalBiases:
             dpi (int): Resolution of saved figures.
             outputdir (str): Output directory for saved plots.
             cmap (str): Colormap to use for the plots.
+            return_fig (bool): Whether plotting methods should return the figure and axes.
             loglevel (str): Logging level.
         """
         self.diagnostic = diagnostic
@@ -34,6 +36,7 @@ class PlotGlobalBiases:
         self.dpi = dpi
         self.outputdir = outputdir
         self.cmap = cmap
+        self.return_fig = return_fig
         self.loglevel = loglevel
 
         self.logger = log_configure(log_level=loglevel, log_name='Global Biases')
@@ -106,8 +109,14 @@ class PlotGlobalBiases:
         realization = get_realizations(data)
         proj = get_projection(proj, **proj_params)
         
-        title = (f"Climatology of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}" 
-                + (f" at {int(plev / 100)} hPa" if plev else ""))
+        extra_info = f"at {int(plev / 100)} hPa" if plev else None
+        title = TitleBuilder(
+            diagnostic="Climatology",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            extra_info=extra_info
+        ).generate()
 
         fig, ax = plot_single_map(
             data[var],
@@ -131,8 +140,13 @@ class PlotGlobalBiases:
             f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
         )
 
-        self._save_figure(fig=fig, diagnostic_product='annual_climatology',
-                          data=data, description=description, var=var, plev=plev, realization=realization)
+        if self.save_pdf or self.save_png:
+            self._save_figure(fig=fig, diagnostic_product='annual_climatology',
+                              data=data, description=description, var=var, plev=plev, realization=realization)
+
+        if self.return_fig:
+            return fig, ax
+        return None
 
 
     def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None, area=None, show_stats=False):
@@ -163,9 +177,18 @@ class PlotGlobalBiases:
 
         proj = get_projection(proj, **proj_params)
 
-        title = (f"Global bias of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}\n"
-                 f"relative to {data_ref.AQUA_model} climatology"
-                 + (f" at {int(plev / 100)} hPa" if plev else ""))
+        extra_info = f"at {int(plev / 100)} hPa" if plev else None
+        title = TitleBuilder(
+            diagnostic="Global bias",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            comparison="\nrelative to ",
+            ref_model=data_ref.AQUA_model,
+            ref_exp=data_ref.AQUA_exp,
+            timeseason="climatology ",
+            extra_info=extra_info
+        ).generate()
 
         fig, ax = plot_single_map_diff(
             data=data[var], 
@@ -199,7 +222,7 @@ class PlotGlobalBiases:
             )
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
-            units = data[var].attrs.get('units', '')
+            units = unit_to_latex(data[var].attrs.get('units', ''))
             stats_text = f"Mean: {mean_bias:{'.2g'}}" + (f" {units}" if units else "")
             stats_text += f"\nRMSE: {rmse:{'.2g'}}" + (f" {units}" if units else "")
 
@@ -221,8 +244,13 @@ class PlotGlobalBiases:
             f" from {data_ref.startdate} to {data_ref.enddate} used as reference data."
         )
 
-        self._save_figure(fig=fig, diagnostic_product='bias', data=data, data_ref=data_ref,
-                          description=description, var=var, plev=plev, realization=realization)
+        if self.save_pdf or self.save_png:
+            self._save_figure(fig=fig, diagnostic_product='bias', data=data, data_ref=data_ref,
+                              description=description, var=var, plev=plev, realization=realization)
+
+        if self.return_fig:
+            return fig, ax
+        return None
 
 
     def plot_seasonal_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None):
@@ -253,9 +281,18 @@ class PlotGlobalBiases:
         season_list = ['DJF', 'MAM', 'JJA', 'SON']
         sym = vmin is None or vmax is None
 
-        title = (f"Seasonal bias of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}\n"
-                 f"relative to {data_ref.AQUA_model} climatology"
-                 + (f" at {int(plev / 100)} hPa" if plev else ""))
+        extra_info = f"at {int(plev / 100)} hPa" if plev else None
+        title = TitleBuilder(
+            diagnostic="Seasonal bias",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            comparison="\nrelative to ",
+            ref_model=data_ref.AQUA_model,
+            ref_exp=data_ref.AQUA_exp,
+            timeseason="climatology ",
+            extra_info=extra_info
+        ).generate()
 
         plot_kwargs = {
             'maps': [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
@@ -289,8 +326,13 @@ class PlotGlobalBiases:
             f" and from {data_ref.startdate} to {data_ref.enddate} for the reference data."
         )
 
-        self._save_figure(fig=fig, diagnostic_product='seasonal_bias', data=data, data_ref=data_ref,
+        if self.save_pdf or self.save_png:
+            self._save_figure(fig=fig, diagnostic_product='seasonal_bias', data=data, data_ref=data_ref,
                           description=description, var=var, plev=plev, realization=realization)
+
+        if self.return_fig:
+            return fig
+        return None
 
 
     def plot_vertical_bias(self, data, data_ref, var, plev_min=None, plev_max=None, 
@@ -314,10 +356,16 @@ class PlotGlobalBiases:
 
         realization = get_realizations(data)
 
-        title = (
-            f"Vertical bias of {data[var].attrs.get('long_name', var)} for {data.AQUA_model} {data.AQUA_exp}\n"
-            f"relative to {data_ref.AQUA_model} climatology\n"
-        )
+        title = TitleBuilder(
+            diagnostic="Vertical bias",
+            variable=data[var].attrs.get('long_name', var),
+            models=data.AQUA_model,
+            exps=data.AQUA_exp,
+            comparison="\nrelative to ",
+            ref_model=data_ref.AQUA_model,
+            ref_exp=data_ref.AQUA_exp,
+            timeseason="climatology ",
+        ).generate()
 
         description = (
             f"Vertical bias plot of {data[var].attrs.get('long_name', var)} across pressure levels from {data.startdate} to {data.enddate}"
@@ -345,7 +393,12 @@ class PlotGlobalBiases:
             loglevel=self.loglevel
         )
 
-        self._save_figure(fig=fig, diagnostic_product='vertical_bias', data=data, data_ref=data_ref,
+        if self.save_pdf or self.save_png:
+            self._save_figure(fig=fig, diagnostic_product='vertical_bias', data=data, data_ref=data_ref,
                           description=description, var=var, realization=realization)
 
+        if self.return_fig:
+            return fig, ax
+
         self.logger.info("Vertical bias plot completed successfully.")
+        return None

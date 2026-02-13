@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
+- Introduce common `TitleBuilder` class for all diagnostics (#99)
 - LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
 - Global Biases: add mean value and RMSE to global bias plot (#132)
 - Teleconnections: fix timmean assignment in ENSO, NAO, MJO diagnostics (#129)

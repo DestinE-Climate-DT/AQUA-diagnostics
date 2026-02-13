@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from aqua.core.util import to_list, unit_to_latex, DEFAULT_REALIZATION
-from aqua.diagnostics.base import OutputSaver
 
 
 class PlotHistogram():
@@ -107,21 +107,18 @@ class PlotHistogram():
 
     def set_title(self):
         """Set the title for the plot."""
-        title = "Histogram "
-        
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
-                title += f'of {name} '
+                variable = name
                 break
         
-        if self.units is not None:
-            title += f'[{unit_to_latex(self.units)}] '
-
-        if self.region is not None:
-            title += f'[{self.region}] '
-
-        if self.len_data == 1:
-            title += f'for {self.catalogs[0]} {self.models[0]} {self.exps[0]} '
+        title = TitleBuilder(
+            diagnostic="Histogram",
+            variable=variable,
+            regions=self.region,
+            catalogs=self.catalogs,
+            models=self.models,
+            exps=self.exps).generate()
 
         self.logger.debug('Title: %s', title)
         return title

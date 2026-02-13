@@ -4,7 +4,7 @@ from aqua.core.logger import log_configure
 from aqua.core.configurer import ConfigPath
 from aqua.core.util import load_yaml, select_season, to_list
 from aqua.core.util import convert_data_units, get_realizations
-from aqua.diagnostics.base import Diagnostic, OutputSaver
+from aqua.diagnostics.base import Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
 
@@ -209,12 +209,22 @@ class PlotBaseMixin():
             diagnostic (str): The name of the diagnostic. Default is None.
         
         Returns:
-            str: The title of the index plot.
+            list: List of titles for each index plot.
         """
-        titles_dataset = [f'{diagnostic} index for {self.models[i]} {self.exps[i]}'
-                          for i in range(self.len_data)]
-        titles_ref = [f'{diagnostic} index for {self.ref_models[i]} {self.ref_exps[i]}'
-                      for i in range(self.len_ref)]
+        titles_dataset = []
+        for i in range(self.len_data):
+            title = TitleBuilder(diagnostic=f"{diagnostic} index" if diagnostic else "index",
+                                 models=self.models[i] if self.models else None,
+                                 exps=self.exps[i] if self.exps else None).generate()
+            titles_dataset.append(title)
+        
+        titles_ref = []
+        for i in range(self.len_ref):
+            title = TitleBuilder(diagnostic=f"{diagnostic} index" if diagnostic else "index",
+                                 models=self.ref_models[i] if self.ref_models else None,
+                                 exps=self.ref_exps[i] if self.ref_exps else None).generate()
+            titles_ref.append(title)
+        
         titles = titles_dataset + titles_ref
 
         return titles
