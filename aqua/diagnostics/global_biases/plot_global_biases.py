@@ -6,6 +6,7 @@ from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
 from aqua.core.util import get_projection, get_realizations
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from .stat_global_biases import StatGlobalBiases
 from .util import handle_pressure_level
 
 class PlotGlobalBiases: 
@@ -148,7 +149,7 @@ class PlotGlobalBiases:
         return None
 
 
-    def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None):
+    def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None, area=None, show_stats=False):
         """
         Plots the bias map between two datasets.
 
@@ -162,6 +163,8 @@ class PlotGlobalBiases:
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
             cbar_label (str, optional): Label for the colorbar.
+            area (xr.DataArray, optional): Grid cell areas for computing weighted statistics.
+            show_stats (bool, optional): Whether to show statistical information on the plot.
         """
         self.logger.info('Plotting global biases.')
 
@@ -204,6 +207,34 @@ class PlotGlobalBiases:
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
+
+        #  Add statistics to the plot if requested
+        if show_stats:
+            self.logger.debug('Computing bias statistics.')
+            if area is None:
+                self.logger.warning('Grid areas not provided, unweighted statistics will be computed.')
+            bs = StatGlobalBiases(loglevel=self.loglevel)
+            stats = bs.compute_bias_statistics(
+                data=data,
+                data_ref=data_ref,
+                var=var,
+                area=area
+            )
+            mean_bias = float(stats.mean_bias.values)
+            rmse = float(stats.rmse.values)
+            units = data[var].attrs.get('units', '')
+            stats_text = f"Mean: {mean_bias:{'.2g'}}" + (f" {units}" if units else "")
+            stats_text += f"\nRMSE: {rmse:{'.2g'}}" + (f" {units}" if units else "")
+
+            x, y, ha, va = (0.02, 0.87, 'left', 'center')
+            # Add text to figure
+            fig.text(x, y, stats_text,
+                    fontsize=12,
+                    ha=ha, va=va,
+                    transform=fig.transFigure,
+                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black'))
+            
+            self.logger.info(f'Added statistics to plot: Mean={mean_bias:{'.2g'}}, RMSE={rmse:{'.2g'}}')
 
         description = (
             f"Spatial map of global bias of {data[var].attrs.get('long_name', var)}"

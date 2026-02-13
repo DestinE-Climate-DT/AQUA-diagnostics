@@ -9,6 +9,8 @@ Unreleased in the current development version (target v0.23.0):
 
 Complete list:
 - Introduce common `TitleBuilder` class for all diagnostics (#99)
+- LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
+- Global Biases: add mean value and RMSE to global bias plot (#132)
 - Teleconnections: fix timmean assignment in ENSO, NAO, MJO diagnostics (#129)
 - Seaice: Add gridlines in maps (#125)
 - Add cross-check workflow for testing against aqua-core main or tag/branch (#126)
@@ -42,7 +44,6 @@ Complete list:
 - Fix of aqua_path for analysis console (#56)
 - Boxplots: hotfix for diagnostic_name (#69)
 - Histogram: CLI refactoring (#49)
-- Lat-lon profiles dask fix (#63)
 - Fix argument passing by common CLI for `regrid`, `startdate` and `enddate` (#52)
 - Introduce call to pd.Timestamp in Global_Bias to accomodate also non-nanoseconds time window (#52)
 - Remove time selection from SeaIce, now centralised in CLI (#52)
