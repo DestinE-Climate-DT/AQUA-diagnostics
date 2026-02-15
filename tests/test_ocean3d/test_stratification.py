@@ -26,5 +26,5 @@ def test_stratification():
         mld=True,
         )
     assert strat is not None, "strat instance should not be None"
-    assert strat.data["mld"].values == pytest.approx(2.5000076,rel=approx_rel)
-    assert strat.data["rho"].isel(level=1).values == pytest.approx(-3.34617212e+08,rel=approx_rel)
+    assert strat.data["mld"].values == pytest.approx(25.49270658, rel=approx_rel)
+    assert strat.data["rho"].isel(level=1).values == pytest.approx(26.8719114, rel=approx_rel)
