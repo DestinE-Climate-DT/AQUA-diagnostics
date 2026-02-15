@@ -125,7 +125,7 @@ class Stratification(Diagnostic):
         self.logger.info("Computing stratification.")
         self.compute_stratification()
         # If a region is specified, apply area selection to self.data
-        if region != None:
+        if region:
             self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
             res_dict = super()._select_region(
                 data=self.data, region=region, diagnostic="ocean3d", drop=True
