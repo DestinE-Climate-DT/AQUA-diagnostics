@@ -83,6 +83,80 @@ class PlotGlobalBiases:
                                 save_pdf=self.save_pdf, save_png=self.save_png,
                                 dpi=self.dpi)
 
+    def _compute_bias_significance(self, data_ts, data_ref_ts, var, plev, alpha):
+        """
+        Compute the statistical significance of the bias between two datasets using a t-test.
+        Args:
+            data_ts (xarray.Dataset): Time series dataset for the primary data.
+            data_ref_ts (xarray.Dataset): Time series dataset for the reference data.
+            var (str): Variable name to analyze.
+            plev (float): Pressure level to analyze (if applicable).
+            alpha (float): Significance level for the t-test (e.g., 0.05 for 95% confidence).
+        Returns:
+            xarray.DataArray: A boolean mask indicating where the bias is statistically significant.
+        """
+        data_ts = handle_pressure_level(data_ts, var, plev, loglevel=self.loglevel)
+        data_ref_ts = handle_pressure_level(data_ref_ts, var, plev, loglevel=self.loglevel)
+
+        stat_test = StatGlobalBiases(loglevel=self.loglevel)
+
+        return stat_test.compute_significance_ttest(
+            data_ts, data_ref_ts, var, alpha=alpha
+        )
+
+    def _add_significance_stippling(self, ax, significance_mask, lat, lon,
+                                    stipple_density=3, stipple_size=0.5,
+                                    stipple_color='black', invert_mask=False
+                                    ):
+        """
+        Add stippling to indicate statistical significance on a map.
+
+        The function subsamples the significance mask to avoid overcrowding
+        and plots small dots (stipples) at grid points where the mask is True.
+        Args:
+        ax (matplotlib.axes.Axes): The axes to plot on.
+        significance_mask (xarray.DataArray): Boolean mask indicating significant points.
+        lat (xarray.DataArray): Latitude coordinates.
+        lon (xarray.DataArray): Longitude coordinates.
+        stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point). Default is 3.
+        stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
+        stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
+        invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points). Default is False (stippling where significant).
+        """
+
+        # Subsample the significance mask along latitude and longitude
+        # (e.g. every Nth grid point) to control stippling density
+        mask_sub = significance_mask.isel(
+            lat=slice(None, None, stipple_density),
+            lon=slice(None, None, stipple_density)
+        )
+
+        # Extract the corresponding subsampled latitude and longitude coordinates
+        lat_sub = mask_sub.lat
+        lon_sub = mask_sub.lon
+
+        # Create 2D coordinate grids for plotting
+        # This maps each grid point to its geographic location
+        lon_mesh, lat_mesh = np.meshgrid(lon_sub, lat_sub)
+
+        # Optionally invert the mask:
+        # - False (default): stipple where differences ARE significant
+        # - True: stipple where differences are NOT significant
+        mask_to_plot = ~mask_sub if invert_mask else mask_sub
+
+        # Plot stippling using a scatter plot:
+        # dots are placed only at grid points where mask_to_plot is True
+        ax.scatter(
+            lon_mesh[mask_to_plot.values],
+            lat_mesh[mask_to_plot.values],
+            s=stipple_size,
+            c=stipple_color,
+            transform=ccrs.PlateCarree(),
+            alpha=0.6,
+            linewidths=0
+        )
+
+
     def plot_climatology(self, data, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None):
         """
         Plots the climatology map for a given variable and time range.
@@ -148,8 +222,10 @@ class PlotGlobalBiases:
             return fig, ax
         return None
 
-
-    def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None, area=None, show_stats=False):
+    def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None, area=None, show_stats=False,
+                  data_timeseries=None, data_ref_timeseries=None, 
+                  show_significance=False, significance_alpha=0.05,
+                  stipple_density=3, stipple_size=0.5, invert_stippling=False):
         """
         Plots the bias map between two datasets.
 
@@ -208,6 +284,40 @@ class PlotGlobalBiases:
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
 
+        # Add significance stippling if requested
+        if show_significance and data_timeseries is not None:
+
+            self.logger.info('Computing statistical significance for bias.')
+
+            significance_mask = self._compute_bias_significance(
+            data_timeseries, data_ref_timeseries, var, plev=plev, alpha=significance_alpha)
+
+            # Add stippling
+            lat = data[var].coords.get('lat', data[var].coords.get('latitude'))
+            lon = data[var].coords.get('lon', data[var].coords.get('longitude'))
+            
+            self._add_significance_stippling(
+                ax, significance_mask, lat, lon,
+                stipple_density=stipple_density,
+                stipple_size=stipple_size,
+                invert_mask=invert_stippling
+            )
+           
+            pct_sig = significance_mask.attrs.get('percent_significant', 0)
+            n_samples = significance_mask.attrs.get('n_samples_model', 'unknown')
+            self.logger.info(f'Added significance stippling: {pct_sig:.1f}% of points are significant.')
+            
+            ax.text(
+                0.99, 0.01,
+                f"Stippling: p < {significance_alpha}\n"
+                f"Welch t-test, N = {n_samples}\n"
+                f"Significant points: {pct_sig:.1f}%",
+                transform=ax.transAxes,
+                ha="right", va="bottom",
+                fontsize=9,
+                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
+            )
+
         #  Add statistics to the plot if requested
         if show_stats:
             self.logger.debug('Computing bias statistics.')
@@ -234,8 +344,7 @@ class PlotGlobalBiases:
                     transform=fig.transFigure,
                     bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black'))
             
-            self.logger.info(f'Added statistics to plot: Mean={mean_bias:{'.2g'}}, RMSE={rmse:{'.2g'}}')
-
+            self.logger.info(f"Added statistics to plot: Mean={mean_bias:.2g}, RMSE={rmse:.2g}")
         description = (
             f"Spatial map of global bias of {data[var].attrs.get('long_name', var)}"
             f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''}"
