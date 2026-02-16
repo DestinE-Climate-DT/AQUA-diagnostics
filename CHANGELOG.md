@@ -5,7 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Unreleased in the current development version (target v0.23.0):
+Unreleased in the current development version (target v0.24.0):
+
+## [v0.23.0]
+
+Main changes:
+1. Introduce common `TitleBuilder` class for all diagnostics
+2. Rename tools/diagnostics with tools/collections 
 
 Complete list:
 - Introduce common `TitleBuilder` class for all diagnostics (#99)
@@ -58,7 +64,6 @@ Main changes:
 1. Complete refactor of the repository to accomodate for the first release of AQUA-diagnostics, now depending on `aqua-core` package.
 2. `aqua-diagnostics` released on pypi.
 
-
 Complete list:
 - Timeseries: Extra timestep in Timeseries analysis fix (#57)
 - Notebooks update with new plt.close() pattern (#50)
@@ -77,5 +82,6 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...HEAD
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...HEAD
+[v0.23.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...v0.23.0
 [v0.22.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...v0.22.0
