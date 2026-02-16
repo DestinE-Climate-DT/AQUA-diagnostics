@@ -116,7 +116,7 @@ class PlotHistogram():
                 break
         
         title = TitleBuilder(
-            diagnostic="Histogram",
+            diagnostic=None,
             variable=variable,
             regions=self.region,
             catalogs=self.catalogs,
