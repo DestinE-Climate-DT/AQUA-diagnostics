@@ -6,41 +6,39 @@ Installation
 In this section we will provide a step-by-step guide to install the Python package ``aqua-diagnostics``.
 AQUA-diagnostics is developed and tested with Python 3.12 and it supports Python 3.9 or later (with the exclusions of 3.13).
 
-AQUA-diagnostics extends the AQUA package (https://github.com/DestinE-Climate-DT/AQUA), which provides 
-the core functionalities required for running diagnostics. When you install AQUA-diagnostics, AQUA 
+AQUA-diagnostics extends the AQUA-core package (https://github.com/DestinE-Climate-DT/AQUA), which provides 
+the core functionalities required for running diagnostics. When you install AQUA-diagnostics, AQUA-core
 will be automatically installed as a dependency, giving you access to both packages.
-
-.. note::
-
-    If you need to install AQUA in editable mode for development purposes, you must clone the 
-    AQUA repository separately and install it in editable mode before installing AQUA-diagnostics.
 
 .. _installation-pip:
 
-Pip installation
-----------------
+Conda/Mamba installation with pip
+---------------------------------
 
-AQUA-diagnostics is also available on the Python Package Index (PyPI) repository and can be installed with pip.
-However, some dependencies are not available on PyPI, so you may need to install them manually
-The extra dependencies are listed in the ``environment.yml`` file in the repository and are:
+Prerequisites
+^^^^^^^^^^^^^
+- `Miniforge <https://github.com/conda-forge/miniforge>`_ : Miniforge is a package manager for conda-forge, and it is the recommended package manager for the installation process. 
 
-- ``pip``
-- ``cdo>=2.5.0``
-- ``eccodes==2.41.0``
-- ``tempest-extremes``
+Installation with Miniforge
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+AQUA-diagnostics is available on the Python Package Index (PyPI) repository and can be installed with pip.
+However, some dependencies are not available on PyPI, so you may need to install them manually: 
+recommended way to do this is to use Mamba/Conda package manager for the installation process of the dependencies, and then use pip to install AQUA-diagnostics itself.
+This can be achieved with:
+
+.. code-block:: bash
+    mamba create -n aquarium -c conda-forge python=3.12 cdo eccodes=2.41.0 esmpy
+    mamba activate aquarium
+    pip install aqua-diagnostics[core]
+
+The same environment is available in the AQUA-diagnostics GitHub repository in the ``environment-pypi.yml`` file.
 
 .. note::
 
     If you need to access data written in a local FDB database (not polytope), you need to install the FDB5 library.
     The FDB5 library is not available in the conda-forge repository, so you need to install it manually.
     If you are working on a supported HPC, you can check the corresponding section for more information in the :ref:`HPC installation <installation-hpc2020>` section.
-
-Once the extra dependencies are installed, you can install AQUA with the following command:
-
-.. code-block:: bash
-
-    pip install aqua-diagnostics
-
 
 Extra dependencies
 ^^^^^^^^^^^^^^^^^^
@@ -65,20 +63,13 @@ Or to install all the extra dependencies:
 .. _installation-conda:
 
 
-Conda/Mamba installation
-------------------------
+Conda/Mamba installation with environment file
+----------------------------------------------
 
 It is possible to use Mamba/Conda package manager for the installation process.
 AQUA-diagnostics is not yet available on the conda-forge repository, so the installation process requires the use of an environment file
 that contains all the required dependencies.
 
-
-Prerequisites
-^^^^^^^^^^^^^
-Before installing AQUA-diagnostics, ensure that you have the following software installed:
-
-- `Git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_: AQUA-diagnostics is hosted on GitHub, and you will need Git to clone the repository.
-- `Miniforge <https://github.com/conda-forge/miniforge>`_ : Miniforge is a package manager for conda-forge, and it is the recommended package manager for the installation process. 
 
 .. _installation-conda:
 
@@ -90,6 +81,7 @@ First, clone the AQUA-diagnostics repository from GitHub:
 .. code-block:: bash
 
     git clone git@github.com:DestinE-Climate-DT/AQUA-diagnostics.git
+
 Then, navigate to the AQUA-diagnostics directory:
 
 .. code-block:: bash
@@ -101,7 +93,7 @@ An environment file is provided in the repository, so you can create the environ
 
 .. code-block:: bash
 
-    conda env create -f environment.yml
+    mamba env create -f environment.yml
 
 This will create a new environment called ``aqua-diagnostics`` with all the required dependencies.
 
@@ -109,7 +101,7 @@ Finally, activate the environment:
 
 .. code-block:: bash
 
-    conda activate aqua-diagnostics
+    mamba activate aqua-diagnostics
 
 At this point, you should have successfully installed the AQUA-diagnostics package and its dependencies 
 in the newly created aqua-diagnostics environment.
@@ -119,18 +111,11 @@ in the newly created aqua-diagnostics environment.
 
     By default, the environment file installs the cloned version of AQUA-diagnostics in editable mode with ``pip install -e .[all]``.
 
+.. note::
 
-Update of the environment
--------------------------
+    If you need to install AQUA-core in editable mode for development purposes, you must clone the 
+    AQUA-core repository separately and install it in editable mode before installing AQUA-diagnostics.
 
-If you want to install AQUA-diagnostics in an existing environment, or if you want to update the environment with the latest version of the package,
-you can install the dependencies with the following command:
-
-.. code-block:: bash
-
-    conda env update -n <environment_name> -f environment.yml
-
-Replace ``<environment_name>`` with the name of the existing environment if this is different from ``aqua-diagnostics``.
 
 .. _installation-lumi:
 

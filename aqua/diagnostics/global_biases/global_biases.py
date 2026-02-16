@@ -1,7 +1,7 @@
 import pandas as pd
 import xarray as xr
 from aqua.core.logger import log_configure
-from aqua.core.util import select_season, convert_data_units
+from aqua.core.util import select_season
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.exceptions import NoDataError
 from aqua.diagnostics.base import Diagnostic

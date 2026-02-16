@@ -4,6 +4,7 @@ from cartopy.crs import NorthPolarStereo
 from aqua.core.logger import log_configure
 from aqua.core.graphics import indexes_plot, plot_single_map, plot_single_map_diff
 from aqua.core.util import apply_circular_window
+from aqua.diagnostics.base import TitleBuilder
 from .base import PlotBaseMixin, _homogeneize_maps
 
 
@@ -32,7 +33,10 @@ class PlotNAO(PlotBaseMixin):
 
         labels = super().set_labels()
 
-        fig, axs = indexes_plot(indexes=indexes, thresh=thresh, suptitle='NAO index',
+        title = TitleBuilder(diagnostic="NAO index", models=self.models, exps=self.exps,
+                             ref_model=self.ref_models, ref_exp=self.ref_exps).generate()
+
+        fig, axs = indexes_plot(indexes=indexes, thresh=thresh, suptitle=title,
                                 ylabel='NAO index', labels=labels, loglevel=self.loglevel)
 
         return fig, axs
@@ -89,9 +93,8 @@ class PlotNAO(PlotBaseMixin):
 
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = f"NAO {maps.AQUA_model} {maps.AQUA_exp} {statistic} map ({var})"
-                if hasattr(maps, 'AQUA_season'):
-                    title += f" ({maps.AQUA_season})"
+                title = TitleBuilder(diagnostic=f"NAO {statistic} map ({var})", models=maps.AQUA_model, exps=maps.AQUA_exp, 
+                                     timeseason=getattr(maps, "AQUA_season", None)).generate()
                 fig, ax = plot_single_map(data=maps, fig=fig, ax=ax,
                                           vmin=vmin, vmax=vmax, title=title,
                                           return_fig=True, loglevel=self.loglevel, **kwargs)
@@ -105,9 +108,9 @@ class PlotNAO(PlotBaseMixin):
 
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = f"NAO {maps.AQUA_model} {maps.AQUA_exp} {statistic} map ({var}) compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
-                if hasattr(maps, 'AQUA_season'):
-                    title += f" ({maps.AQUA_season})"
+                title = TitleBuilder(diagnostic=f"NAO {statistic} map ({var})", models=maps.AQUA_model, exps=maps.AQUA_exp, 
+                                     ref_model=ref_maps.AQUA_model, ref_exp=ref_maps.AQUA_exp,
+                                     timeseason=getattr(maps, "AQUA_season", None)).generate()
                 fig, _ = plot_single_map_diff(data=maps, data_ref=ref_maps,
                                                fig=fig, ax=ax,
                                                vmin_contour=vmin if vmin is not None else None,

@@ -5,6 +5,7 @@ from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection, healpix_resample
+from aqua.diagnostics.base import TitleBuilder
 
 # import matplotlib.pyplot as plt
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
@@ -140,7 +141,16 @@ class sshVariabilityPlot(PlotBaseMixin):
         self.logger.info(f"Plotting SSH Variability for {model} and {exp}, from {startdate} to {enddate}.")
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        title = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
+        
+        title = TitleBuilder(
+            diagnostic="SSH Variability",
+            variable=long_name,
+            regions=region,
+            catalogs=catalog,
+            models=model,
+            exps=exp,
+            startyear=startdate,
+            endyear=enddate).generate()
 
         description = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
 
@@ -162,7 +172,6 @@ class sshVariabilityPlot(PlotBaseMixin):
             dataset_std = regrid_data.regrid(dataset_std)
 
         if region is not None:
-            title = title + f"{region} "
             if lon_limits is None or lat_limits is None:
                 self.logger.error(f"For the {region}, please specify the lon_limits and lat_limits.")
             description = description + f"for {region} "
@@ -409,12 +418,26 @@ class sshVariabilityPlot(PlotBaseMixin):
 
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        title = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
+        
+        title = TitleBuilder(
+            diagnostic="The difference of the SSH Variability",
+            variable=long_name,
+            regions=region,
+            catalogs=catalog,
+            models=model,
+            exps=exp,
+            startyear=startdate,
+            endyear=enddate,
+            comparison="relative to",
+            ref_catalog=catalog_ref,
+            ref_model=model_ref,
+            ref_exp=exp_ref,
+            ref_startyear=startdate_ref,
+            ref_endyear=enddate_ref).generate()
 
         description = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
 
         if region:
-            title = title + f"{region} "
 
             if lon_limits is None or lat_limits is None:
                 self.logger.error(f"For the {region}, please specify the lon_limits and lat_limits.")
