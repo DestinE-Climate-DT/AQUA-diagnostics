@@ -11,6 +11,7 @@ from aqua.core.util import get_projection, plot_box, to_list, get_realizations
 from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window, unit_to_latex
+from aqua.core.exceptions import NotEnoughDataError
 from .util import extract_dates, _check_list_regions_type
 
 xr.set_options(keep_attrs=True)
@@ -130,6 +131,11 @@ class Plot2DSeaIce:
         reg_ref = self.reg_ref[0]
         reg_models = [da for da in self.reg_models if da is not None]
 
+        # Ensure all requested months are present in reference and model data
+        self._check_months_available(reg_ref, "reference data")
+        for reg_mod in reg_models:
+            self._check_months_available(reg_mod, "model data")
+
         self.proj = get_projection(self.projname, **self._set_projpars())
 
         for reg_mod in reg_models:
@@ -231,6 +237,17 @@ class Plot2DSeaIce:
             plt.show()
         plt.close(fig)
 
+    def _check_months_available(self, datarr, data_label: str):
+        """
+        Ensure all requested months are present in the given DataArray.
+
+        Raises a NotEnoughDataError if any requested month is missing.
+        """
+        available = set(datarr.coords['month'].values)
+        for month in self.months:
+            if month not in available:
+                raise NotEnoughDataError(f"Month {month} missing in {data_label}. Available months: {sorted(available)}")
+
     def _plot_var_map(self, region, **kwargs):
         """
         Plot monthly climatological sea ice variable only (e.g. fraction or thickness).
@@ -257,6 +274,8 @@ class Plot2DSeaIce:
             **kwargs: Additional plotting arguments
         """
         self.logger.info(f"Processing {data_type} data: {datarr.name}")
+
+        self._check_months_available(datarr, f"{data_type} data")
 
         nrows, ncols = plot_box(num_plots=len(self.months))
         fig = plt.figure(figsize=(ncols * 4.5, nrows * 4))
