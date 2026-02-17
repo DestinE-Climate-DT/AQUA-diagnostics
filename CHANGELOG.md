@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
+- LatLonProfiles: try/except implementation structure in diagnostic CLI (#155)
 - ECmean: fix import (#152)
 - Ocean3d: speedup with netcdf reader (#144)
 - Introduce common `TitleBuilder` class for all diagnostics (#99)
