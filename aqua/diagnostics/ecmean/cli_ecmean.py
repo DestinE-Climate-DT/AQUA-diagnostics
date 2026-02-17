@@ -18,8 +18,8 @@ from aqua.core.exceptions import NoDataError, NotEnoughDataError
 
 from aqua.diagnostics import PerformanceIndices, GlobalMean
 from aqua.diagnostics.base import load_diagnostic_config, merge_config_args, get_diagnostic_configpath
-from aqua.diagnostics.base import template_parse_arguments, OutputSaver
-from aqua.core.util import strlist_to_phrase, lat_to_phrase, TitleBuilder
+from aqua.diagnostics.base import template_parse_arguments, OutputSaver, TitleBuilder
+from aqua.core.util import strlist_to_phrase, lat_to_phrase
 from aqua.core.configurer import ConfigPath
 
 
