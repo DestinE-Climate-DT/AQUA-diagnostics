@@ -117,88 +117,94 @@ def process_variable(cli, var_config, regions, datasets, references,
     
     # Loop over regions
     for region in regions:
-        cli.logger.info(f"Region: {region}")
+        try:
+            cli.logger.info(f"Region: {region if region else 'global'}")
+            
+            # Process datasets
+            profiles = []
+            for dataset in datasets:
+                cli.logger.info(f"Processing dataset: {dataset['model']}/{dataset['exp']}")
+                
+                dataset_args = cli.dataset_args(dataset)
+                
+                profile = LatLonProfiles(
+                    **dataset_args,
+                    region=region,
+                    regions_file_path=regions_file_path,
+                    mean_type=mean_type,
+                    diagnostic_name=diagnostic_name,
+                    loglevel=cli.loglevel
+                )
+                
+                profile.run(
+                    var=var_name,
+                    formula=formula,
+                    long_name=var_long_name,
+                    units=var_units,
+                    standard_name=var_standard_name,
+                    std=compute_std,
+                    freq=freq,
+                    exclude_incomplete=exclude_incomplete,
+                    center_time=center_time,
+                    box_brd=box_brd,
+                    outputdir=cli.outputdir,
+                    rebuild=cli.rebuild,
+                    reader_kwargs=cli.reader_kwargs
+                )
+                
+                profiles.append(profile)
+            
+            # Process reference dataset (if any)
+            profile_ref = None
+            if references:
+                ref = references[0]  # Take first reference
+                cli.logger.info(f"Processing reference: {ref['model']}/{ref['exp']}")
+                
+                ref_args = cli.dataset_args(ref)
+            
+                # For reference, use std dates if specified
+                if ref.get('std_startdate'):
+                    ref_args['startdate'] = ref['std_startdate']
+                if ref.get('std_enddate'):
+                    ref_args['enddate'] = ref['std_enddate']
+                
+                profile_ref = LatLonProfiles(
+                    **ref_args,
+                    region=region,
+                    regions_file_path=regions_file_path,
+                    mean_type=mean_type,
+                    diagnostic_name=diagnostic_name,
+                    loglevel=cli.loglevel
+                )
+                
+                profile_ref.run(
+                    var=var_name,
+                    formula=formula,
+                    long_name=var_long_name,
+                    units=var_units,
+                    standard_name=var_standard_name,
+                    std=True,
+                    freq=freq,
+                    exclude_incomplete=exclude_incomplete,
+                    center_time=center_time,
+                    box_brd=box_brd,
+                    outputdir=cli.outputdir,
+                    rebuild=cli.rebuild,
+                    reader_kwargs={}
+                )
+            
+            # Create plots
+            if compute_longterm and 'longterm' in freq:
+                _create_plot(cli, profiles, profile_ref, 'longterm', diagnostic_name)
+            
+            if compute_seasonal and 'seasonal' in freq:
+                _create_plot(cli, profiles, profile_ref, 'seasonal', diagnostic_name)
         
-        # Process datasets
-        profiles = []
-        for dataset in datasets:
-            cli.logger.info(f"Processing dataset: {dataset['model']}/{dataset['exp']}")
-            
-            dataset_args = cli.dataset_args(dataset)
-            
-            profile = LatLonProfiles(
-                **dataset_args,
-                region=region,
-                regions_file_path=regions_file_path,
-                mean_type=mean_type,
-                diagnostic_name=diagnostic_name,
-                loglevel=cli.loglevel
+        except Exception as e:
+            var_type = "formula" if formula else "variable"
+            cli.logger.error(
+                f"Error processing {var_type} '{var_name}' in region '{region if region else 'global'}': {e}"
             )
-            
-            profile.run(
-                var=var_name,
-                formula=formula,
-                long_name=var_long_name,
-                units=var_units,
-                standard_name=var_standard_name,
-                std=compute_std,
-                freq=freq,
-                exclude_incomplete=exclude_incomplete,
-                center_time=center_time,
-                box_brd=box_brd,
-                outputdir=cli.outputdir,
-                rebuild=cli.rebuild,
-                reader_kwargs=cli.reader_kwargs
-            )
-            
-            profiles.append(profile)
-        
-        # Process reference dataset (if any)
-        profile_ref = None
-        if references:
-            ref = references[0]  # Take first reference
-            cli.logger.info(f"Processing reference: {ref['model']}/{ref['exp']}")
-            
-            # Get base reference args
-            ref_args = cli.dataset_args(ref)
-            
-            # For reference, use std dates if specified
-            if ref.get('std_startdate'):
-                ref_args['startdate'] = ref['std_startdate']
-            if ref.get('std_enddate'):
-                ref_args['enddate'] = ref['std_enddate']
-            
-            profile_ref = LatLonProfiles(
-                **ref_args,
-                region=region,
-                regions_file_path=regions_file_path,
-                mean_type=mean_type,
-                diagnostic_name=diagnostic_name,
-                loglevel=cli.loglevel
-            )
-            
-            profile_ref.run(
-                var=var_name,
-                formula=formula,
-                long_name=var_long_name,
-                units=var_units,
-                standard_name=var_standard_name,
-                std=True,  # Always compute std for reference
-                freq=freq,
-                exclude_incomplete=exclude_incomplete,
-                center_time=center_time,
-                box_brd=box_brd,
-                outputdir=cli.outputdir,
-                rebuild=cli.rebuild,
-                reader_kwargs={}  # No custom reader_kwargs for reference
-            )
-        
-        # Create plots using helper function
-        if compute_longterm and 'longterm' in freq:
-            _create_plot(cli, profiles, profile_ref, 'longterm', diagnostic_name)
-        
-        if compute_seasonal and 'seasonal' in freq:
-            _create_plot(cli, profiles, profile_ref, 'seasonal', diagnostic_name)
 
 
 if __name__ == '__main__':
@@ -247,38 +253,34 @@ if __name__ == '__main__':
         
         # Process all variables and formulae
         for var, is_formula in all_vars:
-            try:
-                cli.logger.info(
-                    "Running LatLonProfiles diagnostic for %s: %s",
-                    "formula" if is_formula else "variable", var)
-                
-                var_config, regions = load_var_config(
-                    cli.config_dict, 
-                    var, 
-                    diagnostic='lat_lon_profiles'
-                )
-                
-                process_variable(
-                    cli=cli,
-                    var_config=var_config,
-                    regions=regions,
-                    datasets=datasets,
-                    references=references,
-                    mean_type=mean_type,
-                    diagnostic_name=diagnostic_name,
-                    freq=freq,
-                    compute_std=compute_std,
-                    exclude_incomplete=exclude_incomplete,
-                    center_time=center_time,
-                    box_brd=box_brd,
-                    compute_longterm=compute_longterm,
-                    compute_seasonal=compute_seasonal,
-                    regions_file_path=regions_file_path,
-                    formula=is_formula
-                )
-            except Exception as e:
-                var_type = "formula" if is_formula else "variable"
-                cli.logger.error(f"Error running LatLonProfiles diagnostic processing {var_type} '{var}': {e}")
+            cli.logger.info(
+                "Running LatLonProfiles diagnostic for %s: %s",
+                "formula" if is_formula else "variable", var)
+            
+            var_config, regions = load_var_config(
+                cli.config_dict, 
+                var, 
+                diagnostic='lat_lon_profiles'
+            )
+            
+            process_variable(
+                cli=cli,
+                var_config=var_config,
+                regions=regions,
+                datasets=datasets,
+                references=references,
+                mean_type=mean_type,
+                diagnostic_name=diagnostic_name,
+                freq=freq,
+                compute_std=compute_std,
+                exclude_incomplete=exclude_incomplete,
+                center_time=center_time,
+                box_brd=box_brd,
+                compute_longterm=compute_longterm,
+                compute_seasonal=compute_seasonal,
+                regions_file_path=regions_file_path,
+                formula=is_formula
+            )
     
     cli.close_dask_cluster()
     cli.logger.info("LatLonProfiles diagnostic completed.")
