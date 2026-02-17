@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.23.0):
 
 Complete list:
-- Remove unused `select_region` method from `Diagnostic` class (#154)
+- Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
 - ECmean: fix import (#152)
 - Ocean3d: speedup with netcdf reader (#144)
 - Introduce common `TitleBuilder` class for all diagnostics (#99)
