@@ -291,28 +291,6 @@ class Diagnostic():
 
         return region, lon_limits, lat_limits
 
-    def select_region(self, region: str = None, diagnostic: str = None, drop: bool = True):
-        """
-        Selects a geographic region from the dataset and updates self.data accordingly.
-
-        If a region name is provided, the method filters the data using the region's
-        predefined latitude and longitude bounds. The selected region name is stored
-        in the dataset attributes.
-
-        It uses the `_select_region` method to perform the selection on the `self.data` attribute.
-        Use the hidden `_select_region` method if you want to select a region on a different dataset.
-
-        Args:
-            region (str, optional): Name of the region to select. If None, no filtering is applied.
-            diagnostic (str, optional): Diagnostic category used to determine region bounds.
-            drop (bool, optional): Whether to drop coordinates outside the selected region. Default is True.
-
-        Returns:
-            tuple: (region, lon_limits, lat_limits)
-        """
-        res_dict = self._select_region(data=self.data, region=region, diagnostic=diagnostic, drop=drop)
-        return res_dict['region'], res_dict['lon_limits'], res_dict['lat_limits']
-
     def _select_region(self, data: xr.Dataset, region: str = None, diagnostic: str = None, drop: bool = True, **kwargs):
         """
         Select a geographic region from the dataset. Used when selection is not on the self.data attribute.
