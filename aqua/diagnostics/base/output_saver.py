@@ -21,7 +21,7 @@ from aqua.core.util.string import clean_filename
 
 class OutputSaver:
     """
-    Class to manage saving outputs, including NetCDF, PDF, and PNG files, with
+    Class to manage saving outputs, including NetCDF, PDF, SVG and PNG files, with
     customized naming based on provided parameters and metadata.
     """
 
@@ -184,8 +184,8 @@ class OutputSaver:
         Core method to handle the common logic for saving files, including checking if the file exists.
         """
 
-        if file_format not in ['pdf', 'png', 'nc']:
-            raise ValueError("file_format must be either 'pdf',  'png' or 'nc'")
+        if file_format not in ['pdf', 'svg', 'png', 'nc']:
+            raise ValueError("file_format must be either 'pdf', 'svg', 'png' or 'nc'")
 
         filename = self.generate_name(
             diagnostic_product=diagnostic_product, extra_keys=extra_keys
@@ -256,7 +256,7 @@ class OutputSaver:
         Generate a folder for saving output files based on the specified format.
 
         Args:
-            extension (str): The extension of the output files (e.g., 'pdf', 'png', 'netcdf').
+            extension (str): The extension of the output files (e.g., 'pdf', 'svg', 'png', 'netcdf').
         
         Returns:
             str: The path to the generated folder.
@@ -280,12 +280,12 @@ class OutputSaver:
                             rebuild: bool = True, extra_keys: Optional[dict] = None, metadata: Optional[dict] = None,
                             dpi: Optional[int] = None):
         """
-        Internal method to save a Matplotlib figure in a single format with common logic for PDF and PNG.
+        Internal method to save a Matplotlib figure in a single format with common logic for PDF, SVG and PNG.
 
         Args:
             fig (plt.Figure): The Matplotlib figure to save.
             diagnostic_product (str): Product of the diagnostic analysis.
-            file_format (str): 'pdf' or 'png'.
+            file_format (str): 'pdf', 'svg' or 'png'.
             rebuild (bool): Whether to overwrite existing files.
             extra_keys (dict): Extra keys for filename generation.
             metadata (dict): Metadata to embed.
@@ -310,7 +310,7 @@ class OutputSaver:
             diagnostic_product=diagnostic_product,
             extra_keys=extra_keys, metadata=metadata)
 
-        if file_format == 'pdf':
+        if file_format in ['pdf', 'svg']:
             add_pdf_metadata(filepath, metadata, loglevel=self.loglevel)
         elif file_format == 'png':
             add_png_metadata(filepath, metadata, loglevel=self.loglevel)
@@ -318,32 +318,19 @@ class OutputSaver:
         self.logger.info("Saved %s: %s", file_format.upper(), filepath)
         return filepath
 
-    def save_pdf(self, fig: Figure, diagnostic_product: str, rebuild: bool = True,
-                 extra_keys: Optional[dict] = None, metadata: Optional[dict] = None):
-        """
-        Save a Matplotlib figure as a PDF.
-        """
-        return self._save_figure_format(fig, diagnostic_product, 'pdf', rebuild, extra_keys, metadata)
-
-    def save_png(self, fig: Figure, diagnostic_product: str, rebuild: bool = True,
-                 extra_keys: Optional[dict] = None, metadata: Optional[dict] = None, dpi: int = 300):
-        """
-        Save a Matplotlib figure as a PNG.
-        """
-        return self._save_figure_format(fig, diagnostic_product, 'png', rebuild, extra_keys, metadata, dpi)
-
     def save_figure(self, fig: Figure, diagnostic_product: str,
                     extra_keys: Optional[dict] = None,
                     metadata: Optional[dict] = None,
                     save_pdf: bool = False,
                     save_png: bool = True,
+                    save_svg: bool = False,
                     rebuild: bool = True,
                     dpi: int = 300):
         """
         Save a matplotlib figure in the specified format(s).
         
         This method handles the format selection logic and delegates to
-        save_pdf() and/or save_png() as needed.
+        save_vectorial() and/or save_raster() as needed.
         
         Args:
             fig: Matplotlib figure to save.
@@ -352,27 +339,29 @@ class OutputSaver:
             metadata (dict): Dictionary of metadata to embed in the file.
             save_pdf (bool): Whether to save as PDF.
             save_png (bool): Whether to save as PNG.
+            save_svg (bool): Whether to save as SVG.   
             rebuild (bool): Whether to rebuild if file exists.
             dpi (int): Resolution for PNG output (ignored for PDF).
         """
-        if save_pdf and save_png:
-            format = 'both'
-        elif save_pdf:
-            format = 'pdf'
-        elif save_png:
-            format = 'png'
-        else:
-            raise ValueError("At least one of save_pdf or save_png must be True")
+        extension = []
+        if save_pdf:
+            extension+= 'pdf'
+        if save_png:
+            extension+= 'png'
+        if save_svg:
+            extension+= 'svg'
+
+        if set(extension).issubset(['pdf', 'svg', 'png']):
+            raise ValueError(f"format must be 'png', 'pdf', or 'svg', got '{extension}'")
+
+        # vectorial images
+        if extension in ['pdf', 'svg']:
+            self._save_figure_format(fig, diagnostic_product, extension, rebuild, extra_keys, metadata)
         
-        if format not in ['png', 'pdf', 'both']:
-            raise ValueError(f"format must be 'png', 'pdf', or 'both', got '{format}'")
-        
-        if format in ['pdf', 'both']:
-            self.save_pdf(fig, diagnostic_product, rebuild=rebuild, extra_keys=extra_keys, metadata=metadata)
-        
-        if format in ['png', 'both']:
-            self.save_png(fig, diagnostic_product, rebuild=rebuild,
-                         extra_keys=extra_keys, metadata=metadata, dpi=dpi)
+        # raster images
+        if extension in ['png']:
+            self._save_figure_format(fig, diagnostic_product, extension, rebuild, extra_keys, metadata, dpi)
+
 
     def create_metadata(self, diagnostic_product: str, extra_keys: Optional[dict] = None, metadata: Optional[dict] = None) -> dict:
         """
