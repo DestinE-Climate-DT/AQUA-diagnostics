@@ -83,7 +83,7 @@ if __name__ == "__main__":
                         region=region,
                         var=var,
                         dim_mean=dim_mean,
-                        mld=True,
+                        mld=False,
                         climatology=climatology,
                         outputdir=cli.outputdir,
                         reader_kwargs=cli.reader_kwargs,

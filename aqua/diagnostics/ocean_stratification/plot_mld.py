@@ -47,6 +47,11 @@ class PlotMLD:
         self.realizations = get_realizations(self.data[self.vars[0]])
         self.region = self.data.attrs.get("AQUA_region", "global")
 
+        if self.obs:
+            self.obs_catalog = self.obs[self.vars[0]].AQUA_catalog
+            self.obs_model = self.obs[self.vars[0]].AQUA_model
+            self.obs_exp = self.obs[self.vars[0]].AQUA_exp
+
         self.outputsaver = OutputSaver(
             diagnostic=self.diagnostic,
             catalog=self.catalog,
@@ -251,7 +256,7 @@ class PlotMLD:
     def set_description(self):
         self.description = f"Mixed layer depth plot of spatially averaged {self.region} region, {self.clim_time} climatology for the {self.catalog} {self.model} {self.exp} experiment"
         if self.obs:
-            self.description = self.description + (f" with the reference data from {self.obs.attrs['catalog']} {self.obs.attrs['model']} {self.obs.attrs['exp']}")
+            self.description = self.description + (f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}")
 
     def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
                   rebuild: bool = True,

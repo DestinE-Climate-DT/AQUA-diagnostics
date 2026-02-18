@@ -75,7 +75,7 @@ class Stratification(Diagnostic):
         rebuild: bool = True,
         region: str = None,
         var: list = ["thetao", "so"],
-        dim_mean=None,
+        dim_mean = None,
         climatology: str = "month",
         reader_kwargs: dict = {},
         mld: bool = False,
@@ -122,8 +122,10 @@ class Stratification(Diagnostic):
         self.logger.debug(
             f"Variables retrieved: {var}, region: {region}, dim_mean: {dim_mean}"
         )
+        self.logger.info("Computing stratification.")
+        self.compute_stratification()
         # If a region is specified, apply area selection to self.data
-        if region != None:
+        if region:
             self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
             res_dict = super().select_region(
                 data=self.data, region=region, diagnostic="ocean3d", drop=True
@@ -136,7 +138,7 @@ class Stratification(Diagnostic):
             self.lat_limits = None
             self.lon_limits = None
         self.data.attrs["AQUA_region"] = self.region
-        if dim_mean is not None:
+        if dim_mean:
             self.logger.debug(f"Computing fldmean over dimension: {dim_mean}")
             self.data = self.reader.fldmean(
                 self.data,
@@ -146,8 +148,6 @@ class Stratification(Diagnostic):
             )
         else:
             self.data = res_dict['data']
-        self.logger.info("Computing stratification.")
-        self.compute_stratification()
         if mld:
             self.logger.info("Computing mixed layer depth (MLD).")
             self.compute_mld()
@@ -155,8 +155,13 @@ class Stratification(Diagnostic):
         self.logger.debug("Loading data in memory.")
         self.data.load()
         self.logger.debug("Loaded data in memory.")
-        self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=self.region)
-        self.logger.info("Stratification diagnostic saved to netCDF file.")
+        if not mld:
+            self.save_netcdf(self.data, diagnostic_product='stratification', outputdir=outputdir, rebuild=rebuild, region=self.region)
+            self.logger.info("Stratification diagnostic saved to netCDF file.")
+        else:
+            self.save_netcdf(self.data['mld'], diagnostic_product='mld', outputdir=outputdir, rebuild=rebuild, region=self.region)
+            self.logger.info("MLD diagnostic saved to netCDF file.")
+       
 
     def compute_stratification(self):
         """
@@ -222,7 +227,7 @@ class Stratification(Diagnostic):
             self.data = self.data.mean("time", keep_attrs=True)
         self.data.attrs["AQUA_stratification_climatology"] = self.climatology
         self.logger.debug(
-            f"{self.climatology.capitalize()} climatology computed successfully."
+            f"{self.climatology.upper()} climatology computed successfully."
         )
 
     def calculate_rho(self):
@@ -282,6 +287,7 @@ class Stratification(Diagnostic):
 
     def save_netcdf(
         self,
+        data,
         diagnostic: str = "ocean_circulation",
         diagnostic_product: str = "stratification",
         region: str = None,
@@ -293,6 +299,8 @@ class Stratification(Diagnostic):
 
         Parameters
         ----------
+        data : xarray.Dataset or xarray.DataArray
+            The dataset or data array to save.
         diagnostic : str, optional
             High-level diagnostic category (default is "ocean_circulation").
         diagnostic_product : str, optional
@@ -308,7 +316,7 @@ class Stratification(Diagnostic):
             f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, outputdir={outputdir}, region={region}"
         )
         super().save_netcdf(
-            data=self.data,
+            data=data,
             diagnostic=self.diagnostic_name,
             diagnostic_product=f"{diagnostic_product}",
             outputdir=outputdir,
