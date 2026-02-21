@@ -6,8 +6,8 @@ pytestmark = pytest.mark.aqua
 
 @pytest.mark.parametrize("kwargs,expected", [
     ({"title": "Custom Title"}, "Custom Title"),
-    ({"diagnostic": "MLD", "regions": "global", "catalog": "ci", "models": "ERA5", 
-      "exps": "era5-hpz3", "timeseason": "climatology"}, 
+    ({"diagnostic": "MLD", "regions": "global", "catalog": "ci", "model": "ERA5", 
+      "exp": "era5-hpz3", "timeseason": "climatology"}, 
       "MLD [global] for ci ERA5 era5-hpz3 climatology"),
     ({}, ""), # Empty result
     ({"variable": "Temperature"}, "Temperature"),
@@ -25,8 +25,8 @@ def test_title_references():
     result = TitleBuilder(
         diagnostic="Bias",
         variable="Temperature",
-        models="IFS",
-        exps="test-exp",
+        model="IFS",
+        exp="test-exp",
         ref_model="ERA5",
         ref_exp="era5",
         ref_startyear=1980,
@@ -45,9 +45,9 @@ def test_title_complex():
     result = TitleBuilder(
         diagnostic="Stratification",
         regions="global",
-        catalogs="ci",
-        models="ERA5",
-        exps="era5-hpz3",
+        catalog="ci",
+        model="ERA5",
+        exp="era5-hpz3",
         realizations="r1",
         startyear=1990,
         endyear="1991",
@@ -67,8 +67,8 @@ def test_title_realizations():
     assert "Bias Multi-realization" == result
 
 def test_title_models_edge_cases():
-    """Test edge cases for models and extra_info."""
-    result1 = TitleBuilder(diagnostic="Bias", catalogs=["ci", "ci"], models=["IFS", "FESOM"], exps=["exp1", "exp2"]).generate()
+    """Test edge cases for model and extra_info."""
+    result1 = TitleBuilder(diagnostic="Bias", catalog=["ci", "ci"], model=["IFS", "FESOM"], exp=["exp1", "exp2"]).generate()
     assert "Bias for Multi-model" == result1
     result2 = TitleBuilder(diagnostic="Bias", extra_info=["info1", "info2"]).generate()
     assert "info1 info2" in result2

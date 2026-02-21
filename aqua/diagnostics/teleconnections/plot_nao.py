@@ -33,7 +33,7 @@ class PlotNAO(PlotBaseMixin):
 
         labels = super().set_labels()
 
-        title = TitleBuilder(diagnostic="NAO index", models=self.models, exps=self.exps,
+        title = TitleBuilder(diagnostic="NAO index", model=self.models, exp=self.exps,
                              ref_model=self.ref_models, ref_exp=self.ref_exps).generate()
 
         fig, axs = indexes_plot(indexes=indexes, thresh=thresh, suptitle=title,
@@ -93,7 +93,7 @@ class PlotNAO(PlotBaseMixin):
 
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = TitleBuilder(diagnostic=f"NAO {statistic} map ({var})", models=maps.AQUA_model, exps=maps.AQUA_exp, 
+                title = TitleBuilder(diagnostic=f"NAO {statistic} map ({var})", model=maps.AQUA_model, exp=maps.AQUA_exp, 
                                      timeseason=getattr(maps, "AQUA_season", None)).generate()
                 fig, ax = plot_single_map(data=maps, fig=fig, ax=ax,
                                           vmin=vmin, vmax=vmax, title=title,
@@ -108,7 +108,7 @@ class PlotNAO(PlotBaseMixin):
 
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = TitleBuilder(diagnostic=f"NAO {statistic} map ({var})", models=maps.AQUA_model, exps=maps.AQUA_exp, 
+                title = TitleBuilder(diagnostic=f"NAO {statistic} map ({var})", model=maps.AQUA_model, exp=maps.AQUA_exp, 
                                      ref_model=ref_maps.AQUA_model, ref_exp=ref_maps.AQUA_exp,
                                      timeseason=getattr(maps, "AQUA_season", None)).generate()
                 fig, _ = plot_single_map_diff(data=maps, data_ref=ref_maps,
