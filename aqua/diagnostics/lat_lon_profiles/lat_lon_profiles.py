@@ -18,6 +18,8 @@ class LatLonProfiles(Diagnostic):
         - 'meridional': Average over latitude, producing longitude profilesThe class evaluates a seasonal frequency and the entire period (longterm).
 		
 	"""
+	MINIMUM_MONTHS_REQUIRED = 12
+
 	def __init__(self, model: str, exp: str, source: str, 
 			  	 catalog: str = None, regrid: str = None,
 				 startdate: str = None, enddate: str = None,
@@ -100,7 +102,7 @@ class LatLonProfiles(Diagnostic):
 		# If the user requires a formula the evaluation requires the retrieval
         # of all the variables
 		if formula:
-			super().retrieve(reader_kwargs=reader_kwargs, months_required=12)
+			super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 			self.logger.debug("Evaluating formula %s", var)
 			self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
 										short_name=standard_name, units=units,
@@ -109,7 +111,7 @@ class LatLonProfiles(Diagnostic):
 				raise ValueError(f'Error evaluating formula {var}. '
 									'Check the variable names and the formula syntax.')
 		else:
-			super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=12)
+			super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 			if self.data is None:
 				raise ValueError(f'Variable {var} not found in the data. '
 									'Check the variable name and the data source.')
