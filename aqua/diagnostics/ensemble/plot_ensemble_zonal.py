@@ -153,9 +153,9 @@ class PlotEnsembleZonal(BaseMixin):
         self.logger.info("Plotting the ensemble computation of Zonal-averages as mean and STD in Lev-Lon of var {self.var}")
 
         if title_mean is None:
-            title_mean = TitleBuilder(diagnostic="Ensemble mean", models=self.model).generate()
+            title_mean = TitleBuilder(diagnostic="Ensemble mean", model=self.model).generate()
         if title_std is None:
-            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", models=self.model).generate()
+            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", model=self.model).generate()
 
         if (dataset_mean is None) or (dataset_std is None):
             raise NoDataError("No data given to the plotting function")

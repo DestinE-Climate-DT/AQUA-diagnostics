@@ -214,15 +214,15 @@ class PlotBaseMixin():
         titles_dataset = []
         for i in range(self.len_data):
             title = TitleBuilder(diagnostic=f"{diagnostic} index" if diagnostic else "index",
-                                 models=self.models[i] if self.models else None,
-                                 exps=self.exps[i] if self.exps else None).generate()
+                                 model=self.models[i] if self.models else None,
+                                 exp=self.exps[i] if self.exps else None).generate()
             titles_dataset.append(title)
         
         titles_ref = []
         for i in range(self.len_ref):
             title = TitleBuilder(diagnostic=f"{diagnostic} index" if diagnostic else "index",
-                                 models=self.ref_models[i] if self.ref_models else None,
-                                 exps=self.ref_exps[i] if self.ref_exps else None).generate()
+                                 model=self.ref_models[i] if self.ref_models else None,
+                                 exp=self.ref_exps[i] if self.ref_exps else None).generate()
             titles_ref.append(title)
         
         titles = titles_dataset + titles_ref
