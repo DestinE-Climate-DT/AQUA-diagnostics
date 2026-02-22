@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.23.0):
 
+- Histogram: integration in AQUA analysis (#85)
+
 Complete list:
 - Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
 - Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
