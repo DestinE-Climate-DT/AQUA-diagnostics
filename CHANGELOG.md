@@ -14,6 +14,11 @@ Main changes:
 2. Rename tools/diagnostics with tools/collections 
 
 Complete list:
+- Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
+- Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
+- Ocean3D Stratification: compute rho first and other small fixes (#147)
+- ECmean: fix import (#152)
+- Ocean3d: speedup with netcdf reader (#144)
 - Introduce common `TitleBuilder` class for all diagnostics (#99)
 - LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
 - Global Biases: add mean value and RMSE to global bias plot (#132)
