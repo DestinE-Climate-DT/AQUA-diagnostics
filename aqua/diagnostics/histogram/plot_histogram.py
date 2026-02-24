@@ -228,6 +228,7 @@ class PlotHistogram():
             ymin (float, optional): Minimum y value.
             smooth (bool): Apply smoothing to data.
             smooth_window (int): Window size for smoothing.
+            labelsize (int, optional): Font size for labels.
 
         Returns:
             tuple: Matplotlib figure and axes objects.
