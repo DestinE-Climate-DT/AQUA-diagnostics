@@ -122,8 +122,8 @@ class PlotGregory(PlotBaseMixin):
     def set_title(self):
         """Set the title for the plot"""
         title_build = TitleBuilder(diagnostic='Gregory Plot', 
-                                   models=self.models, 
-                                   exps=self.exps)
+                                   model=self.models, 
+                                   exp=self.exps)
         return title_build.generate()
 
     def set_ref_label(self):
