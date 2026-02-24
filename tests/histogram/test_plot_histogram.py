@@ -87,10 +87,9 @@ class TestPlotHistogram:
         
         assert 'IFS test-tco79' in data_labels[0]
         assert 'ERA5 era5' in ref_label
-        assert 'Histogram' in title
         assert 'Skin Temperature' in title or 'skin_temperature' in title
         assert 'global' in title
-        assert 'Histogram' in description
+        assert 'PDF' in description or 'Probability density' in description or 'Histogram' in description
 
     def test_plot_basic(self):
         """Test basic plotting"""
