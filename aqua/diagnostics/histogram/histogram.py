@@ -1,4 +1,5 @@
 import xarray as xr
+import pandas as pd
 
 from aqua.core.logger import log_configure
 from aqua.core.fixer import EvaluateFormula
@@ -162,8 +163,8 @@ class Histogram(Diagnostic):
             hist_data.attrs['AQUA_region'] = self.region
         
         # Add date metadata
-        hist_data.attrs['AQUA_startdate'] = str(self.startdate)
-        hist_data.attrs['AQUA_enddate'] = str(self.enddate)
+        hist_data.attrs['AQUA_startdate'] = pd.Timestamp(str(self.startdate)).strftime("%Y-%m-%d")
+        hist_data.attrs['AQUA_enddate'] = pd.Timestamp(str(self.enddate)).strftime("%Y-%m-%d")
         
         # Add others metadata for description
         hist_data.attrs['AQUA_catalog'] = self.catalog
