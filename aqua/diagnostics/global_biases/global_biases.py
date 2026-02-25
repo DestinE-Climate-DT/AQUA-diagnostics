@@ -36,6 +36,8 @@ class GlobalBiases(Diagnostic):
         outputdir (str): Output directory for NetCDF files.
         loglevel (str): Log level. Default is 'WARNING'.
     """
+    MINIMUM_MONTHS_REQUIRED = 12
+
     def __init__(self, catalog=None, model=None, exp=None, source=None,
                  regrid=None, startdate=None, enddate=None,
                  var=None, plev=None, areas=True,
@@ -89,7 +91,8 @@ class GlobalBiases(Diagnostic):
         if var is not None:
             self.var = var   
         if formula:
-            super().retrieve(reader_kwargs=reader_kwargs)
+            super().retrieve(reader_kwargs=reader_kwargs,
+                             months_required=self.MINIMUM_MONTHS_REQUIRED)
             self.logger.info("Evaluating formula: %s", self.var)
             formula_values = EvaluateFormula(data=self.data, formula=self.var, long_name=long_name,
                                              short_name=short_name, units=units,
@@ -99,7 +102,8 @@ class GlobalBiases(Diagnostic):
                                  'Check the variable names and the formula syntax.')
             self.data[self.var] = formula_values
         else:
-            super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
+            super().retrieve(var=self.var, reader_kwargs=reader_kwargs,
+                             months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         if self.data is None:
             self.logger.error("Data could not be retrieved for %s, %s, %s", self.AQUA_model, self.AQUA_exp, self.AQUA_source)
