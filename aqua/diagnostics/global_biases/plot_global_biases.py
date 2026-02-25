@@ -113,8 +113,8 @@ class PlotGlobalBiases:
         title = TitleBuilder(
             diagnostic="Climatology",
             variable=data[var].attrs.get('long_name', var),
-            models=data.AQUA_model,
-            exps=data.AQUA_exp,
+            model=data.AQUA_model,
+            exp=data.AQUA_exp,
             extra_info=extra_info
         ).generate()
 
@@ -181,8 +181,8 @@ class PlotGlobalBiases:
         title = TitleBuilder(
             diagnostic="Global bias",
             variable=data[var].attrs.get('long_name', var),
-            models=data.AQUA_model,
-            exps=data.AQUA_exp,
+            model=data.AQUA_model,
+            exp=data.AQUA_exp,
             comparison="\nrelative to ",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
@@ -285,8 +285,8 @@ class PlotGlobalBiases:
         title = TitleBuilder(
             diagnostic="Seasonal bias",
             variable=data[var].attrs.get('long_name', var),
-            models=data.AQUA_model,
-            exps=data.AQUA_exp,
+            model=data.AQUA_model,
+            exp=data.AQUA_exp,
             comparison="\nrelative to ",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
@@ -359,8 +359,8 @@ class PlotGlobalBiases:
         title = TitleBuilder(
             diagnostic="Vertical bias",
             variable=data[var].attrs.get('long_name', var),
-            models=data.AQUA_model,
-            exps=data.AQUA_exp,
+            model=data.AQUA_model,
+            exp=data.AQUA_exp,
             comparison="\nrelative to ",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,

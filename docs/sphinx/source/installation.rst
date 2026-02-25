@@ -28,6 +28,7 @@ recommended way to do this is to use Mamba/Conda package manager for the install
 This can be achieved with:
 
 .. code-block:: bash
+
     mamba create -n aquarium -c conda-forge python=3.12 cdo eccodes=2.41.0 esmpy
     mamba activate aquarium
     pip install aqua-diagnostics[core]

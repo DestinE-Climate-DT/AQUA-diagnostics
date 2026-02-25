@@ -16,9 +16,9 @@ class TitleBuilder:
         diagnostic (str, optional): Name of the diagnostic (e.g., 'Seasonal cycle', 'Global bias').
         variable (str, optional): Long name of the variable (e.g., 'Total precipitation rate').
         regions (str or list, optional): Region name(s) (e.g., 'global', 'North Atlantic').
-        catalogs (str or list, optional): Catalog name(s).
-        models (str or list, optional): Model name(s).
-        exps (str or list, optional): Experiment name(s).
+        catalog (str or list, optional): Catalog name(s).
+        model (str or list, optional): Model name(s).
+        exp (str or list, optional): Experiment name(s).
         realizations (str or list, optional): Realization name(s).
         comparison (str, optional): Formulation for the comparison. Default is 'relative to'.
         ref_catalog (str or list, optional): Reference catalog name.
@@ -39,9 +39,9 @@ class TitleBuilder:
                  variable: Optional[str] = None,
                  regions: Optional[Union[str, list]] = None,
                  conjunction: Optional[str] = None,
-                 catalogs: Optional[Union[str, list]] = None,
-                 models: Optional[Union[str, list]] = None, 
-                 exps: Optional[Union[str, list]] = None,
+                 catalog: Optional[Union[str, list]] = None,
+                 model: Optional[Union[str, list]] = None, 
+                 exp: Optional[Union[str, list]] = None,
                  startyear: Optional[int | str] = None,
                  endyear: Optional[int | str] = None,
                  realizations: Optional[Union[str, list]] = None,
@@ -60,9 +60,9 @@ class TitleBuilder:
         self.variable = variable
         self.regions = regions
         self.conjunction = conjunction
-        self.catalogs = to_list(catalogs) if catalogs else []
-        self.models = to_list(models) if models else []
-        self.exps = to_list(exps) if exps else []
+        self.catalogs = to_list(catalog) if catalog else []
+        self.models = to_list(model) if model else []
+        self.exps = to_list(exp) if exp else []
         self.startyear = str(startyear) if isinstance(startyear, int) else startyear
         self.endyear = str(endyear) if isinstance(endyear, int) else endyear
         self.realizations = to_list(realizations) if realizations else []

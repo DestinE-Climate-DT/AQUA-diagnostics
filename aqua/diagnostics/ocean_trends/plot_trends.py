@@ -196,9 +196,9 @@ class PlotTrends:
         self.suptitle = TitleBuilder(
             diagnostic=plot_type,
             regions=self.region,
-            catalogs=self.catalog,
-            models=self.model,
-            exps=self.exp).generate()
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):

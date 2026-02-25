@@ -177,9 +177,9 @@ class PlotEnsembleLatLon(BaseMixin):
             long_name = dataset_mean.attrs.get("long_name") or var
 
         if title_mean is None:
-            title_mean = TitleBuilder(diagnostic="Ensemble mean",variable=long_name, models=self.model).generate()
+            title_mean = TitleBuilder(diagnostic="Ensemble mean",variable=long_name, model=self.model).generate()
         if title_std is None:
-            title_std = TitleBuilder(diagnostic="Ensemble standard deviation",variable=long_name, models=self.model).generate()
+            title_std = TitleBuilder(diagnostic="Ensemble standard deviation",variable=long_name, model=self.model).generate()
 
         proj = get_projection(proj, **proj_params)
 
