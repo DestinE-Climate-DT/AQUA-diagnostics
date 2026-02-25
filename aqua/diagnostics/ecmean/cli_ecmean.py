@@ -22,6 +22,7 @@ from aqua.diagnostics.base import template_parse_arguments, OutputSaver, TitleBu
 from aqua.core.util import strlist_to_phrase, lat_to_phrase
 from aqua.core.configurer import ConfigPath
 
+MINIMUM_MONTHS_REQUIRED = 12
 
 def parse_arguments(arguments):
     """
@@ -147,8 +148,9 @@ def time_check(mydata, y1, y2, logger=None):
             logger.info('Guessing ending year %s', y2)
 
     # run the performance indices if you have at least 12 month of data
-    if len(mydata.time) < 12:
-        raise NotEnoughDataError("Not enough data, exiting...")
+    if len(mydata.time) < MINIMUM_MONTHS_REQUIRED:
+        raise NotEnoughDataError(f"Not enough data: {len(mydata.time)} months available, "
+                                 f"{MINIMUM_MONTHS_REQUIRED} required. Exiting...")
 
     return y1, y2
 
