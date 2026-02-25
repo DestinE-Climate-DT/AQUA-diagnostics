@@ -11,6 +11,8 @@ xr.set_options(keep_attrs=True)
 
 class Gregory(Diagnostic):
 
+    MINIMUM_MONTHS_REQUIRED = 2
+
     def __init__(self, diagnostic_name: str = 'gregory',
                  catalog: str = None, model: str = None,
                  exp: str = None, source: str = None, regrid: str = None,
@@ -102,7 +104,7 @@ class Gregory(Diagnostic):
                                                             exp=self.exp, source=self.source,
                                                             regrid=self.regrid, startdate=self.startdate,
                                                             enddate=self.enddate, reader_kwargs=reader_kwargs,
-                                                            months_required=2)
+                                                            months_required=self.MINIMUM_MONTHS_REQUIRED)
         self.realization = reader_kwargs['realization'] if 'realization' in reader_kwargs else DEFAULT_REALIZATION
 
         if t2m:
