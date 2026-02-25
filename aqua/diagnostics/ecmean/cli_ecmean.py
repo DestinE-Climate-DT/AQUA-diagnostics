@@ -173,7 +173,7 @@ def set_title(diagnostic: str, model: str, exp: str,
         
     builder = TitleBuilder(
         diagnostic=diag_name,
-        models=model, exps=exp,
+        model=model, exp=exp,
         startyear=year1, endyear=year2
     )
 

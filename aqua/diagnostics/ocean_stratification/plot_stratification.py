@@ -167,9 +167,9 @@ class PlotStratification:
         self.suptitle = TitleBuilder(
             diagnostic="Stratification",
             regions=self.region,
-            catalogs=self.catalog,
-            models=self.model,
-            exps=self.exp,
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp,
             timeseason=f"{self.clim_time} climatology"
         ).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")

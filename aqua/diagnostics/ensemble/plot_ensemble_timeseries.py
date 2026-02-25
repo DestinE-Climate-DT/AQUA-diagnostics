@@ -172,7 +172,7 @@ class PlotEnsembleTimeseries(BaseMixin):
             if enddate is not None:
                 enddate = pd.Timestamp(enddate).strftime("%Y-%m-%d")
             
-            title = TitleBuilder(diagnostic="Ensemble analysis", models=self.model,
+            title = TitleBuilder(diagnostic="Ensemble analysis", model=self.model,
                                  startyear=startdate, endyear=enddate).generate()
 
         fig, ax = plot_timeseries(

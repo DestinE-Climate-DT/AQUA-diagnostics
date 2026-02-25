@@ -158,8 +158,8 @@ class PlotBoxplots:
         if not title:
             title = TitleBuilder(
                 diagnostic="Boxplot",
-                models=model_names,
-                exps=exp_names,
+                model=model_names,
+                exp=exp_names,
                 ref_model=model_names_ref if model_names_ref else None,
                 ref_exp=exp_names_ref if exp_names_ref else None
             ).generate()

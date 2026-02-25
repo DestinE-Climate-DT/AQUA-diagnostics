@@ -291,9 +291,9 @@ class PlotLatLonProfiles():
             diagnostic=f"{self.mean_type.capitalize()} profile" if self.mean_type else "Profile",
             variable=variable,
             regions=self.region,
-            catalogs=self.catalogs,
-            models=self.models,
-            exps=self.exps).generate()
+            catalog=self.catalogs,
+            model=self.models,
+            exp=self.exps).generate()
 
         self.logger.debug('Title: %s', title)
         return title
