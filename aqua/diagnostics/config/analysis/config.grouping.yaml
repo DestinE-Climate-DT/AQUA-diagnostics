@@ -24,6 +24,7 @@ diagnostics:
     Water cycle, seasonal cycle: water_cycle.seasonalcycles
     Water cycle, annual bias: water_cycle.bias
     Water cycle, seasonal bias: water_cycle.seasonal_bias
+    Water cycle, pdf: water_cycle.pdf
     Water cycle, profiles: [water_cycle.zonal_profile,  water_cycle.seasonal_zonal_profile]
     Water cycle, tropical rainfall: trop_rainfall
 
