@@ -7,6 +7,7 @@ xr.set_options(keep_attrs=True)
 
 class SeasonalCycles(BaseMixin):
     """SeasonalCycles class for retrieve and netcdf saving of a single experiment"""
+    MINIMUM_MONTHS_REQUIRED = 2
 
     def __init__(self, diagnostic_name: str = 'seasonalcycles',
                  catalog: str = None, model: str = None,
