@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 from aqua.core.logger import log_configure
 from aqua.core.fldstat import FldStat
+from aqua.core.timstat import TimStat
 from .util import handle_pressure_level
 
 
@@ -77,50 +78,24 @@ class StatGlobalBiases:
 
         return stats
     
-    def compute_temporal_means(self,
-                               data: xr.Dataset,
-                               var: str,
-                               freq: str = 'year',
-                               season: str = None) -> xr.DataArray:
-        """
-        Compute temporal means (yearly or seasonal).
-
+    def compute_yearly_temporal_means(self,
+                                    data: xr.Dataset,
+                                    var: str) -> xr.DataArray:
+        """Compute yearly temporal means for a given variable.
         Args:
             data (xr.Dataset): Input dataset with time dimension.
-            var (str): Variable name.
-            freq (str): Frequency for grouping: 'year' or 'season'. Default is 'year'.
-            season (str, optional): If provided, select only this season (DJF, MAM, JJA, SON).
-                                   Only used when freq='season'.
-
+            var (str): Variable name to compute means for.
         Returns:
-            xr.DataArray: Array with temporal means. Shape will be (time, lat, lon) where
-                         time represents years or seasons.
+            xr.DataArray: Yearly temporal means of the variable.
         """
-        self.logger.info(f'Computing temporal means with frequency: {freq}')
-
         if 'time' not in data[var].dims:
             raise ValueError(f"Variable {var} does not have a 'time' dimension.")
 
-        if freq == 'year':
-            yearly_means = data[var].groupby('time.year').mean('time')
-            yearly_means = yearly_means.rename({'year': 'time'})
-            self.logger.info(f'Computed {len(yearly_means.time)} yearly means.')
-            return yearly_means
-
-        elif freq == 'season':
-            seasonal_means = data[var].groupby('time.season').mean('time')
-            
-            if season is not None:
-                if season not in ['DJF', 'MAM', 'JJA', 'SON']:
-                    raise ValueError(f"Season must be one of: DJF, MAM, JJA, SON. Got: {season}")
-                seasonal_means = seasonal_means.sel(season=season)
-                self.logger.info(f'Selected season: {season}')
-            
-            return seasonal_means
-
-        else:
-            raise ValueError(f"freq must be 'year' or 'season'. Got: {freq}")
-
+        timstat = TimStat(loglevel=self.loglevel)
+        yearly_means = timstat.timstat(data[[var]], stat='mean', freq='YS')
+        self.logger.info(f'Computed {len(yearly_means.time)} yearly means.')
+        
+        return yearly_means[var]
 
     def ttest_at_grid_point(self, model_vals, ref_vals, min_samples: int = 3):
         """Perform t-test at a single grid point.
@@ -173,9 +148,8 @@ class StatGlobalBiases:
         self.logger.info(f'Computing statistical significance using t-test (alpha={alpha}).')
 
         # Get temporal means
-        data_temporal = self.compute_temporal_means(data, var, freq=freq, season=season)
-        data_ref_temporal = self.compute_temporal_means(data_ref, var, freq=freq, season=season)
-
+        data_temporal = self.compute_yearly_temporal_means(data, var)
+        data_ref_temporal = self.compute_yearly_temporal_means(data_ref, var)
         # Check if we have enough samples
         n_samples = len(data_temporal.time) if 'time' in data_temporal.dims else len(data_temporal.season)
         n_samples_ref = len(data_ref_temporal.time) if 'time' in data_ref_temporal.dims else len(data_ref_temporal.season)
