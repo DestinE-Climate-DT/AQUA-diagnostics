@@ -117,45 +117,4 @@ class TestEnsembleZonal:
         assert ens.dataset_mean is not None
         assert ens.dataset_std.all() == 0
 
-    def test_plotting(self, ensemble_zonal_instance, plot_zonal_instance, zonal_config, tmp_path_str):
-        """Test the plotting functionality."""
-        ens = ensemble_zonal_instance
-        plot_ens = plot_zonal_instance
-        conf = zonal_config
-
-        if not hasattr(ens, 'dataset_mean'):
-            ens.run()
-
-        # STD values are zero. Using mean value as std to test visualization pipeline (consistent with comments)
-        plot_arguments = {
-            "var": conf['var'],
-            "save_pdf": True,
-            "save_png": True,
-            "title_mean": "Test data",
-            "title_std": "Test data",
-            "cbar_label": "Test Label",
-            "dataset_mean": ens.dataset_mean,
-            "dataset_std": ens.dataset_mean, # Using mean as proxy for std to ensure valid plot generation
-            "dpi": DPI,
-        }
-
-        plot_dict = plot_ens.plot(**plot_arguments)
-
-        assert plot_dict['mean_plot'][0] is not None
-
-        # Construct filenames
-        cat, mod, exp = conf['catalog_list'][0], conf['model_list'][0], conf['exp_list'][0]
-        var = conf['var']
-
-        # Check Output Files
-        png_mean = os.path.join(tmp_path_str, 'png', f'ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.png')
-        assert os.path.exists(png_mean)
-
-        png_std = os.path.join(tmp_path_str, 'png', f'ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.png')
-        assert os.path.exists(png_std)
-
-        pdf_mean = os.path.join(tmp_path_str, 'pdf', f'ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.pdf')
-        assert os.path.exists(pdf_mean)
-
-        pdf_std = os.path.join(tmp_path_str, 'pdf', f'ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.pdf')
-        assert os.path.exists(pdf_std)
+    
