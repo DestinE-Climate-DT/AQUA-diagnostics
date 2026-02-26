@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from aqua.core.util import to_list, unit_to_latex, DEFAULT_REALIZATION
-from aqua.diagnostics.base import OutputSaver
 
 
 class PlotHistogram():
@@ -14,6 +14,7 @@ class PlotHistogram():
     """
     def __init__(self, data=None, ref_data=None,
                  diagnostic_name='histogram',
+                 density=True,
                  loglevel: str = 'WARNING'):
         """
         Initialize the PlotHistogram class.
@@ -22,6 +23,7 @@ class PlotHistogram():
             data: List of histogram DataArrays to plot, or single DataArray.
             ref_data: Reference histogram DataArray.
             diagnostic_name (str): Name of the diagnostic. Default is 'histogram'.
+            density (bool): Whether data represents PDF (True) or counts (False).
             loglevel (str): Logging level. Default is 'WARNING'.
         """
         self.loglevel = loglevel
@@ -30,6 +32,7 @@ class PlotHistogram():
         self.data = to_list(data) if data is not None else []
         self.ref_data = ref_data
         self.diagnostic_name = diagnostic_name
+        self.density = density
 
         self.len_data = len(self.data)
         self.len_ref = 1 if ref_data is not None else 0
@@ -107,52 +110,108 @@ class PlotHistogram():
 
     def set_title(self):
         """Set the title for the plot."""
-        title = "Histogram "
-        
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
-                title += f'of {name} '
+                variable = name
                 break
         
-        if self.units is not None:
-            title += f'[{unit_to_latex(self.units)}] '
-
-        if self.region is not None:
-            title += f'[{self.region}] '
-
-        if self.len_data == 1:
-            title += f'for {self.catalogs[0]} {self.models[0]} {self.exps[0]} '
+        title = TitleBuilder(
+            diagnostic=None,
+            variable=variable,
+            regions=self.region,
+            catalog=self.catalogs,
+            model=self.models,
+            exp=self.exps).generate()
 
         self.logger.debug('Title: %s', title)
         return title
 
     def set_description(self):
         """Set the description for the plot."""
-        description = 'Histogram '
+        description = ""
         
+        # Start with PDF/Histogram type
+        if self.density:
+            description += "Probability density function (PDF) of "
+        else:
+            description += "Histogram of "
+        
+        # Variable name (long_name preferred)
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
-                description += f'of {name} '
+                # Remove "Pdf of" or "Histogram of" prefix if present
+                name_clean = name.replace("Pdf of ", "").replace("Histogram of ", "")
+                description += f"{name_clean} "
                 break
-
-        if self.units is not None:
-            description += f'[{self.units}] '
-
-        if self.region is not None:
-            description += f'for region {self.region} '
-
-        num_items = min(len(self.catalogs), len(self.models), len(self.exps))
         
-        for i in range(min(self.len_data, num_items)):
-            description += f'for {self.catalogs[i]} {self.models[i]} {self.exps[i]} '
+        # Units
+        if self.units is not None:
+            description += f"[{self.units}] "
+        
+        # Short name in parentheses (if different from what was already used)
+        if self.short_name is not None and self.long_name is not None:
+            description += f"({self.short_name}) "
+        
+        # Region - only if not Global
+        if self.region is not None and self.region.lower() != 'global':
+            description += f"over {self.region} "
+        
+        # Handle multiple datasets
+        if self.len_data == 1:
+            # Single dataset
+            data_item = self.data[0] if self.data else None
+            ref_item = self.ref_data
             
+            data_pair = (getattr(data_item, 'AQUA_startdate', None), 
+                        getattr(data_item, 'AQUA_enddate', None))
+            ref_pair = (getattr(ref_item, 'AQUA_startdate', None),
+                        getattr(ref_item, 'AQUA_enddate', None))
+            
+            # Smart date display: show dates only once if they are the same
+            if data_pair == ref_pair and data_pair != (None, None):
+                # Same period for model and reference
+                description += f"for {self.models[0]}/{self.exps[0]}"
+                if ref_item is not None:
+                    ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                    description += f" vs {ref_model}"
+                description += f" from {data_pair[0]} to {data_pair[1]}"
+            else:
+                # Different periods
+                if data_pair != (None, None):
+                    description += f"for {self.models[0]}/{self.exps[0]} "
+                    description += f"from {data_pair[0]} to {data_pair[1]}"
+                if ref_pair != (None, None):
+                    ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                    description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
+        else:
+            # Multiple datasets
+            description += f"comparing {self.len_data} datasets: "
+            model_exp_pairs = [f"{self.models[i]}/{self.exps[i]}" for i in range(min(3, len(self.models)))]
+            description += ", ".join(model_exp_pairs)
+            
+            if len(self.models) > 3:
+                description += f", and {len(self.models) - 3} more"
+            
+            if self.ref_data is not None:
+                ref_model = getattr(self.ref_data, 'AQUA_model', 'reference')
+                description += f" vs {ref_model}"
+            
+            # Add common date range if all datasets share it
+            if self.data:
+                first_dates = (getattr(self.data[0], 'AQUA_startdate', None),
+                            getattr(self.data[0], 'AQUA_enddate', None))
+                if first_dates != (None, None):
+                    description += f" from {first_dates[0]} to {first_dates[1]}"
+        
+        description += '.'
+        
         self.logger.debug('Description: %s', description)
         return description
 
     def plot(self, data_labels=None, ref_label=None, title=None, 
              style=None, xlogscale=False, ylogscale=True,
              xmax=None, xmin=None, ymax=None, ymin=None,
-             smooth=False, smooth_window=5):
+             smooth=False, smooth_window=5, labelsize=None):
         """
         Plot histogram data.
         
@@ -169,6 +228,7 @@ class PlotHistogram():
             ymin (float, optional): Minimum y value.
             smooth (bool): Apply smoothing to data.
             smooth_window (int): Window size for smoothing.
+            labelsize (int, optional): Font size for labels.
 
         Returns:
             tuple: Matplotlib figure and axes objects.
@@ -188,6 +248,7 @@ class PlotHistogram():
             ymin=ymin,
             smooth=smooth,
             smooth_window=smooth_window,
+            labelsize=labelsize,
             loglevel=self.loglevel
         )
     
@@ -230,7 +291,10 @@ class PlotHistogram():
         outputsaver = OutputSaver(diagnostic=self.diagnostic_name, outputdir=outputdir,
                                   loglevel=self.loglevel, **metadata)
         
-        diagnostic_product = f"{self.diagnostic_name}_pdf"
+        if self.density:
+            diagnostic_product = "pdf"
+        else:
+            diagnostic_product = "histogram"
            
         if format == 'png':
             outputsaver.save_png(fig, diagnostic_product, extra_keys=extra_keys, 
@@ -242,7 +306,7 @@ class PlotHistogram():
     def run(self, outputdir='./', rebuild=True, dpi=300, style=None, 
             format='png', xlogscale=False, ylogscale=True,
             xmax=None, xmin=None, ymax=None, ymin=None,
-            smooth=False, smooth_window=5, show=False):
+            smooth=False, smooth_window=5, labelsize=None, show=False):
         """
         Run the complete plotting workflow.
         
@@ -273,7 +337,8 @@ class PlotHistogram():
                           title=title, style=style,
                           xlogscale=xlogscale, ylogscale=ylogscale,
                           xmax=xmax, xmin=xmin, ymax=ymax, ymin=ymin,
-                          smooth=smooth, smooth_window=smooth_window)
+                          smooth=smooth, smooth_window=smooth_window,
+                          labelsize=labelsize)
 
         self.save_plot(fig, description=description, rebuild=rebuild,
                       outputdir=outputdir, dpi=dpi, format=format)

@@ -7,7 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.23.0):
 
+
 Complete list:
+- Histogram: integration in AQUA analysis (#85)
+- Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
+- Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
+- Ocean3D Stratification: compute rho first and other small fixes (#147, #167)
+- ECmean: fix import (#152)
+- Ocean3d: speedup with netcdf reader (#144)
+- Introduce common `TitleBuilder` class for all diagnostics (#99)
+- LatLonProfiles: dask fix (#63) and fixes for description and PDF generation (#82)
 - Global Biases: add mean value and RMSE to global bias plot (#132)
 - Teleconnections: fix timmean assignment in ENSO, NAO, MJO diagnostics (#129)
 - Seaice: Add gridlines in maps (#125)
@@ -21,6 +30,7 @@ Complete list:
 - Ocean3d trend: optimization of region computation in CLI (#105)
 - Remove pandas from environment files (#117)
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
+- Ensemble: improve the coverage of the tests (#88)
 
 ## [v0.22.0]
 
@@ -42,7 +52,6 @@ Complete list:
 - Fix of aqua_path for analysis console (#56)
 - Boxplots: hotfix for diagnostic_name (#69)
 - Histogram: CLI refactoring (#49)
-- Lat-lon profiles dask fix (#63)
 - Fix argument passing by common CLI for `regrid`, `startdate` and `enddate` (#52)
 - Introduce call to pd.Timestamp in Global_Bias to accomodate also non-nanoseconds time window (#52)
 - Remove time selection from SeaIce, now centralised in CLI (#52)

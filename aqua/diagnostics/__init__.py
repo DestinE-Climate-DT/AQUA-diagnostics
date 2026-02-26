@@ -10,7 +10,7 @@ from .global_biases import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
 from .boxplots import Boxplots, PlotBoxplots
 from .ensemble import EnsembleTimeseries, EnsembleLatLon, EnsembleZonal
 from .ensemble import PlotEnsembleTimeseries, PlotEnsembleLatLon, PlotEnsembleZonal
-from .ensemble import reader_retrieve_and_merge, merge_from_data_files, load_premerged_ensemble_dataset, extract_realizations
+from .ensemble import reader_retrieve_and_merge, merge_from_data_files, extract_realizations
 from .ecmean import PerformanceIndices, GlobalMean
 from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
 from .sshVariability import sshVariabilityCompute, sshVariabilityPlot
@@ -29,7 +29,7 @@ __all__ = ["NAO", "ENSO", "MJO",
            "LatLonProfiles", "PlotLatLonProfiles",
            "Histogram", "PlotHistogram",
            "GlobalBiases", "PlotGlobalBiases", "StatGlobalBiases",
-           "reader_retrieve_and_merge", "merge_from_data_files", "load_premerged_ensemble_dataset",
+           "reader_retrieve_and_merge", "merge_from_data_files",
            "EnsembleTimeseries", "EnsembleLatLon", "EnsembleZonal",
            "PlotEnsembleTimeseries", "PlotEnsembleLatLon", "PlotEnsembleZonal",
            "PerformanceIndices", "GlobalMean",
