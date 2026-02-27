@@ -190,23 +190,11 @@ class GlobalBiases(Diagnostic):
             raise ValueError("No data provided or retrieved; cannot compute climatology.")
 
         self.logger.info(f'Computing climatology for variable {var}.')
-        da = data[var]
 
         if plev is not None:
-            if 'plev' in da.dims:
-                da = da.sel(plev=plev)
-            elif 'plev' in da.coords:
-                existing_plev = da.coords['plev'].item()
-                if existing_plev != plev:
-                    raise ValueError(
-                        f"Requested plev={plev}, but data already fixed at plev={existing_plev}"
-                    )
-            else:
-                self.logger.warning(
-                    f"Variable '{var}' has no 'plev' coordinate. Ignoring plev selection."
-                )
+          handle_pressure_level(data, var, plev, loglevel=self.loglevel)
 
-        self.climatology = xr.Dataset({var: da.mean(dim='time')})
+        self.climatology = xr.Dataset({var: data[var].mean(dim='time')})
         self.climatology.attrs.update({
             'AQUA_catalog': self.catalog,
             'AQUA_model': self.model,
