@@ -128,7 +128,7 @@ class TestEnsembleTimeseries:
         plot_ts = plot_ts_instance
         conf = ts_config
 
-        if not hasattr(ts, 'monthly_data_mean'):
+        if getattr(ts, 'monthly_data_mean', None) is None:
             ts.run()
 
         # STD values are zero. Using mean value as std to test visualization pipeline
