@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.23.0):
 
 
 Complete list:
+- GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
 - Histogram: integration in AQUA analysis (#85)
 - Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
 - Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
