@@ -30,7 +30,7 @@ def handle_pressure_level(data, var, plev, loglevel='WARNING'):
 
         # if 'plev' has already a single value, check if it matches the requested plev
         if 'plev' in data[var].coords and data[var].coords['plev'].size == 1:
-            if data[var].coords['plev'].values[0] == plev:
+            if float(data[var].coords['plev'].values) == plev:  
                 return data
 
         # try to select the closest pressure level

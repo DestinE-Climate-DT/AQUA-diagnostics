@@ -97,8 +97,8 @@ class TestGlobalBiases:
         assert float(result['rmse'].values) == pytest.approx(0.0, abs=1e-12)
         
         #With a +1000 offset, every grid point must be flagged as significant
-        ds_base = gb.data.sel(plev=85000)
-        ds_big = gb.data.sel(plev=85000).copy(deep=True)+1000.0
+        ds_base = gb.data
+        ds_big = gb.data.copy(deep=True)+1000.0
         result = stat_gb.compute_significance_ttest(data=ds_base, data_ref=ds_big, var=var, 
                                                     alpha=0.05)
         assert isinstance(result, xr.DataArray)
