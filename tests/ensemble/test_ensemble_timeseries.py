@@ -111,7 +111,7 @@ class TestEnsembleTimeseries:
         ts = ensemble_ts_instance
 
         # Ensure run() has been called
-        if not hasattr(ts, 'monthly_data_mean'):
+        if getattr(ts, 'monthly_data_mean', None) is None:
             ts.run()
 
         # Test if mean is present
