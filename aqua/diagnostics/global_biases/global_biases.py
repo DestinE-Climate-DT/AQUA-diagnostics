@@ -182,6 +182,7 @@ class GlobalBiases(Diagnostic):
         data = data or self.data
         var = var or self.var
         areas = areas or self.areas
+        plev = plev or self.plev
 
         if save_netcdf is None:
             save_netcdf = self.save_netcdf
@@ -192,7 +193,7 @@ class GlobalBiases(Diagnostic):
         self.logger.info(f'Computing climatology for variable {var}.')
 
         if plev is not None:
-          handle_pressure_level(data, var, plev, loglevel=self.loglevel)
+          data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
 
         self.climatology = xr.Dataset({var: data[var].mean(dim='time')})
         self.climatology.attrs.update({

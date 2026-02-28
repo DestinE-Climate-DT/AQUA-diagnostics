@@ -87,6 +87,7 @@ class TestGlobalBiases:
         assert os.path.exists(pdf)
         png = os.path.join(tmp_path_str, 'png', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png')
         assert os.path.exists(png)
+        
     def test_stat_global_biases(self, global_biases_instance, tmp_path_str, test_var):
         gb = global_biases_instance
         var = test_var 
