@@ -12,7 +12,7 @@ Complete list:
 - Histogram: integration in AQUA analysis (#85)
 - Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
 - Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
-- Ocean3D Stratification: compute rho first and other small fixes (#147, #167)
+- Ocean3D Stratification: compute rho first and other small fixes (#147, #167, #171)
 - ECmean: fix import (#152)
 - Ocean3d: speedup with netcdf reader (#144)
 - Introduce common `TitleBuilder` class for all diagnostics (#99)
