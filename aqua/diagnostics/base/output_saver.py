@@ -238,6 +238,11 @@ class OutputSaver:
             }
 
         dataset.attrs.update(metadata)
+        
+        self.logger.debug(f"Loading data in memory")
+        dataset.load()
+        self.logger.debug(f"Writing to netcdf %s", filepath)
+        
         dataset.to_netcdf(filepath)
 
         # create catalog entry for netcdf file
