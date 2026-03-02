@@ -166,11 +166,16 @@ class PlotEnsembleZonal(BaseMixin):
             dataset_mean = dataset_mean
         self.logger.info("Plotting ensemble-mean Zonal-average")
 
+        # --- DYNAMIC COORDINATE EXTRACTION (Vertical Only) ---
+        vert_options = ["lev", "plev", "depth", "st_ocean", "z", "level"]
+        vert_dim = next((dim for dim in dataset_mean.dims if dim.lower() in vert_options), "lev")
+        # -----------------------------------------------------
+
         fig1 = plt.figure(figsize=figure_size)
         ax1 = fig1.add_subplot(1, 1, 1)
         im = ax1.contourf(
-            dataset_mean.lat,
-            dataset_mean.lev,
+            dataset_mean["lat"],     # Safely hardcoded to "lat"
+            dataset_mean[vert_dim],  # Dynamically extracted vertical coordinate
             dataset_mean,
             cmap=cmap,
             levels=levels,
@@ -195,7 +200,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax2 = fig2.add_subplot(1, 1, 1)
         im = ax2.contourf(
             dataset_std.lat,
-            dataset_std.lev,
+            dataset_std[vert_dim],
             dataset_std,
             cmap=cmap,
             levels=levels,

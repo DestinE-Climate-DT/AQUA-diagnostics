@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.23.0):
 
 Complete list:
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
+- Load in memory before saving netcdf (#174)
 - Histogram: integration in AQUA analysis (#85)
 - Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
 - Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
@@ -32,6 +33,7 @@ Complete list:
 - Remove pandas from environment files (#117)
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
 - Ensemble: improve the coverage of the tests (#88)
+- Ensemble: fix tests after datamodel working in issue #156 (#526)
 
 ## [v0.22.0]
 
