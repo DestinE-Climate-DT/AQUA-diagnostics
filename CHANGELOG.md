@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.23.0):
 
 
 Complete list:
+- Load in memory before saving netcdf (#174)
 - Histogram: integration in AQUA analysis (#85)
 - Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
 - Remove unused `select_region` method from `Diagnostic` class, substituting it with the old `_select_region` (#154)
