@@ -72,7 +72,8 @@ class StatGlobalBiases:
             'mean_bias': mean_bias,
             'rmse': rmse
         })
-       try:
+        
+        try:
             self.logger.info(f'Mean bias: {float(mean_bias.values):.4e} {data[var].attrs.get("units", "")}')
             self.logger.info(f'RMSE: {float(rmse.values):.4e} {data[var].attrs.get("units", "")}')
         except (TypeError, ValueError):
