@@ -73,8 +73,6 @@ class StatGlobalBiases:
             'rmse': rmse
         })
 
-        self.logger.info(f'Mean bias: {float(mean_bias.values):.4e} {data[var].attrs.get("units", "")}')
-        self.logger.info(f'RMSE: {float(rmse.values):.4e} {data[var].attrs.get("units", "")}')
 
         return stats
     
@@ -123,8 +121,6 @@ class StatGlobalBiases:
                                    data_ref: xr.Dataset,
                                    var: str,
                                    alpha: float = 0.05,
-                                   freq: str = 'year',
-                                   season: str = None,
                                    min_samples: int = 3) -> xr.DataArray:
         """
         Compute statistical significance of bias using two-sample t-test.
@@ -137,8 +133,6 @@ class StatGlobalBiases:
             data_ref (xr.Dataset): Reference dataset with time dimension.
             var (str): Variable name.
             alpha (float): Significance level (default: 0.05 for 95% confidence).
-            freq (str): Frequency for temporal grouping: 'year' or 'season'. Default is 'year'.
-            season (str, optional): Season to analyze (only for freq='season').
             min_samples (int): Minimum number of samples required to perform test. Default is 3.
 
         Returns:
@@ -150,9 +144,10 @@ class StatGlobalBiases:
         # Get temporal means
         data_temporal = self.compute_yearly_temporal_means(data, var)
         data_ref_temporal = self.compute_yearly_temporal_means(data_ref, var)
+        
         # Check if we have enough samples
-        n_samples = len(data_temporal.time) if 'time' in data_temporal.dims else len(data_temporal.season)
-        n_samples_ref = len(data_ref_temporal.time) if 'time' in data_ref_temporal.dims else len(data_ref_temporal.season)
+        n_samples = len(data_temporal.time)
+        n_samples_ref = len(data_ref_temporal.time) 
         
         self.logger.info(f'Number of samples - Model: {n_samples}, Reference: {n_samples_ref}')
 
@@ -173,23 +168,31 @@ class StatGlobalBiases:
         # core dimensions to be in a single chunk
                 
         # Get time dimension name
-        time_dim = 'time' if 'time' in data_temporal.dims else 'season'
+        time_dim = 'time' 
         
-        if time_dim in data_temporal.dims:
-            self.logger.debug(f'Rechunking data along {time_dim} dimension.')
-            data_temporal = data_temporal.chunk({time_dim: -1})
-            data_ref_temporal = data_ref_temporal.chunk({time_dim: -1})
+        self.logger.debug(f'Rechunking data along {time_dim} dimension.')
+        data_temporal = data_temporal.chunk({time_dim: -1})
+        data_ref_temporal = data_ref_temporal.chunk({time_dim: -1})
 
         # Perform t-test at each grid point
         # Use scipy.stats.ttest_ind for independent samples
         self.logger.debug('Performing t-test at each grid point.')
+        
+        # Rename time dimensions to avoid xarray alignment issues when model and reference
+        # have different number of time steps. Using distinct names prevents apply_ufunc
+        # from attempting to align the two time axes against each other.       
+        time_dim = f'{time_dim}'
+        time_dim_ref = f'{time_dim}_ref'
+
+        data_temporal = data_temporal.rename({time_dim: time_dim})
+        data_ref_temporal = data_ref_temporal.rename({time_dim: time_dim_ref})
 
         # Apply t-test across all grid points
         p_values = xr.apply_ufunc(
             self.ttest_at_grid_point,
             data_temporal,
             data_ref_temporal,
-            input_core_dims=[[time_dim], [time_dim]],
+            input_core_dims=[[time_dim], [time_dim_ref]], 
             vectorize=True,
             dask='parallelized',
             output_dtypes=[float],
@@ -220,3 +223,5 @@ class StatGlobalBiases:
         })
 
         return is_significant
+
+        
