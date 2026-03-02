@@ -284,6 +284,14 @@ class PlotGlobalBiases:
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
 
+        description = (
+            f"Spatial map of global bias of {data[var].attrs.get('long_name', var)}"
+            f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''}"
+            f" from {data.startdate} to {data.enddate}"
+            f" for the {data.AQUA_model} model, experiment {data.AQUA_exp}, with {data_ref.AQUA_model}"
+            f" from {data_ref.startdate} to {data_ref.enddate} used as reference data."
+        )
+
         # Add significance stippling if requested
         if show_significance and data_timeseries is not None:
 
@@ -305,6 +313,7 @@ class PlotGlobalBiases:
            
             pct_sig = significance_mask.attrs.get('percent_significant', 0)
             n_samples = significance_mask.attrs.get('n_samples_model', 'unknown')
+            n_samples_ref = significance_mask.attrs.get('n_samples_reference', 'unknown')
             self.logger.info(f'Added significance stippling: {pct_sig:.1f}% of points are significant.')
             
             ax.text(
@@ -318,6 +327,14 @@ class PlotGlobalBiases:
                 bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
             )
 
+            sig_description = (
+                f" Stippling indicates grid points where the bias is statistically significant"
+                f" (two-sample Welch t-test, alpha={significance_alpha}),"
+                f" based on {n_samples} model years and {n_samples_ref} reference years."
+                f" {pct_sig:.1f}% of grid points are significant."
+            )
+            description += sig_description
+        
         #  Add statistics to the plot if requested
         if show_stats:
             self.logger.debug('Computing bias statistics.')
@@ -345,14 +362,13 @@ class PlotGlobalBiases:
                     bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black'))
             
             self.logger.info(f"Added statistics to plot: Mean={mean_bias:.2g}, RMSE={rmse:.2g}")
-        description = (
-            f"Spatial map of global bias of {data[var].attrs.get('long_name', var)}"
-            f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''}"
-            f" from {data.startdate} to {data.enddate}"
-            f" for the {data.AQUA_model} model, experiment {data.AQUA_exp}, with {data_ref.AQUA_model}"
-            f" from {data_ref.startdate} to {data_ref.enddate} used as reference data."
-        )
 
+            stat_description = (
+                f" The plot includes statistics for the bias: mean bias = {mean_bias:.2g} {units},"
+                f" and RMSE = {rmse:.2f} {units}."
+            )
+            description += stat_description
+        
         if self.save_pdf or self.save_png:
             self._save_figure(fig=fig, diagnostic_product='bias', data=data, data_ref=data_ref,
                               description=description, var=var, plev=plev, realization=realization)
