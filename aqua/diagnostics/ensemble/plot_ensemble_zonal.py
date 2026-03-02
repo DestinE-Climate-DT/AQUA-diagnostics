@@ -172,7 +172,7 @@ class PlotEnsembleZonal(BaseMixin):
 
         # return if no vertical coordinate is found
         if not vert_coord:
-            self.logger.error("Levels selected but no vertical coordinate found in data!")
+            raise ValueError('No vertical coordinate found in data!')
 
         # do the selection on the first vertical coordinate found
         if len(vert_coord) > 1:
@@ -209,7 +209,6 @@ class PlotEnsembleZonal(BaseMixin):
         ax2 = fig2.add_subplot(1, 1, 1)
         im = ax2.contourf(
             dataset_std.lat,
-            #dataset_std[vert_dim],
             dataset_std[vert_coord[0]],            
             dataset_std,
             cmap=cmap,
