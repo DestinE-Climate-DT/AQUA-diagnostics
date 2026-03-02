@@ -25,6 +25,7 @@ references:
     source: 'monthly'
     startdate: '1990-01-01'
     enddate: '2020-12-31'
+    regrid: 'r100'
 
 output:
   outputdir: "./"
