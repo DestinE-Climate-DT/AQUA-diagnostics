@@ -363,6 +363,7 @@ class PlotGlobalBiases:
             
             self.logger.info(f"Added statistics to plot: Mean={mean_bias:.2g}, RMSE={rmse:.2g}")
 
+            units = data[var].attrs.get('units', '')
             stat_description = (
                 f" The plot includes statistics for the bias: mean bias = {mean_bias:.2g} {units},"
                 f" and RMSE = {rmse:.2f} {units}."
