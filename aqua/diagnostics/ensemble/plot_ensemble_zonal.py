@@ -4,6 +4,7 @@ from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import TitleBuilder
+from aqua.core.util import find_vert_coord
 
 from .base import BaseMixin
 
@@ -108,6 +109,7 @@ class PlotEnsembleZonal(BaseMixin):
         This method generates contour plots of the ensemble mean and standard deviation
         for a given variable on a latitude vs. vertical level (Lev) grid. The resulting
         plots can be saved as PNG and/or PDF files using the `save_figure` method.
+        `find_vert_coord` from `aqua.core.util` is used to read the vertical coordiante.
 
         Args:
             var (str): Name of the variable to plot.
@@ -166,16 +168,23 @@ class PlotEnsembleZonal(BaseMixin):
             dataset_mean = dataset_mean
         self.logger.info("Plotting ensemble-mean Zonal-average")
 
-        # --- DYNAMIC COORDINATE EXTRACTION (Vertical Only) ---
-        vert_options = ["lev", "plev", "depth", "st_ocean", "z", "level"]
-        vert_dim = next((dim for dim in dataset_mean.dims if dim.lower() in vert_options), "lev")
-        # -----------------------------------------------------
+        vert_coord = find_vert_coord(dataset_mean)
+
+        # return if no vertical coordinate is found
+        if not vert_coord:
+            raise ValueError('No vertical coordinate found in data!')
+
+        # do the selection on the first vertical coordinate found
+        if len(vert_coord) > 1:
+            self.logger.warning(
+                "Found more than one vertical coordinate, using the first one: %s", 
+                vert_coord[0])
 
         fig1 = plt.figure(figsize=figure_size)
         ax1 = fig1.add_subplot(1, 1, 1)
         im = ax1.contourf(
             dataset_mean["lat"],     # Safely hardcoded to "lat"
-            dataset_mean[vert_dim],  # Dynamically extracted vertical coordinate
+            dataset_mean[vert_coord[0]],
             dataset_mean,
             cmap=cmap,
             levels=levels,
@@ -200,7 +209,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax2 = fig2.add_subplot(1, 1, 1)
         im = ax2.contourf(
             dataset_std.lat,
-            dataset_std[vert_dim],
+            dataset_std[vert_coord[0]],            
             dataset_std,
             cmap=cmap,
             levels=levels,

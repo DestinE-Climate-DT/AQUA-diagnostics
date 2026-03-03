@@ -33,6 +33,7 @@ Complete list:
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
 - Ensemble: improve the coverage of the tests (#88)
 - Ensemble: fix tests after datamodel working in issue #156 (#526)
+- Ensemble: implementing `find_vert_coord` in ensemble zonal plotting function (#175) 
 
 ## [v0.22.0]
 
