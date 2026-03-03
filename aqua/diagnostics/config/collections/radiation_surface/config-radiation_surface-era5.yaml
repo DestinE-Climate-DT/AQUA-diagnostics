@@ -25,6 +25,7 @@ references:
     source: 'monthly'
     startdate: '1990-01-01'
     enddate: '2020-12-31'
+    regrid: 'r100'
 
 output:
   outputdir: "./"
@@ -63,6 +64,9 @@ diagnostics:
       default: 
         projection: 'robinson'
         projection_params: {}
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05  # 95% confidence level
       snlwrf:
         vmin: -30
         vmax: 30
