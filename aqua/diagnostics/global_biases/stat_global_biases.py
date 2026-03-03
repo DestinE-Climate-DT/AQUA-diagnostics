@@ -202,6 +202,9 @@ class StatGlobalBiases:
         )
         # Determine significance (True where p-value < alpha)
         is_significant = p_values < alpha
+        self.logger.debug("Loading significance map in memory")
+        is_significant.load()
+        self.logger.debug("Loaded significance map in memory")
         
         # Count significant points
         n_significant = int(is_significant.sum().values)
