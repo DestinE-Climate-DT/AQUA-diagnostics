@@ -16,7 +16,6 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class 
 
 Complete list:
-Complete list:
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
 - Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173) 
 - Load in memory before saving netcdf (#174)
