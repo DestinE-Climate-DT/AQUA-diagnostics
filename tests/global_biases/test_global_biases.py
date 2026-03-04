@@ -2,7 +2,7 @@ import pytest
 import os
 import numpy as np
 import xarray as xr
-from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
+from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases 
 from aqua.core.exceptions import NoDataError
 from conftest import APPROX_REL, DPI, LOGLEVEL
 
@@ -87,6 +87,42 @@ class TestGlobalBiases:
         assert os.path.exists(pdf)
         png = os.path.join(tmp_path_str, 'png', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png')
         assert os.path.exists(png)
+        
+    def test_stat_global_biases(self, global_biases_instance, tmp_path_str, test_var):
+        gb = global_biases_instance
+        var = test_var 
+        gb.compute_climatology(var=var, areas=True, plev=85000)        
+        stat_gb = StatGlobalBiases()
+        result = stat_gb.compute_bias_statistics(data=gb.climatology, data_ref=gb.climatology, var=var)
+        assert float(result['mean_bias'].values) == pytest.approx(0.0, abs=1e-12)
+        assert float(result['rmse'].values) == pytest.approx(0.0, abs=1e-12)
+        
+        #With a +1000 offset, every grid point must be flagged as significant
+        ds_base = gb.data
+        ds_big = gb.data.copy(deep=True)+1000.0
+        result = stat_gb.compute_significance_ttest(data=ds_base, data_ref=ds_big, var=var, 
+                                                    alpha=0.05)
+        assert isinstance(result, xr.DataArray)
+        assert result.dtype == bool
+        assert bool(result.all())
+               
+    def test_bias_with_stat(self, global_biases_instance, plot_global_biases_instance, 
+                  tmp_path_str, test_var):
+        gb = global_biases_instance
+        plotgb = plot_global_biases_instance
+        var = test_var
+
+        gb.compute_climatology(var=var)        
+        plotgb.plot_bias(data=gb.climatology, data_ref=gb.climatology, var=var, plev=85000,
+                        data_timeseries=gb.data, 
+                        data_ref_timeseries=gb.data,
+                        show_significance = True)    
+        
+        pdf = os.path.join(tmp_path_str, 'pdf', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf')
+        assert os.path.exists(pdf)
+        png = os.path.join(tmp_path_str, 'png', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png')
+        assert os.path.exists(png)         
+
 
     def test_seasonal_bias(self, global_biases_instance, plot_global_biases_instance, 
                           tmp_path_str, test_var):
