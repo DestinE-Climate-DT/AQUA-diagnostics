@@ -24,6 +24,8 @@ class Boxplots(Diagnostic):
         outputdir (str, optional): Directory to save output files. Defaults to './'.
         loglevel (str, optional): Logging level. Defaults to 'WARNING'.
     """
+    MINIMUM_MONTHS_REQUIRED = 2
+
     def __init__(self,
                  catalog: str = None,
                  model: str = None,
@@ -70,7 +72,8 @@ class Boxplots(Diagnostic):
             if var is not None:
                 self.var = [v.lstrip('-') for v in (var if isinstance(var, list) else [var])]
             
-            super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
+            super().retrieve(var=self.var, reader_kwargs=reader_kwargs,
+                             months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         except Exception as e:
             self.logger.warning("Failed to retrieve variable(s) %s from %s, %s, %s: %s", 
