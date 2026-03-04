@@ -39,6 +39,7 @@ class Stratification(Diagnostic):
     logger : logging.Logger
         Configured logger for the diagnostic.
     """
+    MINIMUM_MONTHS_REQUIRED = 12
 
     def __init__(
         self,
@@ -116,7 +117,8 @@ class Stratification(Diagnostic):
         """
         self.climatology = climatology
         self.logger.info("Starting stratification diagnostic run.")
-        super().retrieve(var=var, reader_kwargs=reader_kwargs)
+        super().retrieve(var=var, reader_kwargs=reader_kwargs,
+                         months_required=self.MINIMUM_MONTHS_REQUIRED)
         if "lev" in self.data.dims:
             self.data = self.data.rename({"lev": self.vert_coord})
         self.logger.debug(
