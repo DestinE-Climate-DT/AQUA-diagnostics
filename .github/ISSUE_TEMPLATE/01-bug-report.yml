@@ -21,7 +21,7 @@ body:
       - MN5 operational
       - CI
       - HPC2020
-      - local
+      - Local
       - Others
     validations:
       required: true
