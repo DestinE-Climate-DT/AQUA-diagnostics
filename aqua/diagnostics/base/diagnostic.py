@@ -159,14 +159,12 @@ class Diagnostic():
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
         
-        # Check if the data meets the minimum months requirement.
-        # We need at least 2 timesteps to infer frequency, so if we have
-        # fewer than that we can already determine the requirement is not met.
+        # If there is a month requirement we infer the data frequency,
+        # then we check how many months are available in the data
+        # and finally raise an error if the requirement is not met.
         if months_required is not None:
-            n_times = len(data.time)
-            if n_times < 2:
-                raise NotEnoughDataError(f"Not enough months of data found for {model} {exp} {source}, at least {months_required} months required, only {n_times} found.")
-            freq = pandas_freq_to_string(xarray_to_pandas_freq(data))
+            timedelta = xarray_to_pandas_freq(data)
+            freq = pandas_freq_to_string(timedelta)
             factor = {
                 'hourly': 1/(24*30),
                 'daily': 1/30,
@@ -176,7 +174,7 @@ class Diagnostic():
                 'annual': 12
             }
             # We automatically raise an error if the frequency is not pandas compliant
-            months = n_times * factor.get(freq, 0)
+            months = len(data['time']) * factor.get(freq, 0)
 
             if months < months_required:
                 raise NotEnoughDataError(f"Not enough months of data found for {model} {exp} {source}, at least {months_required} months required, only {months} found.")
