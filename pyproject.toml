@@ -42,7 +42,7 @@ dependencies = [
 
 [project.optional-dependencies]
 core = [
-    "aqua-core==1.0.0a4"
+    "aqua-core>=1.0.0a4"
 ]
 docs = [
     "sphinx",
