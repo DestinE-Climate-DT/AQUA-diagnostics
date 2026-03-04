@@ -3,6 +3,7 @@
 import pandas as pd
 import xarray as xr
 from aqua.core.logger import log_configure
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics.base import Diagnostic
 from aqua.core.util import to_list
 
@@ -74,7 +75,8 @@ class Boxplots(Diagnostic):
             
             super().retrieve(var=self.var, reader_kwargs=reader_kwargs,
                              months_required=self.MINIMUM_MONTHS_REQUIRED)
-
+        except NotEnoughDataError:
+            raise
         except Exception as e:
             self.logger.warning("Failed to retrieve variable(s) %s from %s, %s, %s: %s", 
                                 var, self.model, self.exp, self.source, e)
