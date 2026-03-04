@@ -57,6 +57,9 @@ diagnostics:
       default: 
         projection: 'robinson'
         projection_params: {}
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05 
       tprate:
         vmin: -5
         vmax: 5
@@ -90,6 +93,22 @@ diagnostics:
       tprate:
         regions: ['nh', 'sh', 'europe']
 
+  histogram:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
+    center_time: true
+    bins: 50              # Override only if different from 100
+    density: true         # already default
+    ylogscale: true       # already default
+    params:
+      default:
+        std_startdate: '19900101'
+        std_enddate: '20201231'
+      tprate:
+        units: 'mm/day'
+        regions: [null, 'tropics']  # global and tropics; MUST be a list
+
   lat_lon_profiles:
     run: true
     diagnostic_name: 'water_cycle'
@@ -105,4 +124,5 @@ diagnostics:
         std_enddate: '20201231'
     variables:
       - name: 'tprate'
+        units: 'mm/day'
         regions: [null, 'tropics']  # global and tropics
