@@ -59,7 +59,8 @@ class SeaIce(Diagnostic):
         self.load_regions(regions_file=regions_file, regions=regions)
 
         self.threshold = threshold
-        
+
+
     def load_regions(self, regions_file=None, regions=None):
         """
         Loads region definitions from a .yaml configuration file and sets the selected regions.
@@ -83,18 +84,19 @@ class SeaIce(Diagnostic):
             return
 
         invalid_regions = [reg for reg in selected_regions if reg not in region_definitions]
-        
+
         if invalid_regions:
             invalid_regions_str = ', '.join(str(i) for i in invalid_regions)
             raise ValueError(f"Invalid region name(s): [{invalid_regions_str}]. "
                              f"Please check regions names are lower case or the region file at: '{regions_file}'.")
 
         self.regions = selected_regions
-        
+
+
     def compute_seaice(self, method: str = 'extent', var: str = None, *args, **kwargs):
         """
         Execute the seaice diagnostic based on the specified method.
-        
+
         Args:
             var (str): The variable to be used for computation. Default is 'sithick' or 'siconc'.
             method (str): The method to compute sea ice metrics. Options are 'extent' or 'volume'.
@@ -106,10 +108,8 @@ class SeaIce(Diagnostic):
         Returns:
             xr.DataArray or xr.Dataset: The computed sea ice metric. A Dataset is returned if multiple regions are requested.
         """
-        default_method_vars = {'extent': 'siconc',
-                               'volume': 'sithick',
-                               'fraction':  'siconc',
-                               'thickness': 'sithick'}
+        default_method_vars = {'extent': 'siconc', 'fraction':  'siconc',
+                               'volume': 'sithick', 'thickness': 'sithick'}
 
         valid_methods = list(default_method_vars)
 
@@ -126,7 +126,8 @@ class SeaIce(Diagnostic):
             return self._compute_2d_bymethod(*args, **kwargs)
         else:
             return self._compute_ts_bymethod(*args, **kwargs)
-            
+
+
     def _compute_ts_bymethod(self, calc_std_freq: str = None, 
                              get_seasonal_cycle: bool = False,
                              ts_monthly: bool = False, ts_monthly_std: bool = False,
@@ -219,6 +220,7 @@ class SeaIce(Diagnostic):
         # return a tuple if standard deviation was computed, otherwise just the result
         return (self.result, self.result_std) if calc_std_freq else self.result
 
+
     def _compute_2d_bymethod(self, reader_kwargs: dict = {}, **kwargs):
         """
         This method computes 2D sea ice climatology for each region.
@@ -228,6 +230,7 @@ class SeaIce(Diagnostic):
             **kwargs: Additional keyword arguments.
                 - stat (str): The statistic to compute ('mean' or 'std'). Default is 'mean'.
                 - freq (str): The frequency for grouping the data ('monthly' or 'annual'). Default is 'monthly'.
+
         Returns:
             xr.Dataset: A dataset containing the computed 2D sea ice climatologies for all requested regions.
         """
@@ -241,7 +244,7 @@ class SeaIce(Diagnostic):
 
         for region in self.regions:
             masked_data = original_masked_data.copy(deep=True)
-            
+
             # get the area cells and coordinates for the masked data
             # areacello, space_coord = self.get_area_cells_and_coords(masked_data)
             # areacello = self.select_region_area_cell(areacello, region)
@@ -265,6 +268,7 @@ class SeaIce(Diagnostic):
         self.logger.debug("Loaded data in memory")
 
         return self.result
+
 
     def _mask_data_bymethod(self):
         """
@@ -295,8 +299,9 @@ class SeaIce(Diagnostic):
             self.logger.error(f"Something wrong occurred: masked data is None. Check. "
                               f"Also check if var exist in: {self.model}, {self.exp}, {self.source}.")
             raise NoDataError("Variable not found")
-        
+
         return method_masked_data
+
 
     def get_area_cells_and_coords(self, masked_data: xr.DataArray):
         """
@@ -316,7 +321,7 @@ class SeaIce(Diagnostic):
             self.logger.debug('Data has not been regridded, using source grid area & coords')
             areacello = self.reader.src_grid_area
             space_coord = self.reader.src_space_coord
-        
+
         if areacello is None:
             areacello = self.reader.grid_area
             space_coord = self.reader.space_coord
@@ -331,6 +336,7 @@ class SeaIce(Diagnostic):
 
         return areacello, space_coord
 
+
     def select_region_area_cell(self, areacello: xr.DataArray, region: str, drop: bool = True):
         """
         Select the area cells for a specific region based on the region definition.
@@ -343,7 +349,7 @@ class SeaIce(Diagnostic):
             xr.DataArray: The area cells DataArray filtered by the region coordinates.
         """
         self.logger.debug(f'Selecting area cells for region: {region}')
-        
+
         if region not in self.regions_definition:
             raise ValueError(f"Region '{region}' not found in regions definition.")
 
@@ -365,7 +371,8 @@ class SeaIce(Diagnostic):
         areacello = res_dict['data']
 
         return areacello
-    
+
+
     def integrate_seaice(self, masked_data, region: str):
         """
         Integrate the masked data over the spatial dimension to compute sea ice metrics.
@@ -411,6 +418,7 @@ class SeaIce(Diagnostic):
 
         return seaice_integrated
 
+
     def _calc_time_stat(self, computed_data: xr.DataArray, freq: str = 'monthly', stat: str = 'std'):
         """
         Compute the standard deviation or mean of the data grouped by a specified time frequency (`monthly` or `annual`).
@@ -427,31 +435,29 @@ class SeaIce(Diagnostic):
         Returns:
             xarray.DataArray: A DataArray containing the computed time statistic.
         """
-        if freq not in ['monthly', 'annual']:
-            self.logger.warning(f"Frequency str: '{freq}' not recognized. Set to 'monthly' by default.")
-            freq = 'monthly'
-
-        if stat not in ['std', 'mean']:
-            self.logger.warning(f"Statistic '{stat}' not recognized. Set to 'mean' by default.")
-            stat = 'mean'
-
-        freq_dict = {'monthly':'time.month',
-                     'annual': 'time.year'}
-
         ensure_istype(computed_data, xr.DataArray, logger=self.logger)
 
-        self.logger.debug(f"Computing '{stat}' for '{freq}' frequency")
-
         if 'time' not in computed_data.dims:
-            raise ValueError(f"Cannot compute '{stat}' as 'time' dimension not present in data.")
+            raise ValueError(f"Cannot compute '{stat}' because 'time' dimension is missing.")
 
-        # select time, if None, the whole time will be taken in one or both boundaries
-        #computed_data = computed_data.sel(time=slice(self.startdate, self.enddate))
+        freq_map = {'monthly': 'time.month', 
+                    'annual': 'time.year'}
 
-        if stat == 'std':
-            return computed_data.groupby(freq_dict[freq]).std('time')
-        else:
-            return computed_data.groupby(freq_dict[freq]).mean('time')
+        stat_map = {'std', 'mean'}
+
+        if freq not in freq_map:
+            self.logger.warning(f"Frequency '{freq}' not recognized. Using 'monthly'.")
+            freq = "monthly"
+
+        if stat not in stat_map:
+            self.logger.warning(f"Statistic '{stat}' not recognized. Using 'mean'.")
+            stat = "mean"
+
+        self.logger.debug(f"Computing '{stat}' grouped by '{freq}'")
+
+        grouped = computed_data.groupby(freq_map[freq])
+        return getattr(grouped, stat)("time")
+
 
     def _compute_seasonal_cycle(self, monthly_data):
         """
@@ -478,7 +484,8 @@ class SeaIce(Diagnostic):
             return arr.groupby('time.month').mean('time')
 
         return [_group_bymonth(da) for da in monthly_data] if isinstance(monthly_data, list) else _group_bymonth(monthly_data)
-    
+
+
     def add_seaice_attrs(self, da_seaice_computed: xr.DataArray, region: str,
                          startdate: str=None, enddate: str=None, std_flag=False):
         """
@@ -519,6 +526,7 @@ class SeaIce(Diagnostic):
         da_seaice_computed.name = f"{'std_' if std_flag else ''}sea_ice_{self.method}_{region}"
 
         return da_seaice_computed
+
 
     def save_netcdf(self, seaice_data, diagnostic: str, diagnostic_product: str = None,
                     rebuild: bool = True, output_file: str = None,
