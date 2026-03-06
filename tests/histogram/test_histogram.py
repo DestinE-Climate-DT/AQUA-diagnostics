@@ -42,6 +42,44 @@ class TestHistogram:
         assert 'center_of_bin' in self.hist.histogram_data.dims
         assert len(self.hist.histogram_data.center_of_bin) == self.hist.bins
 
+    def test_compute_histogram_metadata(self):
+        """Test that compute_histogram sets correct metadata attributes"""
+        self.hist.retrieve(var='skt')
+        self.hist.compute_histogram(density=True)
+
+        h = self.hist.histogram_data
+        # Date attrs must be clean YYYY-MM-DD strings
+        assert h.attrs['AQUA_startdate'] == '1990-01-01'
+        assert h.attrs['AQUA_enddate'] == '1991-12-31'
+        # Catalog/model/exp propagation
+        assert h.attrs['AQUA_model'] == 'IFS'
+        assert h.attrs['AQUA_exp'] == 'test-tco79'
+        assert 'AQUA_catalog' in h.attrs
+        # Variable metadata propagated to center_of_bin
+        assert 'units' in h.center_of_bin.attrs
+
+    def test_compute_histogram_counts(self):
+        """Test histogram with counts (not density)"""
+        self.hist.retrieve(var='skt')
+        self.hist.compute_histogram(density=False)
+
+        h = self.hist.histogram_data
+        assert h.attrs['units'] == 'counts'
+        assert 'Histogram of' in h.attrs.get('long_name', '')
+
+    def test_auto_dates_format(self):
+        """Test that auto-detected dates are clean strings in metadata"""
+        hist_auto = Histogram(
+            model='IFS', exp='test-tco79', source='teleconnections',
+            startdate=None, enddate=None, bins=40, loglevel=loglevel
+        )
+        hist_auto.retrieve(var='skt')
+        hist_auto.compute_histogram()
+
+        # Dates must not contain 'T' (i.e. no timestamp format)
+        assert 'T' not in hist_auto.histogram_data.attrs['AQUA_startdate']
+        assert 'T' not in hist_auto.histogram_data.attrs['AQUA_enddate']
+
     def test_full_run(self, tmp_path):
         """Test complete run method"""
         self.hist.run(
@@ -106,37 +144,6 @@ class TestHistogram:
         assert bin_min >= 250
         assert bin_max <= 320
 
-    def test_histogram_counts_not_density(self):
-        """Test histogram with counts (not density)"""
-        self.hist.retrieve(var='skt')
-        self.hist.compute_histogram(density=False)
-        
-        assert self.hist.histogram_data is not None
-        assert self.hist.histogram_data.name == 'histogram'
-        assert self.hist.histogram_data.attrs['units'] == 'counts'
-        assert 'Histogram of' in self.hist.histogram_data.attrs.get('long_name', '')
-
-    def test_histogram_auto_dates(self):
-        """Test histogram with automatic date detection"""
-        hist_auto_dates = Histogram(
-            model='IFS',
-            exp='test-tco79',
-            source='teleconnections',
-            startdate=None,  # Will use data min
-            enddate=None,    # Will use data max
-            bins=40,
-            loglevel=loglevel
-        )
-        
-        hist_auto_dates.retrieve(var='skt')
-        
-        # Check that dates were set from data
-        assert hist_auto_dates.startdate is not None
-        assert hist_auto_dates.enddate is not None
-        
-        hist_auto_dates.compute_histogram()
-        assert hist_auto_dates.histogram_data is not None
-
     def test_error_invalid_variable(self):
         """Test error handling for invalid variable"""
         with pytest.raises(ValueError, match='nonexistent_var'):
@@ -144,7 +151,5 @@ class TestHistogram:
 
     def test_save_netcdf_without_data(self, tmp_path):
         """Test save_netcdf error when no data computed"""
-        # Don't run retrieve/compute
         self.hist.save_netcdf(outputdir=str(tmp_path))
-        # Should log error and return without raising exception
         assert self.hist.histogram_data is None

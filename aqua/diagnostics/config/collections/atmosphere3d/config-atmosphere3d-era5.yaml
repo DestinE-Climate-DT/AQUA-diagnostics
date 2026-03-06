@@ -46,6 +46,9 @@ diagnostics:
         projection: 'robinson'
         projection_params: {}
         cmap: 'PuOr_r'
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05  # 95% confidence level
       t:
         vmin: -8
         vmax: 8
