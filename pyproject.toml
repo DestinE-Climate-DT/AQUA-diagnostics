@@ -65,7 +65,9 @@ minimal = [
 dev = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]"
+    "aqua-diagnostics[tests]",
+    "black",
+    "pre-commit"
 ]
 all = [
     "aqua-diagnostics[core]",
@@ -127,3 +129,7 @@ omit = [
     "aqua/diagnostics/dummy"
     ]
 
+[tool.black]
+line-length = 127
+target-version = ['py310']
+force-exclude = '__init__\.py'

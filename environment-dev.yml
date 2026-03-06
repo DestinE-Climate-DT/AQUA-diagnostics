@@ -23,6 +23,8 @@ dependencies:
   - imagemagick
   - healpy
   - pip:
+    - pre-commit
+    - black
     - -e ../AQUA
     - -e ./frontier-diagnostics/tropical_cyclones/ # pip install -e of tropical cyclones
     - -e ./frontier-diagnostics/tropical_rainfall/ # pip install -e of tropical_rainfall
