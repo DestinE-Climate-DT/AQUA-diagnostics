@@ -11,6 +11,8 @@ class ENSO(BaseMixin):
     It inherits from the BaseMixin class and implements the necessary methods
     to calculate the ENSO index.
     """
+    MINIMUM_MONTHS_REQUIRED = 24
+
     def __init__(self, catalog: str = None, model: str = None,
                  exp: str = None, source: str = None,
                  regrid: str = None,
@@ -50,7 +52,7 @@ class ENSO(BaseMixin):
                                   Default is an empty dictionary.
         """
         # Assign self.data, self.reader, self.catalog
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         self.data = self.reader.timmean(self.data, freq='MS')
     
