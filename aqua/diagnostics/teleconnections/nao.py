@@ -72,8 +72,6 @@ class NAO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError('Data not retrieved')
-        if len(self.data[self.var].time) < 24:
-            raise NotEnoughDataError('Data have less than 24 months')
         
         lat1 = self.definition.get('lat1')
         lat2 = self.definition.get('lat2')

@@ -74,8 +74,6 @@ class ENSO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError('Data not retrieved')
-        if len(self.data[self.var].time) < 24:
-            raise NotEnoughDataError('Data have less than 24 months')
         
         latN = self.definition.get('latN')
         latS = self.definition.get('latS')
