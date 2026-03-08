@@ -235,19 +235,11 @@ class TCs(DetectNodes, StitchNodes):
         if self.orography and not self.orog:  # only if not already done
             self.logger.info("orography retrieved from file")
             self.orog = xr.open_dataset(self.orography_file)
-            if self.model == "IFS" or self.model == "IFS-NEMO" or self.model == "IFS-FESOM":
-                #rename var for detect nodes
-                self.logger.info(f"orography file for {self.model} is {self.orography_file}")
-                self.orog = self.orog.rename({'z': 'zs'})
-            elif self.model == "ICON":
-                self.logger.info(f"orography file for {self.model} is {self.orography_file}")
-                self.orog = self.orog.rename({'oromea': 'zs'})
-            elif self.model == "ERA5":
-                self.logger.info(f"orography file for {self.model} is {self.orography_file}")
-                self.orog = self.orog.rename({'z': 'zs'})
-                self.orog = self.orog.rename({'longitude': 'lon', 'latitude': 'lat'})
-            else:
-                raise ValueError(f'Orography variable of {self.model} not recognised!')
+
+            self.logger.info(f"orography file for {self.model} is {self.orography_file}")
+            rename_dict = {k: v for k, v in {'z': 'zs', 'oromea': 'zs', 'longitude': 'lon', 'latitude': 'lat'}.items() if k in self.orog}
+            if rename_dict:
+                self.orog = self.orog.rename(rename_dict)
 
         if self.data2d is not None and self.data3d is not None:
             if self.write_fullres:
