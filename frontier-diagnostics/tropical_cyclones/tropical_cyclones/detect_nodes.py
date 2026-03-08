@@ -5,7 +5,6 @@ import xarray as xr
 import pandas as pd
 from .tools.tcs_utils import write_fullres_field, clean_files
 
-
 class DetectNodes():
     """
     Class Mixin to take care of detect nodes.
@@ -64,109 +63,45 @@ class DetectNodes():
 
         fileout = os.path.join(self.paths['tmpdir'], f'regrid_{timestep}.nc')
 
-        if self.model in ['IFS', 'ERA5']:
-            # TO BE IMPROVED: check pressure levels units
-            # an import could be using metpy
-            # lowres3d = lowres3d.metpy.convert_coordinate_units('plev', 'Pa')
+        # this assumes that only required 2D data has been retrieved
+        lowres2d = self.reader2d.regrid(self.data2d.sel(time=timestep, drop=False)).load()
 
-            # this assumes that only required 2D data has been retrieved
-            self.lowres2d = self.reader2d.regrid(self.data2d.sel(time=timestep, drop=False))
+        # rename some variables to run DetectNodes command
+        if '10u' in lowres2d.data_vars:
+            lowres2d = lowres2d.rename({'10u': 'u10m'})
+        if '10v' in lowres2d.data_vars:
+            lowres2d = lowres2d.rename({'10v': 'v10m'})
+        # this is required to avoid conflict between z 3D and z 2D (orography)
+        if 'z' in lowres2d.data_vars:
+            lowres2d = lowres2d.rename({'z': 'zs'})
 
-            # rename some variables to run DetectNodes command
-            if '10u' in self.lowres2d.data_vars:
-                self.lowres2d = self.lowres2d.rename({'10u': 'u10m'})
-            if '10v' in self.lowres2d.data_vars:
-                self.lowres2d = self.lowres2d.rename({'10v': 'v10m'})
-            # this is required to avoid conflict between z 3D and z 2D (orography)
-            if 'z' in self.lowres2d.data_vars:
-                self.lowres2d = self.lowres2d.rename({'z': 'zs'})
+        lowres3d = self.reader3d.regrid(
+            self.data3d.sel(time=timestep, plev=[30000, 50000], drop=False)).load()
+        outfield = xr.merge([lowres2d, lowres3d])
 
-            lowres3d = self.reader3d.regrid(
-                self.data3d.sel(time=timestep, plev=[30000, 50000], drop=False))
-            outfield = xr.merge([self.lowres2d, lowres3d])
+        if self.orography:
+            self.logger.info("Adding orography added to detect nodes input file")
+            if 'time' in self.orog.dims:
+                self.logger.debug("Drop time dimension from orography")
+                orog_first_timestep = self.orog.isel(time=0, drop=True)
+                orog_first_timestep['time'] = outfield['time']
+            else:
+                orog_first_timestep = self.orog
 
-            if self.orography:
-                self.logger.info("Adding orography added to detect nodes input file")
-                if 'time' in self.orog.dims:
-                    self.logger.debug("Drop time dimension from orography")
-                    orog_first_timestep = self.orog.isel(time=0, drop=True)
-                    orog_first_timestep['time'] = outfield['time']
-                else:
-                    orog_first_timestep = self.orog
+            orog_first_timestep = self.reader2d.regrid(orog_first_timestep)
 
-                orog_first_timestep = self.reader2d.regrid(orog_first_timestep)
+            # drop 'time' whether it's a coord or a data var
+            if 'time' in orog_first_timestep.coords:
+                # remove coordinate (keeps any underlying data var if present)
+                orog_first_timestep = orog_first_timestep.reset_coords('time', drop=True)
+            elif 'time' in orog_first_timestep.data_vars:
+                # remove data variable entirely
+                orog_first_timestep = orog_first_timestep.drop_vars('time')
 
-                # drop 'time' whether it's a coord or a data var
-                if 'time' in orog_first_timestep.coords:
-                    # remove coordinate (keeps any underlying data var if present)
-                    orog_first_timestep = orog_first_timestep.reset_coords('time', drop=True)
-                elif 'time' in orog_first_timestep.data_vars:
-                    # remove data variable entirely
-                    orog_first_timestep = orog_first_timestep.drop_vars('time')
+            self.logger.debug(orog_first_timestep)
+            self.logger.debug(outfield)
 
-                self.logger.debug(orog_first_timestep)
-                self.logger.debug(outfield)
-
-                #orog_first_timestep.to_netcdf("/work/users/jost/aqua/tc/tc_analysis/tmpdir/ERA5/era5/orog_first_timestep.nc")   
-                outfield = xr.merge([outfield, orog_first_timestep])
-
-        elif self.model == 'IFS-NEMO' or self.model == 'IFS-FESOM':
-
-            # this assumes that only required 2D data has been retrieved
-            self.lowres2d = self.reader2d.regrid(self.data2d.sel(time=timestep, drop=False)).load()
-
-            # rename some variables to run DetectNodes command
-            if '10u' in self.lowres2d.data_vars:
-                self.lowres2d = self.lowres2d.rename({'10u': 'u10m'})
-            if '10v' in self.lowres2d.data_vars:
-                self.lowres2d = self.lowres2d.rename({'10v': 'v10m'})
-
-            lowres3d = self.reader3d.regrid(
-                self.data3d.sel(time=timestep, plev=[30000, 50000],
-                                drop=False)).load()
-
-            outfield = xr.merge([self.lowres2d, lowres3d])
-
-            if self.orography:
-                self.logger.info("Adding orography added to detect nodes input file")
-                if 'time' in self.orog.dims:
-                    self.logger.debug("Drop time dimension from orography")
-                    orog_first_timestep = self.orog.isel(time=0, drop=True)
-                    orog_first_timestep['time'] = outfield['time']
-                else:
-                    orog_first_timestep = self.orog
-                if 'time' in orog_first_timestep.coords:
-                    self.logger.debug("Drop time coordinate from orography")
-                    orog_first_timestep = orog_first_timestep.drop_vars('time')
-
-                self.logger.debug(orog_first_timestep)
-                self.logger.debug(outfield)
-                outfield = xr.merge([outfield, orog_first_timestep])
-
-        elif self.model == 'ICON':
-
-            # this assumes that only required 2D data has been retrieved
-            self.lowres2d = self.reader2d.regrid(self.data2d.sel(time=timestep, drop=False)).load()
-
-            # rename some variables to run DetectNodes command
-            if '10u' in self.lowres2d.data_vars:
-                self.lowres2d = self.lowres2d.rename({'10u': 'u10m'})
-            if '10v' in self.lowres2d.data_vars:
-                self.lowres2d = self.lowres2d.rename({'10v': 'v10m'})
-
-            # deal with vertical levels in ICON (transform to Pa)
-            lowres3d = self.reader3d.regrid(
-                self.data3d.sel(time=timestep, drop=False))
-            lowres3d['level'] = lowres3d['level'] * 100.0
-            lowres3d['level'].attrs['units'] = 'Pa'
-
-            outfield = xr.merge([self.lowres2d, lowres3d])
-
-            if self.orography:
-                self.logger.info("Orography added to detect nodes input file")
-                outfield = xr.merge([outfield, self.orog])
-        else:
-            raise KeyError(f'Atmospheric model {self.model} not supported')
+            outfield = xr.merge([outfield, orog_first_timestep])
 
         # check if output file exists
         if os.path.exists(fileout):

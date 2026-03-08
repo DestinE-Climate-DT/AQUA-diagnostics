@@ -196,76 +196,22 @@ class TCs(DetectNodes, StitchNodes):
             self.logger.warning(
                 'Initialised streaming for %s %s starting on %s', self.stream_step, self.stream_units, pd.to_datetime(self.stream_startdate))
         
-        if self.model == 'ERA5':
-            self.varlist2d = ['msl', '10u', '10v']
+        self.varlist2d = ['msl', '10u', '10v']
+        self.varlist3d = ['z']
 
-            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                         regrid=self.lowgrid,
+        self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                               regrid=self.lowgrid,
+                               streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                               startdate=self.startdate, enddate=self.enddate)
+        self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
+                               regrid=self.lowgrid,
+                               streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                               startdate=self.startdate, enddate=self.enddate)
+        if self.write_fullres:
+            self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                         regrid=self.highgrid,
                                          streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
                                          startdate=self.startdate, enddate=self.enddate)
-            self.varlist3d = ['z']
-            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
-                                         regrid=self.lowgrid,
-                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
-            if self.write_fullres:
-                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                            regrid=self.highgrid,
-                                            streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                            startdate=self.startdate, enddate=self.enddate)
-            
-        elif self.model == 'IFS':
-            self.varlist2d = ['msl', '10u', '10v', 'z']
-            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                         regrid=self.lowgrid,
-                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
-            self.varlist3d = ['z']
-            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
-                                         regrid=self.lowgrid,
-                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
-            if self.write_fullres:
-                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                             regrid=self.highgrid,
-                                             streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                             startdate=self.startdate, enddate=self.enddate)
-
-        elif self.model in ['IFS-NEMO', 'IFS-FESOM']:
-            self.varlist2d = ['msl', '10u', '10v']
-            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                         regrid=self.lowgrid,
-                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
-            self.varlist3d = ['z']
-            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
-                                         regrid=self.lowgrid,
-                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
-            if self.write_fullres:
-                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                            regrid=self.highgrid,
-                                            streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                             startdate=self.startdate, enddate=self.enddate)
-
-        elif self.model == 'ICON':
-            self.varlist2d = ['msl', '10u', '10v']
-            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                         regrid=self.lowgrid,
-                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
-            self.varlist3d = ['z']
-            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
-                                         regrid=self.lowgrid,
-                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
-            if self.write_fullres:
-                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
-                                             regrid=self.highgrid,
-                                            streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                            startdate=self.startdate, enddate=self.enddate)
-        else:
-            raise ValueError(f'Model {self.model} not supported')
 
     def data_retrieve(self, reset_stream=False):
         """
@@ -282,15 +228,9 @@ class TCs(DetectNodes, StitchNodes):
         # now retrieve 2d and 3d data needed
 
         self.data2d = self.reader2d.retrieve(var=self.varlist2d)
-
-        if self.model in ["ERA5", "IFS-FESOM"]: # plev are in Pa
-            self.data3d = self.reader3d.retrieve(var=self.varlist3d)
-            if self.data3d is not None:
-                self.data3d = self.data3d.sel(plev=[30000, 50000], method="nearest")
-        else: # plev are in hPa
-            self.data3d = self.reader3d.retrieve(var=self.varlist3d)
-            if self.data3d is not None:
-                self.data3d = self.data3d.sel(plev=[300, 500], method="nearest")
+        self.data3d = self.reader3d.retrieve(var=self.varlist3d)
+        if self.data3d is not None:
+            self.data3d = self.data3d.sel(plev=[30000, 50000], method="nearest")
             
         if self.orography and not self.orog:  # only if not already done
             self.logger.info("orography retrieved from file")
