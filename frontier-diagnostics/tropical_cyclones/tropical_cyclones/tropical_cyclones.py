@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from aqua import Reader
-from aqua.logger import log_configure
+from aqua.core.logger import log_configure
 from .detect_nodes import DetectNodes
 from .stitch_nodes import StitchNodes
 from .tools.tcs_utils import lonlatbox
