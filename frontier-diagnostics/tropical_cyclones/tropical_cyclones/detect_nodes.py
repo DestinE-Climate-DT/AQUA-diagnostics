@@ -40,7 +40,6 @@ class DetectNodes():
             self.run_detect_nodes(tstep)
             tend = time()
             self.logger.debug(f'DetectNodes took {tend - tstart:.4f} seconds')
-            # clean_files([self.tempest_filein])
             self.read_lonlat_nodes()
             self.store_detect_nodes(tstep, write_fullres=self.write_fullres)
             toc = time()
@@ -76,11 +75,13 @@ class DetectNodes():
             lowres2d = lowres2d.rename({'z': 'zs'})
 
         lowres3d = self.reader3d.regrid(
-            self.data3d.sel(time=timestep, plev=[30000, 50000], drop=False)).load()
+            self.data3d.sel(time=timestep, drop=False)).load()
+
         outfield = xr.merge([lowres2d, lowres3d])
 
         if self.orography:
             self.logger.info("Adding orography added to detect nodes input file")
+
             if 'time' in self.orog.dims:
                 self.logger.debug("Drop time dimension from orography")
                 orog_first_timestep = self.orog.isel(time=0, drop=True)
@@ -110,8 +111,8 @@ class DetectNodes():
         # then write netcdf file for tempest
         self.logger.info('Writing low res to disk..')
         self.logger.debug(f'Writing to {fileout}')
+
         outfield.to_netcdf(fileout)
-        outfield.close()
 
         self.tempest_dictionary = {
             'lon': 'lon', 'lat': 'lat',
