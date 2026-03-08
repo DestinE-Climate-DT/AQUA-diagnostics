@@ -57,6 +57,7 @@ diagnostics:
       default: 
         projection: 'robinson'
         projection_params: {}
+        show_stats: true
       tprate:
         vmin: -8
         vmax: 8

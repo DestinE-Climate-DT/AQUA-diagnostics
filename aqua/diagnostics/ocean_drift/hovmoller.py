@@ -106,7 +106,7 @@ class Hovmoller(Diagnostic):
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
-            res_dict = super()._select_region(
+            res_dict = super().select_region(
                 data=self.data, region=region, diagnostic="ocean3d", drop=True
             )
             self.region = res_dict["region"]
@@ -244,6 +244,9 @@ class Hovmoller(Diagnostic):
                 processed_data = self._get_std_anomaly(
                     self.data, anomaly_ref, standardise, dim="time"
                 )
+                self.logger.info("Loading data in memory")
+                processed_data.load()
+                self.logger.info("Loaded data in memory")
                 self.processed_data_list.append(processed_data)
         self.processed_data_list = sorted(self.processed_data_list, key=self.sort_key)
 

@@ -3,6 +3,7 @@ import xarray as xr
 from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.logger import log_configure
+from aqua.diagnostics.base import TitleBuilder
 
 from .base import BaseMixin
 
@@ -151,8 +152,10 @@ class PlotEnsembleZonal(BaseMixin):
         """
         self.logger.info("Plotting the ensemble computation of Zonal-averages as mean and STD in Lev-Lon of var {self.var}")
 
-        title_mean = "Ensemble mean of " + self.model if title_mean is None else title_mean
-        title_std = "Ensemble standard deviation of " + self.model if title_std is None else title_std
+        if title_mean is None:
+            title_mean = TitleBuilder(diagnostic="Ensemble mean", model=self.model).generate()
+        if title_std is None:
+            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", model=self.model).generate()
 
         if (dataset_mean is None) or (dataset_std is None):
             raise NoDataError("No data given to the plotting function")
@@ -163,11 +166,16 @@ class PlotEnsembleZonal(BaseMixin):
             dataset_mean = dataset_mean
         self.logger.info("Plotting ensemble-mean Zonal-average")
 
+        # --- DYNAMIC COORDINATE EXTRACTION (Vertical Only) ---
+        vert_options = ["lev", "plev", "depth", "st_ocean", "z", "level"]
+        vert_dim = next((dim for dim in dataset_mean.dims if dim.lower() in vert_options), "lev")
+        # -----------------------------------------------------
+
         fig1 = plt.figure(figsize=figure_size)
         ax1 = fig1.add_subplot(1, 1, 1)
         im = ax1.contourf(
-            dataset_mean.lat,
-            dataset_mean.lev,
+            dataset_mean["lat"],     # Safely hardcoded to "lat"
+            dataset_mean[vert_dim],  # Dynamically extracted vertical coordinate
             dataset_mean,
             cmap=cmap,
             levels=levels,
@@ -192,7 +200,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax2 = fig2.add_subplot(1, 1, 1)
         im = ax2.contourf(
             dataset_std.lat,
-            dataset_std.lev,
+            dataset_std[vert_dim],
             dataset_std,
             cmap=cmap,
             levels=levels,

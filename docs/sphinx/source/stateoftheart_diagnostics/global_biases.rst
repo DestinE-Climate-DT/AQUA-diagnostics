@@ -20,7 +20,7 @@ GlobalBiases provides tools to plot:
 Classes
 -------
 
-There is one class for the analysis and one for the plotting:
+There are three classes in the diagnostic:
 
 * **GlobalBiases**: retrieves the data and prepares it for plotting (e.g., regridding, pressure level selection, unit conversion).  
   It handles the computation of mean climatologies, including seasonal climatologies if requested.  
@@ -28,6 +28,9 @@ There is one class for the analysis and one for the plotting:
 
 * **PlotGlobalBiases**: provides methods for plotting the global biases, seasonal biases, and vertical profiles.  
   It generates the plots based on the data prepared by the GlobalBiases class.
+
+* **StatGlobalBiases**: computes global statistics on the biases, such as mean bias and root mean square error (RMSE).
+It can compute area-weighted statistics if grid cell areas are provided.
 
 File structure
 --------------
@@ -81,13 +84,14 @@ The basic structure of the analysis is the following:
     )
 
     biases_ifs_nemo.retrieve(var='q')
-    biases_ifs_nemo.compute_climatology(seasonal=True)
+    biases_ifs_nemo.compute_climatology(seasonal=True, areas=True)
 
     biases_era5.retrieve(var='q')
-    biases_era5.compute_climatology(seasonal=True)
+    biases_era5.compute_climatology(seasonal=True, areas=True)
     
     pg = PlotGlobalBiases(loglevel='DEBUG')
-    pg.plot_bias(data=biases_ifs_nemo.climatology, data_ref=biases_era5.climatology, var='q', plev=18000)
+    pg.plot_bias(data=biases_ifs_nemo.climatology, data_ref=biases_era5.climatology, var='q', plev=18000, 
+                 area=biases_ifs_nemo.climatology['cell_area'], show_stats=True)
 
 .. note::
 
@@ -161,7 +165,8 @@ Here we describe only the specific settings for the global biases diagnostic.
                 short_name: "tnr"
                 long_name: "Top net radiation"
 
-* ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.  
+* ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.
+``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
 The default parameters are used if not specified for a specific variable.
 Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
 
@@ -171,6 +176,7 @@ Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate
         default: 
             projection: 'robinson'
             projection_params: {}
+            show_stats: true
         2t:
             cmap: 'RdBu_r'
             vmin: -15

@@ -8,17 +8,7 @@ datasets:
     exp: hpz3
     source: monthly-3d
     regrid: null
-    reader_kwargs: {chunks: {"time": 12, "level": 1}}
-    # startdate: 1990-01
-    # enddate: 1990-12
-
-references:
-  - catalog: null
-    model: EN4
-    exp: v4.2.2
-    source: monthly
-    regrid: r100  # EN4 is on 1x1 grid different from r100
-    reader_kwargs: null  # it can be a dictionary with reader kwargs
+    reader_kwargs: {chunks: {"time": 12, "level": 1}}  # recommended for DE
     # startdate: 1990-01
     # enddate: 1990-12
 
@@ -33,7 +23,7 @@ output:
 diagnostics:
   ocean_drift:
     hovmoller:
-      # vert_coord: level # optional, default is 'level'
+      vert_coord: depth  # optional, default is 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']
@@ -42,7 +32,7 @@ diagnostics:
 
   ocean_trends:
     multilevel:
-      # vert_coord: level # optional, default is 'level'
+      vert_coord: depth  # optional, default is 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']

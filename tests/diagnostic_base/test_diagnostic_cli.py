@@ -17,6 +17,7 @@ def mock_config_yaml(tmp_path):
                 'model': 'TestModel',
                 'exp': 'test-exp',
                 'source': 'test-source',
+                'reader_kwargs': {'chunks': {'time': 1}}
             }
         ],
         'references': [
@@ -25,6 +26,7 @@ def mock_config_yaml(tmp_path):
                 'model': 'RefModel',
                 'exp': 'ref-exp',
                 'source': 'ref-source',
+                'reader_kwargs': {'chunks': {'time': 1}}
             }
         ],
         'output': {
@@ -119,7 +121,7 @@ class TestDiagnosticCLI:
         assert cli.save_netcdf is True
         assert cli.dpi == 150
         assert cli.create_catalog_entry is True
-        assert cli.reader_kwargs == {}
+        assert cli.reader_kwargs == {'chunks': {'time': 1}}
 
     def test_extract_options_with_realization(self, mock_args, mock_config_yaml):
         """Test that realization is correctly handled."""
@@ -137,7 +139,8 @@ class TestDiagnosticCLI:
         cli._extract_options()
         
         assert cli.realization == 'r1i1p1f1'
-        assert cli.reader_kwargs == {'realization': 'r1i1p1f1'}
+        assert cli.reader_kwargs.get('realization') == 'r1i1p1f1'
+        assert cli.reader_kwargs.get('chunks') == {'time': 1}
 
     def test_dataset_args_returns_correct_mapping(self, mock_args):
         """Test that dataset_args extracts correct dataset arguments."""
@@ -353,7 +356,8 @@ class TestDiagnosticCLI:
         assert cli.loglevel == 'DEBUG'
         assert cli.regrid == 'r400'
         assert cli.realization == 'r2i1p1f1'
-        assert cli.reader_kwargs == {'realization': 'r2i1p1f1'}
+        assert cli.reader_kwargs.get('realization') == 'r2i1p1f1'
+        assert cli.reader_kwargs.get('chunks') == {'time': 1}
         assert cli.outputdir == str(tmp_path / 'test_output')
         
         # Test dataset_args with the prepared CLI

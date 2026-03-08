@@ -129,13 +129,11 @@ class DiagnosticCLI:
             self.logger.info("End date is set to %s", self.enddate)
 
         # Realization option and reader_kwargs
+        self.reader_kwargs = self.config_dict.get('datasets', [{}])[0].get('reader_kwargs') or {}
         self.realization = get_arg(self.args, 'realization', None)
         if self.realization:
             self.logger.info("Realization option is set to: %s", self.realization)
-            self.reader_kwargs = {'realization': self.realization}
-        else:
-            # Fallback to config if present
-            self.reader_kwargs = self.config_dict.get('datasets', [{}])[0].get('reader_kwargs') or {}
+            self.reader_kwargs.update({'realization': self.realization})
 
         # Output options
         output_config = self.config_dict.get('output', {})

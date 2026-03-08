@@ -1,0 +1,63 @@
+name: AQUA-diagnostics Cross-Check
+
+# Tests aqua-diagnostics against aqua-core (default: main) instead of PyPI release; to catch integration issues early.
+# USAGE:
+#   - Auto-trigger: Add 'cross-check' label to PR, then push
+#   - Manual: Actions > Run workflow > enter aqua-core ref (branch/tag/SHA)
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+  workflow_dispatch:
+    inputs:
+      aqua_core_ref:
+        description: 'aqua-core branch/tag/commit to test against'
+        required: false
+        default: 'main'
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Only run when "cross-check" label is present or manual trigger on workflow Action
+  check-trigger:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.result }}
+    steps:
+      - name: Check if cross-check should run
+        id: check
+        run: |
+          SHOULD_RUN="false"
+          
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'cross-check') }}" == "true" ]] || \
+             [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            SHOULD_RUN="true"
+          fi
+          
+          echo "result=$SHOULD_RUN" >> $GITHUB_OUTPUT
+
+  # Call test-reusable workflow with cross-check mode
+  cross-check-tests:
+    needs: check-trigger
+    if: needs.check-trigger.outputs.should-run == 'true'
+    uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
+    with:
+      python-versions: '["3.12"]'
+      pytest-markers: 'diagnostics'
+      enable-parallel: true
+      enable-coverage: true
+      fail-fast: false
+      install-mode: 'cross-check'
+      aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+    secrets:
+      AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
+      AQUA_DVC_PAT: ${{ secrets.AQUA_DVC_PAT }}
+      BSC_GITLAB: ${{ secrets.BSC_GITLAB }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

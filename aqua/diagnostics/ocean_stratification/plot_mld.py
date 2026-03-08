@@ -3,10 +3,9 @@ import math
 import cartopy.crs as ccrs
 
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label
-from aqua.diagnostics.base import OutputSaver
+from aqua.core.util import cbar_get_label, get_realizations
+from aqua.diagnostics.base import OutputSaver, TitleBuilder
 from .mld_profiles import plot_maps
-# from .multivar_vertical_profiles import plot_multivars_vertical_profile
 
 
 xr.set_options(keep_attrs=True)
@@ -45,7 +44,13 @@ class PlotMLD:
         self.catalog = self.data[self.vars[0]].AQUA_catalog
         self.model = self.data[self.vars[0]].AQUA_model
         self.exp = self.data[self.vars[0]].AQUA_exp
+        self.realizations = get_realizations(self.data[self.vars[0]])
         self.region = self.data.attrs.get("AQUA_region", "global")
+
+        if self.obs:
+            self.obs_catalog = self.obs[self.vars[0]].AQUA_catalog
+            self.obs_model = self.obs[self.vars[0]].AQUA_model
+            self.obs_exp = self.obs[self.vars[0]].AQUA_exp
 
         self.outputsaver = OutputSaver(
             diagnostic=self.diagnostic,
@@ -53,6 +58,7 @@ class PlotMLD:
             model=self.model,
             exp=self.exp,
             outputdir=outputdir,
+            realization=self.realizations,
             loglevel=self.loglevel,
         )
 
@@ -225,9 +231,9 @@ class PlotMLD:
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the MLD plot."""
-        if plot_type is None:
-            plot_type = ""
-        self.suptitle = f"MLD in {self.region} - {self.clim_time} climatology - {self.catalog} {self.model} {self.exp}"
+        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region, 
+                             catalog=self.catalog, model=self.model, exp=self.exp, 
+                             timeseason=f"{self.clim_time} climatology").generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):
@@ -250,7 +256,7 @@ class PlotMLD:
     def set_description(self):
         self.description = f"Mixed layer depth plot of spatially averaged {self.region} region, {self.clim_time} climatology for the {self.catalog} {self.model} {self.exp} experiment"
         if self.obs:
-            self.description = self.description + (f" with the reference data from {self.obs.attrs['catalog']} {self.obs.attrs['model']} {self.obs.attrs['exp']}")
+            self.description = self.description + (f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}")
 
     def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
                   rebuild: bool = True,

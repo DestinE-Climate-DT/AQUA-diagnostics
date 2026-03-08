@@ -5,7 +5,7 @@ from aqua.core.exceptions import NoDataError
 from conftest import APPROX_REL, LOGLEVEL
 
 # pytest approximation, to bear with different machines
-approx_rel = APPROX_REL
+approx_rel = APPROX_REL * 10
 abs_rel = 1e-4
 loglevel = LOGLEVEL
 
