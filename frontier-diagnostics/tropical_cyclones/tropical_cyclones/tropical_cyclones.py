@@ -27,7 +27,7 @@ class TCs(DetectNodes, StitchNodes):
                  startdate=None, enddate=None,
                  stream_step=1, stream_unit='days', stream_startdate=None,
                  loglevel='INFO',
-                 orography=False,
+                 orography=False, engine='fdb',
                  nproc=1, write_fullres=False):
         """
         Constructor method that initializes the class attributes based on the
@@ -46,6 +46,7 @@ class TCs(DetectNodes, StitchNodes):
             frequency (str): The time frequency for processing the TCs diagnostic. Default is '6h'.
             startdate (str): The start date for processing the TCs diagnostic.
             enddate (str): The end date for processing the TCs diagnostic.
+            engine (str): The engine to use for reading the data. Default is 'fdb'.
             stream_step (int): The number of stream units to move forward in each step in streaming mode. Default is 1.
             stream_unit (str): The unit of stream_step in streaming mode. Default is 'days'.
             stream_startdate (str): The start date for processing the TCs diagnostic in streaming mode.
@@ -64,6 +65,9 @@ class TCs(DetectNodes, StitchNodes):
 
         if tdict is not None:
             self.paths = tdict['paths']
+            self.catalog = tdict['dataset'].get('catalog', None)
+            self.engine = tdict['dataset'].get('engine', 'fdb')
+            self.reader_kwargs = tdict['dataset'].get('reader_kwargs', None)
             self.model = tdict['dataset']['model']
             self.exp = tdict['dataset']['exp']
             self.source2d = tdict['dataset']['source2d']
@@ -199,19 +203,19 @@ class TCs(DetectNodes, StitchNodes):
         self.varlist2d = ['msl', '10u', '10v']
         self.varlist3d = ['z']
 
-        self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
+        self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d, catalog=self.catalog,
                                regrid=self.lowgrid,
                                streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                               startdate=self.startdate, enddate=self.enddate)
-        self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
+                               startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
+        self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d, catalog=self.catalog,
                                regrid=self.lowgrid,
                                streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                               startdate=self.startdate, enddate=self.enddate)
+                               startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
         if self.write_fullres:
-            self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
+            self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d, catalog=self.catalog,
                                          regrid=self.highgrid,
                                          streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate)
+                                         startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
 
     def data_retrieve(self, reset_stream=False):
         """
