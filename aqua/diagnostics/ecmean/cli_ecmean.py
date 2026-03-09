@@ -84,14 +84,10 @@ def reader_data(model, exp, source,
             model=model, exp=exp, source=source, catalog=catalog,
             regrid=regrid, **reader_kwargs
         )
-        xfield = reader.retrieve(startdate=startdate, enddate=enddate)
+        xfield = reader.retrieve(startdate=startdate, enddate=enddate, var=keep_vars)
     except Exception as err:
         reader_logger.error('Error while reading model %s: %s', model, err)
         return None
-
-            # return only vars that are available: slower but avoid reader failures
-    if keep_vars is not None:
-        xfield = xfield[[value for value in keep_vars if value in xfield.data_vars]]
     
     # regrid after variable selection
     if regrid is not None:
