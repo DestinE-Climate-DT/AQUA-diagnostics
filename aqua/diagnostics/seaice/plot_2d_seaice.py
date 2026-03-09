@@ -55,7 +55,7 @@ class Plot2DSeaIce:
         self.dpi = dpi
 
     def plot_2d_seaice(self, plot_type='var', months=[3,9], method='fraction', projkw=None,
-                       plot_ref_contour=False, save_pdf=True, save_png=True, show=False, **kwargs):
+                       plot_ref_contour=False, save_format=['png', 'pdf'], show=False, **kwargs):
         """
         Plot sea ice data and biases.
 
@@ -63,8 +63,7 @@ class Plot2DSeaIce:
             plot_type (str): Type of plot to generate ['var' or 'bias'].
             months (list):  List of months to plot, e.g. [2, 9] for February and September.
             projkw (dict):  Dictionary with projection parameters for the plot.
-            save_pdf (bool): Whether to save the plot as a PDF.
-            save_png (bool): Whether to save the plot as a PNG.
+            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
             plot_ref_contour (bool):     Whether to add a reference line at 0.2 for sea ice fraction.
             show (bool): If True, display the plot interactively (e.g., in Jupyter notebooks).
             **kwargs: Additional keyword arguments for customization. See below functions for details.
@@ -76,8 +75,7 @@ class Plot2DSeaIce:
         self.months = months
 
         self.plot_type = plot_type
-        self.save_pdf = save_pdf
-        self.save_png = save_png
+        self.save_format = save_format
 
         self.method = method
         supported_methods = ['fraction', 'thickness']
@@ -591,7 +589,7 @@ class Plot2DSeaIce:
         if data is None:
             raise ValueError("Data cannot be None for saving figures")
 
-        if not self.save_pdf and not self.save_png:
+        if not self.save_format:
             return
         
         outputsaver = OutputSaver(
@@ -611,5 +609,5 @@ class Plot2DSeaIce:
         
         outputsaver.save_figure(fig, diagnostic_product,
                                 extra_keys=extra_keys, metadata=metadata,
-                                save_pdf=self.save_pdf, save_png=self.save_png,
+                                extension=self.save_format,
                                 rebuild=self.rebuild, dpi=self.dpi)

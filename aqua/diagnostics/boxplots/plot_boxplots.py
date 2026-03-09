@@ -11,23 +11,21 @@ from aqua.core.graphics import boxplot
 class PlotBoxplots: 
     def __init__(self, 
                  diagnostic='boxplots',
-                 save_pdf=True, save_png=True, 
+                 save_format=['png', 'pdf'], 
                  dpi=300, outputdir='./',
                  loglevel='WARNING'):
         """
-        Initialize the PlotGlobalBiases class.
+        Initialize the PlotBoxplots class.
 
         Args:
             diagnostic (str): Name of the diagnostic.
-            save_pdf (bool): Whether to save the figure as PDF.
-            save_png (bool): Whether to save the figure as PNG.
+            save_format (str, list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
             dpi (int): Resolution of saved figures.
             outputdir (str): Output directory for saved plots.
             loglevel (str): Logging level.
         """
         self.diagnostic = diagnostic
-        self.save_pdf = save_pdf
-        self.save_png = save_png
+        self.format_to_save = save_format
         self.dpi = dpi
         self.outputdir = outputdir
         self.loglevel = loglevel
@@ -45,7 +43,7 @@ class PlotBoxplots:
             var (str): Variable name.
             diagnostic_product (str): Name of the diagnostic product.
             description (str): Description of the figure.
-            format (str): Format to save the figure ('png' or 'pdf').
+            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
         """
         catalog = extract_attrs(data, 'AQUA_catalog')
         model = extract_attrs(data, 'AQUA_model')
@@ -97,12 +95,7 @@ class PlotBoxplots:
         metadata = {"Description": description}
         extra_keys = {'var': '_'.join(var) if isinstance(var, list) else var}
 
-        if format == 'pdf':
-            outputsaver.save_pdf(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata)
-        elif format == 'png':
-            outputsaver.save_png(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata)
-        else:
-            raise ValueError(f'Unsupported format: {format}. Use "png" or "pdf".')
+        outputsaver.save_figure(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save)
 
 
     def plot_boxplots(self, data, data_ref=None, var=None, anomalies=False, add_mean_line=False, 
@@ -200,7 +193,5 @@ class PlotBoxplots:
                                 color='black', fontweight='bold'
                             )
 
-        if self.save_pdf:
-            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var, diagnostic_product='boxplot', format='pdf')
-        if self.save_png:
-            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var, diagnostic_product='boxplot', format='png')
+        if self.format_to_save:
+            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var, diagnostic_product='boxplot', format=self.format_to_save)

@@ -450,6 +450,5 @@ class PlotBaseMixin():
 
         outputsaver.save_figure(fig, diagnostic_product,
                                 extra_keys=extra_keys, metadata=metadata,
-                                save_pdf=format in ['pdf', 'both'], 
-                                save_png=format in ['png', 'both'],
+                                extension=format,
                                 rebuild=rebuild, dpi=dpi)

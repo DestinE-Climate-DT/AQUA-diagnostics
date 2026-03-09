@@ -1,5 +1,5 @@
 import xarray as xr
-
+from typing import Union
 # from aqua.core.util import pandas_freq_to_string
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import Diagnostic, OutputSaver
@@ -236,7 +236,7 @@ class PlotBaseMixin:
         rebuild: bool = True,
         outputdir: str = "./",
         dpi: int = 600,
-        format: str = "png",
+        format: Union[str, list] = "png",
         diagnostic_product: str = "sshVariability",
         catalog: str = None,
         model: str = None,
@@ -262,7 +262,7 @@ class PlotBaseMixin:
             rebuild (bool, optional): If ``True``, overwrite and rebuild the file even if it exists. Default is ``True``.
             outputdir (str, optional): Directory where the figure will be saved. Default is current directory ``'./'``.
             dpi (int, optional): Resolution of the saved figure in dots per inch. Default is ``600``.
-            format (str, optional): File format for saving the figure (e.g., ``'png'``, ``'pdf'``). Default is ``'png'``.
+            format (str or list, optional): Format(s) to save the figure in (e.g. ``'png'``, ``'pdf'``, ``'svg'``). Default is ``'png'``.
             diagnostic_product (str, optional): Diagnostic product name. Default is ``'sshVariability'``.
             catalog (str, optional): Catalog identifier for the dataset. (Mandatory for proper labeling)
             model (str, optional): Model name associated with the dataset. (Mandatory for proper labeling)
@@ -296,16 +296,8 @@ class PlotBaseMixin:
             region = region.replace(" ", "").lower()
             extra_keys.update({"region": region})
 
-        if format == "png":
-            outputsaver.save_png(
-                fig, diagnostic_product=diagnostic_product, rebuild=rebuild, extra_keys=extra_keys, metadata=metadata
-            )
-        elif format == "pdf":
-            outputsaver.save_pdf(
-                fig, diagnostic_product=diagnostic_product, rebuild=rebuild, extra_keys=extra_keys, metadata=metadata
-            )
-        else:
-            raise ValueError(f"Format {format} not supported. Use png or pdf.")
+        outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)
 
     def save_diff_plot(
         self,
@@ -392,13 +384,5 @@ class PlotBaseMixin:
             region = region.replace(" ", "").lower()
             extra_keys.update({"region": region})
 
-        if format == "png":
-            outputsaver.save_png(
-                fig, diagnostic_product=diagnostic_product, rebuild=rebuild, extra_keys=extra_keys, metadata=metadata
-            )
-        elif format == "pdf":
-            outputsaver.save_pdf(
-                fig, diagnostic_product=diagnostic_product, rebuild=rebuild, extra_keys=extra_keys, metadata=metadata
-            )
-        else:
-            raise ValueError(f"Format {format} not supported. Use png or pdf.")
+        outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)

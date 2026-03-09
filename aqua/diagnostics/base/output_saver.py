@@ -12,7 +12,8 @@ from matplotlib.figure import Figure
 
 from aqua.core.lock import SafeFileLock
 from aqua.core.logger import log_configure, log_history
-from aqua.core.util import create_folder, add_pdf_metadata, add_png_metadata, update_metadata
+from aqua.core.util import create_folder, update_metadata, to_list
+from aqua.diagnostics.base.metadata import add_figure_metadata
 from aqua.core.util import dump_yaml, load_yaml
 from aqua.core.util import replace_intake_vars, replace_urlpath_jinja, replace_urlpath_wildcard
 from aqua.core.configurer import ConfigPath
@@ -316,10 +317,7 @@ class OutputSaver:
             diagnostic_product=diagnostic_product,
             extra_keys=extra_keys, metadata=metadata)
 
-        if file_format in ['pdf', 'svg']:
-            add_pdf_metadata(filepath, metadata, loglevel=self.loglevel)
-        elif file_format == 'png':
-            add_png_metadata(filepath, metadata, loglevel=self.loglevel)
+        add_figure_metadata(filepath, metadata, file_format, loglevel=self.loglevel)
 
         self.logger.info("Saved %s: %s", file_format.upper(), filepath)
         return filepath
@@ -327,9 +325,7 @@ class OutputSaver:
     def save_figure(self, fig: Figure, diagnostic_product: str,
                     extra_keys: Optional[dict] = None,
                     metadata: Optional[dict] = None,
-                    save_pdf: bool = False,
-                    save_png: bool = True,
-                    save_svg: bool = False,
+                    extension: Union[str, list] = 'png',
                     rebuild: bool = True,
                     dpi: int = 300):
         """
@@ -343,30 +339,23 @@ class OutputSaver:
             diagnostic_product (str): Name of the diagnostic product.
             extra_keys (dict): Dictionary of additional keys for filename generation.
             metadata (dict): Dictionary of metadata to embed in the file.
-            save_pdf (bool): Whether to save as PDF.
-            save_png (bool): Whether to save as PNG.
-            save_svg (bool): Whether to save as SVG.   
+            extension (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
             rebuild (bool): Whether to rebuild if file exists.
             dpi (int): Resolution for PNG output (ignored for PDF).
         """
-        extension = []
-        if save_pdf:
-            extension+= 'pdf'
-        if save_png:
-            extension+= 'png'
-        if save_svg:
-            extension+= 'svg'
+        extensions = to_list(extension)
 
-        if set(extension).issubset(['pdf', 'svg', 'png']):
-            raise ValueError(f"format must be 'png', 'pdf', or 'svg', got '{extension}'")
+        if not set(extensions).issubset(['pdf', 'svg', 'png']):
+            raise ValueError(f"format must be 'png', 'pdf', or 'svg', got '{extensions}'")
 
-        # vectorial images
-        if extension in ['pdf', 'svg']:
-            self._save_figure_format(fig, diagnostic_product, extension, rebuild, extra_keys, metadata)
+        vectorial_formats = ['pdf', 'svg']
         
-        # raster images
-        if extension in ['png']:
-            self._save_figure_format(fig, diagnostic_product, extension, rebuild, extra_keys, metadata, dpi)
+        for ext in extensions:
+            ext = ext.lower().lstrip('.')
+            if ext in vectorial_formats:
+                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata)
+            else:
+                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, dpi)
 
 
     def create_metadata(self, diagnostic_product: str, extra_keys: Optional[dict] = None, metadata: Optional[dict] = None) -> dict:

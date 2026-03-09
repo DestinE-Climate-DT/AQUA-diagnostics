@@ -5,6 +5,7 @@ from aqua.core.logger import log_configure
 from aqua.core.util import to_list, strlist_to_phrase, unit_to_latex, DEFAULT_REALIZATION
 from aqua.core.graphics import plot_lat_lon_profiles
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from typing import Union
 
 class PlotLatLonProfiles():
     """
@@ -202,7 +203,7 @@ class PlotLatLonProfiles():
                   rebuild: bool = True,
                   outputdir: str = './', 
                   dpi: int = 300, 
-                  format: str = 'png', 
+                  format: Union[str, list] = 'png',
                   diagnostic: str = None):
         """
         Save the plot to a file.
@@ -213,7 +214,7 @@ class PlotLatLonProfiles():
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
             diagnostic (str): Diagnostic name to be used in the filename as diagnostic_product.
         """
         metadata = {
@@ -248,13 +249,9 @@ class PlotLatLonProfiles():
             diagnostic_product = f"{self.mean_type}_profile"
         
         # Save based on format
-        if format == 'png':
-            outputsaver.save_png(fig, diagnostic_product, extra_keys=extra_keys, 
-                            metadata={'description': description, 'dpi': dpi}, rebuild=rebuild)
-        else:
-            outputsaver.save_pdf(fig, diagnostic_product, extra_keys=extra_keys, 
-                            metadata={'description': description, 'dpi': dpi}, rebuild=rebuild)
-
+        outputsaver.save_figure(fig, diagnostic_product, extra_keys=extra_keys,
+                                metadata={'description': description, 'dpi': dpi},
+                                rebuild=rebuild, extension=format, dpi=dpi)
     def _check_data_length(self):
         """
         Check the length of the data arrays and reference data based on data_type.

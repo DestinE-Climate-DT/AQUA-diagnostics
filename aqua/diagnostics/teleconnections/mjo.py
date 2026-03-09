@@ -3,6 +3,7 @@ from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import OutputSaver
 from .base import BaseMixin
+from typing import Union
 
 # set default options for xarray
 xr.set_options(keep_attrs=True)
@@ -149,8 +150,8 @@ class PlotMJO():
         return fig
     
     def save_plot(self, fig, diagnostic_product: str = 'hovmoller', extra_keys: dict = None,
-                  rebuild: bool = True,
-                  dpi: int = 300, format: str = 'png', metadata: dict = None):
+                  rebuild: bool = True, metadata: dict = None,
+                  format: Union[str, list] = 'png', dpi: int = 300):
         """
         Save the plot to a file.
 
@@ -160,14 +161,10 @@ class PlotMJO():
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str): The format of the figure. Default is 'png'.
+            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        if format == 'png':
-            _ = self.outputsaver.save_png(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                          extra_keys=extra_keys, metadata=metadata, dpi=dpi)
-        elif format == 'pdf':
-            _ = self.outputsaver.save_pdf(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                          extra_keys=extra_keys, metadata=metadata)
+        _ = self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                          extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)

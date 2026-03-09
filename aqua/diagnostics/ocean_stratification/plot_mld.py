@@ -1,7 +1,7 @@
 import xarray as xr
 import math
 import cartopy.crs as ccrs
-
+from typing import Union
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, get_realizations
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
@@ -65,8 +65,7 @@ class PlotMLD:
     def plot_mld(
         self,
         rebuild: bool = True,
-        save_pdf: bool = True,
-        save_png: bool = True,
+        save_format: Union[str, list] = ['png', 'pdf'],
         dpi: int = 300,
     ):
         self.diagnostic_product = "mld"
@@ -101,15 +100,8 @@ class PlotMLD:
             sym=False,
         )
 
-        formats = []
-        if save_pdf:
-            formats.append('pdf')
-        if save_png:
-            formats.append('png')
-
-        for format in formats:
-            self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
-                           rebuild=rebuild, dpi=dpi, format=format, extra_keys={'region': self.region})
+        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
+                       rebuild=rebuild, extra_keys={'region': self.region}, format=save_format, dpi=dpi)
 
     def set_figsize(self):
         self.figsize = (9 * self.ncols, 8 * self.nrows)
@@ -270,15 +262,10 @@ class PlotMLD:
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str): The format of the figure. Default is 'png'.
+            format (str or list): The format(s) of the figure. Default is 'png'.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        if format == 'png':
-            result = self.outputsaver.save_png(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata, dpi=dpi)
-        elif format == 'pdf':
-            result = self.outputsaver.save_pdf(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata)
-        self.logger.info(f"Figure saved as {result}")
+        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                     extra_keys=extra_keys, metadata=metadata, dpi=dpi, extension=format)
