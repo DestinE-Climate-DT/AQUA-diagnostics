@@ -85,17 +85,25 @@ def reader_data(model, exp, source,
             regrid=regrid, **reader_kwargs
         )
         xfield = reader.retrieve(startdate=startdate, enddate=enddate)
-        if regrid is not None:
-            xfield = reader.regrid(xfield)
-
     except Exception as err:
         reader_logger.error('Error while reading model %s: %s', model, err)
         return None
 
-    # return only vars that are available: slower but avoid reader failures
-    if keep_vars is None:
-        return xfield
-    return xfield[[value for value in keep_vars if value in xfield.data_vars]]
+            # return only vars that are available: slower but avoid reader failures
+    if keep_vars is not None:
+        xfield = xfield[[value for value in keep_vars if value in xfield.data_vars]]
+    
+    # regrid after variable selection
+    if regrid is not None:
+        try: 
+            return reader.regrid(xfield)
+        except Exception as err:
+            reader_logger.error('Error while regridding model %s: %s', model, err)
+            return None
+
+
+
+
 
 def data_check(data_atm, data_oce, logger=None):
     """
