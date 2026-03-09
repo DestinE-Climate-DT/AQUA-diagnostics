@@ -1,4 +1,3 @@
-from zipfile import Path
 import pytest
 from aqua.diagnostics.ocean_drift import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
@@ -9,15 +8,17 @@ loglevel = LOGLEVEL
 
 
 @pytest.mark.diagnostics
-def test_hovmoller():
+def test_hovmoller(tmp_path):
     """Test the Hovmoller class."""
     # Create an instance of the Hovmoller class
     hovmoller = Hovmoller(catalog='ci', model='FESOM',
                           exp='hpz3', source='monthly-3d',
                           startdate='1990-01-01', enddate='1990-03-31',
-                          regrid='r200', loglevel=loglevel)
+                          regrid='r200', 
+                          loglevel=loglevel)
 
     hovmoller.run(anomaly_ref="t0",
+                    outputdir=tmp_path,
                   region='sss')
     assert hovmoller is not None, "Hovmoller instance should not be None"
 
@@ -33,8 +34,8 @@ def test_hovmoller():
 
     hov_plot = PlotHovmoller(data=hovmoller.processed_data_list, 
                             loglevel=loglevel,
+                            outputdir=tmp_path
                             )
     hov_plot.plot_hovmoller(save_png=True, save_pdf=True)
 
-    assert os.path.exists("png/oceandrift.hovmoller.ci.FESOM.hpz3.r1.sargasso_sea.png"), "Expected output file not found: png/oceandrift.hovmoller.ci.FESOM.hpz3.r1.sargasso_sea.png"
-    # assert os.stat("png/oceandrift.hovmoller.ci.FESOM.hpz3.r1.sargasso_sea.png").st_size > 0, "Expected output file is empty: png/oceandrift.hovmoller.ci.FESOM.hpz3.r1.sargasso_sea.png"
+    assert os.path.exists(f"{tmp_path}/png/oceandrift.hovmoller.ci.FESOM.hpz3.r1.sargasso_sea.png"), f"Expected output file not found: {tmp_path}/png/oceandrift.hovmoller.ci.FESOM.hpz3.r1.sargasso_sea.png"

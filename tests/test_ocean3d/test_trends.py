@@ -8,7 +8,7 @@ loglevel = LOGLEVEL
 approx_rel = APPROX_REL*10
 
 @pytest.mark.diagnostics
-def test_trends():
+def test_trends(tmp_path):
     """Test the trends class."""
     # Create an instance of the trends class
     trend = Trends(catalog='ci', model='FESOM',
@@ -18,17 +18,23 @@ def test_trends():
     trend.run(
         # dim_mean="lat",
               var=['thetao', 'so'],
-              region='go'
+              region='go',
+              outputdir=tmp_path   
               )
     print(trend.trend_coef)
     assert trend is not None, "trend instance should not be None"
     assert trend.trend_coef["thetao"].isel(level=1).mean('lat').mean('lon').values == pytest.approx(-0.06603967,rel=approx_rel)
     assert trend.trend_coef["so"].isel(level=1).mean('lat').mean('lon').values == pytest.approx(0.02622599,rel=approx_rel)
 
-    pt = PlotTrends(data = trend.trend_coef, loglevel=loglevel)
+    pt = PlotTrends(data = trend.trend_coef, 
+                    outputdir=tmp_path,
+                    loglevel=loglevel)
     pt.plot_multilevel()
-    assert os.path.exists("png/trends.multilevel_trend.ci.FESOM.hpz3.r1.global_ocean.png"), "Expected output file not found: png/trends.multilevel_trend.ci.FESOM.hpz3.r1.global_ocean.png"
+    print(tmp_path)
+    assert os.path.exists(f"{tmp_path}/png/trends.multilevel_trend.ci.FESOM.hpz3.r1.global_ocean.png"), f"Expected output file not found: {tmp_path}/png/trends.multilevel_trend.ci.FESOM.hpz3.r1.global_ocean.png"
 
-    pt = PlotTrends(data = trend.trend_coef.mean('lon'), loglevel=loglevel)
+    pt = PlotTrends(data = trend.trend_coef.mean('lon'), 
+                    outputdir=tmp_path,
+                    loglevel=loglevel)
     pt.plot_zonal()
-    assert os.path.exists("png/trends.zonal_mean.ci.FESOM.hpz3.r1.global_ocean.png"), "Expected output file not found: png/trends.zonal_mean.ci.FESOM.hpz3.r1.global_ocean.png"
+    assert os.path.exists(f"{tmp_path}/png/trends.zonal_mean.ci.FESOM.hpz3.r1.global_ocean.png"), f"Expected output file not found: {tmp_path}/png/trends.zonal_mean.ci.FESOM.hpz3.r1.global_ocean.png"
