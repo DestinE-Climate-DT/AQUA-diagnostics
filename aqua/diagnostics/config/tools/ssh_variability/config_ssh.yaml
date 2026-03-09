@@ -30,9 +30,9 @@ output:
   dpi: 600
 
 diagnostics:
-  sshVariability:
+  ssh_variability:
     run: true
-    diagnostic_name: 'sshVariability'
+    diagnostic_name: 'ssh_variability'
     variables: 'zos'
     params:
       default:

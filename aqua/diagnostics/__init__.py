@@ -13,7 +13,7 @@ from .ensemble import PlotEnsembleTimeseries, PlotEnsembleLatLon, PlotEnsembleZo
 from .ensemble import reader_retrieve_and_merge, merge_from_data_files, extract_realizations
 from .ecmean import PerformanceIndices, GlobalMean
 from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
-from .sshVariability import sshVariabilityCompute, sshVariabilityPlot
+from .ssh_variability import ssh_variability_compute, ssh_variability_plot
 from .ocean_drift import Hovmoller, PlotHovmoller
 from .ocean_stratification import Stratification, PlotStratification, PlotMLD
 from .ocean_trends import Trends, PlotTrends
@@ -34,7 +34,7 @@ __all__ = ["NAO", "ENSO", "MJO",
            "PlotEnsembleTimeseries", "PlotEnsembleLatLon", "PlotEnsembleZonal",
            "PerformanceIndices", "GlobalMean",
            "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
-           "sshVariabilityCompute", "sshVariabilityPlot",
+           "ssh_variability_compute", "ssh_variability_plot",
            "Boxplots", "PlotBoxplots", "extract_realizations",
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
            "Trends", "PlotTrends",

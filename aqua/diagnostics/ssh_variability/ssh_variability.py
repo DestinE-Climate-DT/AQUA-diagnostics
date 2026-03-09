@@ -10,14 +10,14 @@ from .base import BaseMixin
 xr.set_options(keep_attrs=True)
 
 
-class sshVariabilityCompute(BaseMixin):
+class ssh_variability_compute(BaseMixin):
     """
     SSH Computation
     """
 
     def __init__(
         self,
-        diagnostic_name: str = "sshVariability",
+        diagnostic_name: str = "ssh_variability",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -40,11 +40,11 @@ class sshVariabilityCompute(BaseMixin):
         loglevel: str = "WARNING",
     ):
         """
-        Initialize the 'sshVariabilityCompute' class.
+        Initialize the 'ssh_variability_compute' class.
 
         This class is designed to load an xarray.Dataset and computes STD.
         Args:
-            diagnostic_name (str): Default is 'sshVariability'.
+            diagnostic_name (str): Default is 'ssh_variability'.
             catalog (str): catalog. It is Mandatory, if 'save_netcdf=True'.
             model (str): Name of the data
             exp (str): Name of the experiment

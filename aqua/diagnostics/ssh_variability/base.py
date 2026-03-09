@@ -13,7 +13,7 @@ class BaseMixin(Diagnostic):
 
     def __init__(
         self,
-        diagnostic_name: str = "sshVariability",
+        diagnostic_name: str = "ssh_variability",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -40,7 +40,7 @@ class BaseMixin(Diagnostic):
         model, experiment, region, regridding options, output directory, and logging.
 
         Args:
-            diagnostic_name (str): Name of the diagnostic (default: 'sshVariability').
+            diagnostic_name (str): Name of the diagnostic (default: 'ssh_variability').
                 Used for configuring the logger and output files.
             catalog (str, optional): Catalog to use. If None, determined by the Reader.
             model (str, optional): Model to be used.
@@ -80,7 +80,7 @@ class BaseMixin(Diagnostic):
         if region is not None and lon_limits is not None and lat_limits is not None:
             # Set the region based on the region name or the lon and lat limits
             self.region, self.lon_limits, self.lat_limits = self._set_region(
-                region=region, diagnostic="sshVariability", lon_limits=lon_limits, lat_limits=lat_limits
+                region=region, diagnostic="ssh_variability", lon_limits=lon_limits, lat_limits=lat_limits
             )
             self.logger.debug(f"Region: {self.region}, Lon limits: {self.lon_limits}, Lat limits: {self.lat_limits}")
 
@@ -142,7 +142,7 @@ class BaseMixin(Diagnostic):
     def netcdf_save(
         self,
         data,
-        diagnostic_product: str = "sshVariability",
+        diagnostic_product: str = "ssh_variability",
         freq: str = None,
         create_catalog_entry: bool = False,
         dict_catalog_entry: dict = {"jinjalist": ["freq", "realization", "region"], "wildcardlist": ["var"]},
@@ -152,7 +152,7 @@ class BaseMixin(Diagnostic):
 
         Args:
             data (xarray.DataArray): Input data array
-            diagnostic_product (str): The product name to be used in the filename 'sshVariability'.
+            diagnostic_product (str): The product name to be used in the filename 'ssh_variability'.
             freq (str): The frequency of the data. It is set to 'None' for this release of code.
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
@@ -207,11 +207,11 @@ class BaseMixin(Diagnostic):
 
 
 class PlotBaseMixin:
-    """PlotBaseMixin class is used for the PlotSSHVariability."""
+    """PlotBaseMixin class is used for the plot_ssh_variability."""
 
     def __init__(
         self,
-        diagnostic_name: str = "sshVariability",
+        diagnostic_name: str = "ssh_variability",
         loglevel: str = "WARNING",
     ):
         """
@@ -237,7 +237,7 @@ class PlotBaseMixin:
         outputdir: str = "./",
         dpi: int = 600,
         format: str = "png",
-        diagnostic_product: str = "sshVariability",
+        diagnostic_product: str = "ssh_variability",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -263,7 +263,7 @@ class PlotBaseMixin:
             outputdir (str, optional): Directory where the figure will be saved. Default is current directory ``'./'``.
             dpi (int, optional): Resolution of the saved figure in dots per inch. Default is ``600``.
             format (str, optional): File format for saving the figure (e.g., ``'png'``, ``'pdf'``). Default is ``'png'``.
-            diagnostic_product (str, optional): Diagnostic product name. Default is ``'sshVariability'``.
+            diagnostic_product (str, optional): Diagnostic product name. Default is ``'ssh_variability'``.
             catalog (str, optional): Catalog identifier for the dataset. (Mandatory for proper labeling)
             model (str, optional): Model name associated with the dataset. (Mandatory for proper labeling)
             exp (str, optional): Experiment name. (Mandatory for proper labeling)
@@ -285,7 +285,7 @@ class PlotBaseMixin:
             diagnostic=self.diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=outputdir, loglevel=self.loglevel
         )
         if description is None:
-            description = "sshVariability diagnostic"
+            description = "ssh_variability diagnostic"
         description = description + f" ({startdate}-{enddate}) "
         metadata = {"Description": description, "dpi": dpi}
         extra_keys = {"diagnostic_product": diagnostic_product}
@@ -316,7 +316,7 @@ class PlotBaseMixin:
         outputdir: str = "./",
         dpi: int = 600,
         format: str = "png",
-        diagnostic_product: str = "sshVariability_Difference",
+        diagnostic_product: str = "ssh_variability_difference",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -347,7 +347,7 @@ class PlotBaseMixin:
             outputdir (str, optional): Directory where the plot file will be saved. Default is current directory ``'./'``.
             dpi (int, optional): Resolution of the saved figure in dots per inch. Default is ``600``.
             format (str, optional): Output file format (e.g., ``'png'``, ``'pdf'``). Default is ``'png'``.
-            diagnostic_product (str, optional): Diagnostic product identifier. Default is ``'sshVariability_Difference'``.
+            diagnostic_product (str, optional): Diagnostic product identifier. Default is ``'ssh_variability_difference'``.
             catalog (str, optional): Catalog name for the model dataset. (Mandatory for labeling)
             model (str, optional): Model name for the dataset. (Mandatory for labeling)
             exp (str, optional): Experiment identifier for the dataset. (Mandatory for labeling)
@@ -367,7 +367,7 @@ class PlotBaseMixin:
             OSError: If the output directory does not exist and cannot be created.
         """
         # TODO:
-        # Test if the sshVariability is computed in healpix/native grid then compte the difference will be an issue.
+        # Test if the ssh_variability is computed in healpix/native grid then compte the difference will be an issue.
         # Therefore perform regridding via Regridding class.
         outputsaver = OutputSaver(
             diagnostic=self.diagnostic_name,
@@ -381,7 +381,7 @@ class PlotBaseMixin:
             loglevel=self.loglevel,
         )
         if description is None:
-            description = "sshVariability difference"
+            description = "ssh_variability difference"
         description = description + f" model time: ({startdate}-{enddate}) and reference time: ({startdate_ref}-{enddate_ref})"
         metadata = {"Description": description, "dpi": dpi}
         extra_keys = {"diagnostic_product": diagnostic_product}

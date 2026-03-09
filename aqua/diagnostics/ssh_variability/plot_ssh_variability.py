@@ -15,22 +15,22 @@ from .base import PlotBaseMixin
 xr.set_options(keep_attrs=True)
 
 
-class sshVariabilityPlot(PlotBaseMixin):
+class ssh_variability_plot(PlotBaseMixin):
     """
-    Plot sshVariability and the difference of sshVariability
+    Plot ssh variability and the difference of ssh variability
     """
 
     def __init__(
         self,
-        diagnostic_name="sshVariability",
+        diagnostic_name="ssh_variability",
         outputdir="./",
         loglevel="WARNING",
     ):
         """
-        Initialize the sshVariability.
+        Initialize the ssh_variability.
 
         Args:
-            diagnostic_name (str): sshVariability
+            diagnostic_name (str): ssh_variability
             outputdir (str): output directory
             loglevel (str): Default WARNING
         """
@@ -69,7 +69,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         mask_southern_boundary=True,
         northern_boundary_latitude=70,
         southern_boundary_latitude=-62,
-        diagnostic_product="sshVariability",
+        diagnostic_product="ssh_variability",
         rebuild: bool = True,
         description=None,
         tgt_grid_name="r1440x721",
@@ -109,7 +109,7 @@ class sshVariabilityPlot(PlotBaseMixin):
             mask_southern_boundary (bool, optional): If ``True``, mask latitudes south of ``southern_boundary_latitude``.
             northern_boundary_latitude (float, optional): Latitude above which data will be masked. Default is ``70``.
             southern_boundary_latitude (float, optional): Latitude below which data will be masked. Default is ``-62``.
-            diagnostic_product (str, optional): Diagnostic type, e.g., ``'sshVariability'``. Default is ``'sshVariability'``.
+            diagnostic_product (str, optional): Diagnostic type, e.g., ``'ssh_variability'``. Default is ``'ssh_variability'``.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             description (str, optional): Additional description to include in the plot or metadata.
             tgt_grid_name='r1440x720',
@@ -307,7 +307,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         mask_southern_boundary=True,
         northern_boundary_latitude=70,
         southern_boundary_latitude=-62,
-        diagnostic_product="sshVariability_Difference",
+        diagnostic_product="ssh_variability_difference",
         description=None,
         rebuild: bool = True,
         tgt_grid_name="r1440x721",
@@ -351,7 +351,7 @@ class sshVariabilityPlot(PlotBaseMixin):
             mask_southern_boundary (bool, optional): Mask latitudes below southern_boundary_latitude. Default is True.
             northern_boundary_latitude (float, optional): Latitude above which data is masked. Default is 70.
             southern_boundary_latitude (float, optional): Latitude below which data is masked. Default is -62.
-            diagnostic_product (str, optional): Diagnostic product identifier. Default is 'sshVariability_Difference'.
+            diagnostic_product (str, optional): Diagnostic product identifier. Default is 'ssh_variability_difference'.
             description (str, optional): Additional description for the plot metadata or title.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             tgt_grid_name='r1440x720',
@@ -364,7 +364,7 @@ class sshVariabilityPlot(PlotBaseMixin):
             TypeError: If input datasets are not xarray.Datasets.
         """
         # TODO:
-        # Test if the sshVariability is computed in healpix/native grid then compte the difference will be an issue.
+        # Test if the ssh_variability is computed in healpix/native grid then compte the difference will be an issue.
         # Therefore perform regridding via Regridding class.
 
         if dataset_std is None and dataset_std_ref is None:

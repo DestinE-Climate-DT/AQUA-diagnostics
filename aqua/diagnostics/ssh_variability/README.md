@@ -17,7 +17,7 @@ No more environments than the regular AQUA ones (located in `./environment.yaml`
 Refer to the AQUA documentation for more information.
 
 ## Configuration
-The application requires a YAML configuration file which are available `AQUA/config/diagnostics/sshVariability` to specify the settings.
+The application requires a YAML configuration file which are available `AQUA/config/diagnostics/ssh_variability` to specify the settings.
 
 ## Usage
 1. Configure the `config_ssh.yaml` file with the desired settings.
