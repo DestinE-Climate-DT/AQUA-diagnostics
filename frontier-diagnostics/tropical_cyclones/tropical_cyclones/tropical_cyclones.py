@@ -82,7 +82,11 @@ class TCs(DetectNodes, StitchNodes):
             self.orography = orography
             self.write_fullres = tdict["detect"].get("write_fullres", False)
             if self.orography:
-                self.orography_file = os.path.join(tdict['orography']['file_path'], tdict['orography']['file_name'])
+                self.orography_file = tdict['orography']['file_path']
+                self.source_oro = tdict['orography'].get('source_oro', None)
+                self.var_oro = tdict['orography'].get('var_oro', None)
+                if not (self.source_oro and self.var_oro) and not self.orography_file:
+                    raise ValueError('To use orography you need to define source_oro and var_oro or orography_file')
         else:
             if paths is None:
                 raise ValueError('Without paths defined you cannot go anywhere!')
@@ -203,6 +207,7 @@ class TCs(DetectNodes, StitchNodes):
         self.varlist2d = ['msl', '10u', '10v']
         self.varlist3d = ['z']
 
+    
         self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d, catalog=self.catalog,
                                regrid=self.lowgrid,
                                streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
@@ -211,11 +216,28 @@ class TCs(DetectNodes, StitchNodes):
                                regrid=self.lowgrid,
                                streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
                                startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
+
+
         if self.write_fullres:
             self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d, catalog=self.catalog,
                                          regrid=self.highgrid,
                                          streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
                                          startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
+
+        if self.orography:
+            if not self.orography_file:
+                self.reader_oro = Reader(model=self.model, exp=self.exp, source=self.source_oro, catalog=self.catalog,
+                                         regrid=self.lowgrid, loglevel=self.loglevel, engine=self.engine, reader_kwargs=self.reader_kwargs)
+                self.orog = self.reader_oro.retrieve(var=self.var_oro).isel(time=0)
+                self.logger.debug("Orography retrieved from catalog source %s", self.source_oro)
+            else:
+                self.orog = xr.open_dataset(self.orography_file)
+                self.logger.debug("Orography retrieved from file %s", self.orography_file)
+
+            # in this diagnostic we need orography to be called zs
+            rename_dict = {k: v for k, v in {'z': 'zs', 'oromea': 'zs', 'orog': 'zs', 'longitude': 'lon', 'latitude': 'lat'}.items() if k in self.orog}
+            if rename_dict:
+                self.orog = self.orog.rename(rename_dict)
 
     def data_retrieve(self, reset_stream=False):
         """
@@ -235,15 +257,6 @@ class TCs(DetectNodes, StitchNodes):
         self.data3d = self.reader3d.retrieve(var=self.varlist3d)
         if self.data3d is not None:
             self.data3d = self.data3d.sel(plev=[30000, 50000], method="nearest")
-            
-        if self.orography and not self.orog:  # only if not already done
-            self.logger.info("orography retrieved from file")
-            self.orog = xr.open_dataset(self.orography_file)
-
-            self.logger.info(f"orography file for {self.model} is {self.orography_file}")
-            rename_dict = {k: v for k, v in {'z': 'zs', 'oromea': 'zs', 'longitude': 'lon', 'latitude': 'lat'}.items() if k in self.orog}
-            if rename_dict:
-                self.orog = self.orog.rename(rename_dict)
 
         if self.data2d is not None and self.data3d is not None:
             if self.write_fullres:
