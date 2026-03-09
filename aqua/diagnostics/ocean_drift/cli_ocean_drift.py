@@ -87,14 +87,15 @@ if __name__ == '__main__':
                         outputdir=cli.outputdir,
                         loglevel=cli.loglevel
                     )
-                    hov_plot.plot_hovmoller(
-                        rebuild=cli.rebuild, save_pdf=cli.save_pdf,
-                        save_png=cli.save_png, dpi=cli.dpi
-                    )
-                    hov_plot.plot_timeseries(
-                        rebuild=cli.rebuild, save_pdf=cli.save_pdf,
-                        save_png=cli.save_png, dpi=cli.dpi
-                    )
+
+                    save_format = getattr(cli, "save_format", None)
+                    if not save_format:
+                        logger.debug("No plot output requested, skipping plot generation for region %s", region)
+                        continue
+                    logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
+
+                    hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                    hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
                 except Exception as e:
                     logger.error("Error plotting region %s: %s", region, e)
                 
