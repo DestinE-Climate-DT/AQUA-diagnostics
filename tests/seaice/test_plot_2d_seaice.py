@@ -120,40 +120,40 @@ class TestPlot2DSeaIce:
                            models=self.frac_model, dpi=DPI)
         
         p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw,
-                          plot_ref_contour=True, save_pdf=False, save_png=False)
+                          plot_ref_contour=True, save_format=[])
 
     def test_plot_fraction_bias(self):
         p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
                            models=self.frac_model, dpi=DPI)
         
         p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent,
-                          plot_ref_contour=True, save_pdf=False, save_png=False)
+                          plot_ref_contour=True, save_format=[])
 
     def test_plot_thickness_var(self):
         p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic],
                            models=self.thick_model_ds, dpi=DPI)
         
         p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw,
-                          plot_ref_contour=True, save_pdf=False, save_png=False)
+                          plot_ref_contour=True, save_format=[])
 
     def test_plot_thickness_bias(self):
         p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic],
                            models=self.thick_model_ds, dpi=DPI)
         
         p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent,
-                          plot_ref_contour=True, save_pdf=False, save_png=False)
+                          plot_ref_contour=True, save_format=[])
 
     def test_bad_months_raise_value_error(self):
         p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
         with pytest.raises(ValueError):
             p2d.plot_2d_seaice(months=[0], projkw=self.projkw,
-                              save_pdf=False, save_png=False)
+                              save_format=[])
 
     def test_bad_months_raise_type_error(self):
         p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
         with pytest.raises(TypeError):
             p2d.plot_2d_seaice(months=["Feb"], projkw=self.projkw,
-                              save_pdf=False, save_png=False)
+                              save_format=[])
 
     def test_detect_common_regions_auto_detection(self):
         """Test automatic region detection without specifying regions_to_plot."""
@@ -224,13 +224,13 @@ class TestPlot2DSeaIce:
         p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
         with pytest.raises(ValueError):
             p2d.plot_2d_seaice(plot_type="invalid_plot_type", projkw=self.projkw,
-                               save_pdf=False, save_png=False)
+                               save_format=[])
 
     def test_bad_method_raises(self):
         p2d = Plot2DSeaIce(models=self.frac_model)
         with pytest.raises(ValueError):
             p2d.plot_2d_seaice(method="invalid_method", projkw=self.projkw,
-                               save_pdf=False, save_png=False)
+                               save_format=[])
 
     def test_plot_saves_outputs(self):
         p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
@@ -238,7 +238,7 @@ class TestPlot2DSeaIce:
                            outputdir=self.tmp_path, loglevel="INFO", dpi=DPI)
 
         p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, 
-                           save_pdf=True, save_png=True, months=[3])
+                           save_format=['png', 'pdf'], months=[3])
 
         png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
         pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)
