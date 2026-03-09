@@ -11,8 +11,7 @@ approx_rel = APPROX_REL * 10
 EXPECTED_THETAO_TREND = -0.06603967
 EXPECTED_SO_TREND     =  0.02622599
 
-# --- Session-scoped fixtures ---
-
+# --- Fixtures ---
 @pytest.fixture(scope="session")
 def trends_result(tmp_path_factory):
     tmp_path = tmp_path_factory.mktemp("trends")
@@ -22,7 +21,7 @@ def trends_result(tmp_path_factory):
     trend.run(var=['thetao', 'so'], region='go', outputdir=tmp_path)
     return trend, tmp_path
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def trends_plots(trends_result):
     """Run both plot types once, saving PNG and PDF."""
     trend, tmp_path = trends_result

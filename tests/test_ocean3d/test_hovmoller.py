@@ -10,7 +10,7 @@ loglevel = LOGLEVEL
 EXPECTED_THETAO = [22.2086629652034, -0.6924832430820729, -2.07305172]
 EXPECTED_SO     = [36.57638045014168, 0.02545398252818387, 2.35781597]
 
-# --- Session-scoped fixtures (pipeline runs once per test session) ---
+# --- Fixtures ---
 
 @pytest.fixture(scope="session")
 def hovmoller_config():
@@ -25,7 +25,7 @@ def hovmoller_config():
         'loglevel': loglevel
     }
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def hovmoller_result(tmp_path_factory, hovmoller_config):
     """Run the Hovmoller pipeline once for the entire test session."""
     tmp_path = tmp_path_factory.mktemp("hovmoller")
@@ -33,7 +33,7 @@ def hovmoller_result(tmp_path_factory, hovmoller_config):
     hov.run(anomaly_ref="t0", outputdir=tmp_path, region='sss')
     return hov, tmp_path
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def hovmoller_plot(hovmoller_result):
     """Run PlotHovmoller once, saving both formats."""
     hov, tmp_path = hovmoller_result

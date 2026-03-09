@@ -16,7 +16,7 @@ pytestmark = [
     pytest.mark.xdist_group(name="dask_operations")
 ]
 
-# --- Session-scoped fixtures ---
+# --- Fixtures ---
 
 @pytest.fixture(scope="session")
 def strat_config():
@@ -29,7 +29,7 @@ def strat_config():
         'loglevel': loglevel
     }
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def strat_dimean_result(tmp_path_factory, strat_config):
     """Run with dim_mean — collapsed scalar, used for value assertions and PlotStratification."""
     tmp_path = tmp_path_factory.mktemp("strat_dimean")
@@ -39,7 +39,7 @@ def strat_dimean_result(tmp_path_factory, strat_config):
               outputdir=tmp_path)
     return strat, tmp_path
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def strat_map_result(tmp_path_factory, strat_config):
     """Run without dim_mean — 2D map data, used for PlotMLD."""
     tmp_path = tmp_path_factory.mktemp("strat_map")
@@ -48,7 +48,7 @@ def strat_map_result(tmp_path_factory, strat_config):
               region='ls', mld=True)
     return strat, tmp_path
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def stratification_plot(strat_dimean_result):
     """Run PlotStratification once, saving PNG and PDF."""
     strat, tmp_path = strat_dimean_result
@@ -58,7 +58,7 @@ def stratification_plot(strat_dimean_result):
                        outputdir=tmp_path).plot_stratification(save_png=True, save_pdf=True)
     return tmp_path
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def mld_plot(strat_dimean_result, strat_map_result):
     """Run PlotMLD once, saving PNG and PDF."""
     _, tmp_path = strat_dimean_result
