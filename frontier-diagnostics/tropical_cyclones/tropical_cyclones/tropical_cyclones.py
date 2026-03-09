@@ -67,7 +67,9 @@ class TCs(DetectNodes, StitchNodes):
             self.paths = tdict['paths']
             self.catalog = tdict['dataset'].get('catalog', None)
             self.engine = tdict['dataset'].get('engine', 'fdb')
-            self.reader_kwargs = tdict['dataset'].get('reader_kwargs', None)
+            self.reader_kwargs = tdict['dataset'].get('reader_kwargs', {})
+            if not self.reader_kwargs:  # make sure it is an empty dictionary
+                self.reader_kwargs = {}
             self.model = tdict['dataset']['model']
             self.exp = tdict['dataset']['exp']
             self.source2d = tdict['dataset']['source2d']
@@ -211,23 +213,23 @@ class TCs(DetectNodes, StitchNodes):
         self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d, catalog=self.catalog,
                                regrid=self.lowgrid,
                                streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                               startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
+                               startdate=self.startdate, enddate=self.enddate, engine=self.engine, **self.reader_kwargs)
         self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d, catalog=self.catalog,
                                regrid=self.lowgrid,
                                streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                               startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
+                               startdate=self.startdate, enddate=self.enddate, engine=self.engine, **self.reader_kwargs)
 
 
         if self.write_fullres:
             self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d, catalog=self.catalog,
                                          regrid=self.highgrid,
                                          streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
-                                         startdate=self.startdate, enddate=self.enddate, engine=self.engine, reader_kwargs=self.reader_kwargs)
+                                         startdate=self.startdate, enddate=self.enddate, engine=self.engine, **self.reader_kwargs)
 
         if self.orography:
             if not self.orography_file:
                 self.reader_oro = Reader(model=self.model, exp=self.exp, source=self.source_oro, catalog=self.catalog,
-                                         regrid=self.lowgrid, loglevel=self.loglevel, engine=self.engine, reader_kwargs=self.reader_kwargs)
+                                         regrid=self.lowgrid, loglevel=self.loglevel, engine=self.engine)
                 self.orog = self.reader_oro.retrieve(var=self.var_oro).isel(time=0)
                 self.logger.debug("Orography retrieved from catalog source %s", self.source_oro)
             else:
