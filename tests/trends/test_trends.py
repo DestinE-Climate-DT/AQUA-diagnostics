@@ -1,5 +1,5 @@
 import pytest
-from aqua.diagnostics.ocean_trends import Trends
+from aqua.diagnostics.trends import Trends
 from conftest import APPROX_REL, LOGLEVEL
 
 loglevel = LOGLEVEL
@@ -12,7 +12,7 @@ def test_trends():
     trend = Trends(catalog='ci', model='FESOM',
                           exp='hpz3', source='monthly-3d',
                           regrid='r100', loglevel=loglevel)
-    
+
     trend.run(
         # dim_mean="lat",
               var=['thetao', 'so'],
