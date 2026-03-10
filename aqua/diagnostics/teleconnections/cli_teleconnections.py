@@ -69,7 +69,7 @@ def process_teleconnection_data(
         cli.logger.info(f'Running {data_type}: {source_args}')
         
         diagnostics[i] = diagnostic_class(**source_args, **init_args)
-        diagnostics[i].retrieve(reader_kwargs=cli.reader_kwargs if not is_reference else None)
+        diagnostics[i].retrieve(reader_kwargs=cli.reader_kwargs if not is_reference else {})
         diagnostics[i].compute_index(months_window=tc_config.get('months_window', 3), rebuild=cli.rebuild)
         diagnostics[i].save_netcdf(
             diagnostics[i].index, diagnostic=diagnostic_name,
