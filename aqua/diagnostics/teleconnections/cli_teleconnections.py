@@ -96,7 +96,16 @@ def process_teleconnection_data(
 
 
 def save_plot_formats(plotter, fig, diagnostic_product, description, cli):
-    """Save plot in requested formats."""
+    """
+    Save plot in requested formats.
+
+    Args:
+        plotter: The plotter object used to save the plot
+        fig: The figure object to save
+        diagnostic_product: The name of the diagnostic product for naming the file
+        description: Description metadata to include in the saved file
+        cli: CLI object with configuration for saving options
+    """
     if cli.save_pdf:
         plotter.save_plot(
             fig, diagnostic_product=diagnostic_product, format='pdf',
