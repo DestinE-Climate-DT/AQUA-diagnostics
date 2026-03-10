@@ -514,9 +514,17 @@ class SeaIce(Diagnostic):
                                                  f"over {da_seaice_computed.attrs['AQUA_region']}")
         da_seaice_computed.attrs["standard_name"] = f"{region}_{'std_' if std_flag else ''}sea_ice_{self.method}"
         da_seaice_computed.attrs["AQUA_method"] = f"{self.method}"
-        if startdate is not None: da_seaice_computed.attrs["AQUA_startdate"] = f"{startdate}"
-        if enddate is not None: da_seaice_computed.attrs["AQUA_enddate"] = f"{enddate}"
+        if startdate is not None:
+            da_seaice_computed.attrs["AQUA_startdate"] = f"{startdate}"
+        if enddate is not None:
+            da_seaice_computed.attrs["AQUA_enddate"] = f"{enddate}"
         da_seaice_computed.name = f"{'std_' if std_flag else ''}sea_ice_{self.method}_{region}"
+
+        # normalise time coordinate metadata so plots get a clean time axis label
+        time_coord = da_seaice_computed.coords.get("time", None)
+        if time_coord is not None:
+            time_coord.attrs["long_name"] = "Time"
+            time_coord.attrs.setdefault("standard_name", "time")
 
         return da_seaice_computed
 
