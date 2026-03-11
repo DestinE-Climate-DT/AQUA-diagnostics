@@ -16,7 +16,7 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class 
 
 Complete list:
-- Seaice: overwrite time attribute to long name for plots (#187)
+- Seaice: overwrite long name time attribute for coherent time axis in plots (#187)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
 - Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173) 
 - Load in memory before saving netcdf (#174)
