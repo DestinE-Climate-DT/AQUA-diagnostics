@@ -1,3 +1,5 @@
+import numpy as np
+import cartopy.crs as ccrs
 from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
