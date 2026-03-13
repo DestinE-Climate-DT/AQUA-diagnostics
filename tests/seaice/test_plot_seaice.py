@@ -172,14 +172,14 @@ class TestPlotSeaIce:
         """Test label generation for single DataArray."""
         psi = PlotSeaIce(dpi=DPI)
         da = self._dummy_da("m1")
-        assert psi._gen_labelname(da) == "m1 e s"
+        assert psi._gen_labelname(da) == "m1 e" # no AQUA_source in the label
 
     def test_gen_labelname_list(self):
         """Test label generation for list of DataArrays."""
         psi = PlotSeaIce(dpi=DPI)
         da_list = [self._dummy_da("m1"), self._dummy_da("m2")]
         labels = psi._gen_labelname(da_list)
-        assert labels == ["m1 e s", "m2 e s"]
+        assert labels == ["m1 e", "m2 e"] # no AQUA_source in the label
 
     def test_getdata_fromdict_single(self):
         """Test data extraction from dict with single item."""
