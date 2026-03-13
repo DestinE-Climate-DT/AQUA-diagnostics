@@ -8,10 +8,10 @@ from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure, log_history
 from aqua.core.graphics import plot_timeseries, plot_seasonalcycle, ConfigStyle
 from aqua.core.configurer import ConfigPath
-from aqua.core.util import get_realizations
+from aqua.core.util import get_realizations, strlist_to_phrase
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
 
-from .util import defaultdict_to_dict, extract_dates, _check_list_regions_type
+from .util import defaultdict_to_dict, _check_list_regions_type, extract_dates
 
 xr.set_options(keep_attrs=True)
 
@@ -203,7 +203,7 @@ class PlotSeaIce:
         if datain is None:
             return None
         
-        required_attrs = ["AQUA_model", "AQUA_exp", "AQUA_source"]
+        required_attrs = ["AQUA_model", "AQUA_exp"]
         missing_attrs = [attr for attr in required_attrs if attr not in datain.attrs]
 
         if missing_attrs:
@@ -282,15 +282,14 @@ class PlotSeaIce:
             self._description = ''
         
         # generate dynamic string for regions
-        if region not in self._description:
-            if not hasattr(self, 'region_str'):
-                self.region_str = region  # start with first region
-            else:
-                if region_idx == self.num_regions - 1:
-                    self.region_str += f" and {region} regions"
-                else:
-                    self.region_str += f", {region}"
-        
+        if not hasattr(self, "regions"):
+            self.regions = []
+        if region not in self.regions:
+            self.regions.append(region)
+
+        regions_phrase = strlist_to_phrase(self.regions)
+        self.region_str = f"{regions_phrase} region{'s' if len(self.regions) != 1 else ''} "
+
         # generate dynamic string for model data
         if hasattr(self, "data_labels") and self.data_labels:
             # remove duplicates while keeping order
@@ -303,18 +302,14 @@ class PlotSeaIce:
             model_startdate_list = []
             if isinstance(model_data_dict, xr.DataArray):
                 stdate, endate = extract_dates(model_data_dict)
-                model_startdate_list = [f"{label} from {stdate} to {endate}" for label in unique_labels]
-                self._description += f" {method} data from {stdate} to {endate} for {region}."
+                model_startdate_list = [f"{label} (from {stdate} to {endate})" for label in unique_labels]
             elif isinstance(model_data_dict, list):
                 for model_data in model_data_dict:
                     stdate, endate = extract_dates(model_data)
-                    model_startdate_list.extend([f"{label} from {stdate} to {endate}" for label in unique_labels])
-                    self._description += f" {method} data from {stdate} to {endate} for {region}."
+                    model_startdate_list.extend([f"{label} (from {stdate} to {endate})" for label in unique_labels])
 
             # build the model data string
-            self.model_labels_str = (f"{', '.join(model_startdate_list)} "
-                                     f"{'are' if len(model_startdate_list) > 1 else 'is'} "
-                                     f"used as {'models' if len(model_startdate_list) > 1 else 'model'} data.")
+            self.model_labels_str = f"{strlist_to_phrase(model_startdate_list)} "
         else:
             self.model_labels_str = ''
 
@@ -324,15 +319,11 @@ class PlotSeaIce:
                 self.ref_label_list = []
             if self.ref_label not in self.ref_label_list:
                 self.ref_label_list.append(f"{self.ref_label}")
-            # check ref list
-            if len(self.ref_label_list) == 1:
-                self.ref_label_str = f" {self.ref_label_list[0]} is used as a reference."
-            elif len(self.ref_label_list) == 2:
-                self.ref_label_str = (f" {self.ref_label_list[0]} and {self.ref_label_list[1]} "
-                                      f"are used as reference data for the respective regions.")
-            else:
-                ref_labels_str = ", ".join(self.ref_label_list[:-1]) + f", and {self.ref_label_list[-1]}"
-                self.ref_label_str = f" {ref_labels_str} are used as references."
+            
+            refs_phrase = strlist_to_phrase(self.ref_label_list, oxford_comma=True)
+            verb = "is" if len(self.ref_label_list) == 1 else "are"
+            plural = "" if len(self.ref_label_list) == 1 else "s"
+            self.ref_label_str = f" {refs_phrase} {verb} used as reference{plural}."
         else:
             self.ref_label_str = ''
 
@@ -340,39 +331,39 @@ class PlotSeaIce:
         if hasattr(self, "std_label") and self.std_label:
             sdtdata = self._getdata_fromdict(data_dict,'monthly_std_ref')
             std_sdate, std_edate = extract_dates(sdtdata[0]) 
-            self.std_label_str = f" Reference data std ranges from {std_sdate} to {std_edate}."
+            self.std_label_str = f" Shaded areas represent ±2σ uncertainty bands (from {std_sdate} to {std_edate})."
         else:
             self.std_label_str = ''
 
         # generate plot type name
         if hasattr(self, "plot_type") and self.plot_type:
             if self.plot_type == 'seasonalcycle':
-                pl_type = 'Seasonal cycle of the '
+                pl_type = 'Seasonal cycle of '
             elif self.plot_type == 'timeseries':
-                pl_type = 'Time series of the '
+                pl_type = 'Time series of '
             else:
                 pl_type = ''
-                
+
         # finally build the string caption (dynamically)
-        self._description = ('{}Sea ice {} integrated over {}. {}{}{}').format(pl_type, method, 
-                                                                               self.region_str, self.model_labels_str,
-                                                                               self.ref_label_str, self.std_label_str)
+        self._description = ('{}sea ice {} integrated over {}for {}{}{}').format(pl_type, method, 
+                                                                                 self.region_str, self.model_labels_str,
+                                                                                 self.ref_label_str, self.std_label_str)
 
     def regions_type_plotter(self, region_dict, style, **kwargs):
         """
         Loops over each region in region_dict and plots data either as a timeseries or a seasonal cycle
         depending on plot_type attribute.
-        
+
         Args:
             region_dict (dict): Dictionary of regions and their associated data.
             style (str): Graphic style of the plot.
             **kwargs (dict): Additional keyword arguments passed on to the underlying plotting function.
-        
+
         Returns:
             (fig, axes) : tuple. The figure and axes objects.
         """
         ConfigStyle(style=style, loglevel=self.loglevel)
-        
+
         self.num_regions = len(region_dict)
 
         fig_height = 6 if self.plot_type == 'seasonalcycle' else 10
@@ -473,9 +464,7 @@ class PlotSeaIce:
             metadata = {"Description": self._description}
             self.logger.debug(f"Description: {self._description}")
 
-            self.save_fig(fig, save_png, save_pdf,
-                          metadata=metadata,
-                          region_dict=region_dict)
+            self.save_fig(fig, save_png, save_pdf, metadata=metadata, region_dict=region_dict)
 
     def save_fig(self, fig, save_png: bool, save_pdf: bool,
                  metadata: dict = None, region_dict: dict = None):
@@ -496,8 +485,7 @@ class PlotSeaIce:
 
             diagnostic_product = self.plot_type
             
-            extra_keys = {'method': self.method,
-                          'region': '_'.join(region_dict.keys())}
+            extra_keys = {'method': self.method, 'region': '_'.join(region_dict.keys())}
             
             if save_pdf: 
                 output_saver.save_pdf(fig=fig, diagnostic_product=diagnostic_product, metadata=metadata,

@@ -3,7 +3,7 @@ import xarray as xr
 
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure, log_history
-from aqua.core.util import to_list, merge_attrs
+from aqua.core.util import to_list, merge_attrs, time_to_string
 from aqua.core.fldstat import FldStat
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.seaice.util import ensure_istype
@@ -514,9 +514,14 @@ class SeaIce(Diagnostic):
                                                  f"over {da_seaice_computed.attrs['AQUA_region']}")
         da_seaice_computed.attrs["standard_name"] = f"{region}_{'std_' if std_flag else ''}sea_ice_{self.method}"
         da_seaice_computed.attrs["AQUA_method"] = f"{self.method}"
-        if startdate is not None: da_seaice_computed.attrs["AQUA_startdate"] = f"{startdate}"
-        if enddate is not None: da_seaice_computed.attrs["AQUA_enddate"] = f"{enddate}"
+        if startdate is not None: da_seaice_computed.attrs["AQUA_startdate"] = f"{time_to_string(startdate, format='%Y-%m')}"
+        if enddate is not None: da_seaice_computed.attrs["AQUA_enddate"] = f"{time_to_string(enddate, format='%Y-%m')}"
         da_seaice_computed.name = f"{'std_' if std_flag else ''}sea_ice_{self.method}_{region}"
+
+        time_coord = da_seaice_computed.coords.get("time", None)
+        if time_coord is not None:
+            time_coord.attrs["long_name"] = "Time"
+            time_coord.attrs.setdefault("standard_name", "time")
 
         return da_seaice_computed
 
