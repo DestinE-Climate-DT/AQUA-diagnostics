@@ -96,7 +96,7 @@ The basic structure of the analysis is the following:
         psi = PlotSeaIce(monthly_models=result, 
                      catalog=si.catalog, model='IFS-NEMO', exp='historical-1990',
                      source='lra-r100-monthly', loglevel='DEBUG'loglevel='DEBUG')
-    psi.plot_seaice(plot_type='timeseries', save_pdf=True, save_png=True)
+    psi.plot_seaice(plot_type='timeseries', save_format=['png', 'pdf'])
 
 **2D Spatial**
 
@@ -132,7 +132,7 @@ The basic structure of the analysis is the following:
                                   'projpars': {'central_longitude': 0.0,
                                                'central_latitude': 'max_lat_signed'}
                                   }
-                          save_pdf=True, save_png=True)
+                          save_format=['png', 'pdf'])
 
 .. note::
 
