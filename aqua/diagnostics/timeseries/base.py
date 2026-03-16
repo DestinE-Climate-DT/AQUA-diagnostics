@@ -1,7 +1,7 @@
 """Base classes for Timeseries diagnostics."""
 
+from typing import Union
 import xarray as xr
-#import pandas as pd
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string
@@ -413,19 +413,22 @@ class PlotBaseMixin():
         self.logger.debug('Description: %s', description)
         return description
 
-    def save_plot(self, fig, description: str = None, rebuild: bool = True,
-                  outputdir: str = './', dpi: int = 300, format: str = 'png', diagnostic_product: str = None):
+    def save_plot(self, fig, description: str | None = None, rebuild: bool = True,
+                  outputdir: str = './', dpi: int = 300,
+                  format: Union[str, list[str]] = 'png',
+                  diagnostic_product: str | None = None):
         """
         Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): Figure object.
-            description (str): Description of the plot.
+            description (str, optional): Description of the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
-            diagnostic_product (str): Diagnostic product to be used in the filename as diagnostic_product.
+            format (str or list[str]): Format or list of formats to save
+                the plot in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
+            diagnostic_product (str, optional): Diagnostic product to be used in the filename as diagnostic_product.
         """
         outputsaver = OutputSaver(diagnostic=self.diagnostic_name,
                                   catalog=self.catalogs,

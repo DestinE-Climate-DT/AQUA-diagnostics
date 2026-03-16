@@ -33,7 +33,7 @@ class PlotSeasonalCycles(PlotBaseMixin):
         self.get_data_info()
 
     def run(self, outputdir: str = './',
-            rebuild: bool = True, dpi: int = 300, format: str = 'png'):
+            rebuild: bool = True, dpi: int = 300, format: str | list[str] = 'png'):
         """
         Run the PlotTimeseries class.
 
@@ -41,7 +41,8 @@ class PlotSeasonalCycles(PlotBaseMixin):
             outputdir (str): Output directory to save the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str or list[str]): Format or list of formats to save
+                the plot in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
         """
 
         self.logger.info('Running PlotSeasonalCycles')
@@ -142,18 +143,19 @@ class PlotSeasonalCycles(PlotBaseMixin):
 
         return fig, ax
 
-    def save_plot(self, fig, description: str = None, rebuild: bool = True,
-                  outputdir: str = './', dpi: int = 300, format: str = 'png'):
+    def save_plot(self, fig, description: str | None = None, rebuild: bool = True,
+                  outputdir: str = './', dpi: int = 300, format: str | list[str] = 'png'):
         """
         Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): Figure object.
-            description (str): Description of the plot.
+            description (str, optional): Description of the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str or list[str]): Format or list of formats to save
+                the plot in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
         """
         super().save_plot(fig, description=description, rebuild=rebuild,
                           outputdir=outputdir, dpi=dpi, format=format, diagnostic_product='seasonalcycles')
