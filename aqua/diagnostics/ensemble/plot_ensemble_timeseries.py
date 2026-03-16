@@ -105,8 +105,7 @@ class PlotEnsembleTimeseries(BaseMixin):
         ref_monthly_data=None,
         ref_annual_data=None,
         description=None,
-        save_pdf=True,
-        save_png=True,
+        save_format=["png", "pdf", "svg"],
         dpi=300,
         figure_size=[10, 5],
         plot_ensemble_members=True,
@@ -123,8 +122,8 @@ class PlotEnsembleTimeseries(BaseMixin):
             enddate (str): enddate to be included in title if 'None'. Default is 'None'.
             description (str): specific for saving the plot.
             figure_size: figure_size can be changed. Default is [10, 5],
-            save_pdf (bool): Default is True.
-            save_png (bool): Default is True.
+            save_format (str or list): Format(s) to save the figure in
+                (e.g. 'png', 'pdf', 'svg'). Default is ('png', 'pdf').
             dpi (int): Resolution for saved figures. Default is 300.
             plot_ensemble_members=True.
             ref_hourly_data: reference hourly timesereis xarray.Dataset. Default is None.
@@ -204,8 +203,7 @@ class PlotEnsembleTimeseries(BaseMixin):
                 )
 
         # Saving plots
-        if save_png:
-            self.save_figure(var=var, fig=fig, startdate=startdate, enddate=enddate, description=description, format="png", dpi=dpi)
-        if save_pdf:
-            self.save_figure(var=var, fig=fig, startdate=startdate, enddate=enddate, description=description, format="pdf")
+        self.save_figure(
+            var=var,fig=fig, startdate=startdate, enddate=enddate,
+            description=description, format=save_format, dpi=dpi)
         return fig, ax

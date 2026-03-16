@@ -102,8 +102,7 @@ class PlotEnsembleLatLon(BaseMixin):
         dpi=300,
         title_mean=None,
         title_std=None,
-        save_pdf=True,
-        save_png=True,
+        save_format=("png", "pdf"),
         vmin_mean=None,
         vmax_mean=None,
         vmin_std=None,
@@ -133,8 +132,8 @@ class PlotEnsembleLatLon(BaseMixin):
             dpi (int, optional): Resolution for saved figures. Default is 300.
             title_mean (str, optional): Title for mean plot. Auto-generated if None.
             title_std (str, optional): Title for standard deviation plot. Auto-generated if None.
-            save_pdf (bool, optional): Whether to save figures as PDF. Default is True.
-            save_png (bool, optional): Whether to save figures as PNG. Default is True.
+            save_format (str or list, optional): Format(s) to save figures in
+                (e.g. 'png', 'pdf', 'svg'). Default is ('png', 'pdf').
             vmin_mean, vmax_mean (float, optional): Color scale limits for mean plot. Auto-set if None.
             vmin_std, vmax_std (float, optional): Color scale limits for std plot. Auto-set if None.
             proj (str, optional): Map projection. Default is "robinson".
@@ -241,8 +240,6 @@ class PlotEnsembleLatLon(BaseMixin):
         ax2.set_ylabel("Latitude")
 
         # Saving plots
-        if save_png:
-            self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format="png")
-        if save_pdf:
-            self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format="pdf")
+        self.save_figure(var=var, fig=fig1, fig_std=fig2,
+                         description=description, format=save_format, dpi=dpi)
         return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}
