@@ -202,7 +202,7 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     Returns:
         description (str)
     """
-    model_time = f"for {model} {exp} from {year1}-01-01 to {year2}-12-31. "
+    model_time = f"for {model} {exp} from {year1}-01 to {year2}-12."
 
     region_bounds = {
         'Global':       (-90.0,  90.0),
@@ -215,25 +215,29 @@ def set_description(diagnostic, model, exp, year1, year2, config):
         'North Pole':   ( 60.0,  90.0),
         'South Pole':   (-90.0, -60.0)
     }
-    region_text = strlist_to_phrase([f"{r} ({lat_to_phrase(int(lat1))}-{lat_to_phrase(int(lat2))})"
-                                       for r in config[diagnostic]["regions"] for (lat1, lat2) in [region_bounds.get(r, (0, 0))]])
+    region_text = strlist_to_phrase(
+        [f"{r} ({lat_to_phrase(int(lat1))}-{lat_to_phrase(int(lat2))})"
+        for r in config[diagnostic]["regions"] for (lat1, lat2) in [region_bounds.get(r, (0, 0))]]
+    )
 
     regions_phrase = f"Processed regions are {region_text}."
 
     if diagnostic == 'performance_indices':
-        description = (f"Performance Indices normalized to the CMIP6 average "
-                       f"for different regions and seasons {model_time}"
-                       f"{regions_phrase}. Numbers < 1 imply better results than CMIP6 mean.")
+        return (
+            f"Reichler and Kim (2008) Performance Indices (normalized against an ensemble of CMIP6 models) "
+            f"for different regions and seasons {model_time} "
+            f"{regions_phrase}. Values smaller than one imply better results than the CMIP6 multi-model mean."
+        )
     elif diagnostic == 'global_mean':
-        description = (f"Global mean biases normalized to observed interannual variability "
-                       f"with respect to references for different regions and seasons {model_time}"
-                       f"{regions_phrase}")
+        return (
+            f"Global mean differences with respect to observational references "
+            f"(normalized to obsevational interannual variability) "
+            f" for different regions and seasons {model_time} "
+            f"{regions_phrase}. Darker colors imply larger differences."
+        )
     else:
         # produce a generic description
-        description = f"Diagnostic {diagnostic} {model_time.strip()}"
-
-    return description
-
+        return f"Diagnostic {diagnostic} {model_time.strip()}"
 
 if __name__ == '__main__':
 
