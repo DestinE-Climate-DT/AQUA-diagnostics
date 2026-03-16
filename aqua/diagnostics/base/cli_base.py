@@ -138,7 +138,7 @@ class DiagnosticCLI:
         output_config = self.config_dict.get('output', {})
         self.outputdir = output_config.get('outputdir', './')
         self.rebuild = output_config.get('rebuild', True)
-        self.save_format = output_config.get('save_format', ['png', 'pdf'])
+        self.save_format = output_config.get('save_format', ['png', 'pdf', 'svg'])
         self.save_netcdf = output_config.get('save_netcdf', True)
         self.dpi = output_config.get('dpi', 300)
         self.create_catalog_entry = output_config.get('create_catalog_entry', False)
