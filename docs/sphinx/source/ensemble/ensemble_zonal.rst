@@ -99,7 +99,6 @@ The basic structure of the analysis is the following:
     ens_zm_plot.plot(
         var=var,
         save_format=['png', 'pdf'],
-        save_png=True,
         title_mean='Mean of Ensemble of Zonal-average of avg_so',
         title_std='Standard deviation of Ensemble of Zonal-average of avg_so',
         cbar_label='Time-mean sea water practical salinity g kg**-1/year',

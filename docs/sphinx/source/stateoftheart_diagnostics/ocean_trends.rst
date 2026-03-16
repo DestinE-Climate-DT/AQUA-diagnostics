@@ -89,7 +89,6 @@ The basic structure of the analysis is the following:
     plot_trends.plot_multilevel(
             levels=[10, 100, 500, 1000, 3000, 5000],
             save_format=['png', 'pdf'],
-            save_png=True,
             dpi=300
         )
 

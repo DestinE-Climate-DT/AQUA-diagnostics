@@ -104,7 +104,6 @@ The basic structure is the following:
     ens_latlon_plot.plot(
         var=var,
         save_format=['png', 'pdf'],
-        save_png=True,
         title_mean='Map of 2t for Ensemble Multi-Model mean',
         title_std='Map of 2t for Ensemble Multi-Model standard deviation',
         cbar_label='2 meter temperature in K',
