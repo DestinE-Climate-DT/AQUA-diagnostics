@@ -130,6 +130,9 @@ class ssh_variability_compute(BaseMixin):
             del self.data
             gc.collect()
 
+            # Remove the non-serializable attribute
+            if '_earthkit' in self.data_std.attrs:
+                del self.data_std.attrs['_earthkit']
             # c)
             # Save STD as netcdf
             if self.save_netcdf:
