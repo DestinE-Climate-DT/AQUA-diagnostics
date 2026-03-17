@@ -66,6 +66,19 @@ class PlotSeaIce:
         self.exp = exp
         self.source = source
         self.catalog = catalog
+        
+        # If not explicitly provided, get catalog/model/exp from first monthly model dataset
+        datasets = self._check_as_datasets_list(monthly_models) or []
+        first_ds = next((ds for ds in datasets if ds is not None), None)
+        if isinstance(first_ds, xr.Dataset):
+            attrs = first_ds.attrs
+            if self.catalog is None:
+                self.catalog = attrs.get('AQUA_catalog')
+            if self.model is None:
+                self.model = attrs.get('AQUA_model')
+            if self.exp is None:
+                self.exp = attrs.get('AQUA_exp')
+
         self.realizations = get_realizations(monthly_models) # TO BE UPDATED when also annual analysis will be implemented
 
 
