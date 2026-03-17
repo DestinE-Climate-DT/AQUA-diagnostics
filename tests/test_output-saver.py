@@ -285,7 +285,7 @@ def test_core_save(base_saver, tmp_path):
     result = base_saver._core_save('mean', 'pdf')
     assert result.endswith('.pdf')
     
-    with pytest.raises(ValueError, match="file_format must be either 'pdf',  'png' or 'nc'"):
+    with pytest.raises(ValueError, match="file_format must be either 'pdf', 'svg', 'png' or 'nc'"):
         base_saver._core_save('mean', 'txt')
 
 @pytest.mark.aqua
