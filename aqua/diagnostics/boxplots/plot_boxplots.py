@@ -190,4 +190,4 @@ class PlotBoxplots:
                             )
 
         if self.format_to_save:
-            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var, diagnostic_product='boxplot', format=self.format_to_save)
+            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var)
