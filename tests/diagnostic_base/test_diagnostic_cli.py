@@ -32,8 +32,7 @@ def mock_config_yaml(tmp_path):
         'output': {
             'outputdir': os.path.join(str(tmp_path), 'output'),
             'rebuild': False,
-            'save_pdf': True,
-            'save_png': False,
+            'save_format': ['pdf'],
             'save_netcdf': True,
             'dpi': 150,
             'create_catalog_entry': True
@@ -116,8 +115,7 @@ class TestDiagnosticCLI:
         # Verify extracted options match the mock config
         assert cli.outputdir == str(tmp_path / 'output')
         assert cli.rebuild is False
-        assert cli.save_pdf is True
-        assert cli.save_png is False
+        assert cli.save_format == ['pdf']
         assert cli.save_netcdf is True
         assert cli.dpi == 150
         assert cli.create_catalog_entry is True
@@ -232,9 +230,9 @@ class TestDiagnosticCLI:
             default_config='config_test.yaml'
         )
         
-        cli.prepare(save_pdf=False, dpi=600)
+        cli.prepare(save_format=['png'], dpi=600)
         
-        assert cli.save_pdf is False  # Overridden
+        assert cli.save_format == ['png']  # Overridden
         assert cli.dpi == 600  # Overridden
         assert cli.save_netcdf is True  # Not overridden, from config
 

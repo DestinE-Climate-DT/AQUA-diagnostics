@@ -117,7 +117,7 @@ class TestPlotSeaIce:
             model=self.model, exp=self.exp, source=self.source,
             catalog=self.catalog, loglevel=self.loglevel, dpi=DPI
         )
-        psi.plot_seaice(plot_type='timeseries', save_pdf=False, save_png=False)
+        psi.plot_seaice(plot_type='timeseries', save_format=[])
 
     def test_plot_seaice_seasonal_cycle(self):
         """Test the seasonal cycle path with no files saved."""
@@ -126,19 +126,19 @@ class TestPlotSeaIce:
             model=self.model, exp=self.exp, source=self.source,
             catalog=self.catalog, loglevel=self.loglevel, dpi=DPI
         )
-        psi.plot_seaice(plot_type="seasonalcycle", save_pdf=False, save_png=False)
+        psi.plot_seaice(plot_type="seasonalcycle", save_format=[])
 
     def test_plot_seascycle_multi(self):
         """Test the seasonal cycle path with multiple datasets."""
         psi = PlotSeaIce(monthly_models=self.siext_seas,
                          monthly_ref=[self.siext_seas_ref], dpi=DPI)
-        psi.plot_seaice(plot_type="seasonalcycle", save_pdf=False, save_png=False)
+        psi.plot_seaice(plot_type="seasonalcycle", save_format=[])
 
     def test_invalid_plot_type_raises(self):
         """Test that invalid plot type raises ValueError."""
         psi = PlotSeaIce(monthly_models=self.siext, dpi=DPI)
         with pytest.raises(ValueError):
-            psi.plot_seaice(plot_type='bad_type', save_pdf=False, save_png=False)
+            psi.plot_seaice(plot_type='bad_type', save_format=[])
 
     def test_get_region_name_from_attrs(self):
         """Test region name extraction from DataArray attributes."""
@@ -203,30 +203,26 @@ class TestPlotSeaIce:
         assert out is None
 
     def test_save_fig_calls_output_saver(self, monkeypatch):
-        """Test that save_fig calls OutputSaver methods."""
-        png_called = {"flag": False}
-        pdf_called = {"flag": False}
+        """Test that save_fig calls OutputSaver.save_figure with correct formats."""
+        save_calls = []
 
-        # fake save_png/pdf that just flips flags 
-        def fake_png(self, *args, **kwargs):
-            png_called["flag"] = True
+        def fake_save_figure(self, *args, **kwargs):
+            save_calls.append(kwargs)
 
-        def fake_pdf(self, *args, **kwargs):
-            pdf_called["flag"] = True
-
-        monkeypatch.setattr(OutputSaver, "save_png", fake_png, raising=True)
-        monkeypatch.setattr(OutputSaver, "save_pdf", fake_pdf, raising=True)
+        monkeypatch.setattr(OutputSaver, "save_figure", fake_save_figure, raising=True)
 
         psi = PlotSeaIce(monthly_models=self.siext,
                          regions_to_plot=["Arctic"], 
                          model=self.model, exp=self.exp, source=self.source, 
                          catalog=self.catalog, loglevel=self.loglevel, dpi=DPI)
 
-        # Both branches inside save_fig should run 
-        psi.plot_seaice(plot_type="timeseries", save_pdf=True, save_png=True)
+        psi.plot_seaice(plot_type="timeseries", save_format=['png', 'pdf'])
 
-        assert png_called["flag"] is True
-        assert pdf_called["flag"] is True
+        assert len(save_calls) == 1
+        ext = save_calls[0].get("extension")
+        formats = [ext] if isinstance(ext, str) else list(ext)
+        assert "png" in formats
+        assert "pdf" in formats
 
     def test_plot_saves_outputs(self):
         """Test that plotting saves output files."""
@@ -237,7 +233,7 @@ class TestPlotSeaIce:
                          catalog=self.catalog, loglevel=self.loglevel, dpi=DPI,
                          outputdir=self.tmp_path)
 
-        psi.plot_seaice(plot_type='timeseries', save_pdf=True, save_png=True)
+        psi.plot_seaice(plot_type='timeseries', save_format=['png', 'pdf'])
 
         png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
         pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)

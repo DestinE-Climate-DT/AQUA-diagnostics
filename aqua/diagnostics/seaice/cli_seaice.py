@@ -160,7 +160,7 @@ if __name__ == '__main__':
                              rebuild=cli.rebuild,
                              **plot_ts_seaice)
 
-            psi.plot_seaice(plot_type='timeseries', save_pdf=cli.save_pdf, save_png=cli.save_png)
+            psi.plot_seaice(plot_type='timeseries', save_format=cli.save_format)
 
     # ================ Sea Ice diagnostic - Seasonal Cycle ================
     # =====================================================================
@@ -265,7 +265,7 @@ if __name__ == '__main__':
                              rebuild=cli.rebuild,
                              **plot_ts_seaice)
 
-            psi.plot_seaice(plot_type='seasonalcycle', save_pdf=cli.save_pdf, save_png=cli.save_png)
+            psi.plot_seaice(plot_type='seasonalcycle', save_format=cli.save_format)
 
     # ================ Sea Ice diagnostic - 2D Bias Maps ================
     # ===================================================================
@@ -365,8 +365,8 @@ if __name__ == '__main__':
                                method=method,
                                projkw=projkw,
                                plot_ref_contour= True if method == 'fraction' else False,
-                               save_pdf=cli.save_pdf, 
-                               save_png=cli.save_png)
+                               save_format=cli.save_format, 
+                               dpi=cli.dpi)
 
     cli.close_dask_cluster()
 

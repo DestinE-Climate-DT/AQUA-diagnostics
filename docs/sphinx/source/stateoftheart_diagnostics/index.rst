@@ -79,12 +79,11 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
         regrid: null
         reader_kwargs: null # it can be a dictionary with reader kwargs
 
-* ``output``: a block describing the details of the output. Is contains:
+* ``output``: a block describing the details of the output. It contains:
 
     * ``outputdir``: the output directory for the plots.
     * ``rebuild``: a boolean that enables the rebuilding of the plots.
-    * ``save_pdf``: a boolean that enables the saving of the plots in pdf format.
-    * ``save_png``: a boolean that enables the saving of the plots in png format.
+    * ``save_format``: a list (or single string) that selects the image formats to save plots. Default is SAVE_FORMAT.
     * ``dpi``: the resolution of the plots.
     * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
@@ -93,8 +92,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     output:
       outputdir: "/path/to/output"
       rebuild: true
-      save_pdf: true
-      save_png: true
+      save_format: ['png', 'svg'] # default is SAVE_FORMAT (['png', 'pdf', 'svg'])
       dpi: 300
       create_catalog_entry: true
 

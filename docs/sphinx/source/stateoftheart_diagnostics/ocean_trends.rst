@@ -88,8 +88,7 @@ The basic structure of the analysis is the following:
     plot_trends = PlotTrends(data = trend.trend_coef)
     plot_trends.plot_multilevel(
             levels=[10, 100, 500, 1000, 3000, 5000],
-            save_pdf=True,
-            save_png=True,
+            save_format=['png', 'pdf'], # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
             dpi=300
         )
 
@@ -97,7 +96,8 @@ The basic structure of the analysis is the following:
 .. note::
 
     Trend coefficients are automatically adjusted based on the detected temporal frequency of the input data.
-    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
+    If not specified otherwise, plots will be saved using ``SAVE_FORMAT`` (PNG, PDF, and SVG)
+    in the current working directory.
 
     The multi-level analysis generates spatial maps of trends at specified depth levels. Default levels are:
 
@@ -180,7 +180,7 @@ The diagnostic produces two types of plots:
 * Multi-level trend maps: Spatial maps showing trend patterns at multiple depth levels. 
 * Zonal mean vertical sections: Meridional-depth cross-sections showing the vertical and latitudinal structure of trends
 
-Plots are saved in both PDF and PNG format.
+Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
 Trend values for each variable at each grid point are saved as NetCDF files for further analysis.
 
 Example Plots

@@ -82,7 +82,7 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
         histogram_ref (Histogram or None): Reference histogram
         diag_config (dict): Diagnostic configuration
     """
-    if not (cli.save_png or cli.save_pdf):
+    if not getattr(cli, "save_format", None):
         cli.logger.debug('No plot output requested, skipping plot generation')
         return
     
@@ -113,12 +113,8 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
         'ymax': diag_config.get('ymax')
     }
     
-    if cli.save_png:
-        cli.logger.info('Saving PNG plot')
-        plot.run(format='png', **plot_params)
-    if cli.save_pdf:
-        cli.logger.info('Saving PDF plot')
-        plot.run(format='pdf', **plot_params)
+    cli.logger.info('Saving histogram plot(s) with formats: %s', cli.save_format)
+    plot.run(format=cli.save_format, **plot_params)
 
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])

@@ -107,10 +107,10 @@ Here is an example of saving a NetCDF file with metadata. The metadata includes 
     If the ``history`` metadata field is provided, the ``OutputSaver`` class will append
     the current message to the existing history.
 
-Saving a PDF or PNG Plot with Metadata
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Saving a Plot with Metadata
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This example demonstrates saving a PDF and PNG plot with metadata. The metadata includes the title, author, subject, and keywords of the file.
+This example demonstrates saving multiple plot formats (e.g. PNG/PDF/SVG) with metadata. The metadata includes the title, author, subject, and keywords of the file.
 
 .. code-block:: python
 
@@ -129,8 +129,9 @@ This example demonstrates saving a PDF and PNG plot with metadata. The metadata 
     }
 
     # Save the PDF and PNG with metadata
-    outputsaver.save_pdf(fig, 'test', extra_keys=extra_keys, metadata=metadata)
-    outputsaver.save_png(fig, 'test', extra_keys=extra_keys, metadata=metadata, dpi=300)
+    outputsaver.save_figure(fig, 'test', extra_keys=extra_keys, metadata=metadata, 
+                            extension=['png', 'pdf'], # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
+                            dpi=300)
 
 .. note::
     We suggest using the metadata field ``/Caption`` to store the plot description.

@@ -4,9 +4,8 @@ Base class for diagnostic CLI to centralize common operations.
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
-from aqua.diagnostics.base import open_cluster, close_cluster
-from aqua.diagnostics.base import load_diagnostic_config, merge_config_args
-
+from .defaults import SAVE_FORMAT
+from .util import open_cluster, close_cluster, load_diagnostic_config, merge_config_args
 
 class DiagnosticCLI:
     """
@@ -61,8 +60,7 @@ class DiagnosticCLI:
         self.reader_kwargs = None
         self.outputdir = None
         self.rebuild = None
-        self.save_pdf = None
-        self.save_png = None
+        self.save_format = None
         self.save_netcdf = None
         self.dpi = None
         self.create_catalog_entry = None  # Default behavior; can be overridden in prepare()
@@ -139,8 +137,7 @@ class DiagnosticCLI:
         output_config = self.config_dict.get('output', {})
         self.outputdir = output_config.get('outputdir', './')
         self.rebuild = output_config.get('rebuild', True)
-        self.save_pdf = output_config.get('save_pdf', True)
-        self.save_png = output_config.get('save_png', True)
+        self.save_format = output_config.get('save_format', SAVE_FORMAT)
         self.save_netcdf = output_config.get('save_netcdf', True)
         self.dpi = output_config.get('dpi', 300)
         self.create_catalog_entry = output_config.get('create_catalog_entry', False)

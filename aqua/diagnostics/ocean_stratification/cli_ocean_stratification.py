@@ -125,7 +125,7 @@ if __name__ == "__main__":
                         loglevel=cli.loglevel,
                     )
                     strat_plot.plot_stratification(
-                        save_pdf=cli.save_pdf, save_png=cli.save_png, dpi=cli.dpi
+                        save_format=cli.save_format, dpi=cli.dpi
                     )
                     # Mixed Layer Depth instance
                     # Model data
@@ -179,7 +179,7 @@ if __name__ == "__main__":
                         outputdir=cli.outputdir,
                         loglevel=cli.loglevel,
                     )
-                    mld_plot.plot_mld(save_pdf=cli.save_pdf, save_png=cli.save_png, dpi=cli.dpi)
+                    mld_plot.plot_mld(save_format=cli.save_format, dpi=cli.dpi)
 
     cli.close_dask_cluster()
 

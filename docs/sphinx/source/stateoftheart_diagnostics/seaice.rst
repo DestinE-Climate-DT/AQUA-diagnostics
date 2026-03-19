@@ -96,7 +96,7 @@ The basic structure of the analysis is the following:
         psi = PlotSeaIce(monthly_models=result, 
                      catalog=si.catalog, model='IFS-NEMO', exp='historical-1990',
                      source='lra-r100-monthly', loglevel='DEBUG'loglevel='DEBUG')
-    psi.plot_seaice(plot_type='timeseries', save_pdf=True, save_png=True)
+    psi.plot_seaice(plot_type='timeseries', save_format=['png', 'pdf'])
 
 **2D Spatial**
 
@@ -132,12 +132,13 @@ The basic structure of the analysis is the following:
                                   'projpars': {'central_longitude': 0.0,
                                                'central_latitude': 'max_lat_signed'}
                                   }
-                          save_pdf=True, save_png=True)
+                          save_format=['png', 'pdf']) # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
 
 .. note::
 
    Start/end dates, reference datasets, and regional subsets may be specified in the configuration.
-   If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
+   If not specified otherwise, plots will be saved using ``SAVE_FORMAT`` (PNG, PDF, and SVG)
+   in the current working directory.
 
 CLI usage
 ---------
@@ -282,7 +283,7 @@ The diagnostic produces four types of outputs:
 * 2D climatology maps of sea ice fraction and thickness
 * Bias maps showing spatial differences between model and reference data
 
-Plots are saved in both PDF and PNG format.
+Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
 Data outputs are saved as NetCDF files.
 
 Observations
