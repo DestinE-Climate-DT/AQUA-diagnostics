@@ -19,7 +19,7 @@ from aqua.core.util import replace_intake_vars, replace_urlpath_jinja, replace_u
 from aqua.core.configurer import ConfigPath
 from aqua.core.util import format_realization
 from aqua.core.util.string import clean_filename
-from aqua.diagnostics.base import SAVE_FORMAT
+from .defaults import SAVE_FORMAT
 
 class OutputSaver:
     """
