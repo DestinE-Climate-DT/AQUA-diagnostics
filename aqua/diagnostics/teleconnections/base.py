@@ -5,7 +5,7 @@ from aqua.core.logger import log_configure
 from aqua.core.configurer import ConfigPath
 from aqua.core.util import load_yaml, select_season, to_list
 from aqua.core.util import convert_data_units, get_realizations
-from aqua.diagnostics.base import Diagnostic, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import Diagnostic, OutputSaver, TitleBuilder, SAVE_FORMAT
 
 xr.set_options(keep_attrs=True)
 
@@ -180,10 +180,7 @@ class PlotBaseMixin():
         We extract the data needed for labels, description etc
         from the data arrays attributes.
 
-        The attributes are:
-        - AQUA_catalog
-        - AQUA_model
-        - AQUA_exp
+        The AQUA attributes are: AQUA_catalog, AQUA_model, AQUA_exp
         """
         if self.indexes is not None:
             self.catalogs = [d.AQUA_catalog for d in self.indexes]
@@ -272,7 +269,7 @@ class PlotBaseMixin():
 
     def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
                   rebuild: bool = True, metadata: dict = None,
-                  dpi: int = 300, format: Union[str, list] = 'png'):
+                  dpi: int = 300, format: Union[str, list] = SAVE_FORMAT):
         """
         Save the plot to a file.
 
@@ -282,7 +279,7 @@ class PlotBaseMixin():
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.

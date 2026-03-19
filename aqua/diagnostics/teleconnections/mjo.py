@@ -1,7 +1,7 @@
 import xarray as xr
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import OutputSaver, SAVE_FORMAT
 from .base import BaseMixin
 from typing import Union
 
@@ -151,7 +151,7 @@ class PlotMJO():
     
     def save_plot(self, fig, diagnostic_product: str = 'hovmoller', extra_keys: dict = None,
                   rebuild: bool = True, metadata: dict = None,
-                  format: Union[str, list] = 'png', dpi: int = 300):
+                  format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
         """
         Save the plot to a file.
 
@@ -161,7 +161,7 @@ class PlotMJO():
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.

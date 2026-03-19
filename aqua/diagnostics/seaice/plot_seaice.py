@@ -1,16 +1,13 @@
 """ PlotSeaIce doc """
-import os
 import xarray as xr
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from typing import Union
 
-from aqua.core.exceptions import NoDataError, NotEnoughDataError
-from aqua.core.logger import log_configure, log_history
+from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_timeseries, plot_seasonalcycle, ConfigStyle
-from aqua.core.configurer import ConfigPath
 from aqua.core.util import get_realizations, to_list
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 
 from .util import defaultdict_to_dict, extract_dates, _check_list_regions_type
 
@@ -95,7 +92,8 @@ class PlotSeaIce:
         self.outputdir = outputdir
         self.rebuild = rebuild
         self.dpi = dpi
-    
+
+
     def _check_as_datasets_list(self, datain) -> list[xr.Dataset | None] :
         """ Check that the input (`datain`) is either:
             - A single `xarray.Dataset` (which is converted into a list).
@@ -114,6 +112,7 @@ class PlotSeaIce:
             return datain
         else:
             raise ValueError(f"Invalid type: {type(datain)}. Expected xr.Dataset, list of xr.Dataset, or None.")
+
 
     def _get_region_name_in_datarray(self, da: xr.DataArray) -> str:
         """
@@ -146,6 +145,7 @@ class PlotSeaIce:
                           f"and region could not be derived from the variable name.")
                 self.logger.error(errmsg)
                 raise KeyError(errmsg)
+
 
     def repack_datasetlists(self, **kwargs) -> dict:
         """
@@ -203,7 +203,8 @@ class PlotSeaIce:
         
         self.logger.info("Sea ice data repacked")
         return repacked_dict
-    
+
+
     def _gen_str_from_attributes(self, datain: xr.DataArray | None) -> str:
         """
         Generate a string from the attributes of the input data.
@@ -225,7 +226,8 @@ class PlotSeaIce:
 
         # join the strs to make label
         return " ".join(str(datain.attrs[attr]) for attr in required_attrs if attr in datain.attrs)
-    
+
+
     def _gen_labelname(self, datain: xr.DataArray | list[xr.DataArray] | None) -> str | list[str] | None:
         """Extract 'model', 'exp', 'source', and 'catalog' from attributes in input data and 
            generate a label or list of labels for each xr.dataArray to be used in the legend plot. 
@@ -248,6 +250,7 @@ class PlotSeaIce:
             return self._gen_str_from_attributes(datain)
         if isinstance(datain, list) and all(isinstance(da, xr.DataArray) for da in datain):
             return [self._gen_str_from_attributes(da) for da in datain]
+
 
     def _getdata_fromdict(self, data_dict: dict, dkey: str) -> xr.DataArray | list[xr.DataArray] | None:
         """Retrieves data from a dictionary and returns either None, a single DataArray or a list of them
@@ -281,6 +284,7 @@ class PlotSeaIce:
         self.logger.info(f"Returning 'None' for key: {dkey}")
         return None
     
+
     def _update_description(self, method, region, data_dict, region_idx):
         """
         Create the caption description from attributes returning the updated string
@@ -372,6 +376,7 @@ class PlotSeaIce:
                                                                                self.region_str, self.model_labels_str,
                                                                                self.ref_label_str, self.std_label_str)
 
+
     def regions_type_plotter(self, region_dict, style, **kwargs):
         """
         Loops over each region in region_dict and plots data either as a timeseries or a seasonal cycle
@@ -451,19 +456,21 @@ class PlotSeaIce:
 
         return fig, axes
 
-    def plot_seaice(self, plot_type='timeseries', save_format=['png', 'pdf'], style=None, **kwargs):
+
+    def plot_seaice(self, plot_type: str = 'timeseries',
+                    save_format: Union[str, list] = SAVE_FORMAT, 
+                    style: str = None, **kwargs):
         """
         Plot sea ice data for each region, either as timeseries or seasonal cycle.
         
         Args:
-            plot_type (str, optional): Type of plot to generate. Options are 
-                `'timeseries'` or `'seasonalcycle'`. Defaults to `'timeseries'`.
-            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
+            plot_type (str, optional): Type of plot to generate.
+                Options are `'timeseries'` or `'seasonalcycle'`. Default is `'timeseries'`.
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             style (str, optional): Override the plotting style. Default to None (which will get the style from config file or fallback to'aqua').
             **kwargs: Additional keyword arguments passed to the region-specific plotting function.
         """
         self.plot_type = plot_type
-
         self.logger.info(f"Plotting sea ice {self.plot_type}")
 
         valid_type_plots = ['timeseries', 'seasonalcycle']
@@ -474,7 +481,6 @@ class PlotSeaIce:
         for method, region_dict in self.repacked_dict.items():
 
             self.method = method
-
             self.logger.info(f"Processing method: {self.method}")
 
             # plot per-region using loop on the same fig
@@ -488,14 +494,15 @@ class PlotSeaIce:
 
             self.save_fig(fig, save_format, metadata=metadata, region_dict=region_dict)
 
-    def save_fig(self, fig, save_format: Union[str, list] = [],
+
+    def save_fig(self, fig, save_format: Union[str, list] = SAVE_FORMAT,
                  metadata: dict = None, region_dict: dict = None):
         """
         Save a matplotlib figure in the specified format(s) with associated metadata.
         
         Args:
             fig (matplotlib.figure.Figure): The figure object to be saved.
-            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict, optional): Metadata such as description to be saved. Defaults to None.
             region_dict (dict, optional): Dictionary of regions plotted. Used to generate output filename. Defaults to None.
         """

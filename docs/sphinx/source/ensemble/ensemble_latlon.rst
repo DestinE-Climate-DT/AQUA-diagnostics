@@ -103,7 +103,7 @@ The basic structure is the following:
 
     ens_latlon_plot.plot(
         var=var,
-        save_format=['png', 'pdf'],
+        save_format=['png', 'pdf'], # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
         title_mean='Map of 2t for Ensemble Multi-Model mean',
         title_std='Map of 2t for Ensemble Multi-Model standard deviation',
         cbar_label='2 meter temperature in K',
@@ -113,7 +113,8 @@ The basic structure is the following:
 
 .. note::
 
-    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory
+    If not specified otherwise, plots will be saved using ``SAVE_FORMAT`` (PNG, PDF, and SVG)
+    in the current working directory.
 
 CLI usage
 ---------
@@ -191,7 +192,7 @@ The diagnostic produces the following outputs:
 * 2D spatial map of ensemble mean
 * 2D spatial map of ensemble standard deviation
 
-Plots are saved in both PDF and PNG format.
+Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
 Data outputs are saved as NetCDF files.
  
 Example Plots

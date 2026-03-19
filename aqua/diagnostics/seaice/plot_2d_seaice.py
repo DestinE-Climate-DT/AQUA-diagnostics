@@ -9,7 +9,7 @@ from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, plot_box, to_list, get_realizations
 from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window, unit_to_latex
 from .util import extract_dates, _check_list_regions_type
 
@@ -55,7 +55,7 @@ class Plot2DSeaIce:
         self.dpi = dpi
 
     def plot_2d_seaice(self, plot_type='var', months=[3,9], method='fraction', projkw=None,
-                       plot_ref_contour=False, save_format=['png', 'pdf'], show=False, **kwargs):
+                       plot_ref_contour=False, save_format=SAVE_FORMAT, show=False, **kwargs):
         """
         Plot sea ice data and biases.
 
@@ -63,7 +63,7 @@ class Plot2DSeaIce:
             plot_type (str): Type of plot to generate ['var' or 'bias'].
             months (list):  List of months to plot, e.g. [2, 9] for February and September.
             projkw (dict):  Dictionary with projection parameters for the plot.
-            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             plot_ref_contour (bool):     Whether to add a reference line at 0.2 for sea ice fraction.
             show (bool): If True, display the plot interactively (e.g., in Jupyter notebooks).
             **kwargs: Additional keyword arguments for customization. See below functions for details.

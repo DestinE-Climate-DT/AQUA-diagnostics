@@ -3,7 +3,7 @@ from typing import Union
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from aqua.core.util import to_list, unit_to_latex, DEFAULT_REALIZATION
 
 
@@ -258,7 +258,7 @@ class PlotHistogram():
                   rebuild: bool = True,
                   outputdir: str = './', 
                   dpi: int = 300, 
-                  format: Union[str, list] = 'png'):
+                  format: Union[str, list] = SAVE_FORMAT):
         """
         Save the plot to a file.
 
@@ -268,7 +268,7 @@ class PlotHistogram():
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
         """
         metadata = {
             'catalog': getattr(self, 'catalogs', ['unknown_catalog'])[0],
@@ -302,7 +302,7 @@ class PlotHistogram():
                                 rebuild=rebuild, extension=format, dpi=dpi)
 
     def run(self, outputdir='./', rebuild=True, dpi=300, style=None, 
-            format: Union[str, list] = 'png', xlogscale=False, ylogscale=True,
+            format: Union[str, list] = SAVE_FORMAT, xlogscale=False, ylogscale=True,
             xmax=None, xmin=None, ymax=None, ymin=None,
             smooth=False, smooth_window=5, labelsize=None, show=False):
         """
@@ -313,7 +313,7 @@ class PlotHistogram():
             rebuild (bool): If True, rebuild the plot even if it already exists.
             dpi (int): Dots per inch for the plot.
             style (str): Plotting style.
-            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             xlogscale (bool): Use log scale for x-axis.
             ylogscale (bool): Use log scale for y-axis.
             xmax (float, optional): Maximum x value.

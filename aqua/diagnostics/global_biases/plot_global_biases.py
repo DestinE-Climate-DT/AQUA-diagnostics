@@ -5,14 +5,14 @@ import cartopy.crs as ccrs
 from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
 from aqua.core.util import get_projection, get_realizations, unit_to_latex
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from .stat_global_biases import StatGlobalBiases
 from .util import handle_pressure_level
 
 class PlotGlobalBiases: 
     def __init__(self, 
                  diagnostic='globalbiases',
-                 save_format=['png', 'pdf'], 
+                 save_format=SAVE_FORMAT,
                  dpi=300, outputdir='./',
                  cmap='RdBu_r',
                  return_fig: bool = False,
@@ -22,7 +22,7 @@ class PlotGlobalBiases:
 
         Args:
             diagnostic (str): Name of the diagnostic.
-            save_format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
+            save_format (str or list): Format(s) to save the figures. Default is SAVE_FORMAT.
             dpi (int): Resolution of saved figures.
             outputdir (str): Output directory for saved plots.
             cmap (str): Colormap to use for the plots.

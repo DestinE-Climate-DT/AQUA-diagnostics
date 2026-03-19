@@ -5,7 +5,7 @@ import xarray as xr
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver, TitleBuilder, SAVE_FORMAT
 from aqua.core.util import time_to_string, strlist_to_phrase, unit_to_latex
 
 xr.set_options(keep_attrs=True)
@@ -415,7 +415,7 @@ class PlotBaseMixin():
 
     def save_plot(self, fig, description: str | None = None, rebuild: bool = True,
                   outputdir: str = './', dpi: int = 300,
-                  format: Union[str, list[str]] = 'png',
+                  format: Union[str, list] = SAVE_FORMAT,
                   diagnostic_product: str | None = None):
         """
         Save the plot to a file.
@@ -426,8 +426,7 @@ class PlotBaseMixin():
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str or list[str]): Format or list of formats to save
-                the plot in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             diagnostic_product (str, optional): Diagnostic product to be used in the filename as diagnostic_product.
         """
         outputsaver = OutputSaver(diagnostic=self.diagnostic_name,

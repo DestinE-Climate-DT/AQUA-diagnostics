@@ -1,11 +1,9 @@
 import xarray as xr
 import math
-import cartopy.crs as ccrs
 from typing import Union
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, get_realizations
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
-from .mld_profiles import plot_maps
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from .multiple_vertical_line import plot_multi_vertical_lines
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -57,7 +55,7 @@ class PlotStratification:
     def plot_stratification(
         self,
         rebuild: bool = True,
-        save_format: Union[str, list] = ['png', 'pdf'],
+        save_format: Union[str, list] = SAVE_FORMAT,
         dpi: int = 300,
     ):
         self.diagnostic_product = "stratification"
@@ -154,7 +152,7 @@ class PlotStratification:
             f"Colorbar limits set to vmin: {self.vmin}, vmax: {self.vmax}, nlevels: {self.nlevels}"
         )
 
-    def set_suptitle(self, plot_type=None):
+    def set_suptitle(self):
         """Set the title for the MLD plot."""
         self.suptitle = TitleBuilder(
             diagnostic="Stratification",
@@ -189,8 +187,8 @@ class PlotStratification:
             self.description = self.description + (f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}")
 
     def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
-                   rebuild: bool = True,
-                   dpi: int = 300, format: Union[str, list] = 'png', metadata: dict = None):
+                   rebuild: bool = True, metadata: dict = None,
+                   dpi: int = 300, format: Union[str, list] = SAVE_FORMAT):
         """
         Save the plot to a file.
 
@@ -200,7 +198,7 @@ class PlotStratification:
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.

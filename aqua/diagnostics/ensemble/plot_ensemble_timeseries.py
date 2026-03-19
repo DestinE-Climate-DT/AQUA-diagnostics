@@ -1,7 +1,7 @@
 import pandas as pd
 import xarray as xr
 from aqua.core.graphics import plot_timeseries
-from aqua.diagnostics.base import TitleBuilder
+from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
 
 # from aqua.logger import log_configure
 # from aqua.exceptions import NoDataError
@@ -105,7 +105,7 @@ class PlotEnsembleTimeseries(BaseMixin):
         ref_monthly_data=None,
         ref_annual_data=None,
         description=None,
-        save_format=["png", "pdf", "svg"],
+        save_format=SAVE_FORMAT,
         dpi=300,
         figure_size=[10, 5],
         plot_ensemble_members=True,
@@ -122,8 +122,7 @@ class PlotEnsembleTimeseries(BaseMixin):
             enddate (str): enddate to be included in title if 'None'. Default is 'None'.
             description (str): specific for saving the plot.
             figure_size: figure_size can be changed. Default is [10, 5],
-            save_format (str or list): Format(s) to save the figure in
-                (e.g. 'png', 'pdf', 'svg'). Default is ('png', 'pdf').
+            save_format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg'). Default is SAVE_FORMAT.
             dpi (int): Resolution for saved figures. Default is 300.
             plot_ensemble_members=True.
             ref_hourly_data: reference hourly timesereis xarray.Dataset. Default is None.

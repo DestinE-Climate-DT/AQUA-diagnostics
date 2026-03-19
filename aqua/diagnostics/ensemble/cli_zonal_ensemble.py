@@ -10,6 +10,7 @@ import sys
 
 from aqua.diagnostics import EnsembleZonal, PlotEnsembleZonal, reader_retrieve_and_merge
 from aqua.diagnostics.base import (
+    SAVE_FORMAT,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
@@ -19,7 +20,6 @@ from aqua.diagnostics.base import (
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
-
 
 def parse_arguments(args):
     """Parse command-line arguments for EnsembleZonal diagnostic.
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     # rebuild = config_dict['output'].get('rebuild', True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_format = config_dict["output"].get("save_format", ["png", "pdf"])
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     # dpi = config_dict["output"].get("dpi", 300)
 
     # EnsembleZonal diagnostic

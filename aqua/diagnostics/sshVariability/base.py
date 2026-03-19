@@ -2,7 +2,7 @@ import xarray as xr
 from typing import Union
 # from aqua.core.util import pandas_freq_to_string
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import Diagnostic, OutputSaver
+from aqua.diagnostics.base import Diagnostic, OutputSaver, SAVE_FORMAT
 
 
 xr.set_options(keep_attrs=True)
@@ -236,7 +236,7 @@ class PlotBaseMixin:
         rebuild: bool = True,
         outputdir: str = "./",
         dpi: int = 600,
-        format: Union[str, list] = "png",
+        format: Union[str, list] = SAVE_FORMAT,
         diagnostic_product: str = "sshVariability",
         catalog: str = None,
         model: str = None,
@@ -262,7 +262,7 @@ class PlotBaseMixin:
             rebuild (bool, optional): If ``True``, overwrite and rebuild the file even if it exists. Default is ``True``.
             outputdir (str, optional): Directory where the figure will be saved. Default is current directory ``'./'``.
             dpi (int, optional): Resolution of the saved figure in dots per inch. Default is ``600``.
-            format (str or list, optional): Format(s) to save the figure in (e.g. ``'png'``, ``'pdf'``, ``'svg'``). Default is ``'png'``.
+            format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             diagnostic_product (str, optional): Diagnostic product name. Default is ``'sshVariability'``.
             catalog (str, optional): Catalog identifier for the dataset. (Mandatory for proper labeling)
             model (str, optional): Model name associated with the dataset. (Mandatory for proper labeling)
@@ -307,7 +307,7 @@ class PlotBaseMixin:
         rebuild: bool = True,
         outputdir: str = "./",
         dpi: int = 600,
-        format: str = "png",
+        format: str = SAVE_FORMAT,
         diagnostic_product: str = "sshVariability_Difference",
         catalog: str = None,
         model: str = None,
@@ -338,7 +338,7 @@ class PlotBaseMixin:
             rebuild (bool, optional): If ``True``, overwrite the plot file even if it already exists. Default is ``True``.
             outputdir (str, optional): Directory where the plot file will be saved. Default is current directory ``'./'``.
             dpi (int, optional): Resolution of the saved figure in dots per inch. Default is ``600``.
-            format (str, optional): Output file format (e.g., ``'png'``, ``'pdf'``). Default is ``'png'``.
+            format (str, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             diagnostic_product (str, optional): Diagnostic product identifier. Default is ``'sshVariability_Difference'``.
             catalog (str, optional): Catalog name for the model dataset. (Mandatory for labeling)
             model (str, optional): Model name for the dataset. (Mandatory for labeling)

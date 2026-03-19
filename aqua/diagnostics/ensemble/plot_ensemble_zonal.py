@@ -3,7 +3,7 @@ import xarray as xr
 from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import TitleBuilder
+from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
 from aqua.core.util import find_vert_coord
 
 from .base import BaseMixin
@@ -93,7 +93,7 @@ class PlotEnsembleZonal(BaseMixin):
         title_std=None,
         figure_size=[10, 8],
         cbar_label=None,
-        save_format=["png", "pdf", "svg"],
+        save_format=SAVE_FORMAT,
         dpi=300,
         units=None,
         ylim=(5500, 0),
@@ -119,8 +119,7 @@ class PlotEnsembleZonal(BaseMixin):
             title_std (str, optional): Title for the standard deviation plot. Auto-generated if None.
             figure_size (list[int], optional): Figure size [width, height]. Default is [10, 8].
             cbar_label (str, optional): Label for the colorbar.
-            save_format (str or list, optional): Format(s) to save plots in
-                (e.g. 'png', 'pdf', 'svg'). Default is ('png', 'pdf').
+            save_format (str or list, optional): Format(s) to save plots in (e.g. 'png', 'pdf', 'svg'). Default is SAVE_FORMAT.
             dpi (int, optional): Resolution for saved figures. Default is 300.
             units (str, optional): Units of the variable. Used in titles and labels if provided.
             ylim (tuple, optional): Y-axis limits for the plot (vertical levels). Default is (5500, 0).

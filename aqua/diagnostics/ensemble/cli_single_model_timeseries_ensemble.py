@@ -8,10 +8,9 @@ defined in a yaml configuration file for multiple models.
 import argparse
 import sys
 
-from aqua import Reader
 from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries, reader_retrieve_and_merge, extract_realizations
 from aqua.diagnostics.base import (
-    close_cluster, load_diagnostic_config, merge_config_args,
+    SAVE_FORMAT, close_cluster, load_diagnostic_config, merge_config_args,
     open_cluster, template_parse_arguments,
 )
 from aqua.core.logger import log_configure
@@ -58,7 +57,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     rebuild = config_dict['output'].get('rebuild', True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_format = config_dict["output"].get("save_format", ["png", "pdf"])
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     dpi = config_dict['output'].get('dpi', 300)
 
     # EnsembleTimeseries diagnostic

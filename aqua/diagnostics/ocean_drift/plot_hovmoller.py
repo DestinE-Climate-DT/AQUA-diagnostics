@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, unit_to_latex
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from .multiple_hovmoller import plot_multi_hovmoller
 from .multiple_timeseries import plot_multi_timeseries
 
@@ -62,7 +62,7 @@ class PlotHovmoller:
             realization=self.realizations,
             loglevel=self.loglevel)
 
-    def plot_hovmoller(self, rebuild: bool = True, save_format: list = ['png', 'pdf'], dpi: int = 300):
+    def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
         """
         Plot the Hovmoller diagram for the given data.
 
@@ -72,7 +72,7 @@ class PlotHovmoller:
 
         Args:
             rebuild (bool): Whether to rebuild the output, default is True.
-            save_format (str or list): List of formats to save the figure in. Default is ['png', 'pdf'].
+            save_format (str or list): List of formats to save the figure. Default is SAVE_FORMAT.
             dpi (int): Dots per inch for the saved figure. Default is 300.
 
         Returns:
@@ -103,7 +103,7 @@ class PlotHovmoller:
 
     def plot_timeseries(self,
                         levels: list = None, rebuild: bool = True,
-                        save_format: list = ['png', 'pdf'], dpi: int = 300):
+                        save_format: list = SAVE_FORMAT, dpi: int = 300):
         """
         Plot the timeseries for the given data.
 
@@ -114,7 +114,7 @@ class PlotHovmoller:
         Args:
             levels (list, optional): List of levels to plot. Default is None.
             rebuild (bool): Whether to rebuild the output, default is True.
-            save_format (list): List of formats to save the figure in. Default is ['png', 'pdf'].
+            save_format (list): List of formats to save the figure. Default is SAVE_FORMAT.
             dpi (int): Dots per inch for the saved figure. Default is 300.
 
         Returns:
@@ -291,7 +291,7 @@ class PlotHovmoller:
 
     def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
                   metadata: dict = None, rebuild: bool = True,
-                  dpi: int = 300, format: str = 'png'):
+                  dpi: int = 300, format: str = SAVE_FORMAT):
         """
         Save the plot to a file.
 
@@ -301,7 +301,7 @@ class PlotHovmoller:
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str or list): The format(s) of the figure. Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.

@@ -5,7 +5,7 @@ from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection, healpix_resample
-from aqua.diagnostics.base import TitleBuilder
+from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
 
 # import matplotlib.pyplot as plt
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
@@ -57,7 +57,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         gridlines=True,
         proj="robinson",
         proj_params={},
-        save_format=["png", "pdf", "svg"],
+        save_format=SAVE_FORMAT,
         dpi=600,
         region=None,
         lon_limits=None,
@@ -97,8 +97,7 @@ class sshVariabilityPlot(PlotBaseMixin):
             vmax (float, optional): Maximum value for color scaling. If ``None``, determined automatically.
             proj (str, optional): Map projection type. Default is ``'robinson'``.
             proj_params (dict, optional): Additional keyword arguments passed to the projection.
-            save_format (str or list, optional): Format(s) to save the figure
-                in (e.g. ``'png'``, ``'pdf'``, ``'svg'``). Default is ``('png', 'pdf')``.
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             dpi (int, optional): Resolution (dots per inch) for saved figures. Default is ``300``.
             region (str, optional): Region identifier. If provided, overrides lat/lon limits.
             lon_limits (list[float], optional): Longitude limits [min, max] for the plot.
@@ -275,7 +274,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         gridlines=True,
         proj="robinson",
         proj_params={},
-        save_format=["png", "pdf", "svg"],
+        save_format=SAVE_FORMAT,
         dpi=600,
         region=None,
         lon_limits=None,
@@ -319,8 +318,7 @@ class sshVariabilityPlot(PlotBaseMixin):
             vmax_diff (float, optional): Maximum value for color scaling. If None, determined automatically.
             proj (str, optional): Map projection. Default is 'robinson'.
             proj_params (dict, optional): Additional keyword arguments for the projection.
-            save_format (str or list, optional): Format(s) to save the figure
-                in (e.g. ``'png'``, ``'pdf'``, ``'svg'``). Default is ``('png', 'pdf')``.
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             dpi (int, optional): Resolution of the saved figure. Default is 300.
             region (str, optional): Region identifier for the plot.
             lon_limits (list[float], optional): Longitude limits [min, max] for the plot.
@@ -412,7 +410,8 @@ class sshVariabilityPlot(PlotBaseMixin):
             ref_model=model_ref,
             ref_exp=exp_ref,
             ref_startyear=startdate_ref,
-            ref_endyear=enddate_ref).generate()
+            ref_endyear=enddate_ref
+            ).generate()
 
         description = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
 

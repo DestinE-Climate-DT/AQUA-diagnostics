@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list, strlist_to_phrase, unit_to_latex, DEFAULT_REALIZATION
+from aqua.core.util import to_list, DEFAULT_REALIZATION
 from aqua.core.graphics import plot_lat_lon_profiles
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from typing import Union
 
 class PlotLatLonProfiles():
@@ -203,7 +203,7 @@ class PlotLatLonProfiles():
                   rebuild: bool = True,
                   outputdir: str = './', 
                   dpi: int = 300, 
-                  format: Union[str, list] = 'png',
+                  format: Union[str, list] = SAVE_FORMAT,
                   diagnostic: str = None):
         """
         Save the plot to a file.
@@ -214,7 +214,7 @@ class PlotLatLonProfiles():
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str or list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             diagnostic (str): Diagnostic name to be used in the filename as diagnostic_product.
         """
         metadata = {
@@ -369,7 +369,7 @@ class PlotLatLonProfiles():
             rebuild=True, 
             dpi=300,
             style=None,
-            format='png',
+            format=SAVE_FORMAT,
             show=False):
         """
         Unified run method that handles all plotting scenarios.
@@ -379,7 +379,7 @@ class PlotLatLonProfiles():
             rebuild (bool): If True, rebuild the plot even if it already exists.
             dpi (int): Dots per inch for the plot.
             style (str): Plotting style. Default is the AQUA style.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str): Format of the plot. Default is SAVE_FORMAT.
             show (bool): If True, display the plot interactively.
         """
         self.logger.info('Running PlotLatLonProfiles')
