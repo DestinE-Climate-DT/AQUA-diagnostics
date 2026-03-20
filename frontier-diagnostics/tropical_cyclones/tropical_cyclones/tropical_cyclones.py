@@ -9,8 +9,6 @@ from aqua.core.logger import log_configure
 from .detect_nodes import DetectNodes
 from .stitch_nodes import StitchNodes
 from .tools.tcs_utils import lonlatbox
-from .aqua_dask import AquaDask
-
 
 class TCs(DetectNodes, StitchNodes):
     """
@@ -61,7 +59,6 @@ class TCs(DetectNodes, StitchNodes):
         self.loglevel = loglevel
 
         self.nproc = nproc
-        self.aquadask = AquaDask(nproc=nproc)
 
         if tdict is not None:
             self.paths = tdict['paths']
