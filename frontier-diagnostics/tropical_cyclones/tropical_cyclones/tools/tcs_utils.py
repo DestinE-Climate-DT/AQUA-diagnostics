@@ -40,46 +40,39 @@ def lonlatbox(lon, lat, delta):
     return [float(lon) - delta, float(lon) + delta, float(lat) - delta, float(lat) + delta]
 
 
-def write_fullres_field(gfield, filestore, dask):
+def write_fullres_field(gfield, filestore):
     """
     Writes the high resolution file (netcdf) format with values only within the TCs centres box.
-
-    Args:
-        gfield: field to write
-        filestore: file to save
-        dask: if dask is active or not
-
-    Returns:
-        None
     """
 
     time_encoding = {
-        'time':
-        {
+        'time': {
             'units': 'days since 1970-01-01',
             'calendar': 'standard',
             'dtype': 'float64'
         }
     }
+
     single_var_encoding = {
-        "zlib": True, "complevel": 1
+        "zlib": True,
+        "complevel": 1
     }
+
     var_encoding = {var: single_var_encoding for var in gfield.data_vars}
     final_encoding = {**time_encoding, **var_encoding}
 
     if isinstance(gfield, int):
         print("No tracks to write")
-    else:
-        gfield = gfield.where(gfield != 0)
-        save_file = gfield.to_netcdf(filestore,
-                                     encoding=final_encoding,
-                                     compute=False)
+        return
 
-        if dask:
-            w_job = save_file.persist()
-            progress(w_job)
-            del w_job
-        else:
-            with ProgressBar():
-                save_file.compute()
-        # gfield.close()
+    gfield = gfield.where(gfield != 0)
+
+    delayed_obj = gfield.to_netcdf(
+        filestore,
+        encoding=final_encoding,
+        compute=False
+    )
+
+    from dask.diagnostics import ProgressBar
+    with ProgressBar():
+        delayed_obj.compute()

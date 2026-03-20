@@ -30,7 +30,6 @@ class DetectNodes():
                                       end=self.enddate,
                                       freq=self.frequency)
 
-        self.aquadask.set_dask()
         for tstep in timerange.strftime('%Y%m%dT%H'):
             tic = time()
             self.logger.warning(f"processing time step {tstep}")
@@ -45,7 +44,6 @@ class DetectNodes():
             toc = time()
             self.logger.info(
                 'DetectNodes done in {:.4f} seconds'.format(toc - tic))
-        self.aquadask.close_dask()
 
     def readwrite_from_intake(self, timestep):
         """
@@ -210,4 +208,4 @@ class DetectNodes():
             xfield = self.store_fullres_field(data, self.tempest_nodes)
             store_file = os.path.join(
                 self.paths['fulldir'], f'TC_fullres_{timestep}.nc')
-            write_fullres_field(xfield, store_file, self.aquadask.dask)
+            write_fullres_field(xfield, store_file)
