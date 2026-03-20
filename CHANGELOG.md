@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.24.0):
-
+- GlobalBiases: improve descriptions (#191)
 - ECmean: time selection is now allowed (#178)
 
 ## [v0.23.0]
