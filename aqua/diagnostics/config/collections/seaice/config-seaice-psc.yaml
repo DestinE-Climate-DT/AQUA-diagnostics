@@ -49,8 +49,7 @@ output:
   outputdir: "./" # mandatory
   rebuild: true
   save_netcdf: true # mandatory
-  save_pdf: true    # mandatory
-  save_png: true    # mandatory
+  save_format: ['png', 'pdf', 'svg']
   dpi: 300
   create_catalog_entry: false
 

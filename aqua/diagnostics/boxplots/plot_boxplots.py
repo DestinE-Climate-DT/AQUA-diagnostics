@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 from aqua.core.util import to_list, extract_attrs, time_to_string, get_realizations, unit_to_latex
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 import matplotlib as plt
 
 from aqua.core.graphics import boxplot
@@ -11,30 +11,27 @@ from aqua.core.graphics import boxplot
 class PlotBoxplots: 
     def __init__(self, 
                  diagnostic='boxplots',
-                 save_pdf=True, save_png=True, 
+                 save_format=SAVE_FORMAT, 
                  dpi=300, outputdir='./',
                  loglevel='WARNING'):
         """
-        Initialize the PlotGlobalBiases class.
+        Initialize the PlotBoxplots class.
 
         Args:
             diagnostic (str): Name of the diagnostic.
-            save_pdf (bool): Whether to save the figure as PDF.
-            save_png (bool): Whether to save the figure as PNG.
+            save_format (str, list): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
             dpi (int): Resolution of saved figures.
             outputdir (str): Output directory for saved plots.
             loglevel (str): Logging level.
         """
         self.diagnostic = diagnostic
-        self.save_pdf = save_pdf
-        self.save_png = save_png
+        self.format_to_save = save_format
         self.dpi = dpi
         self.outputdir = outputdir
         self.loglevel = loglevel
         self.logger = log_configure(log_level=loglevel, log_name='Boxplots')
 
-    def _save_figure(self, fig, data, data_ref, var,
-                     diagnostic_product='boxplot', description=None, format='png'):
+    def _save_figure(self, fig, data, data_ref, var, description=None):
         """
         Handles the saving of a figure using OutputSaver.
 
@@ -43,9 +40,7 @@ class PlotBoxplots:
             data (xarray.Dataset or list of xarray.Dataset): Input dataset(s) containing the fldmeans of the variables to plot.
             data_ref (xarray.Dataset or list of xarray.Dataset, optional): Reference dataset(s) for comparison.
             var (str): Variable name.
-            diagnostic_product (str): Name of the diagnostic product.
             description (str): Description of the figure.
-            format (str): Format to save the figure ('png' or 'pdf').
         """
         catalog = extract_attrs(data, 'AQUA_catalog')
         model = extract_attrs(data, 'AQUA_model')
@@ -97,16 +92,11 @@ class PlotBoxplots:
         metadata = {"Description": description}
         extra_keys = {'var': '_'.join(var) if isinstance(var, list) else var}
 
-        if format == 'pdf':
-            outputsaver.save_pdf(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata)
-        elif format == 'png':
-            outputsaver.save_png(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata)
-        else:
-            raise ValueError(f'Unsupported format: {format}. Use "png" or "pdf".')
+        outputsaver.save_figure(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save)
 
 
     def plot_boxplots(self, data, data_ref=None, var=None, anomalies=False, add_mean_line=False, 
-                      ref_number=0, title=None, description=None):
+                      ref_number=0, title=None):
         """
         Plot boxplots for specified variables in the dataset.
 
@@ -118,7 +108,6 @@ class PlotBoxplots:
             add_mean_line (bool): Whether to add dashed lines for means.
             ref_number (int): Position of reference dataset in data_ref list to use when plotting anomalies.
             title (str, optional): Title for the plot. If None, a default title will be generated.
-            description(str, optional): Description for the plot. If None, a default description will be generated.
         """
 
         self.ref_number = ref_number
@@ -200,7 +189,5 @@ class PlotBoxplots:
                                 color='black', fontweight='bold'
                             )
 
-        if self.save_pdf:
-            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var, diagnostic_product='boxplot', format='pdf')
-        if self.save_png:
-            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var, diagnostic_product='boxplot', format='png')
+        if self.format_to_save:
+            self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var)

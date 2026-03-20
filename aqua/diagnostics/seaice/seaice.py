@@ -206,9 +206,13 @@ class SeaIce(Diagnostic):
 
         # combine the result DataArrays into one Dataset and keep only the attributes common
         self.result = xr.merge(regional_results, combine_attrs='drop_conflicts')
-
+        # propagate catalog/model/exp metadata at Dataset level for downstream plotting utilities
+        self.result.attrs.update({'AQUA_catalog': self.catalog, 'AQUA_model': self.model,'AQUA_exp': self.exp})
+        
         # merge the standard deviation DataArrays if computed
         self.result_std = xr.merge(regional_results_std, combine_attrs='drop_conflicts') if calc_std_freq else None
+        if self.result_std is not None:
+            self.result_std.attrs.update({'AQUA_catalog': self.catalog, 'AQUA_model': self.model, 'AQUA_exp': self.exp})
 
         self.logger.debug("Loading data in memory")
         self.result.load()
@@ -259,6 +263,7 @@ class SeaIce(Diagnostic):
 
         # combine the result DataArrays into one Dataset and keep only the attributes common
         self.result = xr.merge(regional_2d_results, combine_attrs='drop_conflicts')
+        self.result.attrs.update({'AQUA_catalog': self.catalog, 'AQUA_model': self.model, 'AQUA_exp': self.exp})
 
         self.logger.debug("Loading data in memory")
         self.result.load()

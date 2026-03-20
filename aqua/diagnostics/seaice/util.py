@@ -8,12 +8,12 @@ from aqua.core.logger import log_configure
 from aqua.core.util import load_yaml
 from aqua.core.configurer import ConfigPath
 
+
 def defaultdict_to_dict(d):
     """ Recursively converts a defaultdict to a normal dict."""
     if isinstance(d, defaultdict):
         return {k: defaultdict_to_dict(v) for k, v in d.items()}
     return d
-
 
 
 def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains=None):
@@ -37,7 +37,6 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
         raise ValueError(f"Invalid domain '{domain}'. Valid domains are: {valid_domains}")
     
     filtered_regions = []
-
     for r in regions_list:
         if r in regions_dict['regions'].keys():
             region_info = regions_dict['regions'][r]
@@ -57,6 +56,7 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
             
     return filtered_regions
 
+
 def ensure_istype(obj, expected_types, logger=None):
     """ Ensure an object is of the expected type(s), otherwise raise ValueError.
 
@@ -73,21 +73,40 @@ def ensure_istype(obj, expected_types, logger=None):
     if not isinstance(obj, expected_types):
         raise ValueError(f"Expected type {expected_names_type}, but got {type(obj).__name__}.")
 
+
 def extract_dates(data):
+    """Extract start and end dates from data attributes. If they are strings return them.
+    If the attributes are datetime-like objects, they are formatted as `YYYY-MM-DD`.
+
+    Args:
+        data (xr.DataArray | xr.Dataset): Input object holding the `AQUA_*date` attributes.
+
+    Returns:
+        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM-DD` when possible.
     """
-    Extracts start and end dates from data attributes.
-    If the date is a datetime object, it is formatted as 'YYYY-MM-DD'.
-    If the date is a string, it is returned as is.
-    """
-    def fmt_dt(attr_name):
+    def _fmt_dt(attr_name):
         dt = data.attrs.get(attr_name, f'No {attr_name} found')
-        if hasattr(dt, 'strftime'): return dt.strftime('%Y-%m-%d')
-        if isinstance(dt, str) and 'T' in dt: return dt.split('T')[0]
+        if hasattr(dt, 'strftime'):
+            return dt.strftime('%Y-%m-%d')
+        if isinstance(dt, str) and 'T' in dt:
+            return dt.split('T')[0]
         return dt
-    return fmt_dt('AQUA_startdate'), fmt_dt('AQUA_enddate')
+    return _fmt_dt('AQUA_startdate'), _fmt_dt('AQUA_enddate')
+
 
 def _check_list_regions_type(regions_to_plot, logger=None):
-    """Ensures regions_to_plot is a list of strings before assigning it."""
+    """Validate regions_to_plot is a list of strings.
+
+    Args:
+        regions_to_plot (list[str] | None): Regions requested for plotting, or `None` to plot all regions.
+        logger (logging.Logger | None): Logger used for warning messages.
+
+    Returns:
+        list[str] | None: The validated list of region names, or `None`.
+
+    Raises:
+        TypeError: If `regions_to_plot` is not a list of strings.
+    """
     if regions_to_plot is None:
         logger.warning("Expected regions_to_plot to be a list, but got None. Plotting all available regions in data.")
         return None

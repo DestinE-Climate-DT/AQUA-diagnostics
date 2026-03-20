@@ -25,8 +25,7 @@ output:
   outputdir: "./"
   rebuild: true
   save_netcdf: true
-  save_pdf: false
-  save_png: true
+  save_format: ['png', 'pdf', 'svg']
   dpi: 600
 
 diagnostics:

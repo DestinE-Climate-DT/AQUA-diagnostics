@@ -8,10 +8,9 @@ defined in a yaml configuration file for a single model.
 import argparse
 import sys
 
-from aqua import Reader
 from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon, reader_retrieve_and_merge
 from aqua.diagnostics.base import (
-    close_cluster, load_diagnostic_config, merge_config_args,
+    SAVE_FORMAT, close_cluster, load_diagnostic_config, merge_config_args,
     open_cluster, template_parse_arguments,
 )
 from aqua.core.logger import log_configure
@@ -59,8 +58,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     rebuild = config_dict['output'].get('rebuild', True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_pdf = config_dict["output"].get("save_pdf", True)
-    save_png = config_dict["output"].get("save_png", True)
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     dpi = config_dict['output'].get('dpi', 300)
 
     # EnsembleLatLon diagnostic
@@ -149,8 +147,7 @@ if __name__ == "__main__":
 
                 # PlotEnsembleLatLon plot options
                 plot_arguments = {
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
+                    "save_format": save_format,
                     "var": variable,
                     "dpi": dpi,
                     "vmin_mean": vmin_mean,

@@ -102,8 +102,8 @@ if __name__ == '__main__':
                          "\nrelative to " + ", ".join(ref_exp_list_unique))
             else:
                 TITLE = None
-            plot = PlotBoxplots(diagnostic=diagnostic_name, save_pdf=cli.save_pdf,
-                                save_png=cli.save_png, dpi=cli.dpi, outputdir=cli.outputdir, loglevel=cli.loglevel)
+            plot = PlotBoxplots(diagnostic=diagnostic_name, save_format=cli.save_format,
+                                dpi=cli.dpi, outputdir=cli.outputdir, loglevel=cli.loglevel)
             plot.plot_boxplots(data=fldmeans, data_ref=fldmeans_ref, var=variables, title=TITLE, **plot_kwargs)
 
     cli.close_dask_cluster()

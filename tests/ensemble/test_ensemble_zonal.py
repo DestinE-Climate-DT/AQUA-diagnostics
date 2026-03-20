@@ -129,8 +129,7 @@ class TestEnsembleZonal:
         # STD values are zero. Using mean value as std to test visualization pipeline (consistent with comments)
         plot_arguments = {
             "var": conf['var'],
-            "save_pdf": True,
-            "save_png": True,
+            "save_format": ("png", "pdf"),
             "title_mean": "Test data",
             "title_std": "Test data",
             "cbar_label": "Test Label",

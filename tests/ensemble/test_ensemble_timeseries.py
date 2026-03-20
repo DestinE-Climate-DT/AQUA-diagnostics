@@ -134,8 +134,7 @@ class TestEnsembleTimeseries:
         # STD values are zero. Using mean value as std to test visualization pipeline
         plot_arguments = {
             "var": conf['var'],
-            "save_pdf": True,
-            "save_png": True,
+            "save_format": ("png", "pdf"),
             "plot_ensemble_members": True,
             "title": "test timeseries data",
             "monthly_data": ts.monthly_data,

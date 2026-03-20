@@ -127,8 +127,8 @@ if __name__ == '__main__':
                     cli.logger.info("Calculating and displaying global bias statistics for variable: %s", var)
                     area = biases_dataset.climatology['cell_area']
 
-                plot_biases = PlotGlobalBiases(diagnostic=diagnostic_name, save_pdf=cli.save_pdf, save_png=cli.save_png,
-                                            dpi=cli.dpi, outputdir=cli.outputdir, cmap=cmap, loglevel=cli.loglevel)
+                plot_biases = PlotGlobalBiases(diagnostic=diagnostic_name, save_format=cli.save_format,
+                                               dpi=cli.dpi, outputdir=cli.outputdir, cmap=cmap, loglevel=cli.loglevel)
                 plot_biases.plot_bias(data=biases_dataset.climatology, data_ref=biases_reference.climatology,
                                         data_timeseries=biases_dataset.data, data_ref_timeseries=biases_reference.data,  # data with 'time' dimension for t-test
                                         var=var, plev=p,
