@@ -237,7 +237,7 @@ class StitchNodes():
                 xfield = xr.concat(datalist, dim='time')
                 store_file = os.path.join(self.paths['fulldir'],
                                           f'tempest_tracks_{block.strftime("%Y%m%d")}-{dates_freq[-1].strftime("%Y%m%d")}.nc')
-                write_fullres_field(xfield, store_file, self.aquadask.dask)
+                write_fullres_field(xfield, store_file)
                 fullres_field.close()
             # clean_files([fullres_file])
 
