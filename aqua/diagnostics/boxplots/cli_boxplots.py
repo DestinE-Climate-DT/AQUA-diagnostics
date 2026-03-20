@@ -95,10 +95,10 @@ if __name__ == '__main__':
             ref_exp_list_unique = list(dict.fromkeys(ref_exp_list))
 
             if variables == ['-snlwrf', 'snswrf', 'slhtf', 'ishf']:
-                TITLE = ("Boxplot of Surface Radiation Fluxes for " + ", ".join(model_exp_list_unique) +
+                TITLE = ("Boxplots of Surface Radiation Fluxes for " + ", ".join(model_exp_list_unique) +
                          "\nrelative to " + ", ".join(ref_exp_list_unique))
             elif variables == ['-tnlwrf', 'tnswrf']:
-                TITLE = ("Boxplot of TOA Radiation Fluxes for " + ", ".join(model_exp_list_unique) + 
+                TITLE = ("Boxplots of TOA Radiation Fluxes for " + ", ".join(model_exp_list_unique) + 
                          "\nrelative to " + ", ".join(ref_exp_list_unique))
             else:
                 TITLE = None

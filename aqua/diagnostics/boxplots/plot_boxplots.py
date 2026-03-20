@@ -1,5 +1,3 @@
-import xarray as xr
-import numpy as np
 from aqua.core.util import to_list, extract_attrs, time_to_string, get_realizations, unit_to_latex
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
@@ -75,20 +73,19 @@ class PlotBoxplots:
         all_startdates = startdates + (startdates_ref or [] )  
         all_enddates = enddates + (enddates_ref or [] )     
         dataset_info = ', '.join(
-            f"{m} (exp: {e}) from {time_to_string(s)} to {time_to_string(en)}"
+            f"{m} {e} (from {time_to_string(s, format='%Y-%m')} to {time_to_string(en, format='%Y-%m')})"
             for m, e, s, en in zip(all_models, all_exps, all_startdates, all_enddates)
         )
         if not description:
-            description = f"Boxplot for: {dataset_info}."
+            description = f"Boxplots of {dataset_info}."
 
         if self.anomalies:
             ref_name = extract_attrs(data_ref[self.ref_number], 'AQUA_model')
             description += (
-                f" Anomalies with respect to {ref_name} mean value are shown. "
+                f" Anomalies with respect to {ref_name} mean values are shown. "
                 "The dashed line represents the mean value, the solid line the median value, "
                 "and the number indicates the absolute mean value."
             )
-
         metadata = {"Description": description}
         extra_keys = {'var': '_'.join(var) if isinstance(var, list) else var}
 
