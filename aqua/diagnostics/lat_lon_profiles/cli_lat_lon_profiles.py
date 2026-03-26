@@ -65,22 +65,18 @@ def _create_plot(cli, profiles, profile_ref, freq_type, diagnostic_name):
         loglevel=cli.loglevel
     )
     
-    # Save in requested formats
-    if cli.save_pdf:
-        plot.run(
-            outputdir=cli.outputdir,
-            rebuild=cli.rebuild,
-            dpi=cli.dpi,
-            format='pdf'
-        )
-    
-    if cli.save_png:
-        plot.run(
-            outputdir=cli.outputdir,
-            rebuild=cli.rebuild,
-            dpi=cli.dpi,
-            format='png'
-        )
+    # Save in requested formats using DiagnosticCLI.save_format
+    if not getattr(cli, "save_format", None):
+        cli.logger.debug("No plot output requested, skipping plot generation")
+        return
+
+    cli.logger.info("Saving %s plot(s) with formats: %s", freq_type, cli.save_format)
+    plot.run(
+        outputdir=cli.outputdir,
+        rebuild=cli.rebuild,
+        dpi=cli.dpi,
+        format=cli.save_format,
+    )
 
 def process_variable(cli, var_config, regions, datasets, references,
                      mean_type, diagnostic_name, freq, compute_std,

@@ -45,8 +45,7 @@ if __name__ == '__main__':
     reader_kwargs = cli.reader_kwargs
     outputdir = cli.outputdir
     rebuild = cli.rebuild
-    save_pdf = cli.save_pdf
-    save_png = cli.save_png
+    save_format = cli.save_format
     dpi = cli.dpi
 
     if 'multilevel' in config_dict['diagnostics']['ocean_trends']:
@@ -92,7 +91,7 @@ if __name__ == '__main__':
                         rebuild=rebuild,
                         loglevel=cli.loglevel
                     )
-                    trends_plot.plot_multilevel(save_pdf=save_pdf, save_png=save_png, dpi=dpi)
+                    trends_plot.plot_multilevel(save_format=save_format, dpi=dpi)
 
                     zonal_trend_plot = PlotTrends(
                         data=data_trends_region.mean('lon'),
@@ -102,7 +101,7 @@ if __name__ == '__main__':
                         rebuild=rebuild,
                         loglevel=cli.loglevel
                     )
-                    zonal_trend_plot.plot_zonal(save_pdf=save_pdf, save_png=save_png, dpi=dpi)
+                    zonal_trend_plot.plot_zonal(save_format=save_format, dpi=dpi)
                 except Exception as e:
                     cli.logger.error("Error processing region %s: %s", region, e)
 

@@ -130,8 +130,7 @@ class TestEnsembleLatLon:
         plot_arguments = {
             "var": conf['var'],
             "dpi": 50, # Low DPI for testing speed
-            "save_pdf": True,
-            "save_png": True,
+            "save_format": ("png", "pdf"),
             "title_mean": "Test data",
             "title_std": "Test data",
             "cbar_label": "Test Label",

@@ -29,21 +29,18 @@ def parse_arguments(args):
 
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
-    
+
     cli = DiagnosticCLI(args, 
                         diagnostic_name='ocean3d', 
                         default_config='config-ocean3d-en4-trend-drift.yaml', 
                         log_name='OceanDrift CLI').prepare()
     cli.open_dask_cluster()
-    
+
     logger = cli.logger
     config_dict = cli.config_dict
 
     dataset = cli.config_dict['datasets'][0]
     dataset_args = cli.dataset_args(dataset)
-    
-    #logger.info(f"Catalog: {catalog}, Model: {model}, Experiment: {exp}, Source: {source}, Regrid: {regrid}")
-
 
     if 'hovmoller' in config_dict['diagnostics']['ocean_drift']:
         hovmoller_config = config_dict['diagnostics']['ocean_drift']['hovmoller']
@@ -64,7 +61,7 @@ if __name__ == '__main__':
                 vert_coord=vert_coord,
                 loglevel=cli.loglevel
             )
-            
+
             for region in regions:
                 logger.info("Processing region: %s", region)
                 try:
@@ -87,17 +84,18 @@ if __name__ == '__main__':
                         outputdir=cli.outputdir,
                         loglevel=cli.loglevel
                     )
-                    hov_plot.plot_hovmoller(
-                        rebuild=cli.rebuild, save_pdf=cli.save_pdf,
-                        save_png=cli.save_png, dpi=cli.dpi
-                    )
-                    hov_plot.plot_timeseries(
-                        rebuild=cli.rebuild, save_pdf=cli.save_pdf,
-                        save_png=cli.save_png, dpi=cli.dpi
-                    )
+
+                    save_format = getattr(cli, "save_format", None)
+                    if not save_format:
+                        logger.debug("No plot output requested, skipping plot generation for region %s", region)
+                        continue
+                    logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
+
+                    hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                    hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
                 except Exception as e:
                     logger.error("Error plotting region %s: %s", region, e)
-                
+
     cli.close_dask_cluster()
 
     logger.info("Ocean Drift diagnostic completed.")

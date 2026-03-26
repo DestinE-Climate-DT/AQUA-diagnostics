@@ -1,10 +1,10 @@
 import xarray as xr
 import cartopy.crs as ccrs
-
+from typing import Union
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, unit_to_latex
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from .multiple_maps import plot_maps
 from .multivar_vertical_profiles import plot_multivars_vertical_profile
 
@@ -59,13 +59,13 @@ class PlotTrends:
     def plot_multilevel(self,
                         levels = None,
                         rebuild: bool = True,
-                        save_pdf: bool = True,
-                        save_png: bool = True, dpi: int = 300):
+                        save_format: Union[str, list] = SAVE_FORMAT, 
+                        dpi: int = 300):
         """Plot multi-level maps of trends.
         
         Args:
             levels (list, optional): List of depth levels to plot. Defaults to None.
-            formats (list, optional): List of output formats. Defaults to ['pdf'].
+            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
         """
         self.diagnostic_product = 'multilevel_trend'
         if levels is None:
@@ -91,26 +91,19 @@ class PlotTrends:
             return_fig=True,
             loglevel=self.loglevel
         )
-        formats = []
-        if save_pdf:
-            formats.append('pdf')
-        if save_png:
-            formats.append('png')
-
-        for format in formats:
-            self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
-                           rebuild=rebuild, dpi=dpi, format=format, extra_keys={'region': self.region})
+        
+        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
+                        rebuild=rebuild, format=save_format, dpi=dpi, extra_keys={'region': self.region})
 
 
     def plot_zonal(self,
                     rebuild: bool = True,
-                    save_pdf: bool = True,
-                    save_png: bool = True, dpi: int = 300):
+                    save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
         """
         Plot zonal mean vertical profiles of trends.
         
         Args:
-            formats (list, optional): List of output formats. Defaults to ['pdf'].
+            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
             dpi (int, optional): Dots per inch for the output figure. Defaults to 300.
         """
         self.diagnostic_product = 'zonal_mean'
@@ -134,15 +127,9 @@ class PlotTrends:
             sym=True,
             loglevel=self.loglevel
         )
-        formats = []
-        if save_pdf:
-            formats.append('pdf')
-        if save_png:
-            formats.append('png')
 
-        for format in formats:
-            self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
-                           rebuild=rebuild, dpi=dpi, format=format, extra_keys={'region': self.region})
+        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
+                       rebuild=rebuild, extra_keys={'region': self.region}, format=save_format, dpi=dpi)
 
     def set_nrowcol(self):
         if hasattr(self, "levels") and self.levels:
@@ -241,7 +228,7 @@ class PlotTrends:
 
     def save_plot(self, fig, diagnostic_product: str, extra_keys: dict = {},
                   rebuild: bool = True,
-                  dpi: int = 300, format: str = 'png', metadata: dict = None):
+                  dpi: int = 300, format: Union[str, list] = SAVE_FORMAT, metadata: dict = None):
         """
         Save the plot to a file.
 
@@ -251,20 +238,15 @@ class PlotTrends:
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str): The format of the figure. Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
         extra_keys.update({"region": self.region})
 
-        if format == 'png':
-            result = self.outputsaver.save_png(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata, dpi=dpi)
-        elif format == 'pdf':
-            result = self.outputsaver.save_pdf(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata)
-        self.logger.info(f"Figure saved as {result}")
+        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                     extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)
 
     def _get_info(self):
         """Extract model, catalog, exp, region from data attributes."""

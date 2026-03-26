@@ -5,14 +5,14 @@ import cartopy.crs as ccrs
 from aqua.core.logger import log_configure
 from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
 from aqua.core.util import get_projection, get_realizations, unit_to_latex
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 from .stat_global_biases import StatGlobalBiases
 from .util import handle_pressure_level
 
 class PlotGlobalBiases: 
     def __init__(self, 
                  diagnostic='globalbiases',
-                 save_pdf=True, save_png=True, 
+                 save_format=SAVE_FORMAT,
                  dpi=300, outputdir='./',
                  cmap='RdBu_r',
                  return_fig: bool = False,
@@ -22,8 +22,7 @@ class PlotGlobalBiases:
 
         Args:
             diagnostic (str): Name of the diagnostic.
-            save_pdf (bool): Whether to save the figure as PDF.
-            save_png (bool): Whether to save the figure as PNG.
+            save_format (str or list): Format(s) to save the figures. Default is SAVE_FORMAT.
             dpi (int): Resolution of saved figures.
             outputdir (str): Output directory for saved plots.
             cmap (str): Colormap to use for the plots.
@@ -31,8 +30,7 @@ class PlotGlobalBiases:
             loglevel (str): Logging level.
         """
         self.diagnostic = diagnostic
-        self.save_pdf = save_pdf
-        self.save_png = save_png
+        self.format_to_save = save_format
         self.dpi = dpi
         self.outputdir = outputdir
         self.cmap = cmap
@@ -80,7 +78,7 @@ class PlotGlobalBiases:
 
         outputsaver.save_figure(fig, diagnostic_product,
                                 extra_keys=extra_keys, metadata=metadata,
-                                save_pdf=self.save_pdf, save_png=self.save_png,
+                                extension=self.format_to_save,
                                 dpi=self.dpi)
 
     def _compute_bias_significance(self, data_ts, data_ref_ts, var, plev, alpha):
@@ -214,7 +212,7 @@ class PlotGlobalBiases:
             f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
         )
 
-        if self.save_pdf or self.save_png:
+        if self.format_to_save:
             self._save_figure(fig=fig, diagnostic_product='annual_climatology',
                               data=data, description=description, var=var, plev=plev, realization=realization)
 
@@ -370,7 +368,7 @@ class PlotGlobalBiases:
             )
             description += stat_description
         
-        if self.save_pdf or self.save_png:
+        if self.format_to_save:
             self._save_figure(fig=fig, diagnostic_product='bias', data=data, data_ref=data_ref,
                               description=description, var=var, plev=plev, realization=realization)
 
@@ -452,7 +450,7 @@ class PlotGlobalBiases:
             f" and from {data_ref.startdate} to {data_ref.enddate} for the reference data."
         )
 
-        if self.save_pdf or self.save_png:
+        if self.format_to_save:
             self._save_figure(fig=fig, diagnostic_product='seasonal_bias', data=data, data_ref=data_ref,
                           description=description, var=var, plev=plev, realization=realization)
 
@@ -519,7 +517,7 @@ class PlotGlobalBiases:
             loglevel=self.loglevel
         )
 
-        if self.save_pdf or self.save_png:
+        if self.format_to_save:
             self._save_figure(fig=fig, diagnostic_product='vertical_bias', data=data, data_ref=data_ref,
                           description=description, var=var, realization=realization)
 

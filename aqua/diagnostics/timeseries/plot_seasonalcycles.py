@@ -2,7 +2,8 @@ import xarray as xr
 from aqua.core.graphics import plot_seasonalcycle
 from aqua.core.util import to_list, get_realizations
 from .base import PlotBaseMixin
-
+from typing import Union
+from aqua.diagnostics.base import SAVE_FORMAT
 
 class PlotSeasonalCycles(PlotBaseMixin):
     def __init__(self, diagnostic_name: str = 'seasonalcycles',
@@ -33,7 +34,7 @@ class PlotSeasonalCycles(PlotBaseMixin):
         self.get_data_info()
 
     def run(self, outputdir: str = './',
-            rebuild: bool = True, dpi: int = 300, format: str = 'png'):
+            rebuild: bool = True, dpi: int = 300, format: Union[str, list] = SAVE_FORMAT):
         """
         Run the PlotTimeseries class.
 
@@ -41,7 +42,7 @@ class PlotSeasonalCycles(PlotBaseMixin):
             outputdir (str): Output directory to save the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
         """
 
         self.logger.info('Running PlotSeasonalCycles')
@@ -142,18 +143,18 @@ class PlotSeasonalCycles(PlotBaseMixin):
 
         return fig, ax
 
-    def save_plot(self, fig, description: str = None, rebuild: bool = True,
-                  outputdir: str = './', dpi: int = 300, format: str = 'png'):
+    def save_plot(self, fig, description: str | None = None, rebuild: bool = True,
+                  outputdir: str = './', dpi: int = 300, format: Union[str, list] = SAVE_FORMAT):
         """
         Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): Figure object.
-            description (str): Description of the plot.
+            description (str, optional): Description of the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
         """
         super().save_plot(fig, description=description, rebuild=rebuild,
                           outputdir=outputdir, dpi=dpi, format=format, diagnostic_product='seasonalcycles')

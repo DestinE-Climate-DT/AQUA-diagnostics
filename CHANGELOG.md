@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.24.0):
 
+- ECmean: time selection is now allowed (#178)
+
 ## [v0.23.0]
 
 Main changes:
@@ -16,6 +18,7 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class 
 
 Complete list:
+- Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
 - Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173) 
 - Load in memory before saving netcdf (#174)

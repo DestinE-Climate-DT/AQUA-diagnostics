@@ -14,6 +14,7 @@ from aqua.diagnostics.base import (
     merge_config_args,
     open_cluster,
     template_parse_arguments,
+    SAVE_FORMAT,
 )
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
@@ -67,8 +68,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     rebuild = config_dict["output"].get("rebuild", True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_pdf = config_dict["output"].get("save_pdf", True)
-    save_png = config_dict["output"].get("save_png", True)
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     dpi = config_dict["output"].get("dpi", 600)
 
     if "sshVariability" in config_dict["diagnostics"]:
@@ -179,7 +179,7 @@ if __name__ == "__main__":
                 ssh_ref.run()
 
             # Initialize plotting class
-            plot_class = sshVariabilityPlot()
+            plot_class = sshVariabilityPlot(outputdir=outputdir, loglevel=loglevel)
 
             # Dictionary for dataset plot
             if ssh_dataset.data_std is not None:
@@ -188,8 +188,7 @@ if __name__ == "__main__":
                     "catalog": dataset["catalog"],
                     "model": dataset["model"],
                     "exp": dataset["exp"],
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
+                    "save_format": save_format,
                     "startdate": startdate_data,
                     "enddate": enddate_data,
                     "proj": proj,
@@ -208,8 +207,6 @@ if __name__ == "__main__":
                     "catalog": dataset["catalog"],
                     "model": dataset["model"],
                     "exp": dataset["exp"],
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
                     "startdate": startdate_data,
                     "enddate": enddate_data,
                     "proj": region_proj,
@@ -235,8 +232,6 @@ if __name__ == "__main__":
                     "catalog": dataset_ref["catalog"],
                     "model": dataset_ref["model"],
                     "exp": dataset_ref["exp"],
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
                     "startdate": startdate_ref,
                     "enddate": enddate_ref,
                     "proj": proj,
@@ -255,8 +250,6 @@ if __name__ == "__main__":
                     "catalog": dataset_ref["catalog"],
                     "model": dataset_ref["model"],
                     "exp": dataset_ref["exp"],
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
                     "startdate": startdate_ref,
                     "enddate": enddate_ref,
                     "region": region_name,
@@ -281,8 +274,7 @@ if __name__ == "__main__":
                     "catalog_ref": dataset_ref["catalog"],
                     "model_ref": dataset_ref["model"],
                     "exp_ref": dataset_ref["exp"],
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
+                    "save_format": save_format,
                     "startdate": startdate_data,
                     "enddate": enddate_data,
                     "startdate_ref": startdate_ref,

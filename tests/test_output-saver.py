@@ -108,45 +108,28 @@ def test_save_netcdf(base_saver, tmp_path):
     assert new_mtime == old_mtime
 
 @pytest.mark.aqua
-def test_save_png(base_saver, tmp_path):
-    """Test saving a PNG file."""
+def test_save_figure_single_and_multiple_formats(base_saver, tmp_path):
+    """Test saving figures using save_figure with single and multiple formats."""
 
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
 
-    # Save the PNG file
     extra_keys = {'var': 'tprate'}
-    path = base_saver.save_png(fig=fig, diagnostic_product='mean', extra_keys=extra_keys, dpi=DPI)
 
-    # Check if the file was created
+    # Single format
+    base_saver.save_figure(fig=fig, diagnostic_product='mean', extra_keys=extra_keys, extension='png', dpi=DPI)
     png = os.path.join(tmp_path, 'png', 'dummy.mean.ci.IFS-NEMO.historical.r1.tprate.png')
     assert os.path.exists(png)
-    assert path == png
 
     old_mtime = Path(png).stat().st_mtime
-    base_saver.save_png(fig=fig, diagnostic_product='mean', extra_keys=extra_keys, dpi=DPI, rebuild=False)
+    base_saver.save_figure(fig=fig, diagnostic_product='mean', extra_keys=extra_keys, extension='png', dpi=DPI, rebuild=False)
     new_mtime = Path(png).stat().st_mtime
     assert new_mtime == old_mtime
 
-@pytest.mark.aqua
-def test_save_pdf(base_saver, tmp_path):
-    """Test saving a PDF file."""
-    # Create a simple figure
-    fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1])
-
-    # Save the PDF file
-    extra_keys = {'var': 'tprate'}
-    base_saver.save_pdf(fig=fig, diagnostic_product='mean', extra_keys=extra_keys)
-
-    # Check if the file was created
+    # Multiple formats
+    base_saver.save_figure(fig=fig, diagnostic_product='mean', extra_keys=extra_keys, extension=['png', 'pdf'], dpi=DPI)
     pdf = os.path.join(tmp_path, 'pdf', 'dummy.mean.ci.IFS-NEMO.historical.r1.tprate.pdf')
     assert os.path.exists(pdf)
-
-    old_mtime = Path(pdf).stat().st_mtime
-    base_saver.save_pdf(fig=fig, diagnostic_product='mean', extra_keys=extra_keys, rebuild=False)
-    new_mtime = Path(pdf).stat().st_mtime
-    assert new_mtime == old_mtime
 
 @pytest.mark.aqua
 def test_create_catalog_entry_new_entry(base_saver, tmp_path):
@@ -302,7 +285,7 @@ def test_core_save(base_saver, tmp_path):
     result = base_saver._core_save('mean', 'pdf')
     assert result.endswith('.pdf')
     
-    with pytest.raises(ValueError, match="file_format must be either 'pdf',  'png' or 'nc'"):
+    with pytest.raises(ValueError, match="file_format must be either 'pdf', 'svg', 'png' or 'nc'"):
         base_saver._core_save('mean', 'txt')
 
 @pytest.mark.aqua
