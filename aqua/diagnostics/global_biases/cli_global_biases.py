@@ -3,11 +3,10 @@
 import argparse
 import sys
 
-from aqua.core.util import to_list
 from aqua.core.exceptions import NoDataError
+from aqua.core.util import to_list
 from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
-from aqua.diagnostics.base import template_parse_arguments
-from aqua.diagnostics.base import DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
 TOOLNAME='GlobalBiases'
 TOOLNAME_KEY = TOOLNAME.lower()

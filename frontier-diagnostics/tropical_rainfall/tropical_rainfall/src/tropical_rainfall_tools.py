@@ -1,23 +1,24 @@
-import re
-import os
 import math
-import seaborn as sns
-import numpy as np
-import pandas as pd
-import xarray as xr
-from datetime import datetime
-from typing import Union
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import convert_units
-from aqua.core.logger import log_configure
-import yaml
-from os.path import isfile, join, exists, isdir
-from dateutil.relativedelta import relativedelta
-
+import os
+import re
 from calendar import monthrange
 from collections import defaultdict
-
+from datetime import datetime
 from importlib import resources
+from os.path import exists, isdir, isfile, join
+from typing import Union
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import xarray as xr
+import yaml
+from dateutil.relativedelta import relativedelta
+
+from aqua.core.configurer import ConfigPath
+from aqua.core.logger import log_configure
+from aqua.core.util import convert_units
+
 full_path_to_config = resources.files("tropical_rainfall") / "config-tropical-rainfall.yml"
 
 regrid_dict = {

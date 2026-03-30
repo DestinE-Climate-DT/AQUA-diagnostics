@@ -1,4 +1,5 @@
 import pytest
+
 from aqua.diagnostics.histogram import Histogram
 
 loglevel = "DEBUG"

@@ -1,5 +1,6 @@
 from aqua.core.graphics import plot_timeseries
-from aqua.core.util import to_list, get_realizations
+from aqua.core.util import get_realizations, to_list
+
 from .base import PlotBaseMixin
 
 

@@ -1,10 +1,13 @@
 """Tests for ecmean diagnostics"""
 
 import os
+
 import pytest
+
 from aqua import Reader
-from aqua.diagnostics import PerformanceIndices, GlobalMean
-from aqua.diagnostics.base import OutputSaver, load_diagnostic_config, get_diagnostic_configpath
+from aqua.diagnostics import GlobalMean, PerformanceIndices
+from aqua.diagnostics.base import OutputSaver, get_diagnostic_configpath, load_diagnostic_config
+
 
 @pytest.fixture
 def common_setup(tmp_path):

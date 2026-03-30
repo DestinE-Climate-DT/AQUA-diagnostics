@@ -9,13 +9,12 @@ single or multiple experiments.
 """
 import argparse
 import sys
+
 import pandas as pd
 
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
-from aqua.diagnostics.base import round_startdate, round_enddate
+from aqua.diagnostics.base import DiagnosticCLI, round_enddate, round_startdate, template_parse_arguments
+from aqua.diagnostics.timeseries import Gregory, PlotGregory, PlotSeasonalCycles, PlotTimeseries, SeasonalCycles, Timeseries
 from aqua.diagnostics.timeseries.util_cli import load_var_config
-from aqua.diagnostics.timeseries import Timeseries, SeasonalCycles, Gregory
-from aqua.diagnostics.timeseries import PlotTimeseries, PlotSeasonalCycles, PlotGregory
 
 
 def parse_arguments(args):

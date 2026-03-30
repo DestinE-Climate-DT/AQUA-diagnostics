@@ -1,10 +1,11 @@
-import xarray as xr
 import matplotlib.pyplot as plt
+import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
+
 from .multiple_hovmoller import plot_multi_hovmoller
 from .multiple_timeseries import plot_multi_timeseries
 

@@ -10,16 +10,25 @@ from typing import Optional, Union
 import xarray as xr
 from matplotlib.figure import Figure
 
+from aqua.core.configurer import ConfigPath
 from aqua.core.lock import SafeFileLock
 from aqua.core.logger import log_configure, log_history
-from aqua.core.util import create_folder, update_metadata, to_list
-from aqua.diagnostics.base.metadata import add_figure_metadata
-from aqua.core.util import dump_yaml, load_yaml
-from aqua.core.util import replace_intake_vars, replace_urlpath_jinja, replace_urlpath_wildcard
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import format_realization
+from aqua.core.util import (
+    create_folder,
+    dump_yaml,
+    format_realization,
+    load_yaml,
+    replace_intake_vars,
+    replace_urlpath_jinja,
+    replace_urlpath_wildcard,
+    to_list,
+    update_metadata,
+)
 from aqua.core.util.string import clean_filename
+from aqua.diagnostics.base.metadata import add_figure_metadata
+
 from .defaults import SAVE_FORMAT
+
 
 class OutputSaver:
     """

@@ -1,8 +1,10 @@
 import os
+
 import pytest
 import xarray as xr
-from aqua.diagnostics.timeseries import Gregory, PlotGregory
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics.timeseries import Gregory, PlotGregory
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL

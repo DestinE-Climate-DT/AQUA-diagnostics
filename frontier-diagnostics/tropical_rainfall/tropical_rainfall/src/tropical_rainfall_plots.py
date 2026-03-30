@@ -1,20 +1,19 @@
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.gridspec import GridSpec
-from typing import Union, Tuple, Optional, List  # Any
-
-from aqua.core.util import create_folder
-from aqua.core.logger import log_configure
-from .tropical_rainfall_tools import ToolsClass
+from typing import List, Optional, Tuple, Union  # Any
 
 import cartopy.crs as ccrs
 import cartopy.mpl.ticker as cticker
-from cartopy.util import add_cyclic_point
-
-from matplotlib.ticker import StrMethodFormatter
-
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from cartopy.util import add_cyclic_point
+from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import StrMethodFormatter
+
+from aqua.core.logger import log_configure
+from aqua.core.util import create_folder
+
+from .tropical_rainfall_tools import ToolsClass
 
 
 class PlottingClass:

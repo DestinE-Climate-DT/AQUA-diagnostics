@@ -3,7 +3,9 @@ Title generation class and utilities for AQUA plots.
 """
 
 from typing import Optional, Union
-from aqua.core.util import to_list, strlist_to_phrase
+
+from aqua.core.util import strlist_to_phrase, to_list
+
 from .strings import harmonize_lists
 
 

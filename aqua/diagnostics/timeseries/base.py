@@ -1,12 +1,13 @@
 """Base classes for Timeseries diagnostics."""
 
 from typing import Union
+
 import xarray as xr
+
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver, TitleBuilder, SAVE_FORMAT
-from aqua.core.util import time_to_string, strlist_to_phrase, unit_to_latex
+from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, strlist_to_phrase, time_to_string, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, start_end_dates
 
 xr.set_options(keep_attrs=True)
 

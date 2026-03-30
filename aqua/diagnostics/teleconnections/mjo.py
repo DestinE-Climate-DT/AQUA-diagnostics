@@ -1,9 +1,12 @@
+from typing import Union
+
 import xarray as xr
+
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver
+
 from .base import BaseMixin
-from typing import Union
 
 # set default options for xarray
 xr.set_options(keep_attrs=True)

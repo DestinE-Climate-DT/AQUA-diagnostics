@@ -1,9 +1,11 @@
 import os
+
 import pytest
 import xarray as xr
-from aqua import Reader
-from aqua.diagnostics.timeseries import Timeseries, PlotTimeseries
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua import Reader
+from aqua.diagnostics.timeseries import PlotTimeseries, Timeseries
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL

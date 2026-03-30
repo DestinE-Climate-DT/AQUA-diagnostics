@@ -1,8 +1,9 @@
-import xarray as xr
 from itertools import product
 
-from aqua.core.util import to_list
+import xarray as xr
+
 from aqua.core.logger import log_configure
+from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 

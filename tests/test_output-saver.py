@@ -1,12 +1,15 @@
 import os
-import pytest
 from pathlib import Path
-import xarray as xr
+from unittest.mock import MagicMock, patch
+
 import matplotlib.pyplot as plt
-from unittest.mock import patch, MagicMock
+import pytest
+import xarray as xr
+from conftest import DPI, LOGLEVEL
+
 from aqua.core.util import replace_urlpath_jinja, replace_urlpath_wildcard
 from aqua.diagnostics.base import OutputSaver
-from conftest import DPI, LOGLEVEL
+
 
 # Fixture for OutputSaver instance
 @pytest.fixture

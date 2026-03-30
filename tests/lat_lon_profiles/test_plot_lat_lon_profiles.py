@@ -1,8 +1,9 @@
-import pytest
 import numpy as np
+import pytest
 import xarray as xr
-from aqua.diagnostics.lat_lon_profiles import PlotLatLonProfiles
 from conftest import DPI, LOGLEVEL
+
+from aqua.diagnostics.lat_lon_profiles import PlotLatLonProfiles
 
 loglevel = LOGLEVEL
 

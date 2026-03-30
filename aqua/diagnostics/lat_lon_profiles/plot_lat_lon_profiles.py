@@ -1,11 +1,12 @@
+from typing import Union
+
 import matplotlib.pyplot as plt
 
-from aqua.core.graphics import plot_seasonal_lat_lon_profiles
+from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list, DEFAULT_REALIZATION
-from aqua.core.graphics import plot_lat_lon_profiles
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
-from typing import Union
+from aqua.core.util import DEFAULT_REALIZATION, to_list
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+
 
 class PlotLatLonProfiles():
     """

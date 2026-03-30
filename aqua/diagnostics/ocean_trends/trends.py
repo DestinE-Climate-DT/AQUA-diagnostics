@@ -1,7 +1,7 @@
 """Module for computing trends using xarray."""
 
-import xarray as xr
 import pandas as pd
+import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.reader import Trender

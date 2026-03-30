@@ -2,9 +2,9 @@
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError
-from aqua.core.logger import log_configure, log_history
-from aqua.core.util import to_list, merge_attrs
 from aqua.core.fldstat import FldStat
+from aqua.core.logger import log_configure, log_history
+from aqua.core.util import merge_attrs, to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.seaice.util import ensure_istype
 

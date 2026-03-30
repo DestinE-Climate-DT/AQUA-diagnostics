@@ -1,11 +1,12 @@
 import os
-import xarray as xr
 from typing import Union
-from aqua.core.logger import log_configure
+
+import xarray as xr
+
 from aqua.core.configurer import ConfigPath
-from aqua.core.util import load_yaml, select_season, to_list
-from aqua.core.util import convert_data_units, get_realizations
-from aqua.diagnostics.base import Diagnostic, OutputSaver, TitleBuilder, SAVE_FORMAT
+from aqua.core.logger import log_configure
+from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, to_list
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
 

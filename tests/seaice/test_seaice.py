@@ -1,8 +1,9 @@
 import pytest
 import xarray as xr
-from aqua.diagnostics import SeaIce
-from aqua.core.exceptions import NoDataError
 from conftest import APPROX_REL, LOGLEVEL
+
+from aqua.core.exceptions import NoDataError
+from aqua.diagnostics import SeaIce
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL * 10

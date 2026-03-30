@@ -1,7 +1,8 @@
 import pandas as pd
 import xarray as xr
+
 from aqua.core.graphics import plot_timeseries
-from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # from aqua.logger import log_configure
 # from aqua.exceptions import NoDataError

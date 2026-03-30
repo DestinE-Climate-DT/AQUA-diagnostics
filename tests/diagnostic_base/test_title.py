@@ -1,5 +1,6 @@
 """Tests for the TitleBuilder class."""
 import pytest
+
 from aqua.diagnostics.base import TitleBuilder
 
 pytestmark = pytest.mark.aqua

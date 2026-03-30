@@ -1,9 +1,11 @@
-import pytest
 import os
+
 import numpy as np
+import pytest
 import xarray as xr
-from aqua.diagnostics import Boxplots, PlotBoxplots
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics import Boxplots, PlotBoxplots
 
 # Tolerance for numerical comparisons
 approx_rel = APPROX_REL

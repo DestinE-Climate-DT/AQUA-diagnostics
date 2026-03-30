@@ -1,13 +1,16 @@
-import xarray as xr
-import numpy as np
-import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+import numpy as np
+import xarray as xr
+
+from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
-from aqua.core.graphics import plot_single_map, plot_single_map_diff, plot_maps, plot_vertical_profile_diff
 from aqua.core.util import get_projection, get_realizations, unit_to_latex
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+
 from .stat_global_biases import StatGlobalBiases
 from .util import handle_pressure_level
+
 
 class PlotGlobalBiases:
     def __init__(self,

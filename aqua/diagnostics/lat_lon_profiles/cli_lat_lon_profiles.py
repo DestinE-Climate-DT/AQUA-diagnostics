@@ -6,11 +6,13 @@ Details of the run are defined in a yaml configuration file for a
 single or multiple experiments.
 """
 
-import sys
 import argparse
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+import sys
+
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from aqua.diagnostics.lat_lon_profiles.util_cli import load_var_config
+
 
 def parse_arguments(args):
     """Parse command-line arguments for LatLonProfiles diagnostic.

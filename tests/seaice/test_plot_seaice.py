@@ -1,11 +1,13 @@
 
+import glob
+import os
+
 import pytest
-import os, glob
-import numpy as np
 import xarray as xr
-from aqua.diagnostics import SeaIce, PlotSeaIce
-from aqua.diagnostics.base import OutputSaver
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics import PlotSeaIce, SeaIce
+from aqua.diagnostics.base import OutputSaver
 
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL

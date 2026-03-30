@@ -4,12 +4,15 @@ These fixtures use scope="session" to retrieve data once and share across all te
 Reference: https://docs.pytest.org/en/stable/reference/fixtures.html
 """
 import matplotlib
+
 matplotlib.use('Agg')  # Non-interactive backend
 
 import matplotlib.pyplot as plt
+
 plt.ioff()  # Turn off interactive mode explicitly
 
 import pytest
+
 from aqua import Reader
 
 # Centralized setting for all tests

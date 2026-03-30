@@ -1,7 +1,8 @@
-from aqua.core.logger import log_configure
-from aqua.core.util import to_list, time_to_string
 from aqua.core.fixer import EvaluateFormula
+from aqua.core.logger import log_configure
+from aqua.core.util import time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic, start_end_dates
+
 
 class LatLonProfiles(Diagnostic):
 	"""

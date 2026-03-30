@@ -1,10 +1,11 @@
 """Tests for DiagnosticCLI base class."""
-from types import SimpleNamespace
 import os
+from types import SimpleNamespace
+
 import pytest
 
-from aqua.diagnostics.base.cli_base import DiagnosticCLI
 from aqua.core.util import dump_yaml
+from aqua.diagnostics.base.cli_base import DiagnosticCLI
 
 
 @pytest.fixture

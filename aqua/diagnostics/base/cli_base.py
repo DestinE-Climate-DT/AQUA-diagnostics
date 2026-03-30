@@ -4,8 +4,10 @@ Base class for diagnostic CLI to centralize common operations.
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
+
 from .defaults import SAVE_FORMAT
-from .util import open_cluster, close_cluster, load_diagnostic_config, merge_config_args
+from .util import close_cluster, load_diagnostic_config, merge_config_args, open_cluster
+
 
 class DiagnosticCLI:
     """

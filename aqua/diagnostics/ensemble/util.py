@@ -9,10 +9,12 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from aqua import Reader
+from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
-from aqua.core.configurer import ConfigPath
+
 
 def reader_retrieve_and_merge(
     variable: str = None,

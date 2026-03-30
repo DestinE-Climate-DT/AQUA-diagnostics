@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-import pandas as pd
-import numpy as np
-import xarray as xr
 import os
 import sys
 
+import numpy as np
+import pandas as pd
+import xarray as xr
 from tropical_cyclones import TCs
-from aqua.core.util import load_yaml
+
 from aqua.core.logger import log_configure
+from aqua.core.util import load_yaml
+
 mainlogger = log_configure('INFO', log_name='MAIN')
 
 if __name__ == '__main__':

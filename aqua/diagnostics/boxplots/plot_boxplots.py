@@ -1,11 +1,11 @@
-import xarray as xr
-import numpy as np
-from aqua.core.util import to_list, extract_attrs, time_to_string, get_realizations, unit_to_latex
-from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
 import matplotlib as plt
+import numpy as np
+import xarray as xr
 
 from aqua.core.graphics import boxplot
+from aqua.core.logger import log_configure
+from aqua.core.util import extract_attrs, get_realizations, time_to_string, to_list, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
 class PlotBoxplots:

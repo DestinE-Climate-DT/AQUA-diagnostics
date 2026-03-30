@@ -1,10 +1,12 @@
 """Timeseries class for retrieve and netcdf saving of a single experiment"""
-import xarray as xr
 import pandas as pd
-from aqua.core.util import to_list, frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.base import round_startdate, round_enddate
-from .util import loop_seasonalcycle
+import xarray as xr
+
+from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, to_list
+from aqua.diagnostics.base import round_enddate, round_startdate
+
 from .base import BaseMixin
+from .util import loop_seasonalcycle
 
 xr.set_options(keep_attrs=True)
 

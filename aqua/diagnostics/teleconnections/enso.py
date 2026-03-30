@@ -1,6 +1,7 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util.sci_util import lon_to_360
+
 from .base import BaseMixin
 
 

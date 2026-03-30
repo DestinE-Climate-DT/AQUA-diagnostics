@@ -1,8 +1,10 @@
 """Utility for the GlobalBiases module"""
 
 import xarray as xr
-from aqua.core.logger import log_configure
+
 from aqua.core.exceptions import NoDataError
+from aqua.core.logger import log_configure
+
 
 def handle_pressure_level(data, var, plev, loglevel='WARNING'):
     """

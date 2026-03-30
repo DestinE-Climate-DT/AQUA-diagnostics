@@ -3,16 +3,17 @@
 .. moduleauthor:: AQUA team <natalia.nazarova@polito.it>
 
 """
-from typing import Union, Optional
-from aqua.core.logger import log_configure
-from aqua.core.configurer import ConfigPath
+from importlib import resources
+from typing import Optional, Union
 
-from .src.tropical_rainfall_tools import ToolsClass
-from .src.tropical_rainfall_plots import PlottingClass
+from aqua.core.configurer import ConfigPath
+from aqua.core.logger import log_configure
+
 from .src.tropical_rainfall_main import MainClass
 from .src.tropical_rainfall_meta import MetaClass
+from .src.tropical_rainfall_plots import PlottingClass
+from .src.tropical_rainfall_tools import ToolsClass
 
-from importlib import resources
 full_path_to_config = resources.files("tropical_rainfall") / "config-tropical-rainfall.yml"
 config = ToolsClass().get_config()
 machine = ConfigPath().get_machine()

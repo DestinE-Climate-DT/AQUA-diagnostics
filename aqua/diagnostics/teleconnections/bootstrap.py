@@ -5,7 +5,7 @@ import numpy as np
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.diagnostics.teleconnections import NAO, ENSO
+from aqua.diagnostics.teleconnections import ENSO, NAO
 
 xr.set_options(keep_attrs=True)
 

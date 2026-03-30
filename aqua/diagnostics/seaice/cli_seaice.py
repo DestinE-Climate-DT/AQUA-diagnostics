@@ -11,9 +11,10 @@ import argparse
 import sys
 
 from aqua.core.util import get_arg
-from aqua.diagnostics import SeaIce, PlotSeaIce, Plot2DSeaIce
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics import Plot2DSeaIce, PlotSeaIce, SeaIce
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.seaice.util import filter_region_list
+
 
 def parse_arguments(args):
     """Parse command-line arguments for SeaIce diagnostic.

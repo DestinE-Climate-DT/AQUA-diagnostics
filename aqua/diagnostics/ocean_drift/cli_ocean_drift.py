@@ -10,10 +10,9 @@ import argparse
 import sys
 
 from aqua.core.util import to_list
-from aqua.diagnostics.base import template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.ocean_drift.hovmoller import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
-from aqua.diagnostics.base import DiagnosticCLI
 
 
 def parse_arguments(args):

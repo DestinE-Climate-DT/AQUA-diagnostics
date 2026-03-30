@@ -1,10 +1,13 @@
-import xarray as xr
-import cartopy.crs as ccrs
 from typing import Union
+
+import cartopy.crs as ccrs
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
+
 from .multiple_maps import plot_maps
 from .multivar_vertical_profiles import plot_multivars_vertical_profile
 

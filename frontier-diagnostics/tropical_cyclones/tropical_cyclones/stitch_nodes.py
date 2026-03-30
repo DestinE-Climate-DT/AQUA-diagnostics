@@ -1,10 +1,12 @@
 import os
 import subprocess
-import xarray as xr
-import pandas as pd
+from datetime import datetime
 from glob import glob
 from time import time
-from datetime import datetime
+
+import pandas as pd
+import xarray as xr
+
 from .tools.tcs_utils import write_fullres_field
 
 

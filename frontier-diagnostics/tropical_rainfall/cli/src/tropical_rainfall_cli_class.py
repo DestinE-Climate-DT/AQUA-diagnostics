@@ -1,15 +1,17 @@
+import glob
 import os
 import re
-import glob
+
 import pandas as pd
 import xarray as xr
-from aqua import Reader
-from aqua.core.util import get_arg
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import create_folder, add_pdf_metadata
-from aqua.core.logger import log_configure
 from dask.distributed import Client, LocalCluster
 from tropical_rainfall import Tropical_Rainfall
+
+from aqua import Reader
+from aqua.core.configurer import ConfigPath
+from aqua.core.logger import log_configure
+from aqua.core.util import add_pdf_metadata, create_folder, get_arg
+
 from .tropical_rainfall_utils import adjust_year_range_based_on_dataset
 
 

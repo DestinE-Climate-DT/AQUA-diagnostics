@@ -1,6 +1,7 @@
 import pytest
-from aqua.diagnostics.ocean_drift import Hovmoller
 from conftest import LOGLEVEL
+
+from aqua.diagnostics.ocean_drift import Hovmoller
 
 loglevel = LOGLEVEL
 

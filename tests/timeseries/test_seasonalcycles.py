@@ -1,8 +1,10 @@
 import os
+
 import pytest
 import xarray as xr
-from aqua.diagnostics.timeseries import SeasonalCycles, PlotSeasonalCycles
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics.timeseries import PlotSeasonalCycles, SeasonalCycles
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL

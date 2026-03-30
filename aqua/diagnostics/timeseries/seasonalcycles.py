@@ -1,5 +1,6 @@
 """SeasonalCycles class for retrieve and netcdf saving of a single experiment"""
 import xarray as xr
+
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)

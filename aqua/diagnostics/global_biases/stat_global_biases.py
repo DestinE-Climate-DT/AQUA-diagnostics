@@ -1,11 +1,12 @@
-import xarray as xr
 import numpy as np
+import xarray as xr
 from scipy import stats
-from aqua.core.logger import log_configure
-from aqua.core.fldstat import FldStat
-from aqua.core.timstat import TimStat
-from .util import handle_pressure_level
 
+from aqua.core.fldstat import FldStat
+from aqua.core.logger import log_configure
+from aqua.core.timstat import TimStat
+
+from .util import handle_pressure_level
 
 xr.set_options(keep_attrs=True)
 

@@ -1,10 +1,11 @@
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import xarray as xr
+
 from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection
-from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 

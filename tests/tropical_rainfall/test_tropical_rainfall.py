@@ -1,18 +1,18 @@
 """Test of tropical rainfall diagnostic"""
-import pytest
-# import numpy as np
-import xarray
+import importlib
 import os
 import re
-
 from os import listdir, remove
 from os.path import isfile, join
 
-from aqua import Reader
+import pytest
+import xarray
+
+from aqua import Reader  # type: ignore
 from aqua.core.util import create_folder
 
 try:
-    from tropical_rainfall import Tropical_Rainfall
+    from tropical_rainfall import Tropical_Rainfall  # type: ignore
 except ModuleNotFoundError:
     print("The module tropical_rainfall.py is not found.")
 
@@ -55,7 +55,8 @@ def test_module_import():
     """Testing the import of tropical rainfall diagnostic
     """
     try:
-        from tropical_rainfall import Tropical_Rainfall
+        module = importlib.import_module("tropical_rainfall")
+        assert hasattr(module, "Tropical_Rainfall")
     except ModuleNotFoundError:
         assert False, "Diagnostic could not be imported"
 
@@ -92,8 +93,7 @@ def test_attribute_type():
     try:
         diag = Tropical_Rainfall(trop_lat='str')
     except TypeError:
-        print(diag.trop_lat)
-        assert True,       "supposed to be the wrong type"
+        assert True, "supposed to be the wrong type"
     try:
         Tropical_Rainfall(s_year=0.5)
     except TypeError:

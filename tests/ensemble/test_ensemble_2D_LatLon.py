@@ -1,10 +1,12 @@
 """Test ensemble Ensemble module"""
-import pytest
 import os
+
+import pytest
 import xarray as xr
+from conftest import APPROX_REL, DPI, LOGLEVEL
+
 from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon
 from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
-from conftest import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance and Logging
 approx_rel = APPROX_REL

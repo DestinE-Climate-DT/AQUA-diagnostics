@@ -1,12 +1,14 @@
-import xarray as xr
 import math
-import cartopy.crs as ccrs
 from typing import Union
+
+import cartopy.crs as ccrs
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, get_realizations
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
-from .mld_profiles import plot_maps
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
+from .mld_profiles import plot_maps
 
 xr.set_options(keep_attrs=True)
 

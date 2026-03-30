@@ -4,26 +4,25 @@
 
 """
 
-import re
 import os
+import re
+from datetime import datetime
 from os import listdir
 from os.path import isfile, join
-from datetime import datetime
-import numpy as np
-import xarray as xr
-from typing import Union, Tuple, Optional, Any, List
-
-import matplotlib.pyplot as plt
-import matplotlib.figure as figure
+from typing import Any, List, Optional, Tuple, Union
 
 import dask.array as da
 import fast_histogram
+import matplotlib.figure as figure
+import matplotlib.pyplot as plt
+import numpy as np
+import xarray as xr
 
-from aqua.core.util import create_folder
 from aqua.core.logger import log_configure
+from aqua.core.util import create_folder
 
-from .tropical_rainfall_tools import ToolsClass
 from .tropical_rainfall_plots import PlottingClass
+from .tropical_rainfall_tools import ToolsClass
 
 
 class MainClass:

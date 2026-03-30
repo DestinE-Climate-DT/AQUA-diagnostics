@@ -1,10 +1,13 @@
 """Module containing functions necessary to add metadata to different output formats."""
 
 import os
-from pypdf import PdfReader, PdfWriter
-from PIL import Image, PngImagePlugin
 import xml.etree.ElementTree as ET
+
+from PIL import Image, PngImagePlugin
+from pypdf import PdfReader, PdfWriter
+
 from aqua.core.logger import log_configure
+
 
 def add_pdf_metadata(pdf_path: str, metadata: dict, loglevel: str = 'WARNING'):
     """

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Command-line interface for Histogram diagnostic."""
 
-import sys
 import argparse
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+import sys
+
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.histogram import Histogram, PlotHistogram
+
 
 def parse_arguments(args):
     """Parse command-line arguments for Histogram diagnostic."""

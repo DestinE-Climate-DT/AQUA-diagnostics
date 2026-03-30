@@ -1,15 +1,16 @@
 """ PlotSeaIce doc """
-import xarray as xr
 from collections import defaultdict
-import matplotlib.pyplot as plt
 from typing import Union
 
-from aqua.core.logger import log_configure
-from aqua.core.graphics import plot_timeseries, plot_seasonalcycle, ConfigStyle
-from aqua.core.util import get_realizations, to_list
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
+import matplotlib.pyplot as plt
+import xarray as xr
 
-from .util import defaultdict_to_dict, extract_dates, _check_list_regions_type
+from aqua.core.graphics import ConfigStyle, plot_seasonalcycle, plot_timeseries
+from aqua.core.logger import log_configure
+from aqua.core.util import get_realizations, to_list
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+
+from .util import _check_list_regions_type, defaultdict_to_dict, extract_dates
 
 xr.set_options(keep_attrs=True)
 

@@ -1,10 +1,12 @@
 from collections import Counter
 from typing import Union
+
 import pandas as pd
 import xarray as xr
-from aqua.diagnostics.base import Diagnostic, OutputSaver, SAVE_FORMAT
+
 from aqua.core.logger import log_configure
 from aqua.core.util import pandas_freq_to_string
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver
 
 xr.set_options(keep_attrs=True)
 

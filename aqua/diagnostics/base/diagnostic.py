@@ -1,13 +1,14 @@
 import os
-import xarray as xr
+
 import pandas as pd
+import xarray as xr
+
 from aqua import Reader
+from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import load_yaml, convert_units
-from aqua.core.util import xarray_to_pandas_freq, pandas_freq_to_string
-from aqua.core.util import DEFAULT_REALIZATION
+from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml, pandas_freq_to_string, xarray_to_pandas_freq
+
 from .output_saver import OutputSaver
 
 

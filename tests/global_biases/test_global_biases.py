@@ -1,10 +1,12 @@
-import pytest
 import os
+
 import numpy as np
+import pytest
 import xarray as xr
-from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
-from aqua.core.exceptions import NoDataError
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.core.exceptions import NoDataError
+from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
 
 # Tolerance for numerical comparisons
 approx_rel = APPROX_REL

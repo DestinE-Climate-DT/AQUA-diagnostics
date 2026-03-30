@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import xarray as xr
+
+from aqua.core.graphics import indexes_plot, plot_maps, plot_maps_diff, plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
-from aqua.core.graphics import indexes_plot
-from aqua.core.graphics import plot_maps, plot_single_map
-from aqua.core.graphics import plot_maps_diff, plot_single_map_diff
 from aqua.diagnostics.base import TitleBuilder
+
 from .base import PlotBaseMixin, _homogeneize_maps
 
 

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import xarray as xr
+
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
 

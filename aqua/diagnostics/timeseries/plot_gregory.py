@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
-from aqua.core.graphics import ConfigStyle, plot_gregory_monthly, plot_gregory_annual
-from aqua.core.util import to_list, time_to_string, get_realizations
+
+from aqua.core.graphics import ConfigStyle, plot_gregory_annual, plot_gregory_monthly
+from aqua.core.util import get_realizations, time_to_string, to_list
 from aqua.diagnostics.base import TitleBuilder
+
 from .base import PlotBaseMixin
 
 

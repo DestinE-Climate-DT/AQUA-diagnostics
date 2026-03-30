@@ -1,13 +1,22 @@
-import os
-import pytest
 import argparse
-import pandas as pd
+import os
 from unittest.mock import patch
-from aqua.diagnostics.base import template_parse_arguments, load_diagnostic_config
-from aqua.diagnostics.base import open_cluster, close_cluster, merge_config_args
-from aqua.diagnostics.base import start_end_dates, round_startdate, round_enddate
-from aqua.core.util import dump_yaml
+
+import pandas as pd
+import pytest
 from conftest import LOGLEVEL
+
+from aqua.core.util import dump_yaml
+from aqua.diagnostics.base import (
+    close_cluster,
+    load_diagnostic_config,
+    merge_config_args,
+    open_cluster,
+    round_enddate,
+    round_startdate,
+    start_end_dates,
+    template_parse_arguments,
+)
 
 loglevel = LOGLEVEL
 

@@ -1,9 +1,12 @@
-import pytest
-import os, glob
+import glob
+import os
+
 import numpy as np
+import pytest
 import xarray as xr
-from aqua.diagnostics import SeaIce, Plot2DSeaIce
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics import Plot2DSeaIce, SeaIce
 
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL

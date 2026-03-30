@@ -1,10 +1,11 @@
-import matplotlib.pyplot as plt
 from typing import Union
+
+import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
-from aqua.core.util import to_list, unit_to_latex, DEFAULT_REALIZATION
+from aqua.core.util import DEFAULT_REALIZATION, to_list, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
 class PlotHistogram():

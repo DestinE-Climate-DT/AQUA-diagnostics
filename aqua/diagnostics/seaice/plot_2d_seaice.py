@@ -1,17 +1,29 @@
 """ PlotSeaIce doc """
 import os
-import xarray as xr
+
 import cartopy.crs as ccrs
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import xarray as xr
 
 from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
-from aqua.core.util import get_projection, plot_box, to_list, get_realizations
-from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
-from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window, unit_to_latex
-from .util import extract_dates, _check_list_regions_type
+from aqua.core.util import (
+    apply_circular_window,
+    evaluate_colorbar_limits,
+    generate_colorbar_ticks,
+    get_projection,
+    get_realizations,
+    int_month_name,
+    plot_box,
+    set_map_title,
+    time_to_string,
+    to_list,
+    unit_to_latex,
+)
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+
+from .util import _check_list_regions_type, extract_dates
 
 xr.set_options(keep_attrs=True)
 

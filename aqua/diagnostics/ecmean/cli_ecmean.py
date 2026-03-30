@@ -7,20 +7,25 @@ AQUA ECmean4 Performance diagnostic CLI
 import argparse
 import os
 import sys
+
 import xarray as xr
 from ecmean import __version__ as eceversion
 
 from aqua import Reader
 from aqua import __version__ as aquaversion
-from aqua.core.util import get_arg
-from aqua.core.logger import log_configure
-from aqua.core.exceptions import NoDataError, NotEnoughDataError
-
-from aqua.diagnostics import PerformanceIndices, GlobalMean
-from aqua.diagnostics.base import load_diagnostic_config, merge_config_args, get_diagnostic_configpath
-from aqua.diagnostics.base import template_parse_arguments, OutputSaver, TitleBuilder
-from aqua.core.util import strlist_to_phrase, lat_to_phrase
 from aqua.core.configurer import ConfigPath
+from aqua.core.exceptions import NoDataError, NotEnoughDataError
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg, lat_to_phrase, strlist_to_phrase
+from aqua.diagnostics import GlobalMean, PerformanceIndices
+from aqua.diagnostics.base import (
+    OutputSaver,
+    TitleBuilder,
+    get_diagnostic_configpath,
+    load_diagnostic_config,
+    merge_config_args,
+    template_parse_arguments,
+)
 
 
 def parse_arguments(arguments):

@@ -1,6 +1,7 @@
 """Utility for the timeseries module"""
-import xarray as xr
 import pandas as pd
+import xarray as xr
+
 from aqua.core.logger import log_configure
 
 xr.set_options(keep_attrs=True)

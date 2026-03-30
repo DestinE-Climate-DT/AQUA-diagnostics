@@ -1,7 +1,8 @@
-import pytest
 import pandas as pd
+import pytest
 import xarray as xr
-from aqua.diagnostics.timeseries.util import loop_seasonalcycle, center_timestamp
+
+from aqua.diagnostics.timeseries.util import center_timestamp, loop_seasonalcycle
 
 
 @pytest.mark.diagnostics

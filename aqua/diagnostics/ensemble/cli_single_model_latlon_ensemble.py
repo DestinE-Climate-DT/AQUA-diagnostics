@@ -8,16 +8,22 @@ defined in a yaml configuration file for a single model.
 import argparse
 import sys
 
-from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon, reader_retrieve_and_merge
-from aqua.diagnostics.base import (
-    SAVE_FORMAT, close_cluster, load_diagnostic_config, merge_config_args,
-    open_cluster, template_parse_arguments,
-)
+from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from aqua.core.configurer import ConfigPath
+from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon, reader_retrieve_and_merge
+from aqua.diagnostics.base import (
+    SAVE_FORMAT,
+    close_cluster,
+    load_diagnostic_config,
+    merge_config_args,
+    open_cluster,
+    template_parse_arguments,
+)
+
 # This is no circular import because this is a CLI so far
 from aqua.diagnostics.ensemble import extract_realizations
+
 
 def parse_arguments(args):
     """Parse command-line arguments for EnsembleLatLon diagnostic.

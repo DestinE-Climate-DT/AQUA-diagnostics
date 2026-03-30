@@ -7,18 +7,19 @@ defined in a yaml configuration file for multiple models.
 """
 import argparse
 import sys
+
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg
+from aqua.core.version import __version__ as aqua_version
 from aqua.diagnostics import sshVariabilityCompute, sshVariabilityPlot
 from aqua.diagnostics.base import (
+    SAVE_FORMAT,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
     open_cluster,
     template_parse_arguments,
-    SAVE_FORMAT,
 )
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
 
 
 def parse_arguments(args):
