@@ -35,8 +35,5 @@ def test_loop_seasonalcycle_monthly():
 @pytest.mark.diagnostics
 def test_loop_seasonalcycle_errors():
     """Test error handling in loop_seasonalcycle"""
-    data = xr.DataArray([1], dims=['time'],
-                       coords={'time': pd.date_range('2020-01-01', periods=1, freq='MS')})
-
     with pytest.raises(ValueError):
         loop_seasonalcycle(None, '2020-01-01', '2020-12-31', 'monthly')

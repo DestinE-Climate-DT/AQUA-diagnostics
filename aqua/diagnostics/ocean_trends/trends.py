@@ -125,7 +125,7 @@ class Trends(Diagnostic):
         self.logger.debug("Adjusting trend for time frequency")
         time_frequency = y_array["time"].to_index().inferred_freq
 
-        if time_frequency == None:
+        if time_frequency is None:
             self.logger.debug("Time frequency not inferred, checking for monthly data")
             time_index = pd.to_datetime(y_array["time"].values)
             time_diffs = time_index[1:] - time_index[:-1]

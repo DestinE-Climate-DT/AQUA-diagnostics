@@ -91,7 +91,7 @@ def test_attribute_type():
     """ Testing the type of attributes
     """
     try:
-        diag = Tropical_Rainfall(trop_lat='str')
+        Tropical_Rainfall(trop_lat='str')
     except TypeError:
         assert True, "supposed to be the wrong type"
     try:

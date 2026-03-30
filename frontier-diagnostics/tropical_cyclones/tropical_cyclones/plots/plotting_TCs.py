@@ -19,7 +19,7 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
     axs = axs.flatten()
 
     # add main title and save figure accordingly
-    if title==None:
+    if title is None:
         fig.suptitle(tracks_nc_file.name + f" - {tdict['dataset']['model']} - {tdict['dataset']['exp']}")
         save_title = tracks_nc_file.name + f"_{tdict['dataset']['model']}_{tdict['dataset']['exp']}"
     elif title:
@@ -54,7 +54,7 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
         ax.set_title(f'{str(tracks_nc_file.time[i].values)[:13]}', fontsize=10)
 
     # Add a main title and a colorbar
-    if units==None and 'units' in tracks_nc_file.attrs:
+    if units is None and 'units' in tracks_nc_file.attrs:
         plt.colorbar(ax.collections[0], ax=axs, shrink=0.4, pad=0.1, location='bottom', label=tracks_nc_file.attrs['units'])
     elif units:
         plt.colorbar(ax.collections[0], ax=axs, shrink=0.4, pad=0.1, location='bottom', label=units)

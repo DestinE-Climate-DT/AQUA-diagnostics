@@ -193,7 +193,7 @@ def plot_maps(
 
         # Add the colorbar
         mappable = ax.collections[0]
-        if cbar == True:
+        if cbar:
             cbar = fig.colorbar(
                 mappable, cax=cbar_ax, orientation="horizontal", label=cbar_label
             )

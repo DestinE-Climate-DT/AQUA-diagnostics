@@ -175,11 +175,11 @@ class PlotMLD:
         data = data.assign_coords(lon=((data.lon + 180) % 360) - 180)
         data = data.sortby('lon')
 
-        lat_limits = data.attrs['AQUA_lat_limits']
+        # lat_limits = data.attrs['AQUA_lat_limits']
         lon_limits = data.attrs['AQUA_lon_limits']
 
 
-        if lon_limits != None:
+        if lon_limits is not None:
             lon_min, lon_max = lon_limits
             lon_min = ((lon_min + 180) % 360) - 180
             lon_max = ((lon_max + 180) % 360) - 180
