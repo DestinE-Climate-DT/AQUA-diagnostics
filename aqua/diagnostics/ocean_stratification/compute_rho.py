@@ -28,11 +28,11 @@ def compute_rho(absso, bigthetao, ref_pressure, loglevel="WARNING"):
     logger = log_configure(loglevel, "compute_rho")
     logger.debug("Computing potential density in-situ.")
     # reduced variables
-    SAu = 40.0 * 35.16504 / 35.0
-    CTu = 40.0
-    Zu = 1e4
-    deltaS = 32.0
-    ss = xr.ufuncs.sqrt((absso + deltaS) / SAu)
+    SAu = 40.0 * 35.16504 / 35.0  # noqa: N806
+    CTu = 40.0  # noqa: N806
+    Zu = 1e4  # noqa: N806
+    delta_s = 32.0
+    ss = xr.ufuncs.sqrt((absso + delta_s) / SAu)
     tt = bigthetao / CTu
     pp = ref_pressure / Zu
 

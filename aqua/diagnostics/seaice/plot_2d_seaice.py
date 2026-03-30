@@ -185,7 +185,7 @@ class Plot2DSeaIce:
                                 loglevel=self.loglevel,
                                 **kwargs)
 
-                cbar_ref = self._add_colorbar(fig, monmod, ax=axs[1], orientation='vertical',
+                cbar_ref = self._add_colorbar(fig, monmod, ax=axs[1], orientation='vertical', # noqa: F841
                                               norm=setup['norm'], boundaries=setup['boundaries'],
                                               ticks_rounding=ticks_rounding,
                                               **{'fraction': 0.046, 'pad': 0.04})
@@ -212,7 +212,7 @@ class Plot2DSeaIce:
                                      gridlines=gridlines,
                                      **kwargs)
 
-                cbar_diff = self._add_colorbar(fig, monref, ax=axs[2], orientation='vertical',
+                cbar_diff = self._add_colorbar(fig, monref, ax=axs[2], orientation='vertical', # noqa: F841
                                                vmin=vmin, vmax=vmax, sym=True,
                                                ticks_rounding=ticks_rounding,
                                                **{'fraction': 0.046, 'pad': 0.04})
@@ -298,7 +298,7 @@ class Plot2DSeaIce:
         fig.subplots_adjust(bottom=0.25, top=0.8, left=0.15, right=0.85, wspace=0.03, hspace=0.5)
         cbar_ax = fig.add_axes([0.2, 0.15, 0.6, 0.03])
 
-        cbar = self._add_colorbar(fig, mondat, ax=ax, cax=cbar_ax,
+        cbar = self._add_colorbar(fig, mondat, ax=ax, cax=cbar_ax, # noqa: F841
                                   orientation='horizontal',
                                   ticks_rounding=kwargs.get('cbar_ticks_rounding', 1),
                                   **{'shrink': 0.3, 'pad': 0.07})

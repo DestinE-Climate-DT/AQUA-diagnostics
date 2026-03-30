@@ -257,7 +257,7 @@ class SeaIce(Diagnostic):
             else:
                 raise ValueError(f"Method '{self.method}' is not supported for 2D computation.")
 
-            seaice_result = self.add_seaice_attrs(seaice_2d_result, region, self.startdate, self.enddate)
+            seaice_result = self.add_seaice_attrs(seaice_2d_result, region, self.startdate, self.enddate) # noqa: F841
 
             regional_2d_results.append(seaice_2d_result)
 
@@ -519,8 +519,10 @@ class SeaIce(Diagnostic):
                                                  f"over {da_seaice_computed.attrs['AQUA_region']}")
         da_seaice_computed.attrs["standard_name"] = f"{region}_{'std_' if std_flag else ''}sea_ice_{self.method}"
         da_seaice_computed.attrs["AQUA_method"] = f"{self.method}"
-        if startdate is not None: da_seaice_computed.attrs["AQUA_startdate"] = f"{startdate}"
-        if enddate is not None: da_seaice_computed.attrs["AQUA_enddate"] = f"{enddate}"
+        if startdate is not None:
+            da_seaice_computed.attrs["AQUA_startdate"] = f"{startdate}"
+        if enddate is not None:
+            da_seaice_computed.attrs["AQUA_enddate"] = f"{enddate}"
         da_seaice_computed.name = f"{'std_' if std_flag else ''}sea_ice_{self.method}_{region}"
 
         return da_seaice_computed

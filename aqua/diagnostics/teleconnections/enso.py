@@ -76,14 +76,14 @@ class ENSO(BaseMixin):
         if len(self.data[self.var].time) < 24:
             raise NotEnoughDataError('Data have less than 24 months')
 
-        latN = self.definition.get('latN')
-        latS = self.definition.get('latS')
-        lonW = self.definition.get('lonW')
-        lonE = self.definition.get('lonE')
+        latN = self.definition.get('latN') # noqa: N806
+        latS = self.definition.get('latS') # noqa: N806
+        lonW = self.definition.get('lonW') # noqa: N806
+        lonE = self.definition.get('lonE') # noqa: N806
 
         if self.data[self.var].lon.min() >= 0:
-            lonW = lon_to_360(lonW)
-            lonE = lon_to_360(lonE)
+            lonW = lon_to_360(lonW) # noqa: N806
+            lonE = lon_to_360(lonE) # noqa: N806
 
         self.logger.debug(f'lonW: {lonW}, lonE: {lonE}')
         self.logger.debug(f'latN: {latN}, latS: {latS}')

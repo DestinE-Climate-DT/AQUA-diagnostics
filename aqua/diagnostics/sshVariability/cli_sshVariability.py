@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: N999
 """
 Command-line interface for ensemble atmglobalmean diagnostic.
 
@@ -10,7 +11,7 @@ import sys
 
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from aqua.diagnostics import sshVariabilityCompute, sshVariabilityPlot
+from aqua.diagnostics import SshVariabilityCompute, SshVariabilityPlot
 from aqua.diagnostics.base import (
     SAVE_FORMAT,
     close_cluster,
@@ -151,7 +152,7 @@ if __name__ == "__main__":
                 or (dataset_dict["exp"] is not None)
                 or (dataset_dict["source"] is not None)
             ):
-                ssh_dataset = sshVariabilityCompute(
+                ssh_dataset = SshVariabilityCompute(
                     **dataset_dict,
                     var=variable,
                     startdate=startdate_data,
@@ -168,7 +169,7 @@ if __name__ == "__main__":
                 or (dataset_dict_ref["exp"] is not None)
                 or (dataset_dict_ref["source"] is not None)
             ):
-                ssh_ref = sshVariabilityCompute(
+                ssh_ref = SshVariabilityCompute(
                     **dataset_dict_ref,
                     var=variable,
                     startdate=startdate_ref,
@@ -179,7 +180,7 @@ if __name__ == "__main__":
                 ssh_ref.run()
 
             # Initialize plotting class
-            plot_class = sshVariabilityPlot(outputdir=outputdir, loglevel=loglevel)
+            plot_class = SshVariabilityPlot(outputdir=outputdir, loglevel=loglevel)
 
             # Dictionary for dataset plot
             if ssh_dataset.data_std is not None:

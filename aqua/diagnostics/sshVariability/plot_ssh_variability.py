@@ -15,7 +15,7 @@ from .base import PlotBaseMixin
 xr.set_options(keep_attrs=True)
 
 
-class sshVariabilityPlot(PlotBaseMixin):
+class SshVariabilityPlot(PlotBaseMixin):
     """
     Plot sshVariability and the difference of sshVariability
     """

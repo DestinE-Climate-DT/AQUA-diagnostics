@@ -107,7 +107,7 @@ def plot_multi_hovmoller(
             # Create colorbar axis next to plot
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.15)
-            cbar = fig.colorbar(mappable, cax=cax, orientation="vertical")
+            cbar = fig.colorbar(mappable, cax=cax, orientation="vertical") # noqa: F841
 
             # if cbar_label and j < len(cbar_label):
             #     cbar.set_label(cbar_label[j])

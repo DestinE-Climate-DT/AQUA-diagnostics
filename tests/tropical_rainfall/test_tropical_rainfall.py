@@ -12,7 +12,7 @@ from aqua import Reader  # type: ignore
 from aqua.core.util import create_folder
 
 try:
-    from tropical_rainfall import Tropical_Rainfall  # type: ignore
+    from tropical_rainfall import TropicalRainfall  # type: ignore
 except ModuleNotFoundError:
     print("The module tropical_rainfall.py is not found.")
 
@@ -56,7 +56,7 @@ def test_module_import():
     """
     try:
         module = importlib.import_module("tropical_rainfall")
-        assert hasattr(module, "Tropical_Rainfall")
+        assert hasattr(module, "TropicalRainfall")
     except ModuleNotFoundError:
         assert False, "Diagnostic could not be imported"
 
@@ -79,7 +79,7 @@ def data_size(retrieved_dataarray):
 def test_update_default_attribute():
     """ Testing the update of default attributes
     """
-    diag = Tropical_Rainfall()
+    diag = TropicalRainfall()
     old_trop_lat_value = diag.trop_lat
     diag.class_attributes_update(trop_lat=20)
     new_trop_lat_value = diag.trop_lat
@@ -91,15 +91,15 @@ def test_attribute_type():
     """ Testing the type of attributes
     """
     try:
-        Tropical_Rainfall(trop_lat='str')
+        TropicalRainfall(trop_lat='str')
     except TypeError:
         assert True, "supposed to be the wrong type"
     try:
-        Tropical_Rainfall(s_year=0.5)
+        TropicalRainfall(s_year=0.5)
     except TypeError:
         assert True,       "supposed to be the wrong type"
     try:
-        Tropical_Rainfall(model_variable=0)
+        TropicalRainfall(model_variable=0)
     except TypeError:
         assert True,       "supposed to be the wrong type"
 
@@ -110,9 +110,9 @@ def histogram_output(retrieved_dataarray):
     """
     data = retrieved_dataarray
     if 'tprate' in data.name:
-        diag = Tropical_Rainfall(num_of_bins=1000, first_edge=0, width_of_bin=1 - 1*10**(-6), loglevel=LOGLEVEL)
+        diag = TropicalRainfall(num_of_bins=1000, first_edge=0, width_of_bin=1 - 1*10**(-6), loglevel=LOGLEVEL)
     elif '2t' in data.name:
-        diag = Tropical_Rainfall(num_of_bins=1000, first_edge=0, width_of_bin=0.5, new_unit='K', loglevel=LOGLEVEL)
+        diag = TropicalRainfall(num_of_bins=1000, first_edge=0, width_of_bin=0.5, new_unit='K', loglevel=LOGLEVEL)
     hist = diag.histogram(data, trop_lat=90)
     return hist
 
@@ -149,7 +149,7 @@ def test_histogram_pdf(histogram_output):
 def test_histogram_load_to_memory(histogram_output):
     """ Testing the histogram load to memory
     """
-    diag = Tropical_Rainfall()
+    diag = TropicalRainfall()
 
     path_to_histogram = diag.path_to_netcdf+"/test_output/histograms/"
     create_folder(folder=path_to_histogram, loglevel='WARNING')
@@ -177,7 +177,7 @@ def test_histogram_load_to_memory(histogram_output):
 def test_hist_figure_load_to_memory(histogram_output):
     """ Testing the saving of the figure with histogram
     """
-    diag = Tropical_Rainfall()
+    diag = TropicalRainfall()
 
     # Set smaller DPI for tests
     diag.plots.class_attributes_update(dpi=DPI)
@@ -254,7 +254,7 @@ def test_latitude_band(retrieved_dataarray):
     """
     data = retrieved_dataarray
     max_lat_value = max(data.lat.values[0], data.lat.values[-1])
-    diag = Tropical_Rainfall(trop_lat=10)
+    diag = TropicalRainfall(trop_lat=10)
     data_trop = diag.main.latitude_band(data)
     assert max_lat_value > max(data_trop.lat.values[0], data_trop.lat.values[-1])
     assert 10 > data_trop.lat.values[-1]
@@ -270,7 +270,7 @@ def test_histogram_merge(histogram_output):
     hist_2 = histogram_output
     counts_2 = sum(hist_2.counts.values)
 
-    diag = Tropical_Rainfall()
+    diag = TropicalRainfall()
 
     path_to_histogram = diag.path_to_netcdf+"/test_output/histograms/"
     diag.main.dataset_to_netcdf(dataset=hist_2, path_to_netcdf=path_to_histogram, name_of_file='test_merge')
@@ -285,7 +285,7 @@ def test_units_converter(retrieved_dataarray):
     """ Testing convertation of units"""
 
     data = retrieved_dataarray
-    diag = Tropical_Rainfall()
+    diag = TropicalRainfall()
 
     old_units = data.units
 

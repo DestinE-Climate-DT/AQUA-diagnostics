@@ -323,7 +323,7 @@ class LatLonProfiles(Diagnostic):
                                                    center_time=center_time)
             seasonal_data = [seasonal_dataset.isel(time=i, drop=True) for i in range(4)]
             if self.region is not None:
-                for season_data in seasonal_data:    
+                for season_data in seasonal_data:
                     season_data.attrs['AQUA_region'] = self.region
             for season_data in seasonal_data:
                 season_data.attrs['AQUA_mean_type'] = self.mean_type

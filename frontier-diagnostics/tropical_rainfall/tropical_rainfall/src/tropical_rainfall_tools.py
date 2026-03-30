@@ -825,7 +825,7 @@ class ToolsClass:
 
                 if end_year and end_month and end_day:
                     # If the file has an end date, use it to check completeness
-                    start_date = datetime(int(start_year), int(start_month), int(start_day))
+                    start_date = datetime(int(start_year), int(start_month), int(start_day)) # noqa: F841
                     end_date = datetime(int(end_year), int(end_month), int(end_day))
 
                     # Calculate the last day of the end month
@@ -852,7 +852,7 @@ class ToolsClass:
 
                 if end_year and end_month and end_day:
                     # Handle files with both start and end timestamps
-                    end_date = datetime(int(end_year), int(end_month), int(end_day))
+                    end_date = datetime(int(end_year), int(end_month), int(end_day)) # noqa: F841
                     last_day = monthrange(int(end_year), int(end_month))[1]
                     if int(end_day) == last_day:  # Complete file
                         complete_files_by_month[f"{start_year}-{start_month}"].append(full_path)
@@ -1087,7 +1087,7 @@ class ToolsClass:
             lat_band_str += f" with a frequency of {lat_band_values[2].split('=')[1]}"
         return lat_band_str
 
-    def verify_lat_band(sel, model_dataset, comparison_dataset, dataset_name, logger):
+    def verify_lat_band(self, model_dataset, comparison_dataset, dataset_name, logger):
         """
         Verify that the latitude band of a comparison dataset matches the latitude band of the model dataset.
 

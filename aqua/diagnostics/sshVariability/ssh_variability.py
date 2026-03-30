@@ -12,7 +12,7 @@ from .base import BaseMixin
 xr.set_options(keep_attrs=True)
 
 
-class sshVariabilityCompute(BaseMixin):
+class SshVariabilityCompute(BaseMixin):
     """
     SSH Computation
     """
@@ -42,7 +42,7 @@ class sshVariabilityCompute(BaseMixin):
         loglevel: str = "WARNING",
     ):
         """
-        Initialize the 'sshVariabilityCompute' class.
+        Initialize the 'SshVariabilityCompute' class.
 
         This class is designed to load an xarray.Dataset and computes STD.
         Args:

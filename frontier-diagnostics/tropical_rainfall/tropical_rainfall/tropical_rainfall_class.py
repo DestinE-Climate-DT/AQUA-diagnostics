@@ -52,7 +52,7 @@ number_of_bar_ticks = ToolsClass().get_config_value(config, 'plot_attributes', '
 dpi = ToolsClass().get_config_value(config, 'plot_attributes', 'dpi', default=300)
 
 
-class Tropical_Rainfall(metaclass=MetaClass):
+class TropicalRainfall(metaclass=MetaClass):
     """This class is a minimal version of the Tropical Precipitation Diagnostic."""
 
     def __init__(self,
@@ -134,4 +134,4 @@ class Tropical_Rainfall(metaclass=MetaClass):
     def import_methods(self):
         pass
 
-#Tropical_Rainfall.class_attributes_update.__doc__ = MainClass.class_attributes_update.__doc__
+#TropicalRainfall.class_attributes_update.__doc__ = MainClass.class_attributes_update.__doc__

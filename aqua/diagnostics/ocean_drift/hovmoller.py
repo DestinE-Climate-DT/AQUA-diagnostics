@@ -201,11 +201,11 @@ class Hovmoller(Diagnostic):
         if standardise:
             data = self._get_standardise(data, dim)
 
-        Std = "std_" if standardise else ""
+        s_std = "std_" if standardise else ""
         anom = "anom" if anomaly_ref is not None else "full"
         anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
 
-        type = f"{Std}{anom}{anom_ref}"
+        type = f"{s_std}{anom}{anom_ref}"
         data.attrs["AQUA_ocean_drift_type"] = type
         data.attrs["AQUA_region"] = self.region
         return data

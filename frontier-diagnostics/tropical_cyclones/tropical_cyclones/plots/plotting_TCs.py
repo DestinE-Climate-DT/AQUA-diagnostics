@@ -1,3 +1,4 @@
+# ruff: noqa: N999
 import os
 
 import cartopy.crs as ccrs
@@ -7,7 +8,7 @@ import matplotlib.ticker as mticker
 import numpy as np
 from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
 
-from tropical_cyclones.tools.tempest_utils import getTrajectories
+from tropical_cyclones.tools.tempest_utils import get_trajectories
 
 
 def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
@@ -73,13 +74,13 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
 def plot_trajectories(trajfile, tdict):
     # tempest settings
     n_vars=10
-    header_str='start'
+    is_unstruc='start'
     is_unstruc = 0
 
     # Extract trajectories from tempest file and assign to arrays
     # USER_MODIFY
 
-    nstorms, ntimes, traj_data = getTrajectories(trajfile,n_vars,header_str,is_unstruc)
+    nstorms, ntimes, traj_data = get_trajectories(trajfile,n_vars,is_unstruc,is_unstruc)
     xlon   = traj_data[2,:,:]
     xlat   = traj_data[3,:,:]
     #xpres  = traj_data[4,:,:]/100.

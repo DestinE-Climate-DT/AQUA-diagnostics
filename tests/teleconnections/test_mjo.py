@@ -11,7 +11,7 @@ approx_rel = APPROX_REL
 loglevel = LOGLEVEL
 
 @pytest.mark.diagnostics
-def test_MJO(tmp_path):
+def test_mjo(tmp_path):
     """
     Test that the MJO class works
     """

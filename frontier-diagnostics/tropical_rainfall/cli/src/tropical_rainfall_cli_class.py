@@ -4,7 +4,7 @@ import re
 
 import xarray as xr
 from dask.distributed import Client, LocalCluster
-from tropical_rainfall import Tropical_Rainfall
+from tropical_rainfall import TropicalRainfall
 
 from aqua import Reader
 from aqua.core.configurer import ConfigPath
@@ -14,7 +14,7 @@ from aqua.core.util import add_pdf_metadata, create_folder, get_arg
 from .tropical_rainfall_utils import adjust_year_range_based_on_dataset
 
 
-class Tropical_Rainfall_CLI:
+class TropicalRainfallCLI:
     def __init__(self, config, args):
         self.s_year = config['data']['s_year']
         self.f_year = config['data']['f_year']
@@ -104,7 +104,7 @@ class Tropical_Rainfall_CLI:
 
         self.reader = Reader(model=self.model, exp=self.exp, source=self.source, loglevel=self.reader_loglevel, regrid=self.regrid,
                              nproc=self.nproc, **self.reader_kwargs)
-        self.diag = Tropical_Rainfall(trop_lat=self.trop_lat, num_of_bins=self.num_of_bins, first_edge=self.first_edge,
+        self.diag = TropicalRainfall(trop_lat=self.trop_lat, num_of_bins=self.num_of_bins, first_edge=self.first_edge,
                                       width_of_bin=self.width_of_bin, loglevel=self.loglevel)
 
     def need_regrid_timmean(self, dataset):
@@ -350,16 +350,16 @@ class Tropical_Rainfall_CLI:
                         name_of_file=f"histogram_{name}_{self.regrid}_{self.freq}"
                     )
 
-        # Process histograms for each combination of pdf and pdfP flags
-        for pdf, pdfP in [(True, False), (False, True)]:
+        # Process histograms for each combination of pdf and pdf_p flags
+        for pdf, pdf_p in [(True, False), (False, True)]:
             self.process_histograms(
-                pdf_flag=pdf, pdfP_flag=pdfP, model_merged=model_merged,
+                pdf_flag=pdf, pdf_p_flag=pdf_p, model_merged=model_merged,
                 mswep_merged=merged_data_sources.get('MSWEP'),
                 imerg_merged=merged_data_sources.get('IMERG'),
                 era5_merged=merged_data_sources.get('ERA5')
             )
 
-    def process_histograms(self, pdf_flag, pdfP_flag, model_merged=None, mswep_merged=None,
+    def process_histograms(self, pdf_flag, pdf_p_flag, model_merged=None, mswep_merged=None,
                        imerg_merged=None, era5_merged=None, linestyle='-'):
         """
         Generates and saves histograms for model and observational data, with options for PDF and PDF*P plots.
@@ -396,7 +396,7 @@ class Tropical_Rainfall_CLI:
 
         if model_merged is not None:
             add, _path_to_pdf = self.diag.histogram_plot(model_merged, figsize=self.figsize, new_unit=self.new_unit, pdf=pdf_flag,
-                                                         pdfP=pdfP_flag, legend=legend_model, color=self.color, xmax=self.xmax,
+                                                         pdf_p=pdf_p_flag, legend=legend_model, color=self.color, xmax=self.xmax,
                                                          plot_title=plot_title, loc=self.loc, path_to_pdf=self.path_to_pdf,
                                                          pdf_format=self.pdf_format, name_of_file=name_of_pdf, factor=self.factor)
             add_pdf_metadata(filename=_path_to_pdf, metadata_value=description, loglevel=self.loglevel)
@@ -414,7 +414,7 @@ class Tropical_Rainfall_CLI:
             if dataset is not None:
                 self.logger.info(f"Plotting {name} data for comparison.")
                 add, _path_to_pdf = self.diag.histogram_plot(dataset, figsize=self.figsize, new_unit=self.new_unit, add=add,
-                                                             pdf=pdf_flag, pdfP=pdfP_flag, linewidth=1, linestyle=linestyle,
+                                                             pdf=pdf_flag, pdf_p=pdf_p_flag, linewidth=1, linestyle=linestyle,
                                                              color=color, legend=name, xmax=self.xmax, loc=self.loc,
                                                              plot_title=plot_title, path_to_pdf=self.path_to_pdf,
                                                              pdf_format=self.pdf_format, name_of_file=name_of_pdf, factor=factor)

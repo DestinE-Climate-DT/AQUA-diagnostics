@@ -119,7 +119,7 @@ class PlotBoxplots:
         model_names_ref = extract_attrs(data_ref, 'AQUA_model') if data_ref else []
         exp_names_ref = extract_attrs(data_ref, 'AQUA_exp') if data_ref else []
         model_names_plot = extract_attrs(fldmeans, 'AQUA_model')
-        exp_names_plot = extract_attrs(fldmeans, 'AQUA_exp')
+        exp_names_plot = extract_attrs(fldmeans, 'AQUA_exp') # noqa: F841
 
         base_vars = []
         long_names = []

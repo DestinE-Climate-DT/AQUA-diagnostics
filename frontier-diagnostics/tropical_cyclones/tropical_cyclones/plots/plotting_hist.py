@@ -2,22 +2,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from tropical_cyclones.tools.tempest_utils import getTrajectories
+from tropical_cyclones.tools.tempest_utils import get_trajectories
 
 
 def plot_hist_cat(trajfile1, trajfile2, trajfile3, ibtracs_file=None):
     # tempest settings
-    nVars = 10
-    headerStr = 'start'
-    isUnstruc = 0
+    n_vars = 10
+    header_str = 'start'
+    is_unstruc = 0
 
     # set the bins values for wind
     bins = [ 40, 80, 120, 160, 200, 240, 280]
 
     # Extract trajectories from tempest file and assign to arrays
-    nstorms, ntimes, traj_data1 = getTrajectories(trajfile1, nVars, headerStr, isUnstruc)
-    nstorms, ntimes, traj_data2 = getTrajectories(trajfile2, nVars, headerStr, isUnstruc)
-    nstorms, ntimes, traj_data3 = getTrajectories(trajfile3, nVars, headerStr, isUnstruc)
+    nstorms, ntimes, traj_data1 = get_trajectories(trajfile1, n_vars, header_str, is_unstruc)
+    nstorms, ntimes, traj_data2 = get_trajectories(trajfile2, n_vars, header_str, is_unstruc)
+    nstorms, ntimes, traj_data3 = get_trajectories(trajfile3, n_vars, header_str, is_unstruc)
 
     xwind1 = traj_data1[5, :, :] * 3.6  # maximum wind speed near node - convert to km/h
     xwind2 = traj_data2[5, :, :] * 3.6  # maximum wind speed near node - convert to km/h
@@ -83,14 +83,14 @@ def plot_hist_cat(trajfile1, trajfile2, trajfile3, ibtracs_file=None):
 
 def plot_press_wind(trajfile1, trajfile2, trajfile3, ibtracs_file, dot_dim):
     # tempest settings
-    nVars = 10
-    headerStr = 'start'
-    isUnstruc = 0
+    n_vars = 10
+    header_str = 'start'
+    is_unstruc = 0
 
     # Extract trajectories from tempest file and assign to arrays
-    nstorms, ntimes, traj_data1 = getTrajectories(trajfile1, nVars, headerStr, isUnstruc)
-    nstorms, ntimes, traj_data2 = getTrajectories(trajfile2, nVars, headerStr, isUnstruc)
-    nstorms, ntimes, traj_data3 = getTrajectories(trajfile3, nVars, headerStr, isUnstruc)
+    nstorms, ntimes, traj_data1 = get_trajectories(trajfile1, n_vars, header_str, is_unstruc)
+    nstorms, ntimes, traj_data2 = get_trajectories(trajfile2, n_vars, header_str, is_unstruc)
+    nstorms, ntimes, traj_data3 = get_trajectories(trajfile3, n_vars, header_str, is_unstruc)
 
     xwind1 = traj_data1[5, :, :] * 3.6  # maximum wind speed near node - convert to km/h
     xwind2 = traj_data2[5, :, :] * 3.6  # maximum wind speed near node - convert to km/h

@@ -287,8 +287,10 @@ class PlotHistogram():
         region = self.region
 
         extra_keys = {}
-        if var: extra_keys['var'] = var
-        if region: extra_keys['region'] = region.replace(' ', '').lower()
+        if var:
+            extra_keys['var'] = var
+        if region:
+            extra_keys['region'] = region.replace(' ', '').lower()
 
         outputsaver = OutputSaver(diagnostic=self.diagnostic_name, outputdir=outputdir,
                                   loglevel=self.loglevel, **metadata)

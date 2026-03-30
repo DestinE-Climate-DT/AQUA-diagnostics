@@ -217,13 +217,13 @@ class PlottingClass:
             plt.grid(True)
         elif color_map:
             if weights is None:
-                N, _, patches = plt.hist(
+                n, _, patches = plt.hist(
                     x=x, bins=x, weights=data,    label=legend)
             else:
-                N, bins, patches = plt.hist(
+                n, bins, patches = plt.hist(
                     x=x, bins=x, weights=weights, label=legend)
 
-            fracs = ((N**(1 / 5)) / N.max())
+            fracs = ((n**(1 / 5)) / n.max())
             norm = colors.Normalize(fracs.min(), fracs.max())
 
             for thisfrac, thispatch in zip(fracs, patches):
@@ -293,7 +293,7 @@ class PlottingClass:
                                      ylogscale=ylogscale, figsize=figsize, fontsize=fontsize, linestyle=linestyle)
 
         # make a plot with different y-axis using second axis object
-        labels_int = data[coord].values
+        labels_int = data[coord].values # noqa: F841
 
         if fig is not None:
             ax1, ax2, ax3, ax4, ax5, ax_twin_5 = fig[1], fig[2], fig[3], fig[4], fig[5], fig[6]
@@ -689,13 +689,13 @@ class PlottingClass:
         grouped_smooth = data.groupby('local_time')
         mean_per_hour_smooth = grouped_smooth.mean()
 
-        utc_time = mean_per_hour['local_time']
+        utc_time = mean_per_hour["local_time"]  # noqa: F841
         utc_time_smooth = mean_per_hour_smooth['local_time']
         if relative:
-            tprate = mean_per_hour['tprate_relative']
+            tprate = mean_per_hour["tprate_relative"]  # noqa: F841
             tprate_smooth = mean_per_hour_smooth['tprate_relative']
         else:
-            tprate = mean_per_hour[self.model_variable]
+            tprate = mean_per_hour[self.model_variable]  # noqa: F841
             tprate_smooth = mean_per_hour_smooth[self.model_variable]
         try:
             units = mean_per_hour.units

@@ -207,7 +207,7 @@ class Stratification(Diagnostic):
         self.logger.debug(f"Computing {self.climatology} climatology.")
         month_list = list(calendar.month_name)[1:]
         season_list = ["DJF", "MAM", "JJA", "SON"]
-        month_season_list = month_list + season_list
+        month_season_list = month_list + season_list # noqa: F841
 
         if self.climatology in month_list:
             self.clim_type = "month"

@@ -3,7 +3,7 @@
 .. moduleauthor:: AQUA team <natalia.nazarova@polito.it>
 
 """
-
+# ruff: noqa: N806
 import os
 import re
 from datetime import datetime
@@ -751,8 +751,8 @@ class MainClass:
         hist_pdf = self.convert_counts_to_pdf(tprate_dataset.counts,  test=test)
         tprate_dataset['pdf'] = hist_pdf
 
-        hist_pdfP = self.convert_counts_to_pdfP(tprate_dataset.counts,  test=test)
-        tprate_dataset['pdfP'] = hist_pdfP
+        hist_pdf_p = self.convert_counts_to_pdf_p(tprate_dataset.counts,  test=test)
+        tprate_dataset['pdf_p'] = hist_pdf_p
 
         if label is not None:
             hist_frequency = self.convert_counts_to_frequency(tprate_dataset['counts'+label],  test=test)
@@ -996,7 +996,7 @@ class MainClass:
                 raise AssertionError("Test failed.")
         return pdf_per_bin
 
-    def convert_counts_to_pdfP(self, data: xr.Dataset, test: bool = False) -> xr.DataArray:
+    def convert_counts_to_pdf_p(self, data: xr.Dataset, test: bool = False) -> xr.DataArray:
         """
         Function to convert the counts to the pdf multiplied by the center of bin.
 
@@ -1005,25 +1005,25 @@ class MainClass:
             test (bool, optional): Whether to run the function in test mode. Defaults to False.
 
         Returns:
-            xarray.DataArray: The pdfP.
+            xarray.DataArray: The pdf_p.
         """
-        pdfP = data[0:]*data.center_of_bin[0:] / \
+        pdf_p = data[0:]*data.center_of_bin[0:] / \
             (data.size_of_the_data*data.width[0:])
-        pdfP_per_bin = xr.DataArray(
-            pdfP, coords=[data.center_of_bin],    dims=["center_of_bin"])
-        pdfP_per_bin = pdfP_per_bin.assign_coords(
+        pdf_p_per_bin = xr.DataArray(
+            pdf_p, coords=[data.center_of_bin],    dims=["center_of_bin"])
+        pdf_p_per_bin = pdf_p_per_bin.assign_coords(
             width=("center_of_bin", data.width.values))
-        pdfP_per_bin.attrs = data.attrs
-        sum_of_pdfP = sum(pdfP_per_bin[:]*data.width[0:])
+        pdf_p_per_bin.attrs = data.attrs
+        sum_of_pdf_p = sum(pdf_p_per_bin[:]*data.width[0:])
 
         if test:
-            if sum(data[:]) == 0 or abs(sum_of_pdfP-data.mean()) < 10**(-4):
+            if sum(data[:]) == 0 or abs(sum_of_pdf_p-data.mean()) < 10**(-4):
                 pass
             else:
                 self.logger.debug('Sum of PDF: {}'
-                                  .format(abs(sum_of_pdfP.values)))
+                                  .format(abs(sum_of_pdf_p.values)))
                 raise AssertionError("Test failed.")
-        return pdfP_per_bin
+        return pdf_p_per_bin
 
     def mean_from_histogram(self, hist: xr.Dataset, data: xr.Dataset = None, old_unit: str = None, new_unit: str = None,
                             model_variable: str = None, trop_lat: float = None,
@@ -1085,7 +1085,7 @@ class MainClass:
 
         return mean_from_freq, mean_of_original_data, mean_of_modified_data
 
-    def histogram_plot(self, data: xr.Dataset, new_unit: str = None, pdfP: bool = False, positive: bool = True,
+    def histogram_plot(self, data: xr.Dataset, new_unit: str = None, pdf_p: bool = False, positive: bool = True,
                        save: bool = True, weights: np.ndarray = None, frequency: bool = False, pdf: bool = True,
                        smooth: bool = False, step: bool = True, color_map: bool = False, linestyle: str = None,
                        ylogscale: bool = True, xlogscale: bool = False, color: str = 'tab:blue', figsize: float = None,
@@ -1100,7 +1100,7 @@ class MainClass:
         Args:
             data (xarray.Dataset): The data for the histogram.
             new_unit (str, optional): The new unit. Default is None.
-            pdfP (bool, optional): Whether to plot the PDFP. Default is False.
+            pdf_p (bool, optional): Whether to plot the PDFP. Default is False.
             positive (bool, optional): The flag to indicate if the data should be positive. Default is True.
             save (bool, optional): Whether to save the plot. Default is True.
             weights (np.ndarray, optional): An array of weights for the data. Default is None.
@@ -1140,17 +1140,17 @@ class MainClass:
         if 'Dataset' in str(type(data)):
             data = self.tools.adjust_bins(data, factor=factor)
             data = data['counts']
-        if not pdf and not frequency and not pdfP:
+        if not pdf and not frequency and not pdf_p:
             pass
             self.logger.debug("Generating a histogram to visualize the counts...")
-        elif pdf and not frequency and not pdfP:
+        elif pdf and not frequency and not pdf_p:
             data = self.convert_counts_to_pdf(data,  test=test)
             self.logger.debug("Generating a histogram to visualize the PDF...")
-        elif not pdf and frequency and not pdfP:
+        elif not pdf and frequency and not pdf_p:
             data = self.convert_counts_to_frequency(data,  test=test)
             self.logger.debug("Generating a histogram to visualize the frequency...")
-        elif pdfP:
-            data = self.convert_counts_to_pdfP(data,  test=test)
+        elif pdf_p:
+            data = self.convert_counts_to_pdf_p(data,  test=test)
             self.logger.debug("Generating a histogram to visualize the PDFP...")
 
         x = self.precipitation_rate_units_converter(data.center_of_bin, new_unit=self.new_unit).values
@@ -1159,16 +1159,16 @@ class MainClass:
         else:
             xlabel = self.model_variable+", ["+str(self.new_unit)+"]"
 
-        if pdf and not frequency and not pdfP:
+        if pdf and not frequency and not pdf_p:
             ylabel = 'PDF'
             _name = '_PDF_histogram'
-        elif not pdf and frequency and not pdfP:
+        elif not pdf and frequency and not pdf_p:
             ylabel = 'Frequency'
             _name = '_frequency_histogram'
-        elif not frequency and not pdfP and not pdf:
+        elif not frequency and not pdf_p and not pdf:
             ylabel = 'Counts'
             _name = '_counts_histogram'
-        elif pdfP:
+        elif pdf_p:
             ylabel = 'PDF * P'
             _name = '_PDFP_histogram'
 
@@ -1957,8 +1957,7 @@ class MainClass:
                     self.logger.debug('DJF:{}'.format(DJF))
                     bin_value, units, threshold = self.get_95percent_level(DJF.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    DJF_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    DJF_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
                     self.class_attributes_update(s_month=s_month, f_month=f_month, num_of_bins=num_of_bins,
                                                  first_edge=first_edge, width_of_bin=width_of_bin, bins=bins)
@@ -1973,24 +1972,21 @@ class MainClass:
                     JJA_095level = JJA.isel(time=0).copy(deep=True)
                     bin_value, units, threshold = self.get_95percent_level(JJA.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    JJA_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    JJA_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
                     self.class_attributes_update(s_month=s_month, f_month=f_month, num_of_bins=num_of_bins,
                                                  first_edge=first_edge, width_of_bin=width_of_bin, bins=bins)
                     SON_095level = SON.isel(time=0).copy(deep=True)
                     bin_value, units, threshold = self.get_95percent_level(SON.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    SON_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    SON_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
                     self.class_attributes_update(s_month=s_month, f_month=f_month, num_of_bins=num_of_bins,
                                                  first_edge=first_edge, width_of_bin=width_of_bin, bins=bins)
                     glob_095level = glob.isel(time=0).copy(deep=True)
                     bin_value, units, threshold = self.get_95percent_level(glob.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    glob_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    glob_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
             seasonal_095level = DJF_095level.to_dataset(name="DJF")
             seasonal_095level["MAM"] = MAM_095level

@@ -9,10 +9,10 @@ from aqua.diagnostics.teleconnections import NAO, PlotNAO
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL
-
+# ruff: noqa: N806
 
 @pytest.mark.diagnostics
-def test_NAO(tmp_path):
+def test_nao(tmp_path):
     """
     Test that the NAO class works
     """

@@ -155,7 +155,8 @@ class PlotENSO(PlotBaseMixin):
                 for map in maps:
                     title = f"{map.AQUA_model} {map.AQUA_exp}"
                     titles.append(title)
-                title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})", ref_model=ref_maps.AQUA_model, ref_exp=ref_maps.AQUA_exp,
+                title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})",
+                                     ref_model=ref_maps.AQUA_model, ref_exp=ref_maps.AQUA_exp,
                                      timeseason=getattr(ref_maps, "AQUA_season", None)).generate()
 
                 # plot_maps_diff wants a list of reference maps of the same length as maps

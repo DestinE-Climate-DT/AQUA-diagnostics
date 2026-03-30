@@ -138,7 +138,7 @@ class TCs(DetectNodes, StitchNodes):
 
         # do this to remove the last letter from streamstep! e.g. tdict['stream']['streamstep'] is defined as "10D" but we want only the value 10!
         numbers = [int(i) for i in tdict['stream']['streamstep'] if i.isdigit()]
-        streamstep_n = int(''.join(map(str, numbers)))
+        streamstep_n = int(''.join(map(str, numbers))) # noqa: F841
 
         # Check if the character after the number is 'D'
         # if not expressed as "D", raise value error, since we need days for the time loop!
