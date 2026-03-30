@@ -114,7 +114,7 @@ class PlotENSO(PlotBaseMixin):
 
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})", model=maps.AQUA_model, exp=maps.AQUA_exp, 
+                title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})", model=maps.AQUA_model, exp=maps.AQUA_exp,
                                      timeseason=getattr(maps, "AQUA_season", None)).generate()
                 fig, _ = plot_single_map(data=maps, vmin=vmin, vmax=vmax, title=title,
                                          return_fig=True, loglevel=self.loglevel, **kwargs)
@@ -124,7 +124,7 @@ class PlotENSO(PlotBaseMixin):
             elif isinstance(maps, list):
                 titles = []
                 for map in maps:
-                    title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})", model=map.AQUA_model, exp=map.AQUA_exp, 
+                    title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})", model=map.AQUA_model, exp=map.AQUA_exp,
                                          timeseason=getattr(map, "AQUA_season", None)).generate()
                     titles.append(title)
                 fig = plot_maps(maps=maps, vmin=vmin, vmax=vmax, titles=titles,
@@ -136,7 +136,7 @@ class PlotENSO(PlotBaseMixin):
 
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})", model=maps.AQUA_model, exp=maps.AQUA_exp, 
+                title = TitleBuilder(diagnostic=f"ENSO {statistic} map ({var})", model=maps.AQUA_model, exp=maps.AQUA_exp,
                                      ref_model=ref_maps.AQUA_model, ref_exp=ref_maps.AQUA_exp,
                                      timeseason=getattr(maps, "AQUA_season", None)).generate()
                 fig, _ = plot_single_map_diff(data=maps, data_ref=ref_maps,

@@ -111,4 +111,3 @@ def test_merge_from_data_files_no_model_names(tmp_path):
     )
 
     assert merged.coords["model"].values.tolist() == ["model_name"]
-

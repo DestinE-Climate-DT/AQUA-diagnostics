@@ -40,7 +40,7 @@ def bootstrap_teleconnections(telec_model,
 
     if statistic != 'regression' and statistic != 'correlation':
         raise ValueError('Invalid statistic provided. Please provide a statistic to compute (reg or cor).')
-    
+
     index_model = telec_model.index
     index_ref = telec_ref.index
     if var != telec_ref.var:

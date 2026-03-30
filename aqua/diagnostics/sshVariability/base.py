@@ -109,7 +109,7 @@ class BaseMixin(Diagnostic):
         """
         Retrieve the data for the given variable.
         """
-        
+
         super().retrieve(var=self.var, reader_kwargs=self.reader_kwargs)
 
         if self.data is None:

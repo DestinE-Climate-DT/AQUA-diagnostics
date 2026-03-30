@@ -15,7 +15,7 @@ class GlobalBiases(Diagnostic):
     """
     Diagnostic class for computing global and seasonal climatologies of a given variable.
 
-    This class handles data retrieval, pressure level selection, unit conversion, 
+    This class handles data retrieval, pressure level selection, unit conversion,
     and computation of mean climatologies (total or seasonal).
 
     Inherits from `Diagnostic`.
@@ -87,7 +87,7 @@ class GlobalBiases(Diagnostic):
             KeyError: If the variable is missing from the data.
         """
         if var is not None:
-            self.var = var   
+            self.var = var
         if formula:
             super().retrieve(reader_kwargs=reader_kwargs)
             self.logger.info("Evaluating formula: %s", self.var)
@@ -133,7 +133,7 @@ class GlobalBiases(Diagnostic):
         else:
             self.logger.info("All variables retrieved; no variable-specific operations applied.")
 
-    def savenetcdf(self, data: xr.Dataset, diagnostic_product: str, 
+    def savenetcdf(self, data: xr.Dataset, diagnostic_product: str,
                     rebuild: bool = True, create_catalog_entry: bool = False, extra_keys = None,
                     dict_catalog_entry: dict = {'jinjalist': ['realization'],
                                                 'wildcardlist': ['var']}):
@@ -143,7 +143,7 @@ class GlobalBiases(Diagnostic):
         rebuild (bool): If True, rebuild the data from the original files.
         create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         extra_keys (dict): Extra keys for filename generation.
-        dict_catalog_entry (dict): A dictionary with catalog entry information. 
+        dict_catalog_entry (dict): A dictionary with catalog entry information.
             Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
         super().save_netcdf(data=data,

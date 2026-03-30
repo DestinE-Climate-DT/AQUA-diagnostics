@@ -197,7 +197,7 @@ class MainClass:
                 if 'lon' in i:
                     coord_lon = i
         return coord_lat, coord_lon
-    
+
     def precipitation_rate_units_converter(self, data: Union[xr.Dataset, float, int, np.ndarray],
                                            model_variable: Optional[str] = 'tprate', old_unit: Optional[str] = None,
                                            new_unit: Optional[str] = 'm s**-1') -> xr.Dataset:
@@ -232,7 +232,7 @@ class MainClass:
                 data.attrs['history'] = ' '
             history_attr = data.attrs['history'] + history_update
             data.attrs['history'] = history_attr
-        data = self.tools.convert_units(value=data, from_unit=old_unit, to_unit=self.new_unit) 
+        data = self.tools.convert_units(value=data, from_unit=old_unit, to_unit=self.new_unit)
         return data
 
     def latitude_band(self, data: xr.Dataset, trop_lat: Optional[Union[int, float]] = None) -> xr.Dataset:
@@ -841,9 +841,9 @@ class MainClass:
                              start_month: int = None, end_month: int = None, seasons_bool: bool = False,
                              test: bool = False, tqdm: bool = False, flag: str = None) -> xr.Dataset:
         """
-        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal 
+        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal
         categories or specific year and month ranges.
-        
+
         Args:
             path_to_histograms (str, optional): Path to the list of histograms.
             start_year (int, optional): Start year of the range (inclusive).
@@ -854,7 +854,7 @@ class MainClass:
             test (bool, optional): Runs function in test mode.
             tqdm (bool, optional): Displays a progress bar during merging.
             flag (str, optional): A specific flag to look for in the filenames. Defaults to None.
-        
+
         Returns:
             xr.Dataset: Merged xarray Dataset.
         """
@@ -912,11 +912,11 @@ class MainClass:
                                                                                  start_year=start_year, end_year=end_year,
                                                                                  start_month=start_month, end_month=end_month,
                                                                                  flag=flag)
-            
+
             self.tools.check_time_continuity(histograms_to_load)
             self.tools.check_incomplete_months(histograms_to_load)
             histograms_to_load = self.tools.check_and_remove_incomplete_months(histograms_to_load)
-            
+
             self.logger.debug(f"List of files to merge:")
             for i in range(0, len(histograms_to_load)):
                 self.logger.debug(f"{histograms_to_load[i]}")
@@ -926,20 +926,20 @@ class MainClass:
                 try:
                     # Initialize the merged dataset with the first histogram
                     merged_dataset = self.tools.open_dataset(path_to_netcdf=histograms_to_load[0])
-                    
+
                     # Loop through the rest of the histograms and merge them one by one
                     for i in range(1, len(histograms_to_load)):
                         if tqdm:
                             ratio = i / len(histograms_to_load)
                             progress = int(40 * ratio)
                             print(progress_bar_template.format("=" * progress, int(ratio * 100)), end="\r")
-                        
+
                         self.logger.debug(f"Merging histogram: {histograms_to_load[i]}")
                         next_dataset = self.tools.open_dataset(path_to_netcdf=histograms_to_load[i])
                         merged_dataset = self.merge_two_datasets(dataset_1=merged_dataset, dataset_2=next_dataset)
                     return merged_dataset
                 except Exception as e:
-                    self.logger.error(f"An unexpected error occurred while merging histograms: {e}") 
+                    self.logger.error(f"An unexpected error occurred while merging histograms: {e}")
             else:
                 self.logger.error("No histograms to load and merge.")
 
@@ -1129,7 +1129,7 @@ class MainClass:
             test (bool, optional): Whether to run the test. Default is False.
             linewidth (float, optional): The width of the line. Default is None.
             fontsize (float, optional): The font size for the plot. Default is None.
-            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width, 
+            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width,
                                     values < 1 decrease it. None leaves the bin width unchanged.
 
 
@@ -2099,7 +2099,7 @@ class MainClass:
 
         if path_to_netcdf is None and self.path_to_netcdf is not None:
                 path_to_netcdf = self.path_to_netcdf+'daily_variability/'
-        
+
         if name_of_file is not None:
             self.dataset_to_netcdf(
                 new_dataset, path_to_netcdf=path_to_netcdf, name_of_file=name_of_file+'_daily_variability', rebuild=rebuild)
@@ -2190,7 +2190,7 @@ class MainClass:
         concatenated_dataset = xr.concat([dataset_1, dataset_2], dim='time')
         concatenated_dataset.attrs['time_band_history'] = str(dataset_1.time_band)+'; '+str(dataset_2.time_band)
         concatenated_dataset.attrs['time_band'] = self.tools.merge_time_bands(dataset_1, dataset_2)
-                        
+
         return concatenated_dataset
 
 
@@ -2198,9 +2198,9 @@ class MainClass:
                              start_month: int = None, end_month: int = None,
                              test: bool = False, tqdm: bool = False, flag: str = None) -> xr.Dataset:
         """
-        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal 
+        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal
         categories or specific year and month ranges.
-        
+
         Args:
             path_to_output (str, optional): Path to the list of daily_variability data.
             start_year (int, optional): Start year of the range (inclusive).
@@ -2210,7 +2210,7 @@ class MainClass:
             test (bool, optional): Runs function in test mode.
             tqdm (bool, optional): Displays a progress bar during merging.
             flag (str, optional): A specific flag to look for in the filenames. Defaults to None.
-        
+
         Returns:
             xr.Dataset: Merged xarray Dataset.
         """
@@ -2219,11 +2219,11 @@ class MainClass:
                                                                        start_year=start_year, end_year=end_year,
                                                                        start_month=start_month, end_month=end_month,
                                                                        flag=flag)
-        
+
         self.tools.check_time_continuity(list_to_load)
         self.tools.check_incomplete_months(list_to_load)
         list_to_load = self.tools.check_and_remove_incomplete_months(list_to_load)
-        
+
         self.logger.debug(f"List of files to merge:")
         for i in range(0, len(list_to_load)):
             self.logger.debug(f"{list_to_load[i]}")
@@ -2233,19 +2233,19 @@ class MainClass:
             try:
                 # Initialize the merged dataset with the first histogram
                 merged_dataset = self.tools.open_dataset(path_to_netcdf=list_to_load[0])
-                
+
                 # Loop through the rest of the histograms and merge them one by one
                 for i in range(1, len(list_to_load)):
                     if tqdm:
                         ratio = i / len(list_to_load)
                         progress = int(40 * ratio)
                         print(progress_bar_template.format("=" * progress, int(ratio * 100)), end="\r")
-                    
+
                     self.logger.debug(f"Merging histogram: {list_to_load[i]}")
                     next_dataset = self.tools.open_dataset(path_to_netcdf=list_to_load[i])
                     merged_dataset = self.concat_two_datasets(dataset_1=merged_dataset, dataset_2=next_dataset)
                 return merged_dataset
             except Exception as e:
-                self.logger.error(f"An unexpected error occurred while merging histograms: {e}") 
+                self.logger.error(f"An unexpected error occurred while merging histograms: {e}")
         else:
             self.logger.error("No histograms to load and merge.")

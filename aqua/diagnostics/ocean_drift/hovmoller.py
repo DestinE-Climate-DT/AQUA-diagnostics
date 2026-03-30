@@ -119,7 +119,7 @@ class Hovmoller(Diagnostic):
         self.stacked_data = self.compute_hovmoller(
             dim_mean=dim_mean, anomaly_ref=anomaly_ref
         )
-        
+
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=self.region)
         self.logger.info("Hovmoller diagram saved to netCDF file")
 

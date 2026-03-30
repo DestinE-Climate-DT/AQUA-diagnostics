@@ -102,7 +102,7 @@ class Diagnostic():
         if isinstance(data, xr.Dataset) is False and isinstance(data, xr.DataArray) is False:
             self.logger.error('Data to save as netcdf must be an xarray Dataset or DataArray')
 
-        outputsaver = OutputSaver(diagnostic=diagnostic, 
+        outputsaver = OutputSaver(diagnostic=diagnostic,
                                   catalog=self.catalog, model=self.model, exp=self.exp,
                                   realization=self.realization,
                                   outputdir=outputdir, loglevel=self.loglevel)
@@ -149,8 +149,8 @@ class Diagnostic():
         # If the data is empty, raise an error
         if not data:
             raise ValueError(f"No data found for {model} {exp} {source} with variable {var}")
-        
-        # FIX: issues with some time selection for pandas using Timestamp. 
+
+        # FIX: issues with some time selection for pandas using Timestamp.
         # see https://github.com/pydata/xarray/issues/10975
         start = pd.Timestamp(startdate) if startdate is not None else None
         end = pd.Timestamp(enddate) if enddate is not None else None
@@ -158,7 +158,7 @@ class Diagnostic():
         if data.time.size == 0:
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
-        
+
         # If there is a month requirement we infer the data frequency,
         # then we check how many months are available in the data
         # and finally raise an error if the requirement is not met.
@@ -246,7 +246,7 @@ class Diagnostic():
 
         Args:
             diagnostic (str): The diagnostic name.
-            regions_file_path (str, optional): Path to a custom regions file. 
+            regions_file_path (str, optional): Path to a custom regions file.
                 If None, the default path for the diagnostic will be used.
 
         Returns:

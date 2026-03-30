@@ -30,13 +30,13 @@ def parse_arguments(args):
 
 if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
-    
-    cli = DiagnosticCLI(args, 
-                        diagnostic_name='ocean3d', 
-                        default_config='config-ocean3d-en4-stratification.yaml', 
+
+    cli = DiagnosticCLI(args,
+                        diagnostic_name='ocean3d',
+                        default_config='config-ocean3d-en4-stratification.yaml',
                         log_name='OceanStratification CLI').prepare()
     cli.open_dask_cluster()
-    
+
     logger = cli.logger
     config_dict = cli.config_dict
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         reference = config_dict["references"][0]
         reference_args = cli.reference_args(reference)
         cli.logger.debug(f"Reference args: {reference_args}")
-        
+
 
     if "stratification" in config_dict["diagnostics"]["ocean_stratification"]:
         stratification_config = config_dict["diagnostics"]["ocean_stratification"][

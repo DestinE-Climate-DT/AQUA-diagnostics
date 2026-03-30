@@ -37,18 +37,17 @@ diagnostics:
         projection_params: {}
       2t:
         vmin:
-        vmax: 
-        vmin_std: 
-        vmax_std: 
+        vmax:
+        vmin_std:
+        vmax_std:
         cmap: 'RdBu_r'
       msl:
-        vmin: 
-        vmax: 
-        vmin_std: 
-        vmax_std: 
+        vmin:
+        vmax:
+        vmin_std:
+        vmax_std:
       tprate:
-        vmin: 
-        vmax: 
-        vmin_std: 
-        vmax_std: 
-
+        vmin:
+        vmax:
+        vmin_std:
+        vmax_std:

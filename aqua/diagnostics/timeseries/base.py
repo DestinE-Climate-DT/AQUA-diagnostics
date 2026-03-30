@@ -45,7 +45,7 @@ class BaseMixin(Diagnostic):
         """
         super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
                          loglevel=loglevel)
-        
+
         # Log name is the diagnostic name with the first letter capitalized
         self.logger = log_configure(log_level=loglevel, log_name=diagnostic_name.capitalize())
         self.diagnostic_name = diagnostic_name
@@ -350,7 +350,7 @@ class PlotBaseMixin():
         Returns:
             title (str): Title for the plot.
         """
-        
+
         title = TitleBuilder(
             diagnostic=diagnostic,
             variable=self.long_name,

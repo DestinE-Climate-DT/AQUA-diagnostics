@@ -32,12 +32,12 @@ class TestHistogram:
     def test_retrieve_and_compute(self, tmp_path):
         """Test retrieve and compute_histogram methods"""
         self.hist.retrieve(var='skt')
-        
+
         assert self.hist.data is not None
         assert 'time' in self.hist.data.dims
-        
+
         self.hist.compute_histogram(density=True)
-        
+
         assert self.hist.histogram_data is not None
         assert 'center_of_bin' in self.hist.histogram_data.dims
         assert len(self.hist.histogram_data.center_of_bin) == self.hist.bins
@@ -88,7 +88,7 @@ class TestHistogram:
             rebuild=True,
             density=True
         )
-        
+
         assert self.hist.histogram_data is not None
         assert 'center_of_bin' in self.hist.histogram_data.dims
 
@@ -102,10 +102,10 @@ class TestHistogram:
             bins=30,
             loglevel=loglevel
         )
-        
+
         hist_regional.retrieve(var='skt')
         hist_regional.compute_histogram()
-        
+
         assert hist_regional.histogram_data is not None
         assert hist_regional.region == 'Tropics'
         assert hist_regional.lon_limits == [-180, 180]
@@ -120,7 +120,7 @@ class TestHistogram:
             units='K',
             standard_name='temperature'
         )
-        
+
         assert self.hist.data is not None
         assert self.hist.data.attrs['units'] == 'K'
 
@@ -134,10 +134,10 @@ class TestHistogram:
             range=(250, 320),
             loglevel=loglevel
         )
-        
+
         hist_custom.retrieve(var='skt')
         hist_custom.compute_histogram()
-        
+
         assert hist_custom.histogram_data is not None
         bin_min = float(hist_custom.histogram_data.center_of_bin.min())
         bin_max = float(hist_custom.histogram_data.center_of_bin.max())

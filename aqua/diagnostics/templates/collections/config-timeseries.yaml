@@ -63,10 +63,10 @@ diagnostics:
         long_name: "Precipitation"
         units: "mm/day"
         regions: ['tropics', 'europe']
-  
+
   # NB: this is currently disabled, and run by radiation
   gregory:
-    run: false 
+    run: false
     diagnostic_name: 'timeseries'
     t2m: '2t'
     net_toa_name: 'tnlwrf+tnswrf'

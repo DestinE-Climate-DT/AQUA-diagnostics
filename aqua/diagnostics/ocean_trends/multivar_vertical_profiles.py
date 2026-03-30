@@ -89,7 +89,7 @@ def plot_multivars_vertical_profile(
     fig.subplots_adjust(
         bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.3, hspace=0.8
     )
-    
+
     for i in range(len(maps)):
         vmin, vmax = evaluate_colorbar_limits(maps=maps[i], sym=sym)
 
@@ -122,7 +122,7 @@ def plot_multivars_vertical_profile(
         else:
             logger.warning("No mappable object found for subplot %d", i)
             continue
-        
+
         # Update mappable normalization and cmap
         mappable.set_norm(plt.Normalize(vmin=vmin, vmax=vmax))
         mappable.set_cmap(cmap)

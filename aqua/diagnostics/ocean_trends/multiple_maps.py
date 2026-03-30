@@ -135,7 +135,7 @@ def plot_maps(maps: list[xr.DataArray],
         if ytext:
             ax.text(-0.3, 0.33, ytext[i], fontsize=15, color='dimgray',
                     rotation=90, transform=ax.transAxes, ha='center')
-        
+
         if titles and i < len(titles):
             ax.set_title(titles[i], fontsize=12)
 

@@ -44,7 +44,7 @@ def loop_seasonalcycle(data: xr.DataArray, startdate: str, enddate: str,
         time_range = pd.date_range(start=startdate, end=enddate, freq='MS')
     elif freq == 'annual':
         time_range = pd.date_range(start=startdate, end=enddate, freq='YS')
-    
+
     if len(time_range) == 0:
         base_slice = cycle.isel(month=0) if freq == 'monthly' else cycle
         empty = base_slice.expand_dims(time=1).isel(time=slice(0, 0))
@@ -80,7 +80,7 @@ def center_timestamp(time: pd.Timestamp, freq: str):
 
     Returns:
         pd.Timestamp: The centered time value
-    
+
     Raises:
         ValueError: If the frequency is not supported
     """

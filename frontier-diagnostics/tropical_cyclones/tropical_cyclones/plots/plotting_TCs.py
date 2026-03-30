@@ -57,7 +57,7 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
         plt.colorbar(ax.collections[0], ax=axs, shrink=0.4, pad=0.1, location='bottom', label=tracks_nc_file.attrs['units'])
     elif units:
         plt.colorbar(ax.collections[0], ax=axs, shrink=0.4, pad=0.1, location='bottom', label=units)
-    
+
     os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
 
     plt.tight_layout
@@ -68,7 +68,7 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
 
     plt.show()
 
-    
+
 def plot_trajectories(trajfile, tdict):
     # tempest settings
     nVars=10
@@ -77,7 +77,7 @@ def plot_trajectories(trajfile, tdict):
 
     # Extract trajectories from tempest file and assign to arrays
     # USER_MODIFY
-         
+
     nstorms, ntimes, traj_data = getTrajectories(trajfile,nVars,headerStr,isUnstruc)
     xlon   = traj_data[2,:,:]
     xlat   = traj_data[3,:,:]

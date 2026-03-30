@@ -91,7 +91,7 @@ class Tropical_Rainfall_CLI:
         else:
             self.client = None
         self.cluster = cluster
-            
+
         self.rebuild_output = config['rebuild_output']
         if path_to_output is not None:
             create_folder(path_to_output)
@@ -358,7 +358,7 @@ class Tropical_Rainfall_CLI:
                 era5_merged=merged_data_sources.get('ERA5')
             )
 
-    def process_histograms(self, pdf_flag, pdfP_flag, model_merged=None, mswep_merged=None, 
+    def process_histograms(self, pdf_flag, pdfP_flag, model_merged=None, mswep_merged=None,
                        imerg_merged=None, era5_merged=None, linestyle='-'):
         """
         Generates and saves histograms for model and observational data, with options for PDF and PDF*P plots.
@@ -466,7 +466,7 @@ class Tropical_Rainfall_CLI:
                             try:
                                 data = data_per_year.sel(time=str(year)+'-'+str(x))
                                 self.diag.add_localtime(data, path_to_netcdf=path_to_output,
-                                                        name_of_file=f"{self.regrid}_{self.freq}", 
+                                                        name_of_file=f"{self.regrid}_{self.freq}",
                                                         new_unit="mm/hr")
                             except KeyError:
                                 pass
@@ -475,7 +475,7 @@ class Tropical_Rainfall_CLI:
                                     self.logger.error(f"An unexpected error occurred: {e}")
                         self.logger.debug(f"Current Status: {x}/{f_month} months processed in year {year}.")
         else:
-            self.logger.warning("Data appears to be not in hourly intervals. The CLI will not provide the plot of daily variability.")    
+            self.logger.warning("Data appears to be not in hourly intervals. The CLI will not provide the plot of daily variability.")
 
     def plot_daily_variability(self):
         if 'h' in self.freq.lower():

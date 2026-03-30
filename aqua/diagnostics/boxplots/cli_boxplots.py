@@ -26,7 +26,7 @@ if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
 
     # set tool name for config lookup
-    
+
 
     # Initialize CLI handler
     cli = DiagnosticCLI(
@@ -98,7 +98,7 @@ if __name__ == '__main__':
                 TITLE = ("Boxplot of Surface Radiation Fluxes for " + ", ".join(model_exp_list_unique) +
                          "\nrelative to " + ", ".join(ref_exp_list_unique))
             elif variables == ['-tnlwrf', 'tnswrf']:
-                TITLE = ("Boxplot of TOA Radiation Fluxes for " + ", ".join(model_exp_list_unique) + 
+                TITLE = ("Boxplot of TOA Radiation Fluxes for " + ", ".join(model_exp_list_unique) +
                          "\nrelative to " + ", ".join(ref_exp_list_unique))
             else:
                 TITLE = None

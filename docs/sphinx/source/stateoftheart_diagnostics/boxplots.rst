@@ -6,9 +6,9 @@ Boxplots Diagnostic
 Description
 -----------
 
-The **Boxplots** diagnostic computes and visualizes boxplots of spatial field means 
+The **Boxplots** diagnostic computes and visualizes boxplots of spatial field means
 from climate model datasets, for one or multiple variables, over a specified time period.
-The diagnostic is designed with a class that analyzes a single model and generates the NetCDF 
+The diagnostic is designed with a class that analyzes a single model and generates the NetCDF
 files with the field means, and another class that produces the plots.
 
 Classes
@@ -16,10 +16,10 @@ Classes
 
 There is one class for the analysis and one for the plotting:
 
-* **Boxplots**: retrieves the data and prepares it for plotting (e.g., regridding, unit conversion).  
+* **Boxplots**: retrieves the data and prepares it for plotting (e.g., regridding, unit conversion).
   It also handles the computation of field means, which are saved as class attributes and as NetCDF files.
 
-* **PlotBoxplots**: provides methods for plotting the boxplots of the field means computed by the Boxplots class. 
+* **PlotBoxplots**: provides methods for plotting the boxplots of the field means computed by the Boxplots class.
 
 
 File structure
@@ -32,8 +32,8 @@ File structure
 Input variables and datasets
 ----------------------------
 
-The diagnostic can be used with any dataset that contains spatial fields. 
-Multimodel datasets can be analyzed, and the diagnostic can be configured to compare against multiple reference 
+The diagnostic can be used with any dataset that contains spatial fields.
+Multimodel datasets can be analyzed, and the diagnostic can be configured to compare against multiple reference
 datasets.
 
 Some of the variables that are typically used in this diagnostic are:
@@ -54,7 +54,7 @@ degree resolution.
 Basic usage
 -----------
 
-The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic usage of this diagnostic is explained with a working example in the notebook.
 The basic structure of the analysis is the following:
 
 .. code-block:: python
@@ -115,7 +115,7 @@ The configuration file is a YAML file that contains the details on the dataset t
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
 Here we describe only the specific settings for the boxplots diagnostic.
 
-* ``boxplots``: a block (nested in the ``diagnostics`` block) containing options for the Boxplots diagnostic.  
+* ``boxplots``: a block (nested in the ``diagnostics`` block) containing options for the Boxplots diagnostic.
   Variable-specific parameters override the defaults.
 
     * ``run``: enable/disable the diagnostic.
@@ -139,8 +139,8 @@ Output
 
 The diagnostic produces a single plot:
 
-* A boxplot showing the distribution of the field means for each variable across the specified models and reference datasets. 
-  If reference datasets are provided and the ``anomalies`` option is set to ``True``, the boxplot will show anomalies with respect to the mean of the selected reference dataset. 
+* A boxplot showing the distribution of the field means for each variable across the specified models and reference datasets.
+  If reference datasets are provided and the ``anomalies`` option is set to ``True``, the boxplot will show anomalies with respect to the mean of the selected reference dataset.
   With the ``add_mean_line`` option set to ``True``, dashed lines indicating the absolute mean values will be added to the boxplots.
   Plots are saved in both PDF and PNG format.
 
@@ -166,7 +166,7 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 .. figure:: figures/radiation_boxplot.png
    :align: center
    :width: 100%
-   
+
    Box plot showing the globally averaged incoming and outgoing TOA radiation of IFS-NEMO historical-1990 with respect to ERA5 and CERES climatologies.
 
 .. figure:: figures/radiation_boxplot_anomalies.png
@@ -181,7 +181,7 @@ Available demo notebooks
 
 Notebooks are stored in ``notebooks/diagnostics/boxplots``:
 
-* `boxplots.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/boxplots/boxplots.ipynb>`_ 
+* `boxplots.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/boxplots/boxplots.ipynb>`_
 
 Authors and contributors
 ------------------------

@@ -34,13 +34,13 @@ def tmp_path_str():
 
 class TestBoxplots:
     """Test suite for Boxplots diagnostic."""
-    
+
     def test_run_basic(self, boxplots_instance, plot_boxplots_instance, tmp_path_str):
         """Test basic boxplots run."""
         bp = boxplots_instance
         plotbp = plot_boxplots_instance
         var = ['tnlwrf', 'tnswrf']
-        
+
         bp.run(var=var, save_netcdf=True)
         assert hasattr(bp, "fldmeans")
         assert isinstance(bp.fldmeans, xr.Dataset)

@@ -8,10 +8,10 @@ import matplotlib as plt
 from aqua.core.graphics import boxplot
 
 
-class PlotBoxplots: 
-    def __init__(self, 
+class PlotBoxplots:
+    def __init__(self,
                  diagnostic='boxplots',
-                 save_format=SAVE_FORMAT, 
+                 save_format=SAVE_FORMAT,
                  dpi=300, outputdir='./',
                  loglevel='WARNING'):
         """
@@ -71,9 +71,9 @@ class PlotBoxplots:
         )
 
         all_models = model + (model_ref or [])
-        all_exps = exp + (exp_ref or [])    
-        all_startdates = startdates + (startdates_ref or [] )  
-        all_enddates = enddates + (enddates_ref or [] )     
+        all_exps = exp + (exp_ref or [])
+        all_startdates = startdates + (startdates_ref or [] )
+        all_enddates = enddates + (enddates_ref or [] )
         dataset_info = ', '.join(
             f"{m} (exp: {e}) from {time_to_string(s)} to {time_to_string(en)}"
             for m, e, s, en in zip(all_models, all_exps, all_startdates, all_enddates)
@@ -95,7 +95,7 @@ class PlotBoxplots:
         outputsaver.save_figure(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save)
 
 
-    def plot_boxplots(self, data, data_ref=None, var=None, anomalies=False, add_mean_line=False, 
+    def plot_boxplots(self, data, data_ref=None, var=None, anomalies=False, add_mean_line=False,
                       ref_number=0, title=None):
         """
         Plot boxplots for specified variables in the dataset.
@@ -111,7 +111,7 @@ class PlotBoxplots:
         """
 
         self.ref_number = ref_number
-        self.anomalies = anomalies 
+        self.anomalies = anomalies
         data = to_list(data)
         data_ref = to_list(data_ref) if data_ref is not None else []
 
@@ -138,10 +138,10 @@ class PlotBoxplots:
             mean_ds = ds.load().mean(dim='time')
             means_dict = {v: mean_ds[v].item() for v in mean_ds.data_vars}
             abs_means.append(means_dict)
-        
+
         if self.anomalies and data_ref:
             self.logger.info(f"Computing anomalies relative to reference dataset {extract_attrs(data_ref[self.ref_number], 'AQUA_model')}")
-            ref = data_ref[self.ref_number] 
+            ref = data_ref[self.ref_number]
             fldmeans = [ds - ref.mean('time') for ds in fldmeans]
 
         if not title:
@@ -153,8 +153,8 @@ class PlotBoxplots:
                 ref_exp=exp_names_ref if exp_names_ref else None
             ).generate()
 
-        # Plot boxplot 
-        fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names_plot, variables=var, variable_names=long_names, title=title, 
+        # Plot boxplot
+        fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names_plot, variables=var, variable_names=long_names, title=title,
                           add_mean_line=add_mean_line, loglevel=self.loglevel)
 
         if self.anomalies and data_ref:
@@ -171,7 +171,7 @@ class PlotBoxplots:
                         try:
                             patch = [p for p in ax.patches if isinstance(p, plt.patches.PathPatch)][box_index]
                         except IndexError:
-                            continue  
+                            continue
 
                         x = patch.get_path().vertices[:, 0].mean() + 0.05
                         base_var = v.lstrip('-')
@@ -180,7 +180,7 @@ class PlotBoxplots:
                         if base_var in means_dict:
                             abs_val = means_dict[base_var]  # absolute mean value
                             anom_val = fldmeans[dataset_idx][base_var].mean(dim="time")
-                            if v.startswith('-'): 
+                            if v.startswith('-'):
                                 anom_val = -anom_val
 
                             ax.text(

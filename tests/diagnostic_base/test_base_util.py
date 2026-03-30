@@ -52,7 +52,7 @@ def test_load_diagnostic_config_from_args(tmp_path):
     args = parser.parse_args(["--config", config_file, "--loglevel", "DEBUG"])
 
     result = load_diagnostic_config(diagnostic='ignored_name', config=args.config, loglevel=loglevel)
-    
+
     assert result['datasets'][0]['model'] == 'TestModel'
     assert result['output']['outputdir'] == str(tmp_path / 'output')
 

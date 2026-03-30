@@ -36,7 +36,7 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = [
-    "ECmean4<=0.1.16", 
+    "ECmean4<=0.1.16",
     "cartopy<=0.24.1"
 ]
 
@@ -57,7 +57,8 @@ tests = [
     "pytest-cov",
     "pytest-xdist",
     "coverage",
-    "cdo"
+    "cdo",
+    "ruff"
 ]
 minimal = [
     "aqua-diagnostics[core]"
@@ -96,7 +97,7 @@ version = {attr = "aqua.diagnostics.version.__version__"}
 
 [tool.pytest.ini_options]
 # verbose to have full test, run coverage on src folder and use pyproject as a configuration file
-addopts = "--durations=10 -v --cov=aqua" 
+addopts = "--durations=10 -v --cov=aqua"
 testpaths = [
     "tests"
 ]
@@ -122,8 +123,7 @@ branch = true
 command_line = '-m pytest tests'
 source = ["aqua/diagnostics"]
 omit = [
-    "tests/*", 
+    "tests/*",
     "**/__init__.py",
     "aqua/diagnostics/dummy"
     ]
-

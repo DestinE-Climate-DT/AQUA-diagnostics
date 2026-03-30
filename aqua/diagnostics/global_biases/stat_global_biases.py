@@ -38,7 +38,7 @@ class StatGlobalBiases:
             var (str): Variable name.
             area (xr.DataArray, optional): Grid cell areas for weighted statistics.
                                             If None, unweighted statistics will be computed.
-        Returns: 
+        Returns:
             xr.Dataset: Dataset containing mean bias and RMSE.
 
         """
@@ -49,7 +49,7 @@ class StatGlobalBiases:
 
         # Compute bias
         bias = data[var] - data_ref[var]
-        
+
         fldstat = FldStat(area=area, loglevel=self.loglevel)
 
         # Compute mean bias
@@ -72,12 +72,12 @@ class StatGlobalBiases:
             'mean_bias': mean_bias,
             'rmse': rmse
         })
-        
+
         self.logger.info(f'Mean bias: {float(mean_bias.values):.4e} {data[var].attrs.get("units", "")}')
         self.logger.info(f'RMSE: {float(rmse.values):.4e} {data[var].attrs.get("units", "")}')
 
         return stats
-    
+
     def compute_yearly_temporal_means(self,
                                     data: xr.Dataset,
                                     var: str) -> xr.DataArray:
@@ -94,7 +94,7 @@ class StatGlobalBiases:
         timstat = TimStat(loglevel=self.loglevel)
         yearly_means = timstat.timstat(data[[var]], stat='mean', freq='YS')
         self.logger.info(f'Computed {len(yearly_means.time)} yearly means.')
-        
+
         return yearly_means[var]
 
     def ttest_at_grid_point(self, model_vals, ref_vals, min_samples: int = 3):
@@ -109,10 +109,10 @@ class StatGlobalBiases:
         # Remove NaN values
         model_clean = model_vals[np.isfinite(model_vals)]
         ref_clean = ref_vals[np.isfinite(ref_vals)]
-        
+
         if len(model_clean) < min_samples or len(ref_clean) < min_samples:
             return np.nan
-        
+
         # Perform t-test
         _, p_value = stats.ttest_ind(model_clean, ref_clean, equal_var=False)
         return p_value
@@ -126,7 +126,7 @@ class StatGlobalBiases:
                                    min_samples: int = 3) -> xr.DataArray:
         """
         Compute statistical significance of bias using two-sample t-test.
-        
+
         Performs a two-sided t-test at each grid point to determine if the difference
         between model and reference data is statistically significant.
 
@@ -146,11 +146,11 @@ class StatGlobalBiases:
         # Get temporal means
         data_temporal = self.compute_yearly_temporal_means(data, var)
         data_ref_temporal = self.compute_yearly_temporal_means(data_ref, var)
-        
+
         # Check if we have enough samples
         n_samples = len(data_temporal.time)
-        n_samples_ref = len(data_ref_temporal.time) 
-        
+        n_samples_ref = len(data_ref_temporal.time)
+
         self.logger.info(f'Number of samples - Model: {n_samples}, Reference: {n_samples_ref}')
 
         if n_samples < min_samples or n_samples_ref < min_samples:
@@ -168,10 +168,10 @@ class StatGlobalBiases:
         # Rechunk along time dimension for dask compatibility
         # This is needed because apply_ufunc with dask='parallelized' requires
         # core dimensions to be in a single chunk
-                
+
         # Get time dimension name
-        time_dim = 'time' 
-        
+        time_dim = 'time'
+
         self.logger.debug(f'Rechunking data along {time_dim} dimension.')
         data_temporal = data_temporal.chunk({time_dim: -1})
         data_ref_temporal = data_ref_temporal.chunk({time_dim: -1})
@@ -179,10 +179,10 @@ class StatGlobalBiases:
         # Perform t-test at each grid point
         # Use scipy.stats.ttest_ind for independent samples
         self.logger.debug('Performing t-test at each grid point.')
-        
+
         # Rename time dimensions to avoid xarray alignment issues when model and reference
         # have different number of time steps. Using distinct names prevents apply_ufunc
-        # from attempting to align the two time axes against each other.       
+        # from attempting to align the two time axes against each other.
         time_dim = f'{time_dim}'
         time_dim_ref = f'{time_dim}_ref'
 
@@ -194,7 +194,7 @@ class StatGlobalBiases:
             self.ttest_at_grid_point,
             data_temporal,
             data_ref_temporal,
-            input_core_dims=[[time_dim], [time_dim_ref]], 
+            input_core_dims=[[time_dim], [time_dim_ref]],
             vectorize=True,
             dask='parallelized',
             output_dtypes=[float],
@@ -205,12 +205,12 @@ class StatGlobalBiases:
         self.logger.debug("Loading significance map in memory")
         is_significant.load()
         self.logger.debug("Loaded significance map in memory")
-        
+
         # Count significant points
         n_significant = int(is_significant.sum().values)
         n_total = int(np.prod(is_significant.shape))
         pct_significant = 100 * n_significant / n_total if n_total > 0 else 0
-        
+
         self.logger.info(
             f'Statistical significance test completed: '
             f'{n_significant}/{n_total} points ({pct_significant:.1f}%) are significant at alpha={alpha}.'
@@ -228,5 +228,3 @@ class StatGlobalBiases:
         })
 
         return is_significant
-
-        

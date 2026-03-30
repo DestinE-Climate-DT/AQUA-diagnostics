@@ -110,7 +110,7 @@ def reader_retrieve_and_merge(
         else:
             logger.info(f"No realizations defined for {model_i}, using default ['r1']")
             reals = ["r1"]
-            
+
         model_ds_list = []
 
         for r in reals:
@@ -439,5 +439,3 @@ def extract_realizations(catalog, model, exp, source):
             realization = parameter.get('allowed')
             return realization
     return None
-
-

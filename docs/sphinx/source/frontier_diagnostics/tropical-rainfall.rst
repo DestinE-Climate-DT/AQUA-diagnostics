@@ -2,13 +2,13 @@ Tropical rainfall diagnostic
 ============================
 
 The precipitation variability is an excellent indicator of the accuracy of climatological simulations.
-The goal of tropical rainfall diagnostic is to provide fast and straightforward precipitation analysis in tropical or global areas. 
+The goal of tropical rainfall diagnostic is to provide fast and straightforward precipitation analysis in tropical or global areas.
 
 
 Description
 -----------
 
-The current version of tropical rainfall diagnostic successfully achieves the minimal requirements: 
+The current version of tropical rainfall diagnostic successfully achieves the minimal requirements:
 
 * calculation of histograms for selected tropical area band,
 
@@ -18,7 +18,7 @@ The current version of tropical rainfall diagnostic successfully achieves the mi
 
 * diurnal, i.e., daily variability of precipitation data.
 
-The diagnostic also provides us with simple in-the-use plotting functions to create a graphical representation of obtained results. 
+The diagnostic also provides us with simple in-the-use plotting functions to create a graphical representation of obtained results.
 
 
 Structure
@@ -53,7 +53,7 @@ Detailed Class Descriptions:
 #. `src/tropical_rainfall_plots`:
     * Purpose: Manages all plotting functions specific to the diagnostics.
     * Methods: Features methods like histogram_plot, plot_of_average, daily_variability_plot, etc.
-    * Attributes: Plotting-specific settings such as PDF format (pdf_format), figure size (figsize), font size (fontsize), line style (linestyle), line width (linewidth), and others. 
+    * Attributes: Plotting-specific settings such as PDF format (pdf_format), figure size (figsize), font size (fontsize), line style (linestyle), line width (linewidth), and others.
       Incorporating these directly into the class allows for uniform styling across plots through initial class setup rather than manual specification for each function.
 #. `src/tropical_rainfall_tools`:
     * Purpose: Contains utility functions that support the diagnostic processes but are not directly involved in scientific calculations or plotting.
@@ -74,7 +74,7 @@ Input variables
 
 Output
 ------
-All output of the diagnostic is in the format of NetCDF to be further analysed, or in PDF for rapid visualization. 
+All output of the diagnostic is in the format of NetCDF to be further analysed, or in PDF for rapid visualization.
 
 Examples
 --------
@@ -108,7 +108,7 @@ The output from the histogram function is an xarray.Dataset, which includes two 
 
 * `width`:           width of each bin
 
-The xarray.Dataset contains three variables: 
+The xarray.Dataset contains three variables:
 
 * `counts`: the raw number of cases in each bin
 
@@ -123,7 +123,7 @@ The resulting xarray.Dataset features both local and global attributes. The glob
 For more detailed information about these attributes, refer to the notebook located at `$AQUA/diagnostics/tropical_rainfall/notebooks/functions_demo/data_attributes.ipynb`.
 
 
-List of histograms 
+List of histograms
 ^^^^^^^^^^^^^^^^^^
 
 The diagnostic can combine any number of histograms into a single histogram, recalculating the frequencies and PDF values while automatically modifying the attributes.
@@ -149,56 +149,56 @@ It is advisable to store the obtained histograms for distinct models in separate
 
 If you wish to merge only a specific subset of histograms, set the `start_year`, `end_year`, `start_month`, and `end_month` arguments in the function. The function will then sort the files in the repository and merge the histograms that meet the specified time range.
 
-The histogram plots 
+The histogram plots
 ^^^^^^^^^^^^^^^^^^^
 
-The diagnostic contains the simple in-the-use function to create the histogram plot. 
-The user can create plots of the obtained data in  different styles and scales. 
+The diagnostic contains the simple in-the-use function to create the histogram plot.
+The user can create plots of the obtained data in  different styles and scales.
 The example of a histogram plot is:
 
 .. code-block:: python
 
-    diag.histogram_plot(histogram, smooth=True, figsize=0.7, 
+    diag.histogram_plot(histogram, smooth=True, figsize=0.7,
                         xlogscale=True, ylogscale=True)
 
 
 
-You can find an example of the histogram obtained with the tropical-rainfall diagnostic below. 
+You can find an example of the histogram obtained with the tropical-rainfall diagnostic below.
 
-.. figure:: figures/trop_rainfall_icon_ngc3028_ifs_tco2559_ng5_ifs_tco1279_orca025_mswep_lra_r100_monthly_comparison_histogram.png  
+.. figure:: figures/trop_rainfall_icon_ngc3028_ifs_tco2559_ng5_ifs_tco1279_orca025_mswep_lra_r100_monthly_comparison_histogram.png
     :width: 12cm
 
 Seasonal Mean Values
 ^^^^^^^^^^^^^^^^^^^^
 
-The diagnostic can provide us with a graphical comparison of the mean value along different coordinates. 
-For example, the function 
+The diagnostic can provide us with a graphical comparison of the mean value along different coordinates.
+For example, the function
 
 .. code-block:: python
 
     diag.trop_lat = 90
-    diag.mean_and_median_plot(icon_historical_1990, coord='lon',  
+    diag.mean_and_median_plot(icon_historical_1990, coord='lon',
                               legend='icon, historical-1990', new_unit='mm/hr')
 
 
-calculates the mean value of precipitation along the longitude during 
+calculates the mean value of precipitation along the longitude during
 
-- December-January-February (`DJF`), 
-- March-April-May (`MAM`), 
-- June-July-August (`JJA`), 
-- September-October-November (`SON`), and 
-- for the total period of time. 
+- December-January-February (`DJF`),
+- March-April-May (`MAM`),
+- June-July-August (`JJA`),
+- September-October-November (`SON`), and
+- for the total period of time.
 
-Bias between model and observations 
+Bias between model and observations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Tropical-rainfall diagnostic provides the graphical representation of the bias between the mean value of precipitation of the 
-climatological model and the mean value of observations. 
-The function 
+Tropical-rainfall diagnostic provides the graphical representation of the bias between the mean value of precipitation of the
+climatological model and the mean value of observations.
+The function
 
 .. code-block:: python
 
-    diag.plot_bias(icon_historical_1990, dataset_2=mswep, seasons=True, new_unit='mm/day', 
+    diag.plot_bias(icon_historical_1990, dataset_2=mswep, seasons=True, new_unit='mm/day',
                    trop_lat=90, vmin=-10, vmax=10,
                    plot_title='The bias between icon, historical-1990 and mswep, monthly, 1 degree res (100km)',
                    path_to_pdf=path_to_pdf, name_of_file='icon_historical_1990_mswep_lra_r100_monthly_bias')
@@ -211,15 +211,15 @@ Available demo notebooks
 
 The **notebooks/** folder contains several notebooks demonstrating various functionalities:
 
-#. `Diagnostic Demonstartion on Low_resolution data  <https://github.com/DestinE-Climate-DT/AQUA/blob/main/diagnostics/tropical_rainfall/notebooks/demo_for_lowres_data.ipynb>`_: 
-   
+#. `Diagnostic Demonstartion on Low_resolution data  <https://github.com/DestinE-Climate-DT/AQUA/blob/main/diagnostics/tropical_rainfall/notebooks/demo_for_lowres_data.ipynb>`_:
+
    - Histogram comparison for different climate models
    - Merging separate plots into a single one
    - Mean tropical and global precipitation calculations for different climate models
    - Bias between climatological model and observations
 
-#. `Histogram Calculation <https://github.com/DestinE-Climate-DT/AQUA/blob/main/diagnostics/tropical_rainfall/notebooks/functions_demo/histogram_calculation.ipynb>`_: 
-   
+#. `Histogram Calculation <https://github.com/DestinE-Climate-DT/AQUA/blob/main/diagnostics/tropical_rainfall/notebooks/functions_demo/histogram_calculation.ipynb>`_:
+
    - Initialization of a diagnostic class object
    - Selection of class attributes
    - Calculation of histograms in the form of xarray

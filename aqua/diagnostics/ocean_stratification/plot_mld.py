@@ -194,7 +194,7 @@ class PlotMLD:
                 )
             data = ds_reg
         return data
-    
+
     def _round_up(self, value):
         if value % 100 == 0:
             return value  # Already a multiple of 100
@@ -223,8 +223,8 @@ class PlotMLD:
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the MLD plot."""
-        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region, 
-                             catalog=self.catalog, model=self.model, exp=self.exp, 
+        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region,
+                             catalog=self.catalog, model=self.model, exp=self.exp,
                              timeseason=f"{self.clim_time} climatology").generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 

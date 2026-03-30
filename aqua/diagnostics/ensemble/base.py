@@ -196,7 +196,7 @@ class BaseMixin(Diagnostic):
     ):
         """
         Commented-out: Save data as a NetCDF file using OutputSaver or directly if catalog/model/exp are None or multi-values.
-        
+
         Save data as a NetCDF file using OutputSaver.
         This method handles Timeseries, Lat-Lon, and Zonal data. It automatically generates
         metadata including model, experiment, source, region, and optional start/end dates.
@@ -307,7 +307,7 @@ class BaseMixin(Diagnostic):
 
     # Save figure
     def save_figure(self, var, fig=None, fig_std=None, startdate=None, enddate=None,
-                    description=None, format: Union[str, list]=SAVE_FORMAT, dpi=300):    
+                    description=None, format: Union[str, list]=SAVE_FORMAT, dpi=300):
         """
         Save figure(s) to file using OutputSaver or directly to disk if catalog/model/exp are None or multi-values.
 

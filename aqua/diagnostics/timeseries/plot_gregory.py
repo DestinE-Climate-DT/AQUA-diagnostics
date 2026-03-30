@@ -45,7 +45,7 @@ class PlotGregory(PlotBaseMixin):
         self.logger.debug(f'Number of dataset: {self.len_data}')
         self.get_data_info()
 
-    def plot(self, freq=['monthly', 'annual'], title: str = None, 
+    def plot(self, freq=['monthly', 'annual'], title: str = None,
              data_labels: list = None, ref_label: str = None, style: str = 'aqua'):
         """
         Plot the data
@@ -121,8 +121,8 @@ class PlotGregory(PlotBaseMixin):
 
     def set_title(self):
         """Set the title for the plot"""
-        title_build = TitleBuilder(diagnostic='Gregory Plot', 
-                                   model=self.models, 
+        title_build = TitleBuilder(diagnostic='Gregory Plot',
+                                   model=self.models,
                                    exp=self.exps)
         return title_build.generate()
 

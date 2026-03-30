@@ -142,7 +142,7 @@ class TCs(DetectNodes, StitchNodes):
         # if not expressed as "D", raise value error, since we need days for the time loop!
         if tdict['stream']['streamstep'][len(numbers)] != 'D':
             raise ValueError("Critical error! Stream step must be specified in days as 'D' in the config file!")
-        
+
         # retrieve the data and call detect nodes on the first chunk of data
         self.data_retrieve()
         self.detect_nodes_zoomin()
@@ -153,7 +153,7 @@ class TCs(DetectNodes, StitchNodes):
         last_run_stitch = self.stream_startdate
 
         # loop to simulate streaming
-        # while len(np.unique(self.data2d.time.dt.day)) == streamstep_n:   
+        # while len(np.unique(self.data2d.time.dt.day)) == streamstep_n:
         while self.data_retrieve():
             self.logger.warning(
                 "Streaming from %s to %s", pd.to_datetime(self.stream_startdate), pd.to_datetime(self.stream_enddate))
@@ -195,7 +195,7 @@ class TCs(DetectNodes, StitchNodes):
         if self.streaming:
             self.logger.warning(
                 'Initialised streaming for %s %s starting on %s', self.stream_step, self.stream_units, pd.to_datetime(self.stream_startdate))
-        
+
         if self.model == 'ERA5':
             self.varlist2d = ['msl', '10u', '10v']
 
@@ -213,7 +213,7 @@ class TCs(DetectNodes, StitchNodes):
                                             regrid=self.highgrid,
                                             streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
                                             startdate=self.startdate, enddate=self.enddate)
-            
+
         elif self.model == 'IFS':
             self.varlist2d = ['msl', '10u', '10v', 'z']
             self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
@@ -291,7 +291,7 @@ class TCs(DetectNodes, StitchNodes):
             self.data3d = self.reader3d.retrieve(var=self.varlist3d)
             if self.data3d is not None:
                 self.data3d = self.data3d.sel(plev=[300, 500], method="nearest")
-            
+
         if self.orography and not self.orog:  # only if not already done
             self.logger.info("orography retrieved from file")
             self.orog = xr.open_dataset(self.orography_file)

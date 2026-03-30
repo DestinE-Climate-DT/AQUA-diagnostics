@@ -6,8 +6,8 @@ pytestmark = pytest.mark.aqua
 
 @pytest.mark.parametrize("kwargs,expected", [
     ({"title": "Custom Title"}, "Custom Title"),
-    ({"diagnostic": "MLD", "regions": "global", "catalog": "ci", "model": "ERA5", 
-      "exp": "era5-hpz3", "timeseason": "climatology"}, 
+    ({"diagnostic": "MLD", "regions": "global", "catalog": "ci", "model": "ERA5",
+      "exp": "era5-hpz3", "timeseason": "climatology"},
       "MLD [global] for ci ERA5 era5-hpz3 climatology"),
     ({}, ""), # Empty result
     ({"variable": "Temperature"}, "Temperature"),

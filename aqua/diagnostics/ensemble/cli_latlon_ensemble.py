@@ -102,7 +102,7 @@ if __name__ == "__main__":
                         source_list.append(model["source"])
                         realization_dict.update({model["model"]: model["realization"]})
                         #reader_kwargs_dict.update({model["model"]: {"fix":model["fix"], "areas":model["areas"]}})
- 
+
                 # Loading and merging data
                 ens_dataset = reader_retrieve_and_merge(
                     variable=variable,

@@ -1,4 +1,4 @@
-import pytest 
+import pytest
 import xarray as xr
 from aqua.diagnostics import SeaIce
 from aqua.core.exceptions import NoDataError
@@ -23,7 +23,7 @@ pytestmark = [
 
 class TestSeaIce:
     """Test the SeaIce class."""
-    
+
     @pytest.mark.parametrize(
         ('method', 'region', 'value', 'expected_units', 'variable', 'calc_std_freq', 'expect_exception', 'error_message'),
         [
@@ -52,7 +52,7 @@ class TestSeaIce:
                                      calc_std_freq, expect_exception, error_message):
         """Test sea ice computation including std for both valid and invalid cases."""
 
-        seaice = SeaIce(catalog=catalog, model=model, exp=exp, source=source, 
+        seaice = SeaIce(catalog=catalog, model=model, exp=exp, source=source,
                         startdate="1991-01-01", enddate="2000-01-01", regions=region, regrid='r100', loglevel=loglevel)
 
         # Handle expected exceptions first
@@ -69,7 +69,7 @@ class TestSeaIce:
             assert isinstance(result, tuple)
             assert len(result) == 2
 
-            # unpack the tuple 
+            # unpack the tuple
             res, res_std = result
 
             assert isinstance(res, xr.Dataset)
@@ -95,7 +95,7 @@ class TestSeaIce:
             assert isinstance(result, xr.Dataset)
             regionlower = region.lower().replace(" ", "_")
             var_name = f'sea_ice_{method}_{regionlower}'
-            
+
             assert all(c in ['variable', 'time'] for c in result.coords)
             assert list(result.data_vars) == [var_name]
             assert result.attrs['units'] == expected_units
@@ -112,7 +112,7 @@ class TestSeaIce:
         """Test the get_seasonal_cycle functionality with region as a parameter."""
 
         seaice = SeaIce(catalog=catalog, model=model, exp=exp, source=source,
-                        startdate="1991-01-01", enddate="2000-01-01", regions=region, 
+                        startdate="1991-01-01", enddate="2000-01-01", regions=region,
                         regrid='r100', loglevel=loglevel)
 
         result, result_std = seaice.compute_seaice(method=method, var=variable, **kwargs)
@@ -162,7 +162,7 @@ class TestSeaIce:
             return
         else:
             seaice = create_seaice()
-        
+
         # Valid case: compute sea ice
         result = seaice.compute_seaice(method=method, var=variable)
 

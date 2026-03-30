@@ -118,7 +118,7 @@ class Trends(Diagnostic):
         Args:
             trend (xr.DataArray): Trend values to adjust.
             y_array (xr.DataArray): Original data array with time coordinate.
-        
+
         Returns:
             xr.DataArray: Adjusted trend values.
         """

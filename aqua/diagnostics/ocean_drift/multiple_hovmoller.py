@@ -59,7 +59,7 @@ def plot_multi_hovmoller(
         return_fig (bool): Whether to return the figure object. Default is True.
         loglevel (str): Logging level. Default is "WARNING".
         **kwargs: Additional keyword arguments to be passed to the plotting function.
-    
+
     Returns:
         plt.Figure: The matplotlib figure object containing the hovmoller plots.
     """

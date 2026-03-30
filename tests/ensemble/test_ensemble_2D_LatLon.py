@@ -36,11 +36,11 @@ def tmp_path_str():
 def dataset_instance(ensemble_config):
     """Retrieve and merge data once for the module."""
     dataset = reader_retrieve_and_merge(
-        variable=ensemble_config['var'], 
-        catalog_list=ensemble_config['catalog_list'], 
-        model_list=ensemble_config['model_list'], 
-        exp_list=ensemble_config['exp_list'], 
-        source_list=ensemble_config['source_list'], 
+        variable=ensemble_config['var'],
+        catalog_list=ensemble_config['catalog_list'],
+        model_list=ensemble_config['model_list'],
+        exp_list=ensemble_config['exp_list'],
+        source_list=ensemble_config['source_list'],
         loglevel=loglevel,
         ens_dim="ensemble",
     )
@@ -58,7 +58,7 @@ def ensemble_latlon_instance(ensemble_config, dataset_instance):
         exp_list=ensemble_config['exp_list'],
         source_list=ensemble_config['source_list'],
         ensemble_dimension_name="ensemble",
-        outputdir="./", 
+        outputdir="./",
     )
     return ens
 
@@ -86,7 +86,7 @@ class TestEnsembleLatLon:
         """Test the computation and NetCDF output generation."""
         ens = ensemble_latlon_instance
         conf = ensemble_config
-        
+
         # execution
         ens.run()
 
@@ -108,7 +108,7 @@ class TestEnsembleLatLon:
     def test_statistics(self, ensemble_latlon_instance):
         """Test the statistical correctness of the ensemble."""
         ens = ensemble_latlon_instance
-        
+
         # Ensure run() has been called (handled by module scope order, but safe to check)
         if not hasattr(ens, 'dataset_mean'):
             ens.run()
@@ -122,7 +122,7 @@ class TestEnsembleLatLon:
         ens = ensemble_latlon_instance
         plot_ens = plot_ensemble_instance
         conf = ensemble_config
-        
+
         if not hasattr(ens, 'dataset_mean'):
             ens.run()
 
@@ -135,11 +135,11 @@ class TestEnsembleLatLon:
             "title_std": "Test data",
             "cbar_label": "Test Label",
             "dataset_mean": ens.dataset_mean,
-            "dataset_std": ens.dataset_mean, 
+            "dataset_std": ens.dataset_mean,
         }
 
         plot_dict = plot_ens.plot(**plot_arguments)
-        
+
         assert plot_dict['mean_plot'][0] is not None
 
         # Construct filenames
@@ -149,7 +149,7 @@ class TestEnsembleLatLon:
         # Check PNGs
         png_mean = os.path.join(tmp_path_str, 'png', f'ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.png')
         assert os.path.exists(png_mean)
-        
+
         png_std = os.path.join(tmp_path_str, 'png', f'ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.png')
         assert os.path.exists(png_std)
 

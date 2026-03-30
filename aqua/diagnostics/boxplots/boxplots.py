@@ -69,18 +69,18 @@ class Boxplots(Diagnostic):
         try:
             if var is not None:
                 self.var = [v.lstrip('-') for v in (var if isinstance(var, list) else [var])]
-            
+
             super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
 
         except Exception as e:
-            self.logger.warning("Failed to retrieve variable(s) %s from %s, %s, %s: %s", 
+            self.logger.warning("Failed to retrieve variable(s) %s from %s, %s, %s: %s",
                                 var, self.model, self.exp, self.source, e)
 
         if self.data is None:
-            self.logger.warning("Variable(s) %s not found in dataset %s, %s, %s. Skipping.", 
+            self.logger.warning("Variable(s) %s not found in dataset %s, %s, %s. Skipping.",
                                 self.var, self.model, self.exp, self.source)
             return
-   
+
         self.startdate = self.startdate or pd.to_datetime(self.data.time[0].values).strftime('%Y-%m-%d')
         self.enddate = self.enddate or pd.to_datetime(self.data.time[-1].values).strftime('%Y-%m-%d')
 

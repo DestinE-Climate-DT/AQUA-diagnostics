@@ -146,7 +146,7 @@ class PlotEnsembleLatLon(BaseMixin):
 
         Returns:
             dict: Dictionary containing figure and axes for mean and std plots:
-                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}. 
+                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}.
                   If standard deviation is zero everywhere, only 'mean_plot' is returned.
 
         Raises:
@@ -190,7 +190,7 @@ class PlotEnsembleLatLon(BaseMixin):
             vmin_mean = dataset_mean.values.min()
         if vmax_mean is None:
             vmax_mean = dataset_mean.values.max()
-            
+
         fig1, ax1 = plot_single_map(
             dataset_mean,
             proj=proj,

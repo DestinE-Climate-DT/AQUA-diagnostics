@@ -97,12 +97,12 @@ class ToolsClass:
     def adjust_bins(self, ds, factor):
         """
         Adjusts the histogram bins by a specified factor, recalculating the center of each bin based on the assumption
-        that the first bin center is (center_of_bin - 0.5 * width). If factor is None, the function returns a copy of the 
+        that the first bin center is (center_of_bin - 0.5 * width). If factor is None, the function returns a copy of the
         dataset unchanged.
 
         Args:
             ds (xarray.Dataset): The dataset containing the histogram.
-            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width, 
+            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width,
                                     values < 1 decrease it. None leaves the bin width and counts unchanged.
 
         Returns:
@@ -118,7 +118,7 @@ class ToolsClass:
         original_width = ds.width.values[0]  # Assuming uniform width for all bins
         new_width = original_width * factor
         original_centers = ds.center_of_bin.values
-        
+
         # Calculate new bin centers based on the adjusted first bin center
         new_centers = np.array([original_centers[0] - 0.5 * original_width + (0.5 * new_width) + i * new_width for i in range(len(original_centers))])
 
@@ -127,7 +127,7 @@ class ToolsClass:
             additional_bins = int((original_centers[-1] - new_centers[-1]) / new_width)
             for i in range(1, additional_bins + 1):
                 new_centers = np.append(new_centers, new_centers[-1] + new_width)
-        
+
         # Linear interpolation for counts
         new_counts = np.interp(new_centers, original_centers, ds.counts.values, left=0, right=0)
 
@@ -143,7 +143,7 @@ class ToolsClass:
         adjusted_ds.attrs = ds.attrs.copy()
         adjusted_ds.counts.attrs = ds.counts.attrs.copy()
         adjusted_ds.center_of_bin.attrs = ds.center_of_bin.attrs.copy()
-        
+
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         history_update = str(current_time)+f" the histogram bins adjusted by a specified factor {factor} ;\n "
         if 'history' not in adjusted_ds.attrs:
@@ -261,11 +261,11 @@ class ToolsClass:
             ValueError: If the dataset file cannot be opened with the available backends.
         """
         self.logger.debug(f"Opening dataset from path: {path_to_netcdf}")
-        
+
         if not os.path.exists(path_to_netcdf):
             self.logger.error(f"File does not exist: {path_to_netcdf}")
             raise FileNotFoundError(f"File does not exist: {path_to_netcdf}")
-        
+
         try:
             dataset = xr.open_dataset(path_to_netcdf, engine='netcdf4')
             return dataset
@@ -311,8 +311,8 @@ class ToolsClass:
             if date_match and flag_present:
                 year, month = map(int, date_match.groups())
                 # Check if the year and optionally month falls within the specified range
-                if ((start_year is None or start_year <= year) and 
-                    (end_year is None or year <= end_year) and 
+                if ((start_year is None or start_year <= year) and
+                    (end_year is None or year <= end_year) and
                     (not start_month or start_month <= month <= (end_month or 12))):
                     selected_files.append(file_path)
                 elif start_year is None and end_year is None:
@@ -527,9 +527,9 @@ class ToolsClass:
 
         # Define the number of entries
         num_entries = len(loaded_dict)
-        
+
         # Generate a palette starting at a hue past red (e.g., starting at 30 degrees out of 360)
-        palette = sns.husl_palette(n_colors=num_entries, h=0.25) 
+        palette = sns.husl_palette(n_colors=num_entries, h=0.25)
 
         # Assign colors to dictionary entries
         for i, (key, value) in enumerate(loaded_dict.items()):
@@ -553,7 +553,7 @@ class ToolsClass:
         if not isinstance(loaded_dict, dict):
             self.logger.error("The provided object must be a 'dict' type.")
             return None
-        
+
         # Use a custom palette excluding red hues
         num_entries = len(loaded_dict)
         # Exclude red by setting hue range to avoid red (hue near 0)
@@ -813,7 +813,7 @@ class ToolsClass:
         self.logger.info("Continuity of time coordinates confirmed for all files.")
         return True
 
-    
+
     def check_incomplete_months(self, files):
         filenames = [os.path.basename(file) for file in files]
         for file in filenames:
@@ -1069,7 +1069,7 @@ class ToolsClass:
         # Find all datetime parts and format them
         formatted_time_band = re.sub(r'(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}\.\d+', r'\1-\2-\3', time_band)
         return formatted_time_band
-    
+
     def format_lat_band(self, dataset) -> str:
         """
         Format the latitude band information from a dataset.

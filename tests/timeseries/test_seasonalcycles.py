@@ -32,7 +32,7 @@ class TestSeasonalCycles:
                             source=self.source, regrid=self.regrid,
                             startdate=self.startdate, enddate=self.enddate,
                             loglevel=loglevel)
-        
+
         assert sc.lon_limits is None
         assert sc.lat_limits is None
 

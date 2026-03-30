@@ -25,7 +25,7 @@ def parse_arguments(args):
 if __name__ == '__main__':
 
     args = parse_arguments(sys.argv[1:])
-    
+
     cli = DiagnosticCLI(
         args,
         diagnostic_name=TOOLNAME_KEY,
@@ -71,7 +71,7 @@ if __name__ == '__main__':
                                         outputdir=cli.outputdir, loglevel=cli.loglevel)
 
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
-        
+
         all_plot_params = tool_dict.get('plot_params', {})
         default_params = all_plot_params.get('default', {})
 

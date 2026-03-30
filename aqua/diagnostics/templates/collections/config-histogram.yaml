@@ -44,14 +44,14 @@ diagnostics:
   histogram:
     run: true
     diagnostic_name: 'histogram'
-    
+
     # Histogram computation parameters
     bins: 100              # Number of bins for the histogram
     range: null            # Range for bins as [min, max], null for auto
     weighted: true         # Use latitudinal weights
     density: true          # Compute probability density function (PDF)
     box_brd: true          # Apply box boundaries
-    
+
     # Plotting options
     xlogscale: false       # Use logarithmic scale for x-axis
     ylogscale: true        # Use logarithmic scale for y-axis
@@ -61,7 +61,7 @@ diagnostics:
     xmax: null             # Maximum x-axis value (null for auto)
     ymin: null             # Minimum y-axis value (null for auto)
     ymax: null             # Maximum y-axis value (null for auto)
-    
+
     # Variables to process
     variables:
       - name: '2t'
@@ -72,19 +72,19 @@ diagnostics:
         # units: 'K'
         # long_name: '2m temperature'
         # standard_name: 'air_temperature'
-      
+
       # Example with multiple regions and custom range
       # - name: 'tp'
       #   regions: [null, 'tropics', 'NH', 'SH']
       #   range: [0, 20]  # Custom range for precipitation
       #   bins: 50
-      
+
       # Example with specific spatial limits
       # - name: 'sst'
       #   regions: [null]
       #   lon_limits: [-180, 180]
       #   lat_limits: [-60, 60]
-    
+
     # Formulae to process (optional)
     formulae: []
       # Example formula

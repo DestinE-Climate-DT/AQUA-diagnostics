@@ -57,7 +57,7 @@ def test_ENSO(tmp_path):
     # Plotting
     plot_ref = PlotENSO(loglevel=loglevel, indexes=enso.index,
                         ref_indexes=enso.index, outputdir=tmp_path)
-    
+
     # Index plotting
     fig, _ = plot_ref.plot_index()
     description = plot_ref.set_index_description()

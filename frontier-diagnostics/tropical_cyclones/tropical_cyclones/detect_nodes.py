@@ -107,7 +107,7 @@ class DetectNodes():
                 self.logger.debug(orog_first_timestep)
                 self.logger.debug(outfield)
 
-                #orog_first_timestep.to_netcdf("/work/users/jost/aqua/tc/tc_analysis/tmpdir/ERA5/era5/orog_first_timestep.nc")   
+                #orog_first_timestep.to_netcdf("/work/users/jost/aqua/tc/tc_analysis/tmpdir/ERA5/era5/orog_first_timestep.nc")
                 outfield = xr.merge([outfield, orog_first_timestep])
 
         elif self.model == 'IFS-NEMO' or self.model == 'IFS-FESOM':

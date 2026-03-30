@@ -2,7 +2,7 @@ import pytest
 import os
 import numpy as np
 import xarray as xr
-from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases 
+from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
 from aqua.core.exceptions import NoDataError
 from conftest import APPROX_REL, DPI, LOGLEVEL
 
@@ -41,14 +41,14 @@ def test_var():
 
 class TestGlobalBiases:
     """Test suite for GlobalBiases diagnostic."""
-    
-    def test_climatology(self, global_biases_instance, plot_global_biases_instance, 
+
+    def test_climatology(self, global_biases_instance, plot_global_biases_instance,
                         tmp_path_str, test_var):
 
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
-        
+
         gb.compute_climatology(var=var, seasonal=True)
         assert hasattr(gb, "climatology")
         assert hasattr(gb, "seasonal_climatology")
@@ -73,83 +73,83 @@ class TestGlobalBiases:
         png = os.path.join(tmp_path_str, 'png', f'globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.png')
         assert os.path.exists(png)
 
-    def test_bias(self, global_biases_instance, plot_global_biases_instance, 
+    def test_bias(self, global_biases_instance, plot_global_biases_instance,
                   tmp_path_str, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
 
-        gb.compute_climatology(var=var, seasonal=True, areas=True)        
+        gb.compute_climatology(var=var, seasonal=True, areas=True)
         assert 'cell_area' in gb.climatology
-        
+
         plotgb.plot_bias(data=gb.climatology, data_ref=gb.climatology, var=var, plev=85000, show_stats=True)
         pdf = os.path.join(tmp_path_str, 'pdf', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf')
         assert os.path.exists(pdf)
         png = os.path.join(tmp_path_str, 'png', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png')
         assert os.path.exists(png)
-        
+
     def test_stat_global_biases(self, global_biases_instance, tmp_path_str, test_var):
         gb = global_biases_instance
-        var = test_var 
-        gb.compute_climatology(var=var, areas=True, plev=85000)        
+        var = test_var
+        gb.compute_climatology(var=var, areas=True, plev=85000)
         stat_gb = StatGlobalBiases()
         result = stat_gb.compute_bias_statistics(data=gb.climatology, data_ref=gb.climatology, var=var)
         assert float(result['mean_bias'].values) == pytest.approx(0.0, abs=1e-12)
         assert float(result['rmse'].values) == pytest.approx(0.0, abs=1e-12)
-        
+
         #With a +1000 offset, every grid point must be flagged as significant
         ds_base = gb.data
         ds_big = gb.data.copy(deep=True)+1000.0
-        result = stat_gb.compute_significance_ttest(data=ds_base, data_ref=ds_big, var=var, 
+        result = stat_gb.compute_significance_ttest(data=ds_base, data_ref=ds_big, var=var,
                                                     alpha=0.05)
         assert isinstance(result, xr.DataArray)
         assert result.dtype == bool
         assert bool(result.all())
-               
-    def test_bias_with_stat(self, global_biases_instance, plot_global_biases_instance, 
+
+    def test_bias_with_stat(self, global_biases_instance, plot_global_biases_instance,
                   tmp_path_str, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
 
-        gb.compute_climatology(var=var)        
+        gb.compute_climatology(var=var)
         plotgb.plot_bias(data=gb.climatology, data_ref=gb.climatology, var=var, plev=85000,
-                        data_timeseries=gb.data, 
+                        data_timeseries=gb.data,
                         data_ref_timeseries=gb.data,
-                        show_significance = True)    
-        
+                        show_significance = True)
+
         pdf = os.path.join(tmp_path_str, 'pdf', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf')
         assert os.path.exists(pdf)
         png = os.path.join(tmp_path_str, 'png', f'globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png')
-        assert os.path.exists(png)         
+        assert os.path.exists(png)
 
 
-    def test_seasonal_bias(self, global_biases_instance, plot_global_biases_instance, 
+    def test_seasonal_bias(self, global_biases_instance, plot_global_biases_instance,
                           tmp_path_str, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
-        
+
         # Ensure seasonal climatology is computed
         if not hasattr(gb, 'seasonal_climatology'):
             gb.compute_climatology(var=var, seasonal=True)
-        
+
         plotgb.plot_seasonal_bias(data=gb.seasonal_climatology, data_ref=gb.seasonal_climatology, var=var, plev=85000)
         pdf = os.path.join(tmp_path_str, 'pdf', f'globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf')
         assert os.path.exists(pdf)
         png = os.path.join(tmp_path_str, 'png', f'globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png')
         assert os.path.exists(png)
 
-    def test_vertical_bias(self, global_biases_instance, plot_global_biases_instance, 
+    def test_vertical_bias(self, global_biases_instance, plot_global_biases_instance,
                           tmp_path_str, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
-        
+
         # Ensure climatology is computed
         if not hasattr(gb, 'climatology'):
             gb.compute_climatology(var=var, seasonal=True)
-        
+
         plotgb.plot_vertical_bias(data=gb.climatology, data_ref=gb.climatology, var=var, vmin=-0.002, vmax=0.002)
         pdf = os.path.join(tmp_path_str, 'pdf', f'globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.pdf')
         assert os.path.exists(pdf)
@@ -158,7 +158,7 @@ class TestGlobalBiases:
 
     def test_plev_selection(self, test_var):
         gb = GlobalBiases(catalog='ci', model='ERA5', exp='era5-hpz3', source='monthly', regrid='r100')
-        
+
         gb.retrieve(var=test_var, plev=85000)
         gb.compute_climatology(var=test_var, plev=85000)
         assert gb.climatology['q'].coords['plev'] == 85000

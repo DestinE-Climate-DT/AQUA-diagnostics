@@ -1,6 +1,6 @@
 # Tropical Cyclones CLI
 
-This folder contains the commandi line interface (CLI) to run the tropical cyclones detection, tracking and zoom in 
+This folder contains the commandi line interface (CLI) to run the tropical cyclones detection, tracking and zoom in
 diagnostic on a selected experiment.
 
 ## Usage
@@ -19,7 +19,7 @@ If a configuration is specified both in the configuration file and as a command 
 
 ## Execution with slurm
 
-The tropical cyclones CLI can be used in combination with slurm to submit a job in LEVANTE or LUMI. Please refer to the 
+The tropical cyclones CLI can be used in combination with slurm to submit a job in LEVANTE or LUMI. Please refer to the
 `run_TCs_LEVANTE.job` and `run_TCs_LUMI.job` to set the SBATCH options and adjust the output folder path according to the machine you are using. To launch a slurm job it is sufficient to type:
 ```
 slurm run_TCs_MACHINE.job

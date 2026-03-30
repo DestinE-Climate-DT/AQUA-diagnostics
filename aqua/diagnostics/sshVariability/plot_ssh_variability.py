@@ -139,7 +139,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         self.logger.info(f"Plotting SSH Variability for {model} and {exp}, from {startdate} to {enddate}.")
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        
+
         title = TitleBuilder(
             diagnostic="SSH Variability",
             variable=long_name,
@@ -395,7 +395,7 @@ class sshVariabilityPlot(PlotBaseMixin):
 
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        
+
         title = TitleBuilder(
             diagnostic="The difference of the SSH Variability",
             variable=long_name,

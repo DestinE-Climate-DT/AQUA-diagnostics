@@ -53,7 +53,7 @@ diagnostics:
         short_name: "10si"
         long_name: "Wind speed at 10m"
     plot_params:
-      default: 
+      default:
         projection: 'robinson'
         projection_params: {}
         show_stats: true
@@ -71,4 +71,3 @@ diagnostics:
         vmin: -2.5
         vmax: 2.5
         cmap: 'RdBu_r'
-  

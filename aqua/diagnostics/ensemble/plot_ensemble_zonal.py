@@ -175,7 +175,7 @@ class PlotEnsembleZonal(BaseMixin):
         # do the selection on the first vertical coordinate found
         if len(vert_coord) > 1:
             self.logger.warning(
-                "Found more than one vertical coordinate, using the first one: %s", 
+                "Found more than one vertical coordinate, using the first one: %s",
                 vert_coord[0])
 
         fig1 = plt.figure(figsize=figure_size)
@@ -207,7 +207,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax2 = fig2.add_subplot(1, 1, 1)
         im = ax2.contourf(
             dataset_std.lat,
-            dataset_std[vert_coord[0]],            
+            dataset_std[vert_coord[0]],
             dataset_std,
             cmap=cmap,
             levels=levels,

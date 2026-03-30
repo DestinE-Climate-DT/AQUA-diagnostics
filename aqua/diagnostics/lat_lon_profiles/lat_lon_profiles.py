@@ -1,7 +1,7 @@
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list, time_to_string
 from aqua.core.fixer import EvaluateFormula
-from aqua.diagnostics.base import Diagnostic, start_end_dates              
+from aqua.diagnostics.base import Diagnostic, start_end_dates
 
 class LatLonProfiles(Diagnostic):
 	"""
@@ -16,9 +16,9 @@ class LatLonProfiles(Diagnostic):
     Supported Mean Types:
         - 'zonal': Average over longitude, producing latitude profiles
         - 'meridional': Average over latitude, producing longitude profilesThe class evaluates a seasonal frequency and the entire period (longterm).
-		
+
 	"""
-	def __init__(self, model: str, exp: str, source: str, 
+	def __init__(self, model: str, exp: str, source: str,
 			  	 catalog: str = None, regrid: str = None,
 				 startdate: str = None, enddate: str = None,
 				 std_startdate: str = None, std_enddate: str = None,
@@ -82,7 +82,7 @@ class LatLonProfiles(Diagnostic):
 
 		self.mean_type = mean_type
 
-	def retrieve(self, var: str, formula: bool = False, long_name: str = None, 
+	def retrieve(self, var: str, formula: bool = False, long_name: str = None,
 				 units: str = None, standard_name: str = None,
 				 reader_kwargs: dict = {}):
 		"""
@@ -135,7 +135,7 @@ class LatLonProfiles(Diagnostic):
 			self.data.name = standard_name
 		else:
 			self.data.attrs['standard_name'] = var
-        
+
 	def compute_std(self, freq: str, exclude_incomplete: bool = True, center_time: bool = True,
 					box_brd: bool = True):
 		"""
@@ -153,17 +153,17 @@ class LatLonProfiles(Diagnostic):
 		if self.mean_type == 'zonal':
 			dims = ['lon']  # Average over longitude, keep latitude
 		elif self.mean_type == 'meridional':
-			dims = ['lat']  # Average over latitude, keep longitude  
+			dims = ['lat']  # Average over latitude, keep longitude
 		else:
 			raise ValueError(f'Mean type {self.mean_type} not recognized for std computation.')
 
 		# Start with monthly data for both seasonal and longterm std calculations
 		data = self.data
-		data = self.reader.fldmean(data, box_brd=box_brd, 
+		data = self.reader.fldmean(data, box_brd=box_brd,
 								   lon_limits=self.lon_limits, lat_limits=self.lat_limits,
 								   dims=dims)
-		monthly_data = self.reader.timmean(data, freq='monthly', 
-										   exclude_incomplete=exclude_incomplete, 
+		monthly_data = self.reader.timmean(data, freq='monthly',
+										   exclude_incomplete=exclude_incomplete,
 										   center_time=center_time)
 		monthly_data = monthly_data.sel(time=slice(self.std_startdate, self.std_enddate))
 
@@ -178,7 +178,7 @@ class LatLonProfiles(Diagnostic):
 		if freq == 'seasonal':
 			# Group by season and compute std
 			seasonal_std = monthly_data.groupby('time.season').std('time')
-			
+
 			# Convert to list [DJF, MAM, JJA, SON]
 			seasons = ['DJF', 'MAM', 'JJA', 'SON']
 			seasonal_std_list = []
@@ -187,7 +187,7 @@ class LatLonProfiles(Diagnostic):
 				season_data.attrs['AQUA_startdate'] = time_to_string(self.plt_startdate)
 				season_data.attrs['AQUA_enddate'] = time_to_string(self.plt_enddate)
 				seasonal_std_list.append(season_data)
-			
+
 			self.std_seasonal = seasonal_std_list
 
 			self.logger.debug("Loading data in memory")
@@ -206,7 +206,7 @@ class LatLonProfiles(Diagnostic):
 			self.logger.debug("Loading data in memory")
 			self.std_annual.load()
 			self.logger.debug("Loaded data in memory")
-                
+
 	def save_netcdf(self, freq: str, outputdir: str = './', rebuild: bool = True):
 		"""
 		Save the data to a netcdf file.
@@ -228,20 +228,20 @@ class LatLonProfiles(Diagnostic):
 			if data is None:
 				self.logger.error('No longterm data available')
 				return
-			
+
 		diagnostic_product = f"{self.mean_type}_profile"
 
 		# Handle seasonal data (list of seasons)
 		if freq == 'seasonal':
 			seasons = ['DJF', 'MAM', 'JJA', 'SON']
 			for i, season_data in enumerate(data):
-				var = getattr(season_data, 'standard_name', 'unknown')				
+				var = getattr(season_data, 'standard_name', 'unknown')
 
 				extra_keys = {'freq': freq, 'season': seasons[i], 'var': var}
 				if self.region is not None:
 					region = self.region
 					extra_keys['AQUA_region'] = region
-				
+
 				self.logger.info('Saving %s data for %s to netcdf in %s', seasons[i], diagnostic_product, outputdir)
 				super().save_netcdf(data=season_data, diagnostic=self.diagnostic_name,
 									diagnostic_product=diagnostic_product,
@@ -254,7 +254,7 @@ class LatLonProfiles(Diagnostic):
 			if self.region is not None:
 				region = self.region
 				extra_keys['AQUA_region'] = region
-			
+
 			self.logger.info('Saving %s data for %s to netcdf in %s', freq, diagnostic_product, outputdir)
 			super().save_netcdf(data=data, diagnostic=self.diagnostic_name,
 							    diagnostic_product=diagnostic_product,
@@ -275,7 +275,7 @@ class LatLonProfiles(Diagnostic):
 					super().save_netcdf(data=std_data, diagnostic=self.diagnostic_name,
 										diagnostic_product=diagnostic_product,
 										outputdir=outputdir, rebuild=rebuild, extra_keys=extra_keys)
-				
+
 			elif freq == 'longterm':
 				# Handle longterm std data
 				var = getattr(data_std, 'standard_name', 'unknown')
@@ -312,13 +312,13 @@ class LatLonProfiles(Diagnostic):
 		data = self.data.sel(time=slice(self.plt_startdate, self.plt_enddate))
 
 		if freq == 'seasonal':
-			data = self.reader.fldmean(data, 
-							  		   box_brd=box_brd, 
-									   lon_limits=self.lon_limits, 
+			data = self.reader.fldmean(data,
+							  		   box_brd=box_brd,
+									   lon_limits=self.lon_limits,
 									   lat_limits=self.lat_limits,
 									   dims=dims)
-			seasonal_dataset = self.reader.timmean(data, freq=freq, 
-												   exclude_incomplete=exclude_incomplete, 
+			seasonal_dataset = self.reader.timmean(data, freq=freq,
+												   exclude_incomplete=exclude_incomplete,
 												   center_time=center_time)
 			seasonal_data = [seasonal_dataset.isel(time=i, drop=True) for i in range(4)]
 			if self.region is not None:
@@ -334,10 +334,10 @@ class LatLonProfiles(Diagnostic):
 
 		elif freq == 'longterm':
 			# Field and time average
-			data = self.reader.timmean(data, freq=None, 
-							  		   exclude_incomplete=exclude_incomplete, 
+			data = self.reader.timmean(data, freq=None,
+							  		   exclude_incomplete=exclude_incomplete,
 									   center_time=center_time)
-			data = self.reader.fldmean(data, box_brd=box_brd, 
+			data = self.reader.fldmean(data, box_brd=box_brd,
 							  		   lon_limits=self.lon_limits, lat_limits=self.lat_limits,
 									   dims=dims)
 
@@ -380,18 +380,18 @@ class LatLonProfiles(Diagnostic):
 				reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
 			"""
 			self.logger.info('Running LatLonProfiles for %s', var)
-			
+
 			# Retrieve the data
-			self.retrieve(var=var, formula=formula, long_name=long_name, 
+			self.retrieve(var=var, formula=formula, long_name=long_name,
 						  units=units, standard_name=standard_name,
 						  reader_kwargs=reader_kwargs)
 
 			self.logger.info('Mean type set to %s', self.mean_type)
-			
+
             # Check if data is valid
 			if units is not None:
 				self.data = self._check_data(data=self.data, var=var, units=units)
-			
+
 			# Compute temporal means (seasonal/longterm)
 			self.logger.info('Computing temporal means')
 			freq = to_list(freq)
@@ -399,13 +399,13 @@ class LatLonProfiles(Diagnostic):
 				self.logger.info(f'Computing {f} mean')
 				self.compute_dim_mean(freq=f, exclude_incomplete=exclude_incomplete,
 									  center_time=center_time, box_brd=box_brd)
-				
-				if std: 
+
+				if std:
 					self.logger.info(f'Computing {f} standard deviation')
-					self.compute_std(freq=f, exclude_incomplete=exclude_incomplete, 
+					self.compute_std(freq=f, exclude_incomplete=exclude_incomplete,
 									 center_time=center_time, box_brd=box_brd)
-				
+
 				self.logger.info(f'Saving {f} netcdf file')
 				self.save_netcdf(freq=f, outputdir=outputdir, rebuild=rebuild)
-			
+
 			self.logger.info('LatLonProfiles computation completed')

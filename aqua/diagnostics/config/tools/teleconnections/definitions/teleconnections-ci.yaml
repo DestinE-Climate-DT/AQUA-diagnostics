@@ -3,7 +3,7 @@
 #
 # Parameters in common to the teleconnections are:
 #
-# telec_type: 'station' or 'region' choose the 
+# telec_type: 'station' or 'region' choose the
 #             function to use to compute the teleconnection
 # field: field used to compute the teleconnection
 

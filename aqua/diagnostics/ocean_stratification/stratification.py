@@ -161,7 +161,7 @@ class Stratification(Diagnostic):
         else:
             self.save_netcdf(self.data['mld'], diagnostic_product='mld', outputdir=outputdir, rebuild=rebuild, region=self.region)
             self.logger.info("MLD diagnostic saved to netCDF file.")
-       
+
 
     def compute_stratification(self):
         """

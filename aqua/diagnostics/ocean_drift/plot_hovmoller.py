@@ -57,8 +57,8 @@ class PlotHovmoller:
             diagnostic=self.diagnostic,
             catalog=self.catalog,
             model=self.model,
-            exp=self.exp, 
-            outputdir=outputdir, 
+            exp=self.exp,
+            outputdir=outputdir,
             realization=self.realizations,
             loglevel=self.loglevel)
 
@@ -147,7 +147,7 @@ class PlotHovmoller:
         )
 
         self.save_plot(fig, diagnostic_product="timeseries", extra_keys={'region': self.region},
-                       metadata={"description": self.description}, rebuild=rebuild, 
+                       metadata={"description": self.description}, rebuild=rebuild,
                        dpi=dpi, format=save_format)
 
     def set_levels(self):
@@ -174,7 +174,7 @@ class PlotHovmoller:
                 # Interpolate the data to the specified levels
                 if level == 0:
                     new_data = data.isel({self.vert_coord: 0})
-                else: 
+                else:
                     new_data = data.interp({self.vert_coord: level}, method='nearest')
                 new_data_level_list.append(new_data)
             merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords='different')
@@ -252,7 +252,7 @@ class PlotHovmoller:
             for var in self.vars:
                 self.vmax.append(hovmoller_plot_dic[var][type].get('vmax'))
                 self.vmin.append(hovmoller_plot_dic[var][type].get('vmin'))
-                self.cmap.append(hovmoller_plot_dic[var][type].get('cbar', 'jet'))      
+                self.cmap.append(hovmoller_plot_dic[var][type].get('cbar', 'jet'))
 
     def set_data_type(self):
         """
