@@ -90,7 +90,7 @@ if __name__ == "__main__":
                     # Reference data
                     if "references" in config_dict:
                         logger.info(
-                            f"Processing reference data"
+                            "Processing reference data"
                         )
                         obs_stratification = Stratification(
                             **reference_args,
@@ -146,7 +146,7 @@ if __name__ == "__main__":
                     # Reference data
                     if "references" in config_dict:
                         logger.info(
-                            f"Processing reference data"
+                            "Processing reference data"
                         )
                         obs_stratification = Stratification(
                             **reference_args,

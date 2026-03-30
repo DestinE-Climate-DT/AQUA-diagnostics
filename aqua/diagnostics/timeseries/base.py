@@ -6,7 +6,7 @@ import xarray as xr
 
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, strlist_to_phrase, time_to_string, unit_to_latex
+from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, strlist_to_phrase, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, start_end_dates
 
 xr.set_options(keep_attrs=True)
@@ -396,10 +396,10 @@ class PlotBaseMixin():
         description += strlist_to_phrase(items=[f'{self.catalogs[i]} {self.models[i]} {self.exps[i]}' for i in range(self.len_data)])
 
         if self.len_ref > 0:
-            description += f' with reference'
+            description += ' with reference'
             for i in range(self.len_ref):
                 if self.ref_models[i] == 'ERA5' or self.ref_models == 'ERA5':
-                    description += f' ERA5 '
+                    description += ' ERA5 '
                 elif isinstance(self.ref_models, list):
                     description += f' {self.ref_models[i]} {self.ref_exps[i]} '
                 else:

@@ -8,7 +8,6 @@ defined in a yaml configuration file for multiple models.
 import argparse
 import sys
 
-from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries, extract_realizations, reader_retrieve_and_merge

@@ -64,7 +64,7 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
     plt.tight_layout
 
     if save:
-        save_path = os.path.join(tdict['paths']['plotdir'], save_title + ".pdf", bbox_inches="tight")
+        save_path = os.path.join(tdict['paths']['plotdir'], f"{save_title}.pdf", bbox_inches="tight")
         plt.savefig(save_path, dpi=350)
 
     plt.show()
@@ -72,14 +72,14 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
 
 def plot_trajectories(trajfile, tdict):
     # tempest settings
-    nVars=10
-    headerStr='start'
-    isUnstruc = 0
+    n_vars=10
+    header_str='start'
+    is_unstruc = 0
 
     # Extract trajectories from tempest file and assign to arrays
     # USER_MODIFY
 
-    nstorms, ntimes, traj_data = getTrajectories(trajfile,nVars,headerStr,isUnstruc)
+    nstorms, ntimes, traj_data = getTrajectories(trajfile,n_vars,header_str,is_unstruc)
     xlon   = traj_data[2,:,:]
     xlat   = traj_data[3,:,:]
     #xpres  = traj_data[4,:,:]/100.

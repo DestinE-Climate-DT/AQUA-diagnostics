@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import pytest
 import xarray as xr
 from conftest import APPROX_REL, DPI, LOGLEVEL
@@ -48,16 +47,16 @@ class TestBoxplots:
         assert isinstance(bp.fldmeans, xr.Dataset)
         assert all(v in bp.fldmeans for v in var)
 
-        nc = os.path.join(tmp_path_str, 'netcdf', f'boxplots.boxplot.ci.ERA5.era5-hpz3.r1.tnlwrf_tnswrf.nc')
+        nc = os.path.join(tmp_path_str, 'netcdf', 'boxplots.boxplot.ci.ERA5.era5-hpz3.r1.tnlwrf_tnswrf.nc')
         assert os.path.exists(nc)
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var)
 
-        pdf = os.path.join(tmp_path_str, 'pdf', f'test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf')
+        pdf = os.path.join(tmp_path_str, 'pdf', 'test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf')
         assert os.path.exists(pdf)
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var, anomalies=True, add_mean_line=True)
-        png = os.path.join(tmp_path_str, 'png', f'test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png')
+        png = os.path.join(tmp_path_str, 'png', 'test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png')
         assert os.path.exists(png)
 
     def test_run_with_units(self, boxplots_instance):

@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 
-import numpy as np
-import pandas as pd
-import xarray as xr
 from tropical_cyclones import TCs
 
 from aqua.core.logger import log_configure

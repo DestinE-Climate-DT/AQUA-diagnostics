@@ -3,14 +3,13 @@ Module to plot multiple maps
 
 """
 import matplotlib.pyplot as plt
-import numpy as np
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.graphics.styles import ConfigStyle
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label, evaluate_colorbar_limits, plot_box
+from aqua.core.util import evaluate_colorbar_limits, plot_box
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 

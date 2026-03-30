@@ -2,8 +2,6 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError
-from aqua.core.graphics import plot_vertical_profile
-from aqua.core.logger import log_configure
 from aqua.core.util import find_vert_coord
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
@@ -196,7 +194,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax1.set_title(title_mean)
         cbar = fig1.colorbar(im, ax=ax1, shrink=0.9, extend="both")
         cbar.set_label(cbar_label)
-        self.logger.debug(f"Saving Lev-Lon Zonal-average ensemble-mean as pdf and png")
+        self.logger.debug("Saving Lev-Lon Zonal-average ensemble-mean as pdf and png")
 
         if isinstance(dataset_std, xr.Dataset):
             dataset_std = dataset_std[var]
@@ -221,7 +219,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax2.set_title(title_std)
         cbar = fig2.colorbar(im, ax=ax2, shrink=0.9, extend="both")
         cbar.set_label(cbar_label)
-        self.logger.debug(f"Saving Lev-Lon Zonal-average ensemble-STD as pdf and png")
+        self.logger.debug("Saving Lev-Lon Zonal-average ensemble-STD as pdf and png")
 
         # Saving plots
         self.save_figure(

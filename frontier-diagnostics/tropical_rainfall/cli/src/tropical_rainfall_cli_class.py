@@ -2,7 +2,6 @@ import glob
 import os
 import re
 
-import pandas as pd
 import xarray as xr
 from dask.distributed import Client, LocalCluster
 from tropical_rainfall import Tropical_Rainfall
@@ -517,9 +516,9 @@ class Tropical_Rainfall_CLI:
                 start_month=self.s_month, end_month=self.f_month
             )
             if not os.path.exists(path_to_era5):
-                self.logger.error(f"The data is exist for compatison")
+                self.logger.error("The data is exist for compatison")
                 return
-            filename_era5 = self.diag.dataset_to_netcdf(era5_merged, path_to_netcdf=output_path, name_of_file=f'daily_variability_era5')
+            filename_era5 = self.diag.dataset_to_netcdf(era5_merged, path_to_netcdf=output_path, name_of_file='daily_variability_era5')
             self.diag.daily_variability_plot(path_to_netcdf=filename_era5, legend='ERA5', relative=False, new_unit=self.new_unit,
                                              color=self.era5_color, add=add, linestyle='-', path_to_pdf=self.path_to_pdf,
                                              pdf_format=self.pdf_format, name_of_file=name_of_pdf)

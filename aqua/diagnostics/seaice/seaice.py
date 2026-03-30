@@ -328,7 +328,7 @@ class SeaIce(Diagnostic):
 
         # get xr.DataArray with info on grid area that must be reinitialised for each region.
         if len(areacello.data_vars) > 1:
-            self.logger.warning(f"Dataset 'areacello' has more than one variable. Searching for 'cell_area'")
+            self.logger.warning("Dataset 'areacello' has more than one variable. Searching for 'cell_area'")
             areacello = areacello['cell_area']
         else:
             var_name = list(areacello.data_vars)[0]

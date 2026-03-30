@@ -3,7 +3,7 @@ import os
 
 import pytest
 import xarray as xr
-from conftest import APPROX_REL, DPI, LOGLEVEL
+from conftest import APPROX_REL, LOGLEVEL
 
 from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon
 from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge

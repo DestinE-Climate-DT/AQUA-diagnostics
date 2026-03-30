@@ -2,11 +2,9 @@
 Module to plot multiple maps
 
 """
-from typing import Optional, Tuple
 
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
-import numpy as np
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 

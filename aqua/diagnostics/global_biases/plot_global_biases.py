@@ -1,7 +1,5 @@
 import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
 
 from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure

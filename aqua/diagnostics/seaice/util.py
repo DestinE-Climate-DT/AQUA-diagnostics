@@ -1,13 +1,6 @@
 """Utility for the sea ice plotting module"""
 
-import os
 from collections import defaultdict
-
-import xarray as xr
-
-from aqua.core.configurer import ConfigPath
-from aqua.core.logger import log_configure
-from aqua.core.util import load_yaml
 
 
 def defaultdict_to_dict(d):

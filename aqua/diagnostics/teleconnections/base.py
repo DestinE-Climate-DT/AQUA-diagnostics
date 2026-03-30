@@ -81,7 +81,7 @@ class BaseMixin(Diagnostic):
 
         # Modify the attributes to match the correlation
         corr.attrs['long_name'] = f'Correlation of {data.long_name} with index evaluated with {index.long_name}'
-        corr.attrs['shortName'] = f'Pearson_correlation'
+        corr.attrs['shortName'] = 'Pearson_correlation'
         corr.attrs['units'] = '1'
 
         return corr

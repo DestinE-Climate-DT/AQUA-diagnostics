@@ -7,8 +7,6 @@
 import os
 import re
 from datetime import datetime
-from os import listdir
-from os.path import isfile, join
 from typing import Any, List, Optional, Tuple, Union
 
 import dask.array as da
@@ -916,7 +914,7 @@ class MainClass:
             self.tools.check_incomplete_months(histograms_to_load)
             histograms_to_load = self.tools.check_and_remove_incomplete_months(histograms_to_load)
 
-            self.logger.debug(f"List of files to merge:")
+            self.logger.debug("List of files to merge:")
             for i in range(0, len(histograms_to_load)):
                 self.logger.debug(f"{histograms_to_load[i]}")
 
@@ -2223,7 +2221,7 @@ class MainClass:
         self.tools.check_incomplete_months(list_to_load)
         list_to_load = self.tools.check_and_remove_incomplete_months(list_to_load)
 
-        self.logger.debug(f"List of files to merge:")
+        self.logger.debug("List of files to merge:")
         for i in range(0, len(list_to_load)):
             self.logger.debug(f"{list_to_load[i]}")
 

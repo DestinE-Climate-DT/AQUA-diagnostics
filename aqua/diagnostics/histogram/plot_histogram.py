@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, to_list, unit_to_latex
+from aqua.core.util import DEFAULT_REALIZATION, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 

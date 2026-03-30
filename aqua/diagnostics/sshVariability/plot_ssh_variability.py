@@ -126,7 +126,7 @@ class sshVariabilityPlot(PlotBaseMixin):
 
         if dataset_std is None:
             self.logger.error("Please provide the data to the plot function")
-            raise RuntimeError(f"No model data found")
+            raise RuntimeError("No model data found")
 
         if isinstance(dataset_std, xr.Dataset):
             dataset_std = dataset_std[var]

@@ -155,7 +155,7 @@ class TitleBuilder:
 
         if self.realizations:
             if len(self.realizations) > 1:
-                title += f" Multi-realization"
+                title += " Multi-realization"
             else:
                 title += f" {self.realizations[0]}"
 

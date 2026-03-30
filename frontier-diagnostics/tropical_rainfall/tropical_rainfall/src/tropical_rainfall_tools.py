@@ -270,7 +270,7 @@ class ToolsClass:
         try:
             dataset = xr.open_dataset(path_to_netcdf, engine='netcdf4')
             return dataset
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             self.logger.error(f"File not found: {path_to_netcdf}")
             raise FileNotFoundError(f"The specified dataset file was not found: {path_to_netcdf}")
         except ValueError as e:

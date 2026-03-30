@@ -1,5 +1,3 @@
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError
@@ -208,7 +206,7 @@ class PlotEnsembleLatLon(BaseMixin):
         )
         ax1.set_xlabel("Longitude")
         ax1.set_ylabel("Latitude")
-        self.logger.debug(f"Saving 2D map of mean")
+        self.logger.debug("Saving 2D map of mean")
 
         # STD plot
         if isinstance(dataset_std, xr.Dataset):

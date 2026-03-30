@@ -215,9 +215,9 @@ class GlobalBiases(Diagnostic):
                 self.climatology['cell_area'] = self.reader.src_grid_area.cell_area
 
         # Load data in memory for faster plot
-        self.logger.debug(f"Loading climatology data in memory")
+        self.logger.debug("Loading climatology data in memory")
         self.climatology.load()
-        self.logger.debug(f"Loaded climatology data in memory")
+        self.logger.debug("Loaded climatology data in memory")
 
         if save_netcdf:
             extra_keys = {
@@ -259,9 +259,9 @@ class GlobalBiases(Diagnostic):
             })
 
             # Load data in memory for faster plot
-            self.logger.debug(f"Loading seasonal climatology data in memory")
+            self.logger.debug("Loading seasonal climatology data in memory")
             self.seasonal_climatology.load()
-            self.logger.debug(f"Loaded seasonal climatology data in memory")
+            self.logger.debug("Loaded seasonal climatology data in memory")
 
             if save_netcdf:
                 extra_keys = {k: v for k, v in [('var', var), ('plev', plev)] if v is not None}

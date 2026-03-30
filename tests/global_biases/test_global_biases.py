@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import pytest
 import xarray as xr
 from conftest import APPROX_REL, DPI, LOGLEVEL

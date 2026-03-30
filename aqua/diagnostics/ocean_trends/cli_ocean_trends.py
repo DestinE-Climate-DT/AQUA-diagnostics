@@ -9,7 +9,6 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.core.util import get_arg
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.ocean_trends import PlotTrends, Trends
 

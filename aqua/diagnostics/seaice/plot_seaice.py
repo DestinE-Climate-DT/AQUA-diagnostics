@@ -126,8 +126,8 @@ class PlotSeaIce:
             str: The region name.
         """
         if da is None:
-            self.logger.error(f"DataArray is None. Cannot determine region without a valid DataArray.")
-            raise KeyError(f"DataArray is None. Cannot determine region without a valid DataArray.")
+            self.logger.error("DataArray is None. Cannot determine region without a valid DataArray.")
+            raise KeyError("DataArray is None. Cannot determine region without a valid DataArray.")
 
         region = da.attrs.get("AQUA_region")
 

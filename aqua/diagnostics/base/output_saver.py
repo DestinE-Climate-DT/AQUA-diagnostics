@@ -251,9 +251,9 @@ class OutputSaver:
         dataset.attrs.update(metadata)
 
         if dataset.chunks:
-            self.logger.debug(f"Loading data in memory")
+            self.logger.debug("Loading data in memory")
             dataset.load()
-        self.logger.debug(f"Writing to netcdf %s", filepath)
+        self.logger.debug("Writing to netcdf %s", filepath)
 
         dataset.to_netcdf(filepath)
 

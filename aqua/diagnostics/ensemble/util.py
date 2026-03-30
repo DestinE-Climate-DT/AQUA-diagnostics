@@ -3,7 +3,6 @@ Utility functions for the ensemble class
 """
 
 import gc
-import os
 from collections import Counter
 
 import numpy as np

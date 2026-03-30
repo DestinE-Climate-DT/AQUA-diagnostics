@@ -1,5 +1,4 @@
 """ PlotSeaIce doc """
-import os
 
 import cartopy.crs as ccrs
 import matplotlib.colors as mcolors
@@ -23,7 +22,7 @@ from aqua.core.util import (
 )
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
-from .util import _check_list_regions_type, extract_dates
+from .util import _check_list_regions_type
 
 xr.set_options(keep_attrs=True)
 
@@ -538,7 +537,7 @@ class Plot2DSeaIce:
         """
         def _update_regions_list(dalist):
             if dalist is None:
-                self.logger.warning(f"Input data list is None. Skipping region detection")
+                self.logger.warning("Input data list is None. Skipping region detection")
                 return
 
             self.regions_to_plot = []

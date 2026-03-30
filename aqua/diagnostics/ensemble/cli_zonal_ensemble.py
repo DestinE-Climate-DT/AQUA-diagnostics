@@ -10,7 +10,6 @@ import sys
 
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
 from aqua.diagnostics import EnsembleZonal, PlotEnsembleZonal, reader_retrieve_and_merge
 from aqua.diagnostics.base import (
     SAVE_FORMAT,

@@ -2,7 +2,6 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from pyproj import transform
 
 from aqua.core.graphics import ConfigStyle
 from aqua.core.graphics.single_map import plot_single_map

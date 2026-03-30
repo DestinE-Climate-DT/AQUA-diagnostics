@@ -173,7 +173,7 @@ class Timeseries(BaseMixin):
 
             # Handle case where data might be None
             if data is None or len(data.time) == 0:
-                self.logger.warning(f"Cannot extend data: data is None or empty")
+                self.logger.warning("Cannot extend data: data is None or empty")
                 return data
 
             self.logger.debug(f"Start date of data: {data.time[0].values}, End date of data: {data.time[-1].values}")

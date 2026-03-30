@@ -1,6 +1,4 @@
 import matplotlib as plt
-import numpy as np
-import xarray as xr
 
 from aqua.core.graphics import boxplot
 from aqua.core.logger import log_configure

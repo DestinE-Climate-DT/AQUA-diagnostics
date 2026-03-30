@@ -136,7 +136,7 @@ class Trends(Diagnostic):
             else:
                 self.logger.error("Unable to determine time frequency")
                 raise ValueError(
-                    f"The frequency of the data must be in Daily/Monthly/Yearly"
+                    "The frequency of the data must be in Daily/Monthly/Yearly"
                 )
 
         if time_frequency == "MS":
