@@ -16,7 +16,7 @@ output:
   create_catalog_entry: false
 
 diagnostics:
-  ecmean: 
+  ecmean:
     nprocs: 1
     interface_file: 'interface_AQUA_climatedt.yaml'
     config_file: 'ecmean_config_climatedt.yaml'
@@ -38,6 +38,5 @@ diagnostics:
         'tnswrf', 'tnlwrf', 'snswrf', 'snlwrf', 'ishf', 'slhtf',
         'u', 'v', 't', 'q']
       oce_vars: ['tos', 'siconc', 'sos']
-      year1: null #if you want to select some specific years, otherwise use the entire 
+      year1: null #if you want to select some specific years, otherwise use the entire
       year2: null
-  

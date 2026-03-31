@@ -1,13 +1,14 @@
 """Tests for the TitleBuilder class."""
 import pytest
+
 from aqua.diagnostics.base import TitleBuilder
 
 pytestmark = pytest.mark.aqua
 
 @pytest.mark.parametrize("kwargs,expected", [
     ({"title": "Custom Title"}, "Custom Title"),
-    ({"diagnostic": "MLD", "regions": "global", "catalog": "ci", "model": "ERA5", 
-      "exp": "era5-hpz3", "timeseason": "climatology"}, 
+    ({"diagnostic": "MLD", "regions": "global", "catalog": "ci", "model": "ERA5",
+      "exp": "era5-hpz3", "timeseason": "climatology"},
       "MLD [global] for ci ERA5 era5-hpz3 climatology"),
     ({}, ""), # Empty result
     ({"variable": "Temperature"}, "Temperature"),
@@ -60,7 +61,9 @@ def test_title_complex():
         ref_endyear=1990,
         extra_info="info"
     ).generate()
-    assert result == "Stratification [global] for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
+    assert result == (
+        "Stratification [global] for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
+    )
     assert "  " not in result
 
 

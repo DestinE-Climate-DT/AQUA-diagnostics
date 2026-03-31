@@ -1,8 +1,9 @@
-import xarray as xr
 from itertools import product
 
-from aqua.core.util import to_list
+import xarray as xr
+
 from aqua.core.logger import log_configure
+from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -119,7 +120,7 @@ class Hovmoller(Diagnostic):
         self.stacked_data = self.compute_hovmoller(
             dim_mean=dim_mean, anomaly_ref=anomaly_ref
         )
-        
+
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=self.region)
         self.logger.info("Hovmoller diagram saved to netCDF file")
 
@@ -200,11 +201,11 @@ class Hovmoller(Diagnostic):
         if standardise:
             data = self._get_standardise(data, dim)
 
-        Std = "std_" if standardise else ""
+        s_std = "std_" if standardise else ""
         anom = "anom" if anomaly_ref is not None else "full"
         anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
 
-        type = f"{Std}{anom}{anom_ref}"
+        type = f"{s_std}{anom}{anom_ref}"
         data.attrs["AQUA_ocean_drift_type"] = type
         data.attrs["AQUA_region"] = self.region
         return data

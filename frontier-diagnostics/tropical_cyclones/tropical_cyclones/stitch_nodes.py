@@ -1,10 +1,12 @@
 import os
 import subprocess
-import xarray as xr
-import pandas as pd
+from datetime import datetime
 from glob import glob
 from time import time
-from datetime import datetime
+
+import pandas as pd
+import xarray as xr
+
 from .tools.tcs_utils import write_fullres_field
 
 
@@ -104,10 +106,10 @@ class StitchNodes():
         unique_dates = pd.Index(dates_ext).strftime('%Y%m%d').unique()
         file_paths = [os.path.join(
             self.paths['tmpdir'], f"tempest_output_{date}T??.txt") for date in unique_dates]
-        
+
         # use glob to get list of filenames that match the pattern
         filenames = []
-              
+
         for file_path in file_paths:
             filenames.extend(sorted(glob(file_path)))
 
@@ -138,13 +140,13 @@ class StitchNodes():
             for fname in sorted(self.tempest_filenames):
                 with open(fname) as infile:
                     outfile.write(infile.read())
-                    
+
         # if the orography is found run stitch nodes accordingly
         if 'z' in self.lowres2d.data_vars or self.orography:
             stitch_string = f'StitchNodes --in {full_nodes} --out {self.track_file} --in_fmt lon,lat,slp,wind,zs --range 8.0 --mintime {mintime} ' \
                 f'--maxgap {maxgap} --threshold wind,>=,10.0,10;lat,<=,50.0,10;lat,>=,-50.0,10;zs,<=,1500.0,10'
             self.logger.info(stitch_string)
-            
+
         # if the orography is found run stitch nodes accordingly
         else:
             stitch_string = f'StitchNodes --in {full_nodes} --out {self.track_file} --in_fmt lon,lat,slp,wind --range 8.0 --mintime {mintime} ' \
@@ -155,7 +157,7 @@ class StitchNodes():
             subprocess.run(stitch_string.split())
         else:
             subprocess.run(stitch_string.split(), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        
+
         self.logger.warning(f'Tracked into {self.track_file}!')
 
     def reorder_tracks(self):

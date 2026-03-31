@@ -10,11 +10,9 @@ import argparse
 import sys
 
 from aqua.core.util import to_list
-from aqua.diagnostics.base import template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.ocean_stratification import PlotMLD, PlotStratification
 from aqua.diagnostics.ocean_stratification.stratification import Stratification
-from aqua.diagnostics.ocean_stratification import PlotStratification
-from aqua.diagnostics.ocean_stratification import PlotMLD
-from aqua.diagnostics.base import DiagnosticCLI
 
 
 def parse_arguments(args):
@@ -30,13 +28,13 @@ def parse_arguments(args):
 
 if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
-    
-    cli = DiagnosticCLI(args, 
-                        diagnostic_name='ocean3d', 
-                        default_config='config-ocean3d-en4-stratification.yaml', 
+
+    cli = DiagnosticCLI(args,
+                        diagnostic_name='ocean3d',
+                        default_config='config-ocean3d-en4-stratification.yaml',
                         log_name='OceanStratification CLI').prepare()
     cli.open_dask_cluster()
-    
+
     logger = cli.logger
     config_dict = cli.config_dict
 
@@ -50,7 +48,7 @@ if __name__ == "__main__":
         reference = config_dict["references"][0]
         reference_args = cli.reference_args(reference)
         cli.logger.debug(f"Reference args: {reference_args}")
-        
+
 
     if "stratification" in config_dict["diagnostics"]["ocean_stratification"]:
         stratification_config = config_dict["diagnostics"]["ocean_stratification"][
@@ -92,7 +90,7 @@ if __name__ == "__main__":
                     # Reference data
                     if "references" in config_dict:
                         logger.info(
-                            f"Processing reference data"
+                            "Processing reference data"
                         )
                         obs_stratification = Stratification(
                             **reference_args,
@@ -148,7 +146,7 @@ if __name__ == "__main__":
                     # Reference data
                     if "references" in config_dict:
                         logger.info(
-                            f"Processing reference data"
+                            "Processing reference data"
                         )
                         obs_stratification = Stratification(
                             **reference_args,

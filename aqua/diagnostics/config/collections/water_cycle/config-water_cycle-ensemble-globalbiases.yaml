@@ -39,8 +39,8 @@ diagnostics:
         show_significance: true    # Enable significance stippling
         significance_alpha: 0.05  # 95% confidence level
       tprate:
-        vmin: 
-        vmax: 
-        vmin_std: 
-        vmax_std: 
+        vmin:
+        vmax:
+        vmin_std:
+        vmax_std:
         cmap: 'BrBG'

@@ -59,8 +59,8 @@ diagnostics:
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: false     # Vertical profile if variable 3d
-    plot_params: 
-      default: 
+    plot_params:
+      default:
         projection: 'robinson'
         projection_params: {}
         show_stats: true
@@ -78,4 +78,3 @@ diagnostics:
       ishf:
         vmin: -30
         vmax: 30
-    

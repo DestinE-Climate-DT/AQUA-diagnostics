@@ -3,7 +3,7 @@
 Creating Custom Diagnostics
 ---------------------------
 
-AQUA allows users to create custom diagnostics to suit their specific needs. 
+AQUA allows users to create custom diagnostics to suit their specific needs.
 Custom diagnostics can be implemented as Python functions or classes and integrated into AQUA's diagnostic framework.
 
 In this section we provide some guidelines for the development of new diagnostics.

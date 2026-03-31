@@ -3,7 +3,9 @@ Title generation class and utilities for AQUA plots.
 """
 
 from typing import Optional, Union
-from aqua.core.util import to_list, strlist_to_phrase
+
+from aqua.core.util import strlist_to_phrase, to_list
+
 from .strings import harmonize_lists
 
 
@@ -34,21 +36,21 @@ class TitleBuilder:
     """
     DEFAULT_SPLIT_MARKERS = ["relative to", "for", "in"]
 
-    def __init__(self, 
+    def __init__(self,
                  title: Optional[str] = None,
                  diagnostic: Optional[str] = None,
                  variable: Optional[str] = None,
                  regions: Optional[Union[str, list]] = None,
                  conjunction: Optional[str] = None,
                  catalog: Optional[Union[str, list]] = None,
-                 model: Optional[Union[str, list]] = None, 
+                 model: Optional[Union[str, list]] = None,
                  exp: Optional[Union[str, list]] = None,
                  startyear: Optional[int | str] = None,
                  endyear: Optional[int | str] = None,
                  realizations: Optional[Union[str, list]] = None,
                  comparison: Optional[str] = None,
                  ref_catalog: Optional[Union[str, list]] = None,
-                 ref_model: Optional[Union[str, list]] = None, 
+                 ref_model: Optional[Union[str, list]] = None,
                  ref_exp: Optional[Union[str, list]] = None,
                  timeseason: Optional[str] = None,
                  ref_startyear: Optional[int | str] = None,
@@ -84,7 +86,7 @@ class TitleBuilder:
         """
         listpart = list(filter(None, [self.catalogs, self.models, self.exps]))
         listpart = harmonize_lists(*listpart)
-        
+
         if listpart:
             if len(listpart) > 1:
                 return "Multi-model "
@@ -104,7 +106,7 @@ class TitleBuilder:
             ref_list_unique = list(dict.fromkeys(ref_listpart))
             return ", ".join(ref_list_unique)
         return None
-        
+
     def _format_years(self, startyear=None, endyear=None) -> str | None:
         """Format start and end year into a year range string.
 
@@ -188,7 +190,7 @@ class TitleBuilder:
             regions_str = strlist_to_phrase(regions_list)
             if regions_str:
                 title += f" [{regions_str}]"
-        
+
         models_part = self._format_models()
         if models_part:
             if title:
@@ -197,7 +199,7 @@ class TitleBuilder:
 
         if self.realizations:
             if len(self.realizations) > 1:
-                title += f" Multi-realization"
+                title += " Multi-realization"
             else:
                 title += f" {self.realizations[0]}"
 

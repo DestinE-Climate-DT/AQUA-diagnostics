@@ -36,7 +36,7 @@ diagnostics:
         significance_alpha: 0.05  # 95% confidence level
       tos:
         vmin:
-        vmax: 
-        vmin_std: 
-        vmax_std: 
+        vmax:
+        vmin_std:
+        vmax_std:
         cmap: 'RdBu_r'
