@@ -191,7 +191,8 @@ class Plot2DSeaIce:
                     **kwargs,
                 )
 
-                cbar_ref = self._add_colorbar(
+                # cbar_ref
+                self._add_colorbar(
                     fig,
                     monref,
                     ax=axs[0],
@@ -221,7 +222,8 @@ class Plot2DSeaIce:
                     **kwargs,
                 )
 
-                cbar_ref = self._add_colorbar(
+                # cbar_ref
+                self._add_colorbar(
                     fig,
                     monmod,
                     ax=axs[1],
@@ -263,7 +265,8 @@ class Plot2DSeaIce:
                     **kwargs,
                 )
 
-                cbar_diff = self._add_colorbar(
+                # cbar_diff
+                self._add_colorbar(
                     fig,
                     monref,
                     ax=axs[2],
@@ -289,10 +292,16 @@ class Plot2DSeaIce:
             f"Spatial map and total bias of the sea ice {monmod.attrs.get('AQUA_method', '')} climatology "
             f"in the {monmod.attrs.get('AQUA_region', 'geographic')} region. "
             f"The model data is {monmod.attrs.get('AQUA_model')} with experiment {monmod.attrs.get('AQUA_exp')} "
-            f"spanning from {time_to_string(monmod.attrs.get('AQUA_startdate', ''))} to {time_to_string(monmod.attrs.get('AQUA_enddate', ''))}. "
+            f"spanning from {time_to_string(monmod.attrs.get('AQUA_startdate', ''))} "
+            f"to {time_to_string(monmod.attrs.get('AQUA_enddate', ''))}. "
             f"The reference dataset is {monref.attrs.get('AQUA_model')} with experiment {monref.attrs.get('AQUA_exp')} "
-            f"spanning from {time_to_string(monref.attrs.get('AQUA_startdate', ''))} to {time_to_string(monref.attrs.get('AQUA_enddate', ''))}. "
-            f"{'The red contour line represents the regional sea ice fraction equal to 0.2.' if self.method == 'fraction' else ''}"
+            f"spanning from {time_to_string(monref.attrs.get('AQUA_startdate', ''))} "
+            f"to {time_to_string(monref.attrs.get('AQUA_enddate', ''))}. "
+            + (
+                "The red contour line represents the regional sea ice fraction equal to 0.2."
+                if self.method == "fraction"
+                else ""
+            )
         )
         self._save_plots(
             fig=fig,
@@ -372,7 +381,8 @@ class Plot2DSeaIce:
         fig.subplots_adjust(bottom=0.25, top=0.8, left=0.15, right=0.85, wspace=0.03, hspace=0.5)
         cbar_ax = fig.add_axes([0.2, 0.15, 0.6, 0.03])
 
-        cbar = self._add_colorbar(
+        # cbar
+        self._add_colorbar(
             fig,
             mondat,
             ax=ax,
@@ -388,8 +398,13 @@ class Plot2DSeaIce:
             f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method', '')} climatology "
             f"for the {mondat.attrs.get('AQUA_model', '')} model, experiment {mondat.attrs.get('AQUA_exp', '')} "
             f"over {mondat.attrs.get('AQUA_region', 'geographic')} region "
-            f"from {time_to_string(mondat.attrs.get('AQUA_startdate', ''))} to {time_to_string(mondat.attrs.get('AQUA_enddate', ''))}. "
-            f"{'The red contour line represent the regional sea ice fraction equal to 0.2.' if self.method == 'fraction' and self.plot_ref_contour else ''}"
+            f"from {time_to_string(mondat.attrs.get('AQUA_startdate', ''))} "
+            f"to {time_to_string(mondat.attrs.get('AQUA_enddate', ''))}. "
+            + (
+                "The red contour line represent the regional sea ice fraction equal to 0.2."
+                if self.method == "fraction" and self.plot_ref_contour
+                else ""
+            )
         )
         self._save_plots(
             fig=fig,

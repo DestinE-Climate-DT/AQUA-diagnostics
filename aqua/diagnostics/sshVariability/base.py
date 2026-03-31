@@ -167,7 +167,8 @@ class BaseMixin(Diagnostic):
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
-            dict_catalog_entry (dict): A dictionary with catalog entry information. Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
+            dict_catalog_entry (dict): A dictionary with catalog entry information.
+                Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
         # TODO:
         # the 'freq' variable will be updated in depends on the frequency of the data.

@@ -254,7 +254,10 @@ class PlotMLD:
         self.logger.debug("Title list set to: %s", self.title_list)
 
     def set_description(self):
-        self.description = f"Mixed layer depth plot of spatially averaged {self.region} region, {self.clim_time} climatology for the {self.catalog} {self.model} {self.exp} experiment"
+        self.description = (
+            f"Mixed layer depth plot of spatially averaged {self.region} region, {self.clim_time} climatology "
+            f"for the {self.catalog} {self.model} {self.exp} experiment"
+        )
         if self.obs:
             self.description = self.description + (
                 f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}"

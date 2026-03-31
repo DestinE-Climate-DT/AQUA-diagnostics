@@ -117,7 +117,8 @@ class PlotGlobalBiases:
         stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point). Default is 3.
         stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
         stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
-        invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points). Default is False (stippling where significant).
+        invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
+            Default is False (stippling where significant).
         """
 
         # Subsample the significance mask along latitude and longitude
@@ -540,8 +541,10 @@ class PlotGlobalBiases:
         ).generate()
 
         description = (
-            f"Vertical bias plot of {data[var].attrs.get('long_name', var)} across pressure levels from {data.startdate} to {data.enddate}"
-            f" for the {data.AQUA_model} model, experiment {data.AQUA_exp}, with {data_ref.AQUA_model} from {data_ref.startdate} to {data_ref.enddate}"
+            f"Vertical bias plot of {data[var].attrs.get('long_name', var)} across pressure levels "
+            f"from {data.startdate} to {data.enddate}"
+            f" for the {data.AQUA_model} model, experiment {data.AQUA_exp}, "
+            f"with {data_ref.AQUA_model} from {data_ref.startdate} to {data_ref.enddate}"
             f" used as reference data."
         )
 

@@ -179,7 +179,8 @@ class Hovmoller(Diagnostic):
             anomaly_ref (str or None, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None.
                 If "t0" or "tmean", the anomaly is computed relative to the initial time or the mean, respectively.
                 If None, no anomaly is computed.
-            standardise (bool or None, optional): If True, standardise the anomaly. If None or False, no standardisation is applied.
+            standardise (bool or None, optional): If True, standardise the anomaly.
+                If None or False, no standardisation is applied.
             dim (str, optional): The dimension along which to compute the anomaly and/or standardisation. Default is "time".
 
         Returns:
@@ -213,7 +214,8 @@ class Hovmoller(Diagnostic):
         Args:
             dim_mean (str or None): The dimension along which to compute the mean.
                 If None, no mean is computed.
-            anomaly_ref (str or list, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None. By default, full values are used.
+            anomaly_ref (str or list, optional): Reference for anomaly calculation.
+                Can be "t0", "tmean", or None. By default, full values are used.
 
         Returns:
             xarray.DataArray: A concatenated DataArray containing processed data

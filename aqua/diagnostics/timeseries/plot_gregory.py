@@ -163,9 +163,15 @@ class PlotGregory(PlotBaseMixin):
         for i, model in enumerate(self.models):
             description += f" The model data are from {self.startdate[i]} to {self.enddate[i]}."
         if self.ref_std_startdate["t2m"] is not None and self.ref_std_enddate["t2m"] is not None:
-            description += f" The reference 2 m temperature data are from {self.ref_std_startdate['t2m']} to {self.ref_std_enddate['t2m']}."
+            description += (
+                f" The reference 2 m temperature data are from {self.ref_std_startdate['t2m']} "
+                f"to {self.ref_std_enddate['t2m']}."
+            )
         if self.ref_std_startdate["net_toa"] is not None and self.ref_std_enddate["net_toa"] is not None:
-            description += f" The reference net TOA data are from {self.ref_std_startdate['net_toa']} to {self.ref_std_enddate['net_toa']}."
+            description += (
+                f" The reference net TOA data are from {self.ref_std_startdate['net_toa']} to "
+                f"{self.ref_std_enddate['net_toa']}."
+            )
         return description
 
     def plot_monthly(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, ref_label: str = None):
@@ -245,7 +251,8 @@ class PlotGregory(PlotBaseMixin):
                     self.realizations = get_realizations(valid_data)
 
         self.logger.debug(
-            f"Catalogs: {self.catalogs}, Models: {self.models}, Exps: {self.exps}, Startdates: {self.startdate}, Enddates: {self.enddate}, Realizations: {self.realizations}"
+            f"Catalogs: {self.catalogs}, Models: {self.models}, Exps: {self.exps}, Startdates: {self.startdate}, "
+            f"Enddates: {self.enddate}, Realizations: {self.realizations}"
         )
 
         if self.ref_dict["monthly"]["t2m"] is not None:

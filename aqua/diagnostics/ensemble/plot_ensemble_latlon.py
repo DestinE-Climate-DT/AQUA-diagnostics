@@ -131,7 +131,8 @@ class PlotEnsembleLatLon(BaseMixin):
             dpi (int, optional): Resolution for saved figures. Default is 300.
             title_mean (str, optional): Title for mean plot. Auto-generated if None.
             title_std (str, optional): Title for standard deviation plot. Auto-generated if None.
-            save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg'). Default is SAVE_FORMAT.
+            save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg').
+                Default is SAVE_FORMAT.
             vmin_mean, vmax_mean (float, optional): Color scale limits for mean plot. Auto-set if None.
             vmin_std, vmax_std (float, optional): Color scale limits for std plot. Auto-set if None.
             proj (str, optional): Map projection. Default is "robinson".

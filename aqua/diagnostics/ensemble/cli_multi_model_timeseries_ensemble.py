@@ -204,22 +204,22 @@ if __name__ == "__main__":
                 # annual_ref_data = reader.retrieve(var=variable)
 
                 # Monthly reference data
-                ERA5_monthly = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_mon.nc"
+                ERA5_monthly = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_mon.nc"  # noqa: E501
                 monthly_ref_data = xr.open_dataset(
                     ERA5_monthly,
                     drop_variables=[var for var in xr.open_dataset(ERA5_monthly).data_vars if var != variable],
                 )
                 # selection ERA5 data on the same time interval -> xarray.DataArray
-                # monthly_ref_data = monthly_ref_data[variable].sel(time=slice(monthly_dataset.time[0], monthly_dataset.time[-1]))
+                # monthly_ref_data = monthly_ref_data[variable].sel(time=slice(monthly_dataset.time[0], monthly_dataset.time[-1])) # noqa: E501
                 monthly_ref_data = monthly_ref_data[variable].sel(time=slice(startdate_ref, enddate_ref))
                 # Annual reference data
-                ERA5_annual = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_ann.nc"
+                ERA5_annual = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_ann.nc"  # noqa: E501
                 annual_ref_data = xr.open_dataset(
                     ERA5_annual,
                     drop_variables=[var for var in xr.open_dataset(ERA5_annual).data_vars if var != variable],
                 )
                 # selection ERA5 data on the same time interval -> xarray.DataArray
-                # annual_ref_data = annual_ref_data[variable].sel(time=slice(annual_dataset.time[0], annual_dataset.time[-1]))
+                # annual_ref_data = annual_ref_data[variable].sel(time=slice(annual_dataset.time[0], annual_dataset.time[-1])) # noqa: E501
                 annual_ref_data = annual_ref_data[variable].sel(time=slice(startdate_ref, enddate_ref))
 
                 # Check if we need monthly and annual time variables

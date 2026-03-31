@@ -329,7 +329,8 @@ class BaseMixin(Diagnostic):
             startdate (str, optional): Start date to include in metadata. Defaults to None.
             enddate (str, optional): End date to include in metadata. Defaults to None.
             description (str, optional): Description to include in metadata. Defaults to auto-generated.
-            format (str or list, optional): Format(s) to save the figure in (e.g. ``'png'``, ``'pdf'``, ``'svg'``). Default is ``'png'``.
+            format (str or list, optional): Format(s) to save the figure in (e.g. ``'png'``, ``'pdf'``, ``'svg'``).
+                Default is ``'png'``.
             dpi (int, optional): Resolution for saved figures in PNG format. Default is ``300``.
 
         Notes:

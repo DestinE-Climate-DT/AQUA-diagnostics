@@ -164,7 +164,8 @@ class SshVariabilityPlot(PlotBaseMixin):
 
         if tgt_grid_name is not None:
             self.logger.info(
-                f"Regridding model data and reference data using target grid name {tgt_grid_name} and regrid method {regrid_method}"
+                f"Regridding model data and reference data using target grid name {tgt_grid_name} "
+                f"and regrid method {regrid_method}"
             )
             regrid_data = Regridder(data=dataset_std, loglevel=self.loglevel)
             regrid_data.weights(tgt_grid_name=tgt_grid_name, regrid_method=regrid_method)
@@ -378,7 +379,8 @@ class SshVariabilityPlot(PlotBaseMixin):
 
         if tgt_grid_name is not None:
             self.logger.info(
-                f"Regridding model data and reference data using target grid name {tgt_grid_name} and regrid method {regrid_method}"
+                f"Regridding model data and reference data using target grid name {tgt_grid_name} and "
+                f"regrid method {regrid_method}"
             )
             regrid_data = Regridder(data=dataset_std, loglevel=self.loglevel)
             regrid_data.weights(tgt_grid_name=tgt_grid_name, regrid_method=regrid_method)
@@ -413,7 +415,11 @@ class SshVariabilityPlot(PlotBaseMixin):
             ref_endyear=enddate_ref,
         ).generate()
 
-        description = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
+        description = (
+            f"The difference of the SSH Variability of {long_name} for {model} {exp} "
+            f"({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} "
+            f"({startdate_ref}-{enddate_ref}) "
+        )
 
         if region:
             if lon_limits is None or lat_limits is None:

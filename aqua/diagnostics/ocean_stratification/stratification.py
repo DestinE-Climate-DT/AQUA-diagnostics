@@ -304,7 +304,8 @@ class Stratification(Diagnostic):
             If True, force rebuild of NetCDF file even if it exists (default is True).
         """
         self.logger.info(
-            f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, outputdir={outputdir}, region={region}"
+            f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, "
+            f"outputdir={outputdir}, region={region}"
         )
         super().save_netcdf(
             data=data,

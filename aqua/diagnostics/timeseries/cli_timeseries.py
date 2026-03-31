@@ -50,7 +50,8 @@ if __name__ == "__main__":
             for var in cli.config_dict["diagnostics"]["timeseries"].get("variables", []):
                 var_config, regions = load_var_config(cli.config_dict, var)
                 cli.logger.info(
-                    f"Running Timeseries diagnostic for variable {var} with config {var_config} in regions {[region if region else 'global' for region in regions]}"
+                    f"Running Timeseries diagnostic for variable {var} with config {var_config} "
+                    f"in regions {[region if region else 'global' for region in regions]}"
                 )  # noqa
                 for region in regions:
                     try:
@@ -115,7 +116,8 @@ if __name__ == "__main__":
                         # Plot the timeseries
                         if cli.save_format:
                             cli.logger.info(
-                                f"Plotting Timeseries diagnostic for variable {var} in region {region if region else 'global'} with formats: {cli.save_format}"
+                                f"Plotting Timeseries diagnostic for variable {var} in region "
+                                f"{region if region else 'global'} with formats: {cli.save_format}"
                             )
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
@@ -146,7 +148,8 @@ if __name__ == "__main__":
                             )
                     except Exception as e:
                         cli.logger.error(
-                            f"Error running Timeseries diagnostic for variable {var} in region {region if region else 'global'}: {e}"
+                            f"Error running Timeseries diagnostic for variable {var} in region "
+                            f"{region if region else 'global'}: {e}"
                         )
 
             for var in cli.config_dict["diagnostics"]["timeseries"].get("formulae", []):
@@ -218,7 +221,8 @@ if __name__ == "__main__":
                         # Plot the timeseries
                         if cli.save_format:
                             cli.logger.info(
-                                f"Plotting Timeseries diagnostic for variable {var} in region {region if region else 'global'} with formats: {cli.save_format}"
+                                f"Plotting Timeseries diagnostic for variable {var} in region "
+                                f"{region if region else 'global'} with formats: {cli.save_format}"
                             )
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
@@ -249,7 +253,8 @@ if __name__ == "__main__":
                             )
                     except Exception as e:
                         cli.logger.error(
-                            f"Error running Timeseries diagnostic for variable {var} in region {region if region else 'global'}: {e}"
+                            f"Error running Timeseries diagnostic for variable {var} in region "
+                            f"{region if region else 'global'}: {e}"
                         )
 
     # SeasonalCycles diagnostic
@@ -357,7 +362,8 @@ if __name__ == "__main__":
                             )
                 except Exception as e:
                     cli.logger.error(
-                        f"Error running SeasonalCycles diagnostic for variable {var} in region {region if region else 'global'}: {e}"
+                        f"Error running SeasonalCycles diagnostic for variable {var} in region "
+                        f"{region if region else 'global'}: {e}"
                     )
 
     if "gregory" in cli.config_dict["diagnostics"]:

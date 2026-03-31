@@ -263,7 +263,9 @@ class PlotTimeseries(PlotBaseMixin):
         #         raise ValueError('Standard deviation monthly and annual data list must have the same length')
         #     else:
         #         if len(self.std_monthly_data) != ref_length:
-        #             raise ValueError('Standard deviation monthly and annual data list must have the same length as reference data')
+        #             raise ValueError(
+        #                 'Standard deviation monthly and annual data list must have the same length as reference data'
+        #             )
 
         return data_length, ref_length
 

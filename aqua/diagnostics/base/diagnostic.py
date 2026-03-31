@@ -214,7 +214,8 @@ class Diagnostic:
 
             if months < months_required:
                 raise NotEnoughDataError(
-                    f"Not enough months of data found for {model} {exp} {source}, at least {months_required} months required, only {months} found."
+                    f"Not enough months of data found for {model} {exp} {source}, "
+                    f"at least {months_required} months required, only {months} found."
                 )
 
         if catalog is None:

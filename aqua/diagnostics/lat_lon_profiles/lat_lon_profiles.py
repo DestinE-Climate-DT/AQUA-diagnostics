@@ -16,7 +16,8 @@ class LatLonProfiles(Diagnostic):
 
     Supported Mean Types:
         - 'zonal': Average over longitude, producing latitude profiles
-        - 'meridional': Average over latitude, producing longitude profilesThe class evaluates a seasonal frequency and the entire period (longterm).
+        - 'meridional': Average over latitude, producing longitude profilesThe class
+            evaluates a seasonal frequency and the entire period (longterm). Default is 'zonal'.
 
     """
 
