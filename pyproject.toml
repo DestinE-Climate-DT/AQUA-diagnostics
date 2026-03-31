@@ -124,7 +124,6 @@ source = ["aqua/diagnostics"]
 omit = [
     "tests/*", 
     "**/__init__.py",
-    "aqua/diagnostics/dummy",
-    "aqua/diagnostics/teleconnections/mjo.py" # Temporarily disabled until MJO is integrated again.
+    "aqua/diagnostics/dummy"
     ]
 

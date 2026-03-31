@@ -9,7 +9,6 @@ approx_rel = APPROX_REL
 loglevel = LOGLEVEL
 
 @pytest.mark.diagnostics
-@pytest.mark.skip(reason="Temporarily disabled until MJO is integrated again.")
 def test_MJO(tmp_path):
     """
     Test that the MJO class works
@@ -19,9 +18,7 @@ def test_MJO(tmp_path):
         'exp': 'era5-hpz3',
         'source': 'monthly',
         'loglevel': loglevel,
-        'regrid': 'r200',
-        'startdate': '2000-01-01',
-        'enddate': '2001-12-31'
+        'regrid': 'r200'
     }
 
     mjo = MJO(**init_dict)
