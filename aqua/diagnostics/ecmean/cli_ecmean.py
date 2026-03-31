@@ -220,8 +220,11 @@ def set_description(diagnostic, model, exp, year1, year2, config):
         'North Pole':   ( 60.0,  90.0),
         'South Pole':   (-90.0, -60.0)
     }
-    region_text = strlist_to_phrase([f"{r} ({lat_to_phrase(int(lat1))}-{lat_to_phrase(int(lat2))})"
-                                       for r in config[diagnostic]["regions"] for (lat1, lat2) in [region_bounds.get(r, (0, 0))]])
+    region_text = strlist_to_phrase([
+        f"{r} ({lat_to_phrase(int(lat1))}-{lat_to_phrase(int(lat2))})"
+        for r in config[diagnostic]["regions"]
+        for (lat1, lat2) in [region_bounds.get(r, (0, 0))]
+    ])
 
     regions_phrase = f"Processed regions are {region_text}."
 

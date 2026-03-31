@@ -167,7 +167,9 @@ def test_histogram_load_to_memory(histogram_output):
 
     time_band = hist.counts.attrs['time_band']
     try:
-        re_time_band = re.split(":", re.split(", ", time_band)[0])[0]+'_' + re.split(":", re.split(", ", time_band)[1])[0] in files[0]
+        pt1 = re.split(":", re.split(", ", time_band)[0])[0]
+        pt2 = re.split(":", re.split(", ", time_band)[1])[0]
+        re_time_band = f"{pt1}_{pt2}" in files[0]
     except IndexError:
         re_time_band = re.split(":", time_band)[0]
     assert re_time_band in time_band

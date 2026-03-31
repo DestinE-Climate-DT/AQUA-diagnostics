@@ -90,7 +90,8 @@ class PlotBoxplots:
         metadata = {"Description": description}
         extra_keys = {'var': '_'.join(var) if isinstance(var, list) else var}
 
-        outputsaver.save_figure(fig, diagnostic_product='boxplot', extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save)
+        outputsaver.save_figure(fig, diagnostic_product='boxplot', extra_keys=extra_keys,
+            metadata=metadata, extension=self.format_to_save)
 
 
     def plot_boxplots(self, data, data_ref=None, var=None, anomalies=False, add_mean_line=False,
@@ -138,7 +139,8 @@ class PlotBoxplots:
             abs_means.append(means_dict)
 
         if self.anomalies and data_ref:
-            self.logger.info(f"Computing anomalies relative to reference dataset {extract_attrs(data_ref[self.ref_number], 'AQUA_model')}")
+            self.logger.info(f"Computing anomalies relative to reference dataset"
+                             f"{extract_attrs(data_ref[self.ref_number], 'AQUA_model')}")
             ref = data_ref[self.ref_number]
             fldmeans = [ds - ref.mean('time') for ds in fldmeans]
 
@@ -152,7 +154,8 @@ class PlotBoxplots:
             ).generate()
 
         # Plot boxplot
-        fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names_plot, variables=var, variable_names=long_names, title=title,
+        fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names_plot,
+                          variables=var, variable_names=long_names, title=title,
                           add_mean_line=add_mean_line, loglevel=self.loglevel)
 
         if self.anomalies and data_ref:

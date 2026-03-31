@@ -132,7 +132,8 @@ class Diagnostic():
             enddate (str): The end date of the data to be retrieved.
                            If None, all available data will be retrieved.
             regrid (str): The target grid to be used for regridding. If None, no regridding will be done.
-            months_required (int or None): The minimal amount of months to have results. If they are not met, a NotEnoughDataError will be raised.
+            months_required (int or None): The minimal amount of months to have results.
+                If they are not met, a NotEnoughDataError will be raised.
             reader_kwargs (dict): Additional keyword arguments to be passed to the Reader.
             loglevel (str): The log level to be used. Default is 'WARNING'.
 

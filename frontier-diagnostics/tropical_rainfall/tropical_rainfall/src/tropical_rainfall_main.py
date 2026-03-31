@@ -569,7 +569,8 @@ class MainClass:
         return tprate_dataset
 
 
-    def dataset_to_netcdf_filename(self, start_year=None, end_year=None, start_month=None, end_month=None, path_to_netcdf: Optional[str] = None,
+    def dataset_to_netcdf_filename(self, start_year=None, end_year=None,
+                          start_month=None, end_month=None, path_to_netcdf: Optional[str] = None,
                           name_of_file: Optional[str] = None) -> str:
         """
         Function to compute the name of a destination file for the histogram.
@@ -586,14 +587,16 @@ class MainClass:
 
         path_to_netcdf = self.tools.select_files_by_year_and_month_range(path_to_histograms=path_to_netcdf,
                                                                         start_year=start_year, end_year=end_year,
-                                                                        start_month=start_month, end_month=end_month, flag=name_of_file)
+                                                                        start_month=start_month, end_month=end_month,
+                                                                        flag=name_of_file)
 
         self.logger.debug("Generated filename %s", path_to_netcdf)
 
         return(path_to_netcdf[0])
 
 
-    def dataset_to_netcdf(self, dataset: Optional[xr.Dataset] = None, path_to_netcdf: Optional[str] = None, rebuild: bool = False,
+    def dataset_to_netcdf(self, dataset: Optional[xr.Dataset] = None,
+                          path_to_netcdf: Optional[str] = None, rebuild: bool = False,
                           name_of_file: Optional[str] = None) -> str:
         """
         Function to save the histogram.
@@ -633,7 +636,10 @@ class MainClass:
                         self.logger.warning(f"Removing existing file: {path_to_netcdf}.")
                         os.remove(path_to_netcdf)
                     except PermissionError:
-                        self.logger.error(f"Permission denied when attempting to remove {path_to_netcdf}. Check file permissions.")
+                        self.logger.error(
+                            f"Permission denied when attempting to remove {path_to_netcdf}. "
+                            "Check file permissions."
+                        )
                         return  # Exiting the function or handling the error accordingly
 
                     # Proceed to save the new NetCDF file after successfully removing the old one
@@ -683,7 +689,7 @@ class MainClass:
         try:
             if data[coord_lat].size > 1:
                 latitude_step = data[coord_lat][1].values - data[coord_lat][0].values
-                lat_band = str(data[coord_lat][0].values)+', ' + str(data[coord_lat][-1].values) + ', freq='+str(latitude_step)
+                lat_band = f"{data[coord_lat][0].values}, {data[coord_lat][-1].values}, freq={latitude_step}"
             else:
                 lat_band = data[coord_lat].values
                 latitude_step = 'None'
@@ -693,8 +699,7 @@ class MainClass:
         try:
             if data[coord_lon].size > 1:
                 longitude_step = data[coord_lon][1].values - data[coord_lon][0].values
-                lon_band = str(data[coord_lon][0].values)+', ' + str(data[coord_lon][-1].values) + \
-                    ', freq=' + str(longitude_step)
+                lon_band = f"{data[coord_lon][0].values}, {data[coord_lon][-1].values}, freq={longitude_step}"
             else:
                 longitude_step = 'None'
                 lon_band = data[coord_lon].values
@@ -704,8 +709,10 @@ class MainClass:
 
         if variable is None:
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            history_update = str(current_time)+' histogram is calculated for time_band: ['+str(
-                time_band)+']; lat_band: ['+str(lat_band)+']; lon_band: ['+str(lon_band)+'];\n '
+            history_update = (
+                f"{current_time} histogram is calculated for time_band: [{time_band}]; "
+                f"lat_band: [{lat_band}]; lon_band: [{lon_band}];\n "
+            )
             try:
                 history_attr = tprate_dataset.attrs['history'] + history_update
                 tprate_dataset.attrs['history'] = history_attr
@@ -803,13 +810,13 @@ class MainClass:
             for attribute in dataset_1.attrs:
                 try:
                     if dataset_1.attrs[attribute] != dataset_2.attrs[attribute] and attribute not in 'time_band':
-                        dataset_3.attrs[attribute] = str(dataset_1.attrs[attribute])+'; '+str(dataset_2.attrs[attribute])
+                        dataset_3.attrs[attribute] = f"{dataset_1.attrs[attribute]}; {dataset_2.attrs[attribute]}"
                     elif attribute in 'time_band':
-                        dataset_3.attrs['time_band_history'] = str(dataset_1.attrs[attribute])+'; '+str(dataset_2.attrs[attribute])
+                        dataset_3.attrs['time_band_history'] = f"{dataset_1.attrs[attribute]}; {dataset_2.attrs[attribute]}"
                         dataset_3.attrs['time_band'] = self.tools.merge_time_bands(dataset_1, dataset_2)
                 except ValueError:
                     if dataset_1.attrs[attribute].all != dataset_2.attrs[attribute].all:
-                        dataset_3.attrs[attribute] = str(dataset_1.attrs[attribute])+';\n '+str(dataset_2.attrs[attribute])
+                        dataset_3.attrs[attribute] = f"{dataset_1.attrs[attribute]};\n {dataset_2.attrs[attribute]}"
 
             dataset_3.counts.values = dataset_1.counts.values + dataset_2.counts.values
             dataset_3.counts.attrs['size_of_the_data'] = dataset_1.counts.size_of_the_data + dataset_2.counts.size_of_the_data
@@ -868,7 +875,8 @@ class MainClass:
             for season, (months, _) in seasons.items():
                 # Populate the files list for each season
                 for month in months:
-                    # This is a placeholder for how you might select files; adjust according to your actual file selection method
+                    # This is a placeholder for how you might select files;
+                    # adjust according to your actual file selection method
                     files_for_month = self.tools.select_files_by_year_and_month_range(
                         path_to_histograms=path_to_histograms,
                         start_year=start_year,
@@ -899,7 +907,8 @@ class MainClass:
             # Concatenate all seasonal datasets into a single dataset
             if seasonal_datasets:
                 combined_dataset = xr.concat(seasonal_datasets, dim='season')
-                combined_dataset = combined_dataset.assign_coords(season=('season', season_names))  # Correctly assign season names
+                # Correctly assign season names
+                combined_dataset = combined_dataset.assign_coords(season=('season', season_names))
                 return combined_dataset
             else:
                 self.logger.info("No data available for merging.")

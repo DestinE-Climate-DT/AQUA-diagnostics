@@ -102,10 +102,12 @@ class TestEnsembleTimeseries:
         var = conf['var']
 
         # Check NetCDF outputs (Monthly and Annual)
-        nc_monthly = os.path.join(tmp_path_str, 'netcdf', f'ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc')
+        nc_monthly = os.path.join(tmp_path_str, 'netcdf',
+            f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc")
         assert os.path.exists(nc_monthly)
 
-        nc_annual = os.path.join(tmp_path_str, 'netcdf', f'ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc')
+        nc_annual = os.path.join(tmp_path_str, 'netcdf',
+            f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc")
         assert os.path.exists(nc_annual)
 
     def test_statistics(self, ensemble_ts_instance):

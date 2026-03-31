@@ -59,7 +59,9 @@ def test_title_complex():
         ref_endyear=1990,
         extra_info="info"
     ).generate()
-    assert result == "Stratification [global] for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
+    assert result == (
+        "Stratification [global] for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
+    )
     assert "  " not in result
 
 def test_title_realizations():

@@ -121,7 +121,10 @@ class ToolsClass:
         original_centers = ds.center_of_bin.values
 
         # Calculate new bin centers based on the adjusted first bin center
-        new_centers = np.array([original_centers[0] - 0.5 * original_width + (0.5 * new_width) + i * new_width for i in range(len(original_centers))])
+        new_centers = np.array([
+            original_centers[0] - 0.5 * original_width + (0.5 * new_width) + i * new_width
+            for i in range(len(original_centers))
+        ])
 
         # If the factor is meant to decrease bin size, this might result in more bins than originally
         if factor < 1:
@@ -283,7 +286,8 @@ class ToolsClass:
     def select_files_by_year_and_month_range(self, path_to_histograms: str, start_year: int = None, end_year: int = None,
                                              start_month: int = None, end_month: int = None, flag: str = None) -> list:
         """
-        Select files within a specific year and optional month range from a given directory that also contain a certain flag in their filename.
+        Select files within a specific year and optional month range from a given directory
+        that also contain a certain flag in their filename.
         If no year range is provided, return all files sorted alphabetically that match the flag condition.
 
         Args:
@@ -295,7 +299,8 @@ class ToolsClass:
             flag (str, optional): A specific flag to look for in the filenames. Defaults to None.
 
         Returns:
-            list: A list of file paths matching the specified year, month range, and flag or all files if no year range is specified and match the flag condition.
+            list: A list of file paths matching the specified year, month range,
+                and flag or all files if no year range is specified and match the flag condition.
         """
         files = [join(path_to_histograms, f) for f in os.listdir(path_to_histograms) if isfile(join(path_to_histograms, f))]
         files.sort()
@@ -327,8 +332,10 @@ class ToolsClass:
         Searches a specified folder for any file names that contain all the provided keys.
 
         Parameters:
-            folder_path (str): The path to the folder where the search for files will be conducted. If None, the current directory is assumed.
-            keys (list of str): A list of string keys that must all be present in a file name for it to satisfy the search criteria.
+            folder_path (str): The path to the folder where the search for files will be conducted.
+                If None, the current directory is assumed.
+            keys (list of str): A list of string keys that must all be present in
+                a file name for it to satisfy the search criteria.
 
         Returns:
             bool: True if at least one file meeting all specified criteria is found, False otherwise.
@@ -370,7 +377,8 @@ class ToolsClass:
             self.logger.warning(f"Folder path '{folder_path}' does not exist yet or was not provided.")
             return False
 
-        files = [join(folder_path, f) for f in os.listdir(folder_path) if isfile(join(folder_path, f)) or isdir(join(folder_path, f))]
+        files = [join(folder_path, f)
+            for f in os.listdir(folder_path) if isfile(join(folder_path, f)) or isdir(join(folder_path, f))]
         files.sort()
         keys = [str(key) for key in keys]
         for filename in files:
@@ -870,7 +878,8 @@ class ToolsClass:
         for month, paths in complete_files_by_month.items():
             final_files.extend(paths)
             if month in incomplete_files_by_month:
-                self.logger.warning(f"Warning: Removing incomplete records for {month} because a complete month file is present.")
+                self.logger.warning(
+                    f"Warning: Removing incomplete records for {month} because a complete month file is present.")
 
         for month, paths in incomplete_files_by_month.items():
             if month not in complete_files_by_month:
