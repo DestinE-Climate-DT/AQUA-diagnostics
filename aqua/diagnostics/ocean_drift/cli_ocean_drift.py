@@ -10,10 +10,9 @@ import argparse
 import sys
 
 from aqua.core.util import to_list
-from aqua.diagnostics.base import template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.ocean_drift.hovmoller import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
-from aqua.diagnostics.base import DiagnosticCLI
 
 
 def parse_arguments(args):
@@ -30,9 +29,9 @@ def parse_arguments(args):
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
 
-    cli = DiagnosticCLI(args, 
-                        diagnostic_name='ocean3d', 
-                        default_config='config-ocean3d-en4-trend-drift.yaml', 
+    cli = DiagnosticCLI(args,
+                        diagnostic_name='ocean3d',
+                        default_config='config-ocean3d-en4-trend-drift.yaml',
                         log_name='OceanDrift CLI').prepare()
     cli.open_dask_cluster()
 

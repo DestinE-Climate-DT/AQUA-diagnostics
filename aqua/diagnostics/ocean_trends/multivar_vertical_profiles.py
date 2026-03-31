@@ -2,16 +2,16 @@
 Module to plot multiple maps
 
 """
-import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
+import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from aqua.core.logger import log_configure
-from aqua.core.util import plot_box, evaluate_colorbar_limits, cbar_get_label
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.graphics.styles import ConfigStyle
+from aqua.core.logger import log_configure
+from aqua.core.util import evaluate_colorbar_limits, plot_box
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
+
 
 def plot_multivars_vertical_profile(
     maps: list[xr.DataArray],
@@ -89,7 +89,7 @@ def plot_multivars_vertical_profile(
     fig.subplots_adjust(
         bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.3, hspace=0.8
     )
-    
+
     for i in range(len(maps)):
         vmin, vmax = evaluate_colorbar_limits(maps=maps[i], sym=sym)
 
@@ -122,7 +122,7 @@ def plot_multivars_vertical_profile(
         else:
             logger.warning("No mappable object found for subplot %d", i)
             continue
-        
+
         # Update mappable normalization and cmap
         mappable.set_norm(plt.Normalize(vmin=vmin, vmax=vmax))
         mappable.set_cmap(cmap)

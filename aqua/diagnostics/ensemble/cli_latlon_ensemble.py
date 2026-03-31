@@ -8,6 +8,8 @@ defined in a yaml configuration file for multiple models.
 import argparse
 import sys
 
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg
 from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon, reader_retrieve_and_merge
 from aqua.diagnostics.base import (
     SAVE_FORMAT,
@@ -17,9 +19,6 @@ from aqua.diagnostics.base import (
     open_cluster,
     template_parse_arguments,
 )
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
 
 
 def parse_arguments(args):
@@ -102,7 +101,7 @@ if __name__ == "__main__":
                         source_list.append(model["source"])
                         realization_dict.update({model["model"]: model["realization"]})
                         #reader_kwargs_dict.update({model["model"]: {"fix":model["fix"], "areas":model["areas"]}})
- 
+
                 # Loading and merging data
                 ens_dataset = reader_retrieve_and_merge(
                     variable=variable,

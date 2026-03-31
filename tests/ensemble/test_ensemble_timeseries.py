@@ -1,10 +1,12 @@
 """Test ensemble Ensemble module"""
-import pytest
 import os
+
+import pytest
 import xarray as xr
+from conftest import APPROX_REL, DPI, LOGLEVEL
+
 from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries
 from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
-from conftest import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance and Logging
 approx_rel = APPROX_REL
@@ -100,10 +102,12 @@ class TestEnsembleTimeseries:
         var = conf['var']
 
         # Check NetCDF outputs (Monthly and Annual)
-        nc_monthly = os.path.join(tmp_path_str, 'netcdf', f'ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc')
+        nc_monthly = os.path.join(tmp_path_str, 'netcdf',
+            f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc")
         assert os.path.exists(nc_monthly)
 
-        nc_annual = os.path.join(tmp_path_str, 'netcdf', f'ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc')
+        nc_annual = os.path.join(tmp_path_str, 'netcdf',
+            f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc")
         assert os.path.exists(nc_annual)
 
     def test_statistics(self, ensemble_ts_instance):

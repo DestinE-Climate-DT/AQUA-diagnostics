@@ -1,9 +1,11 @@
 import os
+
 import pytest
 import xarray as xr
-from aqua import Reader
-from aqua.diagnostics.timeseries import Timeseries, PlotTimeseries
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua import Reader
+from aqua.diagnostics.timeseries import PlotTimeseries, Timeseries
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL
@@ -26,7 +28,7 @@ class TestTimeseries:
         self.diagnostic_name = 'atmosphere'
 
     def test_no_region(self):
-        ts = Timeseries(diagnostic_name=self.diagnostic_name, 
+        ts = Timeseries(diagnostic_name=self.diagnostic_name,
                         catalog=self.catalog, model=self.model, exp=self.exp, source=self.source,
                         region=None, loglevel=loglevel, regrid=self.regrid)
 
@@ -35,7 +37,7 @@ class TestTimeseries:
 
     def test_wrong_region(self):
         with pytest.raises(ValueError):
-            Timeseries(diagnostic_name=self.diagnostic_name, 
+            Timeseries(diagnostic_name=self.diagnostic_name,
                        catalog=self.catalog, model=self.model, exp=self.exp, source=self.source,
                        region='topolinia', loglevel=loglevel, regrid=self.regrid)
 
@@ -57,19 +59,25 @@ class TestTimeseries:
         assert isinstance(ts.data, xr.DataArray)
         assert data.values[0] == pytest.approx(60.145472982004186, rel=approx_rel)
 
-        filename = f'{self.diagnostic_name}.timeseries.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.monthly.{self.region}.nc'
+        filename = (f"{self.diagnostic_name}.timeseries."
+                    f"{self.catalog}.{self.model}.{self.exp}.r1."
+                    f"{self.var}.monthly.{self.region}.nc")
         file = os.path.join(tmp_path, 'netcdf', filename)
         assert os.path.exists(file)
 
         assert ts.annual.values[0] == pytest.approx(60.31101797654943, rel=approx_rel)
-        
+
         assert ts.std_annual.values == pytest.approx(0.009666691494246038, rel=approx_rel)
 
-        filename = f'{self.diagnostic_name}.timeseries.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.annual.{self.region}.nc'
+        filename = (f"{self.diagnostic_name}.timeseries."
+                    f"{self.catalog}.{self.model}.{self.exp}.r1."
+                    f"{self.var}.annual.{self.region}.nc")
         file = os.path.join(tmp_path, 'netcdf', filename)
         assert os.path.exists(file)
 
-        filename = f'{self.diagnostic_name}.timeseries.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.monthly.{self.region}.std.nc'
+        filename = (f"{self.diagnostic_name}.timeseries."
+                    f"{self.catalog}.{self.model}.{self.exp}.r1."
+                    f"{self.var}.monthly.{self.region}.std.nc")
         file = os.path.join(tmp_path, 'netcdf', filename)
         assert os.path.exists(file)
 
@@ -78,10 +86,12 @@ class TestTimeseries:
                              ref_monthly_data = ts.monthly, ref_annual_data = ts.annual,
                              std_monthly_data = ts.std_monthly, std_annual_data = ts.std_annual,
                              loglevel=loglevel)
-        
+
         plt.run(outputdir=tmp_path, dpi=DPI)
 
-        filename = f'{self.diagnostic_name}.timeseries.{self.catalog}.{self.model}.{self.exp}.r1.{self.catalog}.{self.model}.{self.exp}.{self.var}.{self.region}.png'
+        filename = (f"{self.diagnostic_name}.timeseries."
+                    f"{self.catalog}.{self.model}.{self.exp}.r1."
+                    f"{self.catalog}.{self.model}.{self.exp}.{self.var}.{self.region}.png")
         file = os.path.join(tmp_path, 'png', filename)
         assert os.path.exists(file)
 
@@ -110,7 +120,7 @@ class TestTimeseries:
         ts.compute(freq='monthly')
         assert ts.monthly.values[0] ==  pytest.approx(117.40372092960037, rel=approx_rel)
         assert ts.monthly.values[-1] == pytest.approx(123.01323353753897, rel=approx_rel)
-        
+
         # Test extend with non supported frequency
         ts.compute(freq='hourly', extend=True)
         assert ts.hourly is not None
@@ -123,25 +133,25 @@ class TestTimeseries:
                         regrid=self.regrid)
 
         ts.retrieve(var=self.var)
-        
+
         # Test compute with extend=False (no extension)
         ts.compute(freq='monthly', extend=False)
         assert ts.monthly is not None
-        
+
         # Test annual frequency with extension
         ts.compute(freq='annual', extend=True, center_time=False)
         assert ts.annual is not None
-        
+
         # Test case where dates match exactly (no extension needed - both else branches)
         ts_exact = Timeseries(diagnostic_name=self.diagnostic_name,
                             catalog=self.catalog, model=self.model, exp=self.exp, source=self.source,
-                            region=self.region, loglevel=loglevel, 
+                            region=self.region, loglevel=loglevel,
                             startdate='19900101', enddate='19900228',
                             regrid=self.regrid)
         ts_exact.retrieve(var=self.var)
         ts_exact.compute(freq='monthly', extend=True)
         assert len(ts_exact.monthly.time) == 2
-        
+
         # Test extension only at end (class_enddate > end_date)
         ts_end = Timeseries(diagnostic_name=self.diagnostic_name,
                         catalog=self.catalog, model=self.model, exp=self.exp, source=self.source,
@@ -151,7 +161,7 @@ class TestTimeseries:
         ts_end.retrieve(var=self.var)
         ts_end.compute(freq='monthly', extend=True)
         assert len(ts_end.monthly.time) == 24  # 2 years
-        
+
         # Test extension at both start and end
         ts_both = Timeseries(diagnostic_name=self.diagnostic_name,
                             catalog=self.catalog, model=self.model, exp=self.exp, source=self.source,
@@ -161,11 +171,11 @@ class TestTimeseries:
         ts_both.retrieve(var=self.var)
         ts_both.compute(freq='monthly', extend=True)
         assert len(ts_both.monthly.time) == 36  # 3 years
-        
+
         # Test that retrieve with no data raises ValueError
         ts_nodata = Timeseries(diagnostic_name=self.diagnostic_name,
                             catalog=self.catalog, model=self.model, exp=self.exp, source=self.source,
-                            region=self.region, loglevel=loglevel, 
+                            region=self.region, loglevel=loglevel,
                             startdate='19500101', enddate='19500201',
                             regrid=self.regrid)
         with pytest.raises(ValueError, match="No data found"):

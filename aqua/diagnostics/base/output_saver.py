@@ -1,5 +1,5 @@
 """
-OutputSaver class for saving diagnostic outputs 
+OutputSaver class for saving diagnostic outputs
 in various formats (netcdf, pdf, png) for basic
 AQUA diagnostics.
 """
@@ -10,16 +10,25 @@ from typing import Optional, Union
 import xarray as xr
 from matplotlib.figure import Figure
 
+from aqua.core.configurer import ConfigPath
 from aqua.core.lock import SafeFileLock
 from aqua.core.logger import log_configure, log_history
-from aqua.core.util import create_folder, update_metadata, to_list
-from aqua.diagnostics.base.metadata import add_figure_metadata
-from aqua.core.util import dump_yaml, load_yaml
-from aqua.core.util import replace_intake_vars, replace_urlpath_jinja, replace_urlpath_wildcard
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import format_realization
+from aqua.core.util import (
+    create_folder,
+    dump_yaml,
+    format_realization,
+    load_yaml,
+    replace_intake_vars,
+    replace_urlpath_jinja,
+    replace_urlpath_wildcard,
+    to_list,
+    update_metadata,
+)
 from aqua.core.util.string import clean_filename
+from aqua.diagnostics.base.metadata import add_figure_metadata
+
 from .defaults import SAVE_FORMAT
+
 
 class OutputSaver:
     """
@@ -28,9 +37,9 @@ class OutputSaver:
     """
 
     def __init__(self, diagnostic: str,
-                 catalog: Optional[Union[str, list]] = None, model: Optional[Union[str, list]] = None, 
+                 catalog: Optional[Union[str, list]] = None, model: Optional[Union[str, list]] = None,
                  exp: Optional[Union[str, list]] = None, realization: Optional[Union[str, list]] = None,
-                 catalog_ref: Optional[Union[str, list]] = None, model_ref: Optional[Union[str, list]] = None, 
+                 catalog_ref: Optional[Union[str, list]] = None, model_ref: Optional[Union[str, list]] = None,
                  exp_ref: Optional[Union[str, list]] = None,
                  outputdir: str = '.', loglevel: str = 'WARNING'):
         """
@@ -168,10 +177,10 @@ class OutputSaver:
         # Add additional filename keys if provided
         if extra_keys:
             parts_dict.update(extra_keys)
- 
+
         # Remove None values and check selected parts
-        parts = [clean_filename(str(value)) if key not in 
-                 ['catalog', 'model', 'exp', 'catalog_ref', 'model_ref', 'exp_ref'] 
+        parts = [clean_filename(str(value)) if key not in
+                 ['catalog', 'model', 'exp', 'catalog_ref', 'model_ref', 'exp_ref']
                  else value for key, value in parts_dict.items() if value is not None]
 
         # Join all parts
@@ -240,12 +249,12 @@ class OutputSaver:
             }
 
         dataset.attrs.update(metadata)
-        
+
         if dataset.chunks:
-            self.logger.debug(f"Loading data in memory")
+            self.logger.debug("Loading data in memory")
             dataset.load()
-        self.logger.debug(f"Writing to netcdf %s", filepath)
-        
+        self.logger.debug("Writing to netcdf %s", filepath)
+
         dataset.to_netcdf(filepath)
 
         # create catalog entry for netcdf file
@@ -258,21 +267,21 @@ class OutputSaver:
 
         self.logger.info("Saved NetCDF: %s", filepath)
         return filepath
-    
+
     def generate_folder(self, extension: str = 'pdf'):
         """
         Generate a folder for saving output files based on the specified format.
 
         Args:
             extension (str): The extension of the output files (e.g., 'pdf', 'svg', 'png', 'netcdf').
-        
+
         Returns:
             str: The path to the generated folder.
         """
         folder = os.path.join(self.outputdir, extension)
         create_folder(folder=str(folder), loglevel=self.loglevel)
         return folder
-    
+
     def generate_path(self, extension: str, diagnostic_product: str,
                       extra_keys: dict = None) -> str:
         """
@@ -331,10 +340,10 @@ class OutputSaver:
                     dpi: int = 300):
         """
         Save a matplotlib figure in the specified format(s).
-        
+
         This method handles the format selection logic and delegates to
         save_vectorial() and/or save_raster() as needed.
-        
+
         Args:
             fig: Matplotlib figure to save.
             diagnostic_product (str): Name of the diagnostic product.
@@ -350,7 +359,7 @@ class OutputSaver:
             raise ValueError(f"format must be 'png', 'pdf', or 'svg', got '{extensions}'")
 
         vectorial_formats = ['pdf', 'svg']
-        
+
         for ext in extensions:
             ext = ext.lower().lstrip('.')
             if ext in vectorial_formats:
@@ -424,7 +433,7 @@ class OutputSaver:
             cat_file = load_yaml(catalogfile)
             # Remove None values
             urlpath = replace_intake_vars(catalog=self.catalog, path=filepath)
-            
+
             entry_name = f'aqua-{self.diagnostic}-{metadata.get("diagnostic_product")}'
             if entry_name in cat_file['sources']:
                 catblock = cat_file['sources'][entry_name]
@@ -458,7 +467,7 @@ class OutputSaver:
                     if value is not None:
                         self.logger.debug("Replacing jinja variable %s with value %s in urlpath", key, value)
                         catblock = replace_urlpath_jinja(catblock, value, key)
-            
+
             if wildcardlist:
                for key in wildcardlist:
                    value = metadata.get(key)
@@ -467,7 +476,7 @@ class OutputSaver:
                        catblock = replace_urlpath_wildcard(catblock, value)
 
             self.logger.info('Final urlpath: %s', catblock['args']['urlpath'])
-            
+
             cat_file['sources'][entry_name] = catblock
 
             # dump the update file

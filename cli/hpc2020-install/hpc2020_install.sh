@@ -3,15 +3,15 @@
 # Install AQUA framework and diagnostics.
 
 # Usage
-# bash hpc2020_install.sh 
+# bash hpc2020_install.sh
 # or
-# AQUA_DIAGNOSTICS=/path/to/aqua bash hpc2020_install.sh 
+# AQUA_DIAGNOSTICS=/path/to/aqua bash hpc2020_install.sh
 
 set -e
 
 # Check if AQUA is set and the file exists
 if [[ -z "$AQUA_DIAGNOSTICS" ]]; then
-    export AQUA_DIAGNOSTICS=$(realpath "$(pwd)/../..") 
+    export AQUA_DIAGNOSTICS=$(realpath "$(pwd)/../..")
     echo -e "\033[0;31mWarning: The AQUA_DIAGNOSTICS environment variable is not defined."
     echo -e "\033[0;31mWarning: We are guessing the position of AQUA-diagnostics from that of this script, i.e. $AQUA_DIAGNOSTICS"
     echo -e "\x1b[38;2;255;165;0mAlternatively, define the AQUA_DIAGNOSTICS environment variable with the path to your 'AQUA-diagnostics' directory."
@@ -48,12 +48,12 @@ install_aqua() {
   # load modules. tykky substitutes all other modules, so that a reset is not needed
   module load tykky
   log_message INFO "tykky module has been loaded."
-  
+
   # Fix environment.yml
   SCRIPTDIR="${AQUA_DIAGNOSTICS}/cli/hpc2020-install"
-  sed 's/- imagemagick/# - imagemagick/' ../../environment.yml >$SCRIPTDIR/environment_hpc2020.yml  # imagemagick has a buggy dependency, it needs to be installed separately 
+  sed 's/- imagemagick/# - imagemagick/' ../../environment.yml >$SCRIPTDIR/environment_hpc2020.yml  # imagemagick has a buggy dependency, it needs to be installed separately
   sed -i.bak "s;- -e .;- -e $AQUA_DIAGNOSTICS;" $SCRIPTDIR/environment_hpc2020.yml  # replace relative paths with $AQUA_DIAGNOSTICS
-  
+
   # update.sh is needed to fix the imagemagick bug
   echo "#!/bin/bash" > $SCRIPTDIR/update.sh
   echo "conda install -y -c conda-forge imagemagick" >> $SCRIPTDIR/update.sh
@@ -61,7 +61,7 @@ install_aqua() {
   # install AQUA framework and diagnostics
   conda-containerize new --post-install $SCRIPTDIR/update.sh --prefix "${INSTALLATION_PATH}" $SCRIPTDIR/environment_hpc2020.yml
 
-  rm $SCRIPTDIR/environment_hpc2020.yml $SCRIPTDIR/environment_hpc2020.yml.bak $SCRIPTDIR/update.sh 
+  rm $SCRIPTDIR/environment_hpc2020.yml $SCRIPTDIR/environment_hpc2020.yml.bak $SCRIPTDIR/update.sh
   log_message INFO "AQUA framework and diagnostics have been installed."
 }
 

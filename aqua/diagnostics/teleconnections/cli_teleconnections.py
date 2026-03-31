@@ -9,9 +9,8 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
-from aqua.diagnostics.teleconnections import NAO, ENSO
-from aqua.diagnostics.teleconnections import PlotNAO, PlotENSO
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.teleconnections import ENSO, NAO, PlotENSO, PlotNAO
 
 
 def parse_arguments(args):

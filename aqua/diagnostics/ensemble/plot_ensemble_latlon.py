@@ -1,10 +1,9 @@
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import xarray as xr
+
 from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection
-from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
@@ -146,7 +145,7 @@ class PlotEnsembleLatLon(BaseMixin):
 
         Returns:
             dict: Dictionary containing figure and axes for mean and std plots:
-                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}. 
+                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}.
                   If standard deviation is zero everywhere, only 'mean_plot' is returned.
 
         Raises:
@@ -190,7 +189,7 @@ class PlotEnsembleLatLon(BaseMixin):
             vmin_mean = dataset_mean.values.min()
         if vmax_mean is None:
             vmax_mean = dataset_mean.values.max()
-            
+
         fig1, ax1 = plot_single_map(
             dataset_mean,
             proj=proj,
@@ -207,7 +206,7 @@ class PlotEnsembleLatLon(BaseMixin):
         )
         ax1.set_xlabel("Longitude")
         ax1.set_ylabel("Latitude")
-        self.logger.debug(f"Saving 2D map of mean")
+        self.logger.debug("Saving 2D map of mean")
 
         # STD plot
         if isinstance(dataset_std, xr.Dataset):

@@ -1,6 +1,6 @@
 # Ensemble statistics
 
-Author: 
+Author:
 - Maqsood Mubarak Rajput (AWI,maqsoodmubarak.rajput@awi.de)
 
 ## Description
@@ -26,7 +26,7 @@ Refer to the AQUA documentation for more information.
 
 ## Data requirements
 
-The ensemble members with `1D`,`2D` in `lon-lat` or `lev-lat` dimensions needs merged along the default dimension `Ensembles` to create an `xarray.Dataset`. This `xarray.Dataset` is then given to the `ensemble` module. 
+The ensemble members with `1D`,`2D` in `lon-lat` or `lev-lat` dimensions needs merged along the default dimension `Ensembles` to create an `xarray.Dataset`. This `xarray.Dataset` is then given to the `ensemble` module.
 
 ## Examples
 
@@ -42,5 +42,5 @@ Please note that notebooks may load data from the DKRZ cluster, so they may not 
 
 ## Contributing
 
-Contributions are welcome, please open an issue or a pull request. 
+Contributions are welcome, please open an issue or a pull request.
 If you have any doubt or suggestion, please contact the AQUA team or Maqsood Mubarak Rajput (maqsoodmubarak.rajput@awi.de)

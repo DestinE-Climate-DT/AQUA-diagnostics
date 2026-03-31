@@ -1,12 +1,13 @@
 """Base classes for Timeseries diagnostics."""
 
 from typing import Union
+
 import xarray as xr
+
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver, TitleBuilder, SAVE_FORMAT
-from aqua.core.util import time_to_string, strlist_to_phrase, unit_to_latex
+from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, strlist_to_phrase, time_to_string
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, start_end_dates
 
 xr.set_options(keep_attrs=True)
 
@@ -45,7 +46,7 @@ class BaseMixin(Diagnostic):
         """
         super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
                          loglevel=loglevel)
-        
+
         # Log name is the diagnostic name with the first letter capitalized
         self.logger = log_configure(log_level=loglevel, log_name=diagnostic_name.capitalize())
         self.diagnostic_name = diagnostic_name
@@ -350,7 +351,7 @@ class PlotBaseMixin():
         Returns:
             title (str): Title for the plot.
         """
-        
+
         title = TitleBuilder(
             diagnostic=diagnostic,
             variable=self.long_name,
@@ -395,10 +396,10 @@ class PlotBaseMixin():
         description += strlist_to_phrase(items=[f'{self.catalogs[i]} {self.models[i]} {self.exps[i]}' for i in range(self.len_data)])
 
         if self.len_ref > 0:
-            description += f' with reference'
+            description += ' with reference'
             for i in range(self.len_ref):
                 if self.ref_models[i] == 'ERA5' or self.ref_models == 'ERA5':
-                    description += f' ERA5 '
+                    description += ' ERA5 '
                 elif isinstance(self.ref_models, list):
                     description += f' {self.ref_models[i]} {self.ref_exps[i]} '
                 else:
