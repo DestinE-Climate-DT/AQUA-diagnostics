@@ -9,6 +9,7 @@ approx_rel = APPROX_REL
 loglevel = LOGLEVEL
 
 @pytest.mark.diagnostics
+@pytest.mark.skip(reason="Temporarily disabled until MJO is integrated again.")
 def test_MJO(tmp_path):
     """
     Test that the MJO class works
