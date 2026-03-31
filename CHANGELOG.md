@@ -19,6 +19,7 @@ Main changes:
 
 Complete list:
 - Apply ruff linting and pre-commit hooks (#198)
+- Temporarily exclude MJO test (#201)
 - Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
 - Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173)
