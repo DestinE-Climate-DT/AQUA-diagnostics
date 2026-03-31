@@ -18,7 +18,9 @@ def test_MJO(tmp_path):
         'exp': 'era5-hpz3',
         'source': 'monthly',
         'loglevel': loglevel,
-        'regrid': 'r200'
+        'regrid': 'r200',
+        'startdate': '2000-01-01',
+        'enddate': '2001-12-31'
     }
 
     mjo = MJO(**init_dict)
