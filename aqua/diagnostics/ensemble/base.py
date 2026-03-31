@@ -281,11 +281,7 @@ class BaseMixin(Diagnostic):
             enddate = enddate.strftime("%Y-%m-%d")
             metadata.update({"enddate": enddate})
 
-        if (
-            self.catalog is not None
-            and self.model is not None
-            and self.exp is not None
-        ):
+        if self.catalog is not None and self.model is not None and self.exp is not None:
             outputsaver = OutputSaver(
                 diagnostic=self.diagnostic_name,
                 # diagnostic_product=self.diagnostic_product,
@@ -308,8 +304,17 @@ class BaseMixin(Diagnostic):
             self.logger.info(f"Output is not saved, please check {self.catalog}, {self.model} and {self.exp}")
 
     # Save figure
-    def save_figure(self, var, fig=None, fig_std=None, startdate=None, enddate=None,
-                    description=None, format: Union[str, list]=SAVE_FORMAT, dpi=300):
+    def save_figure(
+        self,
+        var,
+        fig=None,
+        fig_std=None,
+        startdate=None,
+        enddate=None,
+        description=None,
+        format: Union[str, list] = SAVE_FORMAT,
+        dpi=300,
+    ):
         """
         Save figure(s) to file using OutputSaver or directly to disk if catalog/model/exp are None or multi-values.
 
@@ -365,11 +370,7 @@ class BaseMixin(Diagnostic):
             enddate = enddate.strftime("%Y-%m-%d")
             metadata.update({"enddate": enddate})
 
-        if (
-            self.catalog is not None
-            and self.model is not None
-            and self.exp is not None
-        ):
+        if self.catalog is not None and self.model is not None and self.exp is not None:
             if fig is not None:
                 outputsaver = OutputSaver(
                     diagnostic=self.diagnostic_name,
@@ -393,7 +394,9 @@ class BaseMixin(Diagnostic):
                     diagnostic_product=self.diagnostic_product,
                     extra_keys=extra_keys,
                     metadata=metadata,
-                    extension=format, dpi=dpi)
+                    extension=format,
+                    dpi=dpi,
+                )
 
             if fig_std is not None:
                 metadata = {"Description": description}
@@ -422,6 +425,8 @@ class BaseMixin(Diagnostic):
                         diagnostic_product=self.diagnostic_product,
                         extra_keys=extra_keys,
                         metadata=metadata,
-                        dpi=dpi, extension=format)
+                        dpi=dpi,
+                        extension=format,
+                    )
         else:
             self.logger.info(f"Output plot is not saved, please check {self.catalog}, {self.model} and {self.exp}")

@@ -123,7 +123,7 @@ class SshVariabilityCompute(BaseMixin):
 
         super().retrieve()
         if self.data is None:
-            raise ValueError(f"Variable {self.var} not found in the data. " "Check the variable name and the data source.")
+            raise ValueError(f"Variable {self.var} not found in the data. Check the variable name and the data source.")
         try:
             # b)
             # Compute STD

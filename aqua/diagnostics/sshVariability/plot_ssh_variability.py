@@ -148,7 +148,8 @@ class SshVariabilityPlot(PlotBaseMixin):
             model=model,
             exp=exp,
             startyear=startdate,
-            endyear=enddate).generate()
+            endyear=enddate,
+        ).generate()
 
         description = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
 
@@ -203,9 +204,9 @@ class SshVariabilityPlot(PlotBaseMixin):
                 return_fig=True,
                 title=title,
                 proj=proj,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
                 **plot_options,
@@ -220,9 +221,9 @@ class SshVariabilityPlot(PlotBaseMixin):
                 vmin=vmin,
                 vmax=vmax,
                 proj=proj,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
                 **plot_options,
@@ -376,7 +377,6 @@ class SshVariabilityPlot(PlotBaseMixin):
             self.logger.debug("resampling HEALPix dataset_ref_std")
 
         if tgt_grid_name is not None:
-
             self.logger.info(
                 f"Regridding model data and reference data using target grid name {tgt_grid_name} and regrid method {regrid_method}"
             )
@@ -410,13 +410,12 @@ class SshVariabilityPlot(PlotBaseMixin):
             ref_model=model_ref,
             ref_exp=exp_ref,
             ref_startyear=startdate_ref,
-            ref_endyear=enddate_ref
-            ).generate()
+            ref_endyear=enddate_ref,
+        ).generate()
 
         description = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
 
         if region:
-
             if lon_limits is None or lat_limits is None:
                 self.logger.error(f"For the {region}, please specify the lon_limits and lat_limits.")
             description = description + f"for {region} "
@@ -462,9 +461,9 @@ class SshVariabilityPlot(PlotBaseMixin):
                 contour=False,
                 return_fig=True,
                 title=title,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
@@ -479,9 +478,9 @@ class SshVariabilityPlot(PlotBaseMixin):
                 title=title,
                 vmin=vmin_diff,
                 vmax=vmax_diff,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
                 loglevel=self.loglevel,

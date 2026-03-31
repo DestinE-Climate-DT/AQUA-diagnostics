@@ -11,13 +11,16 @@ from .util import handle_pressure_level
 
 
 class PlotGlobalBiases:
-    def __init__(self,
-                 diagnostic='globalbiases',
-                 save_format=SAVE_FORMAT,
-                 dpi=300, outputdir='./',
-                 cmap='RdBu_r',
-                 return_fig: bool = False,
-                 loglevel='WARNING'):
+    def __init__(
+        self,
+        diagnostic="globalbiases",
+        save_format=SAVE_FORMAT,
+        dpi=300,
+        outputdir="./",
+        cmap="RdBu_r",
+        return_fig: bool = False,
+        loglevel="WARNING",
+    ):
         """
         Initialize the PlotGlobalBiases class.
 
@@ -38,11 +41,9 @@ class PlotGlobalBiases:
         self.return_fig = return_fig
         self.loglevel = loglevel
 
-        self.logger = log_configure(log_level=loglevel, log_name='Global Biases')
+        self.logger = log_configure(log_level=loglevel, log_name="Global Biases")
 
-    def _save_figure(self, fig, diagnostic_product,
-                     data, description, var, data_ref=None,
-                     plev=None, **kwargs):
+    def _save_figure(self, fig, diagnostic_product, data, description, var, data_ref=None, plev=None, **kwargs):
         """
         Handles the saving of a figure using OutputSaver.
 
@@ -66,21 +67,20 @@ class PlotGlobalBiases:
             exp_ref=data_ref.AQUA_exp if data_ref else None,
             outputdir=self.outputdir,
             loglevel=self.loglevel,
-            **kwargs
+            **kwargs,
         )
 
         metadata = {"Description": description}
         extra_keys = {}
 
         if var is not None:
-            extra_keys.update({'var': var})
+            extra_keys.update({"var": var})
         if plev is not None:
-            extra_keys.update({'plev': plev})
+            extra_keys.update({"plev": plev})
 
-        outputsaver.save_figure(fig, diagnostic_product,
-                                extra_keys=extra_keys, metadata=metadata,
-                                extension=self.format_to_save,
-                                dpi=self.dpi)
+        outputsaver.save_figure(
+            fig, diagnostic_product, extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save, dpi=self.dpi
+        )
 
     def _compute_bias_significance(self, data_ts, data_ref_ts, var, plev, alpha):
         """
@@ -99,14 +99,11 @@ class PlotGlobalBiases:
 
         stat_test = StatGlobalBiases(loglevel=self.loglevel)
 
-        return stat_test.compute_significance_ttest(
-            data_ts, data_ref_ts, var, alpha=alpha
-        )
+        return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
-    def _add_significance_stippling(self, ax, significance_mask, lat, lon,
-                                    stipple_density=3, stipple_size=0.5,
-                                    stipple_color='black', invert_mask=False
-                                    ):
+    def _add_significance_stippling(
+        self, ax, significance_mask, lat, lon, stipple_density=3, stipple_size=0.5, stipple_color="black", invert_mask=False
+    ):
         """
         Add stippling to indicate statistical significance on a map.
 
@@ -125,10 +122,7 @@ class PlotGlobalBiases:
 
         # Subsample the significance mask along latitude and longitude
         # (e.g. every Nth grid point) to control stippling density
-        mask_sub = significance_mask.isel(
-            lat=slice(None, None, stipple_density),
-            lon=slice(None, None, stipple_density)
-        )
+        mask_sub = significance_mask.isel(lat=slice(None, None, stipple_density), lon=slice(None, None, stipple_density))
 
         # Extract the corresponding subsampled latitude and longitude coordinates
         lat_sub = mask_sub.lat
@@ -152,11 +146,10 @@ class PlotGlobalBiases:
             c=stipple_color,
             transform=ccrs.PlateCarree(),
             alpha=0.6,
-            linewidths=0
+            linewidths=0,
         )
 
-
-    def plot_climatology(self, data, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None):
+    def plot_climatology(self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None):
         """
         Plots the climatology map for a given variable and time range.
 
@@ -173,7 +166,7 @@ class PlotGlobalBiases:
         Returns:
             tuple: Matplotlib figure and axis objects.
         """
-        self.logger.info('Plotting climatology.')
+        self.logger.info("Plotting climatology.")
 
         data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
         if data is None:
@@ -185,10 +178,10 @@ class PlotGlobalBiases:
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
             diagnostic="Climatology",
-            variable=data[var].attrs.get('long_name', var),
+            variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
-            extra_info=extra_info
+            extra_info=extra_info,
         ).generate()
 
         fig, ax = plot_single_map(
@@ -201,7 +194,7 @@ class PlotGlobalBiases:
             proj=proj,
             loglevel=self.loglevel,
             cbar_label=cbar_label,
-            cmap=self.cmap
+            cmap=self.cmap,
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
@@ -214,17 +207,41 @@ class PlotGlobalBiases:
         )
 
         if self.format_to_save:
-            self._save_figure(fig=fig, diagnostic_product='annual_climatology',
-                              data=data, description=description, var=var, plev=plev, realization=realization)
+            self._save_figure(
+                fig=fig,
+                diagnostic_product="annual_climatology",
+                data=data,
+                description=description,
+                var=var,
+                plev=plev,
+                realization=realization,
+            )
 
         if self.return_fig:
             return fig, ax
         return None
 
-    def plot_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None, area=None, show_stats=False,
-                  data_timeseries=None, data_ref_timeseries=None,
-                  show_significance=False, significance_alpha=0.05,
-                  stipple_density=3, stipple_size=0.5, invert_stippling=False):
+    def plot_bias(
+        self,
+        data,
+        data_ref,
+        var,
+        plev=None,
+        proj="robinson",
+        proj_params={},
+        vmin=None,
+        vmax=None,
+        cbar_label=None,
+        area=None,
+        show_stats=False,
+        data_timeseries=None,
+        data_ref_timeseries=None,
+        show_significance=False,
+        significance_alpha=0.05,
+        stipple_density=3,
+        stipple_size=0.5,
+        invert_stippling=False,
+    ):
         """
         Plots the bias map between two datasets.
 
@@ -241,7 +258,7 @@ class PlotGlobalBiases:
             area (xr.DataArray, optional): Grid cell areas for computing weighted statistics.
             show_stats (bool, optional): Whether to show statistical information on the plot.
         """
-        self.logger.info('Plotting global biases.')
+        self.logger.info("Plotting global biases.")
 
         data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
         data_ref = handle_pressure_level(data_ref, var, plev, loglevel=self.loglevel)
@@ -255,14 +272,14 @@ class PlotGlobalBiases:
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
             diagnostic="Global bias",
-            variable=data[var].attrs.get('long_name', var),
+            variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
-            extra_info=extra_info
+            extra_info=extra_info,
         ).generate()
 
         fig, ax = plot_single_map_diff(
@@ -278,7 +295,7 @@ class PlotGlobalBiases:
             vmax_fill=vmax,
             cbar_label=cbar_label,
             cmap=self.cmap,
-            loglevel=self.loglevel
+            loglevel=self.loglevel,
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
@@ -293,37 +310,40 @@ class PlotGlobalBiases:
 
         # Add significance stippling if requested
         if show_significance and data_timeseries is not None:
-
-            self.logger.info('Computing statistical significance for bias.')
+            self.logger.info("Computing statistical significance for bias.")
 
             significance_mask = self._compute_bias_significance(
-            data_timeseries, data_ref_timeseries, var, plev=plev, alpha=significance_alpha)
-
-            # Add stippling
-            lat = data[var].coords.get('lat', data[var].coords.get('latitude'))
-            lon = data[var].coords.get('lon', data[var].coords.get('longitude'))
-
-            self._add_significance_stippling(
-                ax, significance_mask, lat, lon,
-                stipple_density=stipple_density,
-                stipple_size=stipple_size,
-                invert_mask=invert_stippling
+                data_timeseries, data_ref_timeseries, var, plev=plev, alpha=significance_alpha
             )
 
-            pct_sig = significance_mask.attrs.get('percent_significant', 0)
-            n_samples = significance_mask.attrs.get('n_samples_model', 'unknown')
-            n_samples_ref = significance_mask.attrs.get('n_samples_reference', 'unknown')
-            self.logger.info(f'Added significance stippling: {pct_sig:.1f}% of points are significant.')
+            # Add stippling
+            lat = data[var].coords.get("lat", data[var].coords.get("latitude"))
+            lon = data[var].coords.get("lon", data[var].coords.get("longitude"))
+
+            self._add_significance_stippling(
+                ax,
+                significance_mask,
+                lat,
+                lon,
+                stipple_density=stipple_density,
+                stipple_size=stipple_size,
+                invert_mask=invert_stippling,
+            )
+
+            pct_sig = significance_mask.attrs.get("percent_significant", 0)
+            n_samples = significance_mask.attrs.get("n_samples_model", "unknown")
+            n_samples_ref = significance_mask.attrs.get("n_samples_reference", "unknown")
+            self.logger.info(f"Added significance stippling: {pct_sig:.1f}% of points are significant.")
 
             ax.text(
-                0.99, 0.01,
-                f"Stippling: p < {significance_alpha}\n"
-                f"Welch t-test, N = {n_samples}\n"
-                f"Significant points: {pct_sig:.1f}%",
+                0.99,
+                0.01,
+                f"Stippling: p < {significance_alpha}\nWelch t-test, N = {n_samples}\nSignificant points: {pct_sig:.1f}%",
                 transform=ax.transAxes,
-                ha="right", va="bottom",
+                ha="right",
+                va="bottom",
                 fontsize=9,
-                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
+                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none"),
             )
 
             sig_description = (
@@ -336,33 +356,33 @@ class PlotGlobalBiases:
 
         #  Add statistics to the plot if requested
         if show_stats:
-            self.logger.debug('Computing bias statistics.')
+            self.logger.debug("Computing bias statistics.")
             if area is None:
-                self.logger.warning('Grid areas not provided, unweighted statistics will be computed.')
+                self.logger.warning("Grid areas not provided, unweighted statistics will be computed.")
             bs = StatGlobalBiases(loglevel=self.loglevel)
-            stats = bs.compute_bias_statistics(
-                data=data,
-                data_ref=data_ref,
-                var=var,
-                area=area
-            )
+            stats = bs.compute_bias_statistics(data=data, data_ref=data_ref, var=var, area=area)
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
-            units = unit_to_latex(data[var].attrs.get('units', ''))
+            units = unit_to_latex(data[var].attrs.get("units", ""))
             stats_text = f"Mean: {mean_bias:{'.2g'}}" + (f" {units}" if units else "")
             stats_text += f"\nRMSE: {rmse:{'.2g'}}" + (f" {units}" if units else "")
 
-            x, y, ha, va = (0.02, 0.87, 'left', 'center')
+            x, y, ha, va = (0.02, 0.87, "left", "center")
             # Add text to figure
-            fig.text(x, y, stats_text,
-                    fontsize=12,
-                    ha=ha, va=va,
-                    transform=fig.transFigure,
-                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black'))
+            fig.text(
+                x,
+                y,
+                stats_text,
+                fontsize=12,
+                ha=ha,
+                va=va,
+                transform=fig.transFigure,
+                bbox=dict(boxstyle="round", facecolor="white", alpha=0.8, edgecolor="black"),
+            )
 
             self.logger.info(f"Added statistics to plot: Mean={mean_bias:.2g}, RMSE={rmse:.2g}")
 
-            units = data[var].attrs.get('units', '')
+            units = data[var].attrs.get("units", "")
             stat_description = (
                 f" The plot includes statistics for the bias: mean bias = {mean_bias:.2g} {units},"
                 f" and RMSE = {rmse:.2f} {units}."
@@ -370,15 +390,24 @@ class PlotGlobalBiases:
             description += stat_description
 
         if self.format_to_save:
-            self._save_figure(fig=fig, diagnostic_product='bias', data=data, data_ref=data_ref,
-                              description=description, var=var, plev=plev, realization=realization)
+            self._save_figure(
+                fig=fig,
+                diagnostic_product="bias",
+                data=data,
+                data_ref=data_ref,
+                description=description,
+                var=var,
+                plev=plev,
+                realization=realization,
+            )
 
         if self.return_fig:
             return fig, ax
         return None
 
-
-    def plot_seasonal_bias(self, data, data_ref, var, plev=None, proj='robinson', proj_params={}, vmin=None, vmax=None, cbar_label=None):
+    def plot_seasonal_bias(
+        self, data, data_ref, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None
+    ):
         """
         Plots seasonal biases for each season (DJF, MAM, JJA, SON).
 
@@ -396,49 +425,49 @@ class PlotGlobalBiases:
         Returns:
             matplotlib.figure.Figure: The resulting figure.
         """
-        self.logger.info('Plotting seasonal biases.')
+        self.logger.info("Plotting seasonal biases.")
 
         data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
         data_ref = handle_pressure_level(data_ref, var, plev, loglevel=self.loglevel)
 
         realization = get_realizations(data)
 
-        season_list = ['DJF', 'MAM', 'JJA', 'SON']
+        season_list = ["DJF", "MAM", "JJA", "SON"]
         sym = vmin is None or vmax is None
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
             diagnostic="Seasonal bias",
-            variable=data[var].attrs.get('long_name', var),
+            variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
-            extra_info=extra_info
+            extra_info=extra_info,
         ).generate()
 
         plot_kwargs = {
-            'maps': [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
-            'proj': get_projection(proj, **proj_params),
-            'return_fig': True,
-            'title': title,
-            'title_size': 18,
-            'titles': season_list,
-            'titles_size': 16,
-            'figsize':(10, 8),
-            'contour': True,
-            'sym': sym,
-            'cbar_label': cbar_label,
-            'cmap': self.cmap,
-            'loglevel': self.loglevel
+            "maps": [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
+            "proj": get_projection(proj, **proj_params),
+            "return_fig": True,
+            "title": title,
+            "title_size": 18,
+            "titles": season_list,
+            "titles_size": 16,
+            "figsize": (10, 8),
+            "contour": True,
+            "sym": sym,
+            "cbar_label": cbar_label,
+            "cmap": self.cmap,
+            "loglevel": self.loglevel,
         }
 
         if vmin is not None:
-            plot_kwargs['vmin'] = vmin
+            plot_kwargs["vmin"] = vmin
         if vmax is not None:
-            plot_kwargs['vmax'] = vmax
+            plot_kwargs["vmax"] = vmax
 
         fig = plot_maps(**plot_kwargs)
 
@@ -452,16 +481,34 @@ class PlotGlobalBiases:
         )
 
         if self.format_to_save:
-            self._save_figure(fig=fig, diagnostic_product='seasonal_bias', data=data, data_ref=data_ref,
-                          description=description, var=var, plev=plev, realization=realization)
+            self._save_figure(
+                fig=fig,
+                diagnostic_product="seasonal_bias",
+                data=data,
+                data_ref=data_ref,
+                description=description,
+                var=var,
+                plev=plev,
+                realization=realization,
+            )
 
         if self.return_fig:
             return fig
         return None
 
-
-    def plot_vertical_bias(self, data, data_ref, var, plev_min=None, plev_max=None,
-                           vmin=None, vmax=None, vmin_contour=None, vmax_contour=None, nlevels=18):
+    def plot_vertical_bias(
+        self,
+        data,
+        data_ref,
+        var,
+        plev_min=None,
+        plev_max=None,
+        vmin=None,
+        vmax=None,
+        vmin_contour=None,
+        vmax_contour=None,
+        nlevels=18,
+    ):
         """
         Calculates and plots the vertical bias between two datasets.
 
@@ -477,13 +524,13 @@ class PlotGlobalBiases:
             vmax_contour (float, optional): Maximum contour value.
             nlevels (int, optional): Number of contour levels for the plot.
         """
-        self.logger.info('Plotting vertical biases for variable: %s', var)
+        self.logger.info("Plotting vertical biases for variable: %s", var)
 
         realization = get_realizations(data)
 
         title = TitleBuilder(
             diagnostic="Vertical bias",
-            variable=data[var].attrs.get('long_name', var),
+            variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
@@ -499,8 +546,8 @@ class PlotGlobalBiases:
         )
 
         fig, ax = plot_vertical_profile_diff(
-            data=data[var].mean(dim='lon'),
-            data_ref=data_ref[var].mean(dim='lon'),
+            data=data[var].mean(dim="lon"),
+            data_ref=data_ref[var].mean(dim="lon"),
             var=var,
             lev_min=plev_min,
             lev_max=plev_max,
@@ -515,12 +562,19 @@ class PlotGlobalBiases:
             title=title,
             title_size=18,
             return_fig=True,
-            loglevel=self.loglevel
+            loglevel=self.loglevel,
         )
 
         if self.format_to_save:
-            self._save_figure(fig=fig, diagnostic_product='vertical_bias', data=data, data_ref=data_ref,
-                          description=description, var=var, realization=realization)
+            self._save_figure(
+                fig=fig,
+                diagnostic_product="vertical_bias",
+                data=data,
+                data_ref=data_ref,
+                description=description,
+                var=var,
+                realization=realization,
+            )
 
         if self.return_fig:
             return fig, ax

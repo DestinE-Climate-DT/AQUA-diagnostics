@@ -174,9 +174,9 @@ class PlotEnsembleLatLon(BaseMixin):
             long_name = dataset_mean.attrs.get("long_name") or var
 
         if title_mean is None:
-            title_mean = TitleBuilder(diagnostic="Ensemble mean",variable=long_name, model=self.model).generate()
+            title_mean = TitleBuilder(diagnostic="Ensemble mean", variable=long_name, model=self.model).generate()
         if title_std is None:
-            title_std = TitleBuilder(diagnostic="Ensemble standard deviation",variable=long_name, model=self.model).generate()
+            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", variable=long_name, model=self.model).generate()
 
         proj = get_projection(proj, **proj_params)
 
@@ -238,6 +238,5 @@ class PlotEnsembleLatLon(BaseMixin):
         ax2.set_ylabel("Latitude")
 
         # Saving plots
-        self.save_figure(var=var, fig=fig1, fig_std=fig2,
-                         description=description, format=save_format, dpi=dpi)
+        self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format=save_format, dpi=dpi)
         return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}

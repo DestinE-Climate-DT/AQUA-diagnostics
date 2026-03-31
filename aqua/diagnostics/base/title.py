@@ -35,27 +35,28 @@ class TitleBuilder:
         str: The generated title.
     """
 
-    def __init__(self,
-                 title: Optional[str] = None,
-                 diagnostic: Optional[str] = None,
-                 variable: Optional[str] = None,
-                 regions: Optional[Union[str, list]] = None,
-                 conjunction: Optional[str] = None,
-                 catalog: Optional[Union[str, list]] = None,
-                 model: Optional[Union[str, list]] = None,
-                 exp: Optional[Union[str, list]] = None,
-                 startyear: Optional[int | str] = None,
-                 endyear: Optional[int | str] = None,
-                 realizations: Optional[Union[str, list]] = None,
-                 comparison: Optional[str] = None,
-                 ref_catalog: Optional[Union[str, list]] = None,
-                 ref_model: Optional[Union[str, list]] = None,
-                 ref_exp: Optional[Union[str, list]] = None,
-                 timeseason: Optional[str] = None,
-                 ref_startyear: Optional[int | str] = None,
-                 ref_endyear: Optional[int | str] = None,
-                 extra_info: Optional[Union[str, list]] = None,
-                 ):
+    def __init__(
+        self,
+        title: Optional[str] = None,
+        diagnostic: Optional[str] = None,
+        variable: Optional[str] = None,
+        regions: Optional[Union[str, list]] = None,
+        conjunction: Optional[str] = None,
+        catalog: Optional[Union[str, list]] = None,
+        model: Optional[Union[str, list]] = None,
+        exp: Optional[Union[str, list]] = None,
+        startyear: Optional[int | str] = None,
+        endyear: Optional[int | str] = None,
+        realizations: Optional[Union[str, list]] = None,
+        comparison: Optional[str] = None,
+        ref_catalog: Optional[Union[str, list]] = None,
+        ref_model: Optional[Union[str, list]] = None,
+        ref_exp: Optional[Union[str, list]] = None,
+        timeseason: Optional[str] = None,
+        ref_startyear: Optional[int | str] = None,
+        ref_endyear: Optional[int | str] = None,
+        extra_info: Optional[Union[str, list]] = None,
+    ):
 
         self.title = title
         self.diagnostic = diagnostic
@@ -134,7 +135,7 @@ class TitleBuilder:
         if self.title:
             return self.title
 
-        title = ''
+        title = ""
         if self.diagnostic:
             title += f"{self.diagnostic}"
 
@@ -150,7 +151,7 @@ class TitleBuilder:
         models_part = self._format_models()
         if models_part:
             if title:
-                title += f" {self.conjunction}" if self.conjunction else ' for'
+                title += f" {self.conjunction}" if self.conjunction else " for"
             title += f" {models_part}"
 
         if self.realizations:
@@ -166,7 +167,7 @@ class TitleBuilder:
         refs_part = self._format_refs()
         if refs_part:
             if title:
-                title += f" {self.comparison}" if self.comparison else ' relative to'
+                title += f" {self.comparison}" if self.comparison else " relative to"
             title += f" {refs_part}"
 
         ref_years = self._format_years(startyear=self.ref_startyear, endyear=self.ref_endyear)
