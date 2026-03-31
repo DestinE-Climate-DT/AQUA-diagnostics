@@ -18,6 +18,7 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class 
 
 Complete list:
+- Reduce execution time for MJO diagnostic test (#201)
 - Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
 - Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173) 
