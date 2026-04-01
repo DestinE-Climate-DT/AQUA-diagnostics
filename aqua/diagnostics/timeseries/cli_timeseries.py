@@ -9,13 +9,12 @@ single or multiple experiments.
 """
 import argparse
 import sys
-import pandas as pd 
 
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
-from aqua.diagnostics.base import round_startdate, round_enddate
+import pandas as pd
+
+from aqua.diagnostics.base import DiagnosticCLI, round_enddate, round_startdate, template_parse_arguments
+from aqua.diagnostics.timeseries import Gregory, PlotGregory, PlotSeasonalCycles, PlotTimeseries, SeasonalCycles, Timeseries
 from aqua.diagnostics.timeseries.util_cli import load_var_config
-from aqua.diagnostics.timeseries import Timeseries, SeasonalCycles, Gregory
-from aqua.diagnostics.timeseries import PlotTimeseries, PlotSeasonalCycles, PlotGregory
 
 
 def parse_arguments(args):
@@ -315,7 +314,7 @@ if __name__ == '__main__':
                                     'enddate': cli.config_dict['diagnostics']['gregory'].get('std_enddate')}
                     greg_ref_toa = Gregory(**init_args, **dataset_args)
                     greg_ref_toa.run(**run_args, t2m=False, net_toa=True, std=True)
-                
+
                 # Plot the gregory
                 if cli.save_format:
                     cli.logger.info(f"Plotting Gregory diagnostic with formats: {cli.save_format}")
@@ -333,7 +332,7 @@ if __name__ == '__main__':
                         'diagnostic_name': diagnostic_name,
                         'loglevel': cli.loglevel,
                     }
-                    
+
                     plot_greg = PlotGregory(**plot_args)
                     title = plot_greg.set_title()
                     data_labels = plot_greg.set_data_labels()

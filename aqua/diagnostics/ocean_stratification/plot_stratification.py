@@ -1,11 +1,14 @@
-import xarray as xr
 import math
 from typing import Union
+
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, get_realizations
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
-from .multiple_vertical_line import plot_multi_vertical_lines
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
+
+from .multiple_vertical_line import plot_multi_vertical_lines
 
 xr.set_options(keep_attrs=True)
 

@@ -31,9 +31,9 @@ File structure
 Input variables and datasets
 ----------------------------
 
-Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via 
+Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via
 ``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. The final merged dataset will contain all the requested ensemble members with appropriate metadata.
-Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``. 
+Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``.
 The merged dataset must contain all ensemble members concatenated along a pseudo-dimension named ``ensemble`` (by default, but customizable).
 
 Some of the variables that are typically used in this diagnostic are:
@@ -192,7 +192,7 @@ The diagnostic produces the following outputs:
 
 Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
 Data outputs are saved as NetCDF files.
- 
+
 Example Plots
 -------------
 
@@ -201,7 +201,7 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 .. figure:: figures/avg_so_LevLon_mean.png
     :align: center
     :width: 100%
-    
+
     Ensemble-Zonal mean for average Time-mean sea water practical salinity for IFS-NEMO historical-1990.
 
 .. figure:: figures/avg_so_LevLon_STD.png
@@ -220,8 +220,8 @@ Notebooks are stored in the ``notebooks/diagnostics/ensemble`` directory and con
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_). 
-Contributions are welcome — please open an issue or a pull request.  
+This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
+Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
 
 Detailed API

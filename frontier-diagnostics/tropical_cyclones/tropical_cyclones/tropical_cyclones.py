@@ -1,9 +1,10 @@
+import copy
 import os
 
-import copy
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from aqua import Reader
 from aqua.core.logger import log_configure
 from .detect_nodes import DetectNodes
@@ -143,13 +144,13 @@ class TCs(DetectNodes, StitchNodes):
 
         # do this to remove the last letter from streamstep! e.g. tdict['stream']['streamstep'] is defined as "10D" but we want only the value 10!
         numbers = [int(i) for i in tdict['stream']['streamstep'] if i.isdigit()]
-        streamstep_n = int(''.join(map(str, numbers)))
+        streamstep_n = int(''.join(map(str, numbers))) # noqa: F841
 
         # Check if the character after the number is 'D'
         # if not expressed as "D", raise value error, since we need days for the time loop!
         if tdict['stream']['streamstep'][len(numbers)] != 'D':
             raise ValueError("Critical error! Stream step must be specified in days as 'D' in the config file!")
-        
+
         # retrieve the data and call detect nodes on the first chunk of data
         self.data_retrieve()
         self.detect_nodes_zoomin()
@@ -160,7 +161,7 @@ class TCs(DetectNodes, StitchNodes):
         last_run_stitch = self.stream_startdate
 
         # loop to simulate streaming
-        # while len(np.unique(self.data2d.time.dt.day)) == streamstep_n:   
+        # while len(np.unique(self.data2d.time.dt.day)) == streamstep_n:
         while self.data_retrieve():
             self.logger.warning(
                 "Streaming from %s to %s", pd.to_datetime(self.stream_startdate), pd.to_datetime(self.stream_enddate))

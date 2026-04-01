@@ -44,7 +44,7 @@ diagnostics:
         short_name: "10si"
         long_name: "Wind speed at 10m"
     plot_params:
-      default: 
+      default:
         projection: 'robinson'
         projection_params: {}
         show_stats: true
@@ -58,7 +58,7 @@ diagnostics:
         vmin: -2.5
         vmax: 2.5
         cmap: 'RdBu_r'
-  
+
   seasonalcycles:
     run: true
     diagnostic_name: 'atmosphere2d'
@@ -68,7 +68,7 @@ diagnostics:
       default:
         std_startdate: '19900101'
         std_enddate: '20201231'
-  
+
   timeseries:
     run: true
     diagnostic_name: 'atmosphere2d'

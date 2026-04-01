@@ -29,13 +29,12 @@ diagnostics:
     run: true
     diagnostic_name: 'EnsembleZonal'
     variable: ['so',]
-    region: ['atlantic',] 
+    region: ['atlantic',]
     params:
       default:
     plot_params:
       default:
         figure_size: [10,8]
-        mean_title: 
-        std_title: 
+        mean_title:
+        std_title:
         cbar_label:
-

@@ -1,12 +1,14 @@
-import xarray as xr
 import math
-import cartopy.crs as ccrs
 from typing import Union
+
+import cartopy.crs as ccrs
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, get_realizations
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
-from .mld_profiles import plot_maps
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
+from .mld_profiles import plot_maps
 
 xr.set_options(keep_attrs=True)
 
@@ -173,11 +175,11 @@ class PlotMLD:
         data = data.assign_coords(lon=((data.lon + 180) % 360) - 180)
         data = data.sortby('lon')
 
-        lat_limits = data.attrs['AQUA_lat_limits']
+        # lat_limits = data.attrs['AQUA_lat_limits']
         lon_limits = data.attrs['AQUA_lon_limits']
 
 
-        if lon_limits != None:
+        if lon_limits is not None:
             lon_min, lon_max = lon_limits
             lon_min = ((lon_min + 180) % 360) - 180
             lon_max = ((lon_max + 180) % 360) - 180
@@ -194,7 +196,7 @@ class PlotMLD:
                 )
             data = ds_reg
         return data
-    
+
     def _round_up(self, value):
         if value % 100 == 0:
             return value  # Already a multiple of 100
@@ -223,8 +225,8 @@ class PlotMLD:
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the MLD plot."""
-        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region, 
-                             catalog=self.catalog, model=self.model, exp=self.exp, 
+        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region,
+                             catalog=self.catalog, model=self.model, exp=self.exp,
                              timeseason=f"{self.clim_time} climatology").generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 

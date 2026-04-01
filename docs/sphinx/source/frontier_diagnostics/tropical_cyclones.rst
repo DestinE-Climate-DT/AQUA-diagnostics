@@ -27,7 +27,7 @@ The tropical cyclones diagnostic follows a class structure and consists of the f
 * `cli/run_TCs_LUMI.job`: script to run tropical_cyclones_cli.py as slurm job on LUMI;
 * `cli/config_tcs.yml`: a yaml file in which all parameters are configured (including variables to save) and paths are specified. Version for Levante;
 * `pyproject.toml` : file to build pyproject of the tropical cyclones diagnostic;
-* `README.md` : a readme file which contains some tecnical information on how to install the tropical cyclones diagnostic and its environment. 
+* `README.md` : a readme file which contains some tecnical information on how to install the tropical cyclones diagnostic and its environment.
 
 Input variables
 ---------------
@@ -37,13 +37,13 @@ Input variables
 * `10u`     (2m zonal wind, GRIB paramid 165)
 * `10v`     (2m meridional wind, GRIB paramid 166)
 
-Output 
+Output
 ------
 
 Here is a list of files produced by the tropical cyclones diagnostic. The following files are saved in a "$tmpdir/model_name/exp_name" directory (configured in the configuration yml):
 
-* tempest_output_yyyymmddThh.txt:            text files produced by Tempest DetectNodes with TCs centres coordinates and maximum wind at each time step; 
-* tempest_track_yyyymmddThh-yyyymmddThh.txt: text files produced by Tempest StitchNodes with TCs centres coordinates and maximum wind; for each TC trajectory (i.e. after tracking is applied); 
+* tempest_output_yyyymmddThh.txt:            text files produced by Tempest DetectNodes with TCs centres coordinates and maximum wind at each time step;
+* tempest_track_yyyymmddThh-yyyymmddThh.txt: text files produced by Tempest StitchNodes with TCs centres coordinates and maximum wind; for each TC trajectory (i.e. after tracking is applied);
 
 The following files are saved in "$fullres/model_name/exp_name" directory:
 
@@ -103,7 +103,7 @@ References
 
 * tempest-extremes GitHub: https://github.com/ClimateGlobalChange/tempestextremes
 * CyMeP GitHub: https://github.com/ClimateGlobalChange/tempestextremes
-* Ullrich, P.A., C.M. Zarzycki, E.E. McClenny, M.C. Pinheiro, A.M. Stansfield and K.A. Reed (2021) "TempestExtremes v2.1: A community framework for feature detection, tracking and analysis in large datasets" Geosci. Model. Dev. 14, pp. 5023–5048, `DOI <10.5194/gmd-14-5023-2021>`. 
+* Ullrich, P.A., C.M. Zarzycki, E.E. McClenny, M.C. Pinheiro, A.M. Stansfield and K.A. Reed (2021) "TempestExtremes v2.1: A community framework for feature detection, tracking and analysis in large datasets" Geosci. Model. Dev. 14, pp. 5023–5048, `DOI <10.5194/gmd-14-5023-2021>`.
 * Zarzycki, C. M., P. A. Ullrich, and K. A. Reed, 2021: Metrics for Evaluating Tropical Cyclones in Climate Data. J. Appl. Meteor. Climatol., 60, 643–660, `DOI <https://doi.org/10.1175/JAMC-D-20-0149.1>`.
 
 
@@ -117,7 +117,7 @@ Example Plot(s)
 
 .. figure:: figures/tropical_cyclones2.png
     :width: 10cm
-    
+
     Example of TCs trajectories computed from the nextGEMS IFS simulation tco1279-orca025-cycle3. Note the extratropical cyclone identifided offshore the East Coast of the US which might have been erroneously classified as tropical by the TempestExtremes algorithm.
 
 
@@ -128,7 +128,7 @@ Notebooks are stored in diagnostics/tropical_cyclones/notebooks
 
 * `tropical_cyclones.ipynb <https://github.com/oloapinivad/AQUA/blob/main/diagnostics/tropical_cyclones/notebooks/tropical_cyclones.ipynb>`_
 
-        
+
 Detailed API
 ------------
 

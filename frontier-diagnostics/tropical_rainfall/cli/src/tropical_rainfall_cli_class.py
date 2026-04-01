@@ -1,19 +1,20 @@
+import glob
 import os
 import re
-import glob
-import pandas as pd
+
 import xarray as xr
-from aqua import Reader
-from aqua.core.util import get_arg
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import create_folder, add_pdf_metadata
-from aqua.core.logger import log_configure
 from dask.distributed import Client, LocalCluster
-from tropical_rainfall import Tropical_Rainfall
+from tropical_rainfall import TropicalRainfall
+
+from aqua import Reader
+from aqua.core.configurer import ConfigPath
+from aqua.core.logger import log_configure
+from aqua.core.util import add_pdf_metadata, create_folder, get_arg
+
 from .tropical_rainfall_utils import adjust_year_range_based_on_dataset
 
 
-class Tropical_Rainfall_CLI:
+class TropicalRainfallCLI:
     def __init__(self, config, args):
         self.s_year = config['data']['s_year']
         self.f_year = config['data']['f_year']
@@ -91,7 +92,7 @@ class Tropical_Rainfall_CLI:
         else:
             self.client = None
         self.cluster = cluster
-            
+
         self.rebuild_output = config['rebuild_output']
         if path_to_output is not None:
             create_folder(path_to_output)
@@ -101,9 +102,10 @@ class Tropical_Rainfall_CLI:
         else:
             self.path_to_netcdf = self.path_to_pdf = None
 
-        self.reader = Reader(model=self.model, exp=self.exp, source=self.source, loglevel=self.reader_loglevel, regrid=self.regrid,
+        self.reader = Reader(model=self.model, exp=self.exp, source=self.source,
+                             loglevel=self.reader_loglevel, regrid=self.regrid,
                              nproc=self.nproc, **self.reader_kwargs)
-        self.diag = Tropical_Rainfall(trop_lat=self.trop_lat, num_of_bins=self.num_of_bins, first_edge=self.first_edge,
+        self.diag = TropicalRainfall(trop_lat=self.trop_lat, num_of_bins=self.num_of_bins, first_edge=self.first_edge,
                                       width_of_bin=self.width_of_bin, loglevel=self.loglevel)
 
     def need_regrid_timmean(self, dataset):
@@ -258,7 +260,8 @@ class Tropical_Rainfall_CLI:
                         self.logger.info(f"File {os.path.basename(file)} matches the year range {start_year}-{end_year}.")
                         return True
                     else:
-                        self.logger.debug(f"File {os.path.basename(file)} does not match the year range {start_year}-{end_year}.")
+                        self.logger.debug(
+                            f"File {os.path.basename(file)} does not match the year range {start_year}-{end_year}.")
                 else:
                     self.logger.debug(f"No matching years found in the filename {os.path.basename(file)}.")
             else:
@@ -282,8 +285,13 @@ class Tropical_Rainfall_CLI:
                 )
             return None
 
-        start_year = self.s_year - default_interval if source_info.get('auto', False) else source_info.get('s_year', self.s_year)
-        end_year = self.f_year + default_interval if source_info.get('auto', False) else source_info.get('f_year', self.f_year)
+        if source_info.get('auto', False):
+            start_year = self.s_year - default_interval
+            end_year = self.f_year + default_interval
+        else:
+            start_year = source_info.get('s_year', self.s_year)
+            end_year = source_info.get('f_year', self.f_year)
+
 
         if self.check_files(folder_path=folder_path, start_year=start_year, end_year=end_year):
             return self.diag.merge_list_of_histograms(
@@ -349,16 +357,16 @@ class Tropical_Rainfall_CLI:
                         name_of_file=f"histogram_{name}_{self.regrid}_{self.freq}"
                     )
 
-        # Process histograms for each combination of pdf and pdfP flags
-        for pdf, pdfP in [(True, False), (False, True)]:
+        # Process histograms for each combination of pdf and pdf_p flags
+        for pdf, pdf_p in [(True, False), (False, True)]:
             self.process_histograms(
-                pdf_flag=pdf, pdfP_flag=pdfP, model_merged=model_merged,
+                pdf_flag=pdf, pdf_p_flag=pdf_p, model_merged=model_merged,
                 mswep_merged=merged_data_sources.get('MSWEP'),
                 imerg_merged=merged_data_sources.get('IMERG'),
                 era5_merged=merged_data_sources.get('ERA5')
             )
 
-    def process_histograms(self, pdf_flag, pdfP_flag, model_merged=None, mswep_merged=None, 
+    def process_histograms(self, pdf_flag, pdf_p_flag, model_merged=None, mswep_merged=None,
                        imerg_merged=None, era5_merged=None, linestyle='-'):
         """
         Generates and saves histograms for model and observational data, with options for PDF and PDF*P plots.
@@ -379,10 +387,11 @@ class Tropical_Rainfall_CLI:
             description = (
                 f"Comparison of the probability distribution function (PDF) multiplied by probability "
                 f"(PDF*P) for precipitation data from {self.model} {self.exp}, measured in "
-                f"{self.new_unit}, across the time range {self.diag.tools.format_time(model_merged.time_band)}, with observations. "
+                f"{self.new_unit}, across the time range "
+                f"{self.diag.tools.format_time(model_merged.time_band)}, with observations. "
                 f"{self.diag.tools.format_lat_band(model_merged)}. "
             )
-        self.logger.debug('Description: %s', description)
+        self.logger.debug(f"Description: {description}")
 
         # Check if latitude bands match
         if model_merged is not None:
@@ -394,10 +403,12 @@ class Tropical_Rainfall_CLI:
                 return  # or use 'break' if this is within a loop
 
         if model_merged is not None:
-            add, _path_to_pdf = self.diag.histogram_plot(model_merged, figsize=self.figsize, new_unit=self.new_unit, pdf=pdf_flag,
-                                                         pdfP=pdfP_flag, legend=legend_model, color=self.color, xmax=self.xmax,
+            add, _path_to_pdf = self.diag.histogram_plot(model_merged, figsize=self.figsize, new_unit=self.new_unit,
+                                                         pdf=pdf_flag, pdf_p=pdf_p_flag, legend=legend_model,
+                                                         color=self.color, xmax=self.xmax,
                                                          plot_title=plot_title, loc=self.loc, path_to_pdf=self.path_to_pdf,
-                                                         pdf_format=self.pdf_format, name_of_file=name_of_pdf, factor=self.factor)
+                                                         pdf_format=self.pdf_format, name_of_file=name_of_pdf,
+                                                         factor=self.factor)
             add_pdf_metadata(filename=_path_to_pdf, metadata_value=description, loglevel=self.loglevel)
         else:
             add = False  # Ensures that additional plots can be added to an existing plot if the model data is unavailable
@@ -413,7 +424,7 @@ class Tropical_Rainfall_CLI:
             if dataset is not None:
                 self.logger.info(f"Plotting {name} data for comparison.")
                 add, _path_to_pdf = self.diag.histogram_plot(dataset, figsize=self.figsize, new_unit=self.new_unit, add=add,
-                                                             pdf=pdf_flag, pdfP=pdfP_flag, linewidth=1, linestyle=linestyle,
+                                                             pdf=pdf_flag, pdf_p=pdf_p_flag, linewidth=1, linestyle=linestyle,
                                                              color=color, legend=name, xmax=self.xmax, loc=self.loc,
                                                              plot_title=plot_title, path_to_pdf=self.path_to_pdf,
                                                              pdf_format=self.pdf_format, name_of_file=name_of_pdf, factor=factor)
@@ -466,7 +477,7 @@ class Tropical_Rainfall_CLI:
                             try:
                                 data = data_per_year.sel(time=str(year)+'-'+str(x))
                                 self.diag.add_localtime(data, path_to_netcdf=path_to_output,
-                                                        name_of_file=f"{self.regrid}_{self.freq}", 
+                                                        name_of_file=f"{self.regrid}_{self.freq}",
                                                         new_unit="mm/hr")
                             except KeyError:
                                 pass
@@ -475,7 +486,10 @@ class Tropical_Rainfall_CLI:
                                     self.logger.error(f"An unexpected error occurred: {e}")
                         self.logger.debug(f"Current Status: {x}/{f_month} months processed in year {year}.")
         else:
-            self.logger.warning("Data appears to be not in hourly intervals. The CLI will not provide the plot of daily variability.")    
+            self.logger.warning(
+                "Data appears to be not in hourly intervals. "
+                "The CLI will not provide the plot of daily variability."
+            )
 
     def plot_daily_variability(self):
         if 'h' in self.freq.lower():
@@ -515,9 +529,9 @@ class Tropical_Rainfall_CLI:
                 start_month=self.s_month, end_month=self.f_month
             )
             if not os.path.exists(path_to_era5):
-                self.logger.error(f"The data is exist for compatison")
+                self.logger.error("The data is exist for compatison")
                 return
-            filename_era5 = self.diag.dataset_to_netcdf(era5_merged, path_to_netcdf=output_path, name_of_file=f'daily_variability_era5')
+            filename_era5 = self.diag.dataset_to_netcdf(era5_merged, path_to_netcdf=output_path, name_of_file='daily_variability_era5')
             self.diag.daily_variability_plot(path_to_netcdf=filename_era5, legend='ERA5', relative=False, new_unit=self.new_unit,
                                              color=self.era5_color, add=add, linestyle='-', path_to_pdf=self.path_to_pdf,
                                              pdf_format=self.pdf_format, name_of_file=name_of_pdf)
@@ -527,7 +541,10 @@ class Tropical_Rainfall_CLI:
             )
             add_pdf_metadata(filename=_path_to_pdf, metadata_value=description, loglevel=self.loglevel)
         else:
-            self.logger.warning("Data appears to be not in hourly intervals. The CLI will not provide the plot of daily variability.")
+            self.logger.warning(
+                "Data appears to be not in hourly intervals. "
+                "The CLI will not provide the plot of daily variability."
+            )
 
     def average_profiles(self):
         """
@@ -593,7 +610,8 @@ class Tropical_Rainfall_CLI:
         regrid_bool, freq_bool = self.need_regrid_timmean(dataset=full_dataset)
         self.logger.debug(f"Regrid needed: {regrid_bool}, Frequency adjustment needed: {freq_bool}")
 
-        self.s_year, self.f_year = adjust_year_range_based_on_dataset(dataset=full_dataset, start_year=self.s_year, final_year=self.f_year)
+        self.s_year, self.f_year = adjust_year_range_based_on_dataset(
+            dataset=full_dataset, start_year=self.s_year, final_year=self.f_year)
         self.logger.debug(f"Adjusted year range: {self.s_year} to {self.f_year}")
 
         if regrid_bool:
@@ -684,7 +702,8 @@ class Tropical_Rainfall_CLI:
         )
         _path_to_pdf = add[-1]
         description += (
-            f"The time range of {dataset_name} is {self.diag.tools.format_time(self.diag.tools.open_dataset(path_to_dataset).time_band)}. "
+            f"The time range of {dataset_name} is "
+            f"{self.diag.tools.format_time(self.diag.tools.open_dataset(path_to_dataset).time_band)}. "
             f"{self.diag.tools.format_lat_band(self.diag.tools.open_dataset(path_to_dataset))}. "
         )
         add_pdf_metadata(filename=_path_to_pdf, metadata_value=description, loglevel=self.loglevel)

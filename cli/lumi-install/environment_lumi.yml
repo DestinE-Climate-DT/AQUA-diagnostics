@@ -1,5 +1,5 @@
 # Create the environment:
-# mamba env create -f environment.yml 
+# mamba env create -f environment.yml
 # or if you really want to use conda
 # conda env create -f environment.yml
 
@@ -15,7 +15,7 @@ dependencies:
   # for eccodes see issues #252, #634, #870, #1282
   # PR #36 catalog repo
   - cartopy_offlinedata # this is needed for MN5 HPC
-  - pandas      
+  - pandas
   - pip
   - hdf5 #explicitly to avoid issues with pypi version
   - tempest-extremes # for TCs
@@ -23,4 +23,3 @@ dependencies:
   - netcdf4
   - imagemagick
   - healpy
-

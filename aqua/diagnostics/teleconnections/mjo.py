@@ -1,9 +1,12 @@
+from typing import Union
+
 import xarray as xr
+
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver
+
 from .base import BaseMixin
-from typing import Union
 
 # set default options for xarray
 xr.set_options(keep_attrs=True)
@@ -75,7 +78,7 @@ class MJO(BaseMixin):
         if self.definition.get('flip_sign', True):
             self.logger.info("Flipping the sign of the variable.")
             self.data = -self.data
-        
+
         # Acquiring MJO box
         lat = [self.definition['latS'], self.definition['latN']]
         lon = [self.definition['lonW'], self.definition['lonE']]
@@ -139,16 +142,16 @@ class PlotMJO():
         Returns:
             fig (matplotlib.figure.Figure): The Hovmoller plot figure.
         """
-        fig, _ = plot_hovmoller(self.data, dim='lat', 
+        fig, _ = plot_hovmoller(self.data, dim='lat',
                                  invert_axis=invert_axis,
                                  invert_time=invert_time,
                                  nlevels=nlevels,
                                  cmap=cmap, return_fig=True,
                                  vmin=vmin, vmax=vmax,
                                  loglevel=self.loglevel)
-        
+
         return fig
-    
+
     def save_plot(self, fig, diagnostic_product: str = 'hovmoller', extra_keys: dict = None,
                   rebuild: bool = True, metadata: dict = None,
                   format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):

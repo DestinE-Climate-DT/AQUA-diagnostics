@@ -1,9 +1,10 @@
-import xarray as xr
 from typing import Union
+
+import xarray as xr
+
 # from aqua.core.util import pandas_freq_to_string
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import Diagnostic, OutputSaver, SAVE_FORMAT
-
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver
 
 xr.set_options(keep_attrs=True)
 
@@ -109,7 +110,7 @@ class BaseMixin(Diagnostic):
         """
         Retrieve the data for the given variable.
         """
-        
+
         super().retrieve(var=self.var, reader_kwargs=self.reader_kwargs)
 
         if self.data is None:
