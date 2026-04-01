@@ -36,7 +36,7 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = [
-    "ECmean4<=0.1.16",
+    "ECmean4<=0.1.17",
     "cartopy<=0.24.1"
 ]
 
