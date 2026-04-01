@@ -18,7 +18,7 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class 
 
 Complete list:
-- Port `Ruff` linter and formatter to CI and add `pre-commit` implementation (#197)
+- Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #202, #198)
 - Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
 - Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173) 
