@@ -3,7 +3,6 @@
 import os
 
 from dask.diagnostics import ProgressBar
-from dask.distributed import progress
 
 
 def clean_files(filelist):
@@ -74,6 +73,5 @@ def write_fullres_field(gfield, filestore):
         compute=False
     )
 
-    from dask.diagnostics import ProgressBar
     with ProgressBar():
         delayed_obj.compute()
