@@ -7,20 +7,25 @@ AQUA ECmean4 Performance diagnostic CLI
 import argparse
 import os
 import sys
+
 import xarray as xr
 from ecmean import __version__ as eceversion
 
 from aqua import Reader
 from aqua import __version__ as aquaversion
-from aqua.core.util import get_arg
-from aqua.core.logger import log_configure
-from aqua.core.exceptions import NoDataError, NotEnoughDataError
-
-from aqua.diagnostics import PerformanceIndices, GlobalMean
-from aqua.diagnostics.base import load_diagnostic_config, merge_config_args, get_diagnostic_configpath
-from aqua.diagnostics.base import template_parse_arguments, OutputSaver, TitleBuilder
-from aqua.core.util import strlist_to_phrase, lat_to_phrase
 from aqua.core.configurer import ConfigPath
+from aqua.core.exceptions import NoDataError, NotEnoughDataError
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg, lat_to_phrase, strlist_to_phrase
+from aqua.diagnostics import GlobalMean, PerformanceIndices
+from aqua.diagnostics.base import (
+    OutputSaver,
+    TitleBuilder,
+    get_diagnostic_configpath,
+    load_diagnostic_config,
+    merge_config_args,
+    template_parse_arguments,
+)
 
 
 def parse_arguments(arguments):
@@ -67,7 +72,7 @@ def reader_data(model, exp, source,
         keep_vars (list, optional): list of variables to keep, defaults to None
         loglevel (str, optional): logging level, defaults to 'WARNING'
         reader_kwargs (dict, optional): list of reader_kwargs. Defaults to {}.
-    
+
     Returns:
         xarray.Dataset: dataset with the data retrieved and regridded
         None: if model is False or if there is an error retrieving the data
@@ -88,10 +93,10 @@ def reader_data(model, exp, source,
     except Exception as err:
         reader_logger.error('Error while reading model %s: %s', model, err)
         return None
-    
+
     # regrid after variable selection
     if regrid is not None:
-        try: 
+        try:
             return reader.regrid(xfield)
         except Exception as err:
             reader_logger.error('Error while regridding model %s: %s', model, err)
@@ -109,7 +114,7 @@ def data_check(data_atm, data_oce, logger=None):
         data_atm (xarray.Dataset): atmospheric data
         data_oce (xarray.Dataset): oceanic data
     """
-    
+
     # create a single dataset
     if data_oce is None:
         mydata = data_atm
@@ -127,7 +132,7 @@ def data_check(data_atm, data_oce, logger=None):
     # Quit if no data is available
     if mydata is None:
         raise NoDataError('No data available, exiting...')
-    
+
     return mydata
 
 def time_check(mydata, y1, y2, logger=None):
@@ -159,16 +164,16 @@ def time_check(mydata, y1, y2, logger=None):
 
     return y1, y2
 
-def set_title(diagnostic: str, model: str, exp: str, 
+def set_title(diagnostic: str, model: str, exp: str,
               year1: int | None, year2: int | None) -> str:
     """
     Generate a standardized title for ECmean plots using TitleBuilder.
-    
+
     Args:
         diagnostic (str): The diagnostic type.
         model (str): Model name.
         exp (str): Experiment identifier.
-        year1 (int | None): Start year.    
+        year1 (int | None): Start year.
         year2 (int | None): End year.
     Returns:
         str: The generated title.
@@ -179,7 +184,7 @@ def set_title(diagnostic: str, model: str, exp: str,
         diag_name = 'Global Mean Bias'
     else:
         raise ValueError(f"Unknown diagnostic {diagnostic} for title generation")
-        
+
     builder = TitleBuilder(
         diagnostic=diag_name,
         model=model, exp=exp,
@@ -198,7 +203,7 @@ def set_description(diagnostic, model, exp, year1, year2, config):
         exp (str): Experiment identifier.
         year1, year2 (int): First and last year of the period covered by the data.
         config (dict): configuration file.
-    
+
     Returns:
         description (str)
     """
@@ -215,8 +220,11 @@ def set_description(diagnostic, model, exp, year1, year2, config):
         'North Pole':   ( 60.0,  90.0),
         'South Pole':   (-90.0, -60.0)
     }
-    region_text = strlist_to_phrase([f"{r} ({lat_to_phrase(int(lat1))}-{lat_to_phrase(int(lat2))})"
-                                       for r in config[diagnostic]["regions"] for (lat1, lat2) in [region_bounds.get(r, (0, 0))]])
+    region_text = strlist_to_phrase([
+        f"{r} ({lat_to_phrase(int(lat1))}-{lat_to_phrase(int(lat2))})"
+        for r in config[diagnostic]["regions"]
+        for (lat1, lat2) in [region_bounds.get(r, (0, 0))]
+    ])
 
     regions_phrase = f"Processed regions are {region_text}."
 
@@ -271,7 +279,7 @@ if __name__ == '__main__':
     # define the interface file
     ecmeandir = get_diagnostic_configpath('ecmean', folder="tools", loglevel=loglevel)
     interface = os.path.join(ecmeandir, "interface", interface_file)
-    
+
     # define the ecmean configuration file, using the default as a trick
     config = load_diagnostic_config(
         diagnostic='ecmean',
@@ -360,7 +368,7 @@ if __name__ == '__main__':
             else:
                 logger.error('Unknown diagnostic %s, exiting...', diagnostic)
                 sys.exit()
-            
+
             ecmean.prepare()
             ecmean.run()
             if diagnostic == 'performance_indices':

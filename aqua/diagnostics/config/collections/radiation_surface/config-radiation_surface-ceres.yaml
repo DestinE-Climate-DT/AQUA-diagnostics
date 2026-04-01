@@ -64,8 +64,8 @@ diagnostics:
         enddate_data: null
         startdate_obs: "2000-01-01"
         enddate_obs: "2020-12-31"
-    plot_params: 
-      default: 
+    plot_params:
+      default:
         projection: 'robinson'
         projection_params: {}
         show_stats: true
@@ -83,4 +83,3 @@ diagnostics:
       ishf:
         vmin: -10
         vmax: 10
-    

@@ -45,8 +45,8 @@ The following example demonstrates how to initialize the ``OutputSaver`` class:
     from aqua.diagnostics.core import OutputSaver
 
     # Initializing with the system-defined default catalog
-    outputsaver = OutputSaver(diagnostic='dummy', 
-                              catalog='climatedt-phase1', model='IFS-NEMO', exp='historical-1990', 
+    outputsaver = OutputSaver(diagnostic='dummy',
+                              catalog='climatedt-phase1', model='IFS-NEMO', exp='historical-1990',
                               catalog_ref='obs', model_ref='ERA5', exp_ref='era5',
                               outdir='.', loglevel='DEBUG')
 
@@ -63,7 +63,7 @@ This example shows how to generate a filename with the 'mean' diagnostic product
 .. note::
     The generated filename includes the diagnostic name, diagnostic product, catalog, model, and experiment.
     If the reference dataset is specified in the ``OutputSaver`` constructor, it will also be included in the filename.
-    Alternatively, the catalog-model-experiment triplets for the main and reference datasets 
+    Alternatively, the catalog-model-experiment triplets for the main and reference datasets
     can be specified directly in the ``generate_name`` method.
 
 Generating a Filename with Extra Keys
@@ -77,7 +77,7 @@ They are entirely flexible and can include any relevant information the user wis
 
     extra_keys = {'variable': '2t', 'region': 'global', 'period': '1990-2000'}
 
-    filename = outputsaver.generate_name(diagnostic_product='mean', 
+    filename = outputsaver.generate_name(diagnostic_product='mean',
                                          extra_keys=extra_keys)
 
     # Output: 'dummy.mean.climatedt-phase1.IFS-NEMO.historical-1990.obs.ERA5.era5.2t.global.1990-2000'
@@ -129,7 +129,7 @@ This example demonstrates saving multiple plot formats (e.g. PNG/PDF/SVG) with m
     }
 
     # Save the PDF and PNG with metadata
-    outputsaver.save_figure(fig, 'test', extra_keys=extra_keys, metadata=metadata, 
+    outputsaver.save_figure(fig, 'test', extra_keys=extra_keys, metadata=metadata,
                             extension=['png', 'pdf'], # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
                             dpi=300)
 

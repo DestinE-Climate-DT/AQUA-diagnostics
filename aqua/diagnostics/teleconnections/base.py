@@ -1,11 +1,12 @@
 import os
-import xarray as xr
 from typing import Union
-from aqua.core.logger import log_configure
+
+import xarray as xr
+
 from aqua.core.configurer import ConfigPath
-from aqua.core.util import load_yaml, select_season, to_list
-from aqua.core.util import convert_data_units, get_realizations
-from aqua.diagnostics.base import Diagnostic, OutputSaver, TitleBuilder, SAVE_FORMAT
+from aqua.core.logger import log_configure
+from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, to_list
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
 
@@ -80,7 +81,7 @@ class BaseMixin(Diagnostic):
 
         # Modify the attributes to match the correlation
         corr.attrs['long_name'] = f'Correlation of {data.long_name} with index evaluated with {index.long_name}'
-        corr.attrs['shortName'] = f'Pearson_correlation'
+        corr.attrs['shortName'] = 'Pearson_correlation'
         corr.attrs['units'] = '1'
 
         return corr
@@ -205,7 +206,7 @@ class PlotBaseMixin():
 
         Args:
             diagnostic (str): The name of the diagnostic. Default is None.
-        
+
         Returns:
             list: List of titles for each index plot.
         """
@@ -215,14 +216,14 @@ class PlotBaseMixin():
                                  model=self.models[i] if self.models else None,
                                  exp=self.exps[i] if self.exps else None).generate()
             titles_dataset.append(title)
-        
+
         titles_ref = []
         for i in range(self.len_ref):
             title = TitleBuilder(diagnostic=f"{diagnostic} index" if diagnostic else "index",
                                  model=self.ref_models[i] if self.ref_models else None,
                                  exp=self.ref_exps[i] if self.ref_exps else None).generate()
             titles_ref.append(title)
-        
+
         titles = titles_dataset + titles_ref
 
         return titles
@@ -347,7 +348,7 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
     Args:
         maps (list or xarray.DataArray): The list of maps or a single map.
         ref_maps (list or xarray.DataArray): The list of reference maps or a single map.
-        var (str, optional): The variable name to pass to the unit conversion. 
+        var (str, optional): The variable name to pass to the unit conversion.
                              If None, inferred from each DataArray.
 
     Returns:

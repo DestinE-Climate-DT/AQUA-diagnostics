@@ -1,8 +1,9 @@
 """Utility for the GlobalBiases module"""
 
-import xarray as xr
-from aqua.core.logger import log_configure
+
 from aqua.core.exceptions import NoDataError
+from aqua.core.logger import log_configure
+
 
 def handle_pressure_level(data, var, plev, loglevel='WARNING'):
     """
@@ -26,11 +27,11 @@ def handle_pressure_level(data, var, plev, loglevel='WARNING'):
         if plev is None:
             logger.warning(
                 f"Variable '{var}' has multiple pressure levels, but no specific level was selected. ")
-            return data  
+            return data
 
         # if 'plev' has already a single value, check if it matches the requested plev
         if 'plev' in data[var].coords and data[var].coords['plev'].size == 1:
-            if float(data[var].coords['plev'].values) == plev:  
+            if float(data[var].coords['plev'].values) == plev:
                 return data
 
         # try to select the closest pressure level

@@ -1,10 +1,13 @@
 """Module containing functions necessary to add metadata to different output formats."""
 
 import os
-from pypdf import PdfReader, PdfWriter
-from PIL import Image, PngImagePlugin
 import xml.etree.ElementTree as ET
+
+from PIL import Image, PngImagePlugin
+from pypdf import PdfReader, PdfWriter
+
 from aqua.core.logger import log_configure
+
 
 def add_pdf_metadata(pdf_path: str, metadata: dict, loglevel: str = 'WARNING'):
     """
@@ -91,13 +94,13 @@ def add_svg_metadata(svg_path: str, metadata: dict, loglevel: str = 'WARNING'):
         ET.register_namespace('', "http://www.w3.org/2000/svg")
         tree = ET.parse(svg_path)
         root = tree.getroot()
-        
+
         # Check if desc already exists
         desc = root.find('{http://www.w3.org/2000/svg}desc')
         if desc is None:
             desc = ET.Element('{http://www.w3.org/2000/svg}desc')
             root.insert(0, desc)
-            
+
         desc.text = "\n".join([f"{k}: {v}" for k, v in metadata.items()])
         tree.write(svg_path, encoding="utf-8", xml_declaration=True)
         logger.debug(f"Metadata added to SVG: {svg_path}")

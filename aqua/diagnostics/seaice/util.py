@@ -1,12 +1,6 @@
 """Utility for the sea ice plotting module"""
 
-import os
-import xarray as xr
 from collections import defaultdict
-
-from aqua.core.logger import log_configure
-from aqua.core.util import load_yaml
-from aqua.core.configurer import ConfigPath
 
 
 def defaultdict_to_dict(d):
@@ -26,7 +20,7 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
         domain (str): Domain to filter regions by. Must be one of the valid domains, e.g., 'nh' or 'sh'.
         logger (logging.Logger): Logger instance for logging messages.
         valid_domains (list, optional): List of valid domain strings. Defaults to ['nh', 'sh'].
-    
+
     Returns:
         list or str: Filtered list of region names. If exactly one region is valid, returns a single string.
     """
@@ -35,7 +29,7 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
 
     if domain not in valid_domains:
         raise ValueError(f"Invalid domain '{domain}'. Valid domains are: {valid_domains}")
-    
+
     filtered_regions = []
     for r in regions_list:
         if r in regions_dict['regions'].keys():
@@ -53,7 +47,7 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
                 logger.debug(f"Region '{r}' doesn't meet the data domain criteria for {domain}, not including in regions_list.")
         else:
             logger.error(f"No region '{r}' defined in regions_dict from yaml. Check this mismatch.")
-            
+
     return filtered_regions
 
 
@@ -113,7 +107,7 @@ def _check_list_regions_type(regions_to_plot, logger=None):
 
     if not isinstance(regions_to_plot, list):
         raise TypeError(  f"Expected regions_to_plot to be a list, but got {type(regions_to_plot).__name__}.")
-    
+
     if not all(isinstance(region, str) for region in regions_to_plot):
         invalid_types = [type(region).__name__ for region in regions_to_plot]
         raise TypeError(  f"Expected a list of strings, but found element types: {invalid_types}.")

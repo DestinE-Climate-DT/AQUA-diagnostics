@@ -1,6 +1,5 @@
 """AQUA Diagnostics Package"""
 
-from .version import __version__
 from .teleconnections import NAO, ENSO, MJO
 from .teleconnections import PlotNAO, PlotENSO, PlotMJO
 from .timeseries import Gregory, SeasonalCycles, Timeseries, PlotTimeseries, PlotSeasonalCycles, PlotGregory
@@ -13,7 +12,7 @@ from .ensemble import PlotEnsembleTimeseries, PlotEnsembleLatLon, PlotEnsembleZo
 from .ensemble import reader_retrieve_and_merge, merge_from_data_files, extract_realizations
 from .ecmean import PerformanceIndices, GlobalMean
 from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
-from .sshVariability import sshVariabilityCompute, sshVariabilityPlot
+from .sshVariability import SshVariabilityCompute, SshVariabilityPlot
 from .ocean_drift import Hovmoller, PlotHovmoller
 from .ocean_stratification import Stratification, PlotStratification, PlotMLD
 from .ocean_trends import Trends, PlotTrends
@@ -34,7 +33,7 @@ __all__ = ["NAO", "ENSO", "MJO",
            "PlotEnsembleTimeseries", "PlotEnsembleLatLon", "PlotEnsembleZonal",
            "PerformanceIndices", "GlobalMean",
            "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
-           "sshVariabilityCompute", "sshVariabilityPlot",
+           "SshVariabilityCompute", "SshVariabilityPlot",
            "Boxplots", "PlotBoxplots", "extract_realizations",
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
            "Trends", "PlotTrends",

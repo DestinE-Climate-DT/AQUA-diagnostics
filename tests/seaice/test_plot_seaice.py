@@ -1,11 +1,13 @@
 
+import glob
+import os
+
 import pytest
-import os, glob
-import numpy as np
 import xarray as xr
-from aqua.diagnostics import SeaIce, PlotSeaIce
-from aqua.diagnostics.base import OutputSaver
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics import PlotSeaIce, SeaIce
+from aqua.diagnostics.base import OutputSaver
 
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL
@@ -30,27 +32,27 @@ class TestPlotSeaIce:
         cls.startdate = "1991-01-01"
         cls.enddate = "2000-01-01"
         cls.regrid = "r100"
-        
+
         # Initialize sea ice objects
         cls.seaice = SeaIce(catalog=cls.catalog, model=cls.model, exp=cls.exp, source=cls.source,
-                           startdate=cls.startdate, enddate=cls.enddate, regions=cls.regions, 
+                           startdate=cls.startdate, enddate=cls.enddate, regions=cls.regions,
                            regrid=cls.regrid, loglevel=cls.loglevel)
-        
+
         # Compute test data
         cls.siext = cls.seaice.compute_seaice(method='extent', var='siconc')
         cls.siext_seas = cls.seaice.compute_seaice(method='extent', var='siconc', get_seasonal_cycle=True)
-        
+
         # Create reference data with bias for testing
         cls.siext_ref = cls.siext.copy()
         cls.siext_seas_ref = cls.siext_seas.copy()
-        
+
         # Add constant bias to create difference for plotting
         bias_constant = 0.1
-        
+
         # For extent data - add bias to each data variable in the dataset
         for var_name in cls.siext_ref.data_vars:
             cls.siext_ref[var_name] = cls.siext_ref[var_name] + bias_constant
-        
+
         for var_name in cls.siext_seas_ref.data_vars:
             cls.siext_seas_ref[var_name] = cls.siext_seas_ref[var_name] + bias_constant
 
@@ -64,13 +66,13 @@ class TestPlotSeaIce:
     def test_check_as_datasets_list_invalid_input(self):
         """Validate the _check_as_datasets_list utility rejects invalid input."""
         plot_seaice = PlotSeaIce(dpi=DPI)
-        
+
         with pytest.raises(ValueError):
             plot_seaice._check_as_datasets_list('string')
-        
+
         with pytest.raises(ValueError):
             plot_seaice._check_as_datasets_list(123)
-        
+
         with pytest.raises(ValueError):
             plot_seaice._check_as_datasets_list([1, 2, 3])
 
@@ -104,7 +106,7 @@ class TestPlotSeaIce:
         """regions_to_plot must be list or None."""
         with pytest.raises(TypeError):
             PlotSeaIce(monthly_models=self.siext, regions_to_plot='arctic')
-        
+
         with pytest.raises(TypeError):
             PlotSeaIce(monthly_models=self.siext, regions_to_plot=123)
 
@@ -212,8 +214,8 @@ class TestPlotSeaIce:
         monkeypatch.setattr(OutputSaver, "save_figure", fake_save_figure, raising=True)
 
         psi = PlotSeaIce(monthly_models=self.siext,
-                         regions_to_plot=["Arctic"], 
-                         model=self.model, exp=self.exp, source=self.source, 
+                         regions_to_plot=["Arctic"],
+                         model=self.model, exp=self.exp, source=self.source,
                          catalog=self.catalog, loglevel=self.loglevel, dpi=DPI)
 
         psi.plot_seaice(plot_type="timeseries", save_format=['png', 'pdf'])
@@ -237,6 +239,6 @@ class TestPlotSeaIce:
 
         png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
         pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)
-        
+
         assert len(png_files) > 0, "No PNG file saved."
         assert len(pdf_files) > 0, "No PDF file saved."

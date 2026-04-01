@@ -53,12 +53,12 @@ diagnostics:
       tprate:
         units: 'mm/day'
     plot_params:
-      default: 
+      default:
         projection: 'robinson'
         projection_params: {}
         show_stats: true
         show_significance: true    # Enable significance stippling
-        significance_alpha: 0.05 
+        significance_alpha: 0.05
       tprate:
         vmin: -5
         vmax: 5

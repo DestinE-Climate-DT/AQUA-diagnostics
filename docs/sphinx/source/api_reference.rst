@@ -7,4 +7,3 @@ This section provides a detailed reference for AQUA-diagnostics' Application Pro
     :members:
     :undoc-members:
     :show-inheritance:
-
