@@ -58,7 +58,7 @@ tests = [
     "pytest-xdist",
     "coverage",
     "cdo",
-    "ruff"
+    "ruff==0.15.6"
 ]
 minimal = [
     "aqua-diagnostics[core]"
