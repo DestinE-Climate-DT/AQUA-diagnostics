@@ -62,6 +62,7 @@ class TCs(DetectNodes, StitchNodes):
         self.nproc = nproc
 
         if tdict is not None:
+            tcdict = copy.deepcopy(tdict)
             self.paths = tdict['paths']
             self.catalog = tdict['dataset'].get('catalog', None)
             self.engine = tdict['dataset'].get('engine', 'fdb')
