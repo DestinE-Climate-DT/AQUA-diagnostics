@@ -75,8 +75,6 @@ class ENSO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError('Data not retrieved')
-        if len(self.data[self.var].time) < self.MININUM_MONTHS_REQUIRED:
-            raise NotEnoughDataError(f'Not enough data to compute the index, at least {self.MININUM_MONTHS_REQUIRED} months are required.')
 
         latN = self.definition.get('latN') # noqa: N806
         latS = self.definition.get('latS') # noqa: N806

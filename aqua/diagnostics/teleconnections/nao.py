@@ -73,8 +73,6 @@ class NAO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError('Data not retrieved')
-        if len(self.data[self.var].time) < self.MINIMUM_MONTHS_REQUIRED:
-            raise NotEnoughDataError(f'Not enough data to compute the index, at least {self.MINIMUM_MONTHS_REQUIRED} months are required')
 
         lat1 = self.definition.get('lat1')
         lat2 = self.definition.get('lat2')
