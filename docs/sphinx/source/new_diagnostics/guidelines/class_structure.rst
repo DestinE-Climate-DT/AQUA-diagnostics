@@ -113,7 +113,7 @@ its CLI is described.
 This section provides more details on how to update the code if you want to expose a new configuration file or
 you are developing a new diagnostic.
 
-The structure is defined in the ``aqua/cli/diagnostic_config.py`` file. Each diagnostic is associated 
+The structure is defined in the ``aqua/cli/diagnostic_config.py`` file. Each diagnostic is associated
 with multiple configuration files and their corresponding source and target paths.
 
 Example ``diagnostic_config.py`` structure:
@@ -130,7 +130,7 @@ Example ``diagnostic_config.py`` structure:
         ]
     }
 
-During the installation process, the configuration and CLI files for each diagnostics type are copied or linked 
+During the installation process, the configuration and CLI files for each diagnostics type are copied or linked
 from the source path to the target path specified in the ``diagnostic_config.py``.
 
 .. note::
@@ -153,7 +153,7 @@ The folder structure should follow this pattern:
 The ``diagnostics/`` folder contains a subfolder for each diagnostic, which in turn may contain a
 ``definitions/`` folder with possible files defining options for the diagnostic, such as available
 regions for the diagnostic or default variable names to be used.
-The file used to run the diagnostic are contained in the main diagnostic folder, and should be 
+The file used to run the diagnostic are contained in the main diagnostic folder, and should be
 used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
 
 .. note::

@@ -1,9 +1,11 @@
 import os
 import subprocess
 from time import time
-import xarray as xr
+
 import pandas as pd
-from .tools.tcs_utils import write_fullres_field, clean_files
+import xarray as xr
+
+from .tools.tcs_utils import write_fullres_field
 
 
 class DetectNodes():
@@ -107,7 +109,7 @@ class DetectNodes():
                 self.logger.debug(orog_first_timestep)
                 self.logger.debug(outfield)
 
-                #orog_first_timestep.to_netcdf("/work/users/jost/aqua/tc/tc_analysis/tmpdir/ERA5/era5/orog_first_timestep.nc")   
+                #orog_first_timestep.to_netcdf("/work/users/jost/aqua/tc/tc_analysis/tmpdir/ERA5/era5/orog_first_timestep.nc")
                 outfield = xr.merge([outfield, orog_first_timestep])
 
         elif self.model == 'IFS-NEMO' or self.model == 'IFS-FESOM':
@@ -231,13 +233,13 @@ class DetectNodes():
 
         # if the orography is found run stitch nodes accordingly
         if 'z' in self.lowres2d.data_vars or self.orography:
-            self.logger.debug(f'Running DetectNodes with orography')
+            self.logger.debug('Running DetectNodes with orography')
             detect_string = f'DetectNodes --in_data {tempest_filein} --timefilter 6hr --out {tempest_fileout} --searchbymin {tempest_dictionary["psl"]} ' \
                 f'--closedcontourcmd {tempest_dictionary["psl"]},200.0,5.5,0;_DIFF({tempest_dictionary["zg"]}(30000Pa),{tempest_dictionary["zg"]}(50000Pa)),-58.8,6.5,1.0 --mergedist 6.0 ' \
                 f'--outputcmd {tempest_dictionary["psl"]},min,0;_VECMAG({tempest_dictionary["uas"]},{tempest_dictionary["vas"]}),max,2;{tempest_dictionary["orog"]},min,0 --latname {tempest_dictionary["lat"]} --lonname {tempest_dictionary["lon"]}'
 
         else:
-            self.logger.debug(f'Running DetectNodes without orography')
+            self.logger.debug('Running DetectNodes without orography')
             detect_string = f'DetectNodes --in_data {tempest_filein} --timefilter 6hr --out {tempest_fileout} --searchbymin {tempest_dictionary["psl"]} ' \
                 f'--closedcontourcmd {tempest_dictionary["psl"]},200.0,5.5,0;_DIFF({tempest_dictionary["zg"]}(30000Pa),{tempest_dictionary["zg"]}(50000Pa)),-58.8,6.5,1.0 --mergedist 6.0 ' \
                 f'--outputcmd {tempest_dictionary["psl"]},min,0;_VECMAG({tempest_dictionary["uas"]},{tempest_dictionary["vas"]}),max,2 --latname {tempest_dictionary["lat"]} --lonname {tempest_dictionary["lon"]}'

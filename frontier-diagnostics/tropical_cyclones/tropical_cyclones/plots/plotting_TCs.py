@@ -1,12 +1,14 @@
-import numpy as np
+# ruff: noqa: N999
 import os
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import matplotlib.ticker as mticker
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-import cartopy.feature as cfeature
 
-from tropical_cyclones.tools.tempest_utils import getTrajectories
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+import numpy as np
+from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
+
+from tropical_cyclones.tools.tempest_utils import get_trajectories
 
 
 def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
@@ -18,7 +20,7 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
     axs = axs.flatten()
 
     # add main title and save figure accordingly
-    if title==None:
+    if title is None:
         fig.suptitle(tracks_nc_file.name + f" - {tdict['dataset']['model']} - {tdict['dataset']['exp']}")
         save_title = tracks_nc_file.name + f"_{tdict['dataset']['model']}_{tdict['dataset']['exp']}"
     elif title:
@@ -53,32 +55,32 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
         ax.set_title(f'{str(tracks_nc_file.time[i].values)[:13]}', fontsize=10)
 
     # Add a main title and a colorbar
-    if units==None and 'units' in tracks_nc_file.attrs:
+    if units is None and 'units' in tracks_nc_file.attrs:
         plt.colorbar(ax.collections[0], ax=axs, shrink=0.4, pad=0.1, location='bottom', label=tracks_nc_file.attrs['units'])
     elif units:
         plt.colorbar(ax.collections[0], ax=axs, shrink=0.4, pad=0.1, location='bottom', label=units)
-    
+
     os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
 
     plt.tight_layout
 
     if save:
-        save_path = os.path.join(tdict['paths']['plotdir'], save_title + ".pdf", bbox_inches="tight")
+        save_path = os.path.join(tdict['paths']['plotdir'], f"{save_title}.pdf", bbox_inches="tight")
         plt.savefig(save_path, dpi=350)
 
     plt.show()
 
-    
+
 def plot_trajectories(trajfile, tdict):
     # tempest settings
-    nVars=10
-    headerStr='start'
-    isUnstruc = 0
+    n_vars=10
+    is_unstruc='start'
+    is_unstruc = 0
 
     # Extract trajectories from tempest file and assign to arrays
     # USER_MODIFY
-         
-    nstorms, ntimes, traj_data = getTrajectories(trajfile,nVars,headerStr,isUnstruc)
+
+    nstorms, ntimes, traj_data = get_trajectories(trajfile,n_vars,is_unstruc,is_unstruc)
     xlon   = traj_data[2,:,:]
     xlat   = traj_data[3,:,:]
     #xpres  = traj_data[4,:,:]/100.

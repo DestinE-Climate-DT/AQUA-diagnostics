@@ -1,5 +1,6 @@
 """SeasonalCycles class for retrieve and netcdf saving of a single experiment"""
 import xarray as xr
+
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
@@ -107,8 +108,8 @@ class SeasonalCycles(BaseMixin):
         data = data.groupby('time.month').mean('time')
 
         # Load data in memory for faster plot
-        self.logger.debug(f"Loading seasonal cycle data in memory")
+        self.logger.debug("Loading seasonal cycle data in memory")
         data.load()
-        self.logger.debug(f"Loaded seasonal cycle data in memory")
+        self.logger.debug("Loaded seasonal cycle data in memory")
 
         self.monthly = data

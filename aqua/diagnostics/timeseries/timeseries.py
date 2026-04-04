@@ -1,10 +1,12 @@
 """Timeseries class for retrieve and netcdf saving of a single experiment"""
-import xarray as xr
 import pandas as pd
-from aqua.core.util import to_list, frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.base import round_startdate, round_enddate
-from .util import loop_seasonalcycle
+import xarray as xr
+
+from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, to_list
+from aqua.diagnostics.base import round_enddate, round_startdate
+
 from .base import BaseMixin
+from .util import loop_seasonalcycle
 
 xr.set_options(keep_attrs=True)
 
@@ -169,12 +171,12 @@ class Timeseries(BaseMixin):
             class_startdate = round_startdate(pd.Timestamp(self.plt_startdate), freq=freq)
             class_enddate = round_enddate(pd.Timestamp(self.plt_enddate), freq=freq)
             self.logger.debug(f"Start date of class: {class_startdate}, End date of class: {class_enddate}")
-            
+
             # Handle case where data might be None
             if data is None or len(data.time) == 0:
-                self.logger.warning(f"Cannot extend data: data is None or empty")
+                self.logger.warning("Cannot extend data: data is None or empty")
                 return data
-                
+
             self.logger.debug(f"Start date of data: {data.time[0].values}, End date of data: {data.time[-1].values}")
             start_date = round_startdate(pd.Timestamp(data.time[0].values), freq=freq)
             end_date = round_enddate(pd.Timestamp(data.time[-1].values), freq=freq)
@@ -198,14 +200,14 @@ class Timeseries(BaseMixin):
                 # Start extension from the next period after end_date
                 if freq == 'annual':
                     # Get the start of next year
-                    extend_startdate = pd.Timestamp(year=end_date.year + 1, month=1, day=1, 
+                    extend_startdate = pd.Timestamp(year=end_date.year + 1, month=1, day=1,
                                                    hour=0, minute=0, second=0)
                 elif freq == 'monthly':
                     # Get the start of next month
                     next_month = end_date + pd.DateOffset(months=1)
                     extend_startdate = pd.Timestamp(year=next_month.year, month=next_month.month, day=1,
                                                    hour=0, minute=0, second=0)
-                
+
                 self.logger.debug(f'Extension - Creating loop from {extend_startdate} to {class_enddate}')
                 loop = loop_seasonalcycle(data=data, startdate=extend_startdate, enddate=class_enddate,
                                           freq=freq, center_time=center_time, loglevel=self.loglevel)

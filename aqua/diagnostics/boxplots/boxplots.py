@@ -2,10 +2,12 @@
 
 import pandas as pd
 import xarray as xr
+
 from aqua.core.logger import log_configure
+from aqua.core.util import to_list
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics.base import Diagnostic
-from aqua.core.util import to_list
+
 
 class Boxplots(Diagnostic):
     """Class for computing and plotting boxplots of field means from climate model datasets.
@@ -78,14 +80,14 @@ class Boxplots(Diagnostic):
         except NotEnoughDataError:
             raise
         except Exception as e:
-            self.logger.warning("Failed to retrieve variable(s) %s from %s, %s, %s: %s", 
+            self.logger.warning("Failed to retrieve variable(s) %s from %s, %s, %s: %s",
                                 var, self.model, self.exp, self.source, e)
 
         if self.data is None:
-            self.logger.warning("Variable(s) %s not found in dataset %s, %s, %s. Skipping.", 
+            self.logger.warning("Variable(s) %s not found in dataset %s, %s, %s. Skipping.",
                                 self.var, self.model, self.exp, self.source)
             return
-   
+
         self.startdate = self.startdate or pd.to_datetime(self.data.time[0].values).strftime('%Y-%m-%d')
         self.enddate = self.enddate or pd.to_datetime(self.data.time[-1].values).strftime('%Y-%m-%d')
 

@@ -1,10 +1,12 @@
 """Test ensemble Ensemble module"""
-import pytest
 import os
+
+import pytest
 import xarray as xr
+from conftest import APPROX_REL, DPI, LOGLEVEL
+
 from aqua.diagnostics import EnsembleZonal, PlotEnsembleZonal
 from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
-from conftest import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance and Logging
 approx_rel = APPROX_REL
@@ -129,8 +131,7 @@ class TestEnsembleZonal:
         # STD values are zero. Using mean value as std to test visualization pipeline (consistent with comments)
         plot_arguments = {
             "var": conf['var'],
-            "save_pdf": True,
-            "save_png": True,
+            "save_format": ("png", "pdf"),
             "title_mean": "Test data",
             "title_std": "Test data",
             "cbar_label": "Test Label",
