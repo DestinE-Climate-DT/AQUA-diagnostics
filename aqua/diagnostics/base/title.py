@@ -148,8 +148,12 @@ class TitleBuilder:
 
             for line in lines:
                 if len(line) > max_chars and separator in line:
-                    left, _, right = line.partition(separator)
-                    new_lines.extend([left.strip(), f"{marker} {right.strip()}"])
+                    remaining = line
+                    while len(remaining) > max_chars and separator in remaining:
+                        left, _, right = remaining.partition(separator)
+                        new_lines.append(left.strip())
+                        remaining = f"{marker} {right.strip()}"
+                    new_lines.append(remaining)
                 else:
                     new_lines.append(line)
 

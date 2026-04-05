@@ -103,6 +103,27 @@ def test_title_wrap_triggered():
         assert all(len(line) <= limit for line in lines)
 
 
+def test_title_marker_multi_times():
+    """Same marker repeated: keep splitting until each segment fits ``max_chars``.
+
+    One ``partition`` per input line would leave a tail such as ``for BBB for CCC``
+    that can still exceed ``max_chars``; wrapping must apply the same marker again
+    to that remainder in the same marker pass.
+    """
+    result = TitleBuilder(title="AAA for BBB for CCC").generate(max_chars=10, split_on=["for"])
+    assert result == "AAA\nfor BBB\nfor CCC"
+    lines = result.split("\n")
+    assert len(lines) == 3
+    assert all(len(line) <= 10 for line in lines)
+
+
+def test_title_marker_multi_segments():
+    """Several occurrences of one marker on a single long line all get split."""
+    result = TitleBuilder(title="A for B for C for D").generate(max_chars=8, split_on=["for"])
+    assert result == "A\nfor B\nfor C\nfor D"
+    assert all(len(line) <= 8 for line in result.split("\n"))
+
+
 def test_title_wrap_empty_title():
     """_wrap_title early-return on empty title."""
     assert TitleBuilder().generate(max_chars=50) == ""
