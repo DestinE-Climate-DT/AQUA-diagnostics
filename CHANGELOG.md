@@ -50,6 +50,7 @@ Complete list:
 - Ensemble: improve the coverage of the tests (#88)
 - Ensemble: fix tests after datamodel working in issue #156 (#526)
 - Ensemble: implementing `find_vert_coord` in ensemble zonal plotting function (#175)
+- README: added Bash quotation in the main README of AQUA-diagnostics (#208)
 
 ## [v0.22.0]
 
