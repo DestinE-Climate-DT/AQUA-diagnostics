@@ -25,8 +25,8 @@ The application requires a YAML configuration file which are available `AQUA/con
 The application will calculate the SSH standard deviation for AVISO and the other specified models, save the results as NetCDF files, generate plots for visualization, and save the subplots as a PNG or PDF image.
 
 ## Output
-The code produce both NetCDF files for storing output and figures. 
-- NetCDF files: The computed SSH standard deviation for each model is saved as separate NetCDF files. 
+The code produce both NetCDF files for storing output and figures.
+- NetCDF files: The computed SSH standard deviation for each model is saved as separate NetCDF files.
 Output are stored on the model's input grid.
 - Figures: the plots and subplots showing the SSH variability for each model are as PNG or PDF.
-- Additionally, difference plots can be created. 
+- Additionally, difference plots can be created.

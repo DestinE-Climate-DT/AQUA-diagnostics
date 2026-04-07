@@ -9,9 +9,8 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
-from aqua.diagnostics.teleconnections import NAO, ENSO
-from aqua.diagnostics.teleconnections import PlotNAO, PlotENSO
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.teleconnections import ENSO, NAO, PlotENSO, PlotNAO
 
 
 def parse_arguments(args):
@@ -106,8 +105,8 @@ if __name__ == '__main__':
                                                outputdir=cli.outputdir, rebuild=cli.rebuild)
 
                 # Plot NAO regressions
-                if cli.save_pdf or cli.save_png:
-                    logger.info('Plotting NAO')
+                if cli.save_format:
+                    logger.info("Plotting NAO with formats: %s", cli.save_format)
                     plot_args = {
                         'indexes': [nao[i].index for i in range(len(nao))],
                         'ref_indexes': [nao_ref[i].index for i in range(len(nao_ref))],
@@ -121,12 +120,8 @@ if __name__ == '__main__':
                     # Plot the NAO index
                     fig_index, _ = plot_nao.plot_index()
                     index_description = plot_nao.set_index_description()
-                    if cli.save_pdf:
-                        plot_nao.save_plot(fig_index, diagnostic_product='index', format='pdf',
-                                           metadata={'description': index_description}, dpi=cli.dpi)
-                    if cli.save_png:
-                        plot_nao.save_plot(fig_index, diagnostic_product='index', format='png',
-                                           metadata={'description': index_description}, dpi=cli.dpi)
+                    plot_nao.save_plot(fig_index, diagnostic_product='index', format=cli.save_format,
+                                       metadata={'description': index_description}, dpi=cli.dpi)
 
                     # Plot regressions and correlations
                     for season in seasons:
@@ -136,31 +131,17 @@ if __name__ == '__main__':
                             nao_correlations[season][i].load(keep_attrs=True)
                             nao_ref_correlations[season][i].load(keep_attrs=True)
 
-                        fig_reg = plot_nao.plot_maps(maps=nao_regressions[season], ref_maps=nao_ref_regressions[season],
-                                                     statistic='regression')
-                        fig_cor = plot_nao.plot_maps(maps=nao_correlations[season], ref_maps=nao_ref_correlations[season],
-                                                     statistic='correlation')
+                        fig_reg = plot_nao.plot_maps(maps=nao_regressions[season], ref_maps=nao_ref_regressions[season], statistic='regression')
+                        fig_cor = plot_nao.plot_maps(maps=nao_correlations[season], ref_maps=nao_ref_correlations[season], statistic='correlation')
 
-                        regression_description = plot_nao.set_map_description(maps=nao_regressions[season],
-                                                                             ref_maps=nao_ref_regressions[season],
-                                                                             statistic='regression')
-                        correlation_description = plot_nao.set_map_description(maps=nao_correlations[season],
-                                                                             ref_maps=nao_ref_correlations[season],
-                                                                             statistic='correlation')
+                        regression_description = plot_nao.set_map_description(maps=nao_regressions[season], ref_maps=nao_ref_regressions[season], statistic='regression')
+                        correlation_description = plot_nao.set_map_description(maps=nao_correlations[season], ref_maps=nao_ref_correlations[season], statistic='correlation', )
 
                         reg_product = f'regression_{season}' if season != 'annual' else 'regression'
                         cor_product = f'correlation_{season}' if season != 'annual' else 'correlation'
 
-                        if cli.save_pdf:
-                            plot_nao.save_plot(fig_reg, diagnostic_product=reg_product, format='pdf',
-                                               metadata={'description': regression_description})
-                            plot_nao.save_plot(fig_cor, diagnostic_product=cor_product, format='pdf',
-                                               metadata={'description': correlation_description})
-                        if cli.save_png:
-                            plot_nao.save_plot(fig_reg, diagnostic_product=reg_product, format='png',
-                                               metadata={'description': regression_description}, dpi=cli.dpi)
-                            plot_nao.save_plot(fig_cor, diagnostic_product=cor_product, format='png',
-                                               metadata={'description': correlation_description}, dpi=cli.dpi)
+                        plot_nao.save_plot(fig_reg, diagnostic_product=reg_product, format=cli.save_format, metadata={'description': regression_description}, dpi=cli.dpi)
+                        plot_nao.save_plot(fig_cor, diagnostic_product=cor_product, format=cli.save_format, metadata={'description': correlation_description}, dpi=cli.dpi)
 
         # ENSO
         if 'ENSO' in config_dict['diagnostics']['teleconnections']:
@@ -228,8 +209,8 @@ if __name__ == '__main__':
                                                 outputdir=cli.outputdir, rebuild=cli.rebuild)
 
                 # Plot ENSO regressions
-                if cli.save_pdf or cli.save_png:
-                    logger.info('Plotting ENSO')
+                if cli.save_format:
+                    logger.info("Plotting ENSO with formats: %s", cli.save_format)
                     plot_args = {
                         'indexes': [enso[i].index for i in range(len(enso))],
                         'ref_indexes': [enso_ref[i].index for i in range(len(enso_ref))],
@@ -243,12 +224,7 @@ if __name__ == '__main__':
                     # Plot the ENSO index
                     fig_index, _ = plot_enso.plot_index()
                     index_description = plot_enso.set_index_description()
-                    if cli.save_pdf:
-                        plot_enso.save_plot(fig_index, diagnostic_product='index', format='pdf',
-                                            metadata={'description': index_description})
-                    if cli.save_png:
-                        plot_enso.save_plot(fig_index, diagnostic_product='index', format='png',
-                                            metadata={'description': index_description}, dpi=cli.dpi)
+                    plot_enso.save_plot(fig_index, diagnostic_product='index', format=cli.save_format, metadata={'description': index_description}, dpi=cli.dpi)
 
                     # Plot regressions and correlations
                     for season in seasons:
@@ -258,31 +234,17 @@ if __name__ == '__main__':
                             enso_correlations[season][i].load(keep_attrs=True)
                             enso_ref_correlations[season][i].load(keep_attrs=True)
 
-                        fig_reg = plot_enso.plot_maps(maps=enso_regressions[season], ref_maps=enso_ref_regressions[season],
-                                                      statistic='regression')
-                        fig_cor = plot_enso.plot_maps(maps=enso_correlations[season], ref_maps=enso_ref_correlations[season],
-                                                      statistic='correlation')
+                        fig_reg = plot_enso.plot_maps(maps=enso_regressions[season], ref_maps=enso_ref_regressions[season], statistic='regression')
+                        fig_cor = plot_enso.plot_maps(maps=enso_correlations[season], ref_maps=enso_ref_correlations[season], statistic='correlation')
 
-                        regression_description = plot_enso.set_map_description(maps=enso_regressions[season],
-                                                                             ref_maps=enso_ref_regressions[season],
-                                                                             statistic='regression')
-                        correlation_description = plot_enso.set_map_description(maps=enso_correlations[season],
-                                                                             ref_maps=enso_ref_correlations[season],
-                                                                             statistic='correlation')
+                        regression_description = plot_enso.set_map_description(maps=enso_regressions[season], ref_maps=enso_ref_regressions[season], statistic='regression')
+                        correlation_description = plot_enso.set_map_description(maps=enso_correlations[season], ref_maps=enso_ref_correlations[season], statistic='correlation')
 
                         reg_product = f'regression_{season}' if season != 'annual' else 'regression'
                         cor_product = f'correlation_{season}' if season != 'annual' else 'correlation'
 
-                        if cli.save_pdf:
-                            plot_enso.save_plot(fig_reg, diagnostic_product=reg_product, format='pdf',
-                                               metadata={'description': regression_description})
-                            plot_enso.save_plot(fig_cor, diagnostic_product=cor_product, format='pdf',
-                                               metadata={'description': correlation_description})
-                        if cli.save_png:
-                            plot_enso.save_plot(fig_reg, diagnostic_product=reg_product, format='png',
-                                               metadata={'description': regression_description}, dpi=cli.dpi)
-                            plot_enso.save_plot(fig_cor, diagnostic_product=cor_product, format='png',
-                                               metadata={'description': correlation_description}, dpi=cli.dpi)
+                        plot_enso.save_plot(fig_reg, diagnostic_product=reg_product, format=cli.save_format, metadata={'description': regression_description}, dpi=cli.dpi)
+                        plot_enso.save_plot(fig_cor, diagnostic_product=cor_product, format=cli.save_format, metadata={'description': correlation_description}, dpi=cli.dpi)
 
     cli.close_dask_cluster()
 

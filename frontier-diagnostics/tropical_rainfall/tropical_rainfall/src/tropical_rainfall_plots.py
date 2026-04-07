@@ -1,20 +1,19 @@
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.gridspec import GridSpec
-from typing import Union, Tuple, Optional, List  # Any
-
-from aqua.core.util import create_folder
-from aqua.core.logger import log_configure
-from .tropical_rainfall_tools import ToolsClass
+from typing import List, Optional, Tuple, Union  # Any
 
 import cartopy.crs as ccrs
 import cartopy.mpl.ticker as cticker
-from cartopy.util import add_cyclic_point
-
-from matplotlib.ticker import StrMethodFormatter
-
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from cartopy.util import add_cyclic_point
+from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import StrMethodFormatter
+
+from aqua.core.logger import log_configure
+from aqua.core.util import create_folder
+
+from .tropical_rainfall_tools import ToolsClass
 
 
 class PlottingClass:
@@ -135,7 +134,7 @@ class PlottingClass:
         Example:
             savefig(path_to_pdf='example.pdf', pdf_format=True)
             # This will save the current figure in PDF format as 'example.pdf'.
-            
+
             savefig(path_to_pdf='example.pdf', pdf_format=False, dpi=300)
             # This will save the current figure in PNG format as 'example.png' with 300 DPI.
         """
@@ -218,13 +217,13 @@ class PlottingClass:
             plt.grid(True)
         elif color_map:
             if weights is None:
-                N, _, patches = plt.hist(
+                n, _, patches = plt.hist(
                     x=x, bins=x, weights=data,    label=legend)
             else:
-                N, bins, patches = plt.hist(
+                n, bins, patches = plt.hist(
                     x=x, bins=x, weights=weights, label=legend)
 
-            fracs = ((N**(1 / 5)) / N.max())
+            fracs = ((n**(1 / 5)) / n.max())
             norm = colors.Normalize(fracs.min(), fracs.max())
 
             for thisfrac, thispatch in zip(fracs, patches):
@@ -247,7 +246,7 @@ class PlottingClass:
 
         if xmax is not None:
             plt.xlim([0, xmax])
-            
+
         if save and isinstance(path_to_pdf, str):
             path_to_pdf = self.savefig(path_to_pdf, self.pdf_format)
         return {fig, ax}, path_to_pdf
@@ -294,7 +293,7 @@ class PlottingClass:
                                      ylogscale=ylogscale, figsize=figsize, fontsize=fontsize, linestyle=linestyle)
 
         # make a plot with different y-axis using second axis object
-        labels_int = data[coord].values
+        labels_int = data[coord].values # noqa: F841
 
         if fig is not None:
             ax1, ax2, ax3, ax4, ax5, ax_twin_5 = fig[1], fig[2], fig[3], fig[4], fig[5], fig[6]
@@ -338,13 +337,13 @@ class PlottingClass:
             plt.yscale('log') if self.ylogscale else None
             plt.xscale('log') if self.xlogscale else None
 
-            if coord == 'lon':              
+            if coord == 'lon':
                 if projection:
-                    # twin object for two different y-axis on the sample plot  
+                    # twin object for two different y-axis on the sample plot
                     ax_span = axs[i].twinx()
                     axs[i].coastlines(alpha=0.5, color='grey')
                     axs[i].xaxis.set_major_formatter(cticker.LongitudeFormatter())
-                    
+
                     # Latitude labels
                     axs[i].set_yticks(np.arange(-90, 91, 180/self.number_of_axe_ticks), crs=ccrs.PlateCarree())
                     axs[i].yaxis.set_major_formatter(cticker.LatitudeFormatter())
@@ -358,7 +357,7 @@ class PlottingClass:
                         ax_twin.plot(one_season.lon - 180, one_season, color=color, label=legend, linestyle=self.linestyle)
                         ax_twin.set_ylim([0, y_lim_max])
                         ax_twin.set_ylabel(ylabel, fontsize=self.fontsize-3)
-                        
+
                     else:
                         ax_twin_5.set_frame_on(True)
                         ax_twin_5.plot(one_season.lon - 180, one_season, color=color,  label=legend, linestyle=self.linestyle)
@@ -685,18 +684,18 @@ class PlottingClass:
 
         grouped = data.groupby('local_time')
         mean_per_hour = grouped.mean()
-        
+
         data['local_time'].values = data['local_time'].astype(int).values
         grouped_smooth = data.groupby('local_time')
         mean_per_hour_smooth = grouped_smooth.mean()
-        
-        utc_time = mean_per_hour['local_time']
+
+        utc_time = mean_per_hour["local_time"]  # noqa: F841
         utc_time_smooth = mean_per_hour_smooth['local_time']
         if relative:
-            tprate = mean_per_hour['tprate_relative']
+            tprate = mean_per_hour["tprate_relative"]  # noqa: F841
             tprate_smooth = mean_per_hour_smooth['tprate_relative']
         else:
-            tprate = mean_per_hour[self.model_variable]
+            tprate = mean_per_hour[self.model_variable]  # noqa: F841
             tprate_smooth = mean_per_hour_smooth[self.model_variable]
         try:
             units = mean_per_hour.units
@@ -714,7 +713,7 @@ class PlottingClass:
             else:
                 plt.suptitle('Daily Precipitation Variability', fontsize=self.fontsize+1)
                 plt.ylabel('tprate variability, '+units, fontsize=self.fontsize-2)
-                
+
         else:
             plt.suptitle(plot_title, fontsize=self.fontsize+3)
 

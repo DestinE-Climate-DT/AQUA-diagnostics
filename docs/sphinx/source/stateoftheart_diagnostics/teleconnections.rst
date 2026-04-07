@@ -70,21 +70,21 @@ The basic usage of this diagnostic is explained with working examples in the not
 The basic structure of the analysis is the following:
 
 .. code-block:: python
-    
+
     from aqua.diagnostics import NAO, PlotNAO
 
     nao_dataset = NAO(
         catalog='climatedt-phase1',
-        model='IFS-NEMO', 
-        exp='historical-1990', 
-        source='lra-r100-monthly', 
+        model='IFS-NEMO',
+        exp='historical-1990',
+        source='lra-r100-monthly',
         loglevel=loglevel)
 
     nao_obs = NAO(
-        catalog='obs', 
-        model='ERA5', 
-        exp='era5', 
-        source='monthly', 
+        catalog='obs',
+        model='ERA5',
+        exp='era5',
+        source='monthly',
         loglevel=loglevel)
 
     nao_dataset.retrieve()
@@ -143,7 +143,7 @@ Here we describe only the specific settings for the teleconnections diagnostic.
 * ``teleconnections``: a block (nested in the ``diagnostics`` block), containing options for the teleconnections.
     It allows to specify which teleconnections to run, the months window for the rolling mean, the seasons to consider, and the color bar range for the plots.
     It contains the following blocks:
-    
+
     ``NAO``: a block, nested in the ``teleconnections`` block, that contains the details required for the NAO teleconnection.
 
     ``ENSO``: a block, nested in the ``teleconnections`` block, that contains the details required for the ENSO teleconnection.
@@ -177,7 +177,7 @@ The diagnostic produces the following outputs:
 Plots are saved in both PDF and PNG format.
 Data outputs are saved as NetCDF files.
 
-If a reference dataset is provided, the automatic maps consist of contour lines for the model regression map 
+If a reference dataset is provided, the automatic maps consist of contour lines for the model regression map
 and filled contour map for the difference between the model and the reference regression map.
 
 Observations
@@ -221,7 +221,7 @@ For questions or suggestions, contact the AQUA team or the maintainer.
 Detailed API
 ------------
 
-This section provides a detailed reference for the Application Programming Interface (API) of the ``teleconnections`` diagnostic,  
+This section provides a detailed reference for the Application Programming Interface (API) of the ``teleconnections`` diagnostic,
 produced from the diagnostic function docstrings.
 
 .. automodule:: aqua.diagnostics.teleconnections

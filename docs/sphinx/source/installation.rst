@@ -6,7 +6,7 @@ Installation
 In this section we will provide a step-by-step guide to install the Python package ``aqua-diagnostics``.
 AQUA-diagnostics is developed and tested with Python 3.12 and it supports Python 3.9 or later (with the exclusions of 3.13).
 
-AQUA-diagnostics extends the AQUA-core package (https://github.com/DestinE-Climate-DT/AQUA), which provides 
+AQUA-diagnostics extends the AQUA-core package (https://github.com/DestinE-Climate-DT/AQUA), which provides
 the core functionalities required for running diagnostics. When you install AQUA-diagnostics, AQUA-core
 will be automatically installed as a dependency, giving you access to both packages.
 
@@ -17,13 +17,13 @@ Conda/Mamba installation with pip
 
 Prerequisites
 ^^^^^^^^^^^^^
-- `Miniforge <https://github.com/conda-forge/miniforge>`_ : Miniforge is a package manager for conda-forge, and it is the recommended package manager for the installation process. 
+- `Miniforge <https://github.com/conda-forge/miniforge>`_ : Miniforge is a package manager for conda-forge, and it is the recommended package manager for the installation process.
 
 Installation with Miniforge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 AQUA-diagnostics is available on the Python Package Index (PyPI) repository and can be installed with pip.
-However, some dependencies are not available on PyPI, so you may need to install them manually: 
+However, some dependencies are not available on PyPI, so you may need to install them manually:
 recommended way to do this is to use Mamba/Conda package manager for the installation process of the dependencies, and then use pip to install AQUA-diagnostics itself.
 This can be achieved with:
 
@@ -104,7 +104,7 @@ Finally, activate the environment:
 
     mamba activate aqua-diagnostics
 
-At this point, you should have successfully installed the AQUA-diagnostics package and its dependencies 
+At this point, you should have successfully installed the AQUA-diagnostics package and its dependencies
 in the newly created aqua-diagnostics environment.
 
 
@@ -114,7 +114,7 @@ in the newly created aqua-diagnostics environment.
 
 .. note::
 
-    If you need to install AQUA-core in editable mode for development purposes, you must clone the 
+    If you need to install AQUA-core in editable mode for development purposes, you must clone the
     AQUA-core repository separately and install it in editable mode before installing AQUA-diagnostics.
 
 
@@ -138,7 +138,7 @@ First, clone both the AQUA (aqua-core) and AQUA-diagnostics repositories from Gi
     git clone git@github.com:DestinE-Climate-DT/AQUA.git
     git clone git@github.com:DestinE-Climate-DT/AQUA-diagnostics.git
 
-For simpler installation, it is recommended to define the ``$AQUA`` and ``$AQUA_DIAGNOSTICS`` environment variables 
+For simpler installation, it is recommended to define the ``$AQUA`` and ``$AQUA_DIAGNOSTICS`` environment variables
 that point to the respective directories:
 
 .. code-block:: bash
@@ -147,7 +147,7 @@ that point to the respective directories:
     export AQUA_DIAGNOSTICS=/path/to/AQUA-diagnostics
 
 .. note ::
-    Both environment variables are required. The installation script will default to ``$HOME/AQUA`` and ``$HOME/AQUA-diagnostics`` 
+    Both environment variables are required. The installation script will default to ``$HOME/AQUA`` and ``$HOME/AQUA-diagnostics``
     if these are not set, but setting them explicitly is more recommended.
 
 Then, navigate to the AQUA-diagnostics directory and specifically in the ``cli/lumi-install`` directory:
@@ -170,28 +170,28 @@ What ``load_aqua_diagnostics.sh`` does
 
 The generated ``load_aqua_diagnostics.sh`` script configures your shell environment by:
 
-1. **Setting up FDB5 access**: Adds the FDB5 binary path and libraries to ``PATH`` and ``LD_LIBRARY_PATH``, 
+1. **Setting up FDB5 access**: Adds the FDB5 binary path and libraries to ``PATH`` and ``LD_LIBRARY_PATH``,
    enabling access to data stored in FDB databases.
 
 2. **Configuring GSV paths**: Sets environment variables required by the GSV package:
-   
+
    - ``GSV_WEIGHTS_PATH``: Path to GSV neural network weights
    - ``GSV_TEST_FILES``: Path to GSV test files
    - ``GRID_DEFINITION_PATH``: Path to grid definitions for unstructured grids
 
-3. **Defining AQUA paths**: Sets ``AQUA_DIAGNOSTICS_PATH`` and ``AQUA_CORE_PATH`` variables 
+3. **Defining AQUA paths**: Sets ``AQUA_DIAGNOSTICS_PATH`` and ``AQUA_CORE_PATH`` variables
    pointing to the respective environment binaries.
 
-4. **Adding AQUA-diagnostics to PATH**: Prepends the AQUA-diagnostics binary directory to your ``PATH``, 
+4. **Adding AQUA-diagnostics to PATH**: Prepends the AQUA-diagnostics binary directory to your ``PATH``,
    making the ``aqua`` command and Python environment available.
 
 Why sourcing is required
 """"""""""""""""""""""""
 
-As environment variables and shell functions are only available in the current shell session. When you log out and start a new session, all these settings are lost. 
+As environment variables and shell functions are only available in the current shell session. When you log out and start a new session, all these settings are lost.
 
 The script will ask the user if they wish to add ``source ~/load_aqua_diagnostics.sh`` to ``.bash_profile`` at the end of the installation.
-If added to ``.bash_profile``, the script is automatically sourced every time you start a new login shell, 
+If added to ``.bash_profile``, the script is automatically sourced every time you start a new login shell,
 so AQUA-diagnostics will be ready to use immediately.
 
 If you choose not to add it to ``.bash_profile``, you will need to manually source the script at the beginning of each session:
@@ -202,7 +202,7 @@ If you choose not to add it to ``.bash_profile``, you will need to manually sour
 
 .. note::
 
-    Both AQUA (aqua-core) and AQUA-diagnostics are installed in **editable mode**. 
+    Both AQUA (aqua-core) and AQUA-diagnostics are installed in **editable mode**.
     This means you can modify the source code in both repositories and changes will be reflected immediately without reinstallation.
 
 Switching between AQUA environments
@@ -212,10 +212,10 @@ The installation script creates two helper functions to manage AQUA environments
 
 - ``switch_aqua [diagnostics|core]``: Switch between AQUA-diagnostics and AQUA-core environments.
   Use ``switch_aqua -v diagnostics`` or ``switch_aqua -v core`` for verbose output showing path changes.
-  
+
 - ``which_aqua``: Check which AQUA environment is currently active (returns ``aqua-diagnostics``, ``aqua-core``, or ``none``).
 
-By default, the AQUA-diagnostics environment is loaded when you source ``load_aqua_diagnostics.sh``.  
+By default, the AQUA-diagnostics environment is loaded when you source ``load_aqua_diagnostics.sh``.
 
 .. note::
 
@@ -248,8 +248,8 @@ At the moment a specific module for levante seems not to be available, so you ca
 
 .. code-block:: bash
 
-    export LD_LIBRARY_PATH=/work/bb1153/b382075/aqua/local/lib:$LD_LIBRARY_PATH 
-    
+    export LD_LIBRARY_PATH=/work/bb1153/b382075/aqua/local/lib:$LD_LIBRARY_PATH
+
 in ``.bash_profile`` and in ``.bashrc`` in your home directory.
 
 The GSV package will also require, in order to correctly decode the unstructured grid, an environment variable to be set:
@@ -281,7 +281,7 @@ Use the following configuration, replacing ``<port_number>`` with a unique port 
     Host mn5
         RemoteForward <port_number>
 
-After logging into MN5, export the following proxy environment variables to direct traffic through the SSH tunnel. 
+After logging into MN5, export the following proxy environment variables to direct traffic through the SSH tunnel.
 Replace ``<port_number>`` with the same port number used in your SSH configuration:
 
 .. code-block:: bash
@@ -336,14 +336,14 @@ Installation on ECMWF HPC2020
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 HPC2020 is moving to a more container-based approach, so the suggested installation process uses a technology similar to the one used on LUMI.
-In fact, using directly conda or mamba on lustre filesystems (``$PERM`` and ``$HPCPERM``) is not recommended 
+In fact, using directly conda or mamba on lustre filesystems (``$PERM`` and ``$HPCPERM``) is not recommended
 and has been verified to lead to severe performance issues.
 
 The recommended approach is to use the `tykky module <https://docs.csc.fi/computing/containers/tykky/>`_ developed by CSC, and available on HPC2020, which provides
-the same container wrapper technology used for an install on LUMI. 
+the same container wrapper technology used for an install on LUMI.
 This process is also described in the relevant HPC2020 `documentation pages <https://confluence.ecmwf.int/display/UDOC/Moving+away+from+Anaconda+and+Miniconda>`_.
 
-While basically you could follow the instructions in the ECMWF docs on how to create a tykky environment, a small bug in one of the AQUA dependencies requires a slightly 
+While basically you could follow the instructions in the ECMWF docs on how to create a tykky environment, a small bug in one of the AQUA dependencies requires a slightly
 more complex procedure, so that, as for LUMI, a convenience installation script has been created.
 
 First, clone the AQUA-diagnostics repository from GitHub as described in the previous section.
@@ -382,7 +382,7 @@ Please note that adding AQUA to your PATH will make you use the aqua environment
 Instead, the recommended way to use AQUA is by loading the environment with a conda-like syntax:
 
 .. code-block:: bash
-    
+
     module load tykky
     tykky activate aqua
 
@@ -390,7 +390,7 @@ You can later also use ``tykky deactivate`` to deactivate the environment.
 
 .. note ::
 
-    This installs ``aqua-core`` as a package from pip and ``aqua-diagnostics`` in editable mode. 
+    This installs ``aqua-core`` as a package from pip and ``aqua-diagnostics`` in editable mode.
     If you are a developer you can also install using the ``hpc2020_install_dev.sh`` script, which will install both in editable mode, creating the tykky environment ``aqua-dev``.
 
 In case you plan to use Visual Studio Code, you can add a kernel pointing to the containerized AQUA by running also the following command:

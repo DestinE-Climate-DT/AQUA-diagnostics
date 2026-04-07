@@ -3,27 +3,24 @@
 .. moduleauthor:: AQUA team <natalia.nazarova@polito.it>
 
 """
-
-import re
+# ruff: noqa: N806
 import os
-from os import listdir
-from os.path import isfile, join
+import re
 from datetime import datetime
-import numpy as np
-import xarray as xr
-from typing import Union, Tuple, Optional, Any, List
-
-import matplotlib.pyplot as plt
-import matplotlib.figure as figure
+from typing import Any, List, Optional, Tuple, Union
 
 import dask.array as da
 import fast_histogram
+import matplotlib.figure as figure
+import matplotlib.pyplot as plt
+import numpy as np
+import xarray as xr
 
-from aqua.core.util import create_folder
 from aqua.core.logger import log_configure
+from aqua.core.util import create_folder
 
-from .tropical_rainfall_tools import ToolsClass
 from .tropical_rainfall_plots import PlottingClass
+from .tropical_rainfall_tools import ToolsClass
 
 
 class MainClass:
@@ -197,7 +194,7 @@ class MainClass:
                 if 'lon' in i:
                     coord_lon = i
         return coord_lat, coord_lon
-    
+
     def precipitation_rate_units_converter(self, data: Union[xr.Dataset, float, int, np.ndarray],
                                            model_variable: Optional[str] = 'tprate', old_unit: Optional[str] = None,
                                            new_unit: Optional[str] = 'm s**-1') -> xr.Dataset:
@@ -232,7 +229,7 @@ class MainClass:
                 data.attrs['history'] = ' '
             history_attr = data.attrs['history'] + history_update
             data.attrs['history'] = history_attr
-        data = self.tools.convert_units(value=data, from_unit=old_unit, to_unit=self.new_unit) 
+        data = self.tools.convert_units(value=data, from_unit=old_unit, to_unit=self.new_unit)
         return data
 
     def latitude_band(self, data: xr.Dataset, trop_lat: Optional[Union[int, float]] = None) -> xr.Dataset:
@@ -572,7 +569,8 @@ class MainClass:
         return tprate_dataset
 
 
-    def dataset_to_netcdf_filename(self, start_year=None, end_year=None, start_month=None, end_month=None, path_to_netcdf: Optional[str] = None,
+    def dataset_to_netcdf_filename(self, start_year=None, end_year=None,
+                          start_month=None, end_month=None, path_to_netcdf: Optional[str] = None,
                           name_of_file: Optional[str] = None) -> str:
         """
         Function to compute the name of a destination file for the histogram.
@@ -589,14 +587,16 @@ class MainClass:
 
         path_to_netcdf = self.tools.select_files_by_year_and_month_range(path_to_histograms=path_to_netcdf,
                                                                         start_year=start_year, end_year=end_year,
-                                                                        start_month=start_month, end_month=end_month, flag=name_of_file)
+                                                                        start_month=start_month, end_month=end_month,
+                                                                        flag=name_of_file)
 
         self.logger.debug("Generated filename %s", path_to_netcdf)
 
         return(path_to_netcdf[0])
 
 
-    def dataset_to_netcdf(self, dataset: Optional[xr.Dataset] = None, path_to_netcdf: Optional[str] = None, rebuild: bool = False,
+    def dataset_to_netcdf(self, dataset: Optional[xr.Dataset] = None,
+                          path_to_netcdf: Optional[str] = None, rebuild: bool = False,
                           name_of_file: Optional[str] = None) -> str:
         """
         Function to save the histogram.
@@ -636,7 +636,10 @@ class MainClass:
                         self.logger.warning(f"Removing existing file: {path_to_netcdf}.")
                         os.remove(path_to_netcdf)
                     except PermissionError:
-                        self.logger.error(f"Permission denied when attempting to remove {path_to_netcdf}. Check file permissions.")
+                        self.logger.error(
+                            f"Permission denied when attempting to remove {path_to_netcdf}. "
+                            "Check file permissions."
+                        )
                         return  # Exiting the function or handling the error accordingly
 
                     # Proceed to save the new NetCDF file after successfully removing the old one
@@ -686,7 +689,7 @@ class MainClass:
         try:
             if data[coord_lat].size > 1:
                 latitude_step = data[coord_lat][1].values - data[coord_lat][0].values
-                lat_band = str(data[coord_lat][0].values)+', ' + str(data[coord_lat][-1].values) + ', freq='+str(latitude_step)
+                lat_band = f"{data[coord_lat][0].values}, {data[coord_lat][-1].values}, freq={latitude_step}"
             else:
                 lat_band = data[coord_lat].values
                 latitude_step = 'None'
@@ -696,8 +699,7 @@ class MainClass:
         try:
             if data[coord_lon].size > 1:
                 longitude_step = data[coord_lon][1].values - data[coord_lon][0].values
-                lon_band = str(data[coord_lon][0].values)+', ' + str(data[coord_lon][-1].values) + \
-                    ', freq=' + str(longitude_step)
+                lon_band = f"{data[coord_lon][0].values}, {data[coord_lon][-1].values}, freq={longitude_step}"
             else:
                 longitude_step = 'None'
                 lon_band = data[coord_lon].values
@@ -707,8 +709,10 @@ class MainClass:
 
         if variable is None:
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            history_update = str(current_time)+' histogram is calculated for time_band: ['+str(
-                time_band)+']; lat_band: ['+str(lat_band)+']; lon_band: ['+str(lon_band)+'];\n '
+            history_update = (
+                f"{current_time} histogram is calculated for time_band: [{time_band}]; "
+                f"lat_band: [{lat_band}]; lon_band: [{lon_band}];\n "
+            )
             try:
                 history_attr = tprate_dataset.attrs['history'] + history_update
                 tprate_dataset.attrs['history'] = history_attr
@@ -754,8 +758,8 @@ class MainClass:
         hist_pdf = self.convert_counts_to_pdf(tprate_dataset.counts,  test=test)
         tprate_dataset['pdf'] = hist_pdf
 
-        hist_pdfP = self.convert_counts_to_pdfP(tprate_dataset.counts,  test=test)
-        tprate_dataset['pdfP'] = hist_pdfP
+        hist_pdf_p = self.convert_counts_to_pdf_p(tprate_dataset.counts,  test=test)
+        tprate_dataset['pdf_p'] = hist_pdf_p
 
         if label is not None:
             hist_frequency = self.convert_counts_to_frequency(tprate_dataset['counts'+label],  test=test)
@@ -806,13 +810,13 @@ class MainClass:
             for attribute in dataset_1.attrs:
                 try:
                     if dataset_1.attrs[attribute] != dataset_2.attrs[attribute] and attribute not in 'time_band':
-                        dataset_3.attrs[attribute] = str(dataset_1.attrs[attribute])+'; '+str(dataset_2.attrs[attribute])
+                        dataset_3.attrs[attribute] = f"{dataset_1.attrs[attribute]}; {dataset_2.attrs[attribute]}"
                     elif attribute in 'time_band':
-                        dataset_3.attrs['time_band_history'] = str(dataset_1.attrs[attribute])+'; '+str(dataset_2.attrs[attribute])
+                        dataset_3.attrs['time_band_history'] = f"{dataset_1.attrs[attribute]}; {dataset_2.attrs[attribute]}"
                         dataset_3.attrs['time_band'] = self.tools.merge_time_bands(dataset_1, dataset_2)
                 except ValueError:
                     if dataset_1.attrs[attribute].all != dataset_2.attrs[attribute].all:
-                        dataset_3.attrs[attribute] = str(dataset_1.attrs[attribute])+';\n '+str(dataset_2.attrs[attribute])
+                        dataset_3.attrs[attribute] = f"{dataset_1.attrs[attribute]};\n {dataset_2.attrs[attribute]}"
 
             dataset_3.counts.values = dataset_1.counts.values + dataset_2.counts.values
             dataset_3.counts.attrs['size_of_the_data'] = dataset_1.counts.size_of_the_data + dataset_2.counts.size_of_the_data
@@ -841,9 +845,9 @@ class MainClass:
                              start_month: int = None, end_month: int = None, seasons_bool: bool = False,
                              test: bool = False, tqdm: bool = False, flag: str = None) -> xr.Dataset:
         """
-        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal 
+        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal
         categories or specific year and month ranges.
-        
+
         Args:
             path_to_histograms (str, optional): Path to the list of histograms.
             start_year (int, optional): Start year of the range (inclusive).
@@ -854,7 +858,7 @@ class MainClass:
             test (bool, optional): Runs function in test mode.
             tqdm (bool, optional): Displays a progress bar during merging.
             flag (str, optional): A specific flag to look for in the filenames. Defaults to None.
-        
+
         Returns:
             xr.Dataset: Merged xarray Dataset.
         """
@@ -871,7 +875,8 @@ class MainClass:
             for season, (months, _) in seasons.items():
                 # Populate the files list for each season
                 for month in months:
-                    # This is a placeholder for how you might select files; adjust according to your actual file selection method
+                    # This is a placeholder for how you might select files;
+                    # adjust according to your actual file selection method
                     files_for_month = self.tools.select_files_by_year_and_month_range(
                         path_to_histograms=path_to_histograms,
                         start_year=start_year,
@@ -902,7 +907,8 @@ class MainClass:
             # Concatenate all seasonal datasets into a single dataset
             if seasonal_datasets:
                 combined_dataset = xr.concat(seasonal_datasets, dim='season')
-                combined_dataset = combined_dataset.assign_coords(season=('season', season_names))  # Correctly assign season names
+                # Correctly assign season names
+                combined_dataset = combined_dataset.assign_coords(season=('season', season_names))
                 return combined_dataset
             else:
                 self.logger.info("No data available for merging.")
@@ -912,12 +918,12 @@ class MainClass:
                                                                                  start_year=start_year, end_year=end_year,
                                                                                  start_month=start_month, end_month=end_month,
                                                                                  flag=flag)
-            
+
             self.tools.check_time_continuity(histograms_to_load)
             self.tools.check_incomplete_months(histograms_to_load)
             histograms_to_load = self.tools.check_and_remove_incomplete_months(histograms_to_load)
-            
-            self.logger.debug(f"List of files to merge:")
+
+            self.logger.debug("List of files to merge:")
             for i in range(0, len(histograms_to_load)):
                 self.logger.debug(f"{histograms_to_load[i]}")
 
@@ -926,20 +932,20 @@ class MainClass:
                 try:
                     # Initialize the merged dataset with the first histogram
                     merged_dataset = self.tools.open_dataset(path_to_netcdf=histograms_to_load[0])
-                    
+
                     # Loop through the rest of the histograms and merge them one by one
                     for i in range(1, len(histograms_to_load)):
                         if tqdm:
                             ratio = i / len(histograms_to_load)
                             progress = int(40 * ratio)
                             print(progress_bar_template.format("=" * progress, int(ratio * 100)), end="\r")
-                        
+
                         self.logger.debug(f"Merging histogram: {histograms_to_load[i]}")
                         next_dataset = self.tools.open_dataset(path_to_netcdf=histograms_to_load[i])
                         merged_dataset = self.merge_two_datasets(dataset_1=merged_dataset, dataset_2=next_dataset)
                     return merged_dataset
                 except Exception as e:
-                    self.logger.error(f"An unexpected error occurred while merging histograms: {e}") 
+                    self.logger.error(f"An unexpected error occurred while merging histograms: {e}")
             else:
                 self.logger.error("No histograms to load and merge.")
 
@@ -999,7 +1005,7 @@ class MainClass:
                 raise AssertionError("Test failed.")
         return pdf_per_bin
 
-    def convert_counts_to_pdfP(self, data: xr.Dataset, test: bool = False) -> xr.DataArray:
+    def convert_counts_to_pdf_p(self, data: xr.Dataset, test: bool = False) -> xr.DataArray:
         """
         Function to convert the counts to the pdf multiplied by the center of bin.
 
@@ -1008,25 +1014,25 @@ class MainClass:
             test (bool, optional): Whether to run the function in test mode. Defaults to False.
 
         Returns:
-            xarray.DataArray: The pdfP.
+            xarray.DataArray: The pdf_p.
         """
-        pdfP = data[0:]*data.center_of_bin[0:] / \
+        pdf_p = data[0:]*data.center_of_bin[0:] / \
             (data.size_of_the_data*data.width[0:])
-        pdfP_per_bin = xr.DataArray(
-            pdfP, coords=[data.center_of_bin],    dims=["center_of_bin"])
-        pdfP_per_bin = pdfP_per_bin.assign_coords(
+        pdf_p_per_bin = xr.DataArray(
+            pdf_p, coords=[data.center_of_bin],    dims=["center_of_bin"])
+        pdf_p_per_bin = pdf_p_per_bin.assign_coords(
             width=("center_of_bin", data.width.values))
-        pdfP_per_bin.attrs = data.attrs
-        sum_of_pdfP = sum(pdfP_per_bin[:]*data.width[0:])
+        pdf_p_per_bin.attrs = data.attrs
+        sum_of_pdf_p = sum(pdf_p_per_bin[:]*data.width[0:])
 
         if test:
-            if sum(data[:]) == 0 or abs(sum_of_pdfP-data.mean()) < 10**(-4):
+            if sum(data[:]) == 0 or abs(sum_of_pdf_p-data.mean()) < 10**(-4):
                 pass
             else:
                 self.logger.debug('Sum of PDF: {}'
-                                  .format(abs(sum_of_pdfP.values)))
+                                  .format(abs(sum_of_pdf_p.values)))
                 raise AssertionError("Test failed.")
-        return pdfP_per_bin
+        return pdf_p_per_bin
 
     def mean_from_histogram(self, hist: xr.Dataset, data: xr.Dataset = None, old_unit: str = None, new_unit: str = None,
                             model_variable: str = None, trop_lat: float = None,
@@ -1088,7 +1094,7 @@ class MainClass:
 
         return mean_from_freq, mean_of_original_data, mean_of_modified_data
 
-    def histogram_plot(self, data: xr.Dataset, new_unit: str = None, pdfP: bool = False, positive: bool = True,
+    def histogram_plot(self, data: xr.Dataset, new_unit: str = None, pdf_p: bool = False, positive: bool = True,
                        save: bool = True, weights: np.ndarray = None, frequency: bool = False, pdf: bool = True,
                        smooth: bool = False, step: bool = True, color_map: bool = False, linestyle: str = None,
                        ylogscale: bool = True, xlogscale: bool = False, color: str = 'tab:blue', figsize: float = None,
@@ -1103,7 +1109,7 @@ class MainClass:
         Args:
             data (xarray.Dataset): The data for the histogram.
             new_unit (str, optional): The new unit. Default is None.
-            pdfP (bool, optional): Whether to plot the PDFP. Default is False.
+            pdf_p (bool, optional): Whether to plot the PDFP. Default is False.
             positive (bool, optional): The flag to indicate if the data should be positive. Default is True.
             save (bool, optional): Whether to save the plot. Default is True.
             weights (np.ndarray, optional): An array of weights for the data. Default is None.
@@ -1129,7 +1135,7 @@ class MainClass:
             test (bool, optional): Whether to run the test. Default is False.
             linewidth (float, optional): The width of the line. Default is None.
             fontsize (float, optional): The font size for the plot. Default is None.
-            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width, 
+            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width,
                                     values < 1 decrease it. None leaves the bin width unchanged.
 
 
@@ -1143,17 +1149,17 @@ class MainClass:
         if 'Dataset' in str(type(data)):
             data = self.tools.adjust_bins(data, factor=factor)
             data = data['counts']
-        if not pdf and not frequency and not pdfP:
+        if not pdf and not frequency and not pdf_p:
             pass
             self.logger.debug("Generating a histogram to visualize the counts...")
-        elif pdf and not frequency and not pdfP:
+        elif pdf and not frequency and not pdf_p:
             data = self.convert_counts_to_pdf(data,  test=test)
             self.logger.debug("Generating a histogram to visualize the PDF...")
-        elif not pdf and frequency and not pdfP:
+        elif not pdf and frequency and not pdf_p:
             data = self.convert_counts_to_frequency(data,  test=test)
             self.logger.debug("Generating a histogram to visualize the frequency...")
-        elif pdfP:
-            data = self.convert_counts_to_pdfP(data,  test=test)
+        elif pdf_p:
+            data = self.convert_counts_to_pdf_p(data,  test=test)
             self.logger.debug("Generating a histogram to visualize the PDFP...")
 
         x = self.precipitation_rate_units_converter(data.center_of_bin, new_unit=self.new_unit).values
@@ -1162,16 +1168,16 @@ class MainClass:
         else:
             xlabel = self.model_variable+", ["+str(self.new_unit)+"]"
 
-        if pdf and not frequency and not pdfP:
+        if pdf and not frequency and not pdf_p:
             ylabel = 'PDF'
             _name = '_PDF_histogram'
-        elif not pdf and frequency and not pdfP:
+        elif not pdf and frequency and not pdf_p:
             ylabel = 'Frequency'
             _name = '_frequency_histogram'
-        elif not frequency and not pdfP and not pdf:
+        elif not frequency and not pdf_p and not pdf:
             ylabel = 'Counts'
             _name = '_counts_histogram'
-        elif pdfP:
+        elif pdf_p:
             ylabel = 'PDF * P'
             _name = '_PDFP_histogram'
 
@@ -1960,8 +1966,7 @@ class MainClass:
                     self.logger.debug('DJF:{}'.format(DJF))
                     bin_value, units, threshold = self.get_95percent_level(DJF.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    DJF_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    DJF_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
                     self.class_attributes_update(s_month=s_month, f_month=f_month, num_of_bins=num_of_bins,
                                                  first_edge=first_edge, width_of_bin=width_of_bin, bins=bins)
@@ -1976,24 +1981,21 @@ class MainClass:
                     JJA_095level = JJA.isel(time=0).copy(deep=True)
                     bin_value, units, threshold = self.get_95percent_level(JJA.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    JJA_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    JJA_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
                     self.class_attributes_update(s_month=s_month, f_month=f_month, num_of_bins=num_of_bins,
                                                  first_edge=first_edge, width_of_bin=width_of_bin, bins=bins)
                     SON_095level = SON.isel(time=0).copy(deep=True)
                     bin_value, units, threshold = self.get_95percent_level(SON.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    SON_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    SON_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
                     self.class_attributes_update(s_month=s_month, f_month=f_month, num_of_bins=num_of_bins,
                                                  first_edge=first_edge, width_of_bin=width_of_bin, bins=bins)
                     glob_095level = glob.isel(time=0).copy(deep=True)
                     bin_value, units, threshold = self.get_95percent_level(glob.isel(lat=lat_i).isel(lon=lon_i),
                                                                            preprocess=False, value=value, rel_error=rel_error)
-                    glob_095level.isel(lat=lat_i).isel(
-                        lon=lon_i).values = bin_value
+                    glob_095level.isel(lat=lat_i).isel(lon=lon_i).values = bin_value
 
             seasonal_095level = DJF_095level.to_dataset(name="DJF")
             seasonal_095level["MAM"] = MAM_095level
@@ -2099,7 +2101,7 @@ class MainClass:
 
         if path_to_netcdf is None and self.path_to_netcdf is not None:
                 path_to_netcdf = self.path_to_netcdf+'daily_variability/'
-        
+
         if name_of_file is not None:
             self.dataset_to_netcdf(
                 new_dataset, path_to_netcdf=path_to_netcdf, name_of_file=name_of_file+'_daily_variability', rebuild=rebuild)
@@ -2190,7 +2192,7 @@ class MainClass:
         concatenated_dataset = xr.concat([dataset_1, dataset_2], dim='time')
         concatenated_dataset.attrs['time_band_history'] = str(dataset_1.time_band)+'; '+str(dataset_2.time_band)
         concatenated_dataset.attrs['time_band'] = self.tools.merge_time_bands(dataset_1, dataset_2)
-                        
+
         return concatenated_dataset
 
 
@@ -2198,9 +2200,9 @@ class MainClass:
                              start_month: int = None, end_month: int = None,
                              test: bool = False, tqdm: bool = False, flag: str = None) -> xr.Dataset:
         """
-        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal 
+        Function to merge a list of histograms based on specified criteria. It supports merging by seasonal
         categories or specific year and month ranges.
-        
+
         Args:
             path_to_output (str, optional): Path to the list of daily_variability data.
             start_year (int, optional): Start year of the range (inclusive).
@@ -2210,7 +2212,7 @@ class MainClass:
             test (bool, optional): Runs function in test mode.
             tqdm (bool, optional): Displays a progress bar during merging.
             flag (str, optional): A specific flag to look for in the filenames. Defaults to None.
-        
+
         Returns:
             xr.Dataset: Merged xarray Dataset.
         """
@@ -2219,12 +2221,12 @@ class MainClass:
                                                                        start_year=start_year, end_year=end_year,
                                                                        start_month=start_month, end_month=end_month,
                                                                        flag=flag)
-        
+
         self.tools.check_time_continuity(list_to_load)
         self.tools.check_incomplete_months(list_to_load)
         list_to_load = self.tools.check_and_remove_incomplete_months(list_to_load)
-        
-        self.logger.debug(f"List of files to merge:")
+
+        self.logger.debug("List of files to merge:")
         for i in range(0, len(list_to_load)):
             self.logger.debug(f"{list_to_load[i]}")
 
@@ -2233,19 +2235,19 @@ class MainClass:
             try:
                 # Initialize the merged dataset with the first histogram
                 merged_dataset = self.tools.open_dataset(path_to_netcdf=list_to_load[0])
-                
+
                 # Loop through the rest of the histograms and merge them one by one
                 for i in range(1, len(list_to_load)):
                     if tqdm:
                         ratio = i / len(list_to_load)
                         progress = int(40 * ratio)
                         print(progress_bar_template.format("=" * progress, int(ratio * 100)), end="\r")
-                    
+
                     self.logger.debug(f"Merging histogram: {list_to_load[i]}")
                     next_dataset = self.tools.open_dataset(path_to_netcdf=list_to_load[i])
                     merged_dataset = self.concat_two_datasets(dataset_1=merged_dataset, dataset_2=next_dataset)
                 return merged_dataset
             except Exception as e:
-                self.logger.error(f"An unexpected error occurred while merging histograms: {e}") 
+                self.logger.error(f"An unexpected error occurred while merging histograms: {e}")
         else:
             self.logger.error("No histograms to load and merge.")

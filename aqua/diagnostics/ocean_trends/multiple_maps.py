@@ -1,13 +1,12 @@
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from pyproj import transform
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 
 from aqua.core.graphics import ConfigStyle
 from aqua.core.graphics.single_map import plot_single_map
 from aqua.core.logger import log_configure
-from aqua.core.util import evaluate_colorbar_limits, add_cyclic_lon
+from aqua.core.util import add_cyclic_lon, evaluate_colorbar_limits
 
 
 def plot_maps(maps: list[xr.DataArray],
@@ -135,7 +134,7 @@ def plot_maps(maps: list[xr.DataArray],
         if ytext:
             ax.text(-0.3, 0.33, ytext[i], fontsize=15, color='dimgray',
                     rotation=90, transform=ax.transAxes, ha='center')
-        
+
         if titles and i < len(titles):
             ax.set_title(titles[i], fontsize=12)
 

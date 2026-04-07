@@ -5,7 +5,7 @@
 # it is reccomended to set it to the .bashrc file, similarly to how $AQUA is set.
 
 # Usage
-# bash lumi_install.sh 
+# bash lumi_install.sh
 # or
 # bash lumi_install.sh --help
 
@@ -59,7 +59,7 @@ load_aqua_diagnostics_file="$HOME/load_aqua_diagnostics.sh" #check if $HOME does
 export INSTALLATION_PATH="$MAMBADIR/aqua-diagnostics"
 log_message INFO "Installation path has been set to ${INSTALLATION_PATH}"
 
-# Remove the installation paths from the $PATH. 
+# Remove the installation paths from the $PATH.
 # This removes paths containing 'aqua-diagnostics' or 'aqua/bin' (aqua-core)
 # to ensure a clean environment before installation
 
@@ -103,7 +103,7 @@ install_aqua_diagnostics() {
   module load LUMI/24.03
   module load lumi-container-wrapper
   log_message INFO "Modules have been loaded."
-  
+
   # install AQUA-diagnostics framework
   conda-containerize new --mamba --prefix "${INSTALLATION_PATH}" "${AQUA_DIAGNOSTICS}/cli/lumi-install/environment_lumi.yml"
   conda-containerize update "${INSTALLATION_PATH}" --post-install "${AQUA_DIAGNOSTICS}/cli/lumi-install/pip_lumi.txt"
@@ -169,7 +169,7 @@ create_aqua_diagnostics_file() {
   # These are loaded automatically with the fdb module
   # echo 'module load eckit/1.26.3-cpeCray-24.03' >> $load_aqua_diagnostics_file
   # echo 'module load metkit/1.11.14-cpeCray-24.03' >> $load_aqua_diagnostics_file
-    
+
   log_message INFO "exports for FDB5 added to load_aqua_diagnostics.sh."
 
   # Config GSV: check load_modules_lumi.sh on GSV repo https://earth.bsc.es/gitlab/digital-twins/de_340/gsv_interface/-/blob/main/load_modules_lumi.sh
@@ -189,7 +189,7 @@ create_aqua_diagnostics_file() {
   echo 'export AQUA_DIAGNOSTICS_PATH="'$INSTALLATION_PATH'/bin"' >>  $load_aqua_diagnostics_file
   echo 'export AQUA_CORE_PATH="'$MAMBADIR'/aqua/bin"' >>  $load_aqua_diagnostics_file
   echo '' >>  $load_aqua_diagnostics_file
-  
+
   # Function to switch between AQUA environments
   echo '# Function to switch between AQUA environments' >>  $load_aqua_diagnostics_file
   echo '# Usage: switch_aqua [-v|--verbose] [diagnostics|core]' >>  $load_aqua_diagnostics_file
@@ -284,7 +284,7 @@ create_aqua_diagnostics_file() {
   echo '  fi' >>  $load_aqua_diagnostics_file
   echo '}' >>  $load_aqua_diagnostics_file
   echo '' >>  $load_aqua_diagnostics_file
-  
+
   # Function to check which AQUA environment is currently active
   echo '# Function to check which AQUA environment is currently active' >>  $load_aqua_diagnostics_file
   echo '# Returns: "aqua-diagnostics", "aqua-core", or "none"' >>  $load_aqua_diagnostics_file
@@ -314,7 +314,7 @@ create_aqua_diagnostics_file() {
   echo '  fi' >>  $load_aqua_diagnostics_file
   echo '}' >>  $load_aqua_diagnostics_file
   echo '' >>  $load_aqua_diagnostics_file
-  
+
   # Default: load AQUA-diagnostics (for backward compatibility)
   echo '# Default: load AQUA-diagnostics environment' >>  $load_aqua_diagnostics_file
   echo 'export PATH="$AQUA_DIAGNOSTICS_PATH:$PATH"' >>  $load_aqua_diagnostics_file
@@ -326,7 +326,7 @@ create_aqua_diagnostics_file() {
 
 # check if load_aqua_diagnostics_file exist and clean it
 if [ -f "$load_aqua_diagnostics_file" ]; then
-  log_message $next_level_msg_type "Existing ${load_aqua_diagnostics_file} found. Would you like to remove it? Safer to say yes (y/n) " 
+  log_message $next_level_msg_type "Existing ${load_aqua_diagnostics_file} found. Would you like to remove it? Safer to say yes (y/n) "
   read -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -373,4 +373,3 @@ done
 
 log_message WARNING "AQUA-diagnostics environment has been installed. Both AQUA (aqua-core) and AQUA-diagnostics are installed in editable mode."
 log_message WARNING "You can modify both repositories and changes will be reflected immediately."
-

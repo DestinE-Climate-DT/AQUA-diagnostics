@@ -1,6 +1,8 @@
 import gc
 import sys
+
 import xarray as xr
+
 from .base import BaseMixin
 
 # import pandas as pd
@@ -10,6 +12,7 @@ from .base import BaseMixin
 xr.set_options(keep_attrs=True)
 
 
+<<<<<<< HEAD:aqua/diagnostics/ssh_variability/ssh_variability.py
 class ssh_variability_compute(BaseMixin):
     """
     SSH Computation
