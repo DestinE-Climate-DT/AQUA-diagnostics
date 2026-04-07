@@ -7,7 +7,10 @@ from aqua import Reader
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml, pandas_freq_to_string, xarray_to_pandas_freq
+from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml 
+from aqua.core.util import pandas_freq_to_string, time_to_string, xarray_to_pandas_freq
+
+from .time_util import start_end_dates
 
 from .output_saver import OutputSaver
 
@@ -16,7 +19,9 @@ class Diagnostic():
 
     def __init__(self, model: str, exp: str, source: str,
                  catalog: str | None = None, regrid: str | None = None,
-                 startdate: str | None = None, enddate: str | None = None, loglevel: str = 'WARNING'):
+                 startdate: str | None = None, enddate: str | None = None,
+                 std_startdate: str | None = None, std_enddate: str | None = None,
+                 loglevel: str = 'WARNING'):
         """
         Initialize the diagnostic class. This is a general purpose class that can be used
         by the diagnostic classes to retrieve data from a single model and to save the data
@@ -28,10 +33,14 @@ class Diagnostic():
             source (str): The source to be used.
             catalog (str): The catalog to be used. If None, the catalog will be determined by the Reader.
             regrid (str | None): The target grid to be used for regridding. If None, no regridding will be done.
-            startdate (str | None): The start date of the data to be retrieved.
-                        If None, all available data will be retrieved.
-            enddate (str | None): The end date of the data to be retrieved.
-                           If None, all available data will be retrieved.
+            startdate (str | None): The start date of the plot/analysis period.
+                       If None, all available data will be used.
+            enddate (str | None): The end date of the plot/analysis period.
+                     If None, all available data will be used.
+            std_startdate (str | None): The start date of the standard deviation period.
+                           If None, defaults to startdate.
+            std_enddate (str | None): The end date of the standard deviation period.
+                         If None, defaults to enddate.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
 
@@ -44,8 +53,16 @@ class Diagnostic():
         self.realization = None
 
         self.regrid = regrid
-        self.startdate = startdate
-        self.enddate = enddate
+
+        # Compute retrieval window as the widest range covering both plot and std periods
+        self.startdate, self.enddate = start_end_dates(startdate=startdate, enddate=enddate,
+                                                       start_std=std_startdate, end_std=std_enddate)
+        # Plot/analysis window (user-provided; filled from data after retrieve if None)
+        self.plt_startdate = startdate
+        self.plt_enddate = enddate
+        # Std window (defaults to retrieval window if not provided)
+        self.std_startdate = self.startdate if std_startdate is None else std_startdate
+        self.std_enddate = self.enddate if std_enddate is None else std_enddate
 
         # Data to be retrieved
         self.data = None
@@ -74,12 +91,31 @@ class Diagnostic():
 
         if self.regrid is not None:
             self.logger.info(f'Regridded data to {self.regrid} grid')
+
+        # Fill retrieval dates from data if not provided
         if self.startdate is None:
             self.startdate = self.data.time.values[0]
             self.logger.debug(f'Start date: {self.startdate}')
         if self.enddate is None:
             self.enddate = self.data.time.values[-1]
             self.logger.debug(f'End date: {self.enddate}')
+
+        # Fill plot dates from data if not provided
+        if self.plt_startdate is None:
+            self.plt_startdate = self.data.time.values[0]
+            self.logger.debug(f'Plot start date set from data: {self.plt_startdate}')
+        if self.plt_enddate is None:
+            self.plt_enddate = self.data.time.values[-1]
+            self.logger.debug(f'Plot end date set from data: {self.plt_enddate}')
+
+        # Fill std dates from retrieval dates if still unset
+        if self.std_startdate is None:
+            self.std_startdate = self.startdate
+        if self.std_enddate is None:
+            self.std_enddate = self.enddate
+
+        # Attach date attributes to the retrieved dataset
+        self._set_date_attrs(self.data)
 
     def save_netcdf(self, data, diagnostic: str, diagnostic_product: str = None,
                     outputdir: str = '.', rebuild: bool = True,
@@ -188,6 +224,21 @@ class Diagnostic():
             data = reader.regrid(data)
 
         return data, reader, catalog
+
+    def _set_date_attrs(self, data):
+        """
+        Set AQUA_startdate and AQUA_enddate on a DataArray or Dataset using plt_startdate/plt_enddate.
+        Can be called by subclasses after converting self.data from Dataset to DataArray.
+
+        Args:
+            data (xr.DataArray or xr.Dataset): The data object to annotate.
+
+        Returns:
+            data: The same object with AQUA_startdate and AQUA_enddate set in attrs.
+        """
+        data.attrs['AQUA_startdate'] = time_to_string(self.plt_startdate)
+        data.attrs['AQUA_enddate'] = time_to_string(self.plt_enddate)
+        return data
 
     def _check_data(self, data: xr.DataArray, var: str, units: str):
         """
