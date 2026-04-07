@@ -1,7 +1,7 @@
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import time_to_string, to_list
-from aqua.diagnostics.base import Diagnostic, start_end_dates
+from aqua.diagnostics.base import Diagnostic
 
 
 class LatLonProfiles(Diagnostic):
@@ -19,7 +19,7 @@ class LatLonProfiles(Diagnostic):
         - 'meridional': Average over latitude, producing longitude profilesThe class evaluates a seasonal frequency and the entire period (longterm).
 		
 	"""
-	MINIMUM_MONTHS_REQUIRED = 12
+    MINIMUM_MONTHS_REQUIRED = 12
 
     def __init__(self, model: str, exp: str, source: str,
                    catalog: str = None, regrid: str = None,
@@ -52,20 +52,13 @@ class LatLonProfiles(Diagnostic):
         """
         # Initialize the Diagnostic class with the provided parameters
         super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
-                            loglevel=loglevel)
+                         startdate=startdate, enddate=enddate,
+                         std_startdate=std_startdate, std_enddate=std_enddate,
+                         loglevel=loglevel)
         self.diagnostic_name = diagnostic_name
 
         self.logger = log_configure(log_level=loglevel, log_name='LatLonProfiles')
 
-        # We want to make sure we retrieve the required amount of data with a single Reader instance
-        self.startdate, self.enddate = start_end_dates(startdate=startdate, enddate=enddate,
-                                                        start_std=std_startdate, end_std=std_enddate)
-        # They need to be stored to evaluate the std on the correct period
-        self.std_startdate = self.startdate if std_startdate is None else std_startdate
-        self.std_enddate = self.enddate if std_enddate is None else std_enddate
-        # Finally we need to set the start and end dates of the data
-        self.plt_startdate = startdate
-        self.plt_enddate = enddate
         self.logger.debug(f"Retrieve start date: {self.startdate}, End date: {self.enddate}")
         self.logger.debug(f"Plot start date: {self.plt_startdate}, End date: {self.plt_enddate}")
         self.logger.debug(f"Std start date: {self.std_startdate}, Std end date: {self.std_enddate}")
@@ -102,29 +95,25 @@ class LatLonProfiles(Diagnostic):
         self.logger.info('Retrieving data for variable %s', var)
         # If the user requires a formula the evaluation requires the retrieval
         # of all the variables
-		if formula:
-			super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
-			self.logger.debug("Evaluating formula %s", var)
-			self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
-										short_name=standard_name, units=units,
-										loglevel=self.loglevel).evaluate()
-			if self.data is None:
-				raise ValueError(f'Error evaluating formula {var}. '
-									'Check the variable names and the formula syntax.')
-		else:
-			super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
-			if self.data is None:
-				raise ValueError(f'Variable {var} not found in the data. '
-									'Check the variable name and the data source.')
-			# Get the xr.DataArray to be aligned with the formula code
-			self.data = self.data[var]
+        if formula:
+            super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+            self.logger.debug("Evaluating formula %s", var)
+            self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
+                                        short_name=standard_name, units=units,
+                                        loglevel=self.loglevel).evaluate()
+            if self.data is None:
+                raise ValueError(f'Error evaluating formula {var}. '
+                                 'Check the variable names and the formula syntax.')
+        else:
+            super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+            if self.data is None:
+                raise ValueError(f'Variable {var} not found in the data. '
+                                 'Check the variable name and the data source.')
+            # Get the xr.DataArray to be aligned with the formula code
+            self.data = self.data[var]
 
-        if self.plt_startdate is None:
-            self.plt_startdate = self.data.time.min().values
-            self.logger.debug('Plot start date set to %s', self.plt_startdate)
-        if self.plt_enddate is None:
-            self.plt_enddate = self.data.time.max().values
-            self.logger.debug('Plot end date set to %s', self.plt_enddate)
+        # Re-attach date attrs now that self.data is a DataArray (Dataset-level attrs are not inherited)
+        self._set_date_attrs(self.data)
 
         # Customization of the data, expecially needed for formula
         if units is not None:
