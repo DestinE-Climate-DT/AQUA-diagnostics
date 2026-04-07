@@ -87,15 +87,9 @@ class PlotStratification:
             loglevel=self.loglevel,
         )
 
-        self.save_plot(
-            fig,
-            diagnostic_product=self.diagnostic_product,
-            metadata={"description": self.description},
-            rebuild=rebuild,
-            extra_keys={"region": self.region},
-            format=save_format,
-            dpi=dpi,
-        )
+        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
+                        rebuild=rebuild, extra_keys={'region': self.region}, format=save_format, dpi=dpi)
+
 
     def set_nrowcol(self):
         if hasattr(self, "levels") and self.levels:
@@ -131,7 +125,9 @@ class PlotStratification:
         #         self.data_list.append(data_var)
 
     def set_cbar_labels(self, var: str = None):
-        self.cbar_label = cbar_get_label(data=self.data[var], cbar_label=None, loglevel=self.loglevel)
+        self.cbar_label = cbar_get_label(
+            data=self.data[var], cbar_label=None, loglevel=self.loglevel
+        )
 
     def _round_up(self, value):
         if value % 100 == 0:
@@ -155,7 +151,9 @@ class PlotStratification:
         else:
             nlevels = 50
         self.nlevels = nlevels
-        self.logger.debug(f"Colorbar limits set to vmin: {self.vmin}, vmax: {self.vmax}, nlevels: {self.nlevels}")
+        self.logger.debug(
+            f"Colorbar limits set to vmin: {self.vmin}, vmax: {self.vmax}, nlevels: {self.nlevels}"
+        )
 
     def set_suptitle(self):
         """Set the title for the MLD plot."""
@@ -165,7 +163,7 @@ class PlotStratification:
             catalog=self.catalog,
             model=self.model,
             exp=self.exp,
-            timeseason=f"{self.clim_time} climatology",
+            timeseason=f"{self.clim_time} climatology"
         ).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
@@ -186,28 +184,14 @@ class PlotStratification:
                 #     self.title_list.append(" ")
         self.logger.debug("Title list set to: %s", self.title_list)
 
-    def set_description(
-        self,
-    ):
-        self.description = (
-            f"Stratification plot of spatially averaged {self.region} region, {self.clim_time} climatology "
-            f"for the {self.catalog} {self.model} {self.exp} experiment"
-        )
+    def set_description(self, ):
+        self.description = f"Stratification plot of spatially averaged {self.region} region, {self.clim_time} climatology for the {self.catalog} {self.model} {self.exp} experiment"
         if self.obs:
-            self.description = self.description + (
-                f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}"
-            )
+            self.description = self.description + (f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}")
 
-    def save_plot(
-        self,
-        fig,
-        diagnostic_product: str = None,
-        extra_keys: dict = None,
-        rebuild: bool = True,
-        metadata: dict = None,
-        dpi: int = 300,
-        format: Union[str, list] = SAVE_FORMAT,
-    ):
+    def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
+                   rebuild: bool = True, metadata: dict = None,
+                   dpi: int = 300, format: Union[str, list] = SAVE_FORMAT):
         """
         Save the plot to a file.
 
@@ -222,12 +206,5 @@ class PlotStratification:
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        self.outputsaver.save_figure(
-            fig,
-            diagnostic_product=diagnostic_product,
-            rebuild=rebuild,
-            extra_keys=extra_keys,
-            metadata=metadata,
-            extension=format,
-            dpi=dpi,
-        )
+        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                     extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)

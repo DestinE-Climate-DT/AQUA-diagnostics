@@ -171,9 +171,8 @@ class PlotEnsembleTimeseries(BaseMixin):
             if enddate is not None:
                 enddate = pd.Timestamp(enddate).strftime("%Y-%m-%d")
 
-            title = TitleBuilder(
-                diagnostic="Ensemble analysis", model=self.model, startyear=startdate, endyear=enddate
-            ).generate()
+            title = TitleBuilder(diagnostic="Ensemble analysis", model=self.model,
+                                 startyear=startdate, endyear=enddate).generate()
 
         fig, ax = plot_timeseries(
             ref_monthly_data=ref_monthly_data,
@@ -205,6 +204,6 @@ class PlotEnsembleTimeseries(BaseMixin):
 
         # Saving plots
         self.save_figure(
-            var=var, fig=fig, startdate=startdate, enddate=enddate, description=description, format=save_format, dpi=dpi
-        )
+            var=var,fig=fig, startdate=startdate, enddate=enddate,
+            description=description, format=save_format, dpi=dpi)
         return fig, ax

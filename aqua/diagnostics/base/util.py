@@ -1,7 +1,6 @@
 """
 Utility functions for the CLI
 """
-
 import argparse
 import os
 import uuid
@@ -18,8 +17,6 @@ from aqua.core.util import get_arg, load_yaml
 # so that all dask keys generated during this run are unique
 _job_token = uuid.uuid4().hex
 _original_tokenize = tokenize
-
-
 def _unique_tokenize(*args, **kwargs):
     """Tokenize function that includes job token for uniqueness."""
     return _original_tokenize(_job_token, *args, **kwargs)
@@ -35,24 +32,37 @@ def template_parse_arguments(parser: argparse.ArgumentParser):
     Returns:
         argparse.ArgumentParser
     """
-    parser.add_argument("--loglevel", "-l", type=str, required=False, help="loglevel")
-    parser.add_argument("--catalog", type=str, required=False, help="catalog name")
-    parser.add_argument("--model", type=str, required=False, help="model name")
-    parser.add_argument("--exp", type=str, required=False, help="experiment name")
-    parser.add_argument("--source", type=str, required=False, help="source name")
-    parser.add_argument("--realization", type=str, default=None, help="realization name (default: None)")
-    parser.add_argument("--config", "-c", type=str, default=None, help="yaml configuration file")
-    parser.add_argument("--nworkers", "-n", type=int, required=False, help="number of workers")
-    parser.add_argument("--cluster", type=str, required=False, help="cluster address")
-    parser.add_argument("--regrid", type=str, required=False, help="target regrid resolution")
-    parser.add_argument("--outputdir", type=str, required=False, help="output directory")
-    parser.add_argument("--startdate", type=str, required=False, help="start date (YYYY-MM-DD)")
-    parser.add_argument("--enddate", type=str, required=False, help="end date (YYYY-MM-DD)")
+    parser.add_argument("--loglevel", "-l", type=str,
+                        required=False, help="loglevel")
+    parser.add_argument("--catalog", type=str,
+                        required=False, help="catalog name")
+    parser.add_argument("--model", type=str,
+                        required=False, help="model name")
+    parser.add_argument("--exp", type=str,
+                        required=False, help="experiment name")
+    parser.add_argument("--source", type=str,
+                        required=False, help="source name")
+    parser.add_argument("--realization", type=str, default=None,
+                        help="realization name (default: None)")
+    parser.add_argument("--config", "-c", type=str, default=None,
+                        help='yaml configuration file')
+    parser.add_argument("--nworkers", "-n", type=int,
+                        required=False, help="number of workers")
+    parser.add_argument("--cluster", type=str,
+                        required=False, help="cluster address")
+    parser.add_argument("--regrid", type=str,
+                        required=False, help="target regrid resolution")
+    parser.add_argument("--outputdir", type=str,
+                        required=False, help="output directory")
+    parser.add_argument("--startdate", type=str,
+                        required=False, help="start date (YYYY-MM-DD)")
+    parser.add_argument("--enddate", type=str,
+                        required=False, help="end date (YYYY-MM-DD)")
 
     return parser
 
 
-def open_cluster(nworkers, cluster, loglevel: str = "WARNING"):
+def open_cluster(nworkers, cluster, loglevel: str = 'WARNING'):
     """
     Open a dask cluster if nworkers is provided, otherwise connect to an existing cluster.
 
@@ -67,7 +77,7 @@ def open_cluster(nworkers, cluster, loglevel: str = "WARNING"):
         private_cluster (bool): whether the cluster is private
     """
 
-    logger = log_configure(log_name="Cluster", log_level=loglevel)
+    logger = log_configure(log_name='Cluster', log_level=loglevel)
 
     private_cluster = False
     if nworkers or cluster:
@@ -86,7 +96,7 @@ def open_cluster(nworkers, cluster, loglevel: str = "WARNING"):
     return client, cluster, private_cluster
 
 
-def close_cluster(client, cluster, private_cluster, loglevel: str = "WARNING"):
+def close_cluster(client, cluster, private_cluster, loglevel: str = 'WARNING'):
     """
     Close the dask cluster and client.
 
@@ -96,7 +106,7 @@ def close_cluster(client, cluster, private_cluster, loglevel: str = "WARNING"):
         private_cluster (bool): whether the cluster is private
         loglevel (str): logging level
     """
-    logger = log_configure(log_name="Cluster", log_level=loglevel)
+    logger = log_configure(log_name='Cluster', log_level=loglevel)
 
     if client:
         client.close()
@@ -106,8 +116,7 @@ def close_cluster(client, cluster, private_cluster, loglevel: str = "WARNING"):
         cluster.close()
         logger.debug("Dask cluster closed.")
 
-
-def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel="WARNING") -> str:
+def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel='WARNING') -> str:
     """
     Get the path to the diagnostic configuration directory.
 
@@ -127,9 +136,11 @@ def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel="W
     raise ValueError(f"Invalid folder name: {folder}. Must be 'collections', 'tools', or 'templates'.")
 
 
-def load_diagnostic_config(
-    diagnostic: str, config: str = None, default_config: str = None, folder="collections", loglevel: str = "WARNING"
-):
+def load_diagnostic_config(diagnostic: str,
+                           config: str = None,
+                           default_config: str = None,
+                           folder = "collections",
+                           loglevel: str = 'WARNING'):
     """
     Load the diagnostic configuration file and return the configuration dictionary.
 
@@ -148,12 +159,16 @@ def load_diagnostic_config(
     if not default_config:
         default_config = f"config-{diagnostic}.yaml"
 
-    filename = os.path.join(get_diagnostic_configpath(diagnostic, folder=folder, loglevel=loglevel), default_config)
+    filename = os.path.join(
+        get_diagnostic_configpath(diagnostic, folder=folder, loglevel=loglevel),
+        default_config
+    )
 
     return load_yaml(filename)
 
 
-def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "WARNING") -> dict:
+def merge_config_args(config: dict, args: argparse.Namespace,
+                      loglevel: str = 'WARNING') -> dict:
     """
     Merge the configuration dictionary with the arguments of the CLI.
 
@@ -165,24 +180,24 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     Returns:
         dict: merged configuration dictionary
     """
-    logger = log_configure(log_name="merge_config_args", log_level=loglevel)
-    datasets = config["datasets"]
+    logger = log_configure(log_name='merge_config_args', log_level=loglevel)
+    datasets = config['datasets']
 
     # Override the first dataset in the config file if provided in the command line
-    datasets[0]["catalog"] = get_arg(args, "catalog", datasets[0]["catalog"])
-    datasets[0]["model"] = get_arg(args, "model", datasets[0]["model"])
-    datasets[0]["exp"] = get_arg(args, "exp", datasets[0]["exp"])
-    datasets[0]["source"] = get_arg(args, "source", datasets[0]["source"])
+    datasets[0]['catalog'] = get_arg(args, 'catalog', datasets[0]['catalog'])
+    datasets[0]['model'] = get_arg(args, 'model', datasets[0]['model'])
+    datasets[0]['exp'] = get_arg(args, 'exp', datasets[0]['exp'])
+    datasets[0]['source'] = get_arg(args, 'source', datasets[0]['source'])
 
-    config["output"]["outputdir"] = get_arg(args, "outputdir", config["output"]["outputdir"])
+    config['output']['outputdir'] = get_arg(args, 'outputdir', config['output']['outputdir'])
 
     logger.debug("Analyzing models:")
-    for model in config["datasets"]:
+    for model in config['datasets']:
         logger.debug(f"  - {model['catalog']} {model['model']} {model['exp']} {model['source']}")
 
-    if "references" in config:
+    if 'references' in config:
         logger.debug("Using reference data:")
-        for ref in config["references"]:
+        for ref in config['references']:
             logger.debug(f"  - {ref['catalog']} {ref['model']} {ref['exp']} {ref['source']}")
 
     return config
