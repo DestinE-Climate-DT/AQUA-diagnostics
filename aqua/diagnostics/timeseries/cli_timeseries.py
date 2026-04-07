@@ -83,12 +83,10 @@ if __name__ == '__main__':
                             ts_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.reference_args(reference)
+                                reference_args = cli.reference_args(reference, params=var_config)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
-                                    'std_startdate': var_config.get('std_startdate'),
-                                    'std_enddate': var_config.get('std_enddate')
                                 })
                                 cli.logger.info(f"Reference args: {reference_args}")
                                 ts_ref[i] = Timeseries(**init_args, **reference_args)
@@ -156,12 +154,10 @@ if __name__ == '__main__':
                             ts_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.reference_args(reference)
+                                reference_args = cli.reference_args(reference, params=var_config)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
-                                    'std_startdate': var_config.get('std_startdate'),
-                                    'std_enddate': var_config.get('std_enddate')
                                 })
                                 ts_ref[i] = Timeseries(**init_args, **reference_args)
                                 ts_ref[i].run(**run_args, std=True, create_catalog_entry=False,
@@ -234,12 +230,10 @@ if __name__ == '__main__':
                             sc_ref = [None] * len(cli.config_dict['references'])
                             for i, reference in enumerate(cli.config_dict['references']):
                                 cli.logger.info(f'Running reference: {reference}, variable: {var}')
-                                reference_args = cli.reference_args(reference)
+                                reference_args = cli.reference_args(reference, params=var_config)
                                 reference_args.update({
                                     'startdate': startdate,
                                     'enddate': enddate,
-                                    'std_startdate': var_config.get('std_startdate'),
-                                    'std_enddate': var_config.get('std_enddate')
                                 })
                                 sc_ref[i] = SeasonalCycles(**init_args, **reference_args)
                                 sc_ref[i].run(**run_args, std=True, create_catalog_entry=False,
