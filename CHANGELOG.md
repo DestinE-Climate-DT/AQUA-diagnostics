@@ -19,6 +19,7 @@ Main changes:
 
 Complete list:
 - Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #202, #198)
+- TitleBuilder: add wrapping of long titles (#199)
 - Temporarily exclude MJO test (#201)
 - Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
