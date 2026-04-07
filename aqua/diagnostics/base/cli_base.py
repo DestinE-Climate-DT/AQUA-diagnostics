@@ -144,29 +144,53 @@ class DiagnosticCLI:
         self.dpi = output_config.get('dpi', 300)
         self.create_catalog_entry = output_config.get('create_catalog_entry', False)
 
-    def dataset_args(self, dataset):
+    def dataset_args(self, dataset, params=None):
         """
         Helper to extract dataset arguments for diagnostics.
+
+        Args:
+            dataset (dict): Dataset configuration block from the YAML.
+            params (dict, optional): Diagnostic params block (e.g. ``var_config``)
+                from which ``std_startdate``/``std_enddate`` are extracted when present.
+
+        Returns:
+            dict: kwargs ready to be passed to a Diagnostic subclass constructor.
         """
 
-        return {'catalog': dataset['catalog'], 'model': dataset['model'],
+        args = {'catalog': dataset['catalog'], 'model': dataset['model'],
                 'exp': dataset['exp'], 'source': dataset['source'],
                 'regrid': dataset.get('regrid') or self.regrid,
                 'startdate': dataset.get('startdate') or self.startdate,
                 'enddate': dataset.get('enddate') or self.enddate}
+        if params is not None:
+            args['std_startdate'] = params.get('std_startdate')
+            args['std_enddate'] = params.get('std_enddate')
+        return args
 
-    def reference_args(self, reference):
+    def reference_args(self, reference, params=None):
         """
         Helper to extract reference dataset arguments for diagnostics.
         Only difference from dataset_args is that regrid, startdate, enddate
         are not overridden by CLI options.
+
+        Args:
+            reference (dict): Reference dataset configuration block from the YAML.
+            params (dict, optional): Diagnostic params block (e.g. ``var_config``)
+                from which ``std_startdate``/``std_enddate`` are extracted when present.
+
+        Returns:
+            dict: kwargs ready to be passed to a Diagnostic subclass constructor.
         """
 
-        return {'catalog': reference['catalog'], 'model': reference['model'],
+        args = {'catalog': reference['catalog'], 'model': reference['model'],
                 'exp': reference['exp'], 'source': reference['source'],
                 'regrid': reference.get('regrid'),
                 'startdate': reference.get('startdate'),
                 'enddate': reference.get('enddate')}
+        if params is not None:
+            args['std_startdate'] = params.get('std_startdate')
+            args['std_enddate'] = params.get('std_enddate')
+        return args
 
     def open_dask_cluster(self):
         """
