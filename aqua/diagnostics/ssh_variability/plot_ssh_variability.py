@@ -534,6 +534,7 @@ class ssh_variability_plot(PlotBaseMixin):
         """
         self.logger.info(f"Selecting the sub-region plots: {region_name}.")
         # Apply masking if necessary
+        # TODO: Test the ICON part
         if "ICON" in model and mask_northern_boundary and northern_boundary_latitude:
             data = data.where(data.lat < northern_boundary_latitude)
         if "ICON" in model and mask_southern_boundary and southern_boundary_latitude:
