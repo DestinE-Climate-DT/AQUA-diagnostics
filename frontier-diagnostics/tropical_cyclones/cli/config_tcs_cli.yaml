@@ -8,7 +8,7 @@ dataset:
 # folders for regridded data, temprorary and stored high res data
 # scratch path: "/scratch/project_465000454/pghinassi/tc_test/Figures/"
 # work path: "/pfs/lustrep3/projappl/project_465000454/pghinassi/tc_analysis"
-paths: 
+paths:
   tmpdir: "/pfs/lustrep3/projappl/project_465000454/pghinassi/tc_analysis/tmpdir"
   fulldir: "/pfs/lustrep3/projappl/project_465000454/pghinassi/tc_analysis/fulldir"
   plotdir: "/scratch/project_465000454/pghinassi/tc_test/Figures/"
@@ -22,11 +22,11 @@ grids:
   lowgrid: 'r100'
   highgrid: 'r010'
 
-# variables to stored 
+# variables to stored
 varlist: ['msl', '10u', '10v', 'tprate']
 
 # temporal definition (date format: YYYYMMDD)
-time: 
+time:
   startdate: '20200103'
   enddate: '20260101'
   frequency: '6h'

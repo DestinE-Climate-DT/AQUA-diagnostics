@@ -86,7 +86,7 @@ diagnostics:
       volume: 'sithick'
       fraction: 'siconc'       # for 2D bias
       thickness: 'sithick'     # for 2D bias
-  
+
     # ====  Update Datasets and reference entries  ====
     references:
     # -- OSI-SAF for "extent" in NH --
@@ -94,17 +94,17 @@ diagnostics:
       # might be useful to add a key that allow to use a certain dataset only for a specific method
       use_for_method: "extent"
       varname: "siconc"
-  
+
     # -- OSI-SAF for "extent" in SH --
     - <<: *ref_osi_sh
       use_for_method: "extent"
       varname: "siconc"
-  
+
     # -- PSC for "volume" in NH --
     - <<: *ref_psc_nh
       use_for_method: "volume"
       varname: "sithick"
-  
+
     # -- PSC for "volume" in SH --
     - <<: *ref_psc_sh
       use_for_method: "volume"
@@ -125,31 +125,31 @@ diagnostics:
       volume: 'sithick'
       fraction: 'siconc'       # for 2D bias
       thickness: 'sithick'     # for 2D bias
-  
+
     # ====  Update Datasets and reference entries  ====
     references:
     # -- OSI-SAF for "extent" in NH --
     - <<: *ref_osi_nh
-      # might be useful to add a key that allow to use a 
+      # might be useful to add a key that allow to use a
       # certain dataset only for a specific method
       use_for_method: "extent"
       varname: "siconc"
-      
+
     # -- OSI-SAF for "extent" in SH --
     - <<: *ref_osi_sh
       use_for_method: "extent"
       varname: "siconc"
-  
+
     # -- PSC for "volume" in NH --
     - <<: *ref_psc_nh
       use_for_method: "volume"
       varname: "sithick"
-  
+
     # -- PSC for "volume" in SH --
     - <<: *ref_psc_sh
       use_for_method: "volume"
       varname: "sithick"
-  
+
   # =======  Config for 2d bias maps =======
   # =========================================
   # These are options that specify how the data is plotted
@@ -180,7 +180,7 @@ diagnostics:
       volume: 'sithick'
       fraction: 'siconc'       # for 2D bias
       thickness: 'sithick'     # for 2D bias
-  
+
     # ====  Update Datasets and reference entries  ====
     references:
     # -- OSI-SAF for fraction in NH --
@@ -188,17 +188,17 @@ diagnostics:
       # key that allow to use a certain dataset only for a specific method
       use_for_method: "fraction"
       varname: "siconc"
-  
+
     # -- OSI-SAF for fraction in SH --
     - <<: *ref_osi_sh
       use_for_method: "fraction"
       varname: "siconc"
-  
+
     # -- PSC for thickness in NH --
     - <<: *ref_psc_nh
       use_for_method: "thickness"
       varname: "sithick"
-  
+
     # -- PSC for thickness in SH --
     - <<: *ref_psc_sh
       use_for_method: "thickness"

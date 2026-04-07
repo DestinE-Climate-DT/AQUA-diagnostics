@@ -3,14 +3,11 @@ Module to plot multiple Hovmoller data.
 This function is custom for the Ocean Drift diagnostics in AQUA.
 """
 import matplotlib.pyplot as plt
-import numpy as np
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from aqua.core.graphics import plot_hovmoller
-from aqua.core.graphics import ConfigStyle
+from aqua.core.graphics import ConfigStyle, plot_hovmoller
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label, evaluate_colorbar_limits, plot_box
 
 
 def plot_multi_hovmoller(
@@ -59,7 +56,7 @@ def plot_multi_hovmoller(
         return_fig (bool): Whether to return the figure object. Default is True.
         loglevel (str): Logging level. Default is "WARNING".
         **kwargs: Additional keyword arguments to be passed to the plotting function.
-    
+
     Returns:
         plt.Figure: The matplotlib figure object containing the hovmoller plots.
     """
@@ -110,7 +107,7 @@ def plot_multi_hovmoller(
             # Create colorbar axis next to plot
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.15)
-            cbar = fig.colorbar(mappable, cax=cax, orientation="vertical")
+            cbar = fig.colorbar(mappable, cax=cax, orientation="vertical") # noqa: F841
 
             # if cbar_label and j < len(cbar_label):
             #     cbar.set_label(cbar_label[j])

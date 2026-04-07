@@ -1,9 +1,13 @@
-import xarray as xr
-from aqua.core.graphics import plot_seasonalcycle
-from aqua.core.util import to_list, get_realizations
-from .base import PlotBaseMixin
 from typing import Union
+
+import xarray as xr
+
+from aqua.core.graphics import plot_seasonalcycle
+from aqua.core.util import get_realizations, to_list
 from aqua.diagnostics.base import SAVE_FORMAT
+
+from .base import PlotBaseMixin
+
 
 class PlotSeasonalCycles(PlotBaseMixin):
     def __init__(self, diagnostic_name: str = 'seasonalcycles',

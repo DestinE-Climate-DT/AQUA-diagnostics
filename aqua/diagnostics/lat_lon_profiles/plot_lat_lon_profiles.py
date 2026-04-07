@@ -1,11 +1,12 @@
+from typing import Union
+
 import matplotlib.pyplot as plt
 
-from aqua.core.graphics import plot_seasonal_lat_lon_profiles
+from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list, DEFAULT_REALIZATION
-from aqua.core.graphics import plot_lat_lon_profiles
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
-from typing import Union
+from aqua.core.util import DEFAULT_REALIZATION, to_list
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+
 
 class PlotLatLonProfiles():
     """
@@ -33,7 +34,7 @@ class PlotLatLonProfiles():
             ref_std_data: Reference standard deviation data
             diagnostic_name (str): Name of the diagnostic. Default is 'lat_lon_profiles'.
             loglevel (str): Logging level. Default is 'WARNING'.
-            
+
         Note:
             data_type determines how 'data' is interpreted:
             - 'longterm': data should be list of DataArrays for single plot
@@ -65,16 +66,16 @@ class PlotLatLonProfiles():
         # Use self.models and self.exps to create labels
         data_labels = []
         num_labels = max(len(self.models), len(self.exps), 1)
-        
+
         for i in range(num_labels):
             if i < len(self.models) and i < len(self.exps):
                 data_labels.append(f'{self.models[i]} {self.exps[i]}')
             else:
                 data_labels.append(f'Dataset {i+1}')
-        
+
         self.logger.debug('Data labels: %s', data_labels)
         return data_labels
-    
+
     def set_ref_label(self):
         """
         Set the reference label for the plot.
@@ -84,22 +85,22 @@ class PlotLatLonProfiles():
             ref_label (str): Reference label for the plot.
         """
         ref_label = None
-        
+
         if self.ref_data is not None:
             # Handle seasonal (list) vs longterm (single DataArray)
             if self.data_type == 'seasonal' and isinstance(self.ref_data, list):
                 ref_item = self.ref_data[0] if self.ref_data else None
             else:
-                ref_item = self.ref_data 
-            
+                ref_item = self.ref_data
+
             if ref_item is not None and hasattr(ref_item, 'AQUA_model'):
                 model = ref_item.attrs.get('AQUA_model', 'Unknown')
                 exp = ref_item.attrs.get('AQUA_exp', 'Unknown')
                 ref_label = f'{model} {exp}'
-        
+
         self.logger.debug('Reference label: %s', ref_label)
         return ref_label
-    
+
     def get_data_info(self):
         """Extract metadata from data arrays based on data_type."""
         self.catalogs, self.models, self.exps = [], [], []
@@ -110,7 +111,7 @@ class PlotLatLonProfiles():
         self.long_name = None
         self.units = None
         self.mean_type = None
-        
+
         # Get all data items to extract metadata from
         data_items = []
         if self.data_type == 'longterm':
@@ -119,14 +120,14 @@ class PlotLatLonProfiles():
             # For seasonal, use first season's data
             first_season = self.data[0] if self.data else []
             data_items = first_season if isinstance(first_season, list) else [first_season]
-        
+
         # Extract metadata from all data items
         for data_item in data_items:
             if data_item is not None and hasattr(data_item, 'AQUA_catalog'):
                 self.catalogs.append(data_item.AQUA_catalog)
                 self.models.append(data_item.AQUA_model)
                 self.exps.append(data_item.AQUA_exp)
-                
+
                 # Extract realization if available
                 if hasattr(data_item, 'AQUA_realization'):
                     self.realizations.append(data_item.AQUA_realization)
@@ -153,11 +154,11 @@ class PlotLatLonProfiles():
         first_data = data_items[0] if data_items else None
         if first_data is not None and hasattr(first_data, 'AQUA_mean_type'):
             self.mean_type = first_data.AQUA_mean_type
-        
+
         self.logger.debug(f'Extracted metadata for {len(self.models)} datasets: {list(zip(self.models, self.exps))}')
         self.logger.debug(f'Extracted realizations: {self.realizations}')
         self.logger.debug(f'Extracted region: {self.region}')
-        
+
         # Handle std dates
         if self.ref_std_data is not None:
             self.std_startdate = getattr(self.ref_std_data, 'std_startdate', None)
@@ -169,10 +170,10 @@ class PlotLatLonProfiles():
     def plot(self, data_labels=None, ref_label=None, title=None, style=None):
         """
         Unified plotting method that handles all plotting scenarios based on data_type.
-        
+
         Args:
             data_labels (list, optional): Labels for the data.
-            ref_label (str, optional): Label for the reference data.  
+            ref_label (str, optional): Label for the reference data.
             title (str, optional): Title for the plot.
             style (str, optional): Plotting style. Default is the AQUA style.
 
@@ -182,10 +183,10 @@ class PlotLatLonProfiles():
         if self.data_type == 'seasonal':
             # For seasonal plots, delegate to the specialized seasonal method
             return self.plot_seasonal_lines(data_labels=data_labels, title=title)
-        
+
         data_to_plot = self.data
         ref_to_plot = self.ref_data
-        
+
         # Call the graphics function
         return plot_lat_lon_profiles(
             data=data_to_plot,
@@ -197,12 +198,12 @@ class PlotLatLonProfiles():
             style=style,
             loglevel=self.loglevel
         )
-    
-    def save_plot(self, fig, 
-                  description: str = None, 
+
+    def save_plot(self, fig,
+                  description: str = None,
                   rebuild: bool = True,
-                  outputdir: str = './', 
-                  dpi: int = 300, 
+                  outputdir: str = './',
+                  dpi: int = 300,
                   format: Union[str, list] = SAVE_FORMAT,
                   diagnostic: str = None):
         """
@@ -219,35 +220,37 @@ class PlotLatLonProfiles():
         """
         metadata = {
             'catalog': getattr(self, 'catalogs', ['unknown_catalog'])[0],
-            'model': getattr(self, 'models', ['unknown_model'])[0], 
+            'model': getattr(self, 'models', ['unknown_model'])[0],
             'exp': getattr(self, 'exps', ['unknown_exp'])[0]
         }
-        
+
         # Add realization
         if self.realizations:
             metadata['realization'] = self.realizations[0]
             self.logger.debug(f'Using realization for plot filename: {self.realizations[0]}')
-                
+
         # Use class attributes
         var = getattr(self, 'short_name', None) or getattr(self, 'standard_name', None)
         region = self.region
 
         # Build extra_keys
         extra_keys = {}
-        if var: extra_keys['var'] = var
-        if region: extra_keys['region'] = region
-        
+        if var:
+            extra_keys['var'] = var
+        if region:
+            extra_keys['region'] = region
+
         # diagnostic_product must match the one used in OutputSaver
         base_diagnostic = diagnostic if diagnostic else self.diagnostic_name
         outputsaver = OutputSaver(diagnostic=base_diagnostic, outputdir=outputdir,
                                   loglevel=self.loglevel, **metadata)
-        
+
         # Build diagnostic_product with data_type info
         if self.data_type == 'seasonal':
             diagnostic_product = f"seasonal_{self.mean_type}_profile"
         else:  # longterm
             diagnostic_product = f"{self.mean_type}_profile"
-        
+
         # Save based on format
         outputsaver.save_figure(fig, diagnostic_product, extra_keys=extra_keys,
                                 metadata={'description': description, 'dpi': dpi},
@@ -259,14 +262,14 @@ class PlotLatLonProfiles():
             tuple: (length of data arrays, length of reference data)
         """
         len_data = len(self.data) if self.data else 0
-        
+
         if self.data_type == 'longterm':
             len_ref = 1 if self.ref_data is not None else 0
         elif self.data_type == 'seasonal':
             len_ref = len(self.ref_data) if self.ref_data else 0
         else:
             len_ref = 0
-        
+
         self.logger.debug(f'Data type: {self.data_type}, Data length: {len_data}, Reference length: {len_ref}')
         return len_data, len_ref
 
@@ -282,7 +285,7 @@ class PlotLatLonProfiles():
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
                 variable = name
-                break        
+                break
 
         title = TitleBuilder(
             diagnostic=f"{self.mean_type.capitalize()} profile" if self.mean_type else "Profile",
@@ -304,10 +307,10 @@ class PlotLatLonProfiles():
             description = "Seasonal "
         else:
             description = ""
-        
+
         # Mean type (zonal/meridional) and variable name
         description += f"{self.mean_type} profile of "
-        
+
         # Variable name
         for name in [self.long_name, self.standard_name, self.short_name]:
             if name is not None:
@@ -317,7 +320,7 @@ class PlotLatLonProfiles():
         # Units
         if self.units is not None:
             description += f"[{self.units}]"
-        
+
         # Short name in parentheses (if different from what was already used)
         if self.short_name is not None and self.long_name is not None:
             description += f"({self.short_name}) "
@@ -342,14 +345,14 @@ class PlotLatLonProfiles():
             ref_item = None
 
         # Smart date display: show dates only once if they are the same
-        data_pair = (getattr(data_item, 'AQUA_startdate', None), 
+        data_pair = (getattr(data_item, 'AQUA_startdate', None),
                      getattr(data_item, 'AQUA_enddate', None))
         ref_pair = (getattr(ref_item, 'AQUA_startdate', None),
                     getattr(ref_item, 'AQUA_enddate', None))
         std_pair = (self.std_startdate, self.std_enddate) if self.ref_std_data is not None else (None, None)
 
         if data_pair == ref_pair == std_pair and data_pair != (None, None):
-            description += f"for {self.models[0]}/{self.exps[0]} from {data_pair[0]} to {data_pair[1]} with ±2σ uncertainty bands"        
+            description += f"for {self.models[0]}/{self.exps[0]} from {data_pair[0]} to {data_pair[1]} with ±2σ uncertainty bands"
         else:
             # Standard case: list all date ranges
             if data_pair != (None, None):
@@ -358,7 +361,7 @@ class PlotLatLonProfiles():
                 description += f", reference from {ref_pair[0]} to {ref_pair[1]}"
             if std_pair != (None, None):
                 description += f" with ±2σ uncertainty bands computed over {std_pair[0]} to {std_pair[1]}"
-        
+
         description += '.'
 
         self.logger.debug('Description: %s', description)
@@ -366,14 +369,14 @@ class PlotLatLonProfiles():
 
     def run(self,
             outputdir='./',
-            rebuild=True, 
+            rebuild=True,
             dpi=300,
             style=None,
             format=SAVE_FORMAT,
             show=False):
         """
         Unified run method that handles all plotting scenarios.
-        
+
         Args:
             outputdir (str): Output directory to save the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
@@ -403,10 +406,10 @@ class PlotLatLonProfiles():
 
         self.save_plot(fig, description=description, rebuild=rebuild,
                        outputdir=outputdir, dpi=dpi, format=format, diagnostic=self.diagnostic_name)
-        
+
         if show:
             plt.show()
-            
+
         plt.close(fig)
 
         self.logger.info('PlotLatLonProfiles completed successfully')
@@ -417,23 +420,23 @@ class PlotLatLonProfiles():
         description = self.set_description()
         title = self.set_title()
 
-        fig, _ = self.plot_seasonal_lines(data_labels=data_labels, 
+        fig, _ = self.plot_seasonal_lines(data_labels=data_labels,
                                           title=title, style=style)
 
-        self.save_plot(fig, description=description, 
-                       rebuild=rebuild, outputdir=outputdir, dpi=dpi, format=format, 
+        self.save_plot(fig, description=description,
+                       rebuild=rebuild, outputdir=outputdir, dpi=dpi, format=format,
                        diagnostic=self.diagnostic_name)
-        
+
         if show:
             plt.show()
 
         plt.close(fig)
-        
+
         self.logger.info('PlotLatLonProfiles completed successfully')
 
-    def plot_seasonal_lines(self, 
-                            data_labels=None, 
-                            title=None, 
+    def plot_seasonal_lines(self,
+                            data_labels=None,
+                            title=None,
                             style=None):
         """
         Plot seasonal means using plot_seasonal_lat_lon_profiles.
@@ -450,13 +453,13 @@ class PlotLatLonProfiles():
         """
         if not self.data or len(self.data) < 4:
             raise ValueError("Seasonal data must contain at least 4 elements: [DJF, MAM, JJA, SON]")
-        
+
         # Use first 4 seasons only (DJF, MAM, JJA, SON)
         seasonal_data_only = self.data[:4]
         seasonal_ref_only = self.ref_data[:4] if self.ref_data and len(self.ref_data) >= 4 else None
 
         self.logger.debug(f'Plotting {len(seasonal_data_only)} seasons')
-        
+
         return plot_seasonal_lat_lon_profiles(
             seasonal_data=seasonal_data_only,
             ref_data=seasonal_ref_only,

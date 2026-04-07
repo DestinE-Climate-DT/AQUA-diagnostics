@@ -1,6 +1,7 @@
 import pytest
-from aqua.diagnostics.ocean_stratification.stratification import Stratification
 from conftest import APPROX_REL, LOGLEVEL
+
+from aqua.diagnostics.ocean_stratification.stratification import Stratification
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL*10

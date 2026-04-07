@@ -29,7 +29,7 @@ There is one class for the analysis and one for the plotting:
 
 .. note::
 
-    The diagnostic computes histograms over the **entire temporal period** specified 
+    The diagnostic computes histograms over the **entire temporal period** specified
     (no seasonal decomposition).
 
 File structure
@@ -55,7 +55,7 @@ It also supports derived variables using ``EvaluateFormula`` syntax (e.g., ``2t 
 Basic usage
 -----------
 
-The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic usage of this diagnostic is explained with a working example in the notebook.
 The basic structure of the analysis is the following:
 
 .. code-block:: python
@@ -195,7 +195,7 @@ Example Plots
    :align: center
    :width: 100%
 
-   Probability density function (PDF) of precipitation rate (mm/day) for the global region, 
+   Probability density function (PDF) of precipitation rate (mm/day) for the global region,
    showing ICON model output compared to ERA5 reference data.
 
 
@@ -209,14 +209,14 @@ Notebooks are stored in ``notebooks/diagnostics/histogram``:
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Marco Cadau (`@mcadau <https://github.com/mcadau>`_, `marco.cadau@polito.it <mailto:marco.cadau@polito.it>`_).  
+This diagnostic is maintained by Marco Cadau (`@mcadau <https://github.com/mcadau>`_, `marco.cadau@polito.it <mailto:marco.cadau@polito.it>`_).
 Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
 
 Detailed API
 ------------
 
-This section provides a detailed reference for the Application Programming Interface (API) of the ``histogram`` diagnostic,  
+This section provides a detailed reference for the Application Programming Interface (API) of the ``histogram`` diagnostic,
 generated from the function docstrings.
 
 .. automodule:: aqua.diagnostics.histogram
