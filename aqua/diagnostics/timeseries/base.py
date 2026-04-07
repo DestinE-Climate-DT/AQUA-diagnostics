@@ -7,7 +7,7 @@ import xarray as xr
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, strlist_to_phrase, time_to_string
-from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, start_end_dates
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
 
@@ -45,21 +45,14 @@ class BaseMixin(Diagnostic):
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
         super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
+                         startdate=startdate, enddate=enddate,
+                         std_startdate=std_startdate, std_enddate=std_enddate,
                          loglevel=loglevel)
 
         # Log name is the diagnostic name with the first letter capitalized
         self.logger = log_configure(log_level=loglevel, log_name=diagnostic_name.capitalize())
         self.diagnostic_name = diagnostic_name
 
-        # We want to make sure we retrieve the required amount of data with a single Reader instance
-        self.startdate, self.enddate = start_end_dates(startdate=startdate, enddate=enddate,
-                                                       start_std=std_startdate, end_std=std_enddate)
-        # They need to be stored to evaluate the std on the correct period
-        self.std_startdate = self.startdate if std_startdate is None else std_startdate
-        self.std_enddate = self.enddate if std_enddate is None else std_enddate
-        # Finally we need to set the start and end dates of the data
-        self.plt_startdate = startdate
-        self.plt_enddate = enddate
         self.logger.debug(f"Retrieve start date: {self.startdate}, End date: {self.enddate}")
         self.logger.debug(f"Plot start date: {self.plt_startdate}, End date: {self.plt_enddate}")
         self.logger.debug(f"Std start date: {self.std_startdate}, Std end date: {self.std_enddate}")
@@ -111,12 +104,8 @@ class BaseMixin(Diagnostic):
             # Get the xr.DataArray to be aligned with the formula code
             self.data = self.data[var]
 
-        if self.plt_startdate is None:
-            self.plt_startdate = self.data.time.min().values
-            self.logger.debug('Plot start date set to %s', self.plt_startdate)
-        if self.plt_enddate is None:
-            self.plt_enddate = self.data.time.max().values
-            self.logger.debug('Plot end date set to %s', self.plt_enddate)
+        # Re-attach date attrs now that self.data is a DataArray (Dataset-level attrs are not inherited)
+        self._set_date_attrs(self.data)
 
         # Customization of the data, expecially needed for formula
         if units is not None:
