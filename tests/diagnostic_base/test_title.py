@@ -5,6 +5,7 @@ from aqua.diagnostics.base import TitleBuilder
 
 pytestmark = pytest.mark.aqua
 
+
 @pytest.mark.parametrize("kwargs,expected", [
     ({"title": "Custom Title"}, "Custom Title"),
     ({"diagnostic": "MLD", "regions": "global", "catalog": "ci", "model": "ERA5",
@@ -14,16 +15,20 @@ pytestmark = pytest.mark.aqua
     ({"variable": "Temperature"}, "Temperature"),
     ({"diagnostic": "Test", "startyear": 2020}, "Test 2020"),
     ({"diagnostic": "Test", "endyear": 2021}, "Test 2021"),
+    ({"diagnostic": "Bias", "realizations": ["r1", "r2"]}, "Bias Multi-realization"),
+    ({"model": "IFS"}, "IFS"),
+    ({"ref_model": "ERA5"}, "ERA5"),
+    ({"ref_catalog": "ci"}, "ci"),
 ])
 def test_title_basic(kwargs, expected):
-    """Test basic title generation and spacing fix."""
+    """Test basic title generation."""
     result = TitleBuilder(**kwargs).generate()
     assert result == expected
     assert "  " not in result
 
 
 def test_title_references():
-    """Test reference data handling."""
+    """Test reference components with custom comparison and conjunction."""
     result = TitleBuilder(
         diagnostic="Bias",
         variable="Temperature",
@@ -44,7 +49,7 @@ def test_title_references():
 
 
 def test_title_complex():
-    """Test complex title with multiple components."""
+    """Test full title assembly with every component."""
     result = TitleBuilder(
         diagnostic="Stratification",
         regions="global",
@@ -67,74 +72,58 @@ def test_title_complex():
     assert "  " not in result
 
 
-def test_title_realizations():
-    """Test realizations handling."""
-    result = TitleBuilder(diagnostic="Bias", realizations=["r1", "r2"]).generate()
-    assert "Bias Multi-realization" == result
-
-
 def test_title_models_edge_cases():
-    """Test edge cases for model and extra_info."""
-    result1 = TitleBuilder(diagnostic="Bias", catalog=["ci", "ci"], model=["IFS", "FESOM"], exp=["exp1", "exp2"]).generate()
-    assert "Bias for Multi-model" == result1
+    """Test multi-model, extra_info list, and empty region."""
+    result1 = TitleBuilder(
+        diagnostic="Bias", catalog=["ci", "ci"], model=["IFS", "FESOM"], exp=["exp1", "exp2"]
+    ).generate()
+    assert result1 == "Bias for Multi-model"
+
     result2 = TitleBuilder(diagnostic="Bias", extra_info=["info1", "info2"]).generate()
     assert "info1 info2" in result2
+
     assert TitleBuilder(diagnostic="Bias", regions=[""]).generate() == "Bias"
 
 
 def test_title_wrap_not_triggered():
-    """Wrapping is not triggered when title is short or no marker matches."""
+    """Wrapping is skipped when title fits, no marker matches, or marker is not surrounded by spaces."""
     assert "\n" not in TitleBuilder(diagnostic="Bias", model="IFS").generate(max_chars=100)
-    assert "\n" not in TitleBuilder(title="Supercalifragilisticexpialidocious").generate(max_chars=10, split_on=["for"])
+    # No matching marker in split_on
+    assert "\n" not in TitleBuilder(
+        title="Supercalifragilisticexpialidocious"
+    ).generate(max_chars=10, split_on=["for"])
+    # Marker present but only at the very start (no leading space → separator not found)
+    assert "\n" not in TitleBuilder(
+        title="for very long tail"
+    ).generate(max_chars=8, split_on=["for"])
 
 
-def test_title_wrap_triggered():
-    """Wrapping produces multiple lines all within max_chars."""
-    for result, limit in [
-        (TitleBuilder(diagnostic="Bias", variable="Temperature",
-                      model="IFS", exp="historical",
-                      ref_model="ERA5", ref_exp="era5",
-                      comparison="vs", conjunction="in"
-                      ).generate(max_chars=30, split_on=["vs", "in"]), 30),
-        (TitleBuilder(title="Bias in IFS historical vs ERA5 era5").generate(max_chars=20, split_on=["vs", "in"]), 20),
-    ]:
-        lines = result.split("\n")
-        assert len(lines) > 1
-        assert all(len(line) <= limit for line in lines)
-
-
-def test_title_marker_multi_times():
-    """Same marker repeated: keep splitting until each segment fits ``max_chars``.
-
-    One ``partition`` per input line would leave a tail such as ``for BBB for CCC``
-    that can still exceed ``max_chars``; wrapping must apply the same marker again
-    to that remainder in the same marker pass.
-    """
-    result = TitleBuilder(title="AAA for BBB for CCC").generate(max_chars=10, split_on=["for"])
-    assert result == "AAA\nfor BBB\nfor CCC"
+@pytest.mark.parametrize("title,max_chars,split_on,expected", [
+    # Two different markers used in sequence
+    ("Bias in IFS historical vs ERA5 era5", 20, ["vs", "in"], None),
+    # Tail short enough after a single split – loop must stop
+    ("AAAA for BBB", 9, ["for"], "AAAA\nfor BBB"),
+    # Later marker handles what the earlier marker could not
+    ("LongAlpha in Beta", 10, ["for", "in"], "LongAlpha\nin Beta"),
+])
+def test_title_wrap_triggered(title, max_chars, split_on, expected):
+    """Wrapping produces lines all within max_chars; exact output checked when expected is given."""
+    result = TitleBuilder(title=title).generate(max_chars=max_chars, split_on=split_on)
     lines = result.split("\n")
-    assert len(lines) == 3
-    assert all(len(line) <= 10 for line in lines)
+    assert len(lines) > 1
+    assert all(len(line) <= max_chars for line in lines)
+    if expected is not None:
+        assert result == expected
 
 
-def test_title_marker_multi_segments():
-    """Several occurrences of one marker on a single long line all get split."""
-    result = TitleBuilder(title="A for B for C for D").generate(max_chars=8, split_on=["for"])
-    assert result == "A\nfor B\nfor C\nfor D"
-    assert all(len(line) <= 8 for line in result.split("\n"))
-
-
-def test_title_wrap_empty_title():
-    """_wrap_title early-return on empty title."""
-    assert TitleBuilder().generate(max_chars=50) == ""
-
-
-def test_title_model_only():
-    """models_part added without a 'for' prefix when title is empty."""
-    assert TitleBuilder(model="IFS").generate() == "IFS"
-
-
-def test_title_ref_only():
-    """refs_part added without 'relative to' prefix when title is empty."""
-    assert TitleBuilder(ref_model="ERA5").generate() == "ERA5"
-    assert TitleBuilder(ref_catalog="ci").generate() == "ci"
+@pytest.mark.parametrize("title,max_chars,expected", [
+    # Two occurrences → three lines
+    ("AAA for BBB for CCC", 10, "AAA\nfor BBB\nfor CCC"),
+    # Three occurrences → four lines
+    ("A for B for C for D", 8, "A\nfor B\nfor C\nfor D"),
+])
+def test_title_wrap_repeated_marker(title, max_chars, expected):
+    """Same marker repeated: the while-loop keeps splitting until every segment fits."""
+    result = TitleBuilder(title=title).generate(max_chars=max_chars, split_on=["for"])
+    assert result == expected
+    assert all(len(line) <= max_chars for line in result.split("\n"))
