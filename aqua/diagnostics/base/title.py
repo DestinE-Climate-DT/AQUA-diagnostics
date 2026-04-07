@@ -34,6 +34,7 @@ class TitleBuilder:
     Returns:
         str: The generated title.
     """
+    DEFAULT_SPLIT_MARKERS = ["relative to", "for", "in"]
 
     def __init__(self,
                  title: Optional[str] = None,
@@ -124,15 +125,62 @@ class TitleBuilder:
             return endyear
         return None
 
-    def generate(self) -> str:
+    def _wrap_title(self, title: str, max_chars: int, split_on: list[str]) -> str:
+        """Wrap a (long) title by iteratively splitting on markers.
+        Splits the title into multiple lines for each marker,
+        only if the line is longer than ``max_chars``.
+
+        Args:
+            title (str): Input title to wrap.
+            max_chars (int): Maximum line length for each line.
+            split_on (list[str]): Markers used to split the title into multiple lines.
+
+        Returns:
+            str: Wrapped title with newline separators.
+        """
+        if not title or len(title) <= max_chars:
+            return title
+
+        lines = [title]
+        for marker in split_on:
+            new_lines = []
+            separator = f" {marker} "
+
+            for line in lines:
+                if len(line) > max_chars and separator in line:
+                    remaining = line
+                    while len(remaining) > max_chars and separator in remaining:
+                        left, _, right = remaining.partition(separator)
+                        new_lines.append(left.strip())
+                        remaining = f"{marker} {right.strip()}"
+                    new_lines.append(remaining)
+                else:
+                    new_lines.append(line)
+
+            lines = new_lines
+            if all(len(line) <= max_chars for line in lines):
+                break
+
+        return "\n".join(lines)
+
+    def generate(self, max_chars: Optional[int] = None, split_on: Optional[list[str]] = None) -> str:
         """Build the full title from configured components.
+
+        Args:
+            max_chars (int, optional): Maximum line length. If set and the
+                generated title exceeds this length, a newline-based wrapping
+                is attempted using ``split_on`` markers.
+            split_on (list[str], optional): Ordered markers used for iterative
+                line splitting when wrapping is enabled.
 
         Returns:
             str: The assembled title string (stripped).
         """
+        markers = split_on if split_on is not None else self.DEFAULT_SPLIT_MARKERS
 
         if self.title:
-            return self.title
+            title = self.title.strip()
+            return self._wrap_title(title, max_chars=max_chars, split_on=markers) if max_chars else title
 
         title = ''
         if self.diagnostic:
@@ -179,4 +227,5 @@ class TitleBuilder:
         if self.extra_info:
             title += f" {' '.join(to_list(self.extra_info))}"
 
-        return title.strip()
+        title = title.strip()
+        return self._wrap_title(title, max_chars=max_chars, split_on=markers) if max_chars else title
