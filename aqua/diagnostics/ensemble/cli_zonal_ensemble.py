@@ -5,6 +5,7 @@ Command-line interface for ensemble zonalmean diagnostic.
 This CLI allows to plot a map of aqua analysis zonalmean
 defined in a yaml configuration file for multiple models.
 """
+
 import argparse
 import sys
 
@@ -33,7 +34,6 @@ def parse_arguments(args):
 
 
 if __name__ == "__main__":
-
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
@@ -72,7 +72,6 @@ if __name__ == "__main__":
 
             for variable in config_dict["diagnostics"]["ensemble"].get("variable", None):
                 for region in config_dict["diagnostics"]["ensemble"].get("region", None):
-
                     logger.info(f"Variable under consideration: {variable}")
                     title_mean = config_dict["diagnostics"]["ensemble"]["plot_params"]["default"].get("title_mean", None)
                     title_std = config_dict["diagnostics"]["ensemble"]["plot_params"]["default"].get("title_std", None)
