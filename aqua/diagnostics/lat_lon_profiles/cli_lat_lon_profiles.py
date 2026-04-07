@@ -157,14 +157,8 @@ def process_variable(cli, var_config, regions, datasets, references,
             ref = references[0]  # Take first reference
             cli.logger.info(f"Processing reference: {ref['model']}/{ref['exp']}")
 
-            # Get base reference args
-            ref_args = cli.dataset_args(ref)
-
-            # For reference, use std dates if specified
-            if ref.get('std_startdate'):
-                ref_args['startdate'] = ref['std_startdate']
-            if ref.get('std_enddate'):
-                ref_args['enddate'] = ref['std_enddate']
+            # Get base reference args, including std dates from var_config (params.default)
+            ref_args = cli.reference_args(ref, params=var_config)
 
             profile_ref = LatLonProfiles(
                 **ref_args,
