@@ -1,6 +1,7 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util.sci_util import lon_to_360
+
 from .base import BaseMixin
 
 
@@ -20,7 +21,7 @@ class ENSO(BaseMixin):
                  loglevel: str = 'WARNING'):
         """
         Initialize the ENSO class.
-        
+
         Args:
             catalog (str): Catalog name.
             model (str): Model name.
@@ -44,7 +45,7 @@ class ENSO(BaseMixin):
 
     def retrieve(self, reader_kwargs: dict = {}) -> None:
         """Retrieve the data for the ENSO index.
-        
+
         Args:
             reader_kwargs (dict): Additional keyword arguments for the Reader.
                                   Default is an empty dictionary.
@@ -53,7 +54,7 @@ class ENSO(BaseMixin):
         super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
 
         self.data = self.reader.timmean(self.data, freq='MS')
-    
+
     def compute_index(self, months_window: int = 3, box_brd: bool = True,
                        rebuild: bool = False):
         """"
@@ -66,7 +67,7 @@ class ENSO(BaseMixin):
                                  Default is True
             rebuild (bool, opt): if True, the index is recalculated, default is False
         """
-        
+
         if self.index is not None and not rebuild:
             self.logger.info('ENSO index already calculated, skipping.')
             return
@@ -74,15 +75,15 @@ class ENSO(BaseMixin):
             raise NotEnoughDataError('Data not retrieved')
         if len(self.data[self.var].time) < 24:
             raise NotEnoughDataError('Data have less than 24 months')
-        
-        latN = self.definition.get('latN')
-        latS = self.definition.get('latS')
-        lonW = self.definition.get('lonW')
-        lonE = self.definition.get('lonE')
+
+        latN = self.definition.get('latN') # noqa: N806
+        latS = self.definition.get('latS') # noqa: N806
+        lonW = self.definition.get('lonW') # noqa: N806
+        lonE = self.definition.get('lonE') # noqa: N806
 
         if self.data[self.var].lon.min() >= 0:
-            lonW = lon_to_360(lonW)
-            lonE = lon_to_360(lonE)
+            lonW = lon_to_360(lonW) # noqa: N806
+            lonE = lon_to_360(lonE) # noqa: N806
 
         self.logger.debug(f'lonW: {lonW}, lonE: {lonE}')
         self.logger.debug(f'latN: {latN}, latS: {latS}')

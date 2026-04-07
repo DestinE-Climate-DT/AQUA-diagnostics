@@ -1,10 +1,13 @@
-import xarray as xr
-import cartopy.crs as ccrs
 from typing import Union
+
+import cartopy.crs as ccrs
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver, TitleBuilder, SAVE_FORMAT
+
 from .multiple_maps import plot_maps
 from .multivar_vertical_profiles import plot_multivars_vertical_profile
 
@@ -22,7 +25,7 @@ class PlotTrends:
         loglevel: str = "WARNING",
     ):
         """Class to plot trends from xarray Dataset.
-    
+
         Args:
             data (xr.Dataset): Input xarray Dataset containing trend data.
             diagnostic_name (str, optional): Name of the diagnostic for filenames. Defaults to "trends".
@@ -59,10 +62,10 @@ class PlotTrends:
     def plot_multilevel(self,
                         levels = None,
                         rebuild: bool = True,
-                        save_format: Union[str, list] = SAVE_FORMAT, 
+                        save_format: Union[str, list] = SAVE_FORMAT,
                         dpi: int = 300):
         """Plot multi-level maps of trends.
-        
+
         Args:
             levels (list, optional): List of depth levels to plot. Defaults to None.
             save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
@@ -91,7 +94,7 @@ class PlotTrends:
             return_fig=True,
             loglevel=self.loglevel
         )
-        
+
         self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
                         rebuild=rebuild, format=save_format, dpi=dpi, extra_keys={'region': self.region})
 
@@ -101,7 +104,7 @@ class PlotTrends:
                     save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
         """
         Plot zonal mean vertical profiles of trends.
-        
+
         Args:
             save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
             dpi (int, optional): Dots per inch for the output figure. Defaults to 300.
@@ -204,7 +207,7 @@ class PlotTrends:
                 else:
                     self.title_list.append(" ")
         self.logger.debug("Title list set to: %s", self.title_list)
-    
+
     def set_cbar_labels(self):
         """
         Set the colorbar labels for the plot.

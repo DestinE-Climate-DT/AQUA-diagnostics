@@ -1,21 +1,21 @@
 import healpy as hp
 import numpy as np
 import xarray as xr
+
 from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection, healpix_resample
-from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # import matplotlib.pyplot as plt
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
-
 from .base import PlotBaseMixin
 
 xr.set_options(keep_attrs=True)
 
 
-class sshVariabilityPlot(PlotBaseMixin):
+class SshVariabilityPlot(PlotBaseMixin):
     """
     Plot sshVariability and the difference of sshVariability
     """
@@ -126,7 +126,7 @@ class sshVariabilityPlot(PlotBaseMixin):
 
         if dataset_std is None:
             self.logger.error("Please provide the data to the plot function")
-            raise RuntimeError(f"No model data found")
+            raise RuntimeError("No model data found")
 
         if isinstance(dataset_std, xr.Dataset):
             dataset_std = dataset_std[var]
@@ -139,7 +139,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         self.logger.info(f"Plotting SSH Variability for {model} and {exp}, from {startdate} to {enddate}.")
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        
+
         title = TitleBuilder(
             diagnostic="SSH Variability",
             variable=long_name,
@@ -395,7 +395,7 @@ class sshVariabilityPlot(PlotBaseMixin):
 
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        
+
         title = TitleBuilder(
             diagnostic="The difference of the SSH Variability",
             variable=long_name,

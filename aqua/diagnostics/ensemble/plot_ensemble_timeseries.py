@@ -1,7 +1,8 @@
 import pandas as pd
 import xarray as xr
+
 from aqua.core.graphics import plot_timeseries
-from aqua.diagnostics.base import TitleBuilder, SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # from aqua.logger import log_configure
 # from aqua.exceptions import NoDataError
@@ -169,7 +170,7 @@ class PlotEnsembleTimeseries(BaseMixin):
                 startdate = pd.Timestamp(startdate).strftime("%Y-%m-%d")
             if enddate is not None:
                 enddate = pd.Timestamp(enddate).strftime("%Y-%m-%d")
-            
+
             title = TitleBuilder(diagnostic="Ensemble analysis", model=self.model,
                                  startyear=startdate, endyear=enddate).generate()
 

@@ -6,8 +6,8 @@ Overview
 
 `AQUA-diagnostics <https://github.com/DestinE-Climate-DT/AQUA-diagnostics>`_ (Climate DT Applications for QUality Assessment) is a specialized package designed for managing and running diagnostics on climate model datasets both at reduced and native high-resolutions.
 It provides robust tools and interfaces for configuring, launching, and organizing diagnostic analyses of climate simulations.
-The framework operates in conjunction with AQUA-core, which handles fundamental operations including data access, catalog management, and regridding. 
-AQUA-diagnostics builds upon this foundation by implementing a complete suite of diagnostic tools specifically tailored for climate model evaluation. 
+The framework operates in conjunction with AQUA-core, which handles fundamental operations including data access, catalog management, and regridding.
+AQUA-diagnostics builds upon this foundation by implementing a complete suite of diagnostic tools specifically tailored for climate model evaluation.
 The architecture maintains a clear separation between computational analysis classes and visualization components, enabling independent management of data processing and graphical representation.
 
 .. note::
@@ -16,7 +16,7 @@ The architecture maintains a clear separation between computational analysis cla
    regridding, etc.), please refer to the documentation of `AQUA-core <https://aqua.readthedocs.io/en/latest/>`_ , which contains all core
    functions and base classes.
 
-Purpose 
+Purpose
 -------
 
 AQUA-diagnostics serves as a centralized environment for climate model evaluation, enabling researchers to:
@@ -32,8 +32,8 @@ The Diagnostics:
 ----------------
 The diagnostics within AQUA are organized into three principal categories based on their methodological approach and data requirements:
 
-1. **State-of-the-Art Diagnostics**: These diagnostics employ data at resolutions comparable to observational datasets and traditional climate models (such as CMIP6) to monitor and evaluate climate simulations. 
-They focus on detecting model drifts, energy imbalances, and systematic biases through direct comparison with observational data or established climate simulations. 
+1. **State-of-the-Art Diagnostics**: These diagnostics employ data at resolutions comparable to observational datasets and traditional climate models (such as CMIP6) to monitor and evaluate climate simulations.
+They focus on detecting model drifts, energy imbalances, and systematic biases through direct comparison with observational data or established climate simulations.
 State-of-the-art diagnostics support the derivation of quantitative evaluation metrics that characterize model performance across multiple dimensions. This category includes:
 - Time series analyses tracking key climate variables over extended periods
 - Global bias assessments identifying systematic model errors across spatial domains
@@ -45,12 +45,12 @@ State-of-the-art diagnostics support the derivation of quantitative evaluation m
 - Histograms for distribution analysis of climate variables
 - Sea ice extent and concentration diagnostics monitoring polar climate dynamics
 
-To enable efficient execution of these diagnostics, a Low-Resolution Archive (LRA) has been created by downscaling original high-resolution data to coarser spatial (1°x 1°) and temporal (monthly) resolutions. 
-This dimensional reduction is essential because state-of-the-art diagnostics do not require high-frequency, fine-scale data and can effectively assess fundamental model behavior using daily or monthly data at coarser resolutions. 
+To enable efficient execution of these diagnostics, a Low-Resolution Archive (LRA) has been created by downscaling original high-resolution data to coarser spatial (1°x 1°) and temporal (monthly) resolutions.
+This dimensional reduction is essential because state-of-the-art diagnostics do not require high-frequency, fine-scale data and can effectively assess fundamental model behavior using daily or monthly data at coarser resolutions.
 The LRA serves as an intermediate processing layer, enabling faster and more manageable analyses while preserving the information content relevant for climate model assessment.
 
-2. **Frontier Diagnostics**: These diagnostics leverage emerging techniques and high-resolution data to explore new dimensions of model evaluation. 
-They aim to address unresolved questions in climate science and push the boundaries of traditional diagnostic approaches. 
+2. **Frontier Diagnostics**: These diagnostics leverage emerging techniques and high-resolution data to explore new dimensions of model evaluation.
+They aim to address unresolved questions in climate science and push the boundaries of traditional diagnostic approaches.
 Frontier diagnostics may include novel metrics, advanced statistical methods, and machine learning techniques to uncover complex patterns in climate model outputs.
 Examples of frontier diagnostics include:
 - Sea surface height variability analyses capturing fine-scale ocean dynamics
@@ -76,7 +76,7 @@ At the foundation lies the **Base Diagnostic Class** (`Diagnostic`), which provi
 - Standardized output saving procedures
 
 Each specific diagnostic class inherits from `Diagnostic` and extends its capabilities by implementing diagnostic-specific parameters and methods.
-For example, the Global Biases diagnostic in its own class `GlobalBiases` introduces specialized methods like `compute_climatology()` while leveraging the core retrieval and saving functionalities provided by the base class. 
+For example, the Global Biases diagnostic in its own class `GlobalBiases` introduces specialized methods like `compute_climatology()` while leveraging the core retrieval and saving functionalities provided by the base class.
 This inheritance pattern ensures that all diagnostics follow consistent implementation conventions, reducing code redundancy and improving long-term maintainability.
 Additionally, each diagnostic incorporates comparison classes, e.g `PlotGlobalBiases` that handle visualization tasks.
 These classes provide methods for cross-dataset comparisons (such as `plot_bias()` and `plot_seasonal_bias()`) and integrate configurable options including multiple output formats via a single `save_format` setting (default is SAVE_FORMAT, i.e. `['png', 'pdf', 'svg']`) in addition to `save_netcdf`.
@@ -92,20 +92,20 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
 
 1. **Direct Module Import in Notebooks:**
 
-  For users interested in performing targeted analyses—such as examining biases in a specific variable—individual diagnostic modules can be imported directly into Python notebooks or scripts. 
-  This approach offers maximum flexibility, allowing users to call specific functions from particular diagnostics and generate customized plots. 
+  For users interested in performing targeted analyses—such as examining biases in a specific variable—individual diagnostic modules can be imported directly into Python notebooks or scripts.
+  This approach offers maximum flexibility, allowing users to call specific functions from particular diagnostics and generate customized plots.
   Diagnostics tool might have specific configuration files, available in `aqua/diagnostics/config/tools`, which can be adapted to control the behavior of the analysis.
- 
+
 2. **Command-Line Interface with Configuration Files:**
 
-   Each diagnostic in AQUA includes a dedicated command-line interface (CLI) that enables execution of the complete diagnostic workflow. 
+   Each diagnostic in AQUA includes a dedicated command-line interface (CLI) that enables execution of the complete diagnostic workflow.
    Users configure the analysis by providing a configuration file that specifies all necessary parameters, including dataset selection, temporal ranges, spatial domains, and output options.
    Configuration file templates for all available diagnostics are provided in `aqua/diagnostics/templates`, serving as starting points that users can customize according to their specific requirements.
    This approach ensures reproducibility, as the configuration file documents all analysis settings and can be version-controlled alongside results.
 
 3. **Level 3: Diagnostic collections via AQUA Analysis Wrapper**
 
-   For comprehensive model evaluation involving multiple diagnostics, AQUA provides the `aqua-analysis` wrapper, which orchestrates the execution of **diagnostic-collections**. 
+   For comprehensive model evaluation involving multiple diagnostics, AQUA provides the `aqua-analysis` wrapper, which orchestrates the execution of **diagnostic-collections**.
    Users construct a master configuration file that combines multiple diagnostics, defining which analyses to run and how they should be coordinated.
    This approach enables:
 
@@ -116,12 +116,12 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
 
 Examples of diagnostic-collections configuration files are provided in `aqua/diagnostics/config/collections`.
 The aqua-analysis functionality is fully documented at ref:`aqua_analysis`.
- 
+
 
 Contributing
 ------------
 
-AQUA-diagnostics is developed within the European Union Contract 
-`DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT)`.  
-Contributions are welcome via the GitHub repository.  
+AQUA-diagnostics is developed within the European Union Contract
+`DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT)`.
+Contributions are welcome via the GitHub repository.
 Please refer to the ``CONTRIBUTING.md`` file for guidelines and further information.

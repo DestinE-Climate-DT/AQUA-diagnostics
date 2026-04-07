@@ -3,9 +3,8 @@
 import argparse
 import sys
 
-from aqua.diagnostics.base import template_parse_arguments
 from aqua.diagnostics import Boxplots, PlotBoxplots
-from aqua.diagnostics.base import DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
 # default tool name
 TOOLNAME='Boxplots'
@@ -26,7 +25,7 @@ if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
 
     # set tool name for config lookup
-    
+
 
     # Initialize CLI handler
     cli = DiagnosticCLI(

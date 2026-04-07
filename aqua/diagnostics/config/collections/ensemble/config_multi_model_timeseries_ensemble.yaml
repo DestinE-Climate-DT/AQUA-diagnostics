@@ -10,7 +10,7 @@ datasets:
     source: 'aqua-timeseries-monthly'
     regrid: null
     realization: null
-  - catalog: 'nextgems4'  
+  - catalog: 'nextgems4'
     model: 'IFS-FESOM'
     exp: 'historical-1990'
     source: 'aqua-timeseries-monthly'
@@ -31,11 +31,11 @@ datasets:
 
 # Reference
 references:
-  - catalog: 'obs'  
+  - catalog: 'obs'
     model: 'ERA5'
     exp: 'era5'
     source: 'aqua-timeseries-monthly'
-  - catalog: null  
+  - catalog: null
     model: 'ERA5'
     exp: 'era5'
     source: 'aqua-timeseries-annual'
@@ -63,5 +63,5 @@ diagnostics:
         enddate_ref: "2005-01-01"
     plot_params:
       default:
-        title: 
+        title:
         plot_ensemble_members: False

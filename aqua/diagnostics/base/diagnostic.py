@@ -1,13 +1,14 @@
 import os
-import xarray as xr
+
 import pandas as pd
+import xarray as xr
+
 from aqua import Reader
+from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import load_yaml, convert_units
-from aqua.core.util import xarray_to_pandas_freq, pandas_freq_to_string
-from aqua.core.util import DEFAULT_REALIZATION
+from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml, pandas_freq_to_string, xarray_to_pandas_freq
+
 from .output_saver import OutputSaver
 
 
@@ -102,7 +103,7 @@ class Diagnostic():
         if isinstance(data, xr.Dataset) is False and isinstance(data, xr.DataArray) is False:
             self.logger.error('Data to save as netcdf must be an xarray Dataset or DataArray')
 
-        outputsaver = OutputSaver(diagnostic=diagnostic, 
+        outputsaver = OutputSaver(diagnostic=diagnostic,
                                   catalog=self.catalog, model=self.model, exp=self.exp,
                                   realization=self.realization,
                                   outputdir=outputdir, loglevel=self.loglevel)
@@ -131,7 +132,8 @@ class Diagnostic():
             enddate (str): The end date of the data to be retrieved.
                            If None, all available data will be retrieved.
             regrid (str): The target grid to be used for regridding. If None, no regridding will be done.
-            months_required (int or None): The minimal amount of months to have results. If they are not met, a NotEnoughDataError will be raised.
+            months_required (int or None): The minimal amount of months to have results.
+                If they are not met, a NotEnoughDataError will be raised.
             reader_kwargs (dict): Additional keyword arguments to be passed to the Reader.
             loglevel (str): The log level to be used. Default is 'WARNING'.
 
@@ -149,8 +151,8 @@ class Diagnostic():
         # If the data is empty, raise an error
         if not data:
             raise ValueError(f"No data found for {model} {exp} {source} with variable {var}")
-        
-        # FIX: issues with some time selection for pandas using Timestamp. 
+
+        # FIX: issues with some time selection for pandas using Timestamp.
         # see https://github.com/pydata/xarray/issues/10975
         start = pd.Timestamp(startdate) if startdate is not None else None
         end = pd.Timestamp(enddate) if enddate is not None else None
@@ -158,7 +160,7 @@ class Diagnostic():
         if data.time.size == 0:
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
-        
+
         # If there is a month requirement we infer the data frequency,
         # then we check how many months are available in the data
         # and finally raise an error if the requirement is not met.
@@ -246,7 +248,7 @@ class Diagnostic():
 
         Args:
             diagnostic (str): The diagnostic name.
-            regions_file_path (str, optional): Path to a custom regions file. 
+            regions_file_path (str, optional): Path to a custom regions file.
                 If None, the default path for the diagnostic will be used.
 
         Returns:

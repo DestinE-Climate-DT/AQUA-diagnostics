@@ -4,14 +4,16 @@ Base class for diagnostic CLI to centralize common operations.
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
+
 from .defaults import SAVE_FORMAT
-from .util import open_cluster, close_cluster, load_diagnostic_config, merge_config_args
+from .util import close_cluster, load_diagnostic_config, merge_config_args, open_cluster
+
 
 class DiagnosticCLI:
     """
     Base class to centralize common CLI initialization operations.
 
-    
+
     Usage:
         cli = DiagnosticCLI(
             args=args,
@@ -20,13 +22,13 @@ class DiagnosticCLI:
         )
         cli.prepare()
         cli.open_dask_cluster()
-        
+
         # Access prepared attributes
         logger = cli.logger
         config_dict = cli.config_dict
         outputdir = cli.outputdir
         ...
-        
+
         # At the end
         cli.close_dask_cluster()
     """
@@ -34,7 +36,7 @@ class DiagnosticCLI:
     def __init__(self, args, diagnostic_name, default_config, log_name=None):
         """
         Initialize the CLI handler.
-        
+
         Args:
             args: Parsed command-line arguments
             diagnostic_name (str): Name of the diagnostic (e.g., 'timeseries', 'seaice')
@@ -45,7 +47,7 @@ class DiagnosticCLI:
         self.diagnostic_name = diagnostic_name
         self.default_config = default_config
         self.log_name = log_name or f"{diagnostic_name.capitalize()} CLI"
-        
+
         # Attributes populated by prepare()
         self.loglevel = None
         self.logger = None
@@ -64,20 +66,20 @@ class DiagnosticCLI:
         self.save_netcdf = None
         self.dpi = None
         self.create_catalog_entry = None  # Default behavior; can be overridden in prepare()
-        
+
     def prepare(self, **overrides):
         """
         Execute common setup operations (excluding cluster management).
-        
+
         This method:
         1. Sets up logging
         2. Loads and merges config
         3. Extracts common options (regrid, realization, output settings)
-        
+
         Optional keyword arguments can be passed to override options extracted
         from configuration. Overrides are applied after extraction so they
         take precedence.
-        
+
         Returns:
             self: For method chaining
         """
@@ -91,7 +93,7 @@ class DiagnosticCLI:
                 setattr(self, key, value)
 
         return self
-    
+
     def _setup_logging(self):
         """Setup logger."""
         self.loglevel = get_arg(self.args, 'loglevel', 'WARNING')
@@ -152,7 +154,7 @@ class DiagnosticCLI:
                 'regrid': dataset.get('regrid') or self.regrid,
                 'startdate': dataset.get('startdate') or self.startdate,
                 'enddate': dataset.get('enddate') or self.enddate}
-    
+
     def reference_args(self, reference):
         """
         Helper to extract reference dataset arguments for diagnostics.
@@ -169,7 +171,7 @@ class DiagnosticCLI:
     def open_dask_cluster(self):
         """
         Open dask cluster if requested via CLI arguments.
-        
+
         Returns:
             self: For method chaining
         """

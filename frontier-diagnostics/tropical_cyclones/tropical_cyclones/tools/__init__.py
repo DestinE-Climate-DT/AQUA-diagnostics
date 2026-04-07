@@ -5,9 +5,9 @@
 # and associated functions are available directly from the module "tropical_cyclones"
 
 
-from .tempest_utils import getTrajectories, getNodes
+from .tempest_utils import get_trajectories, get_nodes
 from .tcs_utils import clean_files, lonlatbox, write_fullres_field
 
 # This specifies which methods are exported publicly, used by "from dummy import *"
-__all__ = ["getTrajectories", "getNodes", "clean_files",
+__all__ = ["get_trajectories", "get_nodes", "clean_files",
            "lonlatbox", "write_fullres_field"]

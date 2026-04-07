@@ -6,7 +6,7 @@ dataset:
   source3d: "hourly-hpz10-atm3d" #"3D_1h_native"
 
 # folders for regridded data, temprorary and stored high res data
-paths: 
+paths:
   tmpdir: "/pfs/lustrep3/projappl/project_465000454/pghinassi/tc_analysis/tmpdir"
   fulldir: "/pfs/lustrep3/projappl/project_465000454/pghinassi/tc_analysis/fulldir"
   plotdir: "/pfs/lustrep3/projappl/project_465000454/pghinassi/tc_analysis/Figures/"
@@ -20,11 +20,11 @@ grids:
   lowgrid: 'r100'
   highgrid: 'r010'
 
-# variables to stored 
+# variables to stored
 varlist: ['msl', '10u', '10v', 'tprate']
 
 # temporal definition (date format: YYYYMMDD)
-time: 
+time:
   startdate: '19900701'
   enddate: '19911231'
   frequency: '6h'

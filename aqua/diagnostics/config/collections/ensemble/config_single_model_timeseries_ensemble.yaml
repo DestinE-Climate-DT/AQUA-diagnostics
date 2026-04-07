@@ -35,5 +35,5 @@ diagnostics:
         enddate_ref: "2014-11-16"
     plot_params:
       default:
-        title: 
+        title:
         plot_ensemble_members: True

@@ -1,12 +1,12 @@
 # Tropical Cyclones diagnostic for tracking and zoom in
 
-Main authors: 
+Main authors:
 - Paolo Ghinassi (CNR-ISAC, p.ghinassi@isac.cnr.it)
 - Paolo Davini (CNR-ISAC, p.davini@isac.cnr.it)
 
 ## Description
 
-A diagnostic to identify tropical cyclones (TCs) centres (mean sea level pressure minima) and compute their trajectories based 
+A diagnostic to identify tropical cyclones (TCs) centres (mean sea level pressure minima) and compute their trajectories based
 on the tempest-extremes python library (https://climate.ucdavis.edu/tempestextremes.php). In addition to detection and tracking
 it features the possibility to save selected variables in a box in the vicinity of TCs centres along trajectories.
 
@@ -31,7 +31,7 @@ it features the possibility to save selected variables in a box in the vicinity 
 
 The diagnostic is based on the AQUA framework, and requires the installation of the AQUA package. Follow the instructions in the AQUA documentation to install the framework. A pyproject.toml file is provided in this folder to install the diagnostic in the AQUA environment. It is not tought to be used as a standalone package.
 
-## Data requirements  
+## Data requirements
 
 Variables needed to perform TCs detection and tracking through tempest-extremes are:
 
@@ -56,7 +56,7 @@ such that they are stored in a netcdf file along the TCs tracks are:
 
 The **notebook/** folder contains the following notebooks:
 
-- **tropical_cyclones.ipynb**: 
+- **tropical_cyclones.ipynb**:
   Notebook to explain and demonstrate the tropical cyclones diagnostic. It includes the main diagnostic feature which are the detection and tracking of tropical cyclones (usually performed on low resolution data) and the zoom in feature. The zoom in allows to save
   some selected variables in the vicinity of tropical cyclones centres along their trajectories using original resolution data.
 
