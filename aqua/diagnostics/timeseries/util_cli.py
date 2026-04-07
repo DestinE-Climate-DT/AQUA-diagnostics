@@ -1,7 +1,7 @@
 """Utility functions for the CLI."""
 
 
-def load_var_config(config_dict: dict, var: str, diagnostic: str = "timeseries"):
+def load_var_config(config_dict: dict, var: str, diagnostic: str = 'timeseries'):
     """Load the variable configuration from the configuration dictionary.
 
     Args:
@@ -12,10 +12,10 @@ def load_var_config(config_dict: dict, var: str, diagnostic: str = "timeseries")
     Returns:
         var_config (dict): The variable configuration dictionary
     """
-    default_dict = config_dict["diagnostics"][diagnostic]["params"]["default"]
+    default_dict = config_dict['diagnostics'][diagnostic]['params']['default']
 
-    if var in config_dict["diagnostics"][diagnostic]["params"]:
-        var_config = config_dict["diagnostics"][diagnostic]["params"][var]
+    if var in config_dict['diagnostics'][diagnostic]['params']:
+        var_config = config_dict['diagnostics'][diagnostic]['params'][var]
     else:
         var_config = {}
 
@@ -25,19 +25,19 @@ def load_var_config(config_dict: dict, var: str, diagnostic: str = "timeseries")
 
     # Take hourly, daily, monthly, annual and make a list of the True
     # ones, dropping the individual keys
-    if diagnostic == "timeseries":
+    if diagnostic == 'timeseries':
         freq = []
-        for key in ["hourly", "daily", "monthly", "annual"]:
+        for key in ['hourly', 'daily', 'monthly', 'annual']:
             if var_config[key]:
                 freq.append(key)
             if var_config[key] is not None:
                 del var_config[key]
-        var_config["freq"] = freq
+        var_config['freq'] = freq
 
     # Get the regions
     regions = [None]
-    if var_config.get("regions") is not None:
-        regions.extend([region for region in var_config["regions"] if region is not None])
-        del var_config["regions"]
+    if var_config.get('regions') is not None:
+        regions.extend([region for region in var_config['regions'] if region is not None])
+        del var_config['regions']
 
     return var_config, regions

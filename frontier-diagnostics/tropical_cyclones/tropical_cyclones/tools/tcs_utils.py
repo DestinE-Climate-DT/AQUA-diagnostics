@@ -54,8 +54,17 @@ def write_fullres_field(gfield, filestore, dask):
         None
     """
 
-    time_encoding = {"time": {"units": "days since 1970-01-01", "calendar": "standard", "dtype": "float64"}}
-    single_var_encoding = {"zlib": True, "complevel": 1}
+    time_encoding = {
+        'time':
+        {
+            'units': 'days since 1970-01-01',
+            'calendar': 'standard',
+            'dtype': 'float64'
+        }
+    }
+    single_var_encoding = {
+        "zlib": True, "complevel": 1
+    }
     var_encoding = {var: single_var_encoding for var in gfield.data_vars}
     final_encoding = {**time_encoding, **var_encoding}
 
@@ -63,7 +72,9 @@ def write_fullres_field(gfield, filestore, dask):
         print("No tracks to write")
     else:
         gfield = gfield.where(gfield != 0)
-        save_file = gfield.to_netcdf(filestore, encoding=final_encoding, compute=False)
+        save_file = gfield.to_netcdf(filestore,
+                                     encoding=final_encoding,
+                                     compute=False)
 
         if dask:
             w_job = save_file.persist()

@@ -9,7 +9,7 @@ from pypdf import PdfReader, PdfWriter
 from aqua.core.logger import log_configure
 
 
-def add_pdf_metadata(pdf_path: str, metadata: dict, loglevel: str = "WARNING"):
+def add_pdf_metadata(pdf_path: str, metadata: dict, loglevel: str = 'WARNING'):
     """
     Open a PDF and write metadata.
 
@@ -22,10 +22,10 @@ def add_pdf_metadata(pdf_path: str, metadata: dict, loglevel: str = "WARNING"):
     Raise:
         FileNotFoundError: if the file does not exist.
     """
-    logger = log_configure(loglevel, "add_pdf_metadata")
+    logger = log_configure(loglevel, 'add_pdf_metadata')
 
     if not os.path.isfile(pdf_path):
-        raise FileNotFoundError(f"File {pdf_path} not found")
+        raise FileNotFoundError(f'File {pdf_path} not found')
 
     pdf_reader = PdfReader(pdf_path)
     pdf_writer = PdfWriter()
@@ -37,16 +37,16 @@ def add_pdf_metadata(pdf_path: str, metadata: dict, loglevel: str = "WARNING"):
     # Normalize keys to start with '/' as required by PDF spec
     if metadata is None:
         metadata = {}
-    metadata_normalized = {(k if isinstance(k, str) and k.startswith("/") else f"/{k}"): v for k, v in metadata.items()}
+    metadata_normalized = {(k if isinstance(k, str) and k.startswith('/') else f'/{k}'): v for k, v in metadata.items()}
     pdf_writer.add_metadata(metadata_normalized)
     logger.debug(f"Metadata added to PDF: {pdf_path}")
 
     # Overwrite input PDF
-    with open(pdf_path, "wb") as f:
+    with open(pdf_path, 'wb') as f:
         pdf_writer.write(f)
 
 
-def add_png_metadata(png_path: str, metadata: dict, loglevel: str = "WARNING"):
+def add_png_metadata(png_path: str, metadata: dict, loglevel: str = 'WARNING'):
     """
     Add metadata to a PNG image file.
 
@@ -56,10 +56,10 @@ def add_png_metadata(png_path: str, metadata: dict, loglevel: str = "WARNING"):
                          Note: Metadata keys do not need a '/' prefix.
         loglevel (str): The log level. Default is 'WARNING'.
     """
-    logger = log_configure(loglevel, "add_png_metadata")
+    logger = log_configure(loglevel, 'add_png_metadata')
 
     if not os.path.isfile(png_path):
-        raise FileNotFoundError(f"File {png_path} not found")
+        raise FileNotFoundError(f'File {png_path} not found')
 
     image = Image.open(png_path)
 
@@ -69,14 +69,14 @@ def add_png_metadata(png_path: str, metadata: dict, loglevel: str = "WARNING"):
     # Add the new metadata
     for key, value in metadata.items():
         png_info.add_text(key, str(value))
-        logger.debug(f"Adding metadata: {key} = {value}")
+        logger.debug(f'Adding metadata: {key} = {value}')
 
     # Save the file with the new metadata
     image.save(png_path, "PNG", pnginfo=png_info)
     logger.debug(f"Metadata added to PNG: {png_path}")
 
 
-def add_svg_metadata(svg_path: str, metadata: dict, loglevel: str = "WARNING"):
+def add_svg_metadata(svg_path: str, metadata: dict, loglevel: str = 'WARNING'):
     """
     Add metadata to an SVG image file.
 
@@ -85,20 +85,20 @@ def add_svg_metadata(svg_path: str, metadata: dict, loglevel: str = "WARNING"):
         metadata (dict): A dictionary of metadata to add to the SVG file.
         loglevel (str): The log level. Default is 'WARNING'.
     """
-    logger = log_configure(loglevel, "add_svg_metadata")
+    logger = log_configure(loglevel, 'add_svg_metadata')
 
     if not os.path.isfile(svg_path):
-        raise FileNotFoundError(f"File {svg_path} not found")
+        raise FileNotFoundError(f'File {svg_path} not found')
 
     try:
-        ET.register_namespace("", "http://www.w3.org/2000/svg")
+        ET.register_namespace('', "http://www.w3.org/2000/svg")
         tree = ET.parse(svg_path)
         root = tree.getroot()
 
         # Check if desc already exists
-        desc = root.find("{http://www.w3.org/2000/svg}desc")
+        desc = root.find('{http://www.w3.org/2000/svg}desc')
         if desc is None:
-            desc = ET.Element("{http://www.w3.org/2000/svg}desc")
+            desc = ET.Element('{http://www.w3.org/2000/svg}desc')
             root.insert(0, desc)
 
         desc.text = "\n".join([f"{k}: {v}" for k, v in metadata.items()])
@@ -108,7 +108,7 @@ def add_svg_metadata(svg_path: str, metadata: dict, loglevel: str = "WARNING"):
         logger.warning(f"Failed to add metadata to SVG {svg_path}: {e}")
 
 
-def add_figure_metadata(filepath: str, metadata: dict, file_format: str, loglevel: str = "WARNING"):
+def add_figure_metadata(filepath: str, metadata: dict, file_format: str, loglevel: str = 'WARNING'):
     """
     Add metadata to a figure file according to its format (PDF, PNG, or SVG).
 
@@ -118,9 +118,9 @@ def add_figure_metadata(filepath: str, metadata: dict, file_format: str, logleve
         file_format (str): One of 'pdf', 'png', 'svg'.
         loglevel (str): Log level. Default is 'WARNING'.
     """
-    if file_format == "pdf":
+    if file_format == 'pdf':
         add_pdf_metadata(filepath, metadata, loglevel=loglevel)
-    elif file_format == "png":
+    elif file_format == 'png':
         add_png_metadata(filepath, metadata, loglevel=loglevel)
-    elif file_format == "svg":
+    elif file_format == 'svg':
         add_svg_metadata(filepath, metadata, loglevel=loglevel)

@@ -6,7 +6,6 @@ Command-line interface for ensemble atmglobalmean diagnostic.
 This CLI allows to plot a map of aqua analysis atmglobalmean
 defined in a yaml configuration file for multiple models.
 """
-
 import argparse
 import sys
 
@@ -35,6 +34,7 @@ def parse_arguments(args):
 
 
 if __name__ == "__main__":
+
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")

@@ -55,24 +55,28 @@ class PlotTrends:
             model=self.model,
             exp=self.exp,
             outputdir=outputdir,
-            realization=self.realizations,
-            loglevel=self.loglevel,
+            realization = self.realizations,
+            loglevel=self.loglevel
         )
 
-    def plot_multilevel(self, levels=None, rebuild: bool = True, save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
+    def plot_multilevel(self,
+                        levels = None,
+                        rebuild: bool = True,
+                        save_format: Union[str, list] = SAVE_FORMAT,
+                        dpi: int = 300):
         """Plot multi-level maps of trends.
 
         Args:
             levels (list, optional): List of depth levels to plot. Defaults to None.
             save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
         """
-        self.diagnostic_product = "multilevel_trend"
+        self.diagnostic_product = 'multilevel_trend'
         if levels is None:
             self.levels = [10, 100, 500, 1000, 3000, 5000]
         self.logger.debug(f"Levels set to: {self.levels}")
         self.set_central_longitude()
         self.set_data_list()
-        self.set_suptitle(plot_type="Multi-level Trends")
+        self.set_suptitle(plot_type='Multi-level Trends')
         self.set_title()
         self.set_description(content="Multi-level Trends")
         self.set_ytext()
@@ -88,20 +92,16 @@ class PlotTrends:
             cbar_labels=self.cbar_labels,
             ytext=self.ytext,
             return_fig=True,
-            loglevel=self.loglevel,
+            loglevel=self.loglevel
         )
 
-        self.save_plot(
-            fig,
-            diagnostic_product=self.diagnostic_product,
-            metadata={"description": self.description},
-            rebuild=rebuild,
-            format=save_format,
-            dpi=dpi,
-            extra_keys={"region": self.region},
-        )
+        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
+                        rebuild=rebuild, format=save_format, dpi=dpi, extra_keys={'region': self.region})
 
-    def plot_zonal(self, rebuild: bool = True, save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
+
+    def plot_zonal(self,
+                    rebuild: bool = True,
+                    save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
         """
         Plot zonal mean vertical profiles of trends.
 
@@ -109,9 +109,9 @@ class PlotTrends:
             save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
             dpi (int, optional): Dots per inch for the output figure. Defaults to 300.
         """
-        self.diagnostic_product = "zonal_mean"
+        self.diagnostic_product = 'zonal_mean'
         self.set_data_list()
-        self.set_suptitle(plot_type="Zonal mean Trends")
+        self.set_suptitle(plot_type='Zonal mean Trends')
         self.set_title()
         self.set_description(content="Zonal mean Trends")
         self.set_ytext()
@@ -128,18 +128,11 @@ class PlotTrends:
             ytext=self.ytext,
             return_fig=True,
             sym=True,
-            loglevel=self.loglevel,
+            loglevel=self.loglevel
         )
 
-        self.save_plot(
-            fig,
-            diagnostic_product=self.diagnostic_product,
-            metadata={"description": self.description},
-            rebuild=rebuild,
-            extra_keys={"region": self.region},
-            format=save_format,
-            dpi=dpi,
-        )
+        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
+                       rebuild=rebuild, extra_keys={'region': self.region}, format=save_format, dpi=dpi)
 
     def set_nrowcol(self):
         if hasattr(self, "levels") and self.levels:
@@ -162,7 +155,6 @@ class PlotTrends:
     def set_central_longitude(self):
         self.central_longitude = self.data.lon.mean().values
         self.logger.debug(f"Central longitude set to: {self.central_longitude}")
-
     def set_data_list(self):
         """Prepare the list of data arrays to plot."""
         self.data_list = []
@@ -180,18 +172,23 @@ class PlotTrends:
                         self.levels.pop(self.levels.index(level))
                         break
 
-                    data_level_var.attrs["long_name"] = f"{data_level_var.attrs.get('long_name', var)} at {level}m"
+                    data_level_var.attrs["long_name"] = (
+                        f"{data_level_var.attrs.get('long_name', var)} at {level}m"
+                    )
                     self.data_list.append(data_level_var)
         else:
             for var in self.vars:
                 data_var = self.data[var]
                 self.data_list.append(data_var)
 
-    def set_suptitle(self, plot_type=None):
+    def set_suptitle(self, plot_type = None):
         """Set the title for the plot."""
         self.suptitle = TitleBuilder(
-            diagnostic=plot_type, regions=self.region, catalog=self.catalog, model=self.model, exp=self.exp
-        ).generate()
+            diagnostic=plot_type,
+            regions=self.region,
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):
@@ -203,8 +200,8 @@ class PlotTrends:
         for j in range(len(self.data_list)):
             for var in self.vars:
                 if j == 0:
-                    units = self.data[var].attrs.get("units", "")
-                    units_latex = unit_to_latex(units) if units else ""
+                    units = self.data[var].attrs.get('units', '')
+                    units_latex = unit_to_latex(units) if units else ''
                     title = f"{self.data[var].attrs.get('long_name', var)} ({units_latex})"
                     self.title_list.append(title)
                 else:
@@ -219,8 +216,8 @@ class PlotTrends:
         self.cbar_labels = []
         for _ in range(len(self.data_list)):
             for var in self.vars:
-                units = self.data[var].attrs.get("units", "")
-                units_latex = unit_to_latex(units) if units else ""
+                units = self.data[var].attrs.get('units', '')
+                units_latex = unit_to_latex(units) if units else ''
                 cbar_label = f"{self.data[var].attrs.get('short_name', var)} ({units_latex})"
                 self.cbar_labels.append(cbar_label)
         self.logger.debug("Colorbar labels set to: %s", self.cbar_labels)
@@ -232,16 +229,9 @@ class PlotTrends:
 
         self.description = f"{content} in the {self.region} region of {self.catalog} {self.model} {self.exp}."
 
-    def save_plot(
-        self,
-        fig,
-        diagnostic_product: str,
-        extra_keys: dict = {},
-        rebuild: bool = True,
-        dpi: int = 300,
-        format: Union[str, list] = SAVE_FORMAT,
-        metadata: dict = None,
-    ):
+    def save_plot(self, fig, diagnostic_product: str, extra_keys: dict = {},
+                  rebuild: bool = True,
+                  dpi: int = 300, format: Union[str, list] = SAVE_FORMAT, metadata: dict = None):
         """
         Save the plot to a file.
 
@@ -258,15 +248,8 @@ class PlotTrends:
         """
         extra_keys.update({"region": self.region})
 
-        self.outputsaver.save_figure(
-            fig,
-            diagnostic_product=diagnostic_product,
-            rebuild=rebuild,
-            extra_keys=extra_keys,
-            metadata=metadata,
-            extension=format,
-            dpi=dpi,
-        )
+        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                     extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)
 
     def _get_info(self):
         """Extract model, catalog, exp, region from data attributes."""

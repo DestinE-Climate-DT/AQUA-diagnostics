@@ -2,7 +2,6 @@
 Module to plot multiple maps
 
 """
-
 import matplotlib.pyplot as plt
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -87,7 +86,9 @@ def plot_multivars_vertical_profile(
     fig = plt.figure(figsize=figsize)
 
     # Adjust the location of the subplots on the page to make room for the colorbar
-    fig.subplots_adjust(bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.3, hspace=0.8)
+    fig.subplots_adjust(
+        bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.3, hspace=0.8
+    )
 
     for i in range(len(maps)):
         vmin, vmax = evaluate_colorbar_limits(maps=maps[i], sym=sym)
@@ -111,7 +112,7 @@ def plot_multivars_vertical_profile(
         )
         if ytext:
             logger.debug("Adding text in the plot: %s", ytext[i])
-            ax.text(-0.3, 0.33, ytext[i], fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
+            ax.text(-0.3, 0.33, ytext[i], fontsize=15, color='dimgray', rotation=90, transform=ax.transAxes, ha='center')
 
         # Retrieve last plotted object for colorbar (QuadMesh or ContourSet)
         if ax.collections:

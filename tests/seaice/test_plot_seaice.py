@@ -1,3 +1,4 @@
+
 import glob
 import os
 
@@ -13,39 +14,33 @@ loglevel = LOGLEVEL
 
 # pytestmark groups tests that run sequentially on the same worker to avoid conflicts
 # These tests use setup_class with shared resources (data fetching, tmp files)
-pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="diagnostic_setup_class")]
-
+pytestmark = [
+    pytest.mark.diagnostics,
+    pytest.mark.xdist_group(name="diagnostic_setup_class")
+]
 
 class TestPlotSeaIce:
     @classmethod
     def setup_class(cls):
         cls.tmp_path = "./"
-        cls.catalog = "ci"
-        cls.model = "FESOM"
-        cls.exp = "hpz3"
-        cls.source = "monthly-2d"
-        cls.regions = ["arctic", "antarctic"]
-        cls.loglevel = "warning"
+        cls.catalog = 'ci'
+        cls.model = 'FESOM'
+        cls.exp = 'hpz3'
+        cls.source = 'monthly-2d'
+        cls.regions = ['arctic', 'antarctic']
+        cls.loglevel = 'warning'
         cls.startdate = "1991-01-01"
         cls.enddate = "2000-01-01"
         cls.regrid = "r100"
 
         # Initialize sea ice objects
-        cls.seaice = SeaIce(
-            catalog=cls.catalog,
-            model=cls.model,
-            exp=cls.exp,
-            source=cls.source,
-            startdate=cls.startdate,
-            enddate=cls.enddate,
-            regions=cls.regions,
-            regrid=cls.regrid,
-            loglevel=cls.loglevel,
-        )
+        cls.seaice = SeaIce(catalog=cls.catalog, model=cls.model, exp=cls.exp, source=cls.source,
+                           startdate=cls.startdate, enddate=cls.enddate, regions=cls.regions,
+                           regrid=cls.regrid, loglevel=cls.loglevel)
 
         # Compute test data
-        cls.siext = cls.seaice.compute_seaice(method="extent", var="siconc")
-        cls.siext_seas = cls.seaice.compute_seaice(method="extent", var="siconc", get_seasonal_cycle=True)
+        cls.siext = cls.seaice.compute_seaice(method='extent', var='siconc')
+        cls.siext_seas = cls.seaice.compute_seaice(method='extent', var='siconc', get_seasonal_cycle=True)
 
         # Create reference data with bias for testing
         cls.siext_ref = cls.siext.copy()
@@ -73,7 +68,7 @@ class TestPlotSeaIce:
         plot_seaice = PlotSeaIce(dpi=DPI)
 
         with pytest.raises(ValueError):
-            plot_seaice._check_as_datasets_list("string")
+            plot_seaice._check_as_datasets_list('string')
 
         with pytest.raises(ValueError):
             plot_seaice._check_as_datasets_list(123)
@@ -86,31 +81,31 @@ class TestPlotSeaIce:
         psi = PlotSeaIce(monthly_models=self.siext, regions_to_plot=None, dpi=DPI)
         repacked = psi.repacked_dict
 
-        assert "extent" in repacked  # method key
-        method_block = repacked["extent"]
-        expected_regions = ["Arctic", "Antarctic"]
+        assert 'extent' in repacked     # method key
+        method_block = repacked['extent']
+        expected_regions = ['Arctic', 'Antarctic']
         assert sorted(method_block.keys()) == sorted(expected_regions)
 
         for reg in expected_regions:
-            assert method_block[reg]["monthly_models"]  # non-empty list
+            assert method_block[reg]['monthly_models']    # non-empty list
 
     def test_repack_datasetlists_filtered_regions(self):
         """Ensure repacking obeys region filtering."""
-        psi = PlotSeaIce(monthly_models=self.siext, regions_to_plot=["Arctic"], dpi=DPI)
+        psi = PlotSeaIce(monthly_models=self.siext, regions_to_plot=['Arctic'], dpi=DPI)
         repacked = psi.repacked_dict
 
-        assert "extent" in repacked  # method key
-        method_block = repacked["extent"]
-        expected_regions = ["Arctic"]
+        assert 'extent' in repacked     # method key
+        method_block = repacked['extent']
+        expected_regions = ['Arctic']
         assert sorted(method_block.keys()) == sorted(expected_regions)
 
         for reg in expected_regions:
-            assert method_block[reg]["monthly_models"]  # non-empty list
+            assert method_block[reg]['monthly_models']    # non-empty list
 
     def test_invalid_regions_type_raises(self):
         """regions_to_plot must be list or None."""
         with pytest.raises(TypeError):
-            PlotSeaIce(monthly_models=self.siext, regions_to_plot="arctic")
+            PlotSeaIce(monthly_models=self.siext, regions_to_plot='arctic')
 
         with pytest.raises(TypeError):
             PlotSeaIce(monthly_models=self.siext, regions_to_plot=123)
@@ -120,39 +115,32 @@ class TestPlotSeaIce:
         psi = PlotSeaIce(
             monthly_models=self.siext,
             monthly_ref=self.siext_ref,
-            regions_to_plot=["Arctic", "Antarctic"],
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            catalog=self.catalog,
-            loglevel=self.loglevel,
-            dpi=DPI,
+            regions_to_plot=['Arctic', 'Antarctic'],
+            model=self.model, exp=self.exp, source=self.source,
+            catalog=self.catalog, loglevel=self.loglevel, dpi=DPI
         )
-        psi.plot_seaice(plot_type="timeseries", save_format=[])
+        psi.plot_seaice(plot_type='timeseries', save_format=[])
 
     def test_plot_seaice_seasonal_cycle(self):
         """Test the seasonal cycle path with no files saved."""
         psi = PlotSeaIce(
-            regions_to_plot=["Arctic", "Antarctic"],
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            catalog=self.catalog,
-            loglevel=self.loglevel,
-            dpi=DPI,
+            regions_to_plot=['Arctic', 'Antarctic'],
+            model=self.model, exp=self.exp, source=self.source,
+            catalog=self.catalog, loglevel=self.loglevel, dpi=DPI
         )
         psi.plot_seaice(plot_type="seasonalcycle", save_format=[])
 
     def test_plot_seascycle_multi(self):
         """Test the seasonal cycle path with multiple datasets."""
-        psi = PlotSeaIce(monthly_models=self.siext_seas, monthly_ref=[self.siext_seas_ref], dpi=DPI)
+        psi = PlotSeaIce(monthly_models=self.siext_seas,
+                         monthly_ref=[self.siext_seas_ref], dpi=DPI)
         psi.plot_seaice(plot_type="seasonalcycle", save_format=[])
 
     def test_invalid_plot_type_raises(self):
         """Test that invalid plot type raises ValueError."""
         psi = PlotSeaIce(monthly_models=self.siext, dpi=DPI)
         with pytest.raises(ValueError):
-            psi.plot_seaice(plot_type="bad_type", save_format=[])
+            psi.plot_seaice(plot_type='bad_type', save_format=[])
 
     def test_get_region_name_from_attrs(self):
         """Test region name extraction from DataArray attributes."""
@@ -225,18 +213,12 @@ class TestPlotSeaIce:
 
         monkeypatch.setattr(OutputSaver, "save_figure", fake_save_figure, raising=True)
 
-        psi = PlotSeaIce(
-            monthly_models=self.siext,
-            regions_to_plot=["Arctic"],
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            catalog=self.catalog,
-            loglevel=self.loglevel,
-            dpi=DPI,
-        )
+        psi = PlotSeaIce(monthly_models=self.siext,
+                         regions_to_plot=["Arctic"],
+                         model=self.model, exp=self.exp, source=self.source,
+                         catalog=self.catalog, loglevel=self.loglevel, dpi=DPI)
 
-        psi.plot_seaice(plot_type="timeseries", save_format=["png", "pdf"])
+        psi.plot_seaice(plot_type="timeseries", save_format=['png', 'pdf'])
 
         assert len(save_calls) == 1
         ext = save_calls[0].get("extension")
@@ -246,20 +228,14 @@ class TestPlotSeaIce:
 
     def test_plot_saves_outputs(self):
         """Test that plotting saves output files."""
-        psi = PlotSeaIce(
-            monthly_models=self.siext,
-            monthly_ref=self.siext_ref,
-            regions_to_plot=["Arctic", "Antarctic"],
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            catalog=self.catalog,
-            loglevel=self.loglevel,
-            dpi=DPI,
-            outputdir=self.tmp_path,
-        )
+        psi = PlotSeaIce(monthly_models=self.siext,
+                         monthly_ref=self.siext_ref,
+                         regions_to_plot=['Arctic', 'Antarctic'],
+                         model=self.model, exp=self.exp, source=self.source,
+                         catalog=self.catalog, loglevel=self.loglevel, dpi=DPI,
+                         outputdir=self.tmp_path)
 
-        psi.plot_seaice(plot_type="timeseries", save_format=["png", "pdf"])
+        psi.plot_seaice(plot_type='timeseries', save_format=['png', 'pdf'])
 
         png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
         pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)

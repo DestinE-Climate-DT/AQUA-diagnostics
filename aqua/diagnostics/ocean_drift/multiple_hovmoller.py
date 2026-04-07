@@ -2,7 +2,6 @@
 Module to plot multiple Hovmoller data.
 This function is custom for the Ocean Drift diagnostics in AQUA.
 """
-
 import matplotlib.pyplot as plt
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -40,10 +39,8 @@ def plot_multi_hovmoller(
         maps (list): List of xarray datasets containing the data to be plotted.
         contour (bool): Whether to plot contours. Default is True.
         sym (bool): Whether to use symmetric color limits. Default is False.
-        figsize (tuple): Size of the figure. Default is None, which will be
-            set based on the number of variables and datasets.
-        variables (list): List of variable names to be plotted.
-            If None, all variables in the datasets will be used.
+        figsize (tuple): Size of the figure. Default is None, which will be set based on the number of variables and datasets.
+        variables (list): List of variable names to be plotted. If None, all variables in the datasets will be used.
         invert_space_coord (bool): Whether to invert the space coordinate. Default is True.
         fig (plt.Figure): Matplotlib figure object to plot on. If None, a new figure will be created.
         ax (plt.Axes): Matplotlib axes object to plot on. If None, a new axes will be created.
@@ -55,8 +52,7 @@ def plot_multi_hovmoller(
         title (str): Title for the entire figure. Default is None.
         titles (list[str]): List of titles for each subplot. If None, no titles will be set.
         cmap (list[str]): List of colormaps for each variable. If None, the default colormap will be used.
-        cbar_label (list[str]): List of colorbar labels for each subplot.
-            If None, labels will be generated based on the variable names.
+        cbar_label (list[str]): List of colorbar labels for each subplot. If None, labels will be generated based on the variable names.
         return_fig (bool): Whether to return the figure object. Default is True.
         loglevel (str): Logging level. Default is "WARNING".
         **kwargs: Additional keyword arguments to be passed to the plotting function.
@@ -87,7 +83,7 @@ def plot_multi_hovmoller(
                 box_text=False,
                 dim=None,
                 nlevels=nlevels,
-                invert_space_coord=True,
+                invert_space_coord = True,
                 text=text[k] if text else None,
                 cbar=False,
                 title=titles[k] if titles else None,
@@ -111,7 +107,7 @@ def plot_multi_hovmoller(
             # Create colorbar axis next to plot
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.15)
-            cbar = fig.colorbar(mappable, cax=cax, orientation="vertical")  # noqa: F841
+            cbar = fig.colorbar(mappable, cax=cax, orientation="vertical") # noqa: F841
 
             # if cbar_label and j < len(cbar_label):
             #     cbar.set_label(cbar_label[j])
@@ -124,7 +120,7 @@ def plot_multi_hovmoller(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10, fontweight="bold")
+        fig.suptitle(title, fontsize=ncols * 10, fontweight='bold')
 
     if return_fig:
         return fig
