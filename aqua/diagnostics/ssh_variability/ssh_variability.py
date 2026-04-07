@@ -12,7 +12,6 @@ from .base import BaseMixin
 xr.set_options(keep_attrs=True)
 
 
-<<<<<<< HEAD:aqua/diagnostics/ssh_variability/ssh_variability.py
 class ssh_variability_compute(BaseMixin):
     """
     SSH Computation
