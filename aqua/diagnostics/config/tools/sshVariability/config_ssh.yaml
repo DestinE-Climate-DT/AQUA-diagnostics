@@ -4,19 +4,19 @@ datasets:
     model: 'IFS-NEMO'
     exp: 'historical-1990'
     source: 'ssh-IFS-NEMO-test'
-    regrid: 'r025' 
+    regrid: 'r025'
     zoom: null
     realization: null
     # TODO:
-    #reader_kwargs: null #  it can be a dictionary with reader kwargs 
+    #reader_kwargs: null #  it can be a dictionary with reader kwargs
 
 # This is the reference model against which other models are compared.
 references:
-  - catalog: 'obs' 
+  - catalog: 'obs'
     model: 'AVISO'
     exp: 'ssh-L4'
     source: 'ssh-AVISO-test'
-    regrid: 'r025' 
+    regrid: 'r025'
 
 setup:
   loglevel: 'WARNING'
@@ -25,8 +25,7 @@ output:
   outputdir: "./"
   rebuild: true
   save_netcdf: true
-  save_pdf: false
-  save_png: true
+  save_format: ['png', 'pdf', 'svg']
   dpi: 600
 
 diagnostics:
@@ -41,23 +40,23 @@ diagnostics:
         startdate_ref: '1994-01-01'
         enddate_ref: '1994-01-04'
     plot_params:
-      default: 
+      default:
         projection: 'robinson'
         projection_params: {}
-        vmin: 
-        vmax: 
+        vmin:
+        vmax:
         cmap: 'RdBu_r'
         tgt_grid_name: 'r360x180'
-        regrid_method: 'ycon'        
-      # sub region selection 
-      sub_region : 
+        regrid_method: 'ycon'
+      # sub region selection
+      sub_region :
         name: Agulhas
         lon_limits: [5, 50]
         lat_limits: [-10, -50]
         projection: 'plate_carree'
         projection_params: {}
       # ONLY FOR ICON: Flags for northern and southern boundaries to mask out specific latitudes.
-      # As AVISO does not have data under the sea ice, which ICON does, 
+      # As AVISO does not have data under the sea ice, which ICON does,
       # to make the datasets comparable - SSH under sea ice for ICON can be masked out.
       mask_options:
         mask_northern_boundary: true
@@ -70,4 +69,3 @@ cluster:
   nworkers: 8
   #threads_per_worker: 1
   #memory_limit: 30e9
-

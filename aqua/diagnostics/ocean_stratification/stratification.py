@@ -1,10 +1,12 @@
 import calendar
+
 import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import Diagnostic
-from .compute_mld import compute_mld_cont
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
+
+from .compute_mld import compute_mld_cont
 from .compute_rho import compute_rho
 from .convert_variables import convert_so, convert_thetao
 
@@ -161,7 +163,7 @@ class Stratification(Diagnostic):
         else:
             self.save_netcdf(self.data['mld'], diagnostic_product='mld', outputdir=outputdir, rebuild=rebuild, region=self.region)
             self.logger.info("MLD diagnostic saved to netCDF file.")
-       
+
 
     def compute_stratification(self):
         """
@@ -205,7 +207,7 @@ class Stratification(Diagnostic):
         self.logger.debug(f"Computing {self.climatology} climatology.")
         month_list = list(calendar.month_name)[1:]
         season_list = ["DJF", "MAM", "JJA", "SON"]
-        month_season_list = month_list + season_list
+        month_season_list = month_list + season_list # noqa: F841
 
         if self.climatology in month_list:
             self.clim_type = "month"

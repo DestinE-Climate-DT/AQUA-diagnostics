@@ -2,7 +2,7 @@
 # in the command line by using:
 # --model, --exp, --source, --outputdir, --catalog
 datasets:
-  - catalog: 'climatedt-phase1' 
+  - catalog: 'climatedt-phase1'
     model: 'IFS-NEMO'
     exp: 'historical-1990'
     source: 'aqua-atmglobalmean'
@@ -10,7 +10,7 @@ datasets:
     realization: null
     #areas: False
     #fix: True
-  - catalog: 'nextgems4' 
+  - catalog: 'nextgems4'
     model: 'IFS-FESOM'
     exp: 'historical-1990'
     source: 'aqua-atmglobalmean'
@@ -26,8 +26,7 @@ output:
   outputdir: "./"
   #rebuild: true
   save_netcdf: true
-  save_pdf: true
-  save_png: true
+  save_format: ['png', 'pdf', 'svg']
   dpi: 300
 
 diagnostics:
@@ -47,18 +46,17 @@ diagnostics:
         projection_params: {}
       2t:
         vmin:
-        vmax: 
-        vmin_std: 
-        vmax_std: 
+        vmax:
+        vmin_std:
+        vmax_std:
         cmap: 'RdBu_r'
       msl:
-        vmin: 
-        vmax: 
-        vmin_std: 
-        vmax_std: 
+        vmin:
+        vmax:
+        vmin_std:
+        vmax_std:
       tprate:
-        vmin: 
-        vmax: 
-        vmin_std: 
-        vmax_std: 
-
+        vmin:
+        vmax:
+        vmin_std:
+        vmax_std:

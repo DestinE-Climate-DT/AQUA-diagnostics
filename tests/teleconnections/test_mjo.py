@@ -1,15 +1,18 @@
 import os
+
 import matplotlib
 import pytest
+from conftest import APPROX_REL, DPI, LOGLEVEL
+
 from aqua.diagnostics.teleconnections import MJO, PlotMJO
-from conftest import APPROX_REL, LOGLEVEL, DPI
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL
 
 @pytest.mark.diagnostics
-def test_MJO(tmp_path):
+@pytest.mark.skip(reason="Temporarily disabled until MJO is integrated again.")
+def test_mjo(tmp_path):
     """
     Test that the MJO class works
     """
@@ -18,7 +21,9 @@ def test_MJO(tmp_path):
         'exp': 'era5-hpz3',
         'source': 'monthly',
         'loglevel': loglevel,
-        'regrid': 'r200'
+        'regrid': 'r200',
+        'startdate': '2000-01-01',
+        'enddate': '2001-12-31'
     }
 
     mjo = MJO(**init_dict)

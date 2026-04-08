@@ -2,3 +2,6 @@
 
 # Default name for the oceanic vertical coordinate used across diagnostics.
 DEFAULT_OCEAN_VERT_COORD = "level"
+
+# Centralised default list of figure formats used when saving plots.
+SAVE_FORMAT = ["png", "pdf", "svg"]

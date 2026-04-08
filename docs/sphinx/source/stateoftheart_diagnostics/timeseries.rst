@@ -16,7 +16,7 @@ Classes
 
 There are three classes for the analysis:
 
-* **Timeseries**: computes time series of a given variable or formula for a given model or dataset. 
+* **Timeseries**: computes time series of a given variable or formula for a given model or dataset.
   Comparison with a reference dataset is also possible. It supports hourly, daily, monthly and yearly time series and area selection.
   It can also compute the standard deviation of the time series.
 * **SeasonalCycles**: computes the seasonal cycle of a given variable or formula for a given model or dataset.
@@ -57,7 +57,7 @@ The Gregory-like plot requires the Net radiation TOA and the 2 metre temperature
 Basic usage
 -----------
 
-The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic usage of this diagnostic is explained with a working example in the notebook.
 The basic structure of the analysis is the following:
 
 .. code-block:: python
@@ -178,7 +178,7 @@ Here we describe only the specific settings for the time series diagnostic.
         std_enddate: '2020-12-31'
         # Gregory needs 2 datasets and do not care about the references block above
         t2m_ref: {'catalog': 'obs', 'model': 'BERKELEY-EARTH', 'exp': 'aqua-filled', 'source': 'r100-monthly'}
-        net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa421', 'source': 'monthly'}    
+        net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa421', 'source': 'monthly'}
 
 Output
 ------
