@@ -1,7 +1,8 @@
 import xarray as xr
+
 from aqua.core.graphics import plot_single_map
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list, get_realizations
+from aqua.core.util import get_realizations, to_list
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
 
 

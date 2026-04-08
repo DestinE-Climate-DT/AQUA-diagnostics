@@ -1,7 +1,8 @@
 """Module for computing trends using xarray."""
 
-import xarray as xr
 import pandas as pd
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.reader import Trender
 from aqua.core.util import to_list
@@ -154,7 +155,7 @@ class Trends(Diagnostic):
             else:
                 self.logger.error("Unable to determine time frequency")
                 raise ValueError(
-                    f"The frequency of the data must be in Daily/Monthly/Yearly"
+                    "The frequency of the data must be in Daily/Monthly/Yearly"
                 )
 
         if time_frequency == "MS":
