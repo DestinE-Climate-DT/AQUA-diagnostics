@@ -157,7 +157,8 @@ class PlotSeaIce:
 
         where: 'method' is extracted from the dataset attributes (defaulting to "Unknown").
         'region' is determined by self._get_region(dataset, data_var).
-        'str_data' is the keyword with the data in input, and each value is a list of data arrays corresponding to that keyword.
+        'str_data' is the keyword with the data in input, and each value is a
+            list of data arrays corresponding to that keyword.
 
         Args:
             **kwargs (dict): Keyword arguments, where each str_data is linked to
@@ -459,7 +460,8 @@ class PlotSeaIce:
             plot_type (str, optional): Type of plot to generate.
                 Options are `'timeseries'` or `'seasonalcycle'`. Default is `'timeseries'`.
             save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
-            style (str, optional): Override the plotting style. Default to None (which will get the style from config file or fallback to'aqua').
+            style (str, optional): Override the plotting style. Default to None (which will get
+                the style from config file or fallback to'aqua').
             **kwargs: Additional keyword arguments passed to the region-specific plotting function.
         """
         self.plot_type = plot_type

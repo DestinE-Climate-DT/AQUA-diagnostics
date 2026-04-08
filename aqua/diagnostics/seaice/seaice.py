@@ -4,7 +4,7 @@ import xarray as xr
 from aqua.core.exceptions import NoDataError
 from aqua.core.fldstat import FldStat
 from aqua.core.logger import log_configure, log_history
-from aqua.core.util import merge_attrs, to_list, time_to_string
+from aqua.core.util import merge_attrs, time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.seaice.util import ensure_istype
 
@@ -399,10 +399,12 @@ class SeaIce(Diagnostic):
                              grid_name=grid_name, loglevel=self.loglevel)
 
         if self.method == 'extent':
-            # compute sea ice extent: exclude areas with no sea ice and sum over the spatial dimension; divide by 1e12 to convert to million km^2
+            # compute sea ice extent: exclude areas with no sea ice and sum over the spatial dimension;
+            # divide by 1e12 to convert to million km^2
             seaice_integrated = si_fldstat.fldstat(masked_data_region.notnull(), stat='areasum', dims=space_coord) / 1e12
         if self.method == 'volume':
-            # compute sea ice volume: exclude areas with no sea ice; divide by 1e12 to convert to thousand km^3
+            # compute sea ice volume: exclude areas with no sea ice;
+            # divide by 1e12 to convert to thousand km^3
             seaice_integrated = si_fldstat.fldstat(masked_data_region, stat='integral', dims=space_coord) / 1e12
 
             merge_attrs(seaice_integrated.attrs, masked_data.attrs)

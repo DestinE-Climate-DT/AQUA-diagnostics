@@ -44,7 +44,9 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
             elif domain == 'sh' and max_lat <= 0: # Southern hemisphere
                 filtered_regions.append(r)
             else:
-                logger.debug(f"Region '{r}' doesn't meet the data domain criteria for {domain}, not including in regions_list.")
+                logger.debug(
+                    f"Region '{r}' doesn't meet the data domain criteria for {domain}, not including in regions_list."
+                )
         else:
             logger.error(f"No region '{r}' defined in regions_dict from yaml. Check this mismatch.")
 
