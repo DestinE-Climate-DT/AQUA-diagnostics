@@ -2,22 +2,21 @@
 Module to plot multiple maps
 
 """
-import numpy as np
-import xarray as xr
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
+import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from typing import Optional, Tuple
 
-from aqua.core.logger import log_configure
-from aqua.core.util import (
-    plot_box,
-    evaluate_colorbar_limits,
-    cbar_get_label,
-    generate_colorbar_ticks,
-)
 from aqua.core.graphics import plot_single_map
 from aqua.core.graphics.styles import ConfigStyle
+from aqua.core.logger import log_configure
+from aqua.core.util import (
+    cbar_get_label,
+    evaluate_colorbar_limits,
+    generate_colorbar_ticks,
+    plot_box,
+)
 
 
 def plot_maps(
@@ -194,7 +193,7 @@ def plot_maps(
 
         # Add the colorbar
         mappable = ax.collections[0]
-        if cbar == True:
+        if cbar:
             cbar = fig.colorbar(
                 mappable, cax=cbar_ax, orientation="horizontal", label=cbar_label
             )

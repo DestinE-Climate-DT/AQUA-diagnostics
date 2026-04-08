@@ -1,8 +1,10 @@
 import os
+
 import pytest
 import xarray as xr
-from aqua.diagnostics.timeseries import Gregory, PlotGregory
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics.timeseries import Gregory, PlotGregory
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL
@@ -34,7 +36,7 @@ class TestGregory:
                      startdate=self.std_startdate,
                      enddate=self.std_enddate,
                      loglevel=loglevel)
-        
+
         gp.run(std=True, outputdir=tmp_path)
 
         assert isinstance(gp.t2m, xr.DataArray)
@@ -62,7 +64,7 @@ class TestGregory:
                           t2m_annual_std = gp.t2m_std,
                           net_toa_annual_std = gp.net_toa_std,
                           loglevel=loglevel)
-        
+
         title = plt.set_title()
         data_labels = plt.set_data_labels()
         ref_label = plt.set_ref_label()
@@ -73,4 +75,3 @@ class TestGregory:
         filename = f'{self.diagnostic_name}.gregory.{self.catalog}.{self.model}.{self.exp}.r1.multiref.png'
         file = os.path.join(tmp_path, 'png', filename)
         assert os.path.exists(file)
-

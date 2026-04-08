@@ -1,8 +1,10 @@
 import os
+
 import pytest
 import xarray as xr
-from aqua.diagnostics.timeseries import SeasonalCycles, PlotSeasonalCycles
 from conftest import APPROX_REL, DPI, LOGLEVEL
+
+from aqua.diagnostics.timeseries import PlotSeasonalCycles, SeasonalCycles
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL
@@ -32,7 +34,7 @@ class TestSeasonalCycles:
                             source=self.source, regrid=self.regrid,
                             startdate=self.startdate, enddate=self.enddate,
                             loglevel=loglevel)
-        
+
         assert sc.lon_limits is None
         assert sc.lat_limits is None
 
@@ -41,13 +43,17 @@ class TestSeasonalCycles:
         assert isinstance(sc.data, xr.DataArray)
         assert sc.monthly.values[0] == pytest.approx(63.22174285385192, rel=approx_rel)
 
-        filename = f'{self.diagnostic_name}.seasonalcycles.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.monthly.global.nc'
+        filename = (f"{self.diagnostic_name}.seasonalcycles."
+                    f"{self.catalog}.{self.model}.{self.exp}.r1."
+                    f"{self.var}.monthly.global.nc")
         file = os.path.join(tmp_path, 'netcdf', filename)
         assert os.path.exists(file)
 
         assert sc.std_monthly.values[0] == pytest.approx(0.23421051986458963, rel=approx_rel)
 
-        filename = f'{self.diagnostic_name}.seasonalcycles.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.monthly.global.std.nc'
+        filename = (f"{self.diagnostic_name}.seasonalcycles."
+                    f"{self.catalog}.{self.model}.{self.exp}.r1."
+                    f"{self.var}.monthly.global.std.nc")
         file = os.path.join(tmp_path, 'netcdf', filename)
         assert os.path.exists(file)
 
@@ -56,6 +62,8 @@ class TestSeasonalCycles:
                                  std_monthly_data = sc.std_monthly, loglevel=loglevel)
         plt.run(outputdir=tmp_path, dpi=DPI)
 
-        filename = f'{self.diagnostic_name}.seasonalcycles.{self.catalog}.{self.model}.{self.exp}.r1.{self.catalog}.{self.model}.{self.exp}.{self.var}.png'
+        filename = (f"{self.diagnostic_name}.seasonalcycles."
+                    f"{self.catalog}.{self.model}.{self.exp}.r1."
+                    f"{self.catalog}.{self.model}.{self.exp}.{self.var}.png")
         file = os.path.join(tmp_path, 'png', filename)
         assert os.path.exists(file)

@@ -31,9 +31,9 @@ File structure
 Input variables and datasets
 ----------------------------
 
-Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via 
+Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via
 ``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. The final merged dataset will contain all the requested ensemble members with appropriate metadata.
-Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``. 
+Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``.
 The merged dataset must contain all ensemble members concatenated along a pseudo-dimension named ``ensemble`` (by default, but customizable).
 
 Some of the variables that are typically used in this diagnostic are:
@@ -98,8 +98,7 @@ The basic structure of the analysis is the following:
 
     ens_zm_plot.plot(
         var=var,
-        save_pdf=True,
-        save_png=True,
+        save_format=['png', 'pdf'], # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
         title_mean='Mean of Ensemble of Zonal-average of avg_so',
         title_std='Standard deviation of Ensemble of Zonal-average of avg_so',
         cbar_label='Time-mean sea water practical salinity g kg**-1/year',
@@ -109,7 +108,8 @@ The basic structure of the analysis is the following:
 
 .. note::
 
-    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
+    If not specified otherwise, plots will be saved using ``SAVE_FORMAT`` (PNG, PDF, and SVG)
+    in the current working directory.
 
 CLI usage
 ---------
@@ -144,7 +144,7 @@ The diagnostic produces three types of plots:
 * 2D spatial maps of ensemble mean and standard deviation
 * Zonal cross-section plots of ensemble mean and standard deviation
 
-Plots are saved in both PDF and PNG format.
+Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
 Data outputs are saved as NetCDF files.
 
 
@@ -190,9 +190,9 @@ The diagnostic produces the following outputs:
 * Contour plot of ensemble mean as a function of latitude and depth/level
 * Contour plot of ensemble standard deviation as a function of latitude and depth/level
 
-Plots are saved in both PDF and PNG format.
+Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
 Data outputs are saved as NetCDF files.
- 
+
 Example Plots
 -------------
 
@@ -201,7 +201,7 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 .. figure:: figures/avg_so_LevLon_mean.png
     :align: center
     :width: 100%
-    
+
     Ensemble-Zonal mean for average Time-mean sea water practical salinity for IFS-NEMO historical-1990.
 
 .. figure:: figures/avg_so_LevLon_STD.png
@@ -220,8 +220,8 @@ Notebooks are stored in the ``notebooks/diagnostics/ensemble`` directory and con
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_). 
-Contributions are welcome — please open an issue or a pull request.  
+This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
+Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
 
 Detailed API

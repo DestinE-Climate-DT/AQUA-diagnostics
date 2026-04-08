@@ -1,7 +1,7 @@
 """Module for computing trends using xarray."""
 
-import xarray as xr
 import pandas as pd
+import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.reader import Trender
@@ -91,7 +91,7 @@ class Trends(Diagnostic):
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region}.")
-            res_dict = super()._select_region(
+            res_dict = super().select_region(
                 data=data, region=region, diagnostic="ocean3d", drop=True
             )
             lat_limits = res_dict["lat_limits"]
@@ -118,14 +118,14 @@ class Trends(Diagnostic):
         Args:
             trend (xr.DataArray): Trend values to adjust.
             y_array (xr.DataArray): Original data array with time coordinate.
-        
+
         Returns:
             xr.DataArray: Adjusted trend values.
         """
         self.logger.debug("Adjusting trend for time frequency")
         time_frequency = y_array["time"].to_index().inferred_freq
 
-        if time_frequency == None:
+        if time_frequency is None:
             self.logger.debug("Time frequency not inferred, checking for monthly data")
             time_index = pd.to_datetime(y_array["time"].values)
             time_diffs = time_index[1:] - time_index[:-1]
@@ -136,7 +136,7 @@ class Trends(Diagnostic):
             else:
                 self.logger.error("Unable to determine time frequency")
                 raise ValueError(
-                    f"The frequency of the data must be in Daily/Monthly/Yearly"
+                    "The frequency of the data must be in Daily/Monthly/Yearly"
                 )
 
         if time_frequency == "MS":

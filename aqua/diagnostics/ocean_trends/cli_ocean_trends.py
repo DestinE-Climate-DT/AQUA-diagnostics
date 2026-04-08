@@ -9,11 +9,8 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.core.util import get_arg
-from aqua.diagnostics.base import template_parse_arguments
-from aqua.diagnostics.ocean_trends import Trends
-from aqua.diagnostics.ocean_trends import PlotTrends
-from aqua.diagnostics.base import DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.ocean_trends import PlotTrends, Trends
 
 
 def parse_arguments(args):
@@ -29,10 +26,10 @@ def parse_arguments(args):
 
 if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
-    
+
     cli = DiagnosticCLI(args, 'ocean3d', 'config-ocean3d-en4-trend-drift.yaml', log_name='OceanTrends CLI').prepare()
     cli.open_dask_cluster()
-    
+
     logger = cli.logger
     config_dict = cli.config_dict
 
@@ -45,8 +42,7 @@ if __name__ == '__main__':
     reader_kwargs = cli.reader_kwargs
     outputdir = cli.outputdir
     rebuild = cli.rebuild
-    save_pdf = cli.save_pdf
-    save_png = cli.save_png
+    save_format = cli.save_format
     dpi = cli.dpi
 
     if 'multilevel' in config_dict['diagnostics']['ocean_trends']:
@@ -61,9 +57,9 @@ if __name__ == '__main__':
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
             #     regions.append('go')
-            
+
             # Calculating Trend on whole dataset
-            
+
             data_trends = Trends(
                 **dataset_args,
                 diagnostic_name=diagnostic_name,
@@ -78,7 +74,7 @@ if __name__ == '__main__':
                 rebuild=rebuild,
                 reader_kwargs=reader_kwargs
             )
-            
+
             for region in regions:
                 try:
                     cli.logger.info("Processing region: %s", region)
@@ -92,7 +88,7 @@ if __name__ == '__main__':
                         rebuild=rebuild,
                         loglevel=cli.loglevel
                     )
-                    trends_plot.plot_multilevel(save_pdf=save_pdf, save_png=save_png, dpi=dpi)
+                    trends_plot.plot_multilevel(save_format=save_format, dpi=dpi)
 
                     zonal_trend_plot = PlotTrends(
                         data=data_trends_region.mean('lon'),
@@ -102,7 +98,7 @@ if __name__ == '__main__':
                         rebuild=rebuild,
                         loglevel=cli.loglevel
                     )
-                    zonal_trend_plot.plot_zonal(save_pdf=save_pdf, save_png=save_png, dpi=dpi)
+                    zonal_trend_plot.plot_zonal(save_format=save_format, dpi=dpi)
                 except Exception as e:
                     cli.logger.error("Error processing region %s: %s", region, e)
 

@@ -16,7 +16,7 @@ Together, these metrics quantify the climatological *skill* of atmospheric and o
 
 PIs follow the Reichler and Kim (2008) `Reichler and Kim Performance Indices <https://journals.ametsoc.org/view/journals/bams/89/3/bams-89-3-303.xml>`_, definition, with the adjustments implemented in ECmean4.
 For reference, see also * Reichler, T., and J. Kim, 2008: How Well Do Coupled Models Simulate Today's Climate?. Bull. Amer. Meteor. Soc., 89, 303-312, https://doi.org/10.1175/BAMS-89-3-303.
-Key differences from the original formulation include: 
+Key differences from the original formulation include:
 
 - metrics are computed on a common grid (1x1 deg) instead of the model grid
 - updated reference climatologies
@@ -31,24 +31,24 @@ values < 1 indicate a better performance than the CMIP6 average.
 
 
 The GM metric consists of global averages of sany dynamical and physical fields, compared against a set of pre-computed climatological values
-for both the atmosphere and the ocean (e.g. land temperature, salinity, etc.). 
+for both the atmosphere and the ocean (e.g. land temperature, salinity, etc.).
 Multiple observational datasets are taken in consideration for each variable, providing an estimate of the plausible variability in the form of interannual standard deviation.
-GMs provides also estimate for the radiative budget  and for the hydrological cycle (including integrals over land and ocean) 
+GMs provides also estimate for the radiative budget  and for the hydrological cycle (including integrals over land and ocean)
 and other quantities useful for fast model assessment and for model tuning.
 
 Classes
 -------
-For detailed information on the code, please refer to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_.  
+For detailed information on the code, please refer to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_.
 
 File structure
 --------------
-* The diagnostic is located in the ``aqua/diagnostics/ecmean`` directory, which contains the command line interface (CLI) script `cli_ecmean.py`.  
+* The diagnostic is located in the ``aqua/diagnostics/ecmean`` directory, which contains the command line interface (CLI) script `cli_ecmean.py`.
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-ecmean.yaml``
 * The configuration file for ECmean4 specific settings (variables and regions) is located in ``aqua/diagnostics/config/tools/ecmean/ecmean_config_climatedt.yaml``.
 * The interface file to map AQUA variable names to ECmean4 standard names is located in ``aqua/diagnostics/config/tools/ecmean/interface/interface_AQUA_climatedt.yaml``.
-* Notebooks are available in the ``notebooks/diagnostics/ecmean`` directory and contain examples of how to use the diagnostic.  
+* Notebooks are available in the ``notebooks/diagnostics/ecmean`` directory and contain examples of how to use the diagnostic.
 
-For detailed information on the code, please refer to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_.  
+For detailed information on the code, please refer to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_.
 
 
 Input variables and datasets
@@ -61,7 +61,7 @@ For **Performance Indices** the following variables are requested:
 * ``msl``    (mean sea level pressure, GRIB paramid 151)
 * ``metss``  (eastward wind stress, GRIB paramid 180)
 * ``mntss``  (northward wind stress, GRIB paramid 181)
-* ``t``      (air temperature, GRIB paramid 130)        
+* ``t``      (air temperature, GRIB paramid 130)
 * ``u``      (zonal wind, GRIB paramid 131)
 * ``v``      (meridional wind, GRIB paramid 132)
 * ``q``      (specific humidity, GRIB paramid 133)
@@ -74,7 +74,7 @@ For **Performance Indices** the following variables are requested:
 * ``msnswrf``   (surface net shortwave radiation flux, GRIB paramid 235037, required for net surface flux computation)
 * ``msr``      (snowfall rate, GRIB paramid 235031, required for net surface flux computation)
 
-3D fields are zonally averaged, so that the PIs reports the performance on the zonal field. 
+3D fields are zonally averaged, so that the PIs reports the performance on the zonal field.
 
 For **Global Means**, the following variables are requested
 
@@ -84,7 +84,7 @@ For **Global Means**, the following variables are requested
 * ``msl``    (mean sea level pressure, GRIB paramid 151)
 * ``metss``  (eastward wind stress, GRIB paramid 180)
 * ``mntss``  (northward wind stress, GRIB paramid 181)
-* ``t``      (air temperature, GRIB paramid 130)        
+* ``t``      (air temperature, GRIB paramid 130)
 * ``u``      (zonal wind, GRIB paramid 131)
 * ``v``      (meridional wind, GRIB paramid 132)
 * ``q``      (specific humidity, GRIB paramid 133)
@@ -101,25 +101,25 @@ For **Global Means**, the following variables are requested
 * ``msr``      (snowfall rate, GRIB paramid 235031, required for net surface flux computation)
 
 
-For both diagnostics, if a variable (or more) is missing, blank line will be reported in the output figures. 
+For both diagnostics, if a variable (or more) is missing, blank line will be reported in the output figures.
 
 .. note ::
-    ECmean4 is made to work with CMOR variables, but can handle name and file conversion with 
+    ECmean4 is made to work with CMOR variables, but can handle name and file conversion with
     specification of an `interface file <https://ecmean4.readthedocs.io/en/latest/configuration.html#interface-files>`_.
-    An AQUA specific one has been designed for this purpose to work with Climate DT Phase 1. 
-    Updates in the Data Governance will require updates to the interface file.  
-    In addition, although PI and GM can work directly on the model raw output, the interface file 
-    is made to work only with the Low Resolution Archive (LRA) data, generated by the AQUA Data Reduction 
-    OPerator (DROP), to reduce the amount of computation required. 
+    An AQUA specific one has been designed for this purpose to work with Climate DT Phase 1.
+    Updates in the Data Governance will require updates to the interface file.
+    In addition, although PI and GM can work directly on the model raw output, the interface file
+    is made to work only with the Low Resolution Archive (LRA) data, generated by the AQUA Data Reduction
+    OPerator (DROP), to reduce the amount of computation required.
 
 
 Basic usage
 -----------
-A complete example is provided in the ``notebooks/diagnostics/ecmean`` directory.  
+A complete example is provided in the ``notebooks/diagnostics/ecmean`` directory.
 The general structure of the analysis is the following:
 
  .. code-block:: python
-    
+
     import os
     from aqua import Reader
     from aqua.util import load_yaml, ConfigPath
@@ -139,12 +139,12 @@ The general structure of the analysis is the following:
 
     config['dirs']['exp'] = ecmeandir
 
-    for model in models: 
+    for model in models:
         reader = Reader(model=model, exp=exp, source="lra-r100-monthly", fix=False)
         data = reader.retrieve()
         PerformanceIndices(exp, year1, year2, model=model, loglevel='info', xdataset=data, config=load_yaml(config))
 
-Please refer also to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_. 
+Please refer also to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_.
 
 CLI usage
 ---------
@@ -180,7 +180,7 @@ The configuration file is a YAML file that contains the details on the dataset t
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
 Here we describe only the specific settings for the ecmean diagnostic.
 
-* ``ecmean``: a block (nested in the ``diagnostics`` block) containing options for the ECmean diagnostic.  
+* ``ecmean``: a block (nested in the ``diagnostics`` block) containing options for the ECmean diagnostic.
   Variable-specific parameters override the defaults.
 * ``nprocs``: number of multiprocessing processes to use (default: 1).
 * ``interface_file``: path to the ECmean4 interface file to use.
@@ -197,7 +197,7 @@ Two sub-blocks are available, one for Performance Indices and one for Global Mea
 .. code-block:: yaml
 
     diagnostics:
-        ecmean: 
+        ecmean:
             nprocs: 1
             interface_file: 'interface_AQUA_climatedt.yaml'
             config_file: 'ecmean_config_climatedt.yaml'
@@ -213,27 +213,27 @@ Two sub-blocks are available, one for Performance Indices and one for Global Mea
             year2: null
 
 
-Output 
+Output
 ------
 
-The result are stored as a YAML file, indicating PIs and GMs for each variable, region and season, 
+The result are stored as a YAML file, indicating PIs and GMs for each variable, region and season,
 that can be stored for later evaluation.
-Most importantly, a figure for GMs and a figure for PIs (both in PDF format) are produced showing a score card for the 
+Most importantly, a figure for GMs and a figure for PIs (both in PDF format) are produced showing a score card for the
 different regions, variables and seasons.
-For the sake of simplicity, the PIs figure is computed as the ratio between the model PI and the 
-average value estimated over the (precomputed) ensemble of CMIP6 models. 
-Numbers lower than one imply that the model is performing better than the average of CMIP6 models. 
+For the sake of simplicity, the PIs figure is computed as the ratio between the model PI and the
+average value estimated over the (precomputed) ensemble of CMIP6 models.
+Numbers lower than one imply that the model is performing better than the average of CMIP6 models.
 
-Similarly, the GMs are reported as a score card with the average of the field, together with observational value reported in a 
-smaller font, and colorscale which tells how many standard deviations from the interannual variability the model is far from observation. 
+Similarly, the GMs are reported as a score card with the average of the field, together with observational value reported in a
+smaller font, and colorscale which tells how many standard deviations from the interannual variability the model is far from observation.
 The whiter the color, the more reliable is the model output.
 
 
 Reference datasets
 ------------------
 
-ECmean4 uses multiple sources as reference climatologies: please refer to the climatology description for `Performance Indices <https://ecmean4.readthedocs.io/en/latest/performanceindices.html#climatologies-available>`_ 
-and for `Global Mean <https://ecmean4.readthedocs.io/en/latest/globalmean.html#climatology-computation>`_ to get more insight. 
+ECmean4 uses multiple sources as reference climatologies: please refer to the climatology description for `Performance Indices <https://ecmean4.readthedocs.io/en/latest/performanceindices.html#climatologies-available>`_
+and for `Global Mean <https://ecmean4.readthedocs.io/en/latest/globalmean.html#climatology-computation>`_ to get more insight.
 
 Example Plot(s)
 ---------------
@@ -258,14 +258,14 @@ Notebooks are stored in ``notebooks/diagnostics/ecmean``.
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Paolo Davini (`@oloapinivad <https://github.com/oloapinivad>`_, `paolo.davini@cnr.it <mailto:paolo.davini@cnr.it>`_).  
-Contributions are welcome — please open an issue or a pull request.  
+This diagnostic is maintained by Paolo Davini (`@oloapinivad <https://github.com/oloapinivad>`_, `paolo.davini@cnr.it <mailto:paolo.davini@cnr.it>`_).
+Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainers.
 
 Detailed API
 ------------
 
-This section provides a detailed reference for the Application Programming Interface (API) of the ``ecmean`` diagnostic,  
+This section provides a detailed reference for the Application Programming Interface (API) of the ``ecmean`` diagnostic,
 generated from the function docstrings.
 
 .. automodule:: aqua.diagnostics.ecmean

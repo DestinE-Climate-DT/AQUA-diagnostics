@@ -1,12 +1,16 @@
-from aqua.core.logger import log_configure
+import pandas as pd
+import xarray as xr
+
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.histogram import histogram
+from aqua.core.logger import log_configure
 from aqua.diagnostics.base import Diagnostic
+
 
 class Histogram(Diagnostic):
     """
-    Class to compute histograms and probability density functions (PDFs) of a variable 
-    over a specified region. Retrieves data from catalog, computes histograms/PDFs 
+    Class to compute histograms and probability density functions (PDFs) of a variable
+    over a specified region. Retrieves data from catalog, computes histograms/PDFs
     for the entire period, and saves results to netcdf files.
     """
     def __init__(self, model: str, exp: str, source: str,
@@ -38,9 +42,9 @@ class Histogram(Diagnostic):
             diagnostic_name (str, optional): Name of diagnostic. Default 'histogram'.
             loglevel (str, optional): Log level.
         """
-        super().__init__(catalog=catalog, model=model, exp=exp, source=source, 
+        super().__init__(catalog=catalog, model=model, exp=exp, source=source,
                         regrid=regrid, loglevel=loglevel)
-        
+
         self.diagnostic_name = diagnostic_name
         self.logger = log_configure(log_level=loglevel, log_name='Histogram')
 
@@ -104,7 +108,10 @@ class Histogram(Diagnostic):
 
         # Customize data attributes
         if units is not None:
-            self.data = self._check_data(data=self.data, var=var, units=units)
+            if isinstance(self.data, xr.Dataset):
+                self.data[var] = self._check_data(data=self.data[var], var=var, units=units)
+            else:
+                self.data = self._check_data(data=self.data, var=var, units=units)
         if long_name is not None:
             self.data.attrs['long_name'] = long_name
         if standard_name is not None:
@@ -122,14 +129,14 @@ class Histogram(Diagnostic):
             density (bool): If True, returns PDF normalized to integrate to 1.
         """
         self.logger.info('Computing histogram')
-        
+
         # Select data for specified period
         data = self.data.sel(time=slice(self.startdate, self.enddate))
-        
+
         # Select region if specified
         if self.lon_limits is not None or self.lat_limits is not None:
-            data = self.reader.select_area(data, lon=self.lon_limits, 
-                                          lat=self.lat_limits, box_brd=box_brd)
+            data = self.reader.select_area(data, lon=self.lon_limits,
+                                           lat=self.lat_limits, box_brd=box_brd)
 
         # If range is not specified, compute it from the data
         hist_range = self.range
@@ -143,7 +150,6 @@ class Histogram(Diagnostic):
             hist_range = (data_min - buffer, data_max + buffer)
             self.logger.debug(f'Computed range: {hist_range}')
 
-        # Compute histogram using the histogram function directly
         hist_data = histogram(
             data,
             bins=self.bins,
@@ -152,11 +158,28 @@ class Histogram(Diagnostic):
             density=density,
             loglevel=self.loglevel
         )
-        
+
         # Add region metadata
         if self.region is not None:
             hist_data.attrs['AQUA_region'] = self.region
-        
+
+        # Add date metadata
+        hist_data.attrs['AQUA_startdate'] = pd.Timestamp(str(self.startdate)).strftime("%Y-%m-%d")
+        hist_data.attrs['AQUA_enddate'] = pd.Timestamp(str(self.enddate)).strftime("%Y-%m-%d")
+
+        # Add others metadata for description
+        hist_data.attrs['AQUA_catalog'] = self.catalog
+        hist_data.attrs['AQUA_model'] = self.model
+        hist_data.attrs['AQUA_exp'] = self.exp
+
+        # Copy original variable metadata to center_of_bin for xlabel
+        if hasattr(data, 'standard_name'):
+            hist_data.center_of_bin.attrs['standard_name'] = data.standard_name
+        if hasattr(data, 'long_name'):
+            hist_data.center_of_bin.attrs['long_name'] = data.long_name
+        if hasattr(data, 'units'):
+            hist_data.center_of_bin.attrs['units'] = data.units
+
         self.histogram_data = hist_data
 
     def save_netcdf(self, outputdir: str = './', rebuild: bool = True):
@@ -170,13 +193,13 @@ class Histogram(Diagnostic):
         if self.histogram_data is None:
             self.logger.error('No histogram data available')
             return
-        
+
         var = getattr(self.histogram_data, 'standard_name', 'unknown')
         extra_keys = {'var': var}
         if self.region is not None:
             region = self.region.replace(' ', '').lower()
             extra_keys['AQUA_region'] = region
-        
+
         self.logger.info('Saving histogram for variable %s', var)
         super().save_netcdf(data=self.histogram_data, diagnostic=self.diagnostic_name,
                            diagnostic_product='histogram',
@@ -204,18 +227,18 @@ class Histogram(Diagnostic):
             reader_kwargs (dict): Additional Reader kwargs.
         """
         self.logger.info('Running Histogram diagnostic for %s', var)
-        
+
         # Retrieve data
         self.retrieve(var=var, formula=formula, long_name=long_name,
                      units=units, standard_name=standard_name,
                      reader_kwargs=reader_kwargs)
-        
+
         # Compute histogram
         self.logger.info('Computing histogram')
         self.compute_histogram(box_brd=box_brd, density=density)
-        
+
         # Save to netcdf
         self.logger.info('Saving histogram to netcdf')
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
-        
+
         self.logger.info('Histogram diagnostic computation completed')
