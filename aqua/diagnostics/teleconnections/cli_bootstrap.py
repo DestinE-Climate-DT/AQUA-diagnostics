@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
+'''
 AQUA teleconnections command line interface for a single dataset.
 It evaluates the ENSO teleconnections and performs a boostrap to
 evaluate the concordance of the teleconnections with ERA5.
-"""
-
+'''
 import argparse
 import sys
 
@@ -27,33 +26,46 @@ xr.set_options(keep_attrs=True)
 def parse_arguments(cli_args):
     """Parse command line arguments"""
 
-    parser = argparse.ArgumentParser(description="Teleconnections CLI")
+    parser = argparse.ArgumentParser(description='Teleconnections CLI')
 
-    parser.add_argument("-c", "--config", type=str, help="yaml configuration file")
-    parser.add_argument("-n", "--nworkers", type=int, help="number of dask distributed workers")
-    parser.add_argument("-d", "--dry", action="store_true", required=False, help="if True, run is dry, no files are written")
-    parser.add_argument("-l", "--loglevel", type=str, help="log level [default: WARNING]")
-    parser.add_argument("--cluster", type=str, required=False, help="dask cluster address")
+    parser.add_argument('-c', '--config', type=str,
+                        help='yaml configuration file')
+    parser.add_argument('-n', '--nworkers', type=int,
+                        help='number of dask distributed workers')
+    parser.add_argument('-d', '--dry', action='store_true',
+                        required=False,
+                        help='if True, run is dry, no files are written')
+    parser.add_argument('-l', '--loglevel', type=str,
+                        help='log level [default: WARNING]')
+    parser.add_argument("--cluster", type=str,
+                        required=False, help="dask cluster address")
 
     # This arguments will override the configuration file if provided
-    parser.add_argument("--catalog", type=str, help="catalog name", required=False)
-    parser.add_argument("--model", type=str, help="model name", required=False)
-    parser.add_argument("--exp", type=str, help="experiment name", required=False)
-    parser.add_argument("--source", type=str, help="source name", required=False)
-    parser.add_argument("--outputdir", type=str, help="output directory", required=False)
-    parser.add_argument("--interface", type=str, help="interface to use", required=False)
+    parser.add_argument('--catalog', type=str, help='catalog name',
+                        required=False)
+    parser.add_argument('--model', type=str, help='model name',
+                        required=False)
+    parser.add_argument('--exp', type=str, help='experiment name',
+                        required=False)
+    parser.add_argument('--source', type=str, help='source name',
+                        required=False)
+    parser.add_argument('--outputdir', type=str, help='output directory',
+                        required=False)
+    parser.add_argument('--interface', type=str, help='interface to use',
+                        required=False)
 
     return parser.parse_args(cli_args)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+
     args = parse_arguments(sys.argv[1:])
-    loglevel = get_arg(args, "loglevel", "WARNING")
-    logger = log_configure(log_name="Teleconnections Bootstrap CLI", log_level=loglevel)
+    loglevel = get_arg(args, 'loglevel', 'WARNING')
+    logger = log_configure(log_name='Teleconnections Bootstrap CLI', log_level=loglevel)
 
-    logger.info(f"Running AQUA v{aquaversion} Teleconnections bootstrap diagnostic")
+    logger.info(f'Running AQUA v{aquaversion} Teleconnections bootstrap diagnostic')
 
-    logger.critical("This is a legacy CLI, please contact the developers to update it.")
+    logger.critical('This is a legacy CLI, please contact the developers to update it.')
 
     # # change the current directory to the one of the CLI so that relative path works
     # # before doing this we need to get the directory from wich the script is running
@@ -370,4 +382,4 @@ if __name__ == "__main__":
     #     cluster.close()
     #     logger.debug("Dask cluster closed.")
 
-    logger.info("Teleconnections diagnostic completed.")
+    logger.info('Teleconnections diagnostic completed.')

@@ -22,38 +22,21 @@ class TCs(DetectNodes, StitchNodes):
     producing tracks of selected variables stored in netcdf files, respectively.
     """
 
-    def __init__(
-        self,
-        tdict=None,
-        paths=None,
-        model=None,
-        exp="None",
-        source2d="None",
-        source3d="None",
-        boxdim=10,
-        lowgrid="r100",
-        highgrid="r010",
-        var2store=None,
-        streaming=False,
-        frequency="6h",
-        startdate=None,
-        enddate=None,
-        stream_step=1,
-        stream_unit="days",
-        stream_startdate=None,
-        loglevel="INFO",
-        orography=False,
-        nproc=1,
-        write_fullres=False,
-    ):
+    def __init__(self, tdict=None,
+                 paths=None, model=None, exp="None", source2d="None", source3d="None",
+                 boxdim=10, lowgrid='r100', highgrid='r010', var2store=None,
+                 streaming=False, frequency='6h',
+                 startdate=None, enddate=None,
+                 stream_step=1, stream_unit='days', stream_startdate=None,
+                 loglevel='INFO',
+                 orography=False,
+                 nproc=1, write_fullres=False):
         """
         Constructor method that initializes the class attributes based on the
         input arguments or tdict dictionary.
 
         Args:
-            tdict (dict): A dictionary containing various configurations for the TCs diagnostic.
-                If tdict is provided, the configurations will be loaded from it,
-                otherwise the configurations will be set based on the input arguments.
+            tdict (dict): A dictionary containing various configurations for the TCs diagnostic. If tdict is provided, the configurations will be loaded from it, otherwise the configurations will be set based on the input arguments.
             paths (dict): A dictionary containing file paths for input and output files.
             model (str): The name of the weather model to be used for the TCs diagnostic. Default is "IFS".
             exp (str): The name of the weather model experiment to be used for the TCs diagnostic. Default is "tco2559-ng5".
@@ -75,36 +58,36 @@ class TCs(DetectNodes, StitchNodes):
             A TCs object
         """
 
-        self.logger = log_configure(loglevel, "TCs")
+        self.logger = log_configure(loglevel, 'TCs')
         self.loglevel = loglevel
 
         self.nproc = nproc
         self.aquadask = AquaDask(nproc=nproc)
 
         if tdict is not None:
-            self.paths = tdict["paths"]
-            self.model = tdict["dataset"]["model"]
-            self.exp = tdict["dataset"]["exp"]
-            self.source2d = tdict["dataset"]["source2d"]
-            self.source3d = tdict["dataset"]["source3d"]
-            self.boxdim = tdict["detect"]["boxdim"]
-            self.lowgrid = tdict["grids"]["lowgrid"]
-            self.highgrid = tdict["grids"]["highgrid"]
-            self.var2store = tdict["varlist"]
-            self.frequency = tdict["time"]["frequency"]
-            self.startdate = tdict["time"]["startdate"]
-            self.enddate = tdict["time"]["enddate"]
+            self.paths = tdict['paths']
+            self.model = tdict['dataset']['model']
+            self.exp = tdict['dataset']['exp']
+            self.source2d = tdict['dataset']['source2d']
+            self.source3d = tdict['dataset']['source3d']
+            self.boxdim = tdict['detect']['boxdim']
+            self.lowgrid = tdict['grids']['lowgrid']
+            self.highgrid = tdict['grids']['highgrid']
+            self.var2store = tdict['varlist']
+            self.frequency = tdict['time']['frequency']
+            self.startdate = tdict['time']['startdate']
+            self.enddate = tdict['time']['enddate']
             self.orography = orography
             self.write_fullres = tdict["detect"].get("write_fullres", False)
             if self.orography:
-                self.orography_file = os.path.join(tdict["orography"]["file_path"], tdict["orography"]["file_name"])
+                self.orography_file = os.path.join(tdict['orography']['file_path'], tdict['orography']['file_name'])
         else:
             if paths is None:
-                raise ValueError("Without paths defined you cannot go anywhere!")
+                raise ValueError('Without paths defined you cannot go anywhere!')
             else:
                 self.paths = paths
             if startdate is None or enddate is None:
-                raise ValueError("Define startdate and/or enddate")
+                raise ValueError('Define startdate and/or enddate')
             self.model = model
             self.exp = exp
             self.source2d = source2d
@@ -127,9 +110,12 @@ class TCs(DetectNodes, StitchNodes):
             self.stream_startdate = stream_startdate
 
         # create directory structure
-        self.paths["tmpdir"] = os.path.join(self.paths["tmpdir"], self.model, self.exp)
-        self.paths["fulldir"] = os.path.join(self.paths["fulldir"], self.model, self.exp)
-        self.paths["trackdir"] = os.path.join(self.paths["trackdir"], self.model, self.exp)
+        self.paths['tmpdir'] = os.path.join(
+            self.paths['tmpdir'], self.model, self.exp)
+        self.paths['fulldir'] = os.path.join(
+            self.paths['fulldir'], self.model, self.exp)
+        self.paths['trackdir'] = os.path.join(
+            self.paths['trackdir'], self.model, self.exp)
 
         for path in self.paths:
             os.makedirs(self.paths[path], exist_ok=True)
@@ -150,14 +136,13 @@ class TCs(DetectNodes, StitchNodes):
             None
         """
 
-        # do this to remove the last letter from streamstep! e.g. tdict['stream']['streamstep'] is
-        # defined as "10D" but we want only the value 10!
-        numbers = [int(i) for i in tdict["stream"]["streamstep"] if i.isdigit()]
-        streamstep_n = int("".join(map(str, numbers)))  # noqa: F841
+        # do this to remove the last letter from streamstep! e.g. tdict['stream']['streamstep'] is defined as "10D" but we want only the value 10!
+        numbers = [int(i) for i in tdict['stream']['streamstep'] if i.isdigit()]
+        streamstep_n = int(''.join(map(str, numbers))) # noqa: F841
 
         # Check if the character after the number is 'D'
         # if not expressed as "D", raise value error, since we need days for the time loop!
-        if tdict["stream"]["streamstep"][len(numbers)] != "D":
+        if tdict['stream']['streamstep'][len(numbers)] != 'D':
             raise ValueError("Critical error! Stream step must be specified in days as 'D' in the config file!")
 
         # retrieve the data and call detect nodes on the first chunk of data
@@ -165,15 +150,15 @@ class TCs(DetectNodes, StitchNodes):
         self.detect_nodes_zoomin()
 
         # parameters for stitch nodes (to save tracks of selected variables in netcdf)
-        n_days_stitch = tdict["stitch"]["n_days_freq"] + 2 * tdict["stitch"]["n_days_ext"]
+        n_days_stitch = tdict['stitch']['n_days_freq'] + \
+            2*tdict['stitch']['n_days_ext']
         last_run_stitch = self.stream_startdate
 
         # loop to simulate streaming
         # while len(np.unique(self.data2d.time.dt.day)) == streamstep_n:
         while self.data_retrieve():
             self.logger.warning(
-                "Streaming from %s to %s", pd.to_datetime(self.stream_startdate), pd.to_datetime(self.stream_enddate)
-            )
+                "Streaming from %s to %s", pd.to_datetime(self.stream_startdate), pd.to_datetime(self.stream_enddate))
 
             # retrieve data and call to Tempest DetectNodes
             # self.data_retrieve()
@@ -181,23 +166,17 @@ class TCs(DetectNodes, StitchNodes):
             self.detect_nodes_zoomin()
 
             # add one hour since time ends at 23
-            dayspassed = (
-                np.datetime64(self.stream_enddate) + np.timedelta64(1, "h") - np.datetime64(last_run_stitch)
-            ) / np.timedelta64(1, "D")
+            dayspassed = (np.datetime64(self.stream_enddate) + np.timedelta64(1, 'h') - np.datetime64(last_run_stitch)) / np.timedelta64(1, 'D')
 
             # call Tempest StitchNodes every n_days_freq days time period and save TCs tracks in a netcdf file
 
             if dayspassed >= n_days_stitch:
-                end_run_stitch = np.datetime64(last_run_stitch) + np.timedelta64(tdict["stitch"]["n_days_freq"], "D")
+                end_run_stitch = np.datetime64(last_run_stitch) + \
+                    np.timedelta64(tdict['stitch']['n_days_freq'], 'D')
                 self.logger.warning(
-                    "Running stitch nodes from %s to %s", pd.to_datetime(last_run_stitch), pd.to_datetime(end_run_stitch)
-                )
-                self.stitch_nodes_zoomin(
-                    startdate=pd.to_datetime(last_run_stitch),
-                    enddate=pd.to_datetime(end_run_stitch),
-                    n_days_freq=tdict["stitch"]["n_days_freq"],
-                    n_days_ext=tdict["stitch"]["n_days_ext"],
-                )
+                    'Running stitch nodes from %s to %s', pd.to_datetime(last_run_stitch), pd.to_datetime(end_run_stitch))
+                self.stitch_nodes_zoomin(startdate=pd.to_datetime(last_run_stitch), enddate=pd.to_datetime(end_run_stitch),
+                                        n_days_freq=tdict['stitch']['n_days_freq'], n_days_ext=tdict['stitch']['n_days_ext'])
                 last_run_stitch = copy.deepcopy(end_run_stitch)
 
     def catalog_init(self):
@@ -213,170 +192,82 @@ class TCs(DetectNodes, StitchNodes):
         Raises:
         - Exception: If the specified model is not supported.
         """
-        self.logger.warning("Model %s - Exp: %s", self.model, self.exp)
+        self.logger.warning('Model %s - Exp: %s', self.model, self.exp)
 
         if self.streaming:
             self.logger.warning(
-                "Initialised streaming for %s %s starting on %s",
-                self.stream_step,
-                self.stream_units,
-                pd.to_datetime(self.stream_startdate),
-            )
+                'Initialised streaming for %s %s starting on %s', self.stream_step, self.stream_units, pd.to_datetime(self.stream_startdate))
 
-        if self.model == "ERA5":
-            self.varlist2d = ["msl", "10u", "10v"]
+        if self.model == 'ERA5':
+            self.varlist2d = ['msl', '10u', '10v']
 
-            self.reader2d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source2d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
-            self.varlist3d = ["z"]
-            self.reader3d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source3d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
+            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
+            self.varlist3d = ['z']
+            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
             if self.write_fullres:
-                self.reader_fullres = Reader(
-                    model=self.model,
-                    exp=self.exp,
-                    source=self.source2d,
-                    regrid=self.highgrid,
-                    streaming=self.streaming,
-                    aggregation=self.stream_step,
-                    loglevel=self.loglevel,
-                    startdate=self.startdate,
-                    enddate=self.enddate,
-                )
+                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                            regrid=self.highgrid,
+                                            streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                            startdate=self.startdate, enddate=self.enddate)
 
-        elif self.model == "IFS":
-            self.varlist2d = ["msl", "10u", "10v", "z"]
-            self.reader2d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source2d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
-            self.varlist3d = ["z"]
-            self.reader3d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source3d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
+        elif self.model == 'IFS':
+            self.varlist2d = ['msl', '10u', '10v', 'z']
+            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
+            self.varlist3d = ['z']
+            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
             if self.write_fullres:
-                self.reader_fullres = Reader(
-                    model=self.model,
-                    exp=self.exp,
-                    source=self.source2d,
-                    regrid=self.highgrid,
-                    streaming=self.streaming,
-                    aggregation=self.stream_step,
-                    loglevel=self.loglevel,
-                    startdate=self.startdate,
-                    enddate=self.enddate,
-                )
+                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                             regrid=self.highgrid,
+                                             streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                             startdate=self.startdate, enddate=self.enddate)
 
-        elif self.model in ["IFS-NEMO", "IFS-FESOM"]:
-            self.varlist2d = ["msl", "10u", "10v"]
-            self.reader2d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source2d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
-            self.varlist3d = ["z"]
-            self.reader3d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source3d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
+        elif self.model in ['IFS-NEMO', 'IFS-FESOM']:
+            self.varlist2d = ['msl', '10u', '10v']
+            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
+            self.varlist3d = ['z']
+            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
             if self.write_fullres:
-                self.reader_fullres = Reader(
-                    model=self.model,
-                    exp=self.exp,
-                    source=self.source2d,
-                    regrid=self.highgrid,
-                    streaming=self.streaming,
-                    aggregation=self.stream_step,
-                    loglevel=self.loglevel,
-                    startdate=self.startdate,
-                    enddate=self.enddate,
-                )
+                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                            regrid=self.highgrid,
+                                            streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                             startdate=self.startdate, enddate=self.enddate)
 
-        elif self.model == "ICON":
-            self.varlist2d = ["msl", "10u", "10v"]
-            self.reader2d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source2d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
-            self.varlist3d = ["z"]
-            self.reader3d = Reader(
-                model=self.model,
-                exp=self.exp,
-                source=self.source3d,
-                regrid=self.lowgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
-                loglevel=self.loglevel,
-                startdate=self.startdate,
-                enddate=self.enddate,
-            )
+        elif self.model == 'ICON':
+            self.varlist2d = ['msl', '10u', '10v']
+            self.reader2d = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
+            self.varlist3d = ['z']
+            self.reader3d = Reader(model=self.model, exp=self.exp, source=self.source3d,
+                                         regrid=self.lowgrid,
+                                         streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                         startdate=self.startdate, enddate=self.enddate)
             if self.write_fullres:
-                self.reader_fullres = Reader(
-                    model=self.model,
-                    exp=self.exp,
-                    source=self.source2d,
-                    regrid=self.highgrid,
-                    streaming=self.streaming,
-                    aggregation=self.stream_step,
-                    loglevel=self.loglevel,
-                    startdate=self.startdate,
-                    enddate=self.enddate,
-                )
+                self.reader_fullres = Reader(model=self.model, exp=self.exp, source=self.source2d,
+                                             regrid=self.highgrid,
+                                            streaming=self.streaming, aggregation=self.stream_step, loglevel=self.loglevel,
+                                            startdate=self.startdate, enddate=self.enddate)
         else:
-            raise ValueError(f"Model {self.model} not supported")
+            raise ValueError(f'Model {self.model} not supported')
 
     def data_retrieve(self, reset_stream=False):
         """
@@ -394,11 +285,11 @@ class TCs(DetectNodes, StitchNodes):
 
         self.data2d = self.reader2d.retrieve(var=self.varlist2d)
 
-        if self.model in ["ERA5", "IFS-FESOM"]:  # plev are in Pa
+        if self.model in ["ERA5", "IFS-FESOM"]: # plev are in Pa
             self.data3d = self.reader3d.retrieve(var=self.varlist3d)
             if self.data3d is not None:
                 self.data3d = self.data3d.sel(plev=[30000, 50000], method="nearest")
-        else:  # plev are in hPa
+        else: # plev are in hPa
             self.data3d = self.reader3d.retrieve(var=self.varlist3d)
             if self.data3d is not None:
                 self.data3d = self.data3d.sel(plev=[300, 500], method="nearest")
@@ -407,18 +298,18 @@ class TCs(DetectNodes, StitchNodes):
             self.logger.info("orography retrieved from file")
             self.orog = xr.open_dataset(self.orography_file)
             if self.model == "IFS" or self.model == "IFS-NEMO" or self.model == "IFS-FESOM":
-                # rename var for detect nodes
+                #rename var for detect nodes
                 self.logger.info(f"orography file for {self.model} is {self.orography_file}")
-                self.orog = self.orog.rename({"z": "zs"})
+                self.orog = self.orog.rename({'z': 'zs'})
             elif self.model == "ICON":
                 self.logger.info(f"orography file for {self.model} is {self.orography_file}")
-                self.orog = self.orog.rename({"oromea": "zs"})
+                self.orog = self.orog.rename({'oromea': 'zs'})
             elif self.model == "ERA5":
                 self.logger.info(f"orography file for {self.model} is {self.orography_file}")
-                self.orog = self.orog.rename({"z": "zs"})
-                self.orog = self.orog.rename({"longitude": "lon", "latitude": "lat"})
+                self.orog = self.orog.rename({'z': 'zs'})
+                self.orog = self.orog.rename({'longitude': 'lon', 'latitude': 'lat'})
             else:
-                raise ValueError(f"Orography variable of {self.model} not recognised!")
+                raise ValueError(f'Orography variable of {self.model} not recognised!')
 
         if self.data2d is not None and self.data3d is not None:
             if self.write_fullres:
@@ -446,13 +337,12 @@ class TCs(DetectNodes, StitchNodes):
         """
 
         mask = xfield * 0
-        for k in range(0, len(nodes["lon"])):
+        for k in range(0, len(nodes['lon'])):
             # add safe condition: keep only data between 50S and 50N
             # if (float(nodes['lat'][k]) > -50) and (float(nodes['lat'][k]) < 50):
-            box = lonlatbox(nodes["lon"][k], nodes["lat"][k], self.boxdim)
-            mask = mask + xr.where(
-                (xfield.lon > box[0]) & (xfield.lon < box[1]) & (xfield.lat > box[2]) & (xfield.lat < box[3]), True, False
-            )
+            box = lonlatbox(nodes['lon'][k], nodes['lat'][k], self.boxdim)
+            mask = mask + xr.where((xfield.lon > box[0]) & (xfield.lon < box[1]) &
+                                   (xfield.lat > box[2]) & (xfield.lat < box[3]), True, False)
 
         outfield = xfield.where(mask > 0)
 

@@ -6,7 +6,6 @@ This CLI allows to run the hovmoller, OceanDrift diagnostics.
 Details of the run are defined in a yaml configuration file for a
 single or multiple experiments.
 """
-
 import argparse
 import sys
 
@@ -22,40 +21,44 @@ def parse_arguments(args):
     Args:
         args (list): list of command-line arguments to parse.
     """
-    parser = argparse.ArgumentParser(description="OceanDrift CLI")
+    parser = argparse.ArgumentParser(description='OceanDrift CLI')
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
 
-    cli = DiagnosticCLI(
-        args, diagnostic_name="ocean3d", default_config="config-ocean3d-en4-trend-drift.yaml", log_name="OceanDrift CLI"
-    ).prepare()
+    cli = DiagnosticCLI(args,
+                        diagnostic_name='ocean3d',
+                        default_config='config-ocean3d-en4-trend-drift.yaml',
+                        log_name='OceanDrift CLI').prepare()
     cli.open_dask_cluster()
 
     logger = cli.logger
     config_dict = cli.config_dict
 
-    dataset = cli.config_dict["datasets"][0]
+    dataset = cli.config_dict['datasets'][0]
     dataset_args = cli.dataset_args(dataset)
 
-    if "hovmoller" in config_dict["diagnostics"]["ocean_drift"]:
-        hovmoller_config = config_dict["diagnostics"]["ocean_drift"]["hovmoller"]
-        logger.info("Hovmoller diagnostic is set to %s", hovmoller_config["run"])
-        if hovmoller_config["run"]:
-            regions = to_list(hovmoller_config.get("regions", None))
-            diagnostic_name = hovmoller_config.get("diagnostic_name", "ocean_drift")
-            var = hovmoller_config.get("var", None)
-            dim_mean = hovmoller_config.get("dim_mean", ["lat", "lon"])
-            vert_coord = hovmoller_config.get("vert_coord", None)
+    if 'hovmoller' in config_dict['diagnostics']['ocean_drift']:
+        hovmoller_config = config_dict['diagnostics']['ocean_drift']['hovmoller']
+        logger.info("Hovmoller diagnostic is set to %s", hovmoller_config['run'])
+        if hovmoller_config['run']:
+            regions = to_list(hovmoller_config.get('regions', None))
+            diagnostic_name = hovmoller_config.get('diagnostic_name', 'ocean_drift')
+            var = hovmoller_config.get('var', None)
+            dim_mean = hovmoller_config.get('dim_mean', ['lat', 'lon'])
+            vert_coord = hovmoller_config.get('vert_coord', None)
             # Add the global region if not present
             # if regions != [None]:
             #    regions.append(None)
 
             data_hovmoller = Hovmoller(
-                **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
+                **dataset_args,
+                diagnostic_name=diagnostic_name,
+                vert_coord=vert_coord,
+                loglevel=cli.loglevel
             )
 
             for region in regions:
@@ -68,7 +71,7 @@ if __name__ == "__main__":
                         anomaly_ref="t0",
                         outputdir=cli.outputdir,
                         reader_kwargs=cli.reader_kwargs,
-                        rebuild=cli.rebuild,
+                        rebuild=cli.rebuild
                     )
                 except Exception as e:
                     logger.error("Error processing region %s: %s", region, e)
@@ -78,7 +81,7 @@ if __name__ == "__main__":
                         data=data_hovmoller.processed_data_list,
                         vert_coord=vert_coord,
                         outputdir=cli.outputdir,
-                        loglevel=cli.loglevel,
+                        loglevel=cli.loglevel
                     )
 
                     save_format = getattr(cli, "save_format", None)

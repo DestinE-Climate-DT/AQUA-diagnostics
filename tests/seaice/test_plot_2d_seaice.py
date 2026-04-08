@@ -13,8 +13,10 @@ loglevel = LOGLEVEL
 
 # pytestmark groups tests that run sequentially on the same worker to avoid conflicts
 # These tests use setup_class with shared resources (data fetching, tmp files)
-pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="diagnostic_setup_class")]
-
+pytestmark = [
+    pytest.mark.diagnostics,
+    pytest.mark.xdist_group(name="diagnostic_setup_class")
+]
 
 class TestPlot2DSeaIce:
     @classmethod
@@ -31,17 +33,9 @@ class TestPlot2DSeaIce:
         cls.regrid = "r100"
 
         # Initialize sea ice objects
-        cls.seaice = SeaIce(
-            catalog=cls.catalog,
-            model=cls.model,
-            exp=cls.exp,
-            source=cls.source,
-            startdate=cls.startdate,
-            enddate=cls.enddate,
-            regions=cls.regions,
-            regrid=cls.regrid,
-            loglevel=cls.loglevel,
-        )
+        cls.seaice = SeaIce(catalog=cls.catalog, model=cls.model, exp=cls.exp, source=cls.source,
+                           startdate=cls.startdate, enddate=cls.enddate, regions=cls.regions,
+                           regrid=cls.regrid, loglevel=cls.loglevel)
 
         cls.frac_model = cls.seaice.compute_seaice(method="fraction", var="siconc")
         cls.thick_model_ds = cls.seaice.compute_seaice(method="thickness", var="siconc")
@@ -72,13 +66,12 @@ class TestPlot2DSeaIce:
 
         cls.p2d = Plot2DSeaIce(loglevel=loglevel, dpi=DPI)
 
-        cls.projkw = {"projname": "orthographic", "projpars": {"central_longitude": 0.0, "central_latitude": "max_lat_signed"}}
+        cls.projkw = {"projname": "orthographic",
+                     "projpars": {"central_longitude": 0.0, "central_latitude": "max_lat_signed"}}
 
-        cls.projkw_extent = {
-            "projpars": {"central_longitude": 0.0, "central_latitude": "max_lat_signed"},
-            "extent_regions": {"Arctic": [-180, 180, 50, 90], "Antarctic": [-180, 180, -50, -90]},
-            "projname": "azimuthal_equidistant",
-        }
+        cls.projkw_extent = {'projpars': {'central_longitude': 0.0, 'central_latitude': 'max_lat_signed'},
+                            'extent_regions': {'Arctic': [-180, 180, 50, 90], 'Antarctic': [-180, 180, -50, -90]},
+                            'projname': 'azimuthal_equidistant'}
 
     def test_handle_data_rejects_invalid_types(self):
         with pytest.raises(TypeError):
@@ -126,44 +119,51 @@ class TestPlot2DSeaIce:
         assert masked.sel(lat=0.0, method="nearest").isnull().all()
 
     def test_plot_fraction_var(self):
-        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic], models=self.frac_model, dpi=DPI)
+        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
+                           models=self.frac_model, dpi=DPI)
 
-        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, plot_ref_contour=True, save_format=[])
+        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw,
+                          plot_ref_contour=True, save_format=[])
 
     def test_plot_fraction_bias(self):
-        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic], models=self.frac_model, dpi=DPI)
+        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
+                           models=self.frac_model, dpi=DPI)
 
-        p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent, plot_ref_contour=True, save_format=[])
+        p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent,
+                          plot_ref_contour=True, save_format=[])
 
     def test_plot_thickness_var(self):
-        p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic], models=self.thick_model_ds, dpi=DPI)
+        p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic],
+                           models=self.thick_model_ds, dpi=DPI)
 
-        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, plot_ref_contour=True, save_format=[])
+        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw,
+                          plot_ref_contour=True, save_format=[])
 
     def test_plot_thickness_bias(self):
-        p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic], models=self.thick_model_ds, dpi=DPI)
+        p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic],
+                           models=self.thick_model_ds, dpi=DPI)
 
-        p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent, plot_ref_contour=True, save_format=[])
+        p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent,
+                          plot_ref_contour=True, save_format=[])
 
     def test_bad_months_raise_value_error(self):
         p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
         with pytest.raises(ValueError):
-            p2d.plot_2d_seaice(months=[0], projkw=self.projkw, save_format=[])
+            p2d.plot_2d_seaice(months=[0], projkw=self.projkw,
+                              save_format=[])
 
     def test_bad_months_raise_type_error(self):
         p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
         with pytest.raises(TypeError):
-            p2d.plot_2d_seaice(months=["Feb"], projkw=self.projkw, save_format=[])
+            p2d.plot_2d_seaice(months=["Feb"], projkw=self.projkw,
+                              save_format=[])
 
     def test_detect_common_regions_auto_detection(self):
         """Test automatic region detection without specifying regions_to_plot."""
-        p2d = Plot2DSeaIce(
-            ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
-            models=self.frac_model,
-            regions_to_plot=None,  # This triggers _detect_common_regions
-            loglevel=loglevel,
-            dpi=DPI,
-        )
+        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
+                           models=self.frac_model,
+                           regions_to_plot=None,  # This triggers _detect_common_regions
+                           loglevel=loglevel, dpi=DPI)
 
         assert p2d.regions_to_plot is not None
         assert len(p2d.regions_to_plot) > 0
@@ -181,9 +181,9 @@ class TestPlot2DSeaIce:
         sample_data = self.frac_model[0] if isinstance(self.frac_model, list) else self.frac_model
         cmap_dict = p2d._get_cmap(sample_data)
 
-        assert "colormap" in cmap_dict
-        assert cmap_dict["norm"] is None  # fraction uses default normalization
-        assert cmap_dict["boundaries"] is None
+        assert 'colormap' in cmap_dict
+        assert cmap_dict['norm'] is None  # fraction uses default normalization
+        assert cmap_dict['boundaries'] is None
 
     def test_get_cmap_thickness(self):
         """Test colormap generation for thickness method."""
@@ -194,10 +194,10 @@ class TestPlot2DSeaIce:
         sample_data = self.frac_model[0] if isinstance(self.frac_model, list) else self.frac_model
         cmap_dict = p2d._get_cmap(sample_data)
 
-        assert "colormap" in cmap_dict
-        assert cmap_dict["norm"] is not None  # thickness uses BoundaryNorm
-        assert cmap_dict["boundaries"] is not None
-        assert len(cmap_dict["boundaries"]) > 0
+        assert 'colormap' in cmap_dict
+        assert cmap_dict['norm'] is not None  # thickness uses BoundaryNorm
+        assert cmap_dict['boundaries'] is not None
+        assert len(cmap_dict['boundaries']) > 0
 
     def test_set_projpars_function_registry(self):
         """Test projection parameter processing with function registry."""
@@ -206,42 +206,42 @@ class TestPlot2DSeaIce:
         # Set up test data with known lat values
         test_data = self.frac_model[0] if isinstance(self.frac_model, list) else self.frac_model
 
-        p2d.projpars = {"central_longitude": 0.0, "central_latitude": "max_lat_signed"}
+        p2d.projpars = {'central_longitude': 0.0,
+                        'central_latitude': 'max_lat_signed'}
 
         # Mock the data to have known lat values
         p2d.reg_ref = [test_data]
 
         result = p2d._set_projpars()
 
-        assert "central_latitude" in result
-        assert isinstance(result["central_latitude"], (int, float))
+        assert 'central_latitude' in result
+        assert isinstance(result['central_latitude'], (int, float))
 
         # Test with invalid function name
-        p2d.projpars = {"central_latitude": "invalid_function_name"}
+        p2d.projpars = {'central_latitude': 'invalid_function_name'}
 
         result = p2d._set_projpars()
-        assert "central_latitude" not in result  # Invalid function should be skipped
+        assert 'central_latitude' not in result  # Invalid function should be skipped
 
     def test_bad_plot_type_raises(self):
         p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
         with pytest.raises(ValueError):
-            p2d.plot_2d_seaice(plot_type="invalid_plot_type", projkw=self.projkw, save_format=[])
+            p2d.plot_2d_seaice(plot_type="invalid_plot_type", projkw=self.projkw,
+                               save_format=[])
 
     def test_bad_method_raises(self):
         p2d = Plot2DSeaIce(models=self.frac_model)
         with pytest.raises(ValueError):
-            p2d.plot_2d_seaice(method="invalid_method", projkw=self.projkw, save_format=[])
+            p2d.plot_2d_seaice(method="invalid_method", projkw=self.projkw,
+                               save_format=[])
 
     def test_plot_saves_outputs(self):
-        p2d = Plot2DSeaIce(
-            ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
-            models=self.frac_model,
-            outputdir=self.tmp_path,
-            loglevel="INFO",
-            dpi=DPI,
-        )
+        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
+                           models=self.frac_model,
+                           outputdir=self.tmp_path, loglevel="INFO", dpi=DPI)
 
-        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, save_format=["png", "pdf"], months=[3])
+        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw,
+                           save_format=['png', 'pdf'], months=[3])
 
         png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
         pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)

@@ -68,16 +68,7 @@ class BaseMixin(Diagnostic):
             **kwargs: Additional arbitrary keyword arguments to pass to the intake catalog entry.
         """
 
-        super().__init__(
-            catalog=catalog,
-            model=model,
-            exp=exp,
-            source=source,
-            startdate=startdate,
-            enddate=enddate,
-            regrid=regrid,
-            loglevel=loglevel,
-        )
+        super().__init__(catalog=catalog, model=model, exp=exp, source=source, startdate=startdate, enddate=enddate, regrid=regrid, loglevel=loglevel)
 
         # Log name is the diagnostic name with the first letter capitalized
         self.logger = log_configure(log_level=loglevel, log_name=diagnostic_name.capitalize())
@@ -123,7 +114,7 @@ class BaseMixin(Diagnostic):
         super().retrieve(var=self.var, reader_kwargs=self.reader_kwargs)
 
         if self.data is None:
-            raise ValueError(f"Variable {self.var} not found in the data. Check the variable name and the data source.")
+            raise ValueError(f"Variable {self.var} not found in the data. " "Check the variable name and the data source.")
         # Get the xr.DataArray to be aligned with the formula code
         self.data = self.data[self.var]
 
@@ -167,8 +158,7 @@ class BaseMixin(Diagnostic):
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
-            dict_catalog_entry (dict): A dictionary with catalog entry information.
-                Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
+            dict_catalog_entry (dict): A dictionary with catalog entry information. Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
         # TODO:
         # the 'freq' variable will be updated in depends on the frequency of the data.
@@ -307,15 +297,8 @@ class PlotBaseMixin:
             region = region.replace(" ", "").lower()
             extra_keys.update({"region": region})
 
-        outputsaver.save_figure(
-            fig,
-            diagnostic_product=diagnostic_product,
-            rebuild=rebuild,
-            extra_keys=extra_keys,
-            metadata=metadata,
-            extension=format,
-            dpi=dpi,
-        )
+        outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)
 
     def save_diff_plot(
         self,
@@ -402,12 +385,5 @@ class PlotBaseMixin:
             region = region.replace(" ", "").lower()
             extra_keys.update({"region": region})
 
-        outputsaver.save_figure(
-            fig,
-            diagnostic_product=diagnostic_product,
-            rebuild=rebuild,
-            extra_keys=extra_keys,
-            metadata=metadata,
-            extension=format,
-            dpi=dpi,
-        )
+        outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)

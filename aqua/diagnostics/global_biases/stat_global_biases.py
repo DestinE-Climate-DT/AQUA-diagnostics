@@ -17,19 +17,17 @@ class StatGlobalBiases:
     Args:
         loglevel (str): Log level. Default is 'WARNING'.
     """
+    def __init__(self, loglevel: str = 'WARNING'):
 
-    def __init__(self, loglevel: str = "WARNING"):
-
-        self.logger = log_configure(log_level=loglevel, log_name="Bias Statistics")
+        self.logger = log_configure(log_level=loglevel, log_name='Bias Statistics')
         self.loglevel = loglevel
 
-    def compute_bias_statistics(
-        self,
-        data: xr.Dataset,
-        data_ref: xr.Dataset,
-        var: str,
-        area: xr.DataArray = None,
-    ) -> xr.Dataset:
+    def compute_bias_statistics(self,
+                                data: xr.Dataset,
+                                data_ref: xr.Dataset,
+                                var: str,
+                                area: xr.DataArray = None,
+                                ) -> xr.Dataset:
         """
         Compute global mean bias and RMSE between model and reference data.
 
@@ -43,7 +41,7 @@ class StatGlobalBiases:
             xr.Dataset: Dataset containing mean bias and RMSE.
 
         """
-        self.logger.info(f"Computing bias statistics for variable {var}.")
+        self.logger.info(f'Computing bias statistics for variable {var}.')
 
         if data is None or data_ref is None:
             raise ValueError("Data or reference data is None after pressure level handling.")
@@ -54,26 +52,34 @@ class StatGlobalBiases:
         fldstat = FldStat(area=area, loglevel=self.loglevel)
 
         # Compute mean bias
-        self.logger.debug("Computing area-weighted mean bias.")
+        self.logger.debug('Computing area-weighted mean bias.')
         mean_bias = fldstat.fldstat(
             bias,
-            stat="mean",
+            stat='mean',
         )
 
         # Compute RMSE: sqrt(mean(bias^2))
-        self.logger.debug("Computing RMSE.")
-        bias_squared = bias**2
-        mean_squared_error = fldstat.fldstat(bias_squared, stat="mean")
+        self.logger.debug('Computing RMSE.')
+        bias_squared = bias ** 2
+        mean_squared_error = fldstat.fldstat(
+            bias_squared,
+            stat='mean'
+        )
         rmse = np.sqrt(mean_squared_error)
 
-        stats = xr.Dataset({"mean_bias": mean_bias, "rmse": rmse})
+        stats = xr.Dataset({
+            'mean_bias': mean_bias,
+            'rmse': rmse
+        })
 
-        self.logger.info(f"Mean bias: {float(mean_bias.values):.4e} {data[var].attrs.get('units', '')}")
-        self.logger.info(f"RMSE: {float(rmse.values):.4e} {data[var].attrs.get('units', '')}")
+        self.logger.info(f'Mean bias: {float(mean_bias.values):.4e} {data[var].attrs.get("units", "")}')
+        self.logger.info(f'RMSE: {float(rmse.values):.4e} {data[var].attrs.get("units", "")}')
 
         return stats
 
-    def compute_yearly_temporal_means(self, data: xr.Dataset, var: str) -> xr.DataArray:
+    def compute_yearly_temporal_means(self,
+                                    data: xr.Dataset,
+                                    var: str) -> xr.DataArray:
         """Compute yearly temporal means for a given variable.
         Args:
             data (xr.Dataset): Input dataset with time dimension.
@@ -81,12 +87,12 @@ class StatGlobalBiases:
         Returns:
             xr.DataArray: Yearly temporal means of the variable.
         """
-        if "time" not in data[var].dims:
+        if 'time' not in data[var].dims:
             raise ValueError(f"Variable {var} does not have a 'time' dimension.")
 
         timstat = TimStat(loglevel=self.loglevel)
-        yearly_means = timstat.timstat(data[[var]], stat="mean", freq="YS")
-        self.logger.info(f"Computed {len(yearly_means.time)} yearly means.")
+        yearly_means = timstat.timstat(data[[var]], stat='mean', freq='YS')
+        self.logger.info(f'Computed {len(yearly_means.time)} yearly means.')
 
         return yearly_means[var]
 
@@ -110,9 +116,13 @@ class StatGlobalBiases:
         _, p_value = stats.ttest_ind(model_clean, ref_clean, equal_var=False)
         return p_value
 
-    def compute_significance_ttest(
-        self, data: xr.Dataset, data_ref: xr.Dataset, var: str, alpha: float = 0.05, min_samples: int = 3
-    ) -> xr.DataArray:
+
+    def compute_significance_ttest(self,
+                                   data: xr.Dataset,
+                                   data_ref: xr.Dataset,
+                                   var: str,
+                                   alpha: float = 0.05,
+                                   min_samples: int = 3) -> xr.DataArray:
         """
         Compute statistical significance of bias using two-sample t-test.
 
@@ -130,7 +140,7 @@ class StatGlobalBiases:
             xr.DataArray: Boolean array where True indicates statistically significant differences.
                          Same spatial dimensions as input data.
         """
-        self.logger.info(f"Computing statistical significance using t-test (alpha={alpha}).")
+        self.logger.info(f'Computing statistical significance using t-test (alpha={alpha}).')
 
         # Get temporal means
         data_temporal = self.compute_yearly_temporal_means(data, var)
@@ -140,18 +150,18 @@ class StatGlobalBiases:
         n_samples = len(data_temporal.time)
         n_samples_ref = len(data_ref_temporal.time)
 
-        self.logger.info(f"Number of samples - Model: {n_samples}, Reference: {n_samples_ref}")
+        self.logger.info(f'Number of samples - Model: {n_samples}, Reference: {n_samples_ref}')
 
         if n_samples < min_samples or n_samples_ref < min_samples:
             self.logger.warning(
-                f"Insufficient samples for t-test. Model: {n_samples}, Reference: {n_samples_ref}. "
-                f"Minimum required: {min_samples}. Returning all False."
+                f'Insufficient samples for t-test. Model: {n_samples}, Reference: {n_samples_ref}. '
+                f'Minimum required: {min_samples}. Returning all False.'
             )
             # Return array of False (not significant) with same shape as spatial dimensions
             return xr.DataArray(
                 np.zeros(data[var].isel(time=0).shape, dtype=bool),
-                coords={k: v for k, v in data[var].isel(time=0).coords.items() if k != "time"},
-                dims=[d for d in data[var].dims if d != "time"],
+                coords={k: v for k, v in data[var].isel(time=0).coords.items() if k != 'time'},
+                dims=[d for d in data[var].dims if d != 'time']
             )
 
         # Rechunk along time dimension for dask compatibility
@@ -159,21 +169,21 @@ class StatGlobalBiases:
         # core dimensions to be in a single chunk
 
         # Get time dimension name
-        time_dim = "time"
+        time_dim = 'time'
 
-        self.logger.debug(f"Rechunking data along {time_dim} dimension.")
+        self.logger.debug(f'Rechunking data along {time_dim} dimension.')
         data_temporal = data_temporal.chunk({time_dim: -1})
         data_ref_temporal = data_ref_temporal.chunk({time_dim: -1})
 
         # Perform t-test at each grid point
         # Use scipy.stats.ttest_ind for independent samples
-        self.logger.debug("Performing t-test at each grid point.")
+        self.logger.debug('Performing t-test at each grid point.')
 
         # Rename time dimensions to avoid xarray alignment issues when model and reference
         # have different number of time steps. Using distinct names prevents apply_ufunc
         # from attempting to align the two time axes against each other.
-        time_dim = f"{time_dim}"
-        time_dim_ref = f"{time_dim}_ref"
+        time_dim = f'{time_dim}'
+        time_dim_ref = f'{time_dim}_ref'
 
         data_temporal = data_temporal.rename({time_dim: time_dim})
         data_ref_temporal = data_ref_temporal.rename({time_dim: time_dim_ref})
@@ -185,7 +195,7 @@ class StatGlobalBiases:
             data_ref_temporal,
             input_core_dims=[[time_dim], [time_dim_ref]],
             vectorize=True,
-            dask="parallelized",
+            dask='parallelized',
             output_dtypes=[float],
             kwargs={"min_samples": min_samples},
         )
@@ -201,21 +211,19 @@ class StatGlobalBiases:
         pct_significant = 100 * n_significant / n_total if n_total > 0 else 0
 
         self.logger.info(
-            f"Statistical significance test completed: "
-            f"{n_significant}/{n_total} points ({pct_significant:.1f}%) are significant at alpha={alpha}."
+            f'Statistical significance test completed: '
+            f'{n_significant}/{n_total} points ({pct_significant:.1f}%) are significant at alpha={alpha}.'
         )
 
         # Add metadata
-        is_significant.attrs.update(
-            {
-                "long_name": "Statistical significance of bias",
-                "description": f"Two-sample t-test with alpha={alpha}",
-                "alpha": alpha,
-                "n_samples_model": n_samples,
-                "n_samples_reference": n_samples_ref,
-                "n_significant_points": n_significant,
-                "percent_significant": pct_significant,
-            }
-        )
+        is_significant.attrs.update({
+            'long_name': 'Statistical significance of bias',
+            'description': f'Two-sample t-test with alpha={alpha}',
+            'alpha': alpha,
+            'n_samples_model': n_samples,
+            'n_samples_reference': n_samples_ref,
+            'n_significant_points': n_significant,
+            'percent_significant': pct_significant
+        })
 
         return is_significant

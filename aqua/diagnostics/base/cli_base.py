@@ -1,7 +1,6 @@
 """
 Base class for diagnostic CLI to centralize common operations.
 """
-
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
@@ -97,7 +96,7 @@ class DiagnosticCLI:
 
     def _setup_logging(self):
         """Setup logger."""
-        self.loglevel = get_arg(self.args, "loglevel", "WARNING")
+        self.loglevel = get_arg(self.args, 'loglevel', 'WARNING')
         self.logger = log_configure(log_level=self.loglevel, log_name=self.log_name)
         self.logger.info("Running %s diagnostic with AQUA version %s", self.diagnostic_name, aqua_version)
 
@@ -107,54 +106,54 @@ class DiagnosticCLI:
             diagnostic=self.diagnostic_name,
             config=self.args.config,
             default_config=self.default_config,
-            loglevel=self.loglevel,
+            loglevel=self.loglevel
         )
-        self.config_dict = merge_config_args(config=self.config_dict, args=self.args, loglevel=self.loglevel)
+        self.config_dict = merge_config_args(
+            config=self.config_dict,
+            args=self.args,
+            loglevel=self.loglevel
+        )
 
     def _extract_options(self):
         """Extract common options from config and args."""
         # Regrid option
-        self.regrid = get_arg(self.args, "regrid", None)
+        self.regrid = get_arg(self.args, 'regrid', None)
         if self.regrid:
             self.logger.info("Regrid option is set to %s", self.regrid)
 
-        self.startdate = get_arg(self.args, "startdate", None)
-        self.enddate = get_arg(self.args, "enddate", None)
+        self.startdate = get_arg(self.args, 'startdate', None)
+        self.enddate = get_arg(self.args, 'enddate', None)
         if self.startdate:
             self.logger.info("Start date is set to %s", self.startdate)
         if self.enddate:
             self.logger.info("End date is set to %s", self.enddate)
 
         # Realization option and reader_kwargs
-        self.reader_kwargs = self.config_dict.get("datasets", [{}])[0].get("reader_kwargs") or {}
-        self.realization = get_arg(self.args, "realization", None)
+        self.reader_kwargs = self.config_dict.get('datasets', [{}])[0].get('reader_kwargs') or {}
+        self.realization = get_arg(self.args, 'realization', None)
         if self.realization:
             self.logger.info("Realization option is set to: %s", self.realization)
-            self.reader_kwargs.update({"realization": self.realization})
+            self.reader_kwargs.update({'realization': self.realization})
 
         # Output options
-        output_config = self.config_dict.get("output", {})
-        self.outputdir = output_config.get("outputdir", "./")
-        self.rebuild = output_config.get("rebuild", True)
-        self.save_format = output_config.get("save_format", SAVE_FORMAT)
-        self.save_netcdf = output_config.get("save_netcdf", True)
-        self.dpi = output_config.get("dpi", 300)
-        self.create_catalog_entry = output_config.get("create_catalog_entry", False)
+        output_config = self.config_dict.get('output', {})
+        self.outputdir = output_config.get('outputdir', './')
+        self.rebuild = output_config.get('rebuild', True)
+        self.save_format = output_config.get('save_format', SAVE_FORMAT)
+        self.save_netcdf = output_config.get('save_netcdf', True)
+        self.dpi = output_config.get('dpi', 300)
+        self.create_catalog_entry = output_config.get('create_catalog_entry', False)
 
     def dataset_args(self, dataset):
         """
         Helper to extract dataset arguments for diagnostics.
         """
 
-        return {
-            "catalog": dataset["catalog"],
-            "model": dataset["model"],
-            "exp": dataset["exp"],
-            "source": dataset["source"],
-            "regrid": dataset.get("regrid") or self.regrid,
-            "startdate": dataset.get("startdate") or self.startdate,
-            "enddate": dataset.get("enddate") or self.enddate,
-        }
+        return {'catalog': dataset['catalog'], 'model': dataset['model'],
+                'exp': dataset['exp'], 'source': dataset['source'],
+                'regrid': dataset.get('regrid') or self.regrid,
+                'startdate': dataset.get('startdate') or self.startdate,
+                'enddate': dataset.get('enddate') or self.enddate}
 
     def reference_args(self, reference):
         """
@@ -163,15 +162,11 @@ class DiagnosticCLI:
         are not overridden by CLI options.
         """
 
-        return {
-            "catalog": reference["catalog"],
-            "model": reference["model"],
-            "exp": reference["exp"],
-            "source": reference["source"],
-            "regrid": reference.get("regrid"),
-            "startdate": reference.get("startdate"),
-            "enddate": reference.get("enddate"),
-        }
+        return {'catalog': reference['catalog'], 'model': reference['model'],
+                'exp': reference['exp'], 'source': reference['source'],
+                'regrid': reference.get('regrid'),
+                'startdate': reference.get('startdate'),
+                'enddate': reference.get('enddate')}
 
     def open_dask_cluster(self):
         """
@@ -180,11 +175,13 @@ class DiagnosticCLI:
         Returns:
             self: For method chaining
         """
-        cluster_arg = get_arg(self.args, "cluster", None)
-        nworkers = get_arg(self.args, "nworkers", None)
+        cluster_arg = get_arg(self.args, 'cluster', None)
+        nworkers = get_arg(self.args, 'nworkers', None)
 
         self.client, self.cluster, self.private_cluster = open_cluster(
-            nworkers=nworkers, cluster=cluster_arg, loglevel=self.loglevel
+            nworkers=nworkers,
+            cluster=cluster_arg,
+            loglevel=self.loglevel
         )
         return self
 
@@ -194,6 +191,9 @@ class DiagnosticCLI:
         """
         if self.client or self.cluster:
             close_cluster(
-                client=self.client, cluster=self.cluster, private_cluster=self.private_cluster, loglevel=self.loglevel
+                client=self.client,
+                cluster=self.cluster,
+                private_cluster=self.private_cluster,
+                loglevel=self.loglevel
             )
             self.logger.info("%s diagnostic completed.", self.diagnostic_name)

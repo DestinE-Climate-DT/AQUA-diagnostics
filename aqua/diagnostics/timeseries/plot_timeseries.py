@@ -6,24 +6,14 @@ from .base import PlotBaseMixin
 
 class PlotTimeseries(PlotBaseMixin):
     """Class to plot time series data."""
-
-    def __init__(
-        self,
-        diagnostic_name: str = "timeseries",
-        hourly_data=None,
-        daily_data=None,
-        monthly_data=None,
-        annual_data=None,
-        ref_hourly_data=None,
-        ref_daily_data=None,
-        ref_monthly_data=None,
-        ref_annual_data=None,
-        std_hourly_data=None,
-        std_daily_data=None,
-        std_monthly_data=None,
-        std_annual_data=None,
-        loglevel: str = "WARNING",
-    ):
+    def __init__(self, diagnostic_name: str = 'timeseries',
+                 hourly_data=None, daily_data=None,
+                 monthly_data=None, annual_data=None,
+                 ref_hourly_data=None, ref_daily_data=None,
+                 ref_monthly_data=None, ref_annual_data=None,
+                 std_hourly_data=None, std_daily_data=None,
+                 std_monthly_data=None, std_annual_data=None,
+                 loglevel: str = 'WARNING'):
         """
         Initialize the PlotTimeseries class.
         This class is used to plot time series data previously processed
@@ -54,9 +44,10 @@ class PlotTimeseries(PlotBaseMixin):
         super().__init__(loglevel=loglevel, diagnostic_name=diagnostic_name)
 
         # TODO: support hourly and daily data
-        for data in [hourly_data, daily_data, ref_hourly_data, ref_daily_data, std_hourly_data, std_daily_data]:
+        for data in [hourly_data, daily_data, ref_hourly_data, ref_daily_data,
+                     std_hourly_data, std_daily_data]:
             if data is not None:
-                self.logger.warning("Hourly and daily data are not yet supported, they will be ignored")
+                self.logger.warning('Hourly and daily data are not yet supported, they will be ignored')
 
         # Here we want to work with this logic: whatever is provided will be returned as a list
         # if there is at least one data array, otherwise None, to avoid issues in the if checks
@@ -83,7 +74,7 @@ class PlotTimeseries(PlotBaseMixin):
         # Filling them
         self.get_data_info()
 
-    def run(self, outputdir: str = "./", rebuild: bool = True, dpi: int = 300, format: str = "png"):
+    def run(self, outputdir: str = './', rebuild: bool = True, dpi: int = 300, format: str = 'png'):
         """
         Run the PlotTimeseries class.
 
@@ -94,14 +85,15 @@ class PlotTimeseries(PlotBaseMixin):
             format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
         """
 
-        self.logger.info("Running PlotTimeseries")
+        self.logger.info('Running PlotTimeseries')
         data_label = self.set_data_labels()
         ref_label = self.set_ref_label()
         description = self.set_description()
         title = self.set_title()
         fig, _ = self.plot_timeseries(data_labels=data_label, ref_label=ref_label, title=title)
-        self.save_plot(fig, description=description, rebuild=rebuild, outputdir=outputdir, dpi=dpi, format=format)
-        self.logger.info("PlotTimeseries completed successfully")
+        self.save_plot(fig, description=description, rebuild=rebuild,
+                       outputdir=outputdir, dpi=dpi, format=format)
+        self.logger.info('PlotTimeseries completed successfully')
 
     def get_data_info(self):
         """
@@ -125,18 +117,18 @@ class PlotTimeseries(PlotBaseMixin):
                 self.catalogs = [d.AQUA_catalog for d in data]
                 self.models = [d.AQUA_model for d in data]
                 self.exps = [d.AQUA_exp for d in data]
-                self.region = data[0].AQUA_region if hasattr(data[0], "AQUA_region") else None
-                self.short_name = data[0].short_name if hasattr(data[0], "short_name") else None
-                self.long_name = data[0].long_name if hasattr(data[0], "long_name") else None
-                self.units = data[0].units if hasattr(data[0], "units") else None
+                self.region = data[0].AQUA_region if hasattr(data[0], 'AQUA_region') else None
+                self.short_name = data[0].short_name if hasattr(data[0], 'short_name') else None
+                self.long_name = data[0].long_name if hasattr(data[0], 'long_name') else None
+                self.units = data[0].units if hasattr(data[0], 'units') else None
                 if self.units is not None:
                     self.units = str(self.units)
                 break
         self.realizations = get_realizations(self.monthly_data)
-        self.logger.debug(f"Catalogs: {self.catalogs}")
-        self.logger.debug(f"Models: {self.models}")
-        self.logger.debug(f"Experiments: {self.exps}")
-        self.logger.debug(f"Region: {self.region}")
+        self.logger.debug(f'Catalogs: {self.catalogs}')
+        self.logger.debug(f'Models: {self.models}')
+        self.logger.debug(f'Experiments: {self.exps}')
+        self.logger.debug(f'Region: {self.region}')
 
         # TODO: support ref list
         for ref in [self.ref_monthly_data, self.ref_annual_data]:
@@ -144,14 +136,14 @@ class PlotTimeseries(PlotBaseMixin):
                 self.ref_catalogs = ref.AQUA_catalog
                 self.ref_models = ref.AQUA_model
                 self.ref_exps = ref.AQUA_exp
-                self.logger.debug(f"Reference: {self.ref_catalogs} {self.ref_models} {self.ref_exps}")
+                self.logger.debug(f'Reference: {self.ref_catalogs} {self.ref_models} {self.ref_exps}')
                 break
 
         for std in [self.std_monthly_data, self.std_annual_data]:
             if std is not None:
                 self.std_startdate = std.std_startdate if std.std_startdate is not None else None
                 self.std_enddate = std.std_enddate if std.std_enddate is not None else None
-                self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
+                self.logger.debug(f'Standard deviation dates: {self.std_startdate} - {self.std_enddate}')
                 break
 
     def set_title(self):
@@ -161,7 +153,7 @@ class PlotTimeseries(PlotBaseMixin):
         Returns:
             title (str): Title for the plot.
         """
-        return super().set_title(diagnostic="Time series")
+        return super().set_title(diagnostic='Time series')
 
     def set_description(self):
         """
@@ -173,7 +165,7 @@ class PlotTimeseries(PlotBaseMixin):
         Returns:
             description (str): Caption for the plot.
         """
-        return super().set_description(diagnostic="Time series")
+        return super().set_description(diagnostic='Time series')
 
     def plot_timeseries(self, data_labels=None, ref_label=None, title=None):
         """
@@ -188,23 +180,18 @@ class PlotTimeseries(PlotBaseMixin):
             fig (matplotlib.figure.Figure): Figure object.
             ax (matplotlib.axes.Axes): Axes object.
         """
-        fig, ax = plot_timeseries(
-            monthly_data=self.monthly_data,
-            ref_monthly_data=self.ref_monthly_data,
-            std_monthly_data=self.std_monthly_data,
-            annual_data=self.annual_data,
-            ref_annual_data=self.ref_annual_data,
-            std_annual_data=self.std_annual_data,
-            data_labels=data_labels,
-            ref_label=ref_label,
-            title=title,
-            loglevel=self.loglevel,
-        )
+        fig, ax = plot_timeseries(monthly_data=self.monthly_data,
+                                  ref_monthly_data=self.ref_monthly_data,
+                                  std_monthly_data=self.std_monthly_data,
+                                  annual_data=self.annual_data,
+                                  ref_annual_data=self.ref_annual_data,
+                                  std_annual_data=self.std_annual_data,
+                                  data_labels=data_labels, ref_label=ref_label,
+                                  title=title, loglevel=self.loglevel)
         return fig, ax
 
-    def save_plot(
-        self, fig, description: str = None, rebuild: bool = True, outputdir: str = "./", dpi: int = 300, format: str = "png"
-    ):
+    def save_plot(self, fig, description: str = None, rebuild: bool = True,
+                  outputdir: str = './', dpi: int = 300, format: str = 'png'):
         """
         Save the plot to a file.
 
@@ -216,15 +203,8 @@ class PlotTimeseries(PlotBaseMixin):
             dpi (int): Dots per inch for the plot.
             format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
         """
-        super().save_plot(
-            fig=fig,
-            description=description,
-            rebuild=rebuild,
-            outputdir=outputdir,
-            dpi=dpi,
-            format=format,
-            diagnostic_product="timeseries",
-        )
+        super().save_plot(fig=fig, description=description, rebuild=rebuild,
+                          outputdir=outputdir, dpi=dpi, format=format, diagnostic_product='timeseries')
 
     def _check_data_length(self):
         """
@@ -241,7 +221,7 @@ class PlotTimeseries(PlotBaseMixin):
 
         if self.monthly_data and self.annual_data:
             if len(self.monthly_data) != len(self.annual_data):
-                raise ValueError("Monthly and annual data list must have the same length")
+                raise ValueError('Monthly and annual data list must have the same length')
             else:
                 data_length = len(self.monthly_data)
         elif self.monthly_data:
@@ -263,9 +243,7 @@ class PlotTimeseries(PlotBaseMixin):
         #         raise ValueError('Standard deviation monthly and annual data list must have the same length')
         #     else:
         #         if len(self.std_monthly_data) != ref_length:
-        #             raise ValueError(
-        #                 'Standard deviation monthly and annual data list must have the same length as reference data'
-        #             )
+        #             raise ValueError('Standard deviation monthly and annual data list must have the same length as reference data')
 
         return data_length, ref_length
 

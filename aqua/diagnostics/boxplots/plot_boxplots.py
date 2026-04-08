@@ -7,7 +7,11 @@ from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
 class PlotBoxplots:
-    def __init__(self, diagnostic="boxplots", save_format=SAVE_FORMAT, dpi=300, outputdir="./", loglevel="WARNING"):
+    def __init__(self,
+                 diagnostic='boxplots',
+                 save_format=SAVE_FORMAT,
+                 dpi=300, outputdir='./',
+                 loglevel='WARNING'):
         """
         Initialize the PlotBoxplots class.
 
@@ -23,7 +27,7 @@ class PlotBoxplots:
         self.dpi = dpi
         self.outputdir = outputdir
         self.loglevel = loglevel
-        self.logger = log_configure(log_level=loglevel, log_name="Boxplots")
+        self.logger = log_configure(log_level=loglevel, log_name='Boxplots')
 
     def _save_figure(self, fig, data, data_ref, var, description=None):
         """
@@ -36,19 +40,19 @@ class PlotBoxplots:
             var (str): Variable name.
             description (str): Description of the figure.
         """
-        catalog = extract_attrs(data, "AQUA_catalog")
-        model = extract_attrs(data, "AQUA_model")
-        exp = extract_attrs(data, "AQUA_exp")
-        startdates = extract_attrs(data, "startdate")
-        enddates = extract_attrs(data, "enddate")
+        catalog = extract_attrs(data, 'AQUA_catalog')
+        model = extract_attrs(data, 'AQUA_model')
+        exp = extract_attrs(data, 'AQUA_exp')
+        startdates = extract_attrs(data, 'startdate')
+        enddates = extract_attrs(data, 'enddate')
 
-        model_ref = extract_attrs(data_ref, "AQUA_model")
-        exp_ref = extract_attrs(data_ref, "AQUA_exp")
-        startdates_ref = extract_attrs(data_ref, "startdate")
-        enddates_ref = extract_attrs(data_ref, "enddate")
+        model_ref = extract_attrs(data_ref, 'AQUA_model')
+        exp_ref = extract_attrs(data_ref, 'AQUA_exp')
+        startdates_ref = extract_attrs(data_ref, 'startdate')
+        enddates_ref = extract_attrs(data_ref, 'enddate')
 
-        self.logger.info(f"catalogs: {catalog}, models: {model}, experiments: {exp}")
-        self.logger.info(f"ref catalogs: {extract_attrs(data_ref, 'catalog')}, models: {model_ref}, experiments: {exp_ref}")
+        self.logger.info(f'catalogs: {catalog}, models: {model}, experiments: {exp}')
+        self.logger.info(f'ref catalogs: {extract_attrs(data_ref, "catalog")}, models: {model_ref}, experiments: {exp_ref}')
 
         self.realizations = get_realizations(data)
 
@@ -61,14 +65,14 @@ class PlotBoxplots:
             exp_ref=exp_ref,
             realization=self.realizations,
             outputdir=self.outputdir,
-            loglevel=self.loglevel,
+            loglevel=self.loglevel
         )
 
         all_models = model + (model_ref or [])
         all_exps = exp + (exp_ref or [])
-        all_startdates = startdates + (startdates_ref or [])
-        all_enddates = enddates + (enddates_ref or [])
-        dataset_info = ", ".join(
+        all_startdates = startdates + (startdates_ref or [] )
+        all_enddates = enddates + (enddates_ref or [] )
+        dataset_info = ', '.join(
             f"{m} (exp: {e}) from {time_to_string(s)} to {time_to_string(en)}"
             for m, e, s, en in zip(all_models, all_exps, all_startdates, all_enddates)
         )
@@ -76,7 +80,7 @@ class PlotBoxplots:
             description = f"Boxplot for: {dataset_info}."
 
         if self.anomalies:
-            ref_name = extract_attrs(data_ref[self.ref_number], "AQUA_model")
+            ref_name = extract_attrs(data_ref[self.ref_number], 'AQUA_model')
             description += (
                 f" Anomalies with respect to {ref_name} mean value are shown. "
                 "The dashed line represents the mean value, the solid line the median value, "
@@ -84,13 +88,14 @@ class PlotBoxplots:
             )
 
         metadata = {"Description": description}
-        extra_keys = {"var": "_".join(var) if isinstance(var, list) else var}
+        extra_keys = {'var': '_'.join(var) if isinstance(var, list) else var}
 
-        outputsaver.save_figure(
-            fig, diagnostic_product="boxplot", extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save
-        )
+        outputsaver.save_figure(fig, diagnostic_product='boxplot', extra_keys=extra_keys,
+            metadata=metadata, extension=self.format_to_save)
 
-    def plot_boxplots(self, data, data_ref=None, var=None, anomalies=False, add_mean_line=False, ref_number=0, title=None):
+
+    def plot_boxplots(self, data, data_ref=None, var=None, anomalies=False, add_mean_line=False,
+                      ref_number=0, title=None):
         """
         Plot boxplots for specified variables in the dataset.
 
@@ -110,35 +115,34 @@ class PlotBoxplots:
         data_ref = to_list(data_ref) if data_ref is not None else []
 
         fldmeans = data + data_ref if data_ref else data
-        model_names = extract_attrs(data, "AQUA_model")
-        exp_names = extract_attrs(data, "AQUA_exp")
-        model_names_ref = extract_attrs(data_ref, "AQUA_model") if data_ref else []
-        exp_names_ref = extract_attrs(data_ref, "AQUA_exp") if data_ref else []
-        model_names_plot = extract_attrs(fldmeans, "AQUA_model")
-        exp_names_plot = extract_attrs(fldmeans, "AQUA_exp")  # noqa: F841
+        model_names = extract_attrs(data, 'AQUA_model')
+        exp_names = extract_attrs(data, 'AQUA_exp')
+        model_names_ref = extract_attrs(data_ref, 'AQUA_model') if data_ref else []
+        exp_names_ref = extract_attrs(data_ref, 'AQUA_exp') if data_ref else []
+        model_names_plot = extract_attrs(fldmeans, 'AQUA_model')
+        exp_names_plot = extract_attrs(fldmeans, 'AQUA_exp') # noqa: F841
 
         base_vars = []
         long_names = []
         for v in to_list(var):
-            base_var = v.lstrip("-")
+            base_var = v.lstrip('-')
             base_vars.append(base_var)
-            long_name = extract_attrs(fldmeans[0][base_var], "long_name")
+            long_name = extract_attrs(fldmeans[0][base_var], 'long_name')
             long_names.append(long_name or base_var)
 
         # Compute anomalies relative to reference
 
         abs_means = []
         for ds in fldmeans:
-            mean_ds = ds.load().mean(dim="time")
+            mean_ds = ds.load().mean(dim='time')
             means_dict = {v: mean_ds[v].item() for v in mean_ds.data_vars}
             abs_means.append(means_dict)
 
         if self.anomalies and data_ref:
-            self.logger.info(
-                f"Computing anomalies relative to reference dataset{extract_attrs(data_ref[self.ref_number], 'AQUA_model')}"
-            )
+            self.logger.info(f"Computing anomalies relative to reference dataset"
+                             f"{extract_attrs(data_ref[self.ref_number], 'AQUA_model')}")
             ref = data_ref[self.ref_number]
-            fldmeans = [ds - ref.mean("time") for ds in fldmeans]
+            fldmeans = [ds - ref.mean('time') for ds in fldmeans]
 
         if not title:
             title = TitleBuilder(
@@ -146,19 +150,13 @@ class PlotBoxplots:
                 model=model_names,
                 exp=exp_names,
                 ref_model=model_names_ref if model_names_ref else None,
-                ref_exp=exp_names_ref if exp_names_ref else None,
+                ref_exp=exp_names_ref if exp_names_ref else None
             ).generate()
 
         # Plot boxplot
-        fig, ax = boxplot(
-            fldmeans=fldmeans,
-            model_names=model_names_plot,
-            variables=var,
-            variable_names=long_names,
-            title=title,
-            add_mean_line=add_mean_line,
-            loglevel=self.loglevel,
-        )
+        fig, ax = boxplot(fldmeans=fldmeans, model_names=model_names_plot,
+                          variables=var, variable_names=long_names, title=title,
+                          add_mean_line=add_mean_line, loglevel=self.loglevel)
 
         if self.anomalies and data_ref:
             ax.set_ylabel(f"Anomalies with respect to observation mean [{unit_to_latex('W/m2')}]")
@@ -177,16 +175,20 @@ class PlotBoxplots:
                             continue
 
                         x = patch.get_path().vertices[:, 0].mean() + 0.05
-                        base_var = v.lstrip("-")
+                        base_var = v.lstrip('-')
 
                         means_dict = abs_means[dataset_idx]
                         if base_var in means_dict:
                             abs_val = means_dict[base_var]  # absolute mean value
                             anom_val = fldmeans[dataset_idx][base_var].mean(dim="time")
-                            if v.startswith("-"):
+                            if v.startswith('-'):
                                 anom_val = -anom_val
 
-                            ax.text(x, anom_val, f"{abs_val:.2f}", ha="center", va="bottom", color="black", fontweight="bold")
+                            ax.text(
+                                x, anom_val, f"{abs_val:.2f}",
+                                ha='center', va='bottom',
+                                color='black', fontweight='bold'
+                            )
 
         if self.format_to_save:
             self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var)

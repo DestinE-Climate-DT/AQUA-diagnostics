@@ -22,19 +22,20 @@ from aqua.core.util import convert_units
 full_path_to_config = resources.files("tropical_rainfall") / "config-tropical-rainfall.yml"
 
 regrid_dict = {
-    "r250": {"deg": 2.5},
-    "r200": {"deg": 2.0},
-    "r100": {"deg": 1.0},
-    "r050": {"deg": 0.5},
-    "r025": {"deg": 0.25},
-    "r020": {"deg": 0.2},
-    "r010": {"deg": 0.1},
-    "r005": {"deg": 0.05},
+    'r250': {'deg': 2.5},
+    'r200': {'deg': 2.0},
+    'r100': {'deg': 1.0},
+    'r050': {'deg': 0.5},
+    'r025': {'deg': 0.25},
+    'r020': {'deg': 0.2},
+    'r010': {'deg': 0.1},
+    'r005': {'deg': 0.05}
 }
 
 
 class ToolsClass:
-    def __init__(self, loglevel: str = "WARNING"):
+
+    def __init__(self, loglevel: str = 'WARNING'):
         """
         Initialize the class.
 
@@ -42,7 +43,7 @@ class ToolsClass:
             loglevel (str, optional): The log level to be set. Defaults to 'WARNING'.
         """
         self.loglevel = loglevel
-        self.logger = log_configure(self.loglevel, "Tools Func.")
+        self.logger = log_configure(self.loglevel, 'Tools Func.')
 
     def split_time(self, time_str: str) -> str:
         """
@@ -56,7 +57,7 @@ class ToolsClass:
         """
         parts = re.split(r"[^a-zA-Z0-9\s]", time_str)
         if len(parts) <= 5:
-            time_str = "-".join(parts[: len(parts)])
+            time_str = '-'.join(parts[:len(parts)])
         return time_str
 
     def get_netcdf_path(self, configname: str = full_path_to_config) -> tuple:
@@ -79,10 +80,10 @@ class ToolsClass:
             self.logger.error(f"The configuration file '{configname}' does not exist.")
             raise FileNotFoundError(f"The configuration file '{configname}' does not exist.")
         try:
-            with open(config_path, "r") as file:
+            with open(config_path, 'r') as file:
                 data = yaml.safe_load(file)
             machine = ConfigPath().get_machine()
-            path_to_netcdf = data[machine]["path_to_netcdf"]
+            path_to_netcdf = data[machine]['path_to_netcdf']
         except FileNotFoundError as e:
             # Handle FileNotFoundError exception
             self.logger.error(f"An unexpected error occurred: {e}")
@@ -120,12 +121,10 @@ class ToolsClass:
         original_centers = ds.center_of_bin.values
 
         # Calculate new bin centers based on the adjusted first bin center
-        new_centers = np.array(
-            [
-                original_centers[0] - 0.5 * original_width + (0.5 * new_width) + i * new_width
-                for i in range(len(original_centers))
-            ]
-        )
+        new_centers = np.array([
+            original_centers[0] - 0.5 * original_width + (0.5 * new_width) + i * new_width
+            for i in range(len(original_centers))
+        ])
 
         # If the factor is meant to decrease bin size, this might result in more bins than originally
         if factor < 1:
@@ -137,15 +136,12 @@ class ToolsClass:
         new_counts = np.interp(new_centers, original_centers, ds.counts.values, left=0, right=0)
 
         # Create the adjusted dataset
-        adjusted_ds = xr.Dataset(
-            {
-                "counts": ("center_of_bin", new_counts),
-            },
-            coords={
-                "center_of_bin": ("center_of_bin", new_centers),
-                "width": ("center_of_bin", np.full(len(new_centers), new_width)),
-            },
-        )
+        adjusted_ds = xr.Dataset({
+            'counts': ('center_of_bin', new_counts),
+        }, coords={
+            'center_of_bin': ('center_of_bin', new_centers),
+            'width': ('center_of_bin', np.full(len(new_centers), new_width)),
+        })
 
         # Preserve global attributes
         adjusted_ds.attrs = ds.attrs.copy()
@@ -153,11 +149,11 @@ class ToolsClass:
         adjusted_ds.center_of_bin.attrs = ds.center_of_bin.attrs.copy()
 
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        history_update = str(current_time) + f" the histogram bins adjusted by a specified factor {factor} ;\n "
-        if "history" not in adjusted_ds.attrs:
-            adjusted_ds.attrs["history"] = " "
-        history_attr = adjusted_ds.attrs["history"] + history_update
-        adjusted_ds.attrs["history"] = history_attr
+        history_update = str(current_time)+f" the histogram bins adjusted by a specified factor {factor} ;\n "
+        if 'history' not in adjusted_ds.attrs:
+            adjusted_ds.attrs['history'] = ' '
+        history_attr = adjusted_ds.attrs['history'] + history_update
+        adjusted_ds.attrs['history'] = history_attr
         return adjusted_ds
 
     def get_pdf_path(self, configname: str = full_path_to_config) -> tuple:
@@ -180,10 +176,10 @@ class ToolsClass:
             self.logger.error(f"The configuration file '{configname}' does not exist.")
             raise FileNotFoundError(f"The configuration file '{configname}' does not exist.")
         try:
-            with open(config_path, "r") as file:
+            with open(config_path, 'r') as file:
                 data = yaml.safe_load(file)
             machine = ConfigPath().get_machine()
-            path_to_pdf = data[machine]["path_to_pdf"]
+            path_to_pdf = data[machine]['path_to_pdf']
         except FileNotFoundError as e:
             # Handle FileNotFoundError exception
             self.logger.error(f"An unexpected error occurred: {e}")
@@ -217,7 +213,7 @@ class ToolsClass:
             self.logger.error(f"The configuration file '{configname}' does not exist.")
             raise FileNotFoundError(f"The configuration file '{configname}' does not exist.")
         try:
-            with open(config_path, "r") as file:
+            with open(config_path, 'r') as file:
                 config = yaml.safe_load(file)
         except FileNotFoundError as e:
             # Handle FileNotFoundError exception
@@ -275,7 +271,7 @@ class ToolsClass:
             raise FileNotFoundError(f"File does not exist: {path_to_netcdf}")
 
         try:
-            dataset = xr.open_dataset(path_to_netcdf, engine="netcdf4")
+            dataset = xr.open_dataset(path_to_netcdf, engine='netcdf4')
             return dataset
         except FileNotFoundError:
             self.logger.error(f"File not found: {path_to_netcdf}")
@@ -287,15 +283,8 @@ class ToolsClass:
             self.logger.error(f"Unexpected error opening dataset: {e}")
             raise
 
-    def select_files_by_year_and_month_range(
-        self,
-        path_to_histograms: str,
-        start_year: int = None,
-        end_year: int = None,
-        start_month: int = None,
-        end_month: int = None,
-        flag: str = None,
-    ) -> list:
+    def select_files_by_year_and_month_range(self, path_to_histograms: str, start_year: int = None, end_year: int = None,
+                                             start_month: int = None, end_month: int = None, flag: str = None) -> list:
         """
         Select files within a specific year and optional month range from a given directory
         that also contain a certain flag in their filename.
@@ -322,17 +311,15 @@ class ToolsClass:
         selected_files = []
         for file_path in files:
             # Extract the year and month from the filename
-            date_match = re.search(r"(\d{4})-(\d{2})-\d{2}T", file_path)
+            date_match = re.search(r'(\d{4})-(\d{2})-\d{2}T', file_path)
             # Check if flag is present in the filename if a flag is specified
             flag_present = flag is None or flag in file_path
             if date_match and flag_present:
                 year, month = map(int, date_match.groups())
                 # Check if the year and optionally month falls within the specified range
-                if (
-                    (start_year is None or start_year <= year)
-                    and (end_year is None or year <= end_year)
-                    and (not start_month or start_month <= month <= (end_month or 12))
-                ):
+                if ((start_year is None or start_year <= year) and
+                    (end_year is None or year <= end_year) and
+                    (not start_month or start_month <= month <= (end_month or 12))):
                     selected_files.append(file_path)
                 elif start_year is None and end_year is None:
                     # This line seems to be redundant in the context of flag checking,
@@ -360,11 +347,7 @@ class ToolsClass:
         else:
             self.logger.debug(f"The provided path is {folder_path}")
 
-        files = [
-            join(folder_path, f)
-            for f in os.listdir(folder_path)
-            if isfile(join(folder_path, f)) or isdir(join(folder_path, f))
-        ]
+        files = [join(folder_path, f) for f in os.listdir(folder_path) if isfile(join(folder_path, f)) or isdir(join(folder_path, f))]
         files.sort()
         keys = [str(key) for key in keys]
         for filename in files:
@@ -389,16 +372,13 @@ class ToolsClass:
         Returns:
             bool: True if a file was found and removed, False otherwise.
         """
-        # Check if the folder path exists
+         # Check if the folder path exists
         if folder_path is None or not exists(folder_path):
             self.logger.warning(f"Folder path '{folder_path}' does not exist yet or was not provided.")
             return False
 
-        files = [
-            join(folder_path, f)
-            for f in os.listdir(folder_path)
-            if isfile(join(folder_path, f)) or isdir(join(folder_path, f))
-        ]
+        files = [join(folder_path, f)
+            for f in os.listdir(folder_path) if isfile(join(folder_path, f)) or isdir(join(folder_path, f))]
         files.sort()
         keys = [str(key) for key in keys]
         for filename in files:
@@ -408,14 +388,9 @@ class ToolsClass:
                 return True
         return False
 
-    def zoom_in_data(
-        self,
-        trop_lat: float = None,
-        pacific_ocean: bool = False,
-        atlantic_ocean: bool = False,
-        indian_ocean: bool = False,
-        tropical: bool = False,
-    ) -> tuple:
+    def zoom_in_data(self, trop_lat: float = None,
+                     pacific_ocean: bool = False, atlantic_ocean: bool = False, indian_ocean: bool = False,
+                     tropical: bool = False) -> tuple:
         """
         Zooms into specific geographical regions or the tropics in the data.
 
@@ -454,7 +429,7 @@ class ToolsClass:
         if tropical and trop_lat is not None:
             latmax = trop_lat
             latmin = trop_lat
-        self.logger.info("The data was zoomed in.")
+        self.logger.info('The data was zoomed in.')
         return lonmin, lonmax, latmin, latmax
 
     def improve_time_selection(self, data: Union[xr.DataArray, None] = None, time_selection: Union[str, None] = None) -> str:
@@ -473,43 +448,41 @@ class ToolsClass:
         The processed time selection value is then returned.
 
         Examples:
-            >>> time_selection(data=data, time_selection="2023-09-25")
+            >>> time_selection(data=data, time_selection='2023-09-25')
             '2023-09-25'
         """
         if time_selection is not None:
             if not isinstance(time_selection, str):
                 time_selection = str(time_selection)
 
-            year_pattern = re.compile(r"\b\d{4}\b")
+            year_pattern = re.compile(r'\b\d{4}\b')
             match_year = re.search(year_pattern, time_selection)
 
             if match_year:
-                self.logger.debug(f"The input time value for selection contains a year: {time_selection}")
+                self.logger.debug(f'The input time value for selection contains a year: {time_selection}')
                 try:
                     data.sel(time=time_selection)
                 except KeyError:
-                    self.logger.error("The dataset does not contain the input time value. Choose a different time value.")
+                    self.logger.error('The dataset does not contain the input time value. Choose a different time value.')
             else:
-                self.logger.debug(f"The input time value for selection does not contain a year: {time_selection}")
-                time_selection = str(data["time.year"][0].values) + "-" + time_selection
-                self.logger.debug(f"The new time value for selection is: {time_selection}")
+                self.logger.debug(f'The input time value for selection does not contain a year: {time_selection}')
+                time_selection = str(data['time.year'][0].values) + '-' + time_selection
+                self.logger.debug(f'The new time value for selection is: {time_selection}')
 
-                date_pattern = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+                date_pattern = re.compile(r'\b\d{4}-\d{2}-\d{2}\b')
                 match_date = re.search(date_pattern, time_selection)
 
                 if match_date:
-                    self.logger.debug(f"The input time value for selection contains a month and a day: {time_selection}")
+                    self.logger.debug(f'The input time value for selection contains a month and a day: {time_selection}')
                     try:
                         data.sel(time=time_selection)
                     except KeyError:
-                        self.logger.error("The dataset does not contain the input time value. Choose a different time value.")
+                        self.logger.error('The dataset does not contain the input time value. Choose a different time value.')
                 else:
-                    time_selection = time_selection + "-" + str(data.sel(time=time_selection)["time.day"][0].values)
-                    self.logger.debug(
-                        f"The input time value for selection does not contain a day. The new time value \
-                                      for selection is: {time_selection}"
-                    )
-        self.logger.info(f"The time value for selection is: {time_selection}")
+                    time_selection = time_selection + '-' + str(data.sel(time=time_selection)['time.day'][0].values)
+                    self.logger.debug(f'The input time value for selection does not contain a day. The new time value \
+                                      for selection is: {time_selection}')
+        self.logger.info(f'The time value for selection is: {time_selection}')
         return time_selection
 
     def convert_units(self, value, from_unit, to_unit):
@@ -526,8 +499,8 @@ class ToolsClass:
             the factor and offset needed for the conversion.
         """
         conversion = convert_units(from_unit, to_unit)
-        factor = conversion.get("factor", 1)
-        offset = conversion.get("offset", 0)
+        factor = conversion.get('factor', 1)
+        offset = conversion.get('offset', 0)
 
         converted_value = (value * factor) + offset
         return converted_value
@@ -558,7 +531,7 @@ class ToolsClass:
             return None
 
         for key, value in loaded_dict.items():
-            if "path" not in value:
+            if 'path' not in value:
                 print(f"Error: 'path' key is missing in the entry with key {key}")
 
         # Define the number of entries
@@ -573,6 +546,7 @@ class ToolsClass:
             loaded_dict[key]["color"] = palette[i]
 
         return loaded_dict
+
 
     def add_colors_to_dict(self, loaded_dict: dict = None) -> Union[dict, None]:
         """
@@ -611,40 +585,37 @@ class ToolsClass:
             str:                    The unit of timestep in input Dataset
         """
 
-        if dataset["time"].size == 1:
-            return "False. Load more timesteps then one"
+        if dataset['time'].size == 1:
+            return 'False. Load more timesteps then one'
         try:
-            if np.count_nonzero(dataset["time.second"] == dataset["time.second"][0]) == dataset.time.size:
-                if np.count_nonzero(dataset["time.minute"] == dataset["time.minute"][0]) == dataset.time.size:
-                    if np.count_nonzero(dataset["time.hour"] == dataset["time.hour"][0]) == dataset.time.size:
-                        if (
-                            np.count_nonzero(dataset["time.day"] == dataset["time.day"][0]) == dataset.time.size
-                            or np.count_nonzero(
-                                [dataset["time.day"][i] in [1, 28, 29, 30, 31] for i in range(0, len(dataset["time.day"]))]
-                            )
-                            == dataset.time.size
-                        ):
-                            if np.count_nonzero(dataset["time.month"] == dataset["time.month"][0]) == dataset.time.size:
-                                return "Y"
+            if np.count_nonzero(dataset['time.second'] == dataset['time.second'][0]) == dataset.time.size:
+                if np.count_nonzero(dataset['time.minute'] == dataset['time.minute'][0]) == dataset.time.size:
+                    if np.count_nonzero(dataset['time.hour'] == dataset['time.hour'][0]) == dataset.time.size:
+                        if np.count_nonzero(dataset['time.day'] == dataset['time.day'][0]) == dataset.time.size or \
+                                np.count_nonzero([dataset['time.day'][i] in [1, 28, 29, 30, 31]
+                                                  for i in range(0, len(dataset['time.day']))]) == dataset.time.size:
+
+                            if np.count_nonzero(dataset['time.month'] == dataset['time.month'][0]) == dataset.time.size:
+                                return 'Y'
                             else:
-                                return "M"
+                                return 'M'
                         else:
-                            return "D"
+                            return 'D'
                     else:
                         timestep = dataset.time[1] - dataset.time[0]
-                        n_hours = int(timestep / (60 * 60 * 10**9))
-                        return str(n_hours) + "H"
+                        n_hours = int(timestep/(60 * 60 * 10**9))
+                        return str(n_hours)+'H'
                 else:
                     timestep = dataset.time[1] - dataset.time[0]
-                    n_minutes = int(timestep / (60 * 10**9))
-                    return str(n_minutes) + "m"
+                    n_minutes = int(timestep/(60 * 10**9))
+                    return str(n_minutes)+'m'
             else:
                 return 1
 
         except KeyError and AttributeError:
             timestep = dataset.time[1] - dataset.time[0]
             if timestep >= 28 and timestep <= 31:
-                return "M"
+                return 'M'
 
     def check_need_for_time_averaging(self, dataset, target_freq):
         """
@@ -661,10 +632,10 @@ class ToolsClass:
         """
         original_freq = self.time_interpreter(dataset)
         if original_freq == target_freq:
-            self.logger.warning("The original dataset does not need to be time-averaged.")
+            self.logger.warning('The original dataset does not need to be time-averaged.')
             return False
         else:
-            self.logger.warning("The original dataset needs to be time-averaged.")
+            self.logger.warning('The original dataset needs to be time-averaged.')
             return True
 
     def check_need_for_regridding(self, dataset, regrid, tolerance=0.01):
@@ -680,31 +651,27 @@ class ToolsClass:
             bool: True if regridding is needed, False otherwise.
 
         """
-        if "lat" in dataset.dims and "lon" in dataset.dims:
+        if 'lat' in dataset.dims and 'lon' in dataset.dims:
             # Assuming the dataset is 2D, calculate the difference in degrees between adjacent latitude and longitude points
             del_lon = abs(dataset.lon[1].values - dataset.lon[0].values)
             del_lat = abs(dataset.lat[1].values - dataset.lat[0].values)
 
             # Check if both latitude and longitude differences are within the tolerance of the desired regrid resolution
-            if math.isclose(del_lon, regrid_dict[regrid]["deg"], abs_tol=tolerance) and math.isclose(
-                del_lat, regrid_dict[regrid]["deg"], abs_tol=tolerance
-            ):
-                self.logger.warning(
-                    "The original dataset does not need to be regridded as it already"
-                    + "has the necessary spatial resolution."
-                )
+            if math.isclose(del_lon, regrid_dict[regrid]['deg'], abs_tol=tolerance) and \
+               math.isclose(del_lat, regrid_dict[regrid]['deg'], abs_tol=tolerance):
+                self.logger.warning('The original dataset does not need to be regridded as it already' +
+                                    'has the necessary spatial resolution.')
                 return False
             else:
-                self.logger.warning("The original dataset needs to be regridded.")
+                self.logger.warning('The original dataset needs to be regridded.')
                 return True
         else:
-            self.logger.warning(
-                "The original dataset does not contain latitude and longitude coordinates," + "and needs to be regridded."
-            )
+            self.logger.warning('The original dataset does not contain latitude and longitude coordinates,' +
+                                'and needs to be regridded.')
             return True
 
     def convert_24hour_to_12hour_clock(self, data, ind):
-        """Function to convert 24 hour clock to 12 hour clock
+        """ Function to convert 24 hour clock to 12 hour clock
 
         Args:
             data (xarray):                  The Dataset
@@ -713,13 +680,13 @@ class ToolsClass:
         Returns:
             str:                            The converted timestep
         """
-        if data["time.hour"][ind] > 12:
-            return str(data["time.hour"][ind].values - 12) + "PM"
+        if data['time.hour'][ind] > 12:
+            return str(data['time.hour'][ind].values - 12)+'PM'
         else:
-            return str(data["time.hour"][ind].values) + "AM"
+            return str(data['time.hour'][ind].values)+'AM'
 
     def convert_monthnumber_to_str(self, data, ind):
-        """Function to convert month number to string
+        """ Function to convert month number to string
 
         Args:
             data (xarray):                  The Dataset
@@ -728,30 +695,30 @@ class ToolsClass:
         Returns:
             str:                            The converted timestep
         """
-        if int(data["time.month"][ind]) == 1:
-            return "J"
-        elif int(data["time.month"][ind]) == 2:
-            return "F"
-        elif int(data["time.month"][ind]) == 3:
-            return "M"
-        elif int(data["time.month"][ind]) == 4:
-            return "A"
-        elif int(data["time.month"][ind]) == 5:
-            return "M"
-        elif int(data["time.month"][ind]) == 6:
-            return "J"
-        elif int(data["time.month"][ind]) == 7:
-            return "J"
-        elif int(data["time.month"][ind]) == 8:
-            return "A"
-        elif int(data["time.month"][ind]) == 9:
-            return "S"
-        elif int(data["time.month"][ind]) == 10:
-            return "O"
-        elif int(data["time.month"][ind]) == 11:
-            return "N"
-        elif int(data["time.month"][ind]) == 12:
-            return "D"
+        if int(data['time.month'][ind]) == 1:
+            return 'J'
+        elif int(data['time.month'][ind]) == 2:
+            return 'F'
+        elif int(data['time.month'][ind]) == 3:
+            return 'M'
+        elif int(data['time.month'][ind]) == 4:
+            return 'A'
+        elif int(data['time.month'][ind]) == 5:
+            return 'M'
+        elif int(data['time.month'][ind]) == 6:
+            return 'J'
+        elif int(data['time.month'][ind]) == 7:
+            return 'J'
+        elif int(data['time.month'][ind]) == 8:
+            return 'A'
+        elif int(data['time.month'][ind]) == 9:
+            return 'S'
+        elif int(data['time.month'][ind]) == 10:
+            return 'O'
+        elif int(data['time.month'][ind]) == 11:
+            return 'N'
+        elif int(data['time.month'][ind]) == 12:
+            return 'D'
 
     def extract_directory_path(self, string):
         """
@@ -761,7 +728,7 @@ class ToolsClass:
 
     def parse_time_band(self, time_band):
         """Parse the time_band string into start time, end time, and frequency."""
-        parts = time_band.split(", ")
+        parts = time_band.split(', ')
         start_time = np.datetime64(parts[0])
         end_time = start_time  # Assume single time point initially
         freq = None  # Default frequency is None
@@ -769,8 +736,8 @@ class ToolsClass:
         # If there's more than one part, it might include end time or frequency
         if len(parts) > 1:
             # Try to identify and set the frequency
-            if "freq=" in parts[-1]:
-                freq = parts[-1].split("=")[1]
+            if 'freq=' in parts[-1]:
+                freq = parts[-1].split('=')[1]
                 end_time = np.datetime64(parts[1]) if len(parts) == 3 else start_time
             else:
                 end_time = np.datetime64(parts[1])
@@ -780,7 +747,7 @@ class ToolsClass:
     def determine_common_frequency(self, freq_1, freq_2):
         """Determine the most granular common frequency between two frequencies."""
         # For simplicity, let's assume the only possible frequencies are 'D', 'M', 'Y'
-        freq_order = {"D": 1, "M": 2, "Y": 3}
+        freq_order = {'D': 1, 'M': 2, 'Y': 3}
         if freq_1 == freq_2:
             return freq_1
         elif not freq_1 or not freq_2:
@@ -792,8 +759,8 @@ class ToolsClass:
 
     def merge_time_bands(self, dataset_1, dataset_2):
         """Merge time bands from two datasets, considering start, end times, and frequency."""
-        start_1, end_1, freq_1 = self.parse_time_band(dataset_1.attrs["time_band"])
-        start_2, end_2, freq_2 = self.parse_time_band(dataset_2.attrs["time_band"])
+        start_1, end_1, freq_1 = self.parse_time_band(dataset_1.attrs['time_band'])
+        start_2, end_2, freq_2 = self.parse_time_band(dataset_2.attrs['time_band'])
 
         # Determine the earliest start and latest end times
         start_min = min(start_1, start_2)
@@ -825,7 +792,7 @@ class ToolsClass:
         else:
             raise ValueError(f"Time information not found in filename: {filename}")
 
-    def check_time_continuity(self, filenames, freq="M"):
+    def check_time_continuity(self, filenames, freq='M'):
         """
         Checks if the time coordinate is continuous for the given filenames and frequency.
         """
@@ -837,10 +804,10 @@ class ToolsClass:
             current_start_time, current_end_time = times[i]
             next_start_time, _ = times[i + 1]
 
-            if freq == "M":  # Monthly data
+            if freq == 'M':  # Monthly data
                 expected_next_start = current_end_time + relativedelta(months=+1)
                 expected_next_start = expected_next_start.replace(day=1, hour=0)  # Adjust for the end of the month
-            elif "3H" in freq:  # 3-hourly data
+            elif '3H' in freq:  # 3-hourly data
                 expected_next_start = current_end_time + relativedelta(hours=+3)
             else:
                 self.logger.warning(f"Unsupported frequency: {freq}")
@@ -855,6 +822,7 @@ class ToolsClass:
         self.logger.info("Continuity of time coordinates confirmed for all files.")
         return True
 
+
     def check_incomplete_months(self, files):
         filenames = [os.path.basename(file) for file in files]
         for file in filenames:
@@ -865,7 +833,7 @@ class ToolsClass:
 
                 if end_year and end_month and end_day:
                     # If the file has an end date, use it to check completeness
-                    start_date = datetime(int(start_year), int(start_month), int(start_day))  # noqa: F841
+                    start_date = datetime(int(start_year), int(start_month), int(start_day)) # noqa: F841
                     end_date = datetime(int(end_year), int(end_month), int(end_day))
 
                     # Calculate the last day of the end month
@@ -892,7 +860,7 @@ class ToolsClass:
 
                 if end_year and end_month and end_day:
                     # Handle files with both start and end timestamps
-                    end_date = datetime(int(end_year), int(end_month), int(end_day))  # noqa: F841
+                    end_date = datetime(int(end_year), int(end_month), int(end_day)) # noqa: F841
                     last_day = monthrange(int(end_year), int(end_month))[1]
                     if int(end_day) == last_day:  # Complete file
                         complete_files_by_month[f"{start_year}-{start_month}"].append(full_path)
@@ -911,8 +879,7 @@ class ToolsClass:
             final_files.extend(paths)
             if month in incomplete_files_by_month:
                 self.logger.warning(
-                    f"Warning: Removing incomplete records for {month} because a complete month file is present."
-                )
+                    f"Warning: Removing incomplete records for {month} because a complete month file is present.")
 
         for month, paths in incomplete_files_by_month.items():
             if month not in complete_files_by_month:
@@ -933,7 +900,7 @@ class ToolsClass:
                 ds.attrs[attr] = str(value)[:max_attr_length] + "... [truncated]"
 
     def new_time_coordinate(self, data, dummy_data, freq=None, time_length=None, factor=None):
-        """Function to create new time coordinate
+        """ Function to create new time coordinate
 
         Args:
             data (xarray):                  The Dataset
@@ -946,29 +913,29 @@ class ToolsClass:
             pd.date_range:                  The time coordinate
         """
         if data.time.size > 1 and dummy_data.time.size > 1:
-            if data["time"][0] > dummy_data["time"][0]:
-                starting_time = str(data["time"][0].values)
-            elif data["time"][0] <= dummy_data["time"][0]:
-                starting_time = str(dummy_data["time"][0].values)
+            if data['time'][0] > dummy_data['time'][0]:
+                starting_time = str(data['time'][0].values)
+            elif data['time'][0] <= dummy_data['time'][0]:
+                starting_time = str(dummy_data['time'][0].values)
 
             if freq is None:
                 if self.time_interpreter(data) == self.time_interpreter(dummy_data):
                     freq = self.time_interpreter(data)
                 else:
-                    if (data["time"][1] - data["time"][0]) > (dummy_data["time"][1] - dummy_data["time"][0]):
+                    if (data['time'][1] - data['time'][0]) > (dummy_data['time'][1] - dummy_data['time'][0]):
                         freq = self.time_interpreter(data)
                     else:
                         freq = self.time_interpreter(dummy_data)
 
             if time_length is None:
                 if factor is None:
-                    if data["time"][-1] < dummy_data["time"][-1]:
-                        final_time = str(data["time"][-1].values)
-                    elif data["time"][-1] >= dummy_data["time"][-1]:
-                        final_time = str(dummy_data["time"][-1].values)
+                    if data['time'][-1] < dummy_data['time'][-1]:
+                        final_time = str(data['time'][-1].values)
+                    elif data['time'][-1] >= dummy_data['time'][-1]:
+                        final_time = str(dummy_data['time'][-1].values)
                     return pd.date_range(start=starting_time, end=final_time, freq=freq)
                 elif isinstance(factor, int) or isinstance(factor, float):
-                    time_length = data.time.size * abs(factor)
+                    time_length = data.time.size*abs(factor)
                     return pd.date_range(start=starting_time, freq=freq, periods=time_length)
 
             else:
@@ -977,10 +944,11 @@ class ToolsClass:
             if data.time == dummy_data.time:
                 return data.time
             else:
-                raise ValueError("The two datasets have different time coordinates")
+                raise ValueError(
+                    'The two datasets have different time coordinates')
 
     def new_space_coordinate(self, data, coord_name, new_length):
-        """Function to create new space coordinate
+        """ Function to create new space coordinate
 
         Args:
             data (xarray):                  The Dataset
@@ -991,17 +959,17 @@ class ToolsClass:
             list:                          The space coordinate
         """
         if data[coord_name][0] > 0:
-            old_lenght = data[coord_name][0].values - data[coord_name][-1].values
-            delta = (old_lenght - 1) / (new_length - 1)
-            new_coord = [data[coord_name][0].values - i * delta for i in range(0, new_length)]
+            old_lenght = data[coord_name][0].values-data[coord_name][-1].values
+            delta = (old_lenght-1) / (new_length-1)
+            new_coord = [data[coord_name][0].values - i*delta for i in range(0, new_length)]
         else:
             old_lenght = data[coord_name][-1].values - data[coord_name][0].values
-            delta = (old_lenght - 1) / (new_length - 1)
-            new_coord = [data[coord_name][0].values + i * delta for i in range(0, new_length)]
+            delta = (old_lenght-1) / (new_length-1)
+            new_coord = [data[coord_name][0].values + i*delta for i in range(0, new_length)]
         return new_coord
 
     def space_regrider(self, data, space_grid_factor=None, lat_length=None, lon_length=None):
-        """Function to regrid the space coordinate
+        """ Function to regrid the space coordinate
 
         Args:
             data (xarray):                  The Dataset
@@ -1018,30 +986,39 @@ class ToolsClass:
                 new_dataset = data
                 lon_length = int(data.lon.size * space_grid_factor)
                 lat_length = int(data.lat.size * space_grid_factor)
-                new_lon_coord = self.new_space_coordinate(new_dataset, coord_name="lon", new_length=lon_length)
-                new_lat_coord = self.new_space_coordinate(new_dataset, coord_name="lat", new_length=lat_length)
-                new_dataset = new_dataset.interp(lon=new_lon_coord, method="linear", kwargs={"fill_value": "extrapolate"})
-                new_dataset = new_dataset.interp(lat=new_lat_coord, method="linear", kwargs={"fill_value": "extrapolate"})
+                new_lon_coord = self.new_space_coordinate(
+                    new_dataset, coord_name='lon', new_length=lon_length)
+                new_lat_coord = self.new_space_coordinate(
+                    new_dataset, coord_name='lat', new_length=lat_length)
+                new_dataset = new_dataset.interp(lon=new_lon_coord, method="linear", kwargs={
+                                                "fill_value": "extrapolate"})
+                new_dataset = new_dataset.interp(lat=new_lat_coord, method="linear", kwargs={
+                                                "fill_value": "extrapolate"})
 
             elif space_grid_factor < 0:
                 space_grid_factor = abs(space_grid_factor)
-                new_dataset = data.isel(lat=[i for i in range(0, data.lat.size, int(space_grid_factor))])
-                new_dataset = new_dataset.isel(lon=[i for i in range(0, data.lon.size, int(space_grid_factor))])
+                new_dataset = data.isel(
+                    lat=[i for i in range(0, data.lat.size, int(space_grid_factor))])
+                new_dataset = new_dataset.isel(
+                    lon=[i for i in range(0, data.lon.size, int(space_grid_factor))])
         else:
             new_dataset = data
 
         if lon_length is not None and lat_length is not None:
-            new_lon_coord = self.new_space_coordinate(new_dataset, coord_name="lon", new_length=lon_length)
-            new_lat_coord = self.new_space_coordinate(new_dataset, coord_name="lat", new_length=lat_length)
-            new_dataset = new_dataset.interp(lon=new_lon_coord, method="linear", kwargs={"fill_value": "extrapolate"})
-            new_dataset = new_dataset.interp(lat=new_lat_coord, method="linear", kwargs={"fill_value": "extrapolate"})
+            new_lon_coord = self.new_space_coordinate(
+                new_dataset, coord_name='lon', new_length=lon_length)
+            new_lat_coord = self.new_space_coordinate(
+                new_dataset, coord_name='lat', new_length=lat_length)
+            new_dataset = new_dataset.interp(lon=new_lon_coord, method="linear", kwargs={
+                                            "fill_value": "extrapolate"})
+            new_dataset = new_dataset.interp(lat=new_lat_coord, method="linear", kwargs={
+                                            "fill_value": "extrapolate"})
 
         return new_dataset
 
-    def mirror_dummy_grid(
-        self, data, dummy_data, space_grid_factor=None, time_freq=None, time_length=None, time_grid_factor=None
-    ):
-        """Function to mirror the dummy grid
+    def mirror_dummy_grid(self, data, dummy_data, space_grid_factor=None, time_freq=None, time_length=None,
+                          time_grid_factor=None):
+        """ Function to mirror the dummy grid
 
         Args:
             data (xarray):                  The Dataset
@@ -1055,26 +1032,24 @@ class ToolsClass:
             xarray:                        The regridded Dataset
         """
         # work only for lat and lon only for now. Check the line with interpolation command and modify it in the future
-        if "xarray" in str(type(dummy_data)):
+        if 'xarray' in str(type(dummy_data)):
             new_dataset_lat_lon = self.space_regrider(
-                data, space_grid_factor=space_grid_factor, lat_length=dummy_data.lat.size, lon_length=dummy_data.lon.size
-            )
+                data, space_grid_factor=space_grid_factor, lat_length=dummy_data.lat.size, lon_length=dummy_data.lon.size)
 
             if data.time.size > 1 and dummy_data.time.size > 1:
-                new_time_coord = self.new_time_coordinate(
-                    data=data, dummy_data=dummy_data, freq=time_freq, time_length=time_length, factor=time_grid_factor
-                )
+                new_time_coord = self.new_time_coordinate(data=data, dummy_data=dummy_data, freq=time_freq,
+                                                          time_length=time_length, factor=time_grid_factor)
                 new_data = new_dataset_lat_lon.interp(
-                    time=new_time_coord, method="linear", kwargs={"fill_value": "extrapolate"}
-                )
-                new_dummy_data = dummy_data.interp(time=new_time_coord, method="linear", kwargs={"fill_value": "extrapolate"})
+                    time=new_time_coord, method="linear", kwargs={"fill_value": "extrapolate"})
+                new_dummy_data = dummy_data.interp(
+                    time=new_time_coord, method="linear", kwargs={"fill_value": "extrapolate"})
 
                 return new_data, new_dummy_data
             else:
                 return new_dataset_lat_lon, dummy_data
 
     def data_size(self, data):
-        """Function to get the size of the data
+        """ Function to get the size of the data
 
         Args:
             data (xarray):                  The Dataset
@@ -1082,9 +1057,9 @@ class ToolsClass:
         Returns:
             int:                           The size of the data
         """
-        if "DataArray" in str(type(data)):
+        if 'DataArray' in str(type(data)):
             _size = data.size
-        elif "Dataset" in str(type(data)):
+        elif 'Dataset' in str(type(data)):
             _names = list(data.dims)
             _size = 1
             for i in _names:
@@ -1102,7 +1077,7 @@ class ToolsClass:
             str: The formatted date string.
         """
         # Find all datetime parts and format them
-        formatted_time_band = re.sub(r"(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}\.\d+", r"\1-\2-\3", time_band)
+        formatted_time_band = re.sub(r'(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}\.\d+', r'\1-\2-\3', time_band)
         return formatted_time_band
 
     def format_lat_band(self, dataset) -> str:
@@ -1115,7 +1090,7 @@ class ToolsClass:
         Returns:
             str: A formatted string describing the latitude band.
         """
-        lat_band_values = dataset.lat_band.split(", ")
+        lat_band_values = dataset.lat_band.split(', ')
         lat_band_str = f"The latitude band is from {lat_band_values[0]} to {lat_band_values[1]}"
         if len(lat_band_values) > 2:
             lat_band_str += f" with a frequency of {lat_band_values[2].split('=')[1]}"
@@ -1134,7 +1109,6 @@ class ToolsClass:
         Returns:
             bool: True if the latitude bands match, False otherwise.
         """
-
         def check_lat_band(model_lat_band, comparison_lat_band, dataset_name):
             if model_lat_band != comparison_lat_band:
                 logger.error(f"Latitude bands do not match between model and {dataset_name} data. Aborting comparison.")
