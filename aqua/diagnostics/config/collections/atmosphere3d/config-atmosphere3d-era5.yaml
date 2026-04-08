@@ -25,8 +25,7 @@ output:
   outputdir: "./"
   rebuild: true
   save_netcdf: true
-  save_pdf: true
-  save_png: true
+  save_format: ['png', 'pdf', 'svg']
   dpi: 300
   create_catalog_entry: true
 
@@ -42,10 +41,13 @@ diagnostics:
         seasons_stat: 'mean' # May become a list
         vertical: true     # Vertical profile if variable 3d
     plot_params:
-      default: 
+      default:
         projection: 'robinson'
         projection_params: {}
         cmap: 'PuOr_r'
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05  # 95% confidence level
       t:
         vmin: -8
         vmax: 8

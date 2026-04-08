@@ -3,16 +3,17 @@ Utility functions for the ensemble class
 """
 
 import gc
-import os
 from collections import Counter
 
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from aqua import Reader
+from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
-from aqua.core.configurer import ConfigPath
+
 
 def reader_retrieve_and_merge(
     variable: str = None,
@@ -110,7 +111,7 @@ def reader_retrieve_and_merge(
         else:
             logger.info(f"No realizations defined for {model_i}, using default ['r1']")
             reals = ["r1"]
-            
+
         model_ds_list = []
 
         for r in reals:
@@ -439,5 +440,3 @@ def extract_realizations(catalog, model, exp, source):
             realization = parameter.get('allowed')
             return realization
     return None
-
-

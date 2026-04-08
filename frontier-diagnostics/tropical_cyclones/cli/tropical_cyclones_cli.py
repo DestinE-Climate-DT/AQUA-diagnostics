@@ -7,8 +7,9 @@ import argparse
 import sys
 
 from tropical_cyclones import TCs
-from aqua.core.util import load_yaml, get_arg
+
 from aqua.core.logger import log_configure
+from aqua.core.util import get_arg, load_yaml
 
 
 def parse_arguments(args):

@@ -1,9 +1,11 @@
-import sys
 import os
+import sys
+
+from src.tropical_rainfall_cli_class import TropicalRainfallCLI
+from src.tropical_rainfall_utils import load_configuration, parse_arguments, validate_arguments
+
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from src.tropical_rainfall_utils import parse_arguments, validate_arguments, load_configuration
-from src.tropical_rainfall_cli_class import Tropical_Rainfall_CLI
 
 # Initialize logger
 logger = log_configure(log_name="Trop. Rainfall CLI", log_level='INFO')
@@ -39,7 +41,7 @@ def main():
     config = load_config(args)
 
     # Create the CLI object and run operations
-    trop_rainfall_cli = Tropical_Rainfall_CLI(config, args)
+    trop_rainfall_cli = TropicalRainfallCLI(config, args)
 
     try:
         trop_rainfall_cli.calculate_histogram_by_months()

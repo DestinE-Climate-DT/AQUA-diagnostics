@@ -4,5 +4,5 @@
 __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 # This ensures 'from aqua import Reader' works from anywhere
-from .core import *
-from .core import __version__, __all__
+from .core import *  # noqa: F403
+from .core import __version__, __all__  # noqa: F401

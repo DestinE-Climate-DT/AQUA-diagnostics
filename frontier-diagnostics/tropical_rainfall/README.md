@@ -1,6 +1,6 @@
 # Diagnostic of tropical rainfalls
 
-Main authors: 
+Main authors:
 - Natalia Nazarova (POLITO, natalia.nazarova@polito.it)
 
 ## Description
@@ -34,17 +34,17 @@ Alternatively, you can include the package in your Conda environment by adding t
 ```
 The installation requires **fast_histogram** among other dependencies. The installation of the Tropical Rainfall package is integrated into the AQUA package installation process.
 
-For detailed installation instructions specific to environments like Levante or Lumi, please refer to the **Installation** sections in the 
+For detailed installation instructions specific to environments like Levante or Lumi, please refer to the **Installation** sections in the
 **[README.md](https://github.com/DestinE-Climate-DT/AQUA/blob/main/README.md)** file of the AQUA package.
 
 
-## Data requirements  
+## Data requirements
 
 Input data must include the precipitation rate variable (**mtpr**) on a latitude and longitude grid.
 
 The diagnostic can be performed on data of any spatial and temporal resolution.
 
-## Output 
+## Output
 
 All diagnostic outputs are provided in either NetCDF or PDF formats. Users can specify the output storage directory in the config file located at `$AQUA/diagnostics/tropical_rainfall/tropical_rainfall/config-tropical-rainfall.yml`, or directly during the initialization of the diagnostic:
 ```
