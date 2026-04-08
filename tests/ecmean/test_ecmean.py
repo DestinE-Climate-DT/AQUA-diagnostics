@@ -1,10 +1,13 @@
 """Tests for ecmean diagnostics"""
 
 import os
+
 import pytest
+
 from aqua import Reader
-from aqua.diagnostics import PerformanceIndices, GlobalMean
-from aqua.diagnostics.base import OutputSaver, load_diagnostic_config, get_diagnostic_configpath
+from aqua.diagnostics import GlobalMean, PerformanceIndices
+from aqua.diagnostics.base import OutputSaver, get_diagnostic_configpath, load_diagnostic_config
+
 
 @pytest.fixture
 def common_setup(tmp_path):
@@ -53,7 +56,7 @@ def test_performance_indices(common_setup):
     pdffile = outputsaver.generate_path(extension='pdf', diagnostic_product='performance_indices')
     pi.store(yamlfile=yamlfile)
     ecmean_fig = pi.plot(diagname='performance_indices', returnfig=True, storefig=False)
-    outputsaver.save_pdf(fig=ecmean_fig, diagnostic_product='performance_indices')
+    outputsaver.save_figure(fig=ecmean_fig, diagnostic_product='performance_indices', extension='pdf')
     assert os.path.exists(yamlfile), f"{yamlfile} file not found"
     assert os.path.exists(pdffile), f"{pdffile} file not found"
 
@@ -75,7 +78,7 @@ def test_global_mean(common_setup):
     pngfile = outputsaver.generate_path(extension='png', diagnostic_product='global_mean')
     gm.store(yamlfile=yamlfile)
     ecmean_fig = gm.plot(diagname='global_mean', returnfig=True, storefig=False)
-    outputsaver.save_png(fig=ecmean_fig, diagnostic_product='global_mean')
+    outputsaver.save_figure(fig=ecmean_fig, diagnostic_product='global_mean', extension='png')
 
     assert os.path.exists(yamlfile), f"{yamlfile} file not found"
     assert os.path.exists(pngfile), f"{pngfile} file not found"

@@ -33,9 +33,9 @@ File structure
 Input variables and datasets
 ----------------------------
 
-Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via 
+Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via
 ``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. The final merged dataset will contain all the requested ensemble members with appropriate metadata.
-Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``. 
+Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``.
 The merged dataset must contain all ensemble members concatenated along a pseudo-dimension named ``ensemble`` (by default, but customizable).
 
 A variable that is typically used in this diagnostic is:
@@ -82,9 +82,9 @@ Example: loading via the AQUA Reader
 Basic usage
 -----------
 
-The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic usage of this diagnostic is explained with a working example in the notebook.
 The ensemble analysis is performed on merged ``2D`` map by ``EnsembleLatLon`` class.
-The basic structure is the following: 
+The basic structure is the following:
 
 .. code-block:: python
 
@@ -103,8 +103,7 @@ The basic structure is the following:
 
     ens_latlon_plot.plot(
         var=var,
-        save_pdf=True,
-        save_png=True,
+        save_format=['png', 'pdf'], # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
         title_mean='Map of 2t for Ensemble Multi-Model mean',
         title_std='Map of 2t for Ensemble Multi-Model standard deviation',
         cbar_label='2 meter temperature in K',
@@ -114,7 +113,8 @@ The basic structure is the following:
 
 .. note::
 
-    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory
+    If not specified otherwise, plots will be saved using ``SAVE_FORMAT`` (PNG, PDF, and SVG)
+    in the current working directory.
 
 CLI usage
 ---------
@@ -192,9 +192,9 @@ The diagnostic produces the following outputs:
 * 2D spatial map of ensemble mean
 * 2D spatial map of ensemble standard deviation
 
-Plots are saved in both PDF and PNG format.
+Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
 Data outputs are saved as NetCDF files.
- 
+
 Example Plots
 -------------
 
@@ -203,13 +203,13 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 .. figure:: figures/ensemble_2t_LatLon_mean.png
     :align: center
     :width: 100%
-    
-    Ensemble mean of multi-model of global mean of 2-meter temperature. Models considered as IFS-NEMO and IFS-FESOM.  
+
+    Ensemble mean of multi-model of global mean of 2-meter temperature. Models considered as IFS-NEMO and IFS-FESOM.
 
 .. figure:: figures/ensemble_2t_LatLon_STD.png
     :align: center
     :width: 100%
-    
+
     Ensemble standard devation of multi-model of the global mean of 2-meter temperature. Models considered as IFS-NEMO and IFS-FESOM.
 
 
@@ -223,8 +223,8 @@ Notebooks are stored in the ``notebooks/diagnostics/ensemble`` directory and con
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_). 
-Contributions are welcome — please open an issue or a pull request.  
+This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
+Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
 
 
@@ -236,4 +236,3 @@ produced from the diagnostic function docstrings.
 
 .. note::
    WORK IN PROGRESS
-

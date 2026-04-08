@@ -49,8 +49,7 @@ output:
   outputdir: "./" # mandatory
   rebuild: true
   save_netcdf: true # mandatory
-  save_pdf: true    # mandatory
-  save_png: true    # mandatory
+  save_format: ['png', 'pdf', 'svg']
   dpi: 300
   create_catalog_entry: false
 
@@ -68,13 +67,13 @@ diagnostics:
     ref_std_freq: 'monthly' # set to 'monthly' 'annual'
     varname:
       extent: 'siconc'
-  
+
     # ====  Update Datasets and reference entries  ====
     references:
     # -- OSI-SAF for "extent" in NH --
     - <<: *ref_osi_nh
       use_for_method: "extent"
-  
+
     # -- OSI-SAF for "extent" in SH --
     - <<: *ref_osi_sh
       use_for_method: "extent"
@@ -89,13 +88,13 @@ diagnostics:
     ref_std_freq: 'monthly' # set to 'monthly' 'annual'
     varname:
       extent: 'siconc'
-  
+
     # ====  Update Datasets and reference entries  ====
     references:
     # -- OSI-SAF for "extent" in NH --
     - <<: *ref_osi_nh
       use_for_method: "extent"
-      
+
     # -- OSI-SAF for "extent" in SH --
     - <<: *ref_osi_sh
       use_for_method: "extent"
@@ -125,14 +124,13 @@ diagnostics:
           Antarctic: [-180, 180, -50, -90]
     varname:
       fraction: 'siconc'
-  
+
     # ====  Update Datasets and reference entries  ====
     references:
     # -- OSI-SAF for fraction in NH --
     - <<: *ref_osi_nh
       use_for_method: "fraction"
-  
+
     # -- OSI-SAF for fraction in SH --
     - <<: *ref_osi_sh
       use_for_method: "fraction"
-

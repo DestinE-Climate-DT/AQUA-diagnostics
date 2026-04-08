@@ -3,11 +3,11 @@
 State of the art diagnostics
 ============================
 
-AQUA provides a collection of built-in diagnostics to analyze climate model outputs. 
+AQUA provides a collection of built-in diagnostics to analyze climate model outputs.
 The family of diagnostics named **state-of-the-art** lists diagnostics which can be used for the simulation monitoring and
 make use of low resolution data as input (1 degree in both latitude and longitude and monthly frequency).
 Most of these diagnostics can be compared with observations to produce metrics of evaluation and aim at providing an assessment
-of the model against observational datasets and, in some selected occasions, pre-existing climate simulations. 
+of the model against observational datasets and, in some selected occasions, pre-existing climate simulations.
 
 List of diagnostics
 +++++++++++++++++++
@@ -79,12 +79,11 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
         regrid: null
         reader_kwargs: null # it can be a dictionary with reader kwargs
 
-* ``output``: a block describing the details of the output. Is contains:
+* ``output``: a block describing the details of the output. It contains:
 
     * ``outputdir``: the output directory for the plots.
     * ``rebuild``: a boolean that enables the rebuilding of the plots.
-    * ``save_pdf``: a boolean that enables the saving of the plots in pdf format.
-    * ``save_png``: a boolean that enables the saving of the plots in png format.
+    * ``save_format``: a list (or single string) that selects the image formats to save plots. Default is SAVE_FORMAT.
     * ``dpi``: the resolution of the plots.
     * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
@@ -93,8 +92,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     output:
       outputdir: "/path/to/output"
       rebuild: true
-      save_pdf: true
-      save_png: true
+      save_format: ['png', 'svg'] # default is SAVE_FORMAT (['png', 'pdf', 'svg'])
       dpi: 300
       create_catalog_entry: true
 
@@ -133,8 +131,8 @@ in a single command, with a shared Dask cluster, shared output directory and wit
 The entry point is called `aqua analysis` and all the details can be found in :ref:`aqua_analysis`.
 
 .. warning::
-   The analysis has to be performed preferrably on Low Resolution Archive (LRA) data, meaning 
-   that data should be aggregated to a resolution of 1 degree in both latitude and longitude and 
+   The analysis has to be performed preferrably on Low Resolution Archive (LRA) data, meaning
+   that data should be aggregated to a resolution of 1 degree in both latitude and longitude and
    to a monthly frequency.
    It is available the option to regrid the data on the fly, but the memory usage may be highly
    increased and it may be preferrable to run the diagnostics individually.

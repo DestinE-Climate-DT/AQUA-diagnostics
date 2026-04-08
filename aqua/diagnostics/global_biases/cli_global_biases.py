@@ -3,11 +3,10 @@
 import argparse
 import sys
 
-from aqua.core.util import to_list
 from aqua.core.exceptions import NoDataError
+from aqua.core.util import to_list
 from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
-from aqua.diagnostics.base import template_parse_arguments
-from aqua.diagnostics.base import DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
 TOOLNAME='GlobalBiases'
 TOOLNAME_KEY = TOOLNAME.lower()
@@ -25,7 +24,7 @@ def parse_arguments(args):
 if __name__ == '__main__':
 
     args = parse_arguments(sys.argv[1:])
-    
+
     cli = DiagnosticCLI(
         args,
         diagnostic_name=TOOLNAME_KEY,
@@ -71,7 +70,7 @@ if __name__ == '__main__':
                                         outputdir=cli.outputdir, loglevel=cli.loglevel)
 
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
-        
+
         all_plot_params = tool_dict.get('plot_params', {})
         default_params = all_plot_params.get('default', {})
 
@@ -127,8 +126,8 @@ if __name__ == '__main__':
                     cli.logger.info("Calculating and displaying global bias statistics for variable: %s", var)
                     area = biases_dataset.climatology['cell_area']
 
-                plot_biases = PlotGlobalBiases(diagnostic=diagnostic_name, save_pdf=cli.save_pdf, save_png=cli.save_png,
-                                            dpi=cli.dpi, outputdir=cli.outputdir, cmap=cmap, loglevel=cli.loglevel)
+                plot_biases = PlotGlobalBiases(diagnostic=diagnostic_name, save_format=cli.save_format,
+                                               dpi=cli.dpi, outputdir=cli.outputdir, cmap=cmap, loglevel=cli.loglevel)
                 plot_biases.plot_bias(data=biases_dataset.climatology, data_ref=biases_reference.climatology,
                                         data_timeseries=biases_dataset.data, data_ref_timeseries=biases_reference.data,  # data with 'time' dimension for t-test
                                         var=var, plev=p,

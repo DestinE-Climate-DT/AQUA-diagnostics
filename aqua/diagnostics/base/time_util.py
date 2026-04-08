@@ -36,16 +36,16 @@ def start_end_dates(startdate=None, enddate=None,
 def round_startdate(startdate, freq='monthly'):
     """
     Round the start date to the start of the month or year.
-    
+
     Args:
         startdate (pd.Timestamp): start date
         freq (str): frequency ('monthly' or 'annual'). Default is 'monthly'.
-    
+
     Returns:
         pd.Timestamp: rounded start date
     """
     if freq == 'annual':
-        return pd.Timestamp(year=startdate.year, month=1, day=1, 
+        return pd.Timestamp(year=startdate.year, month=1, day=1,
                            hour=0, minute=0, second=0)
     elif freq == 'monthly':
         return pd.Timestamp(year=startdate.year, month=startdate.month, day=1,
@@ -57,11 +57,11 @@ def round_startdate(startdate, freq='monthly'):
 def round_enddate(enddate, freq='monthly'):
     """
     Round the end date to the end of the month or year.
-    
+
     Args:
         enddate (pd.Timestamp): end date
         freq (str): frequency ('monthly' or 'annual'). Default is 'monthly'.
-    
+
     Returns:
         pd.Timestamp: rounded end date
     """

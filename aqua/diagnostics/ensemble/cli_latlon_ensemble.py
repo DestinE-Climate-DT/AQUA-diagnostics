@@ -8,17 +8,17 @@ defined in a yaml configuration file for multiple models.
 import argparse
 import sys
 
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg
 from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon, reader_retrieve_and_merge
 from aqua.diagnostics.base import (
+    SAVE_FORMAT,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
     open_cluster,
     template_parse_arguments,
 )
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
 
 
 def parse_arguments(args):
@@ -62,8 +62,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     # rebuild = config_dict['output'].get('rebuild', True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_pdf = config_dict["output"].get("save_pdf", True)
-    save_png = config_dict["output"].get("save_png", True)
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     dpi = config_dict["output"].get("dpi", 300)
 
     # EnsembleLatLon diagnostic
@@ -102,7 +101,7 @@ if __name__ == "__main__":
                         source_list.append(model["source"])
                         realization_dict.update({model["model"]: model["realization"]})
                         #reader_kwargs_dict.update({model["model"]: {"fix":model["fix"], "areas":model["areas"]}})
- 
+
                 # Loading and merging data
                 ens_dataset = reader_retrieve_and_merge(
                     variable=variable,
@@ -160,8 +159,7 @@ if __name__ == "__main__":
 
                 # PlotEnsembleLatLon plot options
                 plot_arguments = {
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
+                    "save_format": save_format,
                     "var": variable,
                     "dpi": dpi,
                     "vmin_mean": vmin_mean,

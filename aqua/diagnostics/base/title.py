@@ -3,7 +3,9 @@ Title generation class and utilities for AQUA plots.
 """
 
 from typing import Optional, Union
-from aqua.core.util import to_list, strlist_to_phrase
+
+from aqua.core.util import strlist_to_phrase, to_list
+
 from .strings import harmonize_lists
 
 
@@ -32,22 +34,23 @@ class TitleBuilder:
     Returns:
         str: The generated title.
     """
+    DEFAULT_SPLIT_MARKERS = ["relative to", "for", "in"]
 
-    def __init__(self, 
+    def __init__(self,
                  title: Optional[str] = None,
                  diagnostic: Optional[str] = None,
                  variable: Optional[str] = None,
                  regions: Optional[Union[str, list]] = None,
                  conjunction: Optional[str] = None,
                  catalog: Optional[Union[str, list]] = None,
-                 model: Optional[Union[str, list]] = None, 
+                 model: Optional[Union[str, list]] = None,
                  exp: Optional[Union[str, list]] = None,
                  startyear: Optional[int | str] = None,
                  endyear: Optional[int | str] = None,
                  realizations: Optional[Union[str, list]] = None,
                  comparison: Optional[str] = None,
                  ref_catalog: Optional[Union[str, list]] = None,
-                 ref_model: Optional[Union[str, list]] = None, 
+                 ref_model: Optional[Union[str, list]] = None,
                  ref_exp: Optional[Union[str, list]] = None,
                  timeseason: Optional[str] = None,
                  ref_startyear: Optional[int | str] = None,
@@ -83,7 +86,7 @@ class TitleBuilder:
         """
         listpart = list(filter(None, [self.catalogs, self.models, self.exps]))
         listpart = harmonize_lists(*listpart)
-        
+
         if listpart:
             if len(listpart) > 1:
                 return "Multi-model "
@@ -103,7 +106,7 @@ class TitleBuilder:
             ref_list_unique = list(dict.fromkeys(ref_listpart))
             return ", ".join(ref_list_unique)
         return None
-        
+
     def _format_years(self, startyear=None, endyear=None) -> str | None:
         """Format start and end year into a year range string.
 
@@ -122,15 +125,62 @@ class TitleBuilder:
             return endyear
         return None
 
-    def generate(self) -> str:
+    def _wrap_title(self, title: str, max_chars: int, split_on: list[str]) -> str:
+        """Wrap a (long) title by iteratively splitting on markers.
+        Splits the title into multiple lines for each marker,
+        only if the line is longer than ``max_chars``.
+
+        Args:
+            title (str): Input title to wrap.
+            max_chars (int): Maximum line length for each line.
+            split_on (list[str]): Markers used to split the title into multiple lines.
+
+        Returns:
+            str: Wrapped title with newline separators.
+        """
+        if not title or len(title) <= max_chars:
+            return title
+
+        lines = [title]
+        for marker in split_on:
+            new_lines = []
+            separator = f" {marker} "
+
+            for line in lines:
+                if len(line) > max_chars and separator in line:
+                    remaining = line
+                    while len(remaining) > max_chars and separator in remaining:
+                        left, _, right = remaining.partition(separator)
+                        new_lines.append(left.strip())
+                        remaining = f"{marker} {right.strip()}"
+                    new_lines.append(remaining)
+                else:
+                    new_lines.append(line)
+
+            lines = new_lines
+            if all(len(line) <= max_chars for line in lines):
+                break
+
+        return "\n".join(lines)
+
+    def generate(self, max_chars: Optional[int] = None, split_on: Optional[list[str]] = None) -> str:
         """Build the full title from configured components.
+
+        Args:
+            max_chars (int, optional): Maximum line length. If set and the
+                generated title exceeds this length, a newline-based wrapping
+                is attempted using ``split_on`` markers.
+            split_on (list[str], optional): Ordered markers used for iterative
+                line splitting when wrapping is enabled.
 
         Returns:
             str: The assembled title string (stripped).
         """
+        markers = split_on if split_on is not None else self.DEFAULT_SPLIT_MARKERS
 
         if self.title:
-            return self.title
+            title = self.title.strip()
+            return self._wrap_title(title, max_chars=max_chars, split_on=markers) if max_chars else title
 
         title = ''
         if self.diagnostic:
@@ -144,7 +194,7 @@ class TitleBuilder:
             regions_str = strlist_to_phrase(regions_list)
             if regions_str:
                 title += f" [{regions_str}]"
-        
+
         models_part = self._format_models()
         if models_part:
             if title:
@@ -153,7 +203,7 @@ class TitleBuilder:
 
         if self.realizations:
             if len(self.realizations) > 1:
-                title += f" Multi-realization"
+                title += " Multi-realization"
             else:
                 title += f" {self.realizations[0]}"
 
@@ -177,4 +227,5 @@ class TitleBuilder:
         if self.extra_info:
             title += f" {' '.join(to_list(self.extra_info))}"
 
-        return title.strip()
+        title = title.strip()
+        return self._wrap_title(title, max_chars=max_chars, split_on=markers) if max_chars else title
