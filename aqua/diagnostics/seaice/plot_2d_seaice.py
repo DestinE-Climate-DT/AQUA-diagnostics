@@ -229,11 +229,11 @@ class Plot2DSeaIce:
             f"Climatology and differences against the reference dataset for sea ice {monmod.attrs.get('AQUA_method', '')} "
             f"in the {monmod.attrs.get('AQUA_region', 'geographic')} region. "
             f"Model data is {monmod.attrs.get('AQUA_model')}, experiment {monmod.attrs.get('AQUA_exp')} "
-            f"(from {time_to_string(monmod.attrs.get('AQUA_startdate', ''), format="%Y-%m")} "
-            f"to {time_to_string(monmod.attrs.get('AQUA_enddate', ''), format="%Y-%m")}). "
+            f"(from {time_to_string(monmod.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(monmod.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
             f"Reference dataset is {monref.attrs.get('AQUA_model')}, experiment {monref.attrs.get('AQUA_exp')} "
-            f"(from {time_to_string(monref.attrs.get('AQUA_startdate', ''), format="%Y-%m")} "
-            f"to {time_to_string(monref.attrs.get('AQUA_enddate', ''), format="%Y-%m")}). "
+            f"(from {time_to_string(monref.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(monref.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
             + (
                 "The red contour line represents where the sea ice fraction is equal to 0.2."
                 if self.method == "fraction"
@@ -315,8 +315,8 @@ class Plot2DSeaIce:
             f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method','')} climatology "
             f"for the {mondat.attrs.get('AQUA_model','')} model, experiment {mondat.attrs.get('AQUA_exp','')} "
             f"in the {mondat.attrs.get('AQUA_region', 'geographic')} region "
-            f"(from {time_to_string(mondat.attrs.get('AQUA_startdate',''), format="%Y-%m")} "
-            f"to {time_to_string(mondat.attrs.get('AQUA_enddate',''), format="%Y-%m")}). "
+            f"(from {time_to_string(mondat.attrs.get('AQUA_startdate',''), format='%Y-%m')} "
+            f"to {time_to_string(mondat.attrs.get('AQUA_enddate',''), format='%Y-%m')}). "
             + (
                 "The red contour line represent where the sea ice fraction is equal to 0.2."
                 if self.method == "fraction" and self.plot_ref_contour
