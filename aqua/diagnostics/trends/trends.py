@@ -102,7 +102,7 @@ class Trends(Diagnostic):
             region (str, optional): Geographical region to select. If None, no selection is made. Default is None.
             drop (bool, optional): Whether to drop the original coordinates after selection. Default is True.
             dim_mean (str or list, optional): Dimension(s) over which to compute the mean. If None, no mean is computed. Default is None.
-        
+
         Returns:
             tuple: A tuple containing the selected (and possibly averaged) data and the region name.
         """
@@ -136,7 +136,7 @@ class Trends(Diagnostic):
         Args:
             trend (xr.DataArray): Trend values to adjust.
             y_array (xr.DataArray): Original data array with time coordinate.
-        
+
         Returns:
             xr.DataArray: Adjusted trend values.
         """
