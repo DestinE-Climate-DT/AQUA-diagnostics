@@ -1,8 +1,7 @@
 import pytest
-from aqua.diagnostics.trends import Trends
 from conftest import APPROX_REL, LOGLEVEL
 
-from aqua.diagnostics.ocean_trends import Trends
+from aqua.diagnostics.trends import Trends
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL*10
@@ -12,8 +11,8 @@ def test_trends():
     """Test the trends class."""
     # Create an instance of the trends class
     trend = Trends(catalog='ci', model='FESOM',
-                          exp='hpz3', source='monthly-3d',
-                          regrid='r100', loglevel=loglevel)
+                   exp='hpz3', source='monthly-3d',
+                   regrid='r100', loglevel=loglevel)
 
     trend.run(
         # dim_mean="lat",
