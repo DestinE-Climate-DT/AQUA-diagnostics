@@ -338,7 +338,7 @@ class PlotSeaIce:
                 self.ref_label_list = []
             if self.ref_label not in self.ref_label_list:
                 self.ref_label_list.append(f"{self.ref_label}")
-            
+
             refs_phrase = strlist_to_phrase(self.ref_label_list, oxford_comma=True)
             verb = "is" if len(self.ref_label_list) == 1 else "are"
             plural = "" if len(self.ref_label_list) == 1 else "s"
@@ -349,7 +349,7 @@ class PlotSeaIce:
         # generate string for reference std data
         if hasattr(self, "std_label") and self.std_label:
             sdtdata = self._getdata_fromdict(data_dict,'monthly_std_ref')
-            std_sdate, std_edate = extract_dates(sdtdata[0]) 
+            std_sdate, std_edate = extract_dates(sdtdata[0])
             self.std_label_str = f" Shaded areas represent ±2σ uncertainty bands (from {std_sdate} to {std_edate})."
         else:
             self.std_label_str = ''
@@ -364,7 +364,7 @@ class PlotSeaIce:
                 pl_type = ''
 
         # finally build the string caption (dynamically)
-        self._description = ('{}sea ice {} integrated over {}for {}{}{}').format(pl_type, method, 
+        self._description = ('{}sea ice {} integrated over {}for {}{}{}').format(pl_type, method,
                                                                                  self.region_str, self.model_labels_str,
                                                                                  self.ref_label_str, self.std_label_str)
 

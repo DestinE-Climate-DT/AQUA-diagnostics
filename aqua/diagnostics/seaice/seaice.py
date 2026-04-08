@@ -519,7 +519,7 @@ class SeaIce(Diagnostic):
                                                  f"over {da_seaice_computed.attrs['AQUA_region']}")
         da_seaice_computed.attrs["standard_name"] = f"{region}_{'std_' if std_flag else ''}sea_ice_{self.method}"
         da_seaice_computed.attrs["AQUA_method"] = f"{self.method}"
-        
+
         if startdate is not None:
             da_seaice_computed.attrs["AQUA_startdate"] = f"{time_to_string(startdate, format='%Y-%m')}"
         if enddate is not None:
