@@ -1,12 +1,13 @@
 """Base classes for Timeseries diagnostics."""
 
+from typing import Union
+
 import xarray as xr
-#import pandas as pd
+
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string
-from aqua.diagnostics.base import Diagnostic, start_end_dates, OutputSaver, TitleBuilder
-from aqua.core.util import time_to_string, strlist_to_phrase, unit_to_latex
+from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, strlist_to_phrase, time_to_string
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, start_end_dates
 
 xr.set_options(keep_attrs=True)
 
@@ -45,7 +46,7 @@ class BaseMixin(Diagnostic):
         """
         super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
                          loglevel=loglevel)
-        
+
         # Log name is the diagnostic name with the first letter capitalized
         self.logger = log_configure(log_level=loglevel, log_name=diagnostic_name.capitalize())
         self.diagnostic_name = diagnostic_name
@@ -350,7 +351,7 @@ class PlotBaseMixin():
         Returns:
             title (str): Title for the plot.
         """
-        
+
         title = TitleBuilder(
             diagnostic=diagnostic,
             variable=self.long_name,
@@ -395,10 +396,10 @@ class PlotBaseMixin():
         description += strlist_to_phrase(items=[f'{self.catalogs[i]} {self.models[i]} {self.exps[i]}' for i in range(self.len_data)])
 
         if self.len_ref > 0:
-            description += f' with reference'
+            description += ' with reference'
             for i in range(self.len_ref):
                 if self.ref_models[i] == 'ERA5' or self.ref_models == 'ERA5':
-                    description += f' ERA5 '
+                    description += ' ERA5 '
                 elif isinstance(self.ref_models, list):
                     description += f' {self.ref_models[i]} {self.ref_exps[i]} '
                 else:
@@ -413,19 +414,21 @@ class PlotBaseMixin():
         self.logger.debug('Description: %s', description)
         return description
 
-    def save_plot(self, fig, description: str = None, rebuild: bool = True,
-                  outputdir: str = './', dpi: int = 300, format: str = 'png', diagnostic_product: str = None):
+    def save_plot(self, fig, description: str | None = None, rebuild: bool = True,
+                  outputdir: str = './', dpi: int = 300,
+                  format: Union[str, list] = SAVE_FORMAT,
+                  diagnostic_product: str | None = None):
         """
         Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): Figure object.
-            description (str): Description of the plot.
+            description (str, optional): Description of the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
-            diagnostic_product (str): Diagnostic product to be used in the filename as diagnostic_product.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
+            diagnostic_product (str, optional): Diagnostic product to be used in the filename as diagnostic_product.
         """
         outputsaver = OutputSaver(diagnostic=self.diagnostic_name,
                                   catalog=self.catalogs,
@@ -450,6 +453,5 @@ class PlotBaseMixin():
 
         outputsaver.save_figure(fig, diagnostic_product,
                                 extra_keys=extra_keys, metadata=metadata,
-                                save_pdf=format in ['pdf', 'both'], 
-                                save_png=format in ['png', 'both'],
+                                extension=format,
                                 rebuild=rebuild, dpi=dpi)

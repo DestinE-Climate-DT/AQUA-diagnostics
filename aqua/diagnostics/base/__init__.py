@@ -5,6 +5,7 @@ from .util import load_diagnostic_config, merge_config_args, get_diagnostic_conf
 from .output_saver import OutputSaver
 from .cli_base import DiagnosticCLI
 from .title import TitleBuilder
+from .defaults import SAVE_FORMAT
 
 __all__ = ['Diagnostic',
            'start_end_dates', 'round_startdate', 'round_enddate',
@@ -12,4 +13,5 @@ __all__ = ['Diagnostic',
            'load_diagnostic_config', 'merge_config_args', 'get_diagnostic_configpath',
            'OutputSaver',
            'DiagnosticCLI',
-           'TitleBuilder']
+           'TitleBuilder',
+           'SAVE_FORMAT']

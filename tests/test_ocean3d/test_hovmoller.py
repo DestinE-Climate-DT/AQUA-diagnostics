@@ -1,8 +1,12 @@
 import pytest
+
 from pathlib import Path
 from aqua.diagnostics.ocean_drift import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
+
 from conftest import LOGLEVEL
+
+from aqua.diagnostics.ocean_drift import Hovmoller
 
 loglevel = LOGLEVEL
 

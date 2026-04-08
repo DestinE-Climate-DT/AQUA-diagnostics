@@ -3,9 +3,8 @@
 import argparse
 import sys
 
-from aqua.diagnostics.base import template_parse_arguments
 from aqua.diagnostics import Boxplots, PlotBoxplots
-from aqua.diagnostics.base import DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
 # default tool name
 TOOLNAME='Boxplots'
@@ -26,7 +25,7 @@ if __name__ == '__main__':
     args = parse_arguments(sys.argv[1:])
 
     # set tool name for config lookup
-    
+
 
     # Initialize CLI handler
     cli = DiagnosticCLI(
@@ -98,12 +97,12 @@ if __name__ == '__main__':
                 TITLE = ("Boxplot of Surface Radiation Fluxes for " + ", ".join(model_exp_list_unique) +
                          "\nrelative to " + ", ".join(ref_exp_list_unique))
             elif variables == ['-tnlwrf', 'tnswrf']:
-                TITLE = ("Boxplot of TOA Radiation Fluxes for " + ", ".join(model_exp_list_unique) + 
+                TITLE = ("Boxplot of TOA Radiation Fluxes for " + ", ".join(model_exp_list_unique) +
                          "\nrelative to " + ", ".join(ref_exp_list_unique))
             else:
                 TITLE = None
-            plot = PlotBoxplots(diagnostic=diagnostic_name, save_pdf=cli.save_pdf,
-                                save_png=cli.save_png, dpi=cli.dpi, outputdir=cli.outputdir, loglevel=cli.loglevel)
+            plot = PlotBoxplots(diagnostic=diagnostic_name, save_format=cli.save_format,
+                                dpi=cli.dpi, outputdir=cli.outputdir, loglevel=cli.loglevel)
             plot.plot_boxplots(data=fldmeans, data_ref=fldmeans_ref, var=variables, title=TITLE, **plot_kwargs)
 
     cli.close_dask_cluster()
