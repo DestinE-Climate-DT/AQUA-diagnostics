@@ -12,14 +12,14 @@ from .base import BaseMixin
 xr.set_options(keep_attrs=True)
 
 
-class SshVariabilityCompute(BaseMixin):
+class ssh_variability_compute(BaseMixin):
     """
     SSH Computation
     """
 
     def __init__(
         self,
-        diagnostic_name: str = "sshVariability",
+        diagnostic_name: str = "ssh_variability",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -42,11 +42,11 @@ class SshVariabilityCompute(BaseMixin):
         loglevel: str = "WARNING",
     ):
         """
-        Initialize the 'SshVariabilityCompute' class.
+        Initialize the 'ssh_variability_compute' class.
 
         This class is designed to load an xarray.Dataset and computes STD.
         Args:
-            diagnostic_name (str): Default is 'sshVariability'.
+            diagnostic_name (str): Default is 'ssh_variability'.
             catalog (str): catalog. It is Mandatory, if 'save_netcdf=True'.
             model (str): Name of the data
             exp (str): Name of the experiment
@@ -132,6 +132,9 @@ class SshVariabilityCompute(BaseMixin):
             del self.data
             gc.collect()
 
+            # Remove the non-serializable attribute
+            if '_earthkit' in self.data_std.attrs:
+                del self.data_std.attrs['_earthkit']
             # c)
             # Save STD as netcdf
             if self.save_netcdf:

@@ -3,8 +3,8 @@ SSH variability
 Description
 -----------
 
-The **sshVariability** diagnostic is a part of AQUA framework's frontier diagnostic. It calculates the sea surface height (SSH) standard deviation for models (e.g. FESOM, ICON, NEMO)
-and compares them against the AVISO model. This diagnotic can work on ``Healpix`` and standard ``Lat-Lon`` grid data. It also provides visualization of the SSH variability for the models.
+The **ssh_variability** diagnostic is a part of AQUA framework's frontier diagnostic. It calculates the sea surface height (SSH) standard deviation for models (e.g. FESOM, ICON, NEMO)
+and compares them against the AVISO model. This diagnotic can work on ``Healpix`` and standard ``Lat-Lon`` grid data. It also provides visualization of the SSH variability for the models. 
 SSH variability provides insights into the complex dynamics of the ocean.
 It represents the changes in sea surface height over time, which can be influenced by various factors such as ocean currents,
 wind patterns, tides, and interactions with the atmosphere.
@@ -16,34 +16,34 @@ flooding or storm surges.
 Classes
 -------
 
-There are two main classes in this diagnotic namely, **sshVariabilityCompute** and **sshVariabilityPlot**.
+There are two main classes in this diagnotic namely, **ssh_variability_compute** and **ssh_variability_plot**.
 
-* **sshVariabilityCompute**: class to compute the ssh variability.
+* **ssh_variability_compute**: class to compute the ssh variability.
   It retrieves the data on it original grid with an option of regridding the data on a different resolution.
   Then the ssh standard deviation (point-wise) is computed along the given time interval.
   If on time interval is provided, standard deviation will be perfromed over the whole domain.
   Then the data is stored in a netcdf file using the ``AQUA`` ``OutputSaver`` class.
 
-* **sshVariabilityPlot**: class to plot the sshVariability.
+* **ssh_variability_plot**: class to plot the ssh_variability. 
   Once the standard deviation is performed, it can be passed to this class for plotting.
   This class plots the standard deviation for the given model and the reference AVISO data.
   It can also plot the difference between AVISO and the model standard deviation.
   This class also provides a functionality to plot selected region and the difference plots of the region.
   The user may as well choose the resoution on which they would like to plot the data.
 
-* **BaseMixin**: this class is called inside the **sshVariabilityCompute** class.
+* **BaseMixin**: this class is called inside the **ssh_variability_compute** class.
   This class basically retrieves the data using the ``Reader`` class in AQUA core and provides the functionality to save the output as netcdf file.
 
-* **PlotBaseMixin**: this class is called inside the **sshVariabilityPlot** class.
+* **PlotBaseMixin**: this class is called inside the **ssh_variability_plot** class.
   It mainly provides the functionality to save the plots as ``PNG`` and ``PDF``.
 
 File Structure
 --------------
 
-* The diagnostic is located in ``src/aqua_diagnostics/sshVariability`` directory, which contains both the source code and the command line interface (CLI) script.
-* The configuration file for the CLI is located in ``config/diagnostics/sshVariability`` directory with default options.
-* A notebook is avaliable in the ``notebooks/diagnostics/sshVariability/sshVariability.ipynb`` directory with an example for using this diagnostic.
-* ``README.md`` : a readme file which contains technical information on how to install the SSH diagnostic and its environment and, the version of the diagnostic.
+* The diagnostic is located in ``src/aqua_diagnostics/ssh_variability`` directory, which contains both the source code and the command line interface (CLI) script.
+* The configuration file for the CLI is located in ``config/diagnostics/ssh_variability`` directory with default options.
+* A notebook is avaliable in the ``notebooks/diagnostics/ssh_variability/ssh_variability.ipynb`` directory with an example for using this diagnostic.
+* ``README.md`` : a readme file which contains technical information on how to install the SSH diagnostic and its environment and, the version of the diagnostic. 
 
 Input variables and datasets
 ----------------------------
@@ -56,7 +56,7 @@ The diagnostic is designed to work with both the data from the Low Resolution Ar
 Basic Usage
 -----------
 
-The basic usage of this diagnostic is explained with a working example in the notebook provided in the ``notebooks/diagnostics/sshVariability`` directory.
+The basic usage of this diagnostic is explained with a working example in the notebook provided in the ``notebooks/diagnostics/ssh_variability`` directory.
 The basic structure of the analysis is the following:
 
 Example usage
@@ -64,7 +64,7 @@ Example usage
 
 .. code-block:: python
 
-    from aqua.diagnostics import sshVariabilityCompute, sshVariabilityPlot
+    from aqua.diagnostics import ssh_variability_compute, ssh_variability_plot
 
     # You can name these dictionaries as you like
     dataset_dict = {
@@ -87,7 +87,7 @@ Example usage
     enddate = "1994-01-04"
 
     # Initialize the SSH compute class
-    ssh_dataset = sshVariabilityCompute(
+    ssh_dataset = ssh_variability_compute(
         **dataset_dict,
         var="zos",
         startdate=startdate,
@@ -98,7 +98,7 @@ Example usage
     ssh_dataset.run()
 
     # Initialize the SSH compute class for reference data (AVISO)
-    ssh_dataset_ref = sshVariabilityCompute(
+    ssh_dataset_ref = ssh_variability_compute(
         **dataset_dict_ref,
         var="zos",
         startdate=startdate,
@@ -109,7 +109,7 @@ Example usage
     ssh_dataset_ref.run()
 
     # Initialize the SSH plot class
-    plot_class = sshVariabilityPlot()
+    plot_class = ssh_variability_plot()
 
     # Plot SSH for model dataset
     plot_dataset = {"catalog": "climatedt-phase1", "model": "IFS-NEMO", "exp": "historical-1990"}
@@ -179,8 +179,8 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/sshVariability
-    python cli_sshVariability.py --config_file <path_to_config_file>
+    cd $AQUA/src/aqua_diagnostics/ssh_variability
+    python cli_ssh_variability.py --config_file <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
@@ -199,23 +199,27 @@ Config file structure
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
-Here we describe only the specific settings for the **sshVariability** diagnostic.
+Here we describe only the specific settings for the **ssh_variability** diagnostic.
 
+<<<<<<< HEAD
+* ``ssh_variability``: a block (nested in the ``diagnostics`` block) containing options for the SSH Variability diagnostic.  
+=======
 * ``sshVariability``: a block (nested in the ``diagnostics`` block) containing options for the SSH Variability diagnostic.
+>>>>>>> main
   Variable-specific parameters override the defaults.
 
     * ``run``: enable/disable the diagnostic.
-    * ``diagnostic_name``: name of the diagnostic. ``sshVariability`` by default.
-    * ``variables``: list of variables to analyse. In ``sshVariability`` this variable is ``zos`` or ``avg_zos``.
+    * ``diagnostic_name``: name of the diagnostic. ``ssh_variability`` by default.
+    * ``variables``: list of variables to analyse. In ``ssh_variability`` this variable is ``zos`` or ``avg_zos``.
     * ``startdate_data`` / ``enddate_data``: time range for the dataset.
     * ``startdate_ref`` / ``enddate_ref``: time range for the reference dataset.
 
 .. code-block:: yaml
 
    diagnostics:
-       sshVariability:
+       ssh_variability:
        run: true
-       diagnostic_name: 'sshVariability'
+       diagnostic_name: 'ssh_variability'
        variables: 'zos'
        params:
            default:
@@ -283,31 +287,31 @@ References
 Example Plot(s)
 ---------------
 
-.. figure:: figures/sshVariability.sshVariability.climatedt-phase1.IFS-NEMO.historical-1990.r1.png
+.. figure:: figures/ssh_variability.ssh_variability.climatedt-phase1.IFS-NEMO.historical-1990.r1.png
     :align: center
     :width: 100%
 
     SSH Variability for IFS-NEMO historical-1990.
 
-.. figure:: figures/sshVariability.sshVariability.obs.AVISO.ssh-L4.r1.png
+.. figure:: figures/ssh_variability.ssh_variability.obs.AVISO.ssh-L4.r1.png
     :align: center
     :width: 100%
 
     SSH Variability for AVISO data.
 
-.. figure:: figures/sshVariability.sshVariability.climatedt-phase1.IFS-NEMO.historical-1990.r1.agulhas.png
+.. figure:: figures/ssh_variability.ssh_variability.climatedt-phase1.IFS-NEMO.historical-1990.r1.agulhas.png
     :align: center
     :width: 100%
 
     SSH Variability for IFS-NEMO in Agulhas region.
 
-.. figure:: figures/sshVariability.sshVariability.obs.AVISO.ssh-L4.r1.agulhas.png
+.. figure:: figures/ssh_variability.ssh_variability.obs.AVISO.ssh-L4.r1.agulhas.png
     :align: center
     :width: 100%
 
     SSH Variability for AVISO in Agulhas region.
 
-.. figure:: figures/sshVariability.sshVariability_Difference.climatedt-phase1.IFS-NEMO.historical-1990.r1.obs.AVISO.ssh-L4.agulhas.png
+.. figure:: figures/ssh_variability.ssh_variability_Difference.climatedt-phase1.IFS-NEMO.historical-1990.r1.obs.AVISO.ssh-L4.agulhas.png
     :align: center
     :width: 100%
 
@@ -317,9 +321,9 @@ Example Plot(s)
 Available demo notebooks
 ------------------------
 
-Notebooks are stored in the ``notebooks/diagnostics/sshVariability`` directory and contain usage examples.
+Notebooks are stored in the ``notebooks/diagnostics/ssh_variability`` directory and contain usage examples.
 
-* `sshVariability.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/sshVariability/sshVariability.ipynb>`_
+* `ssh_variability.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/ssh_variability/ssh_variability.ipynb>`_
 
 Authors and contributors
 ------------------------
@@ -330,10 +334,10 @@ For questions or suggestions, contact the AQUA team or the maintainers.
 Detailed API
 ------------
 
-This section provides a detailed reference for the Application Programming Interface (API) of the ``sshVariability`` diagnostic,
+This section provides a detailed reference for the Application Programming Interface (API) of the ``ssh_variability`` diagnostic,
 produced from the diagnostic function docstrings.
 
-.. automodule:: aqua.diagnostics.sshVariability
+.. automodule:: aqua.diagnostics.ssh_variability
     :members:
     :undoc-members:
     :show-inheritance:

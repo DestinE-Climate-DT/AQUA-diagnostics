@@ -8,10 +8,10 @@ defined in a yaml configuration file for multiple models.
 """
 import argparse
 import sys
+from aqua.diagnostics import ssh_variability_compute, ssh_variability_plot
 
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from aqua.diagnostics import SshVariabilityCompute, SshVariabilityPlot
 from aqua.diagnostics.base import (
     SAVE_FORMAT,
     close_cluster,
@@ -21,14 +21,13 @@ from aqua.diagnostics.base import (
     template_parse_arguments,
 )
 
-
 def parse_arguments(args):
-    """Parse command-line arguments for sshVariability diagnostic.
+    """Parse command-line arguments for ssh_variability diagnostic.
 
     Args:
         args (list): list of command-line arguments to parse.
     """
-    parser = argparse.ArgumentParser(description="sshVariability CLI")
+    parser = argparse.ArgumentParser(description="ssh_variability CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
@@ -38,7 +37,7 @@ if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
-    logger = log_configure(loglevel, "CLI for sshVariability")
+    logger = log_configure(loglevel, "CLI for ssh_variability")
     logger.info("Starting SSH Variability diagnostic")
     cluster = get_arg(args, "cluster", None)
     nworkers = get_arg(args, "nworkers", None)
@@ -51,7 +50,7 @@ if __name__ == "__main__":
     # Load the configuration file and then merge it with the command-line arguments
     # If for development: config_ssh_dev.yaml
     config_dict = load_diagnostic_config(
-        diagnostic="sshVariability",
+        diagnostic="ssh_variability",
         config=args.config,
         default_config="config_ssh.yaml",
         loglevel=loglevel,
@@ -72,9 +71,9 @@ if __name__ == "__main__":
     save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     dpi = config_dict["output"].get("dpi", 600)
 
-    if "sshVariability" in config_dict["diagnostics"]:
-        if config_dict["diagnostics"]["sshVariability"]["run"]:
-            logger.info("sshVariability module is used.")
+    if "ssh_variability" in config_dict["diagnostics"]:
+        if config_dict["diagnostics"]["ssh_variability"]["run"]:
+            logger.info("ssh_variability module is used.")
 
             # Model data
             dataset = config_dict["datasets"][0]
@@ -100,44 +99,44 @@ if __name__ == "__main__":
                     "regrid": dataset_ref["regrid"],
                 }
 
-            variable = config_dict["diagnostics"]["sshVariability"].get("variables", None)
+            variable = config_dict["diagnostics"]["ssh_variability"].get("variables", None)
             logger.info(f"Variable under consideration: {variable}")
-            startdate_data = config_dict["diagnostics"]["sshVariability"]["params"]["default"].get("startdate_data", None)
-            enddate_data = config_dict["diagnostics"]["sshVariability"]["params"]["default"].get("enddate_data", None)
-            startdate_ref = config_dict["diagnostics"]["sshVariability"]["params"]["default"].get("startdate_ref", None)
-            enddate_ref = config_dict["diagnostics"]["sshVariability"]["params"]["default"].get("enddate_ref", None)
+            startdate_data = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("startdate_data", None)
+            enddate_data = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("enddate_data", None)
+            startdate_ref = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("startdate_ref", None)
+            enddate_ref = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("enddate_ref", None)
 
-            proj = config_dict["diagnostics"]["sshVariability"]["plot_params"]["default"].get("projection", "robinson")
-            proj_params = config_dict["diagnostics"]["sshVariability"]["plot_params"]["default"].get("projection_params", {})
+            proj = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection", "robinson")
+            proj_params = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection_params", {})
             logger.debug(f"Using projection: {proj} for variable: {variable}")
-            vmin = config_dict["diagnostics"]["sshVariability"]["plot_params"]["default"].get("vmin", None)
-            vmax = config_dict["diagnostics"]["sshVariability"]["plot_params"]["default"].get("vmax", None)
+            vmin = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("vmin", None)
+            vmax = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("vmax", None)
             # Regridder options for plots
-            tgt_grid_name = config_dict["diagnostics"]["sshVariability"]["plot_params"]["default"].get("tgt_grid_name", None)
-            regrid_method = config_dict["diagnostics"]["sshVariability"]["plot_params"]["default"].get("regrid_method", None)
+            tgt_grid_name = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("tgt_grid_name", None)
+            regrid_method = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("regrid_method", None)
 
             # Sub region selection
-            region_name = config_dict["diagnostics"]["sshVariability"]["plot_params"]["sub_region"].get("name", None)
-            region_proj = config_dict["diagnostics"]["sshVariability"]["plot_params"]["sub_region"].get(
+            region_name = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get("name", None)
+            region_proj = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get(
                 "projection", "plate_carree"
             )
-            region_proj_params = config_dict["diagnostics"]["sshVariability"]["plot_params"]["sub_region"].get(
+            region_proj_params = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get(
                 "projection_params", {}
             )
 
-            lon_limits = config_dict["diagnostics"]["sshVariability"]["plot_params"]["sub_region"].get("lon_limits", None)
-            lat_limits = config_dict["diagnostics"]["sshVariability"]["plot_params"]["sub_region"].get("lat_limits", None)
+            lon_limits = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get("lon_limits", None)
+            lat_limits = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get("lat_limits", None)
 
-            mask_northern_boundary = config_dict["diagnostics"]["sshVariability"]["plot_params"]["mask_options"].get(
+            mask_northern_boundary = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
                 "mask_northern_boundary", None
             )
-            mask_southern_boundary = config_dict["diagnostics"]["sshVariability"]["plot_params"]["mask_options"].get(
+            mask_southern_boundary = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
                 "mask_southern_boundary", None
             )
-            northern_boundary_latitude = config_dict["diagnostics"]["sshVariability"]["plot_params"]["mask_options"].get(
+            northern_boundary_latitude = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
                 "northern_boundary_latitude", None
             )
-            southern_boundary_latitude = config_dict["diagnostics"]["sshVariability"]["plot_params"]["mask_options"].get(
+            southern_boundary_latitude = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
                 "southern_boundary_latitude", None
             )
 
@@ -152,7 +151,7 @@ if __name__ == "__main__":
                 or (dataset_dict["exp"] is not None)
                 or (dataset_dict["source"] is not None)
             ):
-                ssh_dataset = SshVariabilityCompute(
+                ssh_dataset = ssh_variability_compute(
                     **dataset_dict,
                     var=variable,
                     startdate=startdate_data,
@@ -169,7 +168,7 @@ if __name__ == "__main__":
                 or (dataset_dict_ref["exp"] is not None)
                 or (dataset_dict_ref["source"] is not None)
             ):
-                ssh_ref = SshVariabilityCompute(
+                ssh_ref = ssh_variability_compute(
                     **dataset_dict_ref,
                     var=variable,
                     startdate=startdate_ref,
@@ -180,7 +179,7 @@ if __name__ == "__main__":
                 ssh_ref.run()
 
             # Initialize plotting class
-            plot_class = SshVariabilityPlot(outputdir=outputdir, loglevel=loglevel)
+            plot_class = ssh_variability_plot(outputdir=outputdir, loglevel=loglevel)
 
             # Dictionary for dataset plot
             if ssh_dataset.data_std is not None:
@@ -265,7 +264,7 @@ if __name__ == "__main__":
                 }
                 plot_class.plot(dataset_std=ssh_ref.data_std, **plot_arguments_ref)
 
-            # Dictionary for difference of sshVariability plot
+            # Dictionary for difference of ssh_variability plot
             if ssh_dataset.data_std is not None and ssh_ref.data_std is not None:
                 plot_arguments_diff = {
                     "var": variable,
