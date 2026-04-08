@@ -102,7 +102,8 @@ class Trends(Diagnostic):
             data (xr.DataArray or xr.Dataset): Input data to select from.
             region (str, optional): Geographical region to select. If None, no selection is made. Default is None.
             drop (bool, optional): Whether to drop the original coordinates after selection. Default is True.
-            dim_mean (str or list, optional): Dimension(s) over which to compute the mean. If None, no mean is computed. Default is None.
+            dim_mean (str or list, optional): Dimension(s) over which to compute the mean. If None, no mean is computed.
+                                              Default is None.
 
         Returns:
             tuple: A tuple containing the selected (and possibly averaged) data and the region name.
@@ -144,7 +145,7 @@ class Trends(Diagnostic):
         self.logger.debug("Adjusting trend for time frequency")
         time_frequency = y_array["time"].to_index().inferred_freq
 
-        if time_frequency == None:
+        if time_frequency is None:
             self.logger.debug("Time frequency not inferred, checking for monthly data")
             time_index = pd.to_datetime(y_array["time"].values)
             time_diffs = time_index[1:] - time_index[:-1]
