@@ -1,20 +1,21 @@
 import healpy as hp
 import numpy as np
 import xarray as xr
+
 from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection, healpix_resample
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # import matplotlib.pyplot as plt
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
-
 from .base import PlotBaseMixin
 
 xr.set_options(keep_attrs=True)
 
 
-class sshVariabilityPlot(PlotBaseMixin):
+class SshVariabilityPlot(PlotBaseMixin):
     """
     Plot sshVariability and the difference of sshVariability
     """
@@ -56,8 +57,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         gridlines=True,
         proj="robinson",
         proj_params={},
-        save_png=True,
-        save_pdf=True,
+        save_format=SAVE_FORMAT,
         dpi=600,
         region=None,
         lon_limits=None,
@@ -97,8 +97,7 @@ class sshVariabilityPlot(PlotBaseMixin):
             vmax (float, optional): Maximum value for color scaling. If ``None``, determined automatically.
             proj (str, optional): Map projection type. Default is ``'robinson'``.
             proj_params (dict, optional): Additional keyword arguments passed to the projection.
-            save_png (bool, optional): If ``True``, save plot as PNG. Default is ``True``.
-            save_pdf (bool, optional): If ``True``, save plot as PDF. Default is ``True``.
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             dpi (int, optional): Resolution (dots per inch) for saved figures. Default is ``300``.
             region (str, optional): Region identifier. If provided, overrides lat/lon limits.
             lon_limits (list[float], optional): Longitude limits [min, max] for the plot.
@@ -127,7 +126,7 @@ class sshVariabilityPlot(PlotBaseMixin):
 
         if dataset_std is None:
             self.logger.error("Please provide the data to the plot function")
-            raise RuntimeError(f"No model data found")
+            raise RuntimeError("No model data found")
 
         if isinstance(dataset_std, xr.Dataset):
             dataset_std = dataset_std[var]
@@ -140,7 +139,16 @@ class sshVariabilityPlot(PlotBaseMixin):
         self.logger.info(f"Plotting SSH Variability for {model} and {exp}, from {startdate} to {enddate}.")
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        title = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
+
+        title = TitleBuilder(
+            diagnostic="SSH Variability",
+            variable=long_name,
+            regions=region,
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            startyear=startdate,
+            endyear=enddate).generate()
 
         description = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
 
@@ -162,7 +170,6 @@ class sshVariabilityPlot(PlotBaseMixin):
             dataset_std = regrid_data.regrid(dataset_std)
 
         if region is not None:
-            title = title + f"{region} "
             if lon_limits is None or lat_limits is None:
                 self.logger.error(f"For the {region}, please specify the lon_limits and lat_limits.")
             description = description + f"for {region} "
@@ -224,42 +231,23 @@ class sshVariabilityPlot(PlotBaseMixin):
         ax.set_ylabel("Latitude")
 
         # Saving plots
-        if save_png:
-            self.save_plot(
-                var=var,
-                fig=fig,
-                description=description,
-                rebuild=rebuild,
-                outputdir=self.outputdir,
-                format="png",
-                catalog=catalog,
-                model=model,
-                exp=exp,
-                startdate=startdate,
-                enddate=enddate,
-                long_name=long_name,
-                units=units,
-                region=region,
-                dpi=dpi,
-            )
-        if save_pdf:
-            self.save_plot(
-                var=var,
-                fig=fig,
-                description=description,
-                rebuild=rebuild,
-                outputdir=self.outputdir,
-                format="pdf",
-                catalog=catalog,
-                model=model,
-                exp=exp,
-                startdate=startdate,
-                enddate=enddate,
-                long_name=long_name,
-                units=units,
-                region=region,
-                dpi=dpi,
-            )
+        self.save_plot(
+            var=var,
+            fig=fig,
+            description=description,
+            rebuild=rebuild,
+            outputdir=self.outputdir,
+            format=save_format,
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            startdate=startdate,
+            enddate=enddate,
+            long_name=long_name,
+            units=units,
+            region=region,
+            dpi=dpi,
+        )
 
         return fig, ax
 
@@ -286,8 +274,7 @@ class sshVariabilityPlot(PlotBaseMixin):
         gridlines=True,
         proj="robinson",
         proj_params={},
-        save_png=True,
-        save_pdf=True,
+        save_format=SAVE_FORMAT,
         dpi=600,
         region=None,
         lon_limits=None,
@@ -331,8 +318,7 @@ class sshVariabilityPlot(PlotBaseMixin):
             vmax_diff (float, optional): Maximum value for color scaling. If None, determined automatically.
             proj (str, optional): Map projection. Default is 'robinson'.
             proj_params (dict, optional): Additional keyword arguments for the projection.
-            save_png (bool, optional): Save plot as PNG. Default is True.
-            save_pdf (bool, optional): Save plot as PDF. Default is True.
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             dpi (int, optional): Resolution of the saved figure. Default is 300.
             region (str, optional): Region identifier for the plot.
             lon_limits (list[float], optional): Longitude limits [min, max] for the plot.
@@ -409,12 +395,27 @@ class sshVariabilityPlot(PlotBaseMixin):
 
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
-        title = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
+
+        title = TitleBuilder(
+            diagnostic="The difference of the SSH Variability",
+            variable=long_name,
+            regions=region,
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            startyear=startdate,
+            endyear=enddate,
+            comparison="relative to",
+            ref_catalog=catalog_ref,
+            ref_model=model_ref,
+            ref_exp=exp_ref,
+            ref_startyear=startdate_ref,
+            ref_endyear=enddate_ref
+            ).generate()
 
         description = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
 
         if region:
-            title = title + f"{region} "
 
             if lon_limits is None or lat_limits is None:
                 self.logger.error(f"For the {region}, please specify the lon_limits and lat_limits.")
@@ -491,52 +492,28 @@ class sshVariabilityPlot(PlotBaseMixin):
         ax.set_ylabel("Latitude")
 
         # Saving plots
-        if save_png:
-            self.save_diff_plot(
-                var=var,
-                fig=fig,
-                description=description,
-                rebuild=rebuild,
-                outputdir=self.outputdir,
-                format="png",
-                catalog=catalog,
-                model=model,
-                exp=exp,
-                startdate=startdate,
-                enddate=enddate,
-                catalog_ref=catalog_ref,
-                model_ref=model_ref,
-                exp_ref=exp_ref,
-                startdate_ref=startdate_ref,
-                enddate_ref=enddate_ref,
-                long_name=long_name,
-                units=units,
-                region=region,
-                dpi=dpi,
-            )
-        if save_pdf:
-            self.save_diff_plot(
-                var=var,
-                fig=fig,
-                description=description,
-                rebuild=rebuild,
-                outputdir=self.outputdir,
-                format="pdf",
-                catalog=catalog,
-                model=model,
-                exp=exp,
-                startdate=startdate,
-                enddate=enddate,
-                catalog_ref=catalog_ref,
-                model_ref=model_ref,
-                exp_ref=exp_ref,
-                startdate_ref=startdate_ref,
-                enddate_ref=enddate_ref,
-                long_name=long_name,
-                units=units,
-                region=region,
-                dpi=dpi,
-            )
+        self.save_diff_plot(
+            var=var,
+            fig=fig,
+            description=description,
+            rebuild=rebuild,
+            outputdir=self.outputdir,
+            format=save_format,
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            startdate=startdate,
+            enddate=enddate,
+            catalog_ref=catalog_ref,
+            model_ref=model_ref,
+            exp_ref=exp_ref,
+            startdate_ref=startdate_ref,
+            enddate_ref=enddate_ref,
+            long_name=long_name,
+            units=units,
+            region=region,
+            dpi=dpi,
+        )
         return fig, ax
 
     def subregion_selection(

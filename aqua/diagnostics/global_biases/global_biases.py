@@ -1,12 +1,13 @@
 import pandas as pd
 import xarray as xr
-from aqua.core.logger import log_configure
-from aqua.core.util import select_season, convert_data_units
-from aqua.core.fixer import EvaluateFormula
-from aqua.core.exceptions import NoDataError
-from aqua.diagnostics.base import Diagnostic
-from .util import handle_pressure_level
 
+from aqua.core.exceptions import NoDataError
+from aqua.core.fixer import EvaluateFormula
+from aqua.core.logger import log_configure
+from aqua.core.util import select_season
+from aqua.diagnostics.base import Diagnostic
+
+from .util import handle_pressure_level
 
 xr.set_options(keep_attrs=True)
 
@@ -15,7 +16,7 @@ class GlobalBiases(Diagnostic):
     """
     Diagnostic class for computing global and seasonal climatologies of a given variable.
 
-    This class handles data retrieval, pressure level selection, unit conversion, 
+    This class handles data retrieval, pressure level selection, unit conversion,
     and computation of mean climatologies (total or seasonal).
 
     Inherits from `Diagnostic`.
@@ -30,6 +31,7 @@ class GlobalBiases(Diagnostic):
         enddate (str): End date for data selection.
         var (str): Variable name to analyze.
         plev (float): Pressure level to select (if applicable).
+        areas (bool): if True, save area weights for statistics computation.
         diagnostic (str): Name of the diagnostic.
         save_netcdf (bool): If True, saves output climatologies.
         outputdir (str): Output directory for NetCDF files.
@@ -37,7 +39,7 @@ class GlobalBiases(Diagnostic):
     """
     def __init__(self, catalog=None, model=None, exp=None, source=None,
                  regrid=None, startdate=None, enddate=None,
-                 var=None, plev=None,
+                 var=None, plev=None, areas=True,
                  diagnostic='globalbiases',
                  save_netcdf=True, outputdir='./', loglevel='WARNING'):
 
@@ -48,6 +50,7 @@ class GlobalBiases(Diagnostic):
         self.logger = log_configure(log_level=loglevel, log_name='Global Biases')
         self.var = var
         self.plev = plev
+        self.areas = areas
         self.save_netcdf = save_netcdf
         self.outputdir = outputdir
         self.startdate = startdate
@@ -85,7 +88,7 @@ class GlobalBiases(Diagnostic):
             KeyError: If the variable is missing from the data.
         """
         if var is not None:
-            self.var = var   
+            self.var = var
         if formula:
             super().retrieve(reader_kwargs=reader_kwargs)
             self.logger.info("Evaluating formula: %s", self.var)
@@ -131,7 +134,7 @@ class GlobalBiases(Diagnostic):
         else:
             self.logger.info("All variables retrieved; no variable-specific operations applied.")
 
-    def savenetcdf(self, data: xr.Dataset, diagnostic_product: str, 
+    def savenetcdf(self, data: xr.Dataset, diagnostic_product: str,
                     rebuild: bool = True, create_catalog_entry: bool = False, extra_keys = None,
                     dict_catalog_entry: dict = {'jinjalist': ['realization'],
                                                 'wildcardlist': ['var']}):
@@ -141,7 +144,7 @@ class GlobalBiases(Diagnostic):
         rebuild (bool): If True, rebuild the data from the original files.
         create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         extra_keys (dict): Extra keys for filename generation.
-        dict_catalog_entry (dict): A dictionary with catalog entry information. 
+        dict_catalog_entry (dict): A dictionary with catalog entry information.
             Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
         super().save_netcdf(data=data,
@@ -152,7 +155,6 @@ class GlobalBiases(Diagnostic):
                 dict_catalog_entry=dict_catalog_entry,
                 extra_keys=extra_keys)
 
-    
     def compute_climatology(self,
                             data: xr.Dataset = None,
                             var: str = None,
@@ -160,6 +162,7 @@ class GlobalBiases(Diagnostic):
                             save_netcdf: bool = None,
                             seasonal: bool = False,
                             seasons_stat: str = 'mean',
+                            areas = False,
                             create_catalog_entry: bool = False
                             ) -> None:
         """
@@ -172,12 +175,15 @@ class GlobalBiases(Diagnostic):
             save_netcdf (bool, optional): If True, save output to NetCDF.
             seasonal (bool): If True, compute seasonal climatology (DJF, MAM, JJA, SON).
             seasons_stat (str): Aggregation statistic: 'mean', 'std', 'max', 'min'.
+            areas (bool): If True, include cell area in the output dataset.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         Raises:
             ValueError: If `seasons_stat` is invalid.
         """
         data = data or self.data
         var = var or self.var
+        areas = areas or self.areas
+        plev = plev or self.plev
 
         if save_netcdf is None:
             save_netcdf = self.save_netcdf
@@ -186,6 +192,9 @@ class GlobalBiases(Diagnostic):
             raise ValueError("No data provided or retrieved; cannot compute climatology.")
 
         self.logger.info(f'Computing climatology for variable {var}.')
+
+        if plev is not None:
+          data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
 
         self.climatology = xr.Dataset({var: data[var].mean(dim='time')})
         self.climatology.attrs.update({
@@ -197,10 +206,18 @@ class GlobalBiases(Diagnostic):
             'enddate': str(self.enddate)
         })
 
+        if areas:
+            if self.regrid:
+                self.logger.info("Adding cell area from regridded grid.")
+                self.climatology['cell_area'] = self.reader.tgt_grid_area.cell_area
+            else:
+                self.logger.info("Adding cell area from source grid.")
+                self.climatology['cell_area'] = self.reader.src_grid_area.cell_area
+
         # Load data in memory for faster plot
-        self.logger.debug(f"Loading climatology data in memory")
+        self.logger.debug("Loading climatology data in memory")
         self.climatology.load()
-        self.logger.debug(f"Loaded climatology data in memory")
+        self.logger.debug("Loaded climatology data in memory")
 
         if save_netcdf:
             extra_keys = {
@@ -242,9 +259,9 @@ class GlobalBiases(Diagnostic):
             })
 
             # Load data in memory for faster plot
-            self.logger.debug(f"Loading seasonal climatology data in memory")
+            self.logger.debug("Loading seasonal climatology data in memory")
             self.seasonal_climatology.load()
-            self.logger.debug(f"Loaded seasonal climatology data in memory")
+            self.logger.debug("Loaded seasonal climatology data in memory")
 
             if save_netcdf:
                 extra_keys = {k: v for k, v in [('var', var), ('plev', plev)] if v is not None}

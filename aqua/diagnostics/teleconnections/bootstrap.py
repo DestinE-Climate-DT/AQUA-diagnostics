@@ -5,7 +5,6 @@ import numpy as np
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.diagnostics.teleconnections import NAO, ENSO
 
 xr.set_options(keep_attrs=True)
 
@@ -40,7 +39,7 @@ def bootstrap_teleconnections(telec_model,
 
     if statistic != 'regression' and statistic != 'correlation':
         raise ValueError('Invalid statistic provided. Please provide a statistic to compute (reg or cor).')
-    
+
     index_model = telec_model.index
     index_ref = telec_ref.index
     if var != telec_ref.var:

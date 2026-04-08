@@ -3,15 +3,15 @@ Utility functions for the CLI
 """
 import argparse
 import os
-from dask.distributed import Client, LocalCluster
-
-from dask.base import tokenize
-import dask
 import uuid
 
-from aqua.core.logger import log_configure
-from aqua.core.util import load_yaml, get_arg
+import dask
+from dask.base import tokenize
+from dask.distributed import Client, LocalCluster
+
 from aqua.core.configurer import ConfigPath
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg, load_yaml
 
 # This creates a unique job token for this instance of the module
 # so that all dask keys generated during this run are unique
@@ -116,13 +116,13 @@ def close_cluster(client, cluster, private_cluster, loglevel: str = 'WARNING'):
         cluster.close()
         logger.debug("Dask cluster closed.")
 
-def get_diagnostic_configpath(diagnostic: str, folder="diagnostics", loglevel='WARNING') -> str:
+def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel='WARNING') -> str:
     """
     Get the path to the diagnostic configuration directory.
 
     Args:
         diagnostic (str): diagnostic name
-        folder (str): folder name. Default is "diagnostics". Can be "tools" as well.
+        folder (str): folder name. Default is "collections". Can be "tools" as well.
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:
@@ -130,16 +130,16 @@ def get_diagnostic_configpath(diagnostic: str, folder="diagnostics", loglevel='W
     """
     configdir = ConfigPath(loglevel=loglevel).configdir
     if folder == "templates":
-        return os.path.join(configdir, folder, "diagnostics")
-    if folder in ["tools", "diagnostics"]:
+        return os.path.join(configdir, folder, "collections")
+    if folder in ["collections", "tools"]:
         return os.path.join(configdir, folder, diagnostic)
-    raise ValueError(f"Invalid folder name: {folder}. Must be 'diagnostics', 'tools', or 'templates'.")
+    raise ValueError(f"Invalid folder name: {folder}. Must be 'collections', 'tools', or 'templates'.")
 
 
 def load_diagnostic_config(diagnostic: str,
                            config: str = None,
                            default_config: str = None,
-                           folder = "diagnostics",
+                           folder = "collections",
                            loglevel: str = 'WARNING'):
     """
     Load the diagnostic configuration file and return the configuration dictionary.
@@ -147,7 +147,7 @@ def load_diagnostic_config(diagnostic: str,
     Args:
         diagnostic (str): diagnostic name
         config (str): config argument can modify the default configuration file.
-        folder (str): folder name. Default is "diagnostics". Can be "tools" or "templates" as well.
+        folder (str): folder name. Default is "collections". Can be "tools" or "templates" as well.
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:

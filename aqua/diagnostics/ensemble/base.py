@@ -1,10 +1,12 @@
 from collections import Counter
+from typing import Union
 
 import pandas as pd
 import xarray as xr
-from aqua.diagnostics.base import Diagnostic, OutputSaver
+
 from aqua.core.logger import log_configure
 from aqua.core.util import pandas_freq_to_string
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver
 
 xr.set_options(keep_attrs=True)
 
@@ -196,7 +198,7 @@ class BaseMixin(Diagnostic):
     ):
         """
         Commented-out: Save data as a NetCDF file using OutputSaver or directly if catalog/model/exp are None or multi-values.
-        
+
         Save data as a NetCDF file using OutputSaver.
         This method handles Timeseries, Lat-Lon, and Zonal data. It automatically generates
         metadata including model, experiment, source, region, and optional start/end dates.
@@ -283,8 +285,6 @@ class BaseMixin(Diagnostic):
             self.catalog is not None
             and self.model is not None
             and self.exp is not None
-            #and str(self.catalog) != str(self.None_catalog)
-            #and str(self.catalog) != str(self.multi_catalog)
         ):
             outputsaver = OutputSaver(
                 diagnostic=self.diagnostic_name,
@@ -307,33 +307,15 @@ class BaseMixin(Diagnostic):
         else:
             self.logger.info(f"Output is not saved, please check {self.catalog}, {self.model} and {self.exp}")
 
-            #data.attrs = {
-            #    "AQUA diagnostic": self.diagnostic_product,
-            #    "AQUA catalog": self.catalog_list,
-            #    "model": self.model_list,
-            #    "experiment": self.exp_list,
-            #    "description": description,
-            #}
-
-            #catalog_str = "_".join(self.catalog_list)
-            #model_str = "_".join(self.model_list)
-            #exp_str = "_".join(self.exp_list)
-
-            #filename = f"{self.outputdir}/{catalog_str}_{model_str}_{exp_str}_{data_name}_{var}.nc"
-            #
-            #data.to_netcdf(filename)
-            #self.logger.info(
-            #    f"Saving the output without the OutputSaver to {self.outputdir}/{self.catalog_list}_{self.model_list}_{self.exp_list}_{data_name}_{var}.nc"
-            #)
-
     # Save figure
-    def save_figure(self, var, fig=None, fig_std=None, startdate=None, enddate=None, description=None, format="png", dpi=300):    
+    def save_figure(self, var, fig=None, fig_std=None, startdate=None, enddate=None,
+                    description=None, format: Union[str, list]=SAVE_FORMAT, dpi=300):
         """
         Save figure(s) to file using OutputSaver or directly to disk if catalog/model/exp are None or multi-values.
 
         This method supports saving mean and standard deviation figures for a given variable.
         Metadata is automatically generated, including model, experiment, source, region, startdate, enddate,
-        and a description. Figures can be saved in PNG or PDF formats.
+        and a description. Figures can be saved in PNG, PDF or SVG formats.
 
         Args:
             var (str): Name of the variable in the dataset.
@@ -342,8 +324,8 @@ class BaseMixin(Diagnostic):
             startdate (str, optional): Start date to include in metadata. Defaults to None.
             enddate (str, optional): End date to include in metadata. Defaults to None.
             description (str, optional): Description to include in metadata. Defaults to auto-generated.
-            format (str, optional): File format to save the figure ('png' or 'pdf'). Defaults to 'png'.
-            dpi (int, optional): Resolution for saved figures in PNG format. Default is 300.
+            format (str or list, optional): Format(s) to save the figure in (e.g. ``'png'``, ``'pdf'``, ``'svg'``). Default is ``'png'``.
+            dpi (int, optional): Resolution for saved figures in PNG format. Default is ``300``.
 
         Notes:
             - If catalog/model/exp are None or multi-values, figures are saved directly without OutputSaver.
@@ -387,8 +369,6 @@ class BaseMixin(Diagnostic):
             self.catalog is not None
             and self.model is not None
             and self.exp is not None
-            #and str(self.catalog) != str(self.None_catalog)
-            #and str(self.catalog) != str(self.multi_catalog)
         ):
             if fig is not None:
                 outputsaver = OutputSaver(
@@ -403,34 +383,17 @@ class BaseMixin(Diagnostic):
                     loglevel=self.loglevel,
                 )
                 extra_keys = {}
-                # if fig_std is not None:
-                #    data = "std"
-                # else:
-                #    data = "mean"
                 data = "mean"
                 if var is not None:
                     extra_keys.update({"var": var, "data": data})
                 if self.region is not None:
                     extra_keys.update({"region": self.region})
-                if format == "pdf":
-                    outputsaver.save_pdf(
-                        fig,
-                        # diagnostic=self.diagnostic_name,
-                        diagnostic_product=self.diagnostic_product,
-                        extra_keys=extra_keys,
-                        metadata=metadata,
-                    )
-                elif format == "png":
-                    outputsaver.save_png(
-                        fig,
-                        # diagnostic=self.diagnostic_name,
-                        diagnostic_product=self.diagnostic_product,
-                        extra_keys=extra_keys,
-                        metadata=metadata,
-                        dpi=dpi,
-                    )
-                else:
-                    raise ValueError(f"Format {format} not supported. Use png or pdf.")
+                outputsaver.save_figure(
+                    fig,
+                    diagnostic_product=self.diagnostic_product,
+                    extra_keys=extra_keys,
+                    metadata=metadata,
+                    extension=format, dpi=dpi)
 
             if fig_std is not None:
                 metadata = {"Description": description}
@@ -449,54 +412,16 @@ class BaseMixin(Diagnostic):
                         loglevel=self.loglevel,
                     )
                     extra_keys = {}
-                    # if fig_std is not None:
-                    #    data = "std"
                     data = "std"
                     if var is not None:
                         extra_keys.update({"var": var, "data": data})
                     if self.region is not None:
                         extra_keys.update({"region": self.region})
-                    if format == "pdf":
-                        outputsaver.save_pdf(
-                            fig_std,
-                            diagnostic_product=self.diagnostic_product,
-                            extra_keys=extra_keys,
-                            metadata=metadata,
-                        )
-                    elif format == "png":
-                        outputsaver.save_png(
-                            fig_std,
-                            # diagnostic=self.diagnostic_name,
-                            diagnostic_product=self.diagnostic_product,
-                            extra_keys=extra_keys,
-                            metadata=metadata,
-                            dpi=dpi,
-                        )
-                    else:
-                        raise ValueError(f"Format {format} not supported. Use png or pdf.")
+                    outputsaver.save_figure(
+                        fig_std,
+                        diagnostic_product=self.diagnostic_product,
+                        extra_keys=extra_keys,
+                        metadata=metadata,
+                        dpi=dpi, extension=format)
         else:
             self.logger.info(f"Output plot is not saved, please check {self.catalog}, {self.model} and {self.exp}")
-            #if fig:
-            #    extra_keys = {"statistics": "mean"}
-            #    extra_keys.update(metadata)
-            #    extra_keys = {k: str(v) for k, v in extra_keys.items()}
-            #    fig.savefig(
-            #        f"{self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_mean.png",
-            #        bbox_inches="tight",
-            #        metadata=extra_keys,
-            #    )
-            #    self.logger.info(
-            #        f"Saving the figure without the OutputSaver to {self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_mean.png"
-            #    )
-            #if fig_std:
-            #    extra_keys = {"statistics": "standard deviation"}
-            #    extra_keys.update(metadata)
-            #    extra_keys = {k: str(v) for k, v in extra_keys.items()}
-            #    fig_std.savefig(
-            #        f"{self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_STD.png",
-            #        bbox_inches="tight",
-            #        metadata=extra_keys,
-            #    )
-            #    self.logger.info(
-            #        f"Saving the STD figure without the OutputSaver to {self.outputdir}/{self.catalog}_{self.model}_{self.exp}_{var}_STD.png"
-            #    )

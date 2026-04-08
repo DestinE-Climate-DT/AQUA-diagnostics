@@ -1,7 +1,8 @@
-import pytest
 import pandas as pd
+import pytest
 import xarray as xr
-from aqua.diagnostics.timeseries.util import loop_seasonalcycle, center_timestamp
+
+from aqua.diagnostics.timeseries.util import center_timestamp, loop_seasonalcycle
 
 
 @pytest.mark.diagnostics
@@ -23,10 +24,10 @@ def test_loop_seasonalcycle_monthly():
         dims=['time'],
         coords={'time': pd.date_range('2020-01-01', periods=12, freq='MS')}
     )
-    
-    looped = loop_seasonalcycle(data, '2021-01-01', '2022-12-31', 
+
+    looped = loop_seasonalcycle(data, '2021-01-01', '2022-12-31',
                                 freq='monthly', center_time=False)
-    
+
     assert len(looped.time) == 24
     assert looped.values[0] == looped.values[12] == 10
 
@@ -34,8 +35,5 @@ def test_loop_seasonalcycle_monthly():
 @pytest.mark.diagnostics
 def test_loop_seasonalcycle_errors():
     """Test error handling in loop_seasonalcycle"""
-    data = xr.DataArray([1], dims=['time'], 
-                       coords={'time': pd.date_range('2020-01-01', periods=1, freq='MS')})
-    
     with pytest.raises(ValueError):
         loop_seasonalcycle(None, '2020-01-01', '2020-12-31', 'monthly')

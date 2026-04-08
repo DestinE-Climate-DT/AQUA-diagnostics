@@ -1,6 +1,7 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util.sci_util import lon_to_360
+
 from .base import BaseMixin
 
 
@@ -44,7 +45,7 @@ class NAO(BaseMixin):
     def retrieve(self, reader_kwargs: dict = {}) -> None:
         """
         Retrieve the data for the NAO index.
-        
+
         Args:
             reader_kwargs (dict): Additional keyword arguments for the Reader.
                                   Default is an empty dictionary.
@@ -52,8 +53,8 @@ class NAO(BaseMixin):
         # Assign self.data, self.reader, self.catalog
         super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
 
-        self.reader.timmean(self.data, freq='MS')
-    
+        self.data = self.reader.timmean(self.data, freq='MS')
+
     def compute_index(self, months_window: int = 3,
                        rebuild: bool = False):
         """"
@@ -72,7 +73,7 @@ class NAO(BaseMixin):
             raise NotEnoughDataError('Data not retrieved')
         if len(self.data[self.var].time) < 24:
             raise NotEnoughDataError('Data have less than 24 months')
-        
+
         lat1 = self.definition.get('lat1')
         lat2 = self.definition.get('lat2')
         lon1 = self.definition.get('lon1')
@@ -117,6 +118,6 @@ class NAO(BaseMixin):
         indx = indx.dropna(dim='time')
 
         self.logger.debug('Index evaluated')
-        
+
         # Save the index in the class
         self.index = indx

@@ -6,7 +6,7 @@ LatLonProfiles Diagnostic
 Description
 -----------
 
-The **LatLonProfiles** diagnostic computes and plots zonally or meridionally averaged 
+The **LatLonProfiles** diagnostic computes and plots zonally or meridionally averaged
 profiles of climate variables.
 
 LatLonProfiles provides tools to plot:
@@ -35,14 +35,14 @@ There is one class for the analysis and one for the plotting:
 
 .. note::
 
-    The diagnostic follows a two-step process: **spatial averaging** (zonal/meridional) → 
+    The diagnostic follows a two-step process: **spatial averaging** (zonal/meridional) →
     **temporal averaging** (seasonal/long-term).
 
 
 File structure
 --------------
 
-* The diagnostic is located in the ``aqua/diagnostics/lat_lon_profiles`` directory, which contains both the source code and 
+* The diagnostic is located in the ``aqua/diagnostics/lat_lon_profiles`` directory, which contains both the source code and
   the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-lat_lon_profiles.yaml``.
 * Regional definitions are available in ``aqua/diagnostics/config/tools/lat_lon_profiles/definitions/regions.yaml``.
@@ -93,7 +93,7 @@ The basic structure of the analysis is the following:
     # Plot long-term mean
     plot = PlotLatLonProfiles(data=[lonlat_dataset.longterm], data_type='longterm')
     plot.run(show=True)
-  
+
 .. note::
 
     Start/end dates and reference dataset can be customized.
@@ -166,7 +166,7 @@ The diagnostic produces two types of plots:
 * Seasonal profiles (4-panel: DJF, MAM, JJA, SON)
 
 Plots are saved in both PDF and PNG format.
-Data outputs are saved as NetCDF files. 
+Data outputs are saved as NetCDF files.
 
 Observations
 ------------
@@ -179,7 +179,7 @@ The default reference datasets are:
 
 Details are available on the `MSWEP website <https://www.gloh2o.org/mswep/>`_.
 
-Standard deviation can be computed over a custom period using ``std_startdate`` and 
+Standard deviation can be computed over a custom period using ``std_startdate`` and
 ``std_enddate`` to provide ±2σ uncertainty bands in plots.
 
 Custom reference datasets can be configured in the configuration file.
@@ -219,14 +219,14 @@ Notebooks are stored in ``notebooks/diagnostics/lat_lon_profiles``:
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Marco Cadau (`@mcadau <https://github.com/mcadau>`_, `marco.cadau@polito.it <mailto:marco.cadau@polito.it>`_).  
-Contributions are welcome — please open an issue or a pull request.  
+This diagnostic is maintained by Marco Cadau (`@mcadau <https://github.com/mcadau>`_, `marco.cadau@polito.it <mailto:marco.cadau@polito.it>`_).
+Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainers.
 
 Detailed API
 ------------
 
-This section provides a detailed reference for the Application Programming Interface (API) of the ``lat_lon_profiles`` diagnostic,  
+This section provides a detailed reference for the Application Programming Interface (API) of the ``lat_lon_profiles`` diagnostic,
 generated from the diagnostic function docstrings.
 
 .. automodule:: aqua.diagnostics.lat_lon_profiles

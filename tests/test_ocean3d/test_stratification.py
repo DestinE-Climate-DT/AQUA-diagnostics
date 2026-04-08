@@ -1,6 +1,7 @@
 import pytest
-from aqua.diagnostics.ocean_stratification.stratification import Stratification
 from conftest import APPROX_REL, LOGLEVEL
+
+from aqua.diagnostics.ocean_stratification.stratification import Stratification
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL*10
@@ -26,5 +27,6 @@ def test_stratification():
         mld=True,
         )
     assert strat is not None, "strat instance should not be None"
-    assert strat.data["mld"].values == pytest.approx(2.5000076,rel=approx_rel)
-    assert strat.data["rho"].isel(level=1).values == pytest.approx(-3.34617212e+08,rel=approx_rel)
+    # These are the correct expected values, to be uncommented once a new version of AQUA-core with correct fixer is released
+    assert strat.data["mld"].values == pytest.approx(25.49270658, rel=approx_rel)
+    assert strat.data["rho"].isel(level=1).values == pytest.approx(26.8719114, rel=approx_rel)

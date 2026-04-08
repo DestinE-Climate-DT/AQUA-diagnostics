@@ -3,7 +3,7 @@
 #
 # Parameters in common to the teleconnections are:
 #
-# telec_type: 'station' or 'region' choose the 
+# telec_type: 'station' or 'region' choose the
 #             function to use to compute the teleconnection
 # field: field used to compute the teleconnection
 
@@ -16,7 +16,7 @@ NAO:
   lat2: 64.1
   lon2: -22
 
-# ENSO 3.4 region coordinates 
+# ENSO 3.4 region coordinates
 ENSO:
   telec_type: 'region'
   field: tos
