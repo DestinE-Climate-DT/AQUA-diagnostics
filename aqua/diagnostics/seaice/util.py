@@ -80,7 +80,7 @@ def extract_dates(data):
         data (xr.DataArray | xr.Dataset): Input object holding the `AQUA_*date` attributes.
 
     Returns:
-        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM-DD` when possible.
+        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM` when possible.
     """
     def _fmt_dt(attr_name):
         dt = data.attrs.get(attr_name, f'No {attr_name} found')

@@ -334,16 +334,34 @@ class PlotSeaIce:
             self.model_labels_str = ''
 
         # generate dynamic string for reference data
-        if hasattr(self, "ref_label") and self.ref_label:
+        monthly_ref_data = self._getdata_fromdict(data_dict, 'monthly_ref')
+        if monthly_ref_data is not None:
             if not hasattr(self, 'ref_label_list'):
                 self.ref_label_list = []
-            if self.ref_label not in self.ref_label_list:
-                self.ref_label_list.append(f"{self.ref_label}")
 
-            refs_phrase = strlist_to_phrase(self.ref_label_list, oxford_comma=True)
-            verb = "is" if len(self.ref_label_list) == 1 else "are"
-            plural = "" if len(self.ref_label_list) == 1 else "s"
-            self.ref_label_str = f" {refs_phrase} {verb} used as reference{plural}."
+            if isinstance(monthly_ref_data, xr.DataArray):
+                label = self._gen_labelname(monthly_ref_data)
+                stdate, endate = extract_dates(monthly_ref_data)
+                ref_detail = f"{label} (from {stdate} to {endate})" if label else f"(from {stdate} to {endate})"
+                if ref_detail not in self.ref_label_list:
+                    self.ref_label_list.append(ref_detail)
+            elif isinstance(monthly_ref_data, list):
+                for ref_da in monthly_ref_data:
+                    label = self._gen_labelname(ref_da)
+                    stdate, endate = extract_dates(ref_da)
+                    ref_detail = f"{label} (from {stdate} to {endate})" if label else f"(from {stdate} to {endate})"
+                    if ref_detail not in self.ref_label_list:
+                        self.ref_label_list.append(ref_detail)
+
+            # check ref list
+            if len(self.ref_label_list) == 1:
+                self.ref_label_str = f" {self.ref_label_list[0]} is used as a reference."
+            elif len(self.ref_label_list) == 2:
+                self.ref_label_str = (f" {self.ref_label_list[0]} and {self.ref_label_list[1]} "
+                                      f"are used as reference data for the respective regions.")
+            else:
+                ref_labels_str = ", ".join(self.ref_label_list[:-1]) + f", and {self.ref_label_list[-1]}"
+                self.ref_label_str = f" {ref_labels_str} are used as references."
         else:
             self.ref_label_str = ''
 
