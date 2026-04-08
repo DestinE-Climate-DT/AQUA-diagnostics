@@ -1,6 +1,7 @@
 from aqua.core.graphics import plot_timeseries
-from aqua.core.util import to_list, get_realizations
-from .base import PlotBaseMixin 
+from aqua.core.util import get_realizations, to_list
+
+from .base import PlotBaseMixin
 
 
 class PlotTimeseries(PlotBaseMixin):
@@ -248,7 +249,7 @@ class PlotTimeseries(PlotBaseMixin):
 
     def _check_data_provided(self, data):
         """
-        If data are None or empty list, return a None, 
+        If data are None or empty list, return a None,
         otherwise return the data as a list.
         """
         if data is not None and not (isinstance(data, list) and all(d is None for d in data)):

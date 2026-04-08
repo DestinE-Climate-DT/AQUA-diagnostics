@@ -14,13 +14,17 @@ Unreleased in the current development version (target v0.24.0):
 
 Main changes:
 1. Introduce common `TitleBuilder` class for all diagnostics
-2. Rename tools/diagnostics with tools/collections 
+2. Rename tools/diagnostics with tools/collections
 3. Histogram integration in AQUA analysis
-4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class 
+4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class
 
 Complete list:
+- TitleBuilder: add wrapping of long titles (#199)
+- Apply ruff linting and pre-commit hooks (#198)
+- Temporarily exclude MJO test (#201)
+- Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
-- Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173) 
+- Update aqua analysis config diagnostic execution grouping and remove tropical rainfall (#173)
 - Load in memory before saving netcdf (#174)
 - Histogram: integration in AQUA analysis (#85)
 - Refactor of the `TitleBuilder` class to use the parameter names in singular (#163)
@@ -45,7 +49,7 @@ Complete list:
 - Increase seaice tests approximation tolerance and fix base util tests (#112)
 - Ensemble: improve the coverage of the tests (#88)
 - Ensemble: fix tests after datamodel working in issue #156 (#526)
-- Ensemble: implementing `find_vert_coord` in ensemble zonal plotting function (#175) 
+- Ensemble: implementing `find_vert_coord` in ensemble zonal plotting function (#175)
 
 ## [v0.22.0]
 
@@ -58,8 +62,8 @@ Complete list:
 - Ocean3D: added realization key in plot MLD
 - Add missing netcdf4 dependency in development environment (#104)
 - Add LaTeX units formatting to diagnostic labels (#70)
-- GlobalBiases: few small bugs fixed (#98) 
-- Remove intake-esm dependency (#100) 
+- GlobalBiases: few small bugs fixed (#98)
+- Remove intake-esm dependency (#100)
 - Porting ensemble config files as in the issue #78 (#87)
 - General refactoring of AQUA-diagnostics documentation (#34)
 - Add troubleshooting information for Intel compatibility with gdal and rasterio modules (#84)

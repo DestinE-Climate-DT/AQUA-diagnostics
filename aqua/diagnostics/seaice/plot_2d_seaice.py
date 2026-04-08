@@ -1,17 +1,28 @@
 """ PlotSeaIce doc """
-import os
-import xarray as xr
+
 import cartopy.crs as ccrs
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import xarray as xr
 
 from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
-from aqua.core.util import get_projection, plot_box, to_list, get_realizations
-from aqua.core.util import evaluate_colorbar_limits, set_map_title, time_to_string
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
-from aqua.core.util import generate_colorbar_ticks, int_month_name, apply_circular_window, unit_to_latex
-from .util import extract_dates, _check_list_regions_type
+from aqua.core.util import (
+    apply_circular_window,
+    evaluate_colorbar_limits,
+    generate_colorbar_ticks,
+    get_projection,
+    get_realizations,
+    int_month_name,
+    plot_box,
+    set_map_title,
+    time_to_string,
+    to_list,
+    unit_to_latex,
+)
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+
+from .util import _check_list_regions_type
 
 xr.set_options(keep_attrs=True)
 
@@ -22,7 +33,7 @@ class Plot2DSeaIce:
     Args:
         ref (xarray.DataArray or xarray.Dataset): Reference sea ice data.
         models (list of xarray.DataArray or xarray.Dataset): List of models with sea ice data.
-        regions_to_plot (list): List of strings with the region names to plot which must match 
+        regions_to_plot (list): List of strings with the region names to plot which must match
                                 the 'AQUA_region' attribute in the data provided as input.
         outputdir (str): Output directory for saving plots.
         rebuild (bool): Whether to rebuild the plots if they already exist.
@@ -30,11 +41,11 @@ class Plot2DSeaIce:
         loglevel (str): Logging level for the logger. Default is 'WARNING'.
     """
     def __init__(self,
-                 ref=None, models=None, 
+                 ref=None, models=None,
                  regions_to_plot: list = ['Arctic', 'Antarctic'],
                  outputdir='./',
                  rebuild=True,
-                 dpi=300, 
+                 dpi=300,
                  loglevel='WARNING'):
 
         self.loglevel = loglevel
@@ -44,7 +55,7 @@ class Plot2DSeaIce:
 
         self.ref = self._handle_data(ref)
         self.models = self._handle_data(models)
-        
+
         self.regions_to_plot = _check_list_regions_type(regions_to_plot, logger=self.logger)
 
         if self.regions_to_plot is None:
@@ -55,7 +66,7 @@ class Plot2DSeaIce:
         self.dpi = dpi
 
     def plot_2d_seaice(self, plot_type='var', months=[3,9], method='fraction', projkw=None,
-                       plot_ref_contour=False, save_pdf=True, save_png=True, show=False, **kwargs):
+                       plot_ref_contour=False, save_format=SAVE_FORMAT, show=False, **kwargs):
         """
         Plot sea ice data and biases.
 
@@ -63,8 +74,7 @@ class Plot2DSeaIce:
             plot_type (str): Type of plot to generate ['var' or 'bias'].
             months (list):  List of months to plot, e.g. [2, 9] for February and September.
             projkw (dict):  Dictionary with projection parameters for the plot.
-            save_pdf (bool): Whether to save the plot as a PDF.
-            save_png (bool): Whether to save the plot as a PNG.
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
             plot_ref_contour (bool):     Whether to add a reference line at 0.2 for sea ice fraction.
             show (bool): If True, display the plot interactively (e.g., in Jupyter notebooks).
             **kwargs: Additional keyword arguments for customization. See below functions for details.
@@ -76,8 +86,7 @@ class Plot2DSeaIce:
         self.months = months
 
         self.plot_type = plot_type
-        self.save_pdf = save_pdf
-        self.save_png = save_png
+        self.save_format = save_format
 
         self.method = method
         supported_methods = ['fraction', 'thickness']
@@ -98,7 +107,7 @@ class Plot2DSeaIce:
             self.logger.info(f"Plotting region: {region}")
 
             if not self._find_data_for_region(region):
-                continue  
+                continue
 
             if plot_type == 'bias':
                 self._plot_bias_map(region, **kwargs)
@@ -155,14 +164,14 @@ class Plot2DSeaIce:
 
                 plot_single_map(monref, proj=self.proj, fig=fig, ax=axs[0],
                                 cmap=setup['colormap'], norm=setup['norm'],
-                                contour=False, cbar=False, add_land=add_land, 
+                                contour=False, cbar=False, add_land=add_land,
                                 gridlines=gridlines,
                                 loglevel=self.loglevel,
                                 **kwargs)
 
                 cbar_ref = self._add_colorbar(fig, monref, ax=axs[0], orientation='vertical',
                                               norm=setup['norm'], boundaries=setup['boundaries'],
-                                              ticks_rounding=ticks_rounding, 
+                                              ticks_rounding=ticks_rounding,
                                               **{'fraction': 0.046, 'pad': 0.04})
                 axs[0].set_title(f"{set_map_title(monref, skip_varname=True)}")
 
@@ -171,12 +180,12 @@ class Plot2DSeaIce:
 
                 plot_single_map(monmod, proj=self.proj, fig=fig, ax=axs[1],
                                 cmap=setup['colormap'], norm=setup['norm'],
-                                contour=False, cbar=False, add_land=add_land, 
+                                contour=False, cbar=False, add_land=add_land,
                                 gridlines=gridlines,
                                 loglevel=self.loglevel,
                                 **kwargs)
 
-                cbar_ref = self._add_colorbar(fig, monmod, ax=axs[1], orientation='vertical',
+                cbar_ref = self._add_colorbar(fig, monmod, ax=axs[1], orientation='vertical', # noqa: F841
                                               norm=setup['norm'], boundaries=setup['boundaries'],
                                               ticks_rounding=ticks_rounding,
                                               **{'fraction': 0.046, 'pad': 0.04})
@@ -203,7 +212,7 @@ class Plot2DSeaIce:
                                      gridlines=gridlines,
                                      **kwargs)
 
-                cbar_diff = self._add_colorbar(fig, monref, ax=axs[2], orientation='vertical',
+                cbar_diff = self._add_colorbar(fig, monref, ax=axs[2], orientation='vertical', # noqa: F841
                                                vmin=vmin, vmax=vmax, sym=True,
                                                ticks_rounding=ticks_rounding,
                                                **{'fraction': 0.046, 'pad': 0.04})
@@ -225,7 +234,7 @@ class Plot2DSeaIce:
             f"from {time_to_string(monref.attrs.get('AQUA_startdate', ''), format='%Y-%m')} to {time_to_string(monref.attrs.get('AQUA_enddate', ''), format='%Y-%m')}. "
             f"{'The red contour line represents where the sea ice fraction is equal to 0.2.' if self.method == 'fraction' else ''}"
             )
-        self._save_plots(fig=fig, data=monmod, data_ref=monref, diagnostic_product='bias', 
+        self._save_plots(fig=fig, data=monmod, data_ref=monref, diagnostic_product='bias',
                          description=description, extra_keys={'method': self.method, 'region': region})
         if self.show:
             plt.show()
@@ -250,7 +259,7 @@ class Plot2DSeaIce:
     def _plot_single_dataset(self, datarr, region, data_type, **kwargs):
         """
         Plot a single dataset (reference or model).
-        
+
         Args:
             datarr: The data array to plot
             data_type: 'reference' or 'model'
@@ -269,13 +278,13 @@ class Plot2DSeaIce:
             mondat = self._mask_ice_at_mid_lats(datarr.sel(month=month))
 
             fig, ax = plot_single_map(mondat, proj=self.proj, fig=fig,
-                                      cmap=cmap, norm=norm, 
-                                      add_land=True, contour=False, 
+                                      cmap=cmap, norm=norm,
+                                      add_land=True, contour=False,
                                       cbar=False, return_fig=True,
-                                      loglevel=self.loglevel, ax_pos=(nrows, ncols, jm+1), 
+                                      loglevel=self.loglevel, ax_pos=(nrows, ncols, jm+1),
                                       gridlines=kwargs.get('gridlines', True),
                                       **kwargs)
-            
+
             if self.plot_ref_contour and data_type == 'model':
                 self._plot_reference_contour(ax=ax, month=month, data_type=data_type, **kwargs)
 
@@ -284,18 +293,18 @@ class Plot2DSeaIce:
                 ax = apply_circular_window(ax, extent=ext_coords)
 
             ax.set_title(f"Month: {int_month_name(month)}", fontsize=12)
-                            
+
         # Adjust the location of the subplots on the page to make room for the colorbar
         fig.subplots_adjust(bottom=0.25, top=0.8, left=0.15, right=0.85, wspace=0.03, hspace=0.5)
         cbar_ax = fig.add_axes([0.2, 0.15, 0.6, 0.03])
 
-        cbar = self._add_colorbar(fig, mondat, ax=ax, cax=cbar_ax,
+        cbar = self._add_colorbar(fig, mondat, ax=ax, cax=cbar_ax, # noqa: F841
                                   orientation='horizontal',
                                   ticks_rounding=kwargs.get('cbar_ticks_rounding', 1),
                                   **{'shrink': 0.3, 'pad': 0.07})
 
         fig.suptitle(f"{set_map_title(datarr)}", fontsize=13)
-        
+
         description = (
             f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method','')} climatology "
             f"for the {mondat.attrs.get('AQUA_model','')} model, experiment {mondat.attrs.get('AQUA_exp','')} "
@@ -303,12 +312,12 @@ class Plot2DSeaIce:
             f"from {time_to_string(mondat.attrs.get('AQUA_startdate',''), format='%Y-%m')} to {time_to_string(mondat.attrs.get('AQUA_enddate',''), format='%Y-%m')}. "
             f"{'The red contour line represent the regional sea ice fraction equal to 0.2.' if self.method == 'fraction' and self.plot_ref_contour else ''}"
         )
-        self._save_plots(fig=fig, data=mondat, data_ref=None, 
+        self._save_plots(fig=fig, data=mondat, data_ref=None,
                          diagnostic_product='varmap', description=description, extra_keys={'method': self.method, 'region': region})
         if self.show:
             plt.show()
         plt.close(fig)
-        
+
     def _get_colorbar_ticks(self, data, vmin=None, vmax=None, norm=None,
                             boundaries=None, sym=False, ticks_rounding=1):
         """
@@ -333,10 +342,10 @@ class Plot2DSeaIce:
                                            nlevels=10, ticks_rounding=ticks_rounding)
         else:
             return boundaries[::2] + [boundaries[-1]]
-    
-    def _add_colorbar(self, fig, data, 
-                      mappable=None, ax=None, cax=None, 
-                      vmin=None, vmax=None, norm=None, boundaries=None, 
+
+    def _add_colorbar(self, fig, data,
+                      mappable=None, ax=None, cax=None,
+                      vmin=None, vmax=None, norm=None, boundaries=None,
                       sym=False, orientation='horizontal', ticks_rounding=1, **cb_kwargs):
         """
         Add a colorbar to the current figure.
@@ -344,7 +353,7 @@ class Plot2DSeaIce:
         Args:
             fig (matplotlib.Figure): The figure to which the colorbar will be added.
             data (xarray.DataArray): DataArray containing the data for which the colorbar is generated.
-            mappable (matplotlib.cm.ScalarMappable, optional): The mappable object to which the colorbar applies. 
+            mappable (matplotlib.cm.ScalarMappable, optional): The mappable object to which the colorbar applies.
                                                                Defaults to the first collection in the axis.
             ax (matplotlib.axes.Axes, optional): The axis to which the colorbar is associated. Defaults to None.
             cax (matplotlib.axes.Axes, optional): The axis on which the colorbar is drawn. Defaults to None.
@@ -370,7 +379,7 @@ class Plot2DSeaIce:
         cb.set_ticks(cbar_ticks)
         cb.ax.ticklabel_format(style='sci', axis='x', scilimits=(-3, 3))
         units = data.attrs.get('units', '')
-        
+
         if units:
             units_latex = unit_to_latex(units)
             if not (units_latex.startswith('[') and units_latex.endswith(']')):
@@ -378,7 +387,7 @@ class Plot2DSeaIce:
             units = ' ' + units_latex
         else:
             units = ''
-        
+
         cb.set_label(f"Sea-ice {data.attrs.get('AQUA_method', '')}{units}", fontsize=11)
         return cb
 
@@ -421,7 +430,7 @@ class Plot2DSeaIce:
             raise ValueError("Missing 'projpars' in 'projkw'. Please provide valid projection parameters as a dict.")
 
         regdata = self.reg_ref[0] if self.reg_ref else self.reg_models[0]
-        
+
         function_registry = {
             "max_lat_signed": lambda data: max(data['lat'].values, key=abs)
         }
@@ -460,7 +469,7 @@ class Plot2DSeaIce:
             if ref_dat is not None:
                 self.logger.debug(f"Adding contour for reference data at {line_levels} for month: {month}")
                 ref_dat.plot.contour(ax=ax, transform=ccrs.PlateCarree(),
-                                    levels=line_levels, colors='red', linewidths=1, 
+                                    levels=line_levels, colors='red', linewidths=1,
                                     linestyles='-', add_colorbar=False)
         else:
             self.logger.debug(f"No reference contours for data_type: {data_type}, month: {month}")
@@ -492,7 +501,7 @@ class Plot2DSeaIce:
             - A single xarray.Dataset: includes all its data variables (data_vars)
             - A single xarray.DataArray: includes the DataArray itself
             - A list or tuple of either type (mixed allowed), skip None values in the list
-        
+
         Args:
             datain (xarray.DataArray, xarray.Dataset, list, tuple): Input data to process.
 
@@ -502,9 +511,9 @@ class Plot2DSeaIce:
         if datain is None:
             self.logger.debug("No datain provided, thus returning None.")
             return None
-        
+
         datain_list = to_list(datain)
-        
+
         data_arrays = []
         for model in datain_list:
             if model is None:
@@ -528,9 +537,9 @@ class Plot2DSeaIce:
         """
         def _update_regions_list(dalist):
             if dalist is None:
-                self.logger.warning(f"Input data list is None. Skipping region detection")
+                self.logger.warning("Input data list is None. Skipping region detection")
                 return
-            
+
             self.regions_to_plot = []
             for da in dalist:
                 if da is None:
@@ -574,7 +583,7 @@ class Plot2DSeaIce:
             return False
         return True
 
-    def _save_plots(self, fig, data, diagnostic_product, description, 
+    def _save_plots(self, fig, data, diagnostic_product, description,
                     data_ref=None, extra_keys=None):
         """
         Handles the saving of a figure using OutputSaver.
@@ -591,9 +600,9 @@ class Plot2DSeaIce:
         if data is None:
             raise ValueError("Data cannot be None for saving figures")
 
-        if not self.save_pdf and not self.save_png:
+        if not self.save_format:
             return
-        
+
         outputsaver = OutputSaver(
             diagnostic='seaice',
             catalog=data.attrs.get('AQUA_catalog',''),
@@ -605,11 +614,11 @@ class Plot2DSeaIce:
             loglevel=self.loglevel,
             realization=self.realizations
         )
-        
+
         metadata = {"Description": description}
         extra_keys = {} if extra_keys is None else dict(extra_keys)
-        
+
         outputsaver.save_figure(fig, diagnostic_product,
                                 extra_keys=extra_keys, metadata=metadata,
-                                save_pdf=self.save_pdf, save_png=self.save_png,
+                                extension=self.save_format,
                                 rebuild=self.rebuild, dpi=self.dpi)
