@@ -1,10 +1,11 @@
-import xarray as xr
 import matplotlib.pyplot as plt
+import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
+
 from .multiple_hovmoller import plot_multi_hovmoller
 from .multiple_timeseries import plot_multi_timeseries
 
@@ -57,13 +58,12 @@ class PlotHovmoller:
             diagnostic=self.diagnostic,
             catalog=self.catalog,
             model=self.model,
-            exp=self.exp, 
-            outputdir=outputdir, 
+            exp=self.exp,
+            outputdir=outputdir,
             realization=self.realizations,
             loglevel=self.loglevel)
 
-    def plot_hovmoller(self, rebuild: bool = True, save_pdf: bool = True,
-                       save_png: bool = True, dpi: int = 300):
+    def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
         """
         Plot the Hovmoller diagram for the given data.
 
@@ -73,8 +73,7 @@ class PlotHovmoller:
 
         Args:
             rebuild (bool): Whether to rebuild the output, default is True.
-            save_pdf (bool): Whether to save the plot as a PDF, default is True.
-            save_png (bool): Whether to save the plot as a PNG, default is True.
+            save_format (str or list): List of formats to save the figure. Default is SAVE_FORMAT.
             dpi (int): Dots per inch for the saved figure. Default is 300.
 
         Returns:
@@ -98,20 +97,14 @@ class PlotHovmoller:
             cmap=self.cmap,
             text=self.texts
         )
-        formats = []
-        if save_pdf:
-            formats.append('pdf')
-        if save_png:
-            formats.append('png')
 
-        for format in formats:
-            self.save_plot(fig, diagnostic_product="hovmoller", metadata={"description": self.description},
-                           rebuild=rebuild, dpi=dpi, format=format, extra_keys={'region': self.region})
+        self.save_plot(fig, diagnostic_product="hovmoller", extra_keys={'region': self.region},
+                       metadata={"description": self.description}, rebuild=rebuild,
+                       dpi=dpi, format=save_format)
 
     def plot_timeseries(self,
-                        levels: list = None,
-                        rebuild: bool = True, save_pdf: bool = True,
-                        save_png: bool = True, dpi: int = 300):
+                        levels: list = None, rebuild: bool = True,
+                        save_format: list = SAVE_FORMAT, dpi: int = 300):
         """
         Plot the timeseries for the given data.
 
@@ -122,8 +115,7 @@ class PlotHovmoller:
         Args:
             levels (list, optional): List of levels to plot. Default is None.
             rebuild (bool): Whether to rebuild the output, default is True.
-            save_pdf (bool): Whether to save the plot as a PDF, default is True.
-            save_png (bool): Whether to save the plot as a PNG, default is True.
+            save_format (list): List of formats to save the figure. Default is SAVE_FORMAT.
             dpi (int): Dots per inch for the saved figure. Default is 300.
 
         Returns:
@@ -154,15 +146,10 @@ class PlotHovmoller:
             cmap=self.cmap,
             text=self.texts
         )
-        formats = []
-        if save_pdf:
-            formats.append('pdf')
-        if save_png:
-            formats.append('png')
 
-        for format in formats:
-            self.save_plot(fig, diagnostic_product="timeseries", metadata={"description": self.description},
-                           rebuild=rebuild, dpi=dpi, format=format, extra_keys={'region': self.region})
+        self.save_plot(fig, diagnostic_product="timeseries", extra_keys={'region': self.region},
+                       metadata={"description": self.description}, rebuild=rebuild,
+                       dpi=dpi, format=save_format)
 
     def set_levels(self):
         """
@@ -188,7 +175,7 @@ class PlotHovmoller:
                 # Interpolate the data to the specified levels
                 if level == 0:
                     new_data = data.isel({self.vert_coord: 0})
-                else: 
+                else:
                     new_data = data.interp({self.vert_coord: level}, method='nearest')
                 new_data_level_list.append(new_data)
             merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords='different')
@@ -266,7 +253,7 @@ class PlotHovmoller:
             for var in self.vars:
                 self.vmax.append(hovmoller_plot_dic[var][type].get('vmax'))
                 self.vmin.append(hovmoller_plot_dic[var][type].get('vmin'))
-                self.cmap.append(hovmoller_plot_dic[var][type].get('cbar', 'jet'))      
+                self.cmap.append(hovmoller_plot_dic[var][type].get('cbar', 'jet'))
 
     def set_data_type(self):
         """
@@ -304,8 +291,8 @@ class PlotHovmoller:
         self.logger.debug("Texts set to: %s", self.texts)
 
     def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
-                  rebuild: bool = True,
-                  dpi: int = 300, format: str = 'png', metadata: dict = None):
+                  metadata: dict = None, rebuild: bool = True,
+                  dpi: int = 300, format: str = SAVE_FORMAT):
         """
         Save the plot to a file.
 
@@ -315,15 +302,11 @@ class PlotHovmoller:
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str): The format of the figure. Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        if format == 'png':
-            result = self.outputsaver.save_png(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata, dpi=dpi)
-        elif format == 'pdf':
-            result = self.outputsaver.save_pdf(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata)
-        self.logger.info(f"Figure saved as {result}")
+        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, extra_keys=extra_keys,
+                                     metadata=metadata, rebuild=rebuild,
+                                     dpi=dpi, extension=format)

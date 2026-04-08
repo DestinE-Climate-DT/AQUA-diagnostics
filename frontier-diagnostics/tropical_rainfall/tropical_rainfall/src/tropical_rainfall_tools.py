@@ -1,23 +1,24 @@
-import re
-import os
 import math
-import seaborn as sns
-import numpy as np
-import pandas as pd
-import xarray as xr
-from datetime import datetime
-from typing import Union
-from aqua.core.configurer import ConfigPath
-from aqua.core.util import convert_units
-from aqua.core.logger import log_configure
-import yaml
-from os.path import isfile, join, exists, isdir
-from dateutil.relativedelta import relativedelta
-
+import os
+import re
 from calendar import monthrange
 from collections import defaultdict
-
+from datetime import datetime
 from importlib import resources
+from os.path import exists, isdir, isfile, join
+from typing import Union
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import xarray as xr
+import yaml
+from dateutil.relativedelta import relativedelta
+
+from aqua.core.configurer import ConfigPath
+from aqua.core.logger import log_configure
+from aqua.core.util import convert_units
+
 full_path_to_config = resources.files("tropical_rainfall") / "config-tropical-rainfall.yml"
 
 regrid_dict = {
@@ -97,12 +98,12 @@ class ToolsClass:
     def adjust_bins(self, ds, factor):
         """
         Adjusts the histogram bins by a specified factor, recalculating the center of each bin based on the assumption
-        that the first bin center is (center_of_bin - 0.5 * width). If factor is None, the function returns a copy of the 
+        that the first bin center is (center_of_bin - 0.5 * width). If factor is None, the function returns a copy of the
         dataset unchanged.
 
         Args:
             ds (xarray.Dataset): The dataset containing the histogram.
-            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width, 
+            factor (float or None): The factor by which to adjust bin widths. Values > 1 increase bin width,
                                     values < 1 decrease it. None leaves the bin width and counts unchanged.
 
         Returns:
@@ -118,16 +119,19 @@ class ToolsClass:
         original_width = ds.width.values[0]  # Assuming uniform width for all bins
         new_width = original_width * factor
         original_centers = ds.center_of_bin.values
-        
+
         # Calculate new bin centers based on the adjusted first bin center
-        new_centers = np.array([original_centers[0] - 0.5 * original_width + (0.5 * new_width) + i * new_width for i in range(len(original_centers))])
+        new_centers = np.array([
+            original_centers[0] - 0.5 * original_width + (0.5 * new_width) + i * new_width
+            for i in range(len(original_centers))
+        ])
 
         # If the factor is meant to decrease bin size, this might result in more bins than originally
         if factor < 1:
             additional_bins = int((original_centers[-1] - new_centers[-1]) / new_width)
             for i in range(1, additional_bins + 1):
                 new_centers = np.append(new_centers, new_centers[-1] + new_width)
-        
+
         # Linear interpolation for counts
         new_counts = np.interp(new_centers, original_centers, ds.counts.values, left=0, right=0)
 
@@ -143,7 +147,7 @@ class ToolsClass:
         adjusted_ds.attrs = ds.attrs.copy()
         adjusted_ds.counts.attrs = ds.counts.attrs.copy()
         adjusted_ds.center_of_bin.attrs = ds.center_of_bin.attrs.copy()
-        
+
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         history_update = str(current_time)+f" the histogram bins adjusted by a specified factor {factor} ;\n "
         if 'history' not in adjusted_ds.attrs:
@@ -261,15 +265,15 @@ class ToolsClass:
             ValueError: If the dataset file cannot be opened with the available backends.
         """
         self.logger.debug(f"Opening dataset from path: {path_to_netcdf}")
-        
+
         if not os.path.exists(path_to_netcdf):
             self.logger.error(f"File does not exist: {path_to_netcdf}")
             raise FileNotFoundError(f"File does not exist: {path_to_netcdf}")
-        
+
         try:
             dataset = xr.open_dataset(path_to_netcdf, engine='netcdf4')
             return dataset
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             self.logger.error(f"File not found: {path_to_netcdf}")
             raise FileNotFoundError(f"The specified dataset file was not found: {path_to_netcdf}")
         except ValueError as e:
@@ -282,7 +286,8 @@ class ToolsClass:
     def select_files_by_year_and_month_range(self, path_to_histograms: str, start_year: int = None, end_year: int = None,
                                              start_month: int = None, end_month: int = None, flag: str = None) -> list:
         """
-        Select files within a specific year and optional month range from a given directory that also contain a certain flag in their filename.
+        Select files within a specific year and optional month range from a given directory
+        that also contain a certain flag in their filename.
         If no year range is provided, return all files sorted alphabetically that match the flag condition.
 
         Args:
@@ -294,7 +299,8 @@ class ToolsClass:
             flag (str, optional): A specific flag to look for in the filenames. Defaults to None.
 
         Returns:
-            list: A list of file paths matching the specified year, month range, and flag or all files if no year range is specified and match the flag condition.
+            list: A list of file paths matching the specified year, month range,
+                and flag or all files if no year range is specified and match the flag condition.
         """
         files = [join(path_to_histograms, f) for f in os.listdir(path_to_histograms) if isfile(join(path_to_histograms, f))]
         files.sort()
@@ -311,8 +317,8 @@ class ToolsClass:
             if date_match and flag_present:
                 year, month = map(int, date_match.groups())
                 # Check if the year and optionally month falls within the specified range
-                if ((start_year is None or start_year <= year) and 
-                    (end_year is None or year <= end_year) and 
+                if ((start_year is None or start_year <= year) and
+                    (end_year is None or year <= end_year) and
                     (not start_month or start_month <= month <= (end_month or 12))):
                     selected_files.append(file_path)
                 elif start_year is None and end_year is None:
@@ -326,8 +332,10 @@ class ToolsClass:
         Searches a specified folder for any file names that contain all the provided keys.
 
         Parameters:
-            folder_path (str): The path to the folder where the search for files will be conducted. If None, the current directory is assumed.
-            keys (list of str): A list of string keys that must all be present in a file name for it to satisfy the search criteria.
+            folder_path (str): The path to the folder where the search for files will be conducted.
+                If None, the current directory is assumed.
+            keys (list of str): A list of string keys that must all be present in
+                a file name for it to satisfy the search criteria.
 
         Returns:
             bool: True if at least one file meeting all specified criteria is found, False otherwise.
@@ -369,7 +377,8 @@ class ToolsClass:
             self.logger.warning(f"Folder path '{folder_path}' does not exist yet or was not provided.")
             return False
 
-        files = [join(folder_path, f) for f in os.listdir(folder_path) if isfile(join(folder_path, f)) or isdir(join(folder_path, f))]
+        files = [join(folder_path, f)
+            for f in os.listdir(folder_path) if isfile(join(folder_path, f)) or isdir(join(folder_path, f))]
         files.sort()
         keys = [str(key) for key in keys]
         for filename in files:
@@ -527,9 +536,9 @@ class ToolsClass:
 
         # Define the number of entries
         num_entries = len(loaded_dict)
-        
+
         # Generate a palette starting at a hue past red (e.g., starting at 30 degrees out of 360)
-        palette = sns.husl_palette(n_colors=num_entries, h=0.25) 
+        palette = sns.husl_palette(n_colors=num_entries, h=0.25)
 
         # Assign colors to dictionary entries
         for i, (key, value) in enumerate(loaded_dict.items()):
@@ -553,7 +562,7 @@ class ToolsClass:
         if not isinstance(loaded_dict, dict):
             self.logger.error("The provided object must be a 'dict' type.")
             return None
-        
+
         # Use a custom palette excluding red hues
         num_entries = len(loaded_dict)
         # Exclude red by setting hue range to avoid red (hue near 0)
@@ -813,7 +822,7 @@ class ToolsClass:
         self.logger.info("Continuity of time coordinates confirmed for all files.")
         return True
 
-    
+
     def check_incomplete_months(self, files):
         filenames = [os.path.basename(file) for file in files]
         for file in filenames:
@@ -824,7 +833,7 @@ class ToolsClass:
 
                 if end_year and end_month and end_day:
                     # If the file has an end date, use it to check completeness
-                    start_date = datetime(int(start_year), int(start_month), int(start_day))
+                    start_date = datetime(int(start_year), int(start_month), int(start_day)) # noqa: F841
                     end_date = datetime(int(end_year), int(end_month), int(end_day))
 
                     # Calculate the last day of the end month
@@ -851,7 +860,7 @@ class ToolsClass:
 
                 if end_year and end_month and end_day:
                     # Handle files with both start and end timestamps
-                    end_date = datetime(int(end_year), int(end_month), int(end_day))
+                    end_date = datetime(int(end_year), int(end_month), int(end_day)) # noqa: F841
                     last_day = monthrange(int(end_year), int(end_month))[1]
                     if int(end_day) == last_day:  # Complete file
                         complete_files_by_month[f"{start_year}-{start_month}"].append(full_path)
@@ -869,7 +878,8 @@ class ToolsClass:
         for month, paths in complete_files_by_month.items():
             final_files.extend(paths)
             if month in incomplete_files_by_month:
-                self.logger.warning(f"Warning: Removing incomplete records for {month} because a complete month file is present.")
+                self.logger.warning(
+                    f"Warning: Removing incomplete records for {month} because a complete month file is present.")
 
         for month, paths in incomplete_files_by_month.items():
             if month not in complete_files_by_month:
@@ -1069,7 +1079,7 @@ class ToolsClass:
         # Find all datetime parts and format them
         formatted_time_band = re.sub(r'(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}\.\d+', r'\1-\2-\3', time_band)
         return formatted_time_band
-    
+
     def format_lat_band(self, dataset) -> str:
         """
         Format the latitude band information from a dataset.
@@ -1086,7 +1096,7 @@ class ToolsClass:
             lat_band_str += f" with a frequency of {lat_band_values[2].split('=')[1]}"
         return lat_band_str
 
-    def verify_lat_band(sel, model_dataset, comparison_dataset, dataset_name, logger):
+    def verify_lat_band(self, model_dataset, comparison_dataset, dataset_name, logger):
         """
         Verify that the latitude band of a comparison dataset matches the latitude band of the model dataset.
 

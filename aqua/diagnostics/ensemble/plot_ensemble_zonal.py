@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
 import xarray as xr
+
 from aqua.core.exceptions import NoDataError
-from aqua.core.graphics import plot_vertical_profile
-from aqua.core.logger import log_configure
-from aqua.diagnostics.base import TitleBuilder
 from aqua.core.util import find_vert_coord
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
@@ -93,8 +92,7 @@ class PlotEnsembleZonal(BaseMixin):
         title_std=None,
         figure_size=[10, 8],
         cbar_label=None,
-        save_pdf=True,
-        save_png=True,
+        save_format=SAVE_FORMAT,
         dpi=300,
         units=None,
         ylim=(5500, 0),
@@ -120,8 +118,7 @@ class PlotEnsembleZonal(BaseMixin):
             title_std (str, optional): Title for the standard deviation plot. Auto-generated if None.
             figure_size (list[int], optional): Figure size [width, height]. Default is [10, 8].
             cbar_label (str, optional): Label for the colorbar.
-            save_pdf (bool, optional): Save plots as PDF. Default is True.
-            save_png (bool, optional): Save plots as PNG. Default is True.
+            save_format (str or list, optional): Format(s) to save plots in (e.g. 'png', 'pdf', 'svg'). Default is SAVE_FORMAT.
             dpi (int, optional): Resolution for saved figures. Default is 300.
             units (str, optional): Units of the variable. Used in titles and labels if provided.
             ylim (tuple, optional): Y-axis limits for the plot (vertical levels). Default is (5500, 0).
@@ -177,7 +174,7 @@ class PlotEnsembleZonal(BaseMixin):
         # do the selection on the first vertical coordinate found
         if len(vert_coord) > 1:
             self.logger.warning(
-                "Found more than one vertical coordinate, using the first one: %s", 
+                "Found more than one vertical coordinate, using the first one: %s",
                 vert_coord[0])
 
         fig1 = plt.figure(figsize=figure_size)
@@ -197,7 +194,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax1.set_title(title_mean)
         cbar = fig1.colorbar(im, ax=ax1, shrink=0.9, extend="both")
         cbar.set_label(cbar_label)
-        self.logger.debug(f"Saving Lev-Lon Zonal-average ensemble-mean as pdf and png")
+        self.logger.debug("Saving Lev-Lon Zonal-average ensemble-mean as pdf and png")
 
         if isinstance(dataset_std, xr.Dataset):
             dataset_std = dataset_std[var]
@@ -209,7 +206,7 @@ class PlotEnsembleZonal(BaseMixin):
         ax2 = fig2.add_subplot(1, 1, 1)
         im = ax2.contourf(
             dataset_std.lat,
-            dataset_std[vert_coord[0]],            
+            dataset_std[vert_coord[0]],
             dataset_std,
             cmap=cmap,
             levels=levels,
@@ -222,12 +219,10 @@ class PlotEnsembleZonal(BaseMixin):
         ax2.set_title(title_std)
         cbar = fig2.colorbar(im, ax=ax2, shrink=0.9, extend="both")
         cbar.set_label(cbar_label)
-        self.logger.debug(f"Saving Lev-Lon Zonal-average ensemble-STD as pdf and png")
+        self.logger.debug("Saving Lev-Lon Zonal-average ensemble-STD as pdf and png")
 
         # Saving plots
-        if save_png:
-            self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format="png", dpi=dpi)
-        if save_pdf:
-            self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format="pdf")
+        self.save_figure(
+            var=var,fig=fig1, fig_std=fig2, description=description, format=save_format, dpi=dpi)
 
         return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}

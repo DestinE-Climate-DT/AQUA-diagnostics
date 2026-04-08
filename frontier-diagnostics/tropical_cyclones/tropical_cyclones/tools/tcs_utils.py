@@ -1,8 +1,9 @@
 """Contains some functions external to the TCs class (defined in the tropical_cyclones.py file)"""
 
 import os
-from dask.distributed import progress
+
 from dask.diagnostics import ProgressBar
+from dask.distributed import progress
 
 
 def clean_files(filelist):

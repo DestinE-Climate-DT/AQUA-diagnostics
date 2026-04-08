@@ -1,16 +1,18 @@
 import os
+
 import matplotlib
 import pytest
+from conftest import APPROX_REL, DPI, LOGLEVEL
+
 from aqua.diagnostics.teleconnections import NAO, PlotNAO
-from conftest import APPROX_REL, LOGLEVEL, DPI
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL
-
+# ruff: noqa: N806
 
 @pytest.mark.diagnostics
-def test_NAO(tmp_path):
+def test_nao(tmp_path):
     """
     Test that the NAO class works
     """
@@ -60,9 +62,15 @@ def test_NAO(tmp_path):
     fig_reg = plot_ref.plot_maps(maps=reg_DJF, ref_maps=reg_DJF, statistic='regression')
     assert isinstance(fig_reg, matplotlib.figure.Figure), "Figure should be a matplotlib Figure"
     description = plot_ref.set_map_description(maps=reg_DJF, ref_maps=reg_DJF, statistic='regression')
-    assert description == 'NAO regression map (Mean sea level pressure) IFS test-tco79 (DJF) compared to IFS test-tco79. The contour lines are the model regression map and the filled contour map is the difference between the model and the reference regression map.' # noqa: E501
-    plot_ref.save_plot(fig_reg, diagnostic_product='regression_DJF', metadata={'description': description}, format='pdf', dpi=DPI)
-    assert (os.path.exists(os.path.join(tmp_path, 'pdf', 'nao.regression_djf.ci.IFS.test-tco79.r1.ci.IFS.test-tco79.pdf'))) is True
+    assert description == (
+        'NAO regression map (Mean sea level pressure) IFS test-tco79 (DJF) compared to IFS test-tco79. '
+        'The contour lines are the model regression map and the filled contour map is the difference '
+        'between the model and the reference regression map.'
+    )
+    plot_ref.save_plot(fig_reg, diagnostic_product='regression_DJF', metadata={'description': description},
+        format='pdf', dpi=DPI)
+    assert (os.path.exists(os.path.join(
+        tmp_path, 'pdf', "nao.regression_djf.ci.IFS.test-tco79.r1.ci.IFS.test-tco79.pdf"))) is True
 
     # Correlation plotting
     plot_single = PlotNAO(loglevel=loglevel, indexes=nao.index, outputdir=tmp_path)
@@ -70,8 +78,12 @@ def test_NAO(tmp_path):
     fig_cor = plot_single.plot_maps(maps=cor, statistic='correlation')
     assert isinstance(fig_cor, matplotlib.figure.Figure), "Figure should be a matplotlib Figure"
     description = plot_single.set_map_description(maps=cor, statistic='correlation')
-    assert description == 'NAO correlation map (Correlation of Mean sea level pressure with index evaluated with Mean sea level pressure) IFS test-tco79.'
-    plot_single.save_plot(fig_cor, diagnostic_product='correlation', metadata={'description': description}, format='pdf', dpi=DPI)
+    assert description == (
+        'NAO correlation map '
+        '(Correlation of Mean sea level pressure with index evaluated with Mean sea level pressure) IFS test-tco79.'
+    )
+    plot_single.save_plot(fig_cor, diagnostic_product='correlation', metadata={'description': description},
+        format='pdf', dpi=DPI)
     assert (os.path.exists(os.path.join(tmp_path, 'pdf', 'nao.correlation.ci.IFS.test-tco79.r1.pdf'))) is True
 
     # Not implemented maps

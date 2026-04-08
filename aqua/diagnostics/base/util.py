@@ -3,15 +3,15 @@ Utility functions for the CLI
 """
 import argparse
 import os
-from dask.distributed import Client, LocalCluster
-
-from dask.base import tokenize
-import dask
 import uuid
 
-from aqua.core.logger import log_configure
-from aqua.core.util import load_yaml, get_arg
+import dask
+from dask.base import tokenize
+from dask.distributed import Client, LocalCluster
+
 from aqua.core.configurer import ConfigPath
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg, load_yaml
 
 # This creates a unique job token for this instance of the module
 # so that all dask keys generated during this run are unique

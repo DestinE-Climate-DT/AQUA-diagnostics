@@ -1,12 +1,14 @@
-import xarray as xr
 import math
+from typing import Union
+
 import cartopy.crs as ccrs
+import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.util import cbar_get_label, get_realizations
-from aqua.diagnostics.base import OutputSaver, TitleBuilder
-from .mld_profiles import plot_maps
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
+from .mld_profiles import plot_maps
 
 xr.set_options(keep_attrs=True)
 
@@ -65,8 +67,7 @@ class PlotMLD:
     def plot_mld(
         self,
         rebuild: bool = True,
-        save_pdf: bool = True,
-        save_png: bool = True,
+        save_format: Union[str, list] = SAVE_FORMAT,
         dpi: int = 300,
     ):
         self.diagnostic_product = "mld"
@@ -101,15 +102,8 @@ class PlotMLD:
             sym=False,
         )
 
-        formats = []
-        if save_pdf:
-            formats.append('pdf')
-        if save_png:
-            formats.append('png')
-
-        for format in formats:
-            self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
-                           rebuild=rebuild, dpi=dpi, format=format, extra_keys={'region': self.region})
+        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
+                       rebuild=rebuild, extra_keys={'region': self.region}, format=save_format, dpi=dpi)
 
     def set_figsize(self):
         self.figsize = (9 * self.ncols, 8 * self.nrows)
@@ -181,11 +175,11 @@ class PlotMLD:
         data = data.assign_coords(lon=((data.lon + 180) % 360) - 180)
         data = data.sortby('lon')
 
-        lat_limits = data.attrs['AQUA_lat_limits']
+        # lat_limits = data.attrs['AQUA_lat_limits']
         lon_limits = data.attrs['AQUA_lon_limits']
 
 
-        if lon_limits != None:
+        if lon_limits is not None:
             lon_min, lon_max = lon_limits
             lon_min = ((lon_min + 180) % 360) - 180
             lon_max = ((lon_max + 180) % 360) - 180
@@ -202,7 +196,7 @@ class PlotMLD:
                 )
             data = ds_reg
         return data
-    
+
     def _round_up(self, value):
         if value % 100 == 0:
             return value  # Already a multiple of 100
@@ -231,8 +225,8 @@ class PlotMLD:
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the MLD plot."""
-        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region, 
-                             catalog=self.catalog, model=self.model, exp=self.exp, 
+        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region,
+                             catalog=self.catalog, model=self.model, exp=self.exp,
                              timeseason=f"{self.clim_time} climatology").generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
@@ -260,7 +254,7 @@ class PlotMLD:
 
     def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
                   rebuild: bool = True,
-                  dpi: int = 300, format: str = 'png', metadata: dict = None):
+                  dpi: int = 300, format: str = SAVE_FORMAT, metadata: dict = None):
         """
         Save the plot to a file.
 
@@ -270,15 +264,10 @@ class PlotMLD:
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str): The format of the figure. Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        if format == 'png':
-            result = self.outputsaver.save_png(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata, dpi=dpi)
-        elif format == 'pdf':
-            result = self.outputsaver.save_pdf(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                               extra_keys=extra_keys, metadata=metadata)
-        self.logger.info(f"Figure saved as {result}")
+        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
+                                     extra_keys=extra_keys, metadata=metadata, dpi=dpi, extension=format)

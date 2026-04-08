@@ -1,10 +1,9 @@
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import xarray as xr
+
 from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection
-from aqua.diagnostics.base import TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
@@ -102,8 +101,7 @@ class PlotEnsembleLatLon(BaseMixin):
         dpi=300,
         title_mean=None,
         title_std=None,
-        save_pdf=True,
-        save_png=True,
+        save_format=SAVE_FORMAT,
         vmin_mean=None,
         vmax_mean=None,
         vmin_std=None,
@@ -133,8 +131,7 @@ class PlotEnsembleLatLon(BaseMixin):
             dpi (int, optional): Resolution for saved figures. Default is 300.
             title_mean (str, optional): Title for mean plot. Auto-generated if None.
             title_std (str, optional): Title for standard deviation plot. Auto-generated if None.
-            save_pdf (bool, optional): Whether to save figures as PDF. Default is True.
-            save_png (bool, optional): Whether to save figures as PNG. Default is True.
+            save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg'). Default is SAVE_FORMAT.
             vmin_mean, vmax_mean (float, optional): Color scale limits for mean plot. Auto-set if None.
             vmin_std, vmax_std (float, optional): Color scale limits for std plot. Auto-set if None.
             proj (str, optional): Map projection. Default is "robinson".
@@ -148,7 +145,7 @@ class PlotEnsembleLatLon(BaseMixin):
 
         Returns:
             dict: Dictionary containing figure and axes for mean and std plots:
-                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}. 
+                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}.
                   If standard deviation is zero everywhere, only 'mean_plot' is returned.
 
         Raises:
@@ -156,7 +153,7 @@ class PlotEnsembleLatLon(BaseMixin):
 
         Notes:
             - Titles and colorbar labels are automatically generated if not provided.
-            - Uses `self.save_figure` to save PNG and PDF files.
+            - Uses `self.save_figure` to save figures in the formats specified.
             - Handles both xarray.DataArray and Dataset inputs.
             - If vmin_std equals vmax_std, std plot is skipped.
 
@@ -192,7 +189,7 @@ class PlotEnsembleLatLon(BaseMixin):
             vmin_mean = dataset_mean.values.min()
         if vmax_mean is None:
             vmax_mean = dataset_mean.values.max()
-            
+
         fig1, ax1 = plot_single_map(
             dataset_mean,
             proj=proj,
@@ -209,7 +206,7 @@ class PlotEnsembleLatLon(BaseMixin):
         )
         ax1.set_xlabel("Longitude")
         ax1.set_ylabel("Latitude")
-        self.logger.debug(f"Saving 2D map of mean")
+        self.logger.debug("Saving 2D map of mean")
 
         # STD plot
         if isinstance(dataset_std, xr.Dataset):
@@ -241,8 +238,6 @@ class PlotEnsembleLatLon(BaseMixin):
         ax2.set_ylabel("Latitude")
 
         # Saving plots
-        if save_png:
-            self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format="png")
-        if save_pdf:
-            self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format="pdf")
+        self.save_figure(var=var, fig=fig1, fig_std=fig2,
+                         description=description, format=save_format, dpi=dpi)
         return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}

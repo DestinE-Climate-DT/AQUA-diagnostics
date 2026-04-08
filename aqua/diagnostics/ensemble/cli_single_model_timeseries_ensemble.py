@@ -8,15 +8,18 @@ defined in a yaml configuration file for multiple models.
 import argparse
 import sys
 
-from aqua import Reader
-from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries, reader_retrieve_and_merge, extract_realizations
-from aqua.diagnostics.base import (
-    close_cluster, load_diagnostic_config, merge_config_args,
-    open_cluster, template_parse_arguments,
-)
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from aqua.core.configurer import ConfigPath
+from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries, extract_realizations, reader_retrieve_and_merge
+from aqua.diagnostics.base import (
+    SAVE_FORMAT,
+    close_cluster,
+    load_diagnostic_config,
+    merge_config_args,
+    open_cluster,
+    template_parse_arguments,
+)
+
 
 def parse_arguments(args):
     """Parse command-line arguments for EnsembleTimeseries diagnostic.
@@ -58,8 +61,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     rebuild = config_dict['output'].get('rebuild', True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_pdf = config_dict["output"].get("save_pdf", True)
-    save_png = config_dict["output"].get("save_png", True)
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     dpi = config_dict['output'].get('dpi', 300)
 
     # EnsembleTimeseries diagnostic
@@ -201,8 +203,7 @@ if __name__ == "__main__":
                             # "annual_data_std": ts.annual_data_std,
                             # "ref_monthly_data": ref_data,
                             # "ref_annual_data": ref_annual_data
-                            "save_pdf": save_pdf,
-                            "save_png": save_png,
+                            "save_format": save_format,
                             "plot_ensemble_members": plot_ensemble_members,
                             "title": title,
                             "startdate": ts.monthly_data.time.isel(time=0).values,

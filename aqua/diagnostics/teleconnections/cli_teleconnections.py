@@ -9,9 +9,8 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
-from aqua.diagnostics.teleconnections import NAO, ENSO
-from aqua.diagnostics.teleconnections import PlotNAO, PlotENSO
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.teleconnections import ENSO, NAO, PlotENSO, PlotNAO
 
 
 def parse_arguments(args):
@@ -59,15 +58,15 @@ def process_teleconnection_data(
     """
     seasons = tc_config.get('seasons', 'annual')
     init_args = {'loglevel': cli.loglevel}
-    
+
     diagnostics = [None] * len(data_sources)
     regressions = {season: [None] * len(data_sources) for season in seasons}
     correlations = {season: [None] * len(data_sources) for season in seasons}
-    
+
     for i, source in enumerate(data_sources):
         source_args = cli.reference_args(source) if is_reference else cli.dataset_args(source)
         cli.logger.info(f'Running {data_type}: {source_args}')
-        
+
         diagnostics[i] = diagnostic_class(**source_args, **init_args)
         diagnostics[i].retrieve(reader_kwargs=cli.reader_kwargs if not is_reference else {})
         diagnostics[i].compute_index(months_window=tc_config.get('months_window', 3), rebuild=cli.rebuild)
@@ -75,14 +74,14 @@ def process_teleconnection_data(
             diagnostics[i].index, diagnostic=diagnostic_name,
             diagnostic_product='index',
             outputdir=cli.outputdir, rebuild=cli.rebuild)
-        
+
         for season in seasons:
             regressions[season][i] = diagnostics[i].compute_regression(season=season)
             correlations[season][i] = diagnostics[i].compute_correlation(season=season)
-            
+
             reg_product = get_season_product('regression', season)
             cor_product = get_season_product('correlation', season)
-            
+
             diagnostics[i].save_netcdf(
                 regressions[season][i], diagnostic=diagnostic_name,
                 diagnostic_product=reg_product,
@@ -106,11 +105,11 @@ def save_plot_formats(plotter, fig, diagnostic_product, description, cli):
         description: Description metadata to include in the saved file
         cli: CLI object with configuration for saving options
     """
-    if cli.save_pdf:
+    if cli.save_format == 'pdf':
         plotter.save_plot(
             fig, diagnostic_product=diagnostic_product, format='pdf',
             metadata={'description': description}, dpi=cli.dpi)
-    if cli.save_png:
+    if cli.save_format == 'png':
         plotter.save_plot(
             fig, diagnostic_product=diagnostic_product, format='png',
             metadata={'description': description}, dpi=cli.dpi)
@@ -212,7 +211,7 @@ def run_teleconnection_diagnostic(tc_name: str, tc_class, plot_class, cli):
     )
 
     # Generate plots
-    if cli.save_pdf or cli.save_png:
+    if cli.save_format:
         plot_teleconnection(
             plot_class, diagnostics, ref_diagnostics, regressions,
             ref_regressions, correlations, ref_correlations, seasons, cli,
