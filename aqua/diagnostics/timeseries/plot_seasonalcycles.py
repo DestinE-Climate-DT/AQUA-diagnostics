@@ -1,13 +1,23 @@
+from typing import Union
+
 import xarray as xr
+
 from aqua.core.graphics import plot_seasonalcycle
-from aqua.core.util import to_list, get_realizations
+from aqua.core.util import get_realizations, to_list
+from aqua.diagnostics.base import SAVE_FORMAT
+
 from .base import PlotBaseMixin
 
 
 class PlotSeasonalCycles(PlotBaseMixin):
-    def __init__(self, diagnostic_name: str = 'seasonalcycles',
-                 monthly_data=None, ref_monthly_data=None,
-                 std_monthly_data=None, loglevel: str = 'WARNING'):
+    def __init__(
+        self,
+        diagnostic_name: str = "seasonalcycles",
+        monthly_data=None,
+        ref_monthly_data=None,
+        std_monthly_data=None,
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the PlotSeasonalCycles class.
         This class is used to plot seasonal cycles data previously processed
@@ -24,16 +34,27 @@ class PlotSeasonalCycles(PlotBaseMixin):
 
         # TODO: support ref list
         self.monthly_data = to_list(monthly_data)
-        self.ref_monthly_data = ref_monthly_data  if isinstance(ref_monthly_data, xr.DataArray) else ref_monthly_data[0] if isinstance(ref_monthly_data, list) else None
-        self.std_monthly_data = std_monthly_data if isinstance(std_monthly_data, xr.DataArray) else std_monthly_data[0] if isinstance(std_monthly_data, list) else None
+        self.ref_monthly_data = (
+            ref_monthly_data
+            if isinstance(ref_monthly_data, xr.DataArray)
+            else ref_monthly_data[0]
+            if isinstance(ref_monthly_data, list)
+            else None
+        )
+        self.std_monthly_data = (
+            std_monthly_data
+            if isinstance(std_monthly_data, xr.DataArray)
+            else std_monthly_data[0]
+            if isinstance(std_monthly_data, list)
+            else None
+        )
 
         self.len_data, self.len_ref = len(self.monthly_data), 1 if self.ref_monthly_data is not None else 0
 
         # Filling them
         self.get_data_info()
 
-    def run(self, outputdir: str = './',
-            rebuild: bool = True, dpi: int = 300, format: str = 'png'):
+    def run(self, outputdir: str = "./", rebuild: bool = True, dpi: int = 300, format: Union[str, list] = SAVE_FORMAT):
         """
         Run the PlotTimeseries class.
 
@@ -41,18 +62,17 @@ class PlotSeasonalCycles(PlotBaseMixin):
             outputdir (str): Output directory to save the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
         """
 
-        self.logger.info('Running PlotSeasonalCycles')
+        self.logger.info("Running PlotSeasonalCycles")
         data_label = self.set_data_labels()
         ref_label = self.set_ref_label()
         description = self.set_description()
         title = self.set_title()
         fig, _ = self.plot_seasonalcycles(data_labels=data_label, ref_label=ref_label, title=title)
-        self.save_plot(fig, description=description, rebuild=rebuild,
-                       outputdir=outputdir, dpi=dpi, format=format)
-        self.logger.info('PlotSeasonalCycles completed successfully')
+        self.save_plot(fig, description=description, rebuild=rebuild, outputdir=outputdir, dpi=dpi, format=format)
+        self.logger.info("PlotSeasonalCycles completed successfully")
 
     def get_data_info(self):
         """
@@ -74,28 +94,28 @@ class PlotSeasonalCycles(PlotBaseMixin):
             self.catalogs = [d.AQUA_catalog for d in self.monthly_data]
             self.models = [d.AQUA_model for d in self.monthly_data]
             self.exps = [d.AQUA_exp for d in self.monthly_data]
-            self.region = self.monthly_data[0].AQUA_region if hasattr(self.monthly_data[0], 'AQUA_region') else None
-            self.short_name = self.monthly_data[0].short_name if hasattr(self.monthly_data[0], 'short_name') else None
-            self.long_name = self.monthly_data[0].long_name if hasattr(self.monthly_data[0], 'long_name') else None
-            self.units = self.monthly_data[0].units if hasattr(self.monthly_data[0], 'units') else None
+            self.region = self.monthly_data[0].AQUA_region if hasattr(self.monthly_data[0], "AQUA_region") else None
+            self.short_name = self.monthly_data[0].short_name if hasattr(self.monthly_data[0], "short_name") else None
+            self.long_name = self.monthly_data[0].long_name if hasattr(self.monthly_data[0], "long_name") else None
+            self.units = self.monthly_data[0].units if hasattr(self.monthly_data[0], "units") else None
             self.realizations = get_realizations(self.monthly_data)
-        self.logger.debug(f'Catalogs: {self.catalogs}')
-        self.logger.debug(f'Models: {self.models}')
-        self.logger.debug(f'Experiments: {self.exps}')
-        self.logger.debug(f'Region: {self.region}')
+        self.logger.debug(f"Catalogs: {self.catalogs}")
+        self.logger.debug(f"Models: {self.models}")
+        self.logger.debug(f"Experiments: {self.exps}")
+        self.logger.debug(f"Region: {self.region}")
 
         if self.ref_monthly_data is not None:
             # Make a list from the data array attributes
             self.ref_catalogs = self.ref_monthly_data.AQUA_catalog
             self.ref_models = self.ref_monthly_data.AQUA_model
             self.ref_exps = self.ref_monthly_data.AQUA_exp
-            self.logger.debug(f'Reference: {self.ref_catalogs} {self.ref_models} {self.ref_exps}')
+            self.logger.debug(f"Reference: {self.ref_catalogs} {self.ref_models} {self.ref_exps}")
 
         if self.std_monthly_data is not None:
             for std in self.std_monthly_data:
                 self.std_startdate = std.std_startdate if std.std_startdate is not None else None
                 self.std_enddate = std.std_enddate if std.std_enddate is not None else None
-                self.logger.debug(f'Standard deviation dates: {self.std_startdate} - {self.std_enddate}')
+                self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
                 break
 
     def set_title(self):
@@ -105,7 +125,7 @@ class PlotSeasonalCycles(PlotBaseMixin):
         Returns:
             title (str): Title for the plot.
         """
-        return super().set_title(diagnostic='Seasonal cycle')
+        return super().set_title(diagnostic="Seasonal cycle")
 
     def set_description(self):
         """
@@ -117,7 +137,7 @@ class PlotSeasonalCycles(PlotBaseMixin):
         Returns:
             description (str): Caption for the plot.
         """
-        return super().set_description(diagnostic='Seasonal cycle')
+        return super().set_description(diagnostic="Seasonal cycle")
 
     def plot_seasonalcycles(self, data_labels=None, ref_label=None, title=None):
         """
@@ -132,28 +152,44 @@ class PlotSeasonalCycles(PlotBaseMixin):
             fig (matplotlib.figure.Figure): Figure object.
             ax (matplotlib.axes.Axes): Axes object.
         """
-        fig, ax = plot_seasonalcycle(data=self.monthly_data,
-                                     ref_data=self.ref_monthly_data,
-                                     std_data=self.std_monthly_data,
-                                     data_labels=data_labels,
-                                     ref_label=ref_label,
-                                     title=title,
-                                     loglevel=self.loglevel)
+        fig, ax = plot_seasonalcycle(
+            data=self.monthly_data,
+            ref_data=self.ref_monthly_data,
+            std_data=self.std_monthly_data,
+            data_labels=data_labels,
+            ref_label=ref_label,
+            title=title,
+            loglevel=self.loglevel,
+        )
 
         return fig, ax
 
-    def save_plot(self, fig, description: str = None, rebuild: bool = True,
-                  outputdir: str = './', dpi: int = 300, format: str = 'png'):
+    def save_plot(
+        self,
+        fig,
+        description: str | None = None,
+        rebuild: bool = True,
+        outputdir: str = "./",
+        dpi: int = 300,
+        format: Union[str, list] = SAVE_FORMAT,
+    ):
         """
         Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): Figure object.
-            description (str): Description of the plot.
+            description (str, optional): Description of the plot.
             rebuild (bool): If True, rebuild the plot even if it already exists.
             outputdir (str): Output directory to save the plot.
             dpi (int): Dots per inch for the plot.
-            format (str): Format of the plot ('png' or 'pdf'). Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
         """
-        super().save_plot(fig, description=description, rebuild=rebuild,
-                          outputdir=outputdir, dpi=dpi, format=format, diagnostic_product='seasonalcycles')
+        super().save_plot(
+            fig,
+            description=description,
+            rebuild=rebuild,
+            outputdir=outputdir,
+            dpi=dpi,
+            format=format,
+            diagnostic_product="seasonalcycles",
+        )

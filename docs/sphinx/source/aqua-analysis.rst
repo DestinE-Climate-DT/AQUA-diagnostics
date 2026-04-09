@@ -3,7 +3,7 @@
 AQUA analysis wrapper
 =====================
 
-A wrapper containing calls to all the state-of-the-art diagnostic available in AQUA.
+A wrapper containing calls to all the state-of-the-art diagnostic available in AQUA, orchestrating the different collections of diagnostics.
 
 .. note::
 
@@ -36,7 +36,7 @@ so that the script can be used in a batch job or in a workflow. These override c
 
 .. option:: -c <catalog>, --catalog <catalog>
 
-    The catalog to use. If a default is not specified in the configuration file, 
+    The catalog to use. If a default is not specified in the configuration file,
     then the default first catalog installed is used.
 
 .. option:: -m <model>, --model <model>
@@ -83,7 +83,7 @@ so that the script can be used in a batch job or in a workflow. These override c
 
 .. option:: -d <dir>, --outputdir <dir>
 
-    The output directory to use. 
+    The output directory to use.
     The default in the config file is ``$AQUA/cli/aqua-analysis/output``.
     Better to use an absolute path.
 
@@ -101,12 +101,12 @@ so that the script can be used in a batch job or in a workflow. These override c
 
     This flag activates running the diagnostics with multiple dask.distributed workers.
     By default the script will set up a common dask cluster/scheduler and close it when finished.
-    
+
 .. option:: --local_clusters
-    
+
     This is a legacy feature to run the diagnostics with multiple dask.distributed 'local' clusters (not reccomended)
     In this case predefined number of workers is used for each diagnostic, set in the configuration file `config.aqua-analysis.yaml`.
-    
+
 .. note ::
 
     By default the script will run all the state-of-the-art diagnostics available in AQUA.
@@ -179,7 +179,7 @@ A ``run`` list contains the diagnostics to run. By default, all the diagnostics 
 The diagnostics are specified as a dictionary with the following keys:
 
 - ``nworkers``: the number of workers to use for this diagnostic.
-- ``script_path``: the relative path to the diagnostic script with respect to ``script_path_base``. 
+- ``script_path``: the relative path to the diagnostic script with respect to ``script_path_base``.
 - ``config``: the configuration file for the diagnostic.
 - ``nocluster``: a boolean flag to disable the use of the global dask cluster for this diagnostic (used by ECmean)
 - ``source_oce``: a boolean flag to pass the additional ocean source to the diagnostic (currently only ECmean). Defaults to False.

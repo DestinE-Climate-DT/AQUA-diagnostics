@@ -3,16 +3,17 @@ Utility functions for the ensemble class
 """
 
 import gc
-import os
 from collections import Counter
 
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from aqua import Reader
+from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
-from aqua.core.configurer import ConfigPath
+
 
 def reader_retrieve_and_merge(
     variable: str = None,
@@ -110,7 +111,7 @@ def reader_retrieve_and_merge(
         else:
             logger.info(f"No realizations defined for {model_i}, using default ['r1']")
             reals = ["r1"]
-            
+
         model_ds_list = []
 
         for r in reals:
@@ -124,7 +125,7 @@ def reader_retrieve_and_merge(
                     realization=r,
                     region=region,
                     regrid=regrid,
-                    #reader_kwargs=reader_kwargs[model_i],
+                    # reader_kwargs=reader_kwargs[model_i],
                     areas=areas,
                     fix=fix,
                 )
@@ -298,58 +299,6 @@ def merge_from_data_files(
         ens_dataset.attrs["model"] = model_names
         return ens_dataset
 
-# This function is mainly for testing purposes. Not-tested
-def load_premerged_ensemble_dataset(ds: xr.Dataset, ens_dim: str = "ensemble", loglevel: str = "WARNING"):
-    """
-    Prepares a pre-merged xarray dataset for statistical computation.
-    Ensures correct ensemble dimension and model labeling.
-
-    Args:
-        ds (xr.Dataset): Pre-merged dataset.
-        ens_dim (str): Name of the ensemble dimension.
-        loglevel (str): Logging level.
-
-    Returns:
-        xr.Dataset: Prepared dataset ready for compute_statistics.
-    """
-
-    logger = log_configure(log_name="load_premerged_ensemble_dataset", log_level=loglevel)
-    logger.info("Loading and merging the ensemble dataset by reading files")
-
-    if ds is None:
-        logger.warning("No dataset provided to load_premerged_ensemble_dataset")
-        return None
-
-    # Check ensemble dimension
-    if ens_dim not in ds.dims:
-        logger.info(f"Adding '{ens_dim}' dimension as it does not exist")
-        # Expand dataset along ensemble dimension
-        ds = ds.expand_dims({ens_dim: [0]})
-
-    # Check for model coordinate
-    if "model" not in ds.coords:
-        logger.info("No 'model' coordinate found. Assuming single-model ensemble")
-        ds = ds.assign_coords(model=("ensemble", ["single_model"] * ds.dims[ens_dim]))
-
-    else:
-        # Ensure model coordinate is same length as ensemble dimension
-        if len(ds["model"]) != ds.dims[ens_dim]:
-            logger.warning(f"'model' coordinate length {len(ds['model'])} != ensemble size {ds.dims[ens_dim]}. Adjusting...")
-            # Repeat or truncate model labels as needed
-            repeat_factor = ds.dims[ens_dim] // len(ds["model"])
-            remainder = ds.dims[ens_dim] % len(ds["model"])
-            new_model = list(ds["model"].values) * repeat_factor + list(ds["model"].values)[:remainder]
-            ds = ds.assign_coords(model=("ensemble", new_model))
-
-    # Optional: sort ensemble members by model label
-    logger.info("Sorting ensemble members by model label")
-    sorted_indices = np.argsort(ds["model"].values)
-    ds = ds.isel({ens_dim: sorted_indices})
-
-    # Clean memory
-    gc.collect()
-
-    return ds
 
 def compute_statistics(variable: str = None, ds: xr.Dataset = None, ens_dim: str = "ensemble", loglevel="WARNING"):
     """
@@ -466,6 +415,7 @@ def center_timestamp(time: pd.Timestamp, freq: str):
 
     return center_time
 
+
 def extract_realizations(catalog, model, exp, source):
     """Extract the realizations available for a given catalog, model, exp and source.
 
@@ -478,19 +428,16 @@ def extract_realizations(catalog, model, exp, source):
     Returns:
         list: List of available realizations.
     """
-    configurer = ConfigPath(catalog=catalog, loglevel='WARNING')
-    cat, catalog_file, machine_file = configurer.deliver_intake_catalog(
-        catalog=catalog, model=model, exp=exp, source=source)
+    configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
+    cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
 
     expcat = cat()[model][exp]
-    esmcat = expcat[source].describe().get('user_parameters', {})
+    esmcat = expcat[source].describe().get("user_parameters", {})
 
     for parameter in esmcat:
-        name = parameter.get('name')
+        name = parameter.get("name")
 
-        if name == 'realization':
-            realization = parameter.get('allowed')
+        if name == "realization":
+            realization = parameter.get("allowed")
             return realization
     return None
-
-

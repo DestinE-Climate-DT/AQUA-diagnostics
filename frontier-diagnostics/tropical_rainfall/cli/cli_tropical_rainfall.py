@@ -1,21 +1,23 @@
-import sys
 import os
+import sys
+
+from src.tropical_rainfall_cli_class import TropicalRainfallCLI
+from src.tropical_rainfall_utils import load_configuration, parse_arguments, validate_arguments
+
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from src.tropical_rainfall_utils import parse_arguments, validate_arguments, load_configuration
-from src.tropical_rainfall_cli_class import Tropical_Rainfall_CLI
 
 # Initialize logger
-logger = log_configure(log_name="Trop. Rainfall CLI", log_level='INFO')
+logger = log_configure(log_name="Trop. Rainfall CLI", log_level="INFO")
 
 
 def load_config(args):
     """Load the configuration file."""
-    homedir = os.environ.get('HOME')
-    config_filename = os.path.join(homedir, '.aqua', 'diagnostics', 'tropical_rainfall', 'cli', 'cli_config_trop_rainfall.yml')
+    homedir = os.environ.get("HOME")
+    config_filename = os.path.join(homedir, ".aqua", "diagnostics", "tropical_rainfall", "cli", "cli_config_trop_rainfall.yml")
 
     # Load the configuration
-    config_path = get_arg(args, 'config', config_filename)
+    config_path = get_arg(args, "config", config_filename)
     try:
         config = load_configuration(config_path)
         logger.info(f"Configuration successfully loaded from {config_path}")
@@ -39,7 +41,7 @@ def main():
     config = load_config(args)
 
     # Create the CLI object and run operations
-    trop_rainfall_cli = Tropical_Rainfall_CLI(config, args)
+    trop_rainfall_cli = TropicalRainfallCLI(config, args)
 
     try:
         trop_rainfall_cli.calculate_histogram_by_months()
@@ -60,5 +62,5 @@ def main():
     logger.info("Tropical rainfall diagnostic completed.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

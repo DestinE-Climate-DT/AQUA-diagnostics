@@ -5,20 +5,24 @@ Command-line interface for ensemble global bias 2D lat-lon diagnostic.
 This CLI allows to plot ensemble of global bias 2D lat-lon of a variable
 defined in a yaml configuration file for a single model.
 """
+
 import argparse
 import sys
 
-from aqua import Reader
-from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon, reader_retrieve_and_merge
-from aqua.diagnostics.base import (
-    close_cluster, load_diagnostic_config, merge_config_args,
-    open_cluster, template_parse_arguments,
-)
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
-from aqua.core.configurer import ConfigPath
+from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon, reader_retrieve_and_merge
+from aqua.diagnostics.base import (
+    SAVE_FORMAT,
+    close_cluster,
+    load_diagnostic_config,
+    open_cluster,
+    template_parse_arguments,
+)
+
 # This is no circular import because this is a CLI so far
 from aqua.diagnostics.ensemble import extract_realizations
+
 
 def parse_arguments(args):
     """Parse command-line arguments for EnsembleLatLon diagnostic.
@@ -30,8 +34,8 @@ def parse_arguments(args):
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
@@ -57,11 +61,10 @@ if __name__ == "__main__":
 
     # Output options
     outputdir = config_dict["output"].get("outputdir", "./")
-    rebuild = config_dict['output'].get('rebuild', True)
+    rebuild = config_dict["output"].get("rebuild", True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_pdf = config_dict["output"].get("save_pdf", True)
-    save_png = config_dict["output"].get("save_png", True)
-    dpi = config_dict['output'].get('dpi', 300)
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
+    dpi = config_dict["output"].get("dpi", 300)
 
     # EnsembleLatLon diagnostic
     if "ensemble" in config_dict["diagnostics"]:
@@ -98,7 +101,7 @@ if __name__ == "__main__":
                     model_list=model,
                     exp_list=exp,
                     source_list=source,
-                    #region=region,
+                    # region=region,
                     realization=realization_dict,
                 )
                 if dataset is None:
@@ -149,8 +152,7 @@ if __name__ == "__main__":
 
                 # PlotEnsembleLatLon plot options
                 plot_arguments = {
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
+                    "save_format": save_format,
                     "var": variable,
                     "dpi": dpi,
                     "vmin_mean": vmin_mean,

@@ -1,0 +1,46 @@
+# The first model in this block can be overridden
+# in the command line by using:
+# --model, --exp, --source, --outputdir, --catalog
+datasets:
+  - catalog: null
+    model: 'IFS-NEMO'
+    exp: 'hist-1990-ensemble'
+    source: 'aqua-water_cycle-annual_climatology'
+    regrid: null
+    #areas: False
+    #fix: True
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  #rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  ensemble:
+    run: true
+    diagnostic_name: 'EnsembleLatLon'
+    variable: ['tprate']
+    params:
+      default:
+      tprate:
+        standard_name: "tprate"
+        long_name: "Precipitation"
+        units: "mm/day"
+    plot_params:
+      default:
+        projection: 'robinson'
+        projection_params: {}
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05  # 95% confidence level
+      tprate:
+        vmin:
+        vmax:
+        vmin_std:
+        vmax_std:
+        cmap: 'BrBG'

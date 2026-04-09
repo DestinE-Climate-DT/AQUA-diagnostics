@@ -1,7 +1,11 @@
+from typing import Union
+
 import xarray as xr
+
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import OutputSaver
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver
+
 from .base import BaseMixin
 
 # set default options for xarray
@@ -12,13 +16,20 @@ class MJO(BaseMixin):
     """
     MJO (Madden-Julian Oscillation) class.
     """
-    def __init__(self, catalog: str = None, model: str = None,
-                 exp: str = None, source: str = None,
-                 regrid: str = None,
-                 startdate: str = None, enddate: str = None,
-                 configdir: str = None,
-                 definition: str = 'teleconnections-destine',
-                 loglevel: str = 'WARNING'):
+
+    def __init__(
+        self,
+        catalog: str = None,
+        model: str = None,
+        exp: str = None,
+        source: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        configdir: str = None,
+        definition: str = "teleconnections-destine",
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the MJO class.
 
@@ -34,17 +45,26 @@ class MJO(BaseMixin):
             definition (str): definition filename. Default is 'teleconnections-destine'.
             loglevel (str): Logging level. Default is 'WARNING'.
         """
-        super().__init__(telecname='MJO', catalog=catalog, model=model, exp=exp, source=source,
-                         regrid=regrid, startdate=startdate, enddate=enddate,
-                         configdir=configdir, definition=definition,
-                         loglevel=loglevel)
-        self.logger = log_configure(log_name='MJO', log_level=loglevel)
+        super().__init__(
+            telecname="MJO",
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            configdir=configdir,
+            definition=definition,
+            loglevel=loglevel,
+        )
+        self.logger = log_configure(log_name="MJO", log_level=loglevel)
 
-        self.var = self.definition.get('field')
+        self.var = self.definition.get("field")
         self.data_hovmoller = None
 
         # Delete the self.index attribute if it exists
-        if hasattr(self, 'index'):
+        if hasattr(self, "index"):
             del self.index
 
     def retrieve(self, reader_kwargs: dict = {}) -> None:
@@ -59,7 +79,7 @@ class MJO(BaseMixin):
         super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
         self.data = self.data[self.var]
 
-        self.reader.timmean(self.data, freq='D')
+        self.data = self.reader.timmean(self.data, freq="D")
 
     def compute_hovmoller(self, day_window: int = None):
         """
@@ -71,19 +91,19 @@ class MJO(BaseMixin):
             day_window (int, optional): Number of days to be used in the smoothing window.
                                         If None, no smoothing is performed. Default is None.
         """
-        if self.definition.get('flip_sign', True):
+        if self.definition.get("flip_sign", True):
             self.logger.info("Flipping the sign of the variable.")
             self.data = -self.data
-        
+
         # Acquiring MJO box
-        lat = [self.definition['latS'], self.definition['latN']]
-        lon = [self.definition['lonW'], self.definition['lonE']]
+        lat = [self.definition["latS"], self.definition["latN"]]
+        lon = [self.definition["lonW"], self.definition["lonE"]]
 
         # Selecting the MJO box
         data_sel = self.reader.select_area(self.data, lat=lat, lon=lon, drop=True)
 
         # Evaluating anomalies
-        data_mean = data_sel.mean(dim='time')
+        data_mean = data_sel.mean(dim="time")
         data_anom = data_sel - data_mean
 
         # Smoothing the data
@@ -94,12 +114,13 @@ class MJO(BaseMixin):
             self.data_hovmoller = data_anom
 
 
-class PlotMJO():
+class PlotMJO:
     """
     PlotMJO class for plotting the MJO Hovmoller data.
     This class is a placeholder for future plotting methods.
     """
-    def __init__(self, data, outputdir: str = './', loglevel: str = 'WARNING'):
+
+    def __init__(self, data, outputdir: str = "./", loglevel: str = "WARNING"):
         """
         Initialize the PlotMJO class.
 
@@ -110,20 +131,30 @@ class PlotMJO():
         """
         # Data info initalized as empty
         self.loglevel = loglevel
-        self.logger = log_configure(self.loglevel, 'PlotMJO')
-        self.catalogs = data.AQUA_catalog if hasattr(data, 'AQUA_catalog') else None
-        self.models = data.AQUA_model if hasattr(data, 'AQUA_model') else None
-        self.exps = data.AQUA_exp if hasattr(data, 'AQUA_exp') else None
+        self.logger = log_configure(self.loglevel, "PlotMJO")
+        self.catalogs = data.AQUA_catalog if hasattr(data, "AQUA_catalog") else None
+        self.models = data.AQUA_model if hasattr(data, "AQUA_model") else None
+        self.exps = data.AQUA_exp if hasattr(data, "AQUA_exp") else None
         self.data = data
 
-        self.outputsaver = OutputSaver(diagnostic='mjo',  catalog=self.catalogs, model=self.models,
-                                       exp=self.exps, outputdir=outputdir, loglevel=self.loglevel)
+        self.outputsaver = OutputSaver(
+            diagnostic="mjo",
+            catalog=self.catalogs,
+            model=self.models,
+            exp=self.exps,
+            outputdir=outputdir,
+            loglevel=self.loglevel,
+        )
 
-    def plot_hovmoller(self, invert_axis: bool = True,
-                       invert_time: bool = True,
-                       nlevels: int = 21,
-                       cmap: str = 'PuOr',
-                       vmin: float = -90, vmax: float = 90):
+    def plot_hovmoller(
+        self,
+        invert_axis: bool = True,
+        invert_time: bool = True,
+        nlevels: int = 21,
+        cmap: str = "PuOr",
+        vmin: float = -90,
+        vmax: float = 90,
+    ):
         """
         Plot the Hovmoller diagram for the MJO data.
 
@@ -138,19 +169,31 @@ class PlotMJO():
         Returns:
             fig (matplotlib.figure.Figure): The Hovmoller plot figure.
         """
-        fig, _ = plot_hovmoller(self.data, dim='lat', 
-                                 invert_axis=invert_axis,
-                                 invert_time=invert_time,
-                                 nlevels=nlevels,
-                                 cmap=cmap, return_fig=True,
-                                 vmin=vmin, vmax=vmax,
-                                 loglevel=self.loglevel)
-        
+        fig, _ = plot_hovmoller(
+            self.data,
+            dim="lat",
+            invert_axis=invert_axis,
+            invert_time=invert_time,
+            nlevels=nlevels,
+            cmap=cmap,
+            return_fig=True,
+            vmin=vmin,
+            vmax=vmax,
+            loglevel=self.loglevel,
+        )
+
         return fig
-    
-    def save_plot(self, fig, diagnostic_product: str = 'hovmoller', extra_keys: dict = None,
-                  rebuild: bool = True,
-                  dpi: int = 300, format: str = 'png', metadata: dict = None):
+
+    def save_plot(
+        self,
+        fig,
+        diagnostic_product: str = "hovmoller",
+        extra_keys: dict = None,
+        rebuild: bool = True,
+        metadata: dict = None,
+        format: Union[str, list] = SAVE_FORMAT,
+        dpi: int = 300,
+    ):
         """
         Save the plot to a file.
 
@@ -160,14 +203,17 @@ class PlotMJO():
             extra_keys (dict): Extra keys to be used for the filename (e.g. season). Default is None.
             rebuild (bool): If True, the output files will be rebuilt. Default is True.
             dpi (int): The dpi of the figure. Default is 300.
-            format (str): The format of the figure. Default is 'png'.
+            format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        if format == 'png':
-            _ = self.outputsaver.save_png(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                          extra_keys=extra_keys, metadata=metadata, dpi=dpi)
-        elif format == 'pdf':
-            _ = self.outputsaver.save_pdf(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                          extra_keys=extra_keys, metadata=metadata)
+        _ = self.outputsaver.save_figure(
+            fig,
+            diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
+            extra_keys=extra_keys,
+            metadata=metadata,
+            extension=format,
+            dpi=dpi,
+        )

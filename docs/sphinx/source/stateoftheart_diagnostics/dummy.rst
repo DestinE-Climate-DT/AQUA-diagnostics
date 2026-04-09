@@ -12,7 +12,7 @@ Description
 -----------
 
 Please write here in a clear and concise manner what the diagnostic is about,
-what it is supposed to be doing and the motivation behind it (i.e. which phenomenon or physical process 
+what it is supposed to be doing and the motivation behind it (i.e. which phenomenon or physical process
 is diagnosed and why it is important in the context of the analysis of high-resulution climate simulations).
 If the diagnostic is based on published material, include references (we have a reference section below).
 
@@ -129,12 +129,12 @@ Diagnostic-specific settings (nested in ``diagnostics`` block):
         vmin: -15
         vmax: 15
 
-Output 
+Output
 ------
 
 List here types of files/datasets produced by the diagnostic.
 Please keep in mind that diagnostic output should be both figures (PDF format is recommended)
-and data (NetCDF file is recommended). 
+and data (NetCDF file is recommended).
 
 Observations
 ------------
@@ -154,7 +154,7 @@ Available demo notebooks
 ------------------------
 
 * `dummy.ipynb <https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/dummy/dummy.ipynb>`_
-        
+
 References
 ----------
 

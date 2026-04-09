@@ -1,31 +1,43 @@
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.gridspec import GridSpec
-from typing import Union, Tuple, Optional, List  # Any
-
-from aqua.core.util import create_folder
-from aqua.core.logger import log_configure
-from .tropical_rainfall_tools import ToolsClass
+from typing import List, Optional, Tuple, Union  # Any
 
 import cartopy.crs as ccrs
 import cartopy.mpl.ticker as cticker
-from cartopy.util import add_cyclic_point
-
-from matplotlib.ticker import StrMethodFormatter
-
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from cartopy.util import add_cyclic_point
+from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import StrMethodFormatter
+
+from aqua.core.logger import log_configure
+from aqua.core.util import create_folder
+
+from .tropical_rainfall_tools import ToolsClass
 
 
 class PlottingClass:
     """This is class to create the plots."""
 
-    def __init__(self, pdf_format: bool = None, figsize: float = None,
-                 linewidth: float = None, fontsize: int = None, smooth: bool = None,
-                 step: bool = None, color_map: bool = None, cmap: str = None,
-                 linestyle: str = None, ylogscale: bool = None, xlogscale: bool = None,
-                 model_variable: str = None, number_of_axe_ticks: int = None,
-                 number_of_bar_ticks: int = None, dpi: int = None, loglevel: str = 'WARNING'):
+    def __init__(
+        self,
+        pdf_format: bool = None,
+        figsize: float = None,
+        linewidth: float = None,
+        fontsize: int = None,
+        smooth: bool = None,
+        step: bool = None,
+        color_map: bool = None,
+        cmap: str = None,
+        linestyle: str = None,
+        ylogscale: bool = None,
+        xlogscale: bool = None,
+        model_variable: str = None,
+        number_of_axe_ticks: int = None,
+        number_of_bar_ticks: int = None,
+        dpi: int = None,
+        loglevel: str = "WARNING",
+    ):
         """
         Constructor for the plotting class, initializing various plotting parameters.
 
@@ -64,16 +76,27 @@ class PlottingClass:
         self.number_of_bar_ticks = number_of_bar_ticks
         self.dpi = dpi
         self.loglevel = loglevel
-        self.logger = log_configure(self.loglevel, 'Plot. Func.')
+        self.logger = log_configure(self.loglevel, "Plot. Func.")
         self.tools = ToolsClass(self.loglevel)
 
-    def class_attributes_update(self, pdf_format: Optional[bool] = None, figsize: Optional[float] = None,
-                                linewidth: Optional[float] = None, fontsize: Optional[int] = None,
-                                smooth: Optional[bool] = None, step: Optional[bool] = None, color_map: Optional[bool] = None,
-                                cmap: Optional[str] = None, linestyle: Optional[str] = None, ylogscale: Optional[bool] = None,
-                                xlogscale: Optional[bool] = None, model_variable: Optional[str] = None,
-                                number_of_axe_ticks: Optional[int] = None, number_of_bar_ticks: Optional[int] = None,
-                                dpi: Optional[int] = None):
+    def class_attributes_update(
+        self,
+        pdf_format: Optional[bool] = None,
+        figsize: Optional[float] = None,
+        linewidth: Optional[float] = None,
+        fontsize: Optional[int] = None,
+        smooth: Optional[bool] = None,
+        step: Optional[bool] = None,
+        color_map: Optional[bool] = None,
+        cmap: Optional[str] = None,
+        linestyle: Optional[str] = None,
+        ylogscale: Optional[bool] = None,
+        xlogscale: Optional[bool] = None,
+        model_variable: Optional[str] = None,
+        number_of_axe_ticks: Optional[int] = None,
+        number_of_bar_ticks: Optional[int] = None,
+        dpi: Optional[int] = None,
+    ):
         """
         Update the class attributes based on the provided arguments.
 
@@ -135,35 +158,69 @@ class PlottingClass:
         Example:
             savefig(path_to_pdf='example.pdf', pdf_format=True)
             # This will save the current figure in PDF format as 'example.pdf'.
-            
+
             savefig(path_to_pdf='example.pdf', pdf_format=False, dpi=300)
             # This will save the current figure in PNG format as 'example.png' with 300 DPI.
         """
         self.class_attributes_update(pdf_format=pdf_format, dpi=dpi)
 
-        create_folder(folder=self.tools.extract_directory_path(
-                    path_to_pdf), loglevel='WARNING')
+        create_folder(folder=self.tools.extract_directory_path(path_to_pdf), loglevel="WARNING")
 
         if pdf_format:
-            plt.savefig(path_to_pdf, format="pdf", bbox_inches="tight", pad_inches=0.1, transparent=True,
-                        facecolor="w", edgecolor='w', orientation='landscape')
+            plt.savefig(
+                path_to_pdf,
+                format="pdf",
+                bbox_inches="tight",
+                pad_inches=0.1,
+                transparent=True,
+                facecolor="w",
+                edgecolor="w",
+                orientation="landscape",
+            )
         else:
-            path_to_pdf = path_to_pdf.replace('.pdf', '.png')
+            path_to_pdf = path_to_pdf.replace(".pdf", ".png")
             save_dpi = dpi if dpi is not None else self.dpi
-            plt.savefig(path_to_pdf, dpi=save_dpi, bbox_inches="tight", pad_inches=0.1,
-                        transparent=True, facecolor="w", edgecolor='w', orientation='landscape')
+            plt.savefig(
+                path_to_pdf,
+                dpi=save_dpi,
+                bbox_inches="tight",
+                pad_inches=0.1,
+                transparent=True,
+                facecolor="w",
+                edgecolor="w",
+                orientation="landscape",
+            )
         self.logger.info(f"The path to plot is: {path_to_pdf}")
         return path_to_pdf
 
-    def histogram_plot(self, x: Union[np.ndarray, List[float]], data: Union[np.ndarray, List[float]],
-                       positive: bool = True, xlabel: str = '', ylabel: str = '',
-                       weights: Optional[Union[np.ndarray, List[float]]] = None, smooth: Optional[bool] = None,
-                       step: Optional[bool] = None, color_map: Union[bool, str] = None, linestyle: Optional[str] = None,
-                       ylogscale: Optional[bool] = None, xlogscale: Optional[bool] = None,
-                       save: bool = True, color: str = 'tab:blue', figsize: Optional[float] = None, legend: str = '_Hidden',
-                       plot_title: Optional[str] = None, loc: str = 'upper right', add: Optional[Tuple] = None,
-                       fig: Optional[object] = None, path_to_pdf: Optional[str] = None, pdf_format: Optional[bool] = None,
-                       xmax: Optional[float] = None, linewidth: Optional[float] = None, fontsize: Optional[int] = None):
+    def histogram_plot(
+        self,
+        x: Union[np.ndarray, List[float]],
+        data: Union[np.ndarray, List[float]],
+        positive: bool = True,
+        xlabel: str = "",
+        ylabel: str = "",
+        weights: Optional[Union[np.ndarray, List[float]]] = None,
+        smooth: Optional[bool] = None,
+        step: Optional[bool] = None,
+        color_map: Union[bool, str] = None,
+        linestyle: Optional[str] = None,
+        ylogscale: Optional[bool] = None,
+        xlogscale: Optional[bool] = None,
+        save: bool = True,
+        color: str = "tab:blue",
+        figsize: Optional[float] = None,
+        legend: str = "_Hidden",
+        plot_title: Optional[str] = None,
+        loc: str = "upper right",
+        add: Optional[Tuple] = None,
+        fig: Optional[object] = None,
+        path_to_pdf: Optional[str] = None,
+        pdf_format: Optional[bool] = None,
+        xmax: Optional[float] = None,
+        linewidth: Optional[float] = None,
+        fontsize: Optional[int] = None,
+    ):
         """
         Function to generate a histogram figure based on the provided data.
 
@@ -198,13 +255,22 @@ class PlottingClass:
         Returns:
             A dictionary containing the figure and axes objects.
         """
-        self.class_attributes_update(pdf_format=pdf_format, color_map=color_map, xlogscale=xlogscale, ylogscale=ylogscale,
-                                     figsize=figsize, fontsize=fontsize, smooth=smooth, step=step, linestyle=linestyle,
-                                     linewidth=linewidth)
+        self.class_attributes_update(
+            pdf_format=pdf_format,
+            color_map=color_map,
+            xlogscale=xlogscale,
+            ylogscale=ylogscale,
+            figsize=figsize,
+            fontsize=fontsize,
+            smooth=smooth,
+            step=step,
+            linestyle=linestyle,
+            linewidth=linewidth,
+        )
         if fig is not None:
             fig, ax = fig
         elif add is None and fig is None:
-            fig, ax = plt.subplots(figsize=(8*self.figsize, 5*self.figsize))
+            fig, ax = plt.subplots(figsize=(8 * self.figsize, 5 * self.figsize))
         elif add is not None:
             fig, ax = add
 
@@ -218,49 +284,64 @@ class PlottingClass:
             plt.grid(True)
         elif color_map:
             if weights is None:
-                N, _, patches = plt.hist(
-                    x=x, bins=x, weights=data,    label=legend)
+                n, _, patches = plt.hist(x=x, bins=x, weights=data, label=legend)
             else:
-                N, bins, patches = plt.hist(
-                    x=x, bins=x, weights=weights, label=legend)
+                n, bins, patches = plt.hist(x=x, bins=x, weights=weights, label=legend)
 
-            fracs = ((N**(1 / 5)) / N.max())
+            fracs = (n ** (1 / 5)) / n.max()
             norm = colors.Normalize(fracs.min(), fracs.max())
 
             for thisfrac, thispatch in zip(fracs, patches):
                 if color_map is True:
-                    color = plt.cm.get_cmap('viridis')(norm(thisfrac))
+                    color = plt.cm.get_cmap("viridis")(norm(thisfrac))
                 elif isinstance(color_map, str):
                     color = plt.cm.get_cmap(color_map)(norm(thisfrac))
                 thispatch.set_facecolor(color)
         plt.xlabel(xlabel, fontsize=self.fontsize)
         if self.ylogscale:
-            plt.yscale('log')
+            plt.yscale("log")
         if self.xlogscale:
-            plt.xscale('log')
+            plt.xscale("log")
 
         plt.ylabel(ylabel, fontsize=self.fontsize)
-        plt.title(plot_title, fontsize=self.fontsize+2)
+        plt.title(plot_title, fontsize=self.fontsize + 2)
 
-        if legend != '_Hidden':
-            plt.legend(loc=loc, fontsize=self.fontsize-4)
+        if legend != "_Hidden":
+            plt.legend(loc=loc, fontsize=self.fontsize - 4)
 
         if xmax is not None:
             plt.xlim([0, xmax])
-            
+
         if save and isinstance(path_to_pdf, str):
             path_to_pdf = self.savefig(path_to_pdf, self.pdf_format)
         return {fig, ax}, path_to_pdf
 
-    def plot_of_average(self, data: Union[list, xr.DataArray] = None, trop_lat: Optional[float] = None, ylabel: str = '',
-                        coord: Optional[str] = None, fontsize: Optional[int] = None, pad: int = 15,
-                        projection: bool = False,
-                        y_lim_max: Optional[float] = None, number_of_axe_ticks: Optional[int] = None,
-                        legend: str = '_Hidden', figsize: Optional[int] = None, linestyle: Optional[str] = None,
-                        maxticknum: int = 12, color: str = 'tab:blue', ylogscale: Optional[bool] = None,
-                        xlogscale: Optional[bool] = None, loc: str = 'upper right', add: Optional[list] = None,
-                        fig: Optional[list] = None, plot_title: Optional[str] = None, path_to_pdf: Optional[str] = None,
-                        save: bool = True, pdf_format: Optional[bool] = None):
+    def plot_of_average(
+        self,
+        data: Union[list, xr.DataArray] = None,
+        trop_lat: Optional[float] = None,
+        ylabel: str = "",
+        coord: Optional[str] = None,
+        fontsize: Optional[int] = None,
+        pad: int = 15,
+        projection: bool = False,
+        y_lim_max: Optional[float] = None,
+        number_of_axe_ticks: Optional[int] = None,
+        legend: str = "_Hidden",
+        figsize: Optional[int] = None,
+        linestyle: Optional[str] = None,
+        maxticknum: int = 12,
+        color: str = "tab:blue",
+        ylogscale: Optional[bool] = None,
+        xlogscale: Optional[bool] = None,
+        loc: str = "upper right",
+        add: Optional[list] = None,
+        fig: Optional[list] = None,
+        plot_title: Optional[str] = None,
+        path_to_pdf: Optional[str] = None,
+        save: bool = True,
+        pdf_format: Optional[bool] = None,
+    ):
         """
         Make a plot with different y-axes using a second axis object.
 
@@ -290,11 +371,18 @@ class PlottingClass:
         Returns:
             list: List of figure and axis objects.
         """
-        self.class_attributes_update(pdf_format=pdf_format, xlogscale=xlogscale, number_of_axe_ticks=number_of_axe_ticks,
-                                     ylogscale=ylogscale, figsize=figsize, fontsize=fontsize, linestyle=linestyle)
+        self.class_attributes_update(
+            pdf_format=pdf_format,
+            xlogscale=xlogscale,
+            number_of_axe_ticks=number_of_axe_ticks,
+            ylogscale=ylogscale,
+            figsize=figsize,
+            fontsize=fontsize,
+            linestyle=linestyle,
+        )
 
         # make a plot with different y-axis using second axis object
-        labels_int = data[coord].values
+        labels_int = data[coord].values  # noqa: F841
 
         if fig is not None:
             ax1, ax2, ax3, ax4, ax5, ax_twin_5 = fig[1], fig[2], fig[3], fig[4], fig[5], fig[6]
@@ -302,7 +390,7 @@ class PlottingClass:
             axs = [ax1, ax2, ax3, ax4, ax5]
 
         elif add is None and fig is None:
-            fig = plt.figure(figsize=(10*self.figsize, 11*self.figsize), layout='constrained')
+            fig = plt.figure(figsize=(10 * self.figsize, 11 * self.figsize), layout="constrained")
             gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 2.5])
             if projection:
                 ax1 = fig.add_subplot(gs[0, 0], projection=ccrs.PlateCarree())
@@ -327,26 +415,26 @@ class PlottingClass:
         i = -1
         for one_season in [data.DJF, data.MAM, data.JJA, data.SON, data.Yearly]:
             i += 1
-            axs[i].set_title(titles[i], fontsize=self.fontsize+1)
+            axs[i].set_title(titles[i], fontsize=self.fontsize + 1)
             # Latitude labels
-            if coord == 'lon':
-                axs[i].set_xlabel('Longitude', fontsize=self.fontsize-2)
-                axs[i].set_ylabel('Latitude', fontsize=self.fontsize-2)
-            elif coord == 'lat':
-                axs[i].set_xlabel('Latitude', fontsize=self.fontsize-2)
+            if coord == "lon":
+                axs[i].set_xlabel("Longitude", fontsize=self.fontsize - 2)
+                axs[i].set_ylabel("Latitude", fontsize=self.fontsize - 2)
+            elif coord == "lat":
+                axs[i].set_xlabel("Latitude", fontsize=self.fontsize - 2)
 
-            plt.yscale('log') if self.ylogscale else None
-            plt.xscale('log') if self.xlogscale else None
+            plt.yscale("log") if self.ylogscale else None
+            plt.xscale("log") if self.xlogscale else None
 
-            if coord == 'lon':              
+            if coord == "lon":
                 if projection:
-                    # twin object for two different y-axis on the sample plot  
+                    # twin object for two different y-axis on the sample plot
                     ax_span = axs[i].twinx()
-                    axs[i].coastlines(alpha=0.5, color='grey')
+                    axs[i].coastlines(alpha=0.5, color="grey")
                     axs[i].xaxis.set_major_formatter(cticker.LongitudeFormatter())
-                    
+
                     # Latitude labels
-                    axs[i].set_yticks(np.arange(-90, 91, 180/self.number_of_axe_ticks), crs=ccrs.PlateCarree())
+                    axs[i].set_yticks(np.arange(-90, 91, 180 / self.number_of_axe_ticks), crs=ccrs.PlateCarree())
                     axs[i].yaxis.set_major_formatter(cticker.LatitudeFormatter())
                     ax_span.set_ylim([-90, 90])
                     ax_span.set_xticks([])
@@ -357,52 +445,64 @@ class PlottingClass:
                         ax_twin.set_frame_on(True)
                         ax_twin.plot(one_season.lon - 180, one_season, color=color, label=legend, linestyle=self.linestyle)
                         ax_twin.set_ylim([0, y_lim_max])
-                        ax_twin.set_ylabel(ylabel, fontsize=self.fontsize-3)
-                        
+                        ax_twin.set_ylabel(ylabel, fontsize=self.fontsize - 3)
+
                     else:
                         ax_twin_5.set_frame_on(True)
-                        ax_twin_5.plot(one_season.lon - 180, one_season, color=color,  label=legend, linestyle=self.linestyle)
+                        ax_twin_5.plot(one_season.lon - 180, one_season, color=color, label=legend, linestyle=self.linestyle)
                         ax_twin_5.set_ylim([0, y_lim_max])
-                        ax_twin_5.set_ylabel(ylabel, fontsize=self.fontsize-3)
-                        axs[i].set_xlabel('Longitude', fontsize=self.fontsize-3)
-                    axs[i].set_xticks(np.arange(-180, 181, 360/self.number_of_axe_ticks), crs=ccrs.PlateCarree())
+                        ax_twin_5.set_ylabel(ylabel, fontsize=self.fontsize - 3)
+                        axs[i].set_xlabel("Longitude", fontsize=self.fontsize - 3)
+                    axs[i].set_xticks(np.arange(-180, 181, 360 / self.number_of_axe_ticks), crs=ccrs.PlateCarree())
                 else:
                     axs[i].plot(one_season.lon - 180, one_season, color=color, label=legend, linestyle=self.linestyle)
                     axs[i].set_ylim([0, y_lim_max])
-                    axs[i].set_ylabel(ylabel, fontsize=self.fontsize-3)
-                    axs[i].set_xlabel('Longitude', fontsize=self.fontsize-3)
+                    axs[i].set_ylabel(ylabel, fontsize=self.fontsize - 3)
+                    axs[i].set_xlabel("Longitude", fontsize=self.fontsize - 3)
             else:
                 axs[i].plot(one_season.lat, one_season, color=color, label=legend, linestyle=self.linestyle)
                 axs[i].set_ylim([0, y_lim_max])
-                axs[i].set_ylabel(ylabel, fontsize=self.fontsize-3)
-                axs[i].set_xlabel('Latitude', fontsize=self.fontsize-3)
+                axs[i].set_ylabel(ylabel, fontsize=self.fontsize - 3)
+                axs[i].set_xlabel("Latitude", fontsize=self.fontsize - 3)
 
             axs[i].grid(True)
-        if coord == 'lon':
-            if legend != '_Hidden':
+        if coord == "lon":
+            if legend != "_Hidden":
                 if projection:
-                    ax_twin_5.legend(loc=loc, fontsize=self.fontsize-3, ncol=2)
+                    ax_twin_5.legend(loc=loc, fontsize=self.fontsize - 3, ncol=2)
                 else:
-                    axs[4].legend(loc=loc, fontsize=self.fontsize-3, ncol=2)
+                    axs[4].legend(loc=loc, fontsize=self.fontsize - 3, ncol=2)
             if plot_title is not None:
-                plt.suptitle(plot_title, fontsize=self.fontsize+2)
+                plt.suptitle(plot_title, fontsize=self.fontsize + 2)
         else:
-            if legend != '_Hidden':
-                ax5.legend(loc=loc, fontsize=self.fontsize-3, ncol=2)
+            if legend != "_Hidden":
+                ax5.legend(loc=loc, fontsize=self.fontsize - 3, ncol=2)
             if plot_title is not None:
-                plt.suptitle(plot_title, fontsize=self.fontsize+2)
+                plt.suptitle(plot_title, fontsize=self.fontsize + 2)
 
         if save and isinstance(path_to_pdf, str):
             path_to_pdf = self.savefig(path_to_pdf, self.pdf_format)
 
-        return [fig,  ax1, ax2, ax3, ax4, ax5, ax_twin_5, path_to_pdf]
+        return [fig, ax1, ax2, ax3, ax4, ax5, ax_twin_5, path_to_pdf]
 
-    def plot_seasons_or_months(self, data: xr.DataArray, cbarlabel: Optional[str] = None, seasons: Optional[list] = None,
-                               months: Optional[list] = None, cmap: str = 'coolwarm', save: bool = True,
-                               figsize: Optional[int] = None, plot_title: Optional[str] = None,  vmin: Optional[float] = None,
-                               vmax: Optional[float] = None, fontsize: Optional[int] = None, linestyle: Optional[str] = None,
-                               path_to_pdf: Optional[str] = None, pdf_format: Optional[bool] = None):
-        """ Function to plot seasonal data.
+    def plot_seasons_or_months(
+        self,
+        data: xr.DataArray,
+        cbarlabel: Optional[str] = None,
+        seasons: Optional[list] = None,
+        months: Optional[list] = None,
+        cmap: str = "coolwarm",
+        save: bool = True,
+        figsize: Optional[int] = None,
+        plot_title: Optional[str] = None,
+        vmin: Optional[float] = None,
+        vmax: Optional[float] = None,
+        fontsize: Optional[int] = None,
+        linestyle: Optional[str] = None,
+        path_to_pdf: Optional[str] = None,
+        pdf_format: Optional[bool] = None,
+    ):
+        """Function to plot seasonal data.
 
         Args:
             data (xarray.DataArray): First dataset to be plotted.
@@ -420,14 +520,14 @@ class PlottingClass:
             path_to_pdf (str, optional): Path to save the PDF file. Defaults to None.
             pdf_format (bool, optional): If True, save the figure in PDF format. Defaults to True.
         """
-        self.class_attributes_update(pdf_format=pdf_format, cmap=cmap,
-                                     figsize=figsize, fontsize=fontsize, linestyle=linestyle)
+        self.class_attributes_update(pdf_format=pdf_format, cmap=cmap, figsize=figsize, fontsize=fontsize, linestyle=linestyle)
 
-        clevs = self.ticks_for_colorbar(data, vmin=vmin, vmax=vmax, model_variable=self.model_variable,
-                                        number_of_bar_ticks=self.number_of_bar_ticks)
+        clevs = self.ticks_for_colorbar(
+            data, vmin=vmin, vmax=vmax, model_variable=self.model_variable, number_of_bar_ticks=self.number_of_bar_ticks
+        )
 
         if months is None:
-            fig = plt.figure(figsize=(11*self.figsize, 10*self.figsize), layout='constrained')
+            fig = plt.figure(figsize=(11 * self.figsize, 10 * self.figsize), layout="constrained")
             gs = fig.add_gridspec(3, 2)
             ax1 = fig.add_subplot(gs[0, 0], projection=ccrs.PlateCarree())
             ax2 = fig.add_subplot(gs[0, 1], projection=ccrs.PlateCarree())
@@ -442,10 +542,11 @@ class PlottingClass:
                 one_season = seasons[i]
 
                 one_season = one_season.where(one_season > vmin)
-                one_season, lons = add_cyclic_point(one_season, coord=data['lon'])
-                im1 = axs[i].contourf(lons, data['lat'], one_season, clevs, transform=ccrs.PlateCarree(),
-                                      cmap=self.cmap, extend='both')
-                axs[i].set_title(titles[i], fontsize=self.fontsize+3)
+                one_season, lons = add_cyclic_point(one_season, coord=data["lon"])
+                im1 = axs[i].contourf(
+                    lons, data["lat"], one_season, clevs, transform=ccrs.PlateCarree(), cmap=self.cmap, extend="both"
+                )
+                axs[i].set_title(titles[i], fontsize=self.fontsize + 3)
                 axs[i].coastlines()
 
                 # Longitude labels
@@ -460,21 +561,39 @@ class PlottingClass:
                 axs[i].grid(True)
 
         else:
-            fig, axes = plt.subplots(ncols=3, nrows=4, subplot_kw={'projection': ccrs.PlateCarree()},
-                                     figsize=(11*self.figsize, 8.5*self.figsize), layout='constrained')
+            fig, axes = plt.subplots(
+                ncols=3,
+                nrows=4,
+                subplot_kw={"projection": ccrs.PlateCarree()},
+                figsize=(11 * self.figsize, 8.5 * self.figsize),
+                layout="constrained",
+            )
 
             for i in range(0, len(months)):
                 months[i] = months[i].where(months[i] > vmin)
-                months[i], lons = add_cyclic_point(months[i], coord=data['lon'])
+                months[i], lons = add_cyclic_point(months[i], coord=data["lon"])
 
-            titles = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
-                      'October', 'November', 'December']
+            titles = [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+            ]
             axs = axes.flatten()
 
             for i in range(0, len(months)):
-                im1 = axs[i].contourf(lons, data['lat'], months[i], clevs, transform=ccrs.PlateCarree(),
-                                      cmap=self.cmap, extend='both')
-                axs[i].set_title(titles[i], fontsize=self.fontsize+3)
+                im1 = axs[i].contourf(
+                    lons, data["lat"], months[i], clevs, transform=ccrs.PlateCarree(), cmap=self.cmap, extend="both"
+                )
+                axs[i].set_title(titles[i], fontsize=self.fontsize + 3)
                 axs[i].coastlines()
 
                 # Longitude labels
@@ -488,18 +607,23 @@ class PlottingClass:
                 axs[i].yaxis.set_major_formatter(lat_formatter)
                 axs[i].grid(True)
         # Draw the colorbar
-        cbar = fig.colorbar(im1, ticks=clevs, ax=ax5, location='bottom')
+        cbar = fig.colorbar(im1, ticks=clevs, ax=ax5, location="bottom")
         cbar.set_label(cbarlabel, fontsize=self.fontsize)
 
         if plot_title is not None:
-            plt.suptitle(plot_title, fontsize=self.fontsize+3)
+            plt.suptitle(plot_title, fontsize=self.fontsize + 3)
 
         if save and isinstance(path_to_pdf, str):
             self.savefig(path_to_pdf, self.pdf_format)
 
-    def ticks_for_colorbar(self, data: Union[xr.DataArray, float, int], vmin: Optional[Union[float, int]] = None,
-                           vmax: Optional[Union[float, int]] = None, model_variable: Optional[str] = None,
-                           number_of_bar_ticks: Optional[int] = None):
+    def ticks_for_colorbar(
+        self,
+        data: Union[xr.DataArray, float, int],
+        vmin: Optional[Union[float, int]] = None,
+        vmax: Optional[Union[float, int]] = None,
+        model_variable: Optional[str] = None,
+        number_of_bar_ticks: Optional[int] = None,
+    ):
         """Compute ticks and levels for a color bar based on provided data.
 
         Args:
@@ -530,16 +654,31 @@ class PlottingClass:
             clevs = list(range(vmin, vmax + 1))
         elif isinstance(vmax, float) or isinstance(vmin, float):
             clevs = [vmin + i * (vmax - vmin) / self.number_of_bar_ticks for i in range(self.number_of_bar_ticks + 1)]
-        self.logger.debug('Clevs: {}'.format(clevs))
+        self.logger.debug("Clevs: {}".format(clevs))
         return clevs
 
-    def map(self, data: List[xr.DataArray], titles: Optional[Union[List[str], str]] = None,
-            lonmin: int = -180, lonmax: int = 181, latmin: int = -90, latmax: int = 91,
-            cmap: Optional[str] = None, save: bool = True, model_variable: Optional[str] = None,
-            figsize: Optional[float] = None,  number_of_axe_ticks: Optional[int] = None,
-            number_of_bar_ticks: Optional[int] = None, cbarlabel: str = '',
-            plot_title: Optional[str] = None, vmin: Optional[float] = None, vmax: Optional[float] = None,
-            path_to_pdf: Optional[str] = None, pdf_format: Optional[bool] = None, fontsize: Optional[int] = None):
+    def map(
+        self,
+        data: List[xr.DataArray],
+        titles: Optional[Union[List[str], str]] = None,
+        lonmin: int = -180,
+        lonmax: int = 181,
+        latmin: int = -90,
+        latmax: int = 91,
+        cmap: Optional[str] = None,
+        save: bool = True,
+        model_variable: Optional[str] = None,
+        figsize: Optional[float] = None,
+        number_of_axe_ticks: Optional[int] = None,
+        number_of_bar_ticks: Optional[int] = None,
+        cbarlabel: str = "",
+        plot_title: Optional[str] = None,
+        vmin: Optional[float] = None,
+        vmax: Optional[float] = None,
+        path_to_pdf: Optional[str] = None,
+        pdf_format: Optional[bool] = None,
+        fontsize: Optional[int] = None,
+    ):
         """
         Generate a map with subplots for provided data.
 
@@ -565,9 +704,14 @@ class PlottingClass:
         Returns:
             The pyplot figure in the PDF format.
         """
-        self.class_attributes_update(pdf_format=pdf_format, figsize=figsize, fontsize=fontsize,
-                                     model_variable=model_variable, number_of_axe_ticks=number_of_axe_ticks,
-                                     number_of_bar_ticks=number_of_bar_ticks)
+        self.class_attributes_update(
+            pdf_format=pdf_format,
+            figsize=figsize,
+            fontsize=fontsize,
+            model_variable=model_variable,
+            number_of_axe_ticks=number_of_axe_ticks,
+            number_of_bar_ticks=number_of_bar_ticks,
+        )
         data_len = len(data)
         if titles is None:
             titles = [""] * data_len
@@ -581,72 +725,100 @@ class PlottingClass:
         elif data_len % 3 == 0:
             ncols, nrows = 3, data_len // 3
 
-        horizontal_size = 10*abs(lonmax-lonmin)*ncols*self.figsize/360
-        vertical_size = 8*abs(latmax-latmin)*nrows*self.figsize/180
+        horizontal_size = 10 * abs(lonmax - lonmin) * ncols * self.figsize / 360
+        vertical_size = 8 * abs(latmax - latmin) * nrows * self.figsize / 180
 
         if horizontal_size < 8 or vertical_size < 4:
             figsize = 4 if horizontal_size < 4 or vertical_size < 2 else 2
         else:
             figsize = 1
-        self.logger.debug('Size of the plot before auto re-scaling: {}, {}'.format(horizontal_size, vertical_size))
-        self.logger.debug('Size of the plot after auto re-scaling: {}, {}'.format(horizontal_size*figsize,
-                                                                                  vertical_size*figsize))
+        self.logger.debug("Size of the plot before auto re-scaling: {}, {}".format(horizontal_size, vertical_size))
+        self.logger.debug(
+            "Size of the plot after auto re-scaling: {}, {}".format(horizontal_size * figsize, vertical_size * figsize)
+        )
 
-        fig = plt.figure(figsize=(horizontal_size*figsize, vertical_size*figsize))
-        gs = GridSpec(nrows=nrows, ncols=ncols, figure=fig, wspace=0.175, hspace=0.175, width_ratios=[1] * ncols,
-                      height_ratios=[1] * nrows)
+        fig = plt.figure(figsize=(horizontal_size * figsize, vertical_size * figsize))
+        gs = GridSpec(
+            nrows=nrows,
+            ncols=ncols,
+            figure=fig,
+            wspace=0.175,
+            hspace=0.175,
+            width_ratios=[1] * ncols,
+            height_ratios=[1] * nrows,
+        )
         # Add subplots using the grid
         axs = [fig.add_subplot(gs[i, j], projection=ccrs.PlateCarree()) for i in range(nrows) for j in range(ncols)]
-        clevs = self.ticks_for_colorbar(data, vmin=vmin, vmax=vmax, model_variable=self.model_variable,
-                                        number_of_bar_ticks=self.number_of_bar_ticks)
+        clevs = self.ticks_for_colorbar(
+            data, vmin=vmin, vmax=vmax, model_variable=self.model_variable, number_of_bar_ticks=self.number_of_bar_ticks
+        )
 
         if not isinstance(self.cmap, list):
             self.class_attributes_update(cmap=cmap)
             cmap = [self.cmap for _ in range(data_len)]
 
         for i in range(0, data_len):
-            data_cycl, lons = add_cyclic_point(data[i], coord=data[i]['lon'])
-            im1 = axs[i].contourf(lons, data[i]['lat'], data_cycl, clevs, transform=ccrs.PlateCarree(),
-                                  cmap=cmap[i],  extend='both')
-            axs[i].set_title(titles[i], fontsize=self.fontsize+3)
+            data_cycl, lons = add_cyclic_point(data[i], coord=data[i]["lon"])
+            im1 = axs[i].contourf(
+                lons, data[i]["lat"], data_cycl, clevs, transform=ccrs.PlateCarree(), cmap=cmap[i], extend="both"
+            )
+            axs[i].set_title(titles[i], fontsize=self.fontsize + 3)
             axs[i].coastlines()
             # Longitude labels
-            axs[i].set_xticks(np.arange(lonmin, lonmax, int(lonmax-lonmin)/self.number_of_axe_ticks), crs=ccrs.PlateCarree())
+            axs[i].set_xticks(
+                np.arange(lonmin, lonmax, int(lonmax - lonmin) / self.number_of_axe_ticks), crs=ccrs.PlateCarree()
+            )
             axs[i].xaxis.set_major_formatter(cticker.LongitudeFormatter())
             # Longitude labels
-            lon_formatter = StrMethodFormatter('{x:.1f}')  # Adjust the precision as needed
+            lon_formatter = StrMethodFormatter("{x:.1f}")  # Adjust the precision as needed
             axs[i].xaxis.set_major_formatter(lon_formatter)
-            axs[i].tick_params(axis='x', which='major', labelsize=self.fontsize-3)
+            axs[i].tick_params(axis="x", which="major", labelsize=self.fontsize - 3)
 
             # Latitude labels
-            axs[i].set_yticks(np.arange(latmin, latmax, int(latmax-latmin)/self.number_of_axe_ticks), crs=ccrs.PlateCarree())
+            axs[i].set_yticks(
+                np.arange(latmin, latmax, int(latmax - latmin) / self.number_of_axe_ticks), crs=ccrs.PlateCarree()
+            )
             axs[i].yaxis.set_major_formatter(cticker.LatitudeFormatter())
             # Latitude labels
-            lat_formatter = StrMethodFormatter('{x:.1f}')  # Adjust the precision as needed
+            lat_formatter = StrMethodFormatter("{x:.1f}")  # Adjust the precision as needed
             axs[i].yaxis.set_major_formatter(lat_formatter)
-            axs[i].tick_params(axis='y', which='major', labelsize=self.fontsize-3)
+            axs[i].tick_params(axis="y", which="major", labelsize=self.fontsize - 3)
 
             axs[i].grid(True)
-        [axs[-1*i].set_xlabel('Longitude', fontsize=self.fontsize) for i in range(1, ncols+1)]
-        [axs[ncols*i].set_ylabel('Latitude', fontsize=self.fontsize) for i in range(0, nrows)]
+        [axs[-1 * i].set_xlabel("Longitude", fontsize=self.fontsize) for i in range(1, ncols + 1)]
+        [axs[ncols * i].set_ylabel("Latitude", fontsize=self.fontsize) for i in range(0, nrows)]
         # Draw the colorbar
         fig.subplots_adjust(bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.2, hspace=0.5)
         cbar_ax = fig.add_axes([0.2, 0.15, 0.6, 0.02])
 
-        cbar = fig.colorbar(im1, cax=cbar_ax, ticks=clevs, orientation='horizontal', extend='both')
+        cbar = fig.colorbar(im1, cax=cbar_ax, ticks=clevs, orientation="horizontal", extend="both")
         cbar.set_label(cbarlabel, fontsize=self.fontsize)
 
         if plot_title is not None:
-            plt.suptitle(plot_title, fontsize=self.fontsize+3)
+            plt.suptitle(plot_title, fontsize=self.fontsize + 3)
 
         if save and isinstance(path_to_pdf, str):
             self.savefig(path_to_pdf, self.pdf_format)
 
-    def daily_variability_plot(self, data, ymax: float = 12, relative: bool = True, save: bool = True,
-                               legend: str = '_Hidden', figsize: float = None, linestyle: str = None, color: str = 'tab:blue',
-                               model_variable: str = None, loc: str = 'upper right', fontsize: int = None,
-                               add: Optional[Tuple] = None, fig: Optional[object] = None, plot_title: str = None,
-                               path_to_pdf: str = None, pdf_format: bool = True):
+    def daily_variability_plot(
+        self,
+        data,
+        ymax: float = 12,
+        relative: bool = True,
+        save: bool = True,
+        legend: str = "_Hidden",
+        figsize: float = None,
+        linestyle: str = None,
+        color: str = "tab:blue",
+        model_variable: str = None,
+        loc: str = "upper right",
+        fontsize: int = None,
+        add: Optional[Tuple] = None,
+        fig: Optional[object] = None,
+        plot_title: str = None,
+        path_to_pdf: str = None,
+        pdf_format: bool = True,
+    ):
         """
         Plot the daily variability of the dataset.
 
@@ -674,57 +846,55 @@ class PlottingClass:
         Returns:
             list: A list containing the figure and axis objects.
         """
-        self.class_attributes_update(pdf_format=pdf_format, figsize=figsize, fontsize=fontsize,
-                                     model_variable=model_variable)
+        self.class_attributes_update(pdf_format=pdf_format, figsize=figsize, fontsize=fontsize, model_variable=model_variable)
         if fig is not None:
             fig, ax = fig
         elif add is None and fig is None:
-            fig, ax = plt.subplots(figsize=(8*self.figsize, 5*self.figsize))
+            fig, ax = plt.subplots(figsize=(8 * self.figsize, 5 * self.figsize))
         elif add is not None:
             fig, ax = add
 
-        grouped = data.groupby('local_time')
+        grouped = data.groupby("local_time")
         mean_per_hour = grouped.mean()
-        
-        data['local_time'].values = data['local_time'].astype(int).values
-        grouped_smooth = data.groupby('local_time')
+
+        data["local_time"].values = data["local_time"].astype(int).values
+        grouped_smooth = data.groupby("local_time")
         mean_per_hour_smooth = grouped_smooth.mean()
-        
-        utc_time = mean_per_hour['local_time']
-        utc_time_smooth = mean_per_hour_smooth['local_time']
+
+        utc_time = mean_per_hour["local_time"]  # noqa: F841
+        utc_time_smooth = mean_per_hour_smooth["local_time"]
         if relative:
-            tprate = mean_per_hour['tprate_relative']
-            tprate_smooth = mean_per_hour_smooth['tprate_relative']
+            tprate = mean_per_hour["tprate_relative"]  # noqa: F841
+            tprate_smooth = mean_per_hour_smooth["tprate_relative"]
         else:
-            tprate = mean_per_hour[self.model_variable]
+            tprate = mean_per_hour[self.model_variable]  # noqa: F841
             tprate_smooth = mean_per_hour_smooth[self.model_variable]
         try:
             units = mean_per_hour.units
         except AttributeError:
             units = mean_per_hour.tprate.units
 
-        #plt.plot(utc_time, tprate, color=color, linestyle=self.linestyle, alpha=0.25)
-        plt.plot(utc_time_smooth, tprate_smooth, color=color, label=legend, linestyle=self.linestyle,
-                 linewidth=1*self.linewidth)
+        # plt.plot(utc_time, tprate, color=color, linestyle=self.linestyle, alpha=0.25)
+        plt.plot(
+            utc_time_smooth, tprate_smooth, color=color, label=legend, linestyle=self.linestyle, linewidth=1 * self.linewidth
+        )
         if plot_title is None:
             if relative:
-                plt.suptitle(
-                    'Relative Value of Daily Precipitation Variability', fontsize=self.fontsize+1)
-                plt.ylabel('relative tprate', fontsize=self.fontsize-2)
+                plt.suptitle("Relative Value of Daily Precipitation Variability", fontsize=self.fontsize + 1)
+                plt.ylabel("relative tprate", fontsize=self.fontsize - 2)
             else:
-                plt.suptitle('Daily Precipitation Variability', fontsize=self.fontsize+1)
-                plt.ylabel('tprate variability, '+units, fontsize=self.fontsize-2)
-                
+                plt.suptitle("Daily Precipitation Variability", fontsize=self.fontsize + 1)
+                plt.ylabel("tprate variability, " + units, fontsize=self.fontsize - 2)
+
         else:
-            plt.suptitle(plot_title, fontsize=self.fontsize+3)
+            plt.suptitle(plot_title, fontsize=self.fontsize + 3)
 
         plt.grid(True)
-        plt.xlim([0-0.2,24+0.2])
-        plt.xlabel('Local time', fontsize=self.fontsize-2)
+        plt.xlim([0 - 0.2, 24 + 0.2])
+        plt.xlabel("Local time", fontsize=self.fontsize - 2)
 
-        if legend != '_Hidden':
-            plt.legend(loc=loc,
-                       fontsize=self.fontsize-2, ncol=2)
+        if legend != "_Hidden":
+            plt.legend(loc=loc, fontsize=self.fontsize - 2, ncol=2)
 
         if save and isinstance(path_to_pdf, str):
             path_to_pdf = self.savefig(path_to_pdf, self.pdf_format)

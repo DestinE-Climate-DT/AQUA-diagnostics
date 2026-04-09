@@ -1,6 +1,8 @@
 import gc
 import sys
+
 import xarray as xr
+
 from .base import BaseMixin
 
 # import pandas as pd
@@ -10,7 +12,7 @@ from .base import BaseMixin
 xr.set_options(keep_attrs=True)
 
 
-class sshVariabilityCompute(BaseMixin):
+class SshVariabilityCompute(BaseMixin):
     """
     SSH Computation
     """
@@ -40,7 +42,7 @@ class sshVariabilityCompute(BaseMixin):
         loglevel: str = "WARNING",
     ):
         """
-        Initialize the 'sshVariabilityCompute' class.
+        Initialize the 'SshVariabilityCompute' class.
 
         This class is designed to load an xarray.Dataset and computes STD.
         Args:
@@ -52,8 +54,10 @@ class sshVariabilityCompute(BaseMixin):
             It is important to give these dates and input. Otherwise the whole dataset is retrieved.
             startdate (str): Start date.
             enddate  (str): End date.
-            freq (str): Frequency of the data. In the TODO list. This becomes important when implementing the 'variance of the variances formula'.
-            region (str): For subregion selection. Default is 'None'. In case of sub-region STD computation, this variable is mandatory.
+            freq (str): Frequency of the data. In the TODO list. This becomes important when
+                implementing the 'variance of the variances formula'.
+            region (str): For subregion selection. Default is 'None'.
+                In case of sub-region STD computation, this variable is mandatory.
             regrid (str): Regrid option for the data. NOTE: the regridding will be applied before computing the STD.
             If 'lon_limits' and 'lat_limits' are None, they are taken from region file in AQUA.
             lon_limits (list[float]): list of lon limits. Default is 'None'.
@@ -71,11 +75,12 @@ class sshVariabilityCompute(BaseMixin):
         Keyword Args:
             zoom (int, optional): HEALPix grid zoom level (e.g. zoom=10 is h1024). Allows for multiple gridname definitions.
             realization (int, optional): The ensemble realization number, included in the output filename.
-            **kwargs: Additional arbitrary keyword arguments to be passed as additional parameters to the intake catalog entry.
+            **kwargs: Additional arbitrary keyword arguments to be passed as additional parameters to the intake catalog entry
 
         """
         # TODO:
-        #   If the catalog entry of the output exists retrieve that data and check the regridding option for the data, i.e., Retrieve the data if the STD file already exits.
+        #   If the catalog entry of the output exists retrieve that data and check the regridding
+        #   option for the data, i.e., Retrieve the data if the STD file already exits.
         #   Implement the technique: "Variance of Variances fomula" for computing STD.
         #   Include information about freq of the data.
         #   The STD is computed using xarray.std(dim="time"). Test if this works for the native grids.
@@ -121,7 +126,7 @@ class sshVariabilityCompute(BaseMixin):
 
         super().retrieve()
         if self.data is None:
-            raise ValueError(f"Variable {self.var} not found in the data. " "Check the variable name and the data source.")
+            raise ValueError(f"Variable {self.var} not found in the data. Check the variable name and the data source.")
         try:
             # b)
             # Compute STD

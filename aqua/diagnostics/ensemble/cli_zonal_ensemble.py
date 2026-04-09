@@ -5,20 +5,21 @@ Command-line interface for ensemble zonalmean diagnostic.
 This CLI allows to plot a map of aqua analysis zonalmean
 defined in a yaml configuration file for multiple models.
 """
+
 import argparse
 import sys
 
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg
 from aqua.diagnostics import EnsembleZonal, PlotEnsembleZonal, reader_retrieve_and_merge
 from aqua.diagnostics.base import (
+    SAVE_FORMAT,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
     open_cluster,
     template_parse_arguments,
 )
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
 
 
 def parse_arguments(args):
@@ -33,7 +34,6 @@ def parse_arguments(args):
 
 
 if __name__ == "__main__":
-
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
@@ -62,8 +62,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     # rebuild = config_dict['output'].get('rebuild', True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_pdf = config_dict["output"].get("save_pdf", True)
-    save_png = config_dict["output"].get("save_png", True)
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     # dpi = config_dict["output"].get("dpi", 300)
 
     # EnsembleZonal diagnostic
@@ -73,7 +72,6 @@ if __name__ == "__main__":
 
             for variable in config_dict["diagnostics"]["ensemble"].get("variable", None):
                 for region in config_dict["diagnostics"]["ensemble"].get("region", None):
-
                     logger.info(f"Variable under consideration: {variable}")
                     title_mean = config_dict["diagnostics"]["ensemble"]["plot_params"]["default"].get("title_mean", None)
                     title_std = config_dict["diagnostics"]["ensemble"]["plot_params"]["default"].get("title_std", None)
@@ -141,8 +139,7 @@ if __name__ == "__main__":
 
                     # PlotEnsembleLatLon plot options
                     plot_arguments = {
-                        "save_pdf": save_pdf,
-                        "save_png": save_png,
+                        "save_format": save_format,
                         "var": variable,
                         "cbar_label": None,
                     }

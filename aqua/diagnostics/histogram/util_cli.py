@@ -1,8 +1,9 @@
 """Utility functions for the Histogram CLI."""
 
-def load_var_config(config_dict, var, diagnostic='histogram'):
+
+def load_var_config(config_dict, var, diagnostic="histogram"):
     """Load variable configuration from config dictionary.
-    
+
     Args:
         config_dict (dict): Configuration dictionary.
         var (str or dict): Variable name or variable configuration dictionary.
@@ -14,14 +15,14 @@ def load_var_config(config_dict, var, diagnostic='histogram'):
     if isinstance(var, dict):
         var_config = var
     else:
-        default_vars = config_dict.get('diagnostics', {}).get(diagnostic, {}).get('default_variables', {})
-        var_config = default_vars.get(var, {'name': var})
-    
+        default_vars = config_dict.get("diagnostics", {}).get(diagnostic, {}).get("default_variables", {})
+        var_config = default_vars.get(var, {"name": var})
+
     # Ensure 'name' key exists
-    if 'name' not in var_config:
-        var_config['name'] = var
-    
+    if "name" not in var_config:
+        var_config["name"] = var
+
     # Get regions
-    regions = var_config.get('regions', [None])
-    
+    regions = var_config.get("regions", [None])
+
     return var_config, regions

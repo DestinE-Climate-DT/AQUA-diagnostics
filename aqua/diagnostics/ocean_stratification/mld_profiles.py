@@ -2,22 +2,21 @@
 Module to plot multiple maps
 
 """
-import numpy as np
-import xarray as xr
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
+import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from typing import Optional, Tuple
 
-from aqua.core.logger import log_configure
-from aqua.core.util import (
-    plot_box,
-    evaluate_colorbar_limits,
-    cbar_get_label,
-    generate_colorbar_ticks,
-)
 from aqua.core.graphics import plot_single_map
 from aqua.core.graphics.styles import ConfigStyle
+from aqua.core.logger import log_configure
+from aqua.core.util import (
+    cbar_get_label,
+    evaluate_colorbar_limits,
+    generate_colorbar_ticks,
+    plot_box,
+)
 
 
 def plot_maps(
@@ -109,9 +108,7 @@ def plot_maps(
         cbar = False
 
     # Adjust the location of the subplots on the page to make room for the colorbar
-    fig.subplots_adjust(
-        bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.1, hspace=0.5
-    )
+    fig.subplots_adjust(bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.1, hspace=0.5)
 
     for i in range(len(maps)):
         if cbar_number == "separate":
@@ -183,21 +180,16 @@ def plot_maps(
             )
             cbar.set_ticks(cbar_ticks)
     if cbar_number == "single":
-
         # Add a colorbar axis at the bottom of the graph
         cbar_ax = fig.add_axes([0.2, 0.15, 0.6, 0.03])
 
-        cbar_label = cbar_get_label(
-            data=maps[0], cbar_label=cbar_label, loglevel=loglevel
-        )
+        cbar_label = cbar_get_label(data=maps[0], cbar_label=cbar_label, loglevel=loglevel)
         logger.debug("Setting colorbar label to %s", cbar_label)
 
         # Add the colorbar
         mappable = ax.collections[0]
-        if cbar == True:
-            cbar = fig.colorbar(
-                mappable, cax=cbar_ax, orientation="horizontal", label=cbar_label
-            )
+        if cbar:
+            cbar = fig.colorbar(mappable, cax=cbar_ax, orientation="horizontal", label=cbar_label)
             # cbar.set_ticks([vmin, vmax])  # Only show min and max
             cbar_ticks_rounding = kwargs.get("cbar_ticks_rounding", None)
             cbar_ticks = generate_colorbar_ticks(

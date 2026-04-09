@@ -14,17 +14,18 @@ import argparse
 import sys
 
 import xarray as xr
+
+from aqua.core.logger import log_configure
+from aqua.core.util import get_arg
 from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries, reader_retrieve_and_merge
 from aqua.diagnostics.base import (
+    SAVE_FORMAT,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
     open_cluster,
     template_parse_arguments,
 )
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.version import __version__ as aqua_version
 
 
 def parse_arguments(args):
@@ -39,7 +40,6 @@ def parse_arguments(args):
 
 
 if __name__ == "__main__":
-
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
@@ -68,8 +68,7 @@ if __name__ == "__main__":
     outputdir = config_dict["output"].get("outputdir", "./")
     # rebuild = config_dict['output'].get('rebuild', True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_pdf = config_dict["output"].get("save_pdf", True)
-    save_png = config_dict["output"].get("save_png", True)
+    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
     # dpi = config_dict['output'].get('dpi', 300)
 
     # EnsembleTimeseries diagnostic
@@ -205,22 +204,22 @@ if __name__ == "__main__":
                 # annual_ref_data = reader.retrieve(var=variable)
 
                 # Monthly reference data
-                ERA5_monthly = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_mon.nc"
+                ERA5_monthly = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_mon.nc"  # noqa: E501
                 monthly_ref_data = xr.open_dataset(
                     ERA5_monthly,
                     drop_variables=[var for var in xr.open_dataset(ERA5_monthly).data_vars if var != variable],
                 )
                 # selection ERA5 data on the same time interval -> xarray.DataArray
-                # monthly_ref_data = monthly_ref_data[variable].sel(time=slice(monthly_dataset.time[0], monthly_dataset.time[-1]))
+                # monthly_ref_data = monthly_ref_data[variable].sel(time=slice(monthly_dataset.time[0], monthly_dataset.time[-1])) # noqa: E501
                 monthly_ref_data = monthly_ref_data[variable].sel(time=slice(startdate_ref, enddate_ref))
                 # Annual reference data
-                ERA5_annual = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_ann.nc"
+                ERA5_annual = "/work/ab0995/a270260/pre_computed_aqua_analysis/IFS-FESOM/historical-1990/global_time_series/netcdf/global_time_series_timeseries_2t_ERA5_era5_ann.nc"  # noqa: E501
                 annual_ref_data = xr.open_dataset(
                     ERA5_annual,
                     drop_variables=[var for var in xr.open_dataset(ERA5_annual).data_vars if var != variable],
                 )
                 # selection ERA5 data on the same time interval -> xarray.DataArray
-                # annual_ref_data = annual_ref_data[variable].sel(time=slice(annual_dataset.time[0], annual_dataset.time[-1]))
+                # annual_ref_data = annual_ref_data[variable].sel(time=slice(annual_dataset.time[0], annual_dataset.time[-1])) # noqa: E501
                 annual_ref_data = annual_ref_data[variable].sel(time=slice(startdate_ref, enddate_ref))
 
                 # Check if we need monthly and annual time variables
@@ -267,8 +266,7 @@ if __name__ == "__main__":
                     "annual_data_std": ts.annual_data_std,
                     "ref_monthly_data": monthly_ref_data,
                     "ref_annual_data": annual_ref_data,
-                    "save_pdf": save_pdf,
-                    "save_png": save_png,
+                    "save_format": save_format,
                     "plot_ensemble_members": plot_ensemble_members,
                     "title": title,
                     "startdate": ts.monthly_data.time.isel(time=0).values,

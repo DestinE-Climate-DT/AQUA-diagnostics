@@ -23,7 +23,7 @@ There is one class for the analysis and one for the plotting:
 
 .. note::
 
-The standard deviation is computed point-wise along the time axis.  
+The standard deviation is computed point-wise along the time axis.
 A reference time series can also be added to the plot.
 
 * **PlotEnsembleTimeseries**: provides methods for plotting time series with ensemble mean and ±2 standard deviation envelope.
@@ -39,9 +39,9 @@ File structure
 Input variables and datasets
 ----------------------------
 
-Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via 
+Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via
 ``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. The final merged dataset will contain all the requested ensemble members with appropriate metadata.
-Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``. 
+Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``.
 The merged dataset must contain all ensemble members concatenated along a pseudo-dimension named ``ensemble`` (by default, but customizable).
 
 A variable that is typically used in this diagnostic is:
@@ -87,7 +87,7 @@ Example: loading via the AQUA Reader
 Basic usage
 -----------
 
-The basic usage of this diagnostic is explained with a working example in the notebook. 
+The basic usage of this diagnostic is explained with a working example in the notebook.
 The ensemble analysis is performed on merged ``1D`` timeseries by ``EnsembleTimeseries`` class.
 The basic structure is the following:
 
@@ -127,7 +127,7 @@ The basic structure is the following:
 .. note::
 
     Start/end dates and reference dataset can be customized.
-    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory. 
+    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
 
 CLI usage
 ---------
@@ -221,7 +221,7 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 .. figure:: figures/ensemble_time_series_timeseries_2t.png
     :align: center
     :width: 100%
-    
+
     Ensemble of multi-model global monthly and annual timeseries and compared with ERA5 global monthly and annual average. Models considered as IFS-NEMO and IFS-FESOM.
 
 Available demo notebooks
@@ -234,8 +234,8 @@ Notebooks are stored in the ``notebooks/diagnostics/ensemble`` directory and con
 Authors and contributors
 ------------------------
 
-This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_). 
-Contributions are welcome — please open an issue or a pull request.  
+This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
+Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
 
 Detailed API
@@ -246,4 +246,3 @@ produced from the diagnostic function docstrings.
 
 .. note::
    WORK IN PROGRESS
-
