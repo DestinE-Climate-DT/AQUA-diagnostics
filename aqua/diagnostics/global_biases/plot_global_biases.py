@@ -3,8 +3,7 @@ import numpy as np
 
 from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
-
-from aqua.core.util import get_projection, get_realizations, unit_to_latex, time_to_string
+from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .stat_global_biases import StatGlobalBiases
@@ -203,8 +202,10 @@ class PlotGlobalBiases:
 
         description = (
             f"Spatial map of the climatology for {data[var].attrs.get('long_name', var).lower()}"
-            f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''}"
-            f" from {time_to_string(data.startdate, format='%Y-%m')} to {time_to_string(data.enddate, format='%Y-%m')} for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
+            f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
+            f"from {time_to_string(data.startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.enddate, format='%Y-%m')} "
+            f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
         )
 
         if self.format_to_save:
@@ -304,8 +305,10 @@ class PlotGlobalBiases:
         description = (
             f"Climatology of {data[var].attrs.get('long_name', var).lower()}"
             f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"for {data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.startdate, format='%Y-%m')} to {time_to_string(data.enddate, format='%Y-%m')}, contours) "
-            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.startdate, format='%Y-%m')} to {time_to_string(data_ref.enddate, format='%Y-%m')}, shading)."
+            f"for {data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.enddate, format='%Y-%m')}, contours) "
+            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.startdate, format='%Y-%m')} "
+            f"to {time_to_string(data_ref.enddate, format='%Y-%m')}, shading)."
         )
 
         # Add significance stippling if requested
@@ -449,19 +452,19 @@ class PlotGlobalBiases:
         ).generate()
 
         plot_kwargs = {
-            'maps': [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
-            'proj': get_projection(proj, **proj_params),
-            'return_fig': True,
-            'title': title,
-            'title_size': 16,
-            'titles': season_list,
-            'titles_size': 14,
-            'figsize':(10, 8),
-            'contour': True,
-            'sym': sym,
-            'cbar_label': cbar_label,
-            'cmap': self.cmap,
-            'loglevel': self.loglevel
+            "maps": [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
+            "proj": get_projection(proj, **proj_params),
+            "return_fig": True,
+            "title": title,
+            "title_size": 16,
+            "titles": season_list,
+            "titles_size": 14,
+            "figsize": (10, 8),
+            "contour": True,
+            "sym": sym,
+            "cbar_label": cbar_label,
+            "cmap": self.cmap,
+            "loglevel": self.loglevel,
         }
 
         if vmin is not None:
@@ -474,8 +477,10 @@ class PlotGlobalBiases:
         description = (
             f"Seasonal climatology of {data[var].attrs.get('long_name', var).lower()}"
             f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"for {data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.startdate, format='%Y-%m')} to {time_to_string(data.enddate, format='%Y-%m')}, contours) "
-            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.startdate, format='%Y-%m')} to {time_to_string(data_ref.enddate, format='%Y-%m')}, shading)."
+            f"for {data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.enddate, format='%Y-%m')}, contours) "
+            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.startdate, format='%Y-%m')} "
+            f"to {time_to_string(data_ref.enddate, format='%Y-%m')}, shading)."
         )
 
         if self.format_to_save:
@@ -539,8 +544,10 @@ class PlotGlobalBiases:
 
         description = (
             f"Vertical cross-section of {data[var].attrs.get('long_name', var).lower()} for "
-            f"{data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.startdate, format='%Y-%m')} to {time_to_string(data.enddate, format='%Y-%m')}, contours) "
-            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.startdate, format='%Y-%m')} to {time_to_string(data_ref.enddate, format='%Y-%m')}, shading)."
+            f"{data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.enddate, format='%Y-%m')}, contours) "
+            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.startdate, format='%Y-%m')} "
+            f"to {time_to_string(data_ref.enddate, format='%Y-%m')}, shading)."
         )
 
         fig, ax = plot_vertical_profile_diff(
