@@ -10,8 +10,8 @@ from conftest import LOGLEVEL
 
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.util import dump_yaml
-from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base import (
+    Diagnostic,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
@@ -246,7 +246,7 @@ def test_minimum_months_enough(mock_reader_class):
 
 def test_minimum_months_required_class_attribute():
     """Concrete diagnostics expose MINIMUM_MONTHS_REQUIRED as a positive int class attribute."""
-    #LatLonProfiles is selected since is one of the easiest diagnostics on this perspective
+    # LatLonProfiles is selected since is one of the easiest diagnostics on this perspective
     assert hasattr(LatLonProfiles, "MINIMUM_MONTHS_REQUIRED")
     assert isinstance(LatLonProfiles.MINIMUM_MONTHS_REQUIRED, int)
     assert LatLonProfiles.MINIMUM_MONTHS_REQUIRED > 0
