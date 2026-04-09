@@ -1,4 +1,5 @@
-""" PlotSeaIce doc """
+"""PlotSeaIce doc"""
+
 from collections import defaultdict
 from typing import Union
 
@@ -13,6 +14,7 @@ from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from .util import _check_list_regions_type, defaultdict_to_dict, extract_dates
 
 xr.set_options(keep_attrs=True)
+
 
 class PlotSeaIce:
     """
@@ -46,19 +48,29 @@ class PlotSeaIce:
         loglevel (str, optional): Logging level for debugging and information messages. Defaults to 'WARNING'.
     """
 
-    def __init__(self, monthly_models=None, annual_models=None,
-                 monthly_ref=None, annual_ref=None,
-                 monthly_std_ref: str = None, annual_std_ref: str = None,
-                 model: str = None, exp: str = None, source: str = None, catalog: str = None,
-                 regions_to_plot: list = ['Arctic', 'Antarctic'], # this is a list of strings with the region names to plot
-                 outputdir='./',
-                 rebuild=True,
-                 filename_keys=None,  # List of keys to keep in the filename. Default is None, which includes all keys.
-                 dpi=300, loglevel='WARNING'):
+    def __init__(
+        self,
+        monthly_models=None,
+        annual_models=None,
+        monthly_ref=None,
+        annual_ref=None,
+        monthly_std_ref: str = None,
+        annual_std_ref: str = None,
+        model: str = None,
+        exp: str = None,
+        source: str = None,
+        catalog: str = None,
+        regions_to_plot: list = ["Arctic", "Antarctic"],  # this is a list of strings with the region names to plot
+        outputdir="./",
+        rebuild=True,
+        filename_keys=None,  # List of keys to keep in the filename. Default is None, which includes all keys.
+        dpi=300,
+        loglevel="WARNING",
+    ):
 
         # logging setup
         self.loglevel = loglevel
-        self.logger = log_configure(log_level=self.loglevel, log_name='PlotSeaIce')
+        self.logger = log_configure(log_level=self.loglevel, log_name="PlotSeaIce")
 
         self.model = model
         self.exp = exp
@@ -71,32 +83,32 @@ class PlotSeaIce:
         if isinstance(first_ds, xr.Dataset):
             attrs = first_ds.attrs
             if self.catalog is None:
-                self.catalog = attrs.get('AQUA_catalog')
+                self.catalog = attrs.get("AQUA_catalog")
             if self.model is None:
-                self.model = attrs.get('AQUA_model')
+                self.model = attrs.get("AQUA_model")
             if self.exp is None:
-                self.exp = attrs.get('AQUA_exp')
+                self.exp = attrs.get("AQUA_exp")
 
-        self.realizations = get_realizations(monthly_models) # TO BE UPDATED when also annual analysis will be implemented
-
+        self.realizations = get_realizations(monthly_models)  # TO BE UPDATED when also annual analysis will be implemented
 
         self.regions_to_plot = _check_list_regions_type(regions_to_plot, logger=self.logger)
 
         # define and check data types
-        self.repacked_dict = self.repack_datasetlists(monthly_models=monthly_models,
-                                                      annual_models=annual_models,
-                                                      monthly_ref=monthly_ref,
-                                                      annual_ref=annual_ref,
-                                                      monthly_std_ref=monthly_std_ref,
-                                                      annual_std_ref=annual_std_ref)
+        self.repacked_dict = self.repack_datasetlists(
+            monthly_models=monthly_models,
+            annual_models=annual_models,
+            monthly_ref=monthly_ref,
+            annual_ref=annual_ref,
+            monthly_std_ref=monthly_std_ref,
+            annual_std_ref=annual_std_ref,
+        )
         # Output & saving settings
         self.outputdir = outputdir
         self.rebuild = rebuild
         self.dpi = dpi
 
-
-    def _check_as_datasets_list(self, datain) -> list[xr.Dataset | None] :
-        """ Check that the input (`datain`) is either:
+    def _check_as_datasets_list(self, datain) -> list[xr.Dataset | None]:
+        """Check that the input (`datain`) is either:
             - A single `xarray.Dataset` (which is converted into a list).
             - A list of `xarray.Dataset` objects (which may contain None values).
             - `None` (which is returned as is).
@@ -113,7 +125,6 @@ class PlotSeaIce:
             return datain
         else:
             raise ValueError(f"Invalid type: {type(datain)}. Expected xr.Dataset, list of xr.Dataset, or None.")
-
 
     def _get_region_name_in_datarray(self, da: xr.DataArray) -> str:
         """
@@ -142,11 +153,12 @@ class PlotSeaIce:
                 region_from_name = var_name.split("_")[-1].capitalize()
                 return region_from_name
             else:
-                errmsg = (f"Dataset {da.attrs.get('name', 'Unnamed Dataset')} has no 'region' attribute "
-                          f"and region could not be derived from the variable name.")
+                errmsg = (
+                    f"Dataset {da.attrs.get('name', 'Unnamed Dataset')} has no 'region' attribute "
+                    f"and region could not be derived from the variable name."
+                )
                 self.logger.error(errmsg)
                 raise KeyError(errmsg)
-
 
     def repack_datasetlists(self, **kwargs) -> dict:
         """
@@ -206,7 +218,6 @@ class PlotSeaIce:
         self.logger.info("Sea ice data repacked")
         return repacked_dict
 
-
     def _gen_str_from_attributes(self, datain: xr.DataArray | None) -> str:
         """
         Generate a string from the attributes of the input data.
@@ -228,7 +239,6 @@ class PlotSeaIce:
 
         # join the strs to make label
         return " ".join(str(datain.attrs[attr]) for attr in required_attrs if attr in datain.attrs)
-
 
     def _gen_labelname(self, datain: xr.DataArray | list[xr.DataArray] | None) -> str | list[str] | None:
         """Extract 'model', 'exp', 'source', and 'catalog' from attributes in input data and
@@ -252,7 +262,6 @@ class PlotSeaIce:
             return self._gen_str_from_attributes(datain)
         if isinstance(datain, list) and all(isinstance(da, xr.DataArray) for da in datain):
             return [self._gen_str_from_attributes(da) for da in datain]
-
 
     def _getdata_fromdict(self, data_dict: dict, dkey: str) -> xr.DataArray | list[xr.DataArray] | None:
         """Retrieves data from a dictionary and returns either None, a single DataArray or a list of them
@@ -286,7 +295,6 @@ class PlotSeaIce:
         self.logger.info(f"Returning 'None' for key: {dkey}")
         return None
 
-
     def _update_description(self, method, region, data_dict, region_idx):
         """
         Create the caption description from attributes returning the updated string
@@ -298,8 +306,8 @@ class PlotSeaIce:
             region_idx (int): The index of the region.
         """
         # initialise string if _description doesn't exist
-        if not hasattr(self, '_description'):
-            self._description = ''
+        if not hasattr(self, "_description"):
+            self._description = ""
 
         # generate dynamic string for regions
         if not hasattr(self, "regions"):
@@ -316,7 +324,7 @@ class PlotSeaIce:
             unique_labels = list(dict.fromkeys(self.data_labels))
 
             # extract model data from current dictionary
-            model_data_dict = self._getdata_fromdict(data_dict, 'monthly_models')
+            model_data_dict = self._getdata_fromdict(data_dict, "monthly_models")
 
             # Build per-model date string
             model_startdate_list = []
@@ -331,7 +339,7 @@ class PlotSeaIce:
             # build the model data string
             self.model_labels_str = f"{strlist_to_phrase(model_startdate_list)} "
         else:
-            self.model_labels_str = ''
+            self.model_labels_str = ""
 
         # generate dynamic string for reference data
         monthly_ref_data = self._getdata_fromdict(data_dict, 'monthly_ref')
@@ -357,21 +365,23 @@ class PlotSeaIce:
             if len(self.ref_label_list) == 1:
                 self.ref_label_str = f" {self.ref_label_list[0]} is used as a reference."
             elif len(self.ref_label_list) == 2:
-                self.ref_label_str = (f" {self.ref_label_list[0]} and {self.ref_label_list[1]} "
-                                      f"are used as reference data for the respective regions.")
+                self.ref_label_str = (
+                    f" {self.ref_label_list[0]} and {self.ref_label_list[1]} "
+                    f"are used as reference data for the respective regions."
+                )
             else:
                 ref_labels_str = ", ".join(self.ref_label_list[:-1]) + f", and {self.ref_label_list[-1]}"
                 self.ref_label_str = f" {ref_labels_str} are used as references."
         else:
-            self.ref_label_str = ''
+            self.ref_label_str = ""
 
         # generate string for reference std data
         if hasattr(self, "std_label") and self.std_label:
-            sdtdata = self._getdata_fromdict(data_dict,'monthly_std_ref')
+            sdtdata = self._getdata_fromdict(data_dict, "monthly_std_ref")
             std_sdate, std_edate = extract_dates(sdtdata[0])
             self.std_label_str = f" Shaded areas represent ±2σ uncertainty bands (from {std_sdate} to {std_edate})."
         else:
-            self.std_label_str = ''
+            self.std_label_str = ""
 
         # generate plot type name
         if hasattr(self, "plot_type") and self.plot_type:
@@ -380,7 +390,7 @@ class PlotSeaIce:
             elif self.plot_type == 'timeseries':
                 pl_type = 'Time series of '
             else:
-                pl_type = ''
+                pl_type = ""
 
         # finally build the string caption (dynamically)
         self._description = ('{}sea ice {} integrated over {}for {}{}{}').format(pl_type, method,
@@ -405,24 +415,22 @@ class PlotSeaIce:
 
         self.num_regions = len(region_dict)
 
-        fig_height = 6 if self.plot_type == 'seasonalcycle' else 10
+        fig_height = 6 if self.plot_type == "seasonalcycle" else 10
 
-        fig, axes = plt.subplots(nrows=self.num_regions, ncols=1,
-                                 figsize=(fig_height, 4 * self.num_regions), squeeze=False)
+        fig, axes = plt.subplots(nrows=self.num_regions, ncols=1, figsize=(fig_height, 4 * self.num_regions), squeeze=False)
         axes = axes.flatten()
 
         self.logger.debug("Start looping over sea ice regions")
 
         for region_idx, (ax, (region, data_dict)) in enumerate(zip(axes, region_dict.items())):
-
             self.logger.info(f"Processing {self.plot_type} for region: {region}")
 
-            monthly_models = self._getdata_fromdict(data_dict, 'monthly_models')
-            annual_models  = self._getdata_fromdict(data_dict, 'annual_models')
-            monthly_ref    = self._getdata_fromdict(data_dict, 'monthly_ref')
-            annual_ref     = self._getdata_fromdict(data_dict, 'annual_ref')
-            monthly_std    = self._getdata_fromdict(data_dict, 'monthly_std_ref')
-            annual_std     = self._getdata_fromdict(data_dict, 'annual_std_ref')
+            monthly_models = self._getdata_fromdict(data_dict, "monthly_models")
+            annual_models = self._getdata_fromdict(data_dict, "annual_models")
+            monthly_ref = self._getdata_fromdict(data_dict, "monthly_ref")
+            annual_ref = self._getdata_fromdict(data_dict, "annual_ref")
+            monthly_std = self._getdata_fromdict(data_dict, "monthly_std_ref")
+            annual_std = self._getdata_fromdict(data_dict, "annual_std_ref")
 
             # create labels
             if monthly_models is not None:
@@ -433,30 +441,34 @@ class PlotSeaIce:
             self.std_label = self._gen_labelname(monthly_std)
 
             # call the appropriate plotting function
-            if self.plot_type == 'timeseries':
-                fig, ax = plot_timeseries(monthly_data=monthly_models,
-                                          annual_data=annual_models,
-                                          ref_monthly_data=monthly_ref,
-                                          ref_annual_data=annual_ref,
-                                          std_monthly_data=monthly_std,
-                                          std_annual_data=annual_std,
-                                          data_labels=self.data_labels,
-                                          ref_label=self.ref_label,
-                                          style=style,
-                                          fig=fig,
-                                          ax=ax,
-                                          **kwargs)
+            if self.plot_type == "timeseries":
+                fig, ax = plot_timeseries(
+                    monthly_data=monthly_models,
+                    annual_data=annual_models,
+                    ref_monthly_data=monthly_ref,
+                    ref_annual_data=annual_ref,
+                    std_monthly_data=monthly_std,
+                    std_annual_data=annual_std,
+                    data_labels=self.data_labels,
+                    ref_label=self.ref_label,
+                    style=style,
+                    fig=fig,
+                    ax=ax,
+                    **kwargs,
+                )
 
-            elif self.plot_type == 'seasonalcycle':
-                fig, ax = plot_seasonalcycle(data=monthly_models,
-                                             ref_data=monthly_ref,
-                                             std_data=monthly_std,
-                                             data_labels=self.data_labels,
-                                             ref_label=self.ref_label,
-                                             style=style,
-                                             fig=fig,
-                                             ax=ax,
-                                             **kwargs)
+            elif self.plot_type == "seasonalcycle":
+                fig, ax = plot_seasonalcycle(
+                    data=monthly_models,
+                    ref_data=monthly_ref,
+                    std_data=monthly_std,
+                    data_labels=self.data_labels,
+                    ref_label=self.ref_label,
+                    style=style,
+                    fig=fig,
+                    ax=ax,
+                    **kwargs,
+                )
             else:
                 raise ValueError(f"Unknown plot_type function name: {self.plot_type}")
 
@@ -467,10 +479,9 @@ class PlotSeaIce:
 
         return fig, axes
 
-
-    def plot_seaice(self, plot_type: str = 'timeseries',
-                    save_format: Union[str, list] = SAVE_FORMAT,
-                    style: str = None, **kwargs):
+    def plot_seaice(
+        self, plot_type: str = "timeseries", save_format: Union[str, list] = SAVE_FORMAT, style: str = None, **kwargs
+    ):
         """
         Plot sea ice data for each region, either as timeseries or seasonal cycle.
 
@@ -485,13 +496,12 @@ class PlotSeaIce:
         self.plot_type = plot_type
         self.logger.info(f"Plotting sea ice {self.plot_type}")
 
-        valid_type_plots = ['timeseries', 'seasonalcycle']
+        valid_type_plots = ["timeseries", "seasonalcycle"]
 
         if self.plot_type not in valid_type_plots:
             raise ValueError(f"Invalid plot_type. Allowed plots are: {valid_type_plots}")
 
         for method, region_dict in self.repacked_dict.items():
-
             self.method = method
             self.logger.info(f"Processing method: {self.method}")
 
@@ -506,9 +516,7 @@ class PlotSeaIce:
 
             self.save_fig(fig, save_format, metadata=metadata, region_dict=region_dict)
 
-
-    def save_fig(self, fig, save_format: Union[str, list] = SAVE_FORMAT,
-                 metadata: dict = None, region_dict: dict = None):
+    def save_fig(self, fig, save_format: Union[str, list] = SAVE_FORMAT, metadata: dict = None, region_dict: dict = None):
         """
         Save a matplotlib figure in the specified format(s) with associated metadata.
 
@@ -519,14 +527,27 @@ class PlotSeaIce:
             region_dict (dict, optional): Dictionary of regions plotted. Used to generate output filename. Defaults to None.
         """
         if save_format:
-            self.logger.debug("Saving figure as format(s): %s", ', '.join(to_list(save_format)))
-            outputsaver = OutputSaver(diagnostic='seaice', catalog=self.catalog, model=self.model, exp=self.exp,
-                                      loglevel=self.loglevel, outputdir=self.outputdir, realization=self.realizations)
+            self.logger.debug("Saving figure as format(s): %s", ", ".join(to_list(save_format)))
+            outputsaver = OutputSaver(
+                diagnostic="seaice",
+                catalog=self.catalog,
+                model=self.model,
+                exp=self.exp,
+                loglevel=self.loglevel,
+                outputdir=self.outputdir,
+                realization=self.realizations,
+            )
 
             diagnostic_product = self.plot_type
 
-            extra_keys = {'method': self.method,
-                          'region': '_'.join(region_dict.keys())}
+            extra_keys = {"method": self.method, "region": "_".join(region_dict.keys())}
 
-            outputsaver.save_figure(fig=fig, diagnostic_product=diagnostic_product, metadata=metadata,
-                                    rebuild=self.rebuild, extra_keys=extra_keys, extension=save_format, dpi=self.dpi)
+            outputsaver.save_figure(
+                fig=fig,
+                diagnostic_product=diagnostic_product,
+                metadata=metadata,
+                rebuild=self.rebuild,
+                extra_keys=extra_keys,
+                extension=save_format,
+                dpi=self.dpi,
+            )
