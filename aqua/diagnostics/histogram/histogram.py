@@ -13,6 +13,7 @@ class Histogram(Diagnostic):
     over a specified region. Retrieves data from catalog, computes histograms/PDFs
     for the entire period, and saves results to netcdf files.
     """
+
     MINIMUM_MONTHS_REQUIRED = 12
 
     def __init__(

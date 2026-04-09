@@ -24,6 +24,7 @@ class Hovmoller(Diagnostic):
         var (list): List of variables to process.
         stacked_data (xarray.Dataset): Processed data for Hovmoller diagrams.
     """
+
     MINIMUM_MONTHS_REQUIRED = 2
 
     def __init__(
