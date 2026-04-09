@@ -58,7 +58,7 @@ tests = [
     "pytest-xdist",
     "coverage",
     "cdo",
-    "ruff"
+    "ruff==0.15.6"
 ]
 minimal = [
     "aqua-diagnostics[core]"
@@ -128,3 +128,26 @@ omit = [
     "aqua/diagnostics/dummy",
     "aqua/diagnostics/teleconnections/mjo.py" # Temporarily disabled until MJO is integrated again.
     ]
+
+[tool.ruff]
+line-length = 127
+target-version = "py310"
+exclude = ["**/__init__.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "N"]
+ignore = [
+    "N816",
+    "E741",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/*.ipynb" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["aqua"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true

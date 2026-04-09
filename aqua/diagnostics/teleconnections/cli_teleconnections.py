@@ -6,6 +6,7 @@ This CLI allows to run the NAO and ENSO diagnostics.
 Details of the run are defined in a yaml configuration file for a
 single or multiple experiments.
 """
+
 import argparse
 import sys
 
@@ -19,7 +20,7 @@ def parse_arguments(args):
     Args:
         args (list): list of command-line arguments to parse.
     """
-    parser = argparse.ArgumentParser(description='Teleconnections CLI')
+    parser = argparse.ArgumentParser(description="Teleconnections CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
@@ -223,9 +224,9 @@ if __name__ == '__main__':
 
     cli = DiagnosticCLI(
         args,
-        diagnostic_name='teleconnections',
-        default_config='config_teleconnections.yaml',
-        log_name='Teleconnections CLI',
+        diagnostic_name="teleconnections",
+        default_config="config_teleconnections.yaml",
+        log_name="Teleconnections CLI",
     ).prepare()
     cli.open_dask_cluster()
 

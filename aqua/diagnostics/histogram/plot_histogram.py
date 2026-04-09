@@ -8,16 +8,14 @@ from aqua.core.util import DEFAULT_REALIZATION, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
-class PlotHistogram():
+class PlotHistogram:
     """
     Class for plotting Histogram diagnostics.
     Provides methods to plot histogram/PDF data with customizable labels,
     titles, and styling options.
     """
-    def __init__(self, data=None, ref_data=None,
-                 diagnostic_name='histogram',
-                 density=True,
-                 loglevel: str = 'WARNING'):
+
+    def __init__(self, data=None, ref_data=None, diagnostic_name="histogram", density=True, loglevel: str = "WARNING"):
         """
         Initialize the PlotHistogram class.
 
@@ -29,7 +27,7 @@ class PlotHistogram():
             loglevel (str): Logging level. Default is 'WARNING'.
         """
         self.loglevel = loglevel
-        self.logger = log_configure(loglevel, 'PlotHistogram')
+        self.logger = log_configure(loglevel, "PlotHistogram")
 
         self.data = to_list(data) if data is not None else []
         self.ref_data = ref_data
@@ -53,36 +51,36 @@ class PlotHistogram():
 
         # Extract metadata from data arrays
         for data_item in self.data:
-            if data_item is not None and hasattr(data_item, 'AQUA_catalog'):
+            if data_item is not None and hasattr(data_item, "AQUA_catalog"):
                 self.catalogs.append(data_item.AQUA_catalog)
                 self.models.append(data_item.AQUA_model)
                 self.exps.append(data_item.AQUA_exp)
 
                 # Extract realization if available
-                if hasattr(data_item, 'AQUA_realization'):
+                if hasattr(data_item, "AQUA_realization"):
                     self.realizations.append(data_item.AQUA_realization)
-                    self.logger.debug(f'Extracted realization: {data_item.AQUA_realization}')
+                    self.logger.debug(f"Extracted realization: {data_item.AQUA_realization}")
                 else:
                     self.realizations.append(DEFAULT_REALIZATION)
-                    self.logger.debug(f'No realization found in data, using default: {DEFAULT_REALIZATION}')
+                    self.logger.debug(f"No realization found in data, using default: {DEFAULT_REALIZATION}")
 
                 # Extract region if not already set
-                if self.region is None and hasattr(data_item, 'AQUA_region'):
+                if self.region is None and hasattr(data_item, "AQUA_region"):
                     self.region = data_item.AQUA_region
 
                 # Extract variable names if not already set
-                if self.short_name is None and hasattr(data_item, 'short_name'):
+                if self.short_name is None and hasattr(data_item, "short_name"):
                     self.short_name = data_item.short_name
-                if self.standard_name is None and hasattr(data_item, 'standard_name'):
+                if self.standard_name is None and hasattr(data_item, "standard_name"):
                     self.standard_name = data_item.standard_name
-                if self.long_name is None and hasattr(data_item, 'long_name'):
+                if self.long_name is None and hasattr(data_item, "long_name"):
                     self.long_name = data_item.long_name
-                if self.units is None and hasattr(data_item, 'center_of_bin'):
-                    self.units = getattr(data_item.center_of_bin, 'units', None)
+                if self.units is None and hasattr(data_item, "center_of_bin"):
+                    self.units = getattr(data_item.center_of_bin, "units", None)
 
-        self.logger.debug(f'Extracted metadata for {len(self.models)} datasets: {list(zip(self.models, self.exps))}')
-        self.logger.debug(f'Extracted realizations: {self.realizations}')
-        self.logger.debug(f'Extracted region: {self.region}')
+        self.logger.debug(f"Extracted metadata for {len(self.models)} datasets: {list(zip(self.models, self.exps))}")
+        self.logger.debug(f"Extracted realizations: {self.realizations}")
+        self.logger.debug(f"Extracted region: {self.region}")
 
     def set_data_labels(self):
         """Set the data labels for the plot."""
@@ -91,11 +89,11 @@ class PlotHistogram():
 
         for i in range(num_labels):
             if i < len(self.models) and i < len(self.exps):
-                data_labels.append(f'{self.models[i]} {self.exps[i]}')
+                data_labels.append(f"{self.models[i]} {self.exps[i]}")
             else:
-                data_labels.append(f'Dataset {i+1}')
+                data_labels.append(f"Dataset {i + 1}")
 
-        self.logger.debug('Data labels: %s', data_labels)
+        self.logger.debug("Data labels: %s", data_labels)
         return data_labels
 
     def set_ref_label(self):
@@ -103,11 +101,11 @@ class PlotHistogram():
         ref_label = None
 
         if self.ref_data is not None:
-            model = self.ref_data.attrs.get('AQUA_model', 'Unknown')
-            exp = self.ref_data.attrs.get('AQUA_exp', 'Unknown')
-            ref_label = f'{model} {exp}'
+            model = self.ref_data.attrs.get("AQUA_model", "Unknown")
+            exp = self.ref_data.attrs.get("AQUA_exp", "Unknown")
+            ref_label = f"{model} {exp}"
 
-        self.logger.debug('Reference label: %s', ref_label)
+        self.logger.debug("Reference label: %s", ref_label)
         return ref_label
 
     def set_title(self):
@@ -118,14 +116,10 @@ class PlotHistogram():
                 break
 
         title = TitleBuilder(
-            diagnostic=None,
-            variable=variable,
-            regions=self.region,
-            catalog=self.catalogs,
-            model=self.models,
-            exp=self.exps).generate()
+            diagnostic=None, variable=variable, regions=self.region, catalog=self.catalogs, model=self.models, exp=self.exps
+        ).generate()
 
-        self.logger.debug('Title: %s', title)
+        self.logger.debug("Title: %s", title)
         return title
 
     def set_description(self):
@@ -155,7 +149,7 @@ class PlotHistogram():
             description += f"({self.short_name}) "
 
         # Region - only if not Global
-        if self.region is not None and self.region.lower() != 'global':
+        if self.region is not None and self.region.lower() != "global":
             description += f"over {self.region} "
 
         # Handle multiple datasets
@@ -164,17 +158,15 @@ class PlotHistogram():
             data_item = self.data[0] if self.data else None
             ref_item = self.ref_data
 
-            data_pair = (getattr(data_item, 'AQUA_startdate', None),
-                        getattr(data_item, 'AQUA_enddate', None))
-            ref_pair = (getattr(ref_item, 'AQUA_startdate', None),
-                        getattr(ref_item, 'AQUA_enddate', None))
+            data_pair = (getattr(data_item, "AQUA_startdate", None), getattr(data_item, "AQUA_enddate", None))
+            ref_pair = (getattr(ref_item, "AQUA_startdate", None), getattr(ref_item, "AQUA_enddate", None))
 
             # Smart date display: show dates only once if they are the same
             if data_pair == ref_pair and data_pair != (None, None):
                 # Same period for model and reference
                 description += f"for {self.models[0]}/{self.exps[0]}"
                 if ref_item is not None:
-                    ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                    ref_model = getattr(ref_item, "AQUA_model", "reference")
                     description += f" vs {ref_model}"
                 description += f" from {data_pair[0]} to {data_pair[1]}"
             else:
@@ -183,7 +175,7 @@ class PlotHistogram():
                     description += f"for {self.models[0]}/{self.exps[0]} "
                     description += f"from {data_pair[0]} to {data_pair[1]}"
                 if ref_pair != (None, None):
-                    ref_model = getattr(ref_item, 'AQUA_model', 'reference')
+                    ref_model = getattr(ref_item, "AQUA_model", "reference")
                     description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
         else:
             # Multiple datasets
@@ -195,25 +187,36 @@ class PlotHistogram():
                 description += f", and {len(self.models) - 3} more"
 
             if self.ref_data is not None:
-                ref_model = getattr(self.ref_data, 'AQUA_model', 'reference')
+                ref_model = getattr(self.ref_data, "AQUA_model", "reference")
                 description += f" vs {ref_model}"
 
             # Add common date range if all datasets share it
             if self.data:
-                first_dates = (getattr(self.data[0], 'AQUA_startdate', None),
-                            getattr(self.data[0], 'AQUA_enddate', None))
+                first_dates = (getattr(self.data[0], "AQUA_startdate", None), getattr(self.data[0], "AQUA_enddate", None))
                 if first_dates != (None, None):
                     description += f" from {first_dates[0]} to {first_dates[1]}"
 
-        description += '.'
+        description += "."
 
-        self.logger.debug('Description: %s', description)
+        self.logger.debug("Description: %s", description)
         return description
 
-    def plot(self, data_labels=None, ref_label=None, title=None,
-             style=None, xlogscale=False, ylogscale=True,
-             xmax=None, xmin=None, ymax=None, ymin=None,
-             smooth=False, smooth_window=5, labelsize=None):
+    def plot(
+        self,
+        data_labels=None,
+        ref_label=None,
+        title=None,
+        style=None,
+        xlogscale=False,
+        ylogscale=True,
+        xmax=None,
+        xmin=None,
+        ymax=None,
+        ymin=None,
+        smooth=False,
+        smooth_window=5,
+        labelsize=None,
+    ):
         """
         Plot histogram data.
 
@@ -251,15 +254,18 @@ class PlotHistogram():
             smooth=smooth,
             smooth_window=smooth_window,
             labelsize=labelsize,
-            loglevel=self.loglevel
+            loglevel=self.loglevel,
         )
 
-    def save_plot(self, fig,
-                  description: str = None,
-                  rebuild: bool = True,
-                  outputdir: str = './',
-                  dpi: int = 300,
-                  format: Union[str, list] = SAVE_FORMAT):
+    def save_plot(
+        self,
+        fig,
+        description: str = None,
+        rebuild: bool = True,
+        outputdir: str = "./",
+        dpi: int = 300,
+        format: Union[str, list] = SAVE_FORMAT,
+    ):
         """
         Save the plot to a file.
 
@@ -272,42 +278,61 @@ class PlotHistogram():
             format (str or list): Format(s) to save the figure. Default is SAVE_FORMAT.
         """
         metadata = {
-            'catalog': getattr(self, 'catalogs', ['unknown_catalog'])[0],
-            'model': getattr(self, 'models', ['unknown_model'])[0],
-            'exp': getattr(self, 'exps', ['unknown_exp'])[0]
+            "catalog": getattr(self, "catalogs", ["unknown_catalog"])[0],
+            "model": getattr(self, "models", ["unknown_model"])[0],
+            "exp": getattr(self, "exps", ["unknown_exp"])[0],
         }
 
         # Add realization
         if self.realizations:
-            metadata['realization'] = self.realizations[0]
-            self.logger.debug(f'Using realization for plot filename: {self.realizations[0]}')
+            metadata["realization"] = self.realizations[0]
+            self.logger.debug(f"Using realization for plot filename: {self.realizations[0]}")
 
         # Use class attributes
-        var = getattr(self, 'short_name', None) or getattr(self, 'standard_name', None)
+        var = getattr(self, "short_name", None) or getattr(self, "standard_name", None)
         region = self.region
 
         extra_keys = {}
         if var:
-            extra_keys['var'] = var
+            extra_keys["var"] = var
         if region:
-            extra_keys['region'] = region.replace(' ', '').lower()
+            extra_keys["region"] = region.replace(" ", "").lower()
 
-        outputsaver = OutputSaver(diagnostic=self.diagnostic_name, outputdir=outputdir,
-                                  loglevel=self.loglevel, **metadata)
+        outputsaver = OutputSaver(diagnostic=self.diagnostic_name, outputdir=outputdir, loglevel=self.loglevel, **metadata)
 
         if self.density:
             diagnostic_product = "pdf"
         else:
             diagnostic_product = "histogram"
 
-        outputsaver.save_figure(fig, diagnostic_product, extra_keys=extra_keys,
-                                metadata={'Description': description, 'dpi': dpi},
-                                rebuild=rebuild, extension=format, dpi=dpi)
+        outputsaver.save_figure(
+            fig,
+            diagnostic_product,
+            extra_keys=extra_keys,
+            metadata={"Description": description, "dpi": dpi},
+            rebuild=rebuild,
+            extension=format,
+            dpi=dpi,
+        )
 
-    def run(self, outputdir='./', rebuild=True, dpi=300, style=None,
-            format: Union[str, list] = SAVE_FORMAT, xlogscale=False, ylogscale=True,
-            xmax=None, xmin=None, ymax=None, ymin=None,
-            smooth=False, smooth_window=5, labelsize=None, show=False):
+    def run(
+        self,
+        outputdir="./",
+        rebuild=True,
+        dpi=300,
+        style=None,
+        format: Union[str, list] = SAVE_FORMAT,
+        xlogscale=False,
+        ylogscale=True,
+        xmax=None,
+        xmin=None,
+        ymax=None,
+        ymin=None,
+        smooth=False,
+        smooth_window=5,
+        labelsize=None,
+        show=False,
+    ):
         """
         Run the complete plotting workflow.
 
@@ -327,25 +352,33 @@ class PlotHistogram():
             smooth_window (int): Window size for smoothing.
             show (bool): If True, display the plot interactively.
         """
-        self.logger.info('Running PlotHistogram')
+        self.logger.info("Running PlotHistogram")
 
         data_labels = self.set_data_labels()
         ref_label = self.set_ref_label()
         description = self.set_description()
         title = self.set_title()
 
-        fig, _ = self.plot(data_labels=data_labels, ref_label=ref_label,
-                          title=title, style=style,
-                          xlogscale=xlogscale, ylogscale=ylogscale,
-                          xmax=xmax, xmin=xmin, ymax=ymax, ymin=ymin,
-                          smooth=smooth, smooth_window=smooth_window,
-                          labelsize=labelsize)
+        fig, _ = self.plot(
+            data_labels=data_labels,
+            ref_label=ref_label,
+            title=title,
+            style=style,
+            xlogscale=xlogscale,
+            ylogscale=ylogscale,
+            xmax=xmax,
+            xmin=xmin,
+            ymax=ymax,
+            ymin=ymin,
+            smooth=smooth,
+            smooth_window=smooth_window,
+            labelsize=labelsize,
+        )
 
-        self.save_plot(fig, description=description, rebuild=rebuild,
-                      outputdir=outputdir, dpi=dpi, format=format)
+        self.save_plot(fig, description=description, rebuild=rebuild, outputdir=outputdir, dpi=dpi, format=format)
 
         if show:
             plt.show()
         plt.close(fig)
 
-        self.logger.info('PlotHistogram completed successfully')
+        self.logger.info("PlotHistogram completed successfully")
