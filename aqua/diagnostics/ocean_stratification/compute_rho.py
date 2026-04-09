@@ -115,12 +115,7 @@ def compute_rho(absso, bigthetao, ref_pressure, loglevel="WARNING"):
         (
             (
                 (
-                    (
-                        (r060 * tt + r150 * ss + r050) * tt
-                        + (r240 * ss + r140) * ss
-                        + r040
-                    )
-                    * tt
+                    ((r060 * tt + r150 * ss + r050) * tt + (r240 * ss + r140) * ss + r040) * tt
                     + ((r330 * ss + r230) * ss + r130) * ss
                     + r030
                 )
@@ -133,8 +128,7 @@ def compute_rho(absso, bigthetao, ref_pressure, loglevel="WARNING"):
             + r010
         )
         * tt
-        + (((((r600 * ss + r500) * ss + r400) * ss + r300) * ss + r200) * ss + r100)
-        * ss
+        + (((((r600 * ss + r500) * ss + r400) * ss + r300) * ss + r200) * ss + r100) * ss
         + r000
     )
     r = ((rz3 * pp + rz2) * pp + rz1) * pp + rz0

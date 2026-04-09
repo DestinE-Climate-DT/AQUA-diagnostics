@@ -19,6 +19,7 @@ Main changes:
 
 Complete list:
 - LatLonProfiles: try/except implementation structure in diagnostic CLI (#155)
+- Apply ruff format (#202, #210, #209)
 - TitleBuilder: add wrapping of long titles (#199)
 - Apply ruff linting and pre-commit hooks (#198)
 - Temporarily exclude MJO test (#201)

@@ -2,7 +2,8 @@
 String utility functions for AQUA diagnostics.
 """
 
-def harmonize_lists(*lists, sep: str = ' ') -> list:
+
+def harmonize_lists(*lists, sep: str = " ") -> list:
     """
     Combine multiple lists element-wise into strings, skipping empty/None values.
     Rows that end up empty after filtering are dropped.
