@@ -146,7 +146,7 @@ def process_variable(
                     regions_file_path=regions_file_path,
                     mean_type=mean_type,
                     diagnostic_name=diagnostic_name,
-                    loglevel=cli.loglevel
+                    loglevel=cli.loglevel,
                 )
 
                 profile.run(
@@ -162,7 +162,7 @@ def process_variable(
                     box_brd=box_brd,
                     outputdir=cli.outputdir,
                     rebuild=cli.rebuild,
-                    reader_kwargs=cli.reader_kwargs
+                    reader_kwargs=cli.reader_kwargs,
                 )
 
                 profiles.append(profile)
@@ -176,10 +176,10 @@ def process_variable(
                 ref_args = cli.dataset_args(ref)
 
                 # For reference, use std dates if specified
-                if ref.get('std_startdate'):
-                    ref_args['startdate'] = ref['std_startdate']
-                if ref.get('std_enddate'):
-                    ref_args['enddate'] = ref['std_enddate']
+                if ref.get("std_startdate"):
+                    ref_args["startdate"] = ref["std_startdate"]
+                if ref.get("std_enddate"):
+                    ref_args["enddate"] = ref["std_enddate"]
 
                 profile_ref = LatLonProfiles(
                     **ref_args,
@@ -187,7 +187,7 @@ def process_variable(
                     regions_file_path=regions_file_path,
                     mean_type=mean_type,
                     diagnostic_name=diagnostic_name,
-                    loglevel=cli.loglevel
+                    loglevel=cli.loglevel,
                 )
 
                 profile_ref.run(
@@ -203,21 +203,19 @@ def process_variable(
                     box_brd=box_brd,
                     outputdir=cli.outputdir,
                     rebuild=cli.rebuild,
-                    reader_kwargs={}
+                    reader_kwargs={},
                 )
 
             # Create plots
-            if compute_longterm and 'longterm' in freq:
-                _create_plot(cli, profiles, profile_ref, 'longterm', diagnostic_name)
+            if compute_longterm and "longterm" in freq:
+                _create_plot(cli, profiles, profile_ref, "longterm", diagnostic_name)
 
-            if compute_seasonal and 'seasonal' in freq:
-                _create_plot(cli, profiles, profile_ref, 'seasonal', diagnostic_name)
+            if compute_seasonal and "seasonal" in freq:
+                _create_plot(cli, profiles, profile_ref, "seasonal", diagnostic_name)
 
         except Exception as e:
             var_type = "formula" if formula else "variable"
-            cli.logger.error(
-                f"Error processing {var_type} '{var_name}' in region '{region if region else 'global'}': {e}"
-            )
+            cli.logger.error(f"Error processing {var_type} '{var_name}' in region '{region if region else 'global'}': {e}")
 
 
 if __name__ == "__main__":
