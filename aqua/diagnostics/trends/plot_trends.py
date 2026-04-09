@@ -6,17 +6,18 @@ from aqua.core.util import get_realizations, to_list
 from aqua.diagnostics.base import OutputSaver, TitleBuilder
 
 
-class PlotTrends():
-
-    def __init__(self,
-                trend,
-                diagnostic: str ='Trends',
-                save_pdf: bool = True,
-                save_png: bool = True,
-                dpi: int = 300,
-                outdir: str = './',
-                cmap: str = 'RdBu_r',
-                loglevel: str = 'WARNING'):
+class PlotTrends:
+    def __init__(
+        self,
+        trend,
+        diagnostic: str = "Trends",
+        save_pdf: bool = True,
+        save_png: bool = True,
+        dpi: int = 300,
+        outdir: str = "./",
+        cmap: str = "RdBu_r",
+        loglevel: str = "WARNING",
+    ):
         """
         Class to plot trend maps.
 
@@ -43,7 +44,7 @@ class PlotTrends():
         self.cmap = cmap
         self.loglevel = loglevel
 
-        self.logger = log_configure(log_level=self.loglevel, log_name=f'Plot{self.diagnostic.capitalize()}')
+        self.logger = log_configure(log_level=self.loglevel, log_name=f"Plot{self.diagnostic.capitalize()}")
 
     def get_data_info(self):
         """
@@ -61,17 +62,17 @@ class PlotTrends():
         - long_name
         - units
         """
-        self.catalog = self.data.attrs.get('AQUA_catalog', 'unknown_catalog')
-        self.model = self.data.attrs.get('AQUA_model', 'unknown_model')
-        self.exp = self.data.attrs.get('AQUA_exp', 'unknown_exp')
-        self.region = self.data.attrs.get('AQUA_region', 'global')
-        self.startdate = self.data.attrs.get('startdate', 'unknown_startdate')
-        self.enddate = self.data.attrs.get('enddate', 'unknown_enddate')
-        self.short_name = self.data.attrs.get('short_name', self.short_name)
-        self.long_name = self.data.attrs.get('long_name', 'unknown_long_name')
-        self.units = self.data.attrs.get('units', 'unknown_units')
-        self.start_year = self.startdate[:4] if self.startdate != 'unknown_startdate' else None
-        self.end_year = self.enddate[:4] if self.enddate != 'unknown_enddate' else None
+        self.catalog = self.data.attrs.get("AQUA_catalog", "unknown_catalog")
+        self.model = self.data.attrs.get("AQUA_model", "unknown_model")
+        self.exp = self.data.attrs.get("AQUA_exp", "unknown_exp")
+        self.region = self.data.attrs.get("AQUA_region", "global")
+        self.startdate = self.data.attrs.get("startdate", "unknown_startdate")
+        self.enddate = self.data.attrs.get("enddate", "unknown_enddate")
+        self.short_name = self.data.attrs.get("short_name", self.short_name)
+        self.long_name = self.data.attrs.get("long_name", "unknown_long_name")
+        self.units = self.data.attrs.get("units", "unknown_units")
+        self.start_year = self.startdate[:4] if self.startdate != "unknown_startdate" else None
+        self.end_year = self.enddate[:4] if self.enddate != "unknown_enddate" else None
         self.realization = get_realizations(self.data)
 
     def set_title(self):
@@ -81,12 +82,13 @@ class PlotTrends():
         self.title = TitleBuilder(
             diagnostic=self.diagnostic,
             variable=self.long_name,
-            regions=to_list(self.region) if self.region != 'global' else None,
+            regions=to_list(self.region) if self.region != "global" else None,
             catalog=self.catalog,
             model=self.model,
             exp=self.exp,
             startyear=self.start_year,
-            endyear=self.end_year).generate()
+            endyear=self.end_year,
+        ).generate()
 
     def set_description(self):
         """
@@ -114,14 +116,14 @@ class PlotTrends():
             exp=self.exp,
             realization=self.realization,
             outputdir=self.outdir,
-            loglevel=self.loglevel
+            loglevel=self.loglevel,
         )
 
         metadata = {"Description": description}
         extra_keys = {}
-        extra_keys.update({'var': self.short_name})
-        if self.region != 'global':
-            extra_keys.update({'region': self.region})
+        extra_keys.update({"var": self.short_name})
+        if self.region != "global":
+            extra_keys.update({"region": self.region})
 
         outputsaver.save_figure(
             fig,
@@ -130,7 +132,7 @@ class PlotTrends():
             extra_keys=extra_keys,
             save_pdf=self.save_pdf,
             save_png=self.save_png,
-            dpi=self.dpi
+            dpi=self.dpi,
         )
 
     def plot_trend(self, vmin: float = None, vmax: float = None):
