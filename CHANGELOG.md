@@ -18,10 +18,9 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class
 
 Complete list:
-- Add pre-commit config and ruff setup (#215)
+- Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #198, #215)
 - Apply ruff format (#202, #210, #209)
 - TitleBuilder: add wrapping of long titles (#199)
-- Apply ruff linting and pre-commit hooks (#198)
 - Temporarily exclude MJO test (#201)
 - Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
