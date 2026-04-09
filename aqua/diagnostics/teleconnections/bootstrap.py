@@ -1,6 +1,7 @@
 """
 Module to evaluate the confidence intervals of the teleconnections using bootstrapping.
 """
+
 import numpy as np
 import xarray as xr
 
@@ -9,14 +10,16 @@ from aqua.core.logger import log_configure
 xr.set_options(keep_attrs=True)
 
 
-def bootstrap_teleconnections(telec_model,
-                              telec_ref,
-                              var: str,
-                              n_bootstraps: int = 1000,
-                              concordance: float = 0.05,
-                              statistic: str = None,
-                              season: str = None,
-                              loglevel: str = 'WARNING'):
+def bootstrap_teleconnections(
+    telec_model,
+    telec_ref,
+    var: str,
+    n_bootstraps: int = 1000,
+    concordance: float = 0.05,
+    statistic: str = None,
+    season: str = None,
+    loglevel: str = "WARNING",
+):
     """
     Bootstrap the regression and correlation maps.
 
@@ -35,15 +38,17 @@ def bootstrap_teleconnections(telec_model,
         xr.DataArray: Lower percentile map
         xr.DataArray: Upper percentile map
     """
-    logger = log_configure(loglevel, 'Bootstrap teleconnections')
+    logger = log_configure(loglevel, "Bootstrap teleconnections")
 
-    if statistic != 'regression' and statistic != 'correlation':
-        raise ValueError('Invalid statistic provided. Please provide a statistic to compute (reg or cor).')
+    if statistic != "regression" and statistic != "correlation":
+        raise ValueError("Invalid statistic provided. Please provide a statistic to compute (reg or cor).")
 
     index_model = telec_model.index
     index_ref = telec_ref.index
     if var != telec_ref.var:
-        logger.warning(f'Variable {var} does not match the reference teleconnection variable {telec_ref.var}. Retrieving {var}.')
+        logger.warning(
+            f"Variable {var} does not match the reference teleconnection variable {telec_ref.var}. Retrieving {var}."
+        )
         telec_ref.retrieve(var=var)
     data_ref = telec_ref.data
 
@@ -51,13 +56,15 @@ def bootstrap_teleconnections(telec_model,
     # bootstrap_maps = xr.DataArray(np.zeros((n_bootstraps,) + map.shape),
     #                               coords=[range(n_bootstraps)] + [coord for coord in map.coords.values()],
     #                               dims=['bootstrap'] + [dim for dim in map.dims])
-    bootstrap_maps = xr.DataArray(np.zeros((n_bootstraps,) + data_ref[var].isel(time=0).shape),
-                                  coords=[range(n_bootstraps)] + [coord for coord in data_ref[var].coords.values() if coord.name != 'time'],
-                                  dims=['bootstrap'] + [dim for dim in data_ref[var].dims if dim != 'time'])
+    bootstrap_maps = xr.DataArray(
+        np.zeros((n_bootstraps,) + data_ref[var].isel(time=0).shape),
+        coords=[range(n_bootstraps)] + [coord for coord in data_ref[var].coords.values() if coord.name != "time"],
+        dims=["bootstrap"] + [dim for dim in data_ref[var].dims if dim != "time"],
+    )
 
     # Bootstrap the maps
     for i in range(n_bootstraps):
-        logger.info(f'Bootstrap {i+1}/{n_bootstraps}')
+        logger.info(f"Bootstrap {i + 1}/{n_bootstraps}")
 
         boot_time = np.random.choice(index_ref.time.values, index_model.time.size, replace=True)
 
@@ -66,24 +73,23 @@ def bootstrap_teleconnections(telec_model,
 
         telec_ref.index = boot_index  # Update the index for the reference teleconnection
         telec_ref.data = boot_data  # Update the data for the reference teleconnection
-        if statistic == 'regression':
+        if statistic == "regression":
             bootstrap_maps.loc[dict(bootstrap=i)] = telec_ref.compute_regression(season=season)
-        elif statistic == 'correlation':
+        elif statistic == "correlation":
             bootstrap_maps.loc[dict(bootstrap=i)] = telec_ref.compute_correlation(season=season)
 
     # Evaluate the percentile confidence intervals
-    upper = bootstrap_maps.quantile(1-concordance, dim='bootstrap')
-    lower = bootstrap_maps.quantile(concordance, dim='bootstrap')
+    upper = bootstrap_maps.quantile(1 - concordance, dim="bootstrap")
+    lower = bootstrap_maps.quantile(concordance, dim="bootstrap")
 
     telec_ref.index = index_ref  # Restore the original index for the reference teleconnection
     telec_ref.data = data_ref  # Restore the original data for the reference teleconnection
-    logger.info('Bootstrap confidence intervals computed.')
+    logger.info("Bootstrap confidence intervals computed.")
 
     return lower, upper
 
 
-def build_confidence_mask(map: xr.DataArray, lower: xr.DataArray, upper: xr.DataArray,
-                          mask_concordance=True):
+def build_confidence_mask(map: xr.DataArray, lower: xr.DataArray, upper: xr.DataArray, mask_concordance=True):
     """
     Build the confidence masks based on the lower and upper percentiles.
 
@@ -102,6 +108,7 @@ def build_confidence_mask(map: xr.DataArray, lower: xr.DataArray, upper: xr.Data
         mask = xr.where((map < lower) | (map > upper), True, False)
 
     return mask
+
 
 # THIS IS A LEGACY CODE
 # Alternative approach, done with the P2 method (RAJ JAIN 1985)

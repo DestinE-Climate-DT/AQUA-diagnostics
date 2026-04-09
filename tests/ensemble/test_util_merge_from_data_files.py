@@ -64,6 +64,7 @@ def test_merge_from_data_files_timeseries(tmp_path):
     assert "description" in merged.attrs
     assert merged.attrs["model"] == model_names
 
+
 @pytest.mark.ensemble
 def test_merge_from_data_files_non_timeseries(tmp_path):
     """
@@ -96,6 +97,7 @@ def test_merge_from_data_files_non_timeseries(tmp_path):
     assert merged.dims["ensemble"] == 2
     assert "time" not in merged.dims
     assert merged.attrs["model"] == ["M1", "M2"]
+
 
 def test_merge_from_data_files_no_model_names(tmp_path):
     var = "tas"

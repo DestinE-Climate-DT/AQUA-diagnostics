@@ -18,12 +18,12 @@ version = str(project_version)
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', "sphinx.ext.todo"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.todo"]
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 
 templates_path = ["_templates"]
-autoclass_content = 'both'
+autoclass_content = "both"
 exclude_patterns = []
 
 # Mock imports for modules that are not available during docs build, can be expanded
@@ -44,4 +44,4 @@ html_theme_options = {
 # Add the path to the package root (where 'aqua' folder is located)
 # From: docs/sphinx/source/conf.py
 # To:   root of the project (3 levels up)
-sys.path.insert(0, os.path.abspath('../../..'))
+sys.path.insert(0, os.path.abspath("../../.."))

@@ -169,18 +169,16 @@ class PlotEnsembleZonal(BaseMixin):
 
         # return if no vertical coordinate is found
         if not vert_coord:
-            raise ValueError('No vertical coordinate found in data!')
+            raise ValueError("No vertical coordinate found in data!")
 
         # do the selection on the first vertical coordinate found
         if len(vert_coord) > 1:
-            self.logger.warning(
-                "Found more than one vertical coordinate, using the first one: %s",
-                vert_coord[0])
+            self.logger.warning("Found more than one vertical coordinate, using the first one: %s", vert_coord[0])
 
         fig1 = plt.figure(figsize=figure_size)
         ax1 = fig1.add_subplot(1, 1, 1)
         im = ax1.contourf(
-            dataset_mean["lat"],     # Safely hardcoded to "lat"
+            dataset_mean["lat"],  # Safely hardcoded to "lat"
             dataset_mean[vert_coord[0]],
             dataset_mean,
             cmap=cmap,
@@ -222,7 +220,6 @@ class PlotEnsembleZonal(BaseMixin):
         self.logger.debug("Saving Lev-Lon Zonal-average ensemble-STD as pdf and png")
 
         # Saving plots
-        self.save_figure(
-            var=var,fig=fig1, fig_std=fig2, description=description, format=save_format, dpi=dpi)
+        self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format=save_format, dpi=dpi)
 
         return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}
