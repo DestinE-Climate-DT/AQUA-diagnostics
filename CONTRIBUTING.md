@@ -136,9 +136,9 @@ ruff check --fix <file_or_folder_to_target> --no-cache
 
 This will fix the code according to the linting rules set in the `pyproject.toml` file.
 
-Note:  
+Note:
 The extra flag `--unsafe-fix` allows Ruff to apply fixes that might change the behavior of your code, even if it is not safe to do so.  
-Use it with caution and review the diff!  
+Use it with caution and review the diff!
 
 7. Run the formatter from AQUA-diagnostics root folder:
 ```bash
