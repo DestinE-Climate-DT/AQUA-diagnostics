@@ -163,14 +163,17 @@ class PlotSeaIce:
     def repack_datasetlists(self, **kwargs) -> dict:
         """
         Repack input datasets into a nested dictionary organized by method and region.
+
         The output dictionary is structured as::
 
             { method: { region: { str_data: [list of data arrays] }}}
 
-        where: 'method' is extracted from the dataset attributes (defaulting to "Unknown").
-        'region' is determined by self._get_region(dataset, data_var).
-        'str_data' is the keyword with the data in input, and each value is a
-            list of data arrays corresponding to that keyword.
+        where:
+
+        - 'method' is extracted from the dataset attributes (defaulting to "Unknown").
+        - 'region' is determined by self._get_region(dataset, data_var).
+        - 'str_data' is the keyword with the data in input, and each value is a
+          list of data arrays corresponding to that keyword.
 
         Args:
             **kwargs (dict): Keyword arguments, where each str_data is linked to
