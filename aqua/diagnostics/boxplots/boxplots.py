@@ -3,9 +3,9 @@
 import pandas as pd
 import xarray as xr
 
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list
-from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics.base import Diagnostic
 
 
@@ -27,6 +27,7 @@ class Boxplots(Diagnostic):
         outputdir (str, optional): Directory to save output files. Defaults to './'.
         loglevel (str, optional): Logging level. Defaults to 'WARNING'.
     """
+
     MINIMUM_MONTHS_REQUIRED = 2
 
     def __init__(
@@ -81,10 +82,9 @@ class Boxplots(Diagnostic):
 
         try:
             if var is not None:
-                self.var = [v.lstrip('-') for v in (var if isinstance(var, list) else [var])]
+                self.var = [v.lstrip("-") for v in (var if isinstance(var, list) else [var])]
 
-            super().retrieve(var=self.var, reader_kwargs=reader_kwargs,
-                             months_required=self.MINIMUM_MONTHS_REQUIRED)
+            super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         except NotEnoughDataError:
             raise
         except Exception as e:
