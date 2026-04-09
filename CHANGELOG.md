@@ -18,7 +18,7 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class
 
 Complete list:
-- Apply ruff format (#202)
+- Apply ruff format (#202, #210, #209)
 - TitleBuilder: add wrapping of long titles (#199)
 - Apply ruff linting and pre-commit hooks (#198)
 - Temporarily exclude MJO test (#201)
