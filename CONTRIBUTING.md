@@ -67,7 +67,7 @@ To enforce the coding style, we leverage on `pre-commit` hooks and `ruff` as a l
 We set the length limit of 127 characters per line. More information about the coding style chosen
 can be found in the `pyproject.toml` file.
 
-### Manual trigger of style checks for specific files in the Pull Request
+### Manual trigger of lint and formatting checks for specific files in a Pull Request
 
 To manually trigger and align the code changes to the reference coding style, do the following steps:
 
@@ -76,7 +76,7 @@ To manually trigger and align the code changes to the reference coding style, do
 pre-commit install
 ```
 
-2. If not there, create a `.pre-commit-config.yaml` file in the root of the repository with the following content:
+2. If does not exist yet, create a file `.pre-commit-config.yaml` in the root of the repository with the following content:
 
 ```yaml
 repos:
@@ -93,54 +93,22 @@ repos:
 pre-commit run --all-files
 ```
 
-4. If not installed already, install `ruff`:
+4. If not installed already, install `ruff` (check the version in the `.pre-commit-config.yaml` file):
 ```bash
-pip install ruff==0.15.6
+pip install ruff==<version_number>
 ```
 
-5. Add the following lines at the end of the `pyproject.toml` file:
-
-```toml
-[tool.ruff]
-line-length = 127
-target-version = "py310"
-exclude = ["**/__init__.py"]
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "W", "N"]
-ignore = [
-    "N816",
-    "E741",
-]
-
-[tool.ruff.lint.per-file-ignores]
-"**/*.ipynb" = ["E501"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["aqua"]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-docstring-code-format = true
-
-```
-
-these lines will define a standardised set of rules for the ruff linter and formatter.
-
-6. Run the linter fixer from the path to the file or folder that have been modified in the PR and need to be aligned to the reference coding style:
+5. Run the linter fixer from the path to the file or folder that have been modified in the PR and need to be aligned to the reference coding style (it will use the rules set in the `pyproject.toml` file):
 
 ```bash
 ruff check --fix <file_or_folder_to_target> --no-cache
 ```
 
-This will fix the code according to the linting rules set in the `pyproject.toml` file.
-
 Note:
 The extra flag `--unsafe-fix` allows Ruff to apply fixes that might change the behavior of your code, even if it is not safe to do so.  
 Use it with caution and review the diff!
 
-7. Run the formatter from AQUA-diagnostics root folder:
+6. Run the formatter from AQUA-diagnostics root folder:
 ```bash
 ruff format <file_or_folder_to_target> --no-cache
 ```
