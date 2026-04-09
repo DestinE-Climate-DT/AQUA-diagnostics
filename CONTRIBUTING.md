@@ -57,6 +57,23 @@ Before asking for a review, please make sure to:
 
 Do not merge your Pull Request yourself, it will be merged by the AQUA-diagnostics team.
 
+### Cross-check tests
+
+Regular CI runs **aqua-diagnostics** against the local branch, building the Micromamba environment which resolves aqua-core from PyPI. **Cross-check** uses `environment-dev.yml` and runs the same diagnostics test suite, but installs **aqua-core** from the [AQUA](https://github.com/DestinE-Climate-DT/AQUA) GitHub repository at a chosen reference (branch, tag, or commit SHA) instead of relying on the PyPI release. That helps to catch integration breaks between diagnostics and the current core codebase early.
+
+**When to use cross-check**
+
+- Your change depends on aqua-core behaviour or APIs that are not yet published to PyPI.
+- You want to confirm compatibility against `main` or another aqua-core branch before merge.
+
+**How to run cross-check on a pull request**
+
+1. Add the `cross-check` label to the PR. After the `cross-check` label is added, the workflow runs automatically the cross-check tests when new commits are pushed.
+
+**Manual run (maintainers)**
+
+In the GitHub UI: **Actions** → **AQUA-diagnostics Cross-Check** → **Run workflow**. You can set **aqua-core branch/tag/commit**; it defaults to `main`.
+
 ### Suggesting enhancements
 
 Enhancements of existing features or new features may be suggested by opening an issue in the AQUA-diagnostics repository. Please use the `improvements` label for existing features.
