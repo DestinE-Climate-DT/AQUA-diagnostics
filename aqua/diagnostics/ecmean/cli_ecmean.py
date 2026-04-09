@@ -29,6 +29,7 @@ from aqua.diagnostics.base import (
 
 MINIMUM_MONTHS_REQUIRED = 12
 
+
 def parse_arguments(arguments):
     """
     Parse command line arguments, extending the AQUA core parser
@@ -164,8 +165,9 @@ def time_check(mydata, y1, y2, logger=None):
 
     # run the performance indices if you have at least 12 month of data
     if len(mydata.time) < MINIMUM_MONTHS_REQUIRED:
-        raise NotEnoughDataError(f"Not enough data: {len(mydata.time)} months available, "
-                                 f"{MINIMUM_MONTHS_REQUIRED} required. Exiting...")
+        raise NotEnoughDataError(
+            f"Not enough data: {len(mydata.time)} months available, {MINIMUM_MONTHS_REQUIRED} required. Exiting..."
+        )
 
     return y1, y2
 
