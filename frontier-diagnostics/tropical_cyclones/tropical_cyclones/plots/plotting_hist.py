@@ -8,11 +8,11 @@ from tropical_cyclones.tools.tempest_utils import get_trajectories
 def plot_hist_cat(trajfile1, trajfile2, trajfile3, ibtracs_file=None):
     # tempest settings
     n_vars = 10
-    header_str = 'start'
+    header_str = "start"
     is_unstruc = 0
 
     # set the bins values for wind
-    bins = [ 40, 80, 120, 160, 200, 240, 280]
+    bins = [40, 80, 120, 160, 200, 240, 280]
 
     # Extract trajectories from tempest file and assign to arrays
     nstorms, ntimes, traj_data1 = get_trajectories(trajfile1, n_vars, header_str, is_unstruc)
@@ -28,13 +28,12 @@ def plot_hist_cat(trajfile1, trajfile2, trajfile3, ibtracs_file=None):
         ibtracs_data = pd.read_csv(ibtracs_file)
 
         # Filter the 'USA_WIND' column to include only the values without 'kts'
-        wind_intensities_num = ibtracs_data.loc[~ibtracs_data['USA_WIND'].str.contains('kts'), 'USA_WIND']
+        wind_intensities_num = ibtracs_data.loc[~ibtracs_data["USA_WIND"].str.contains("kts"), "USA_WIND"]
 
         # Convert the filtered values to numeric
-        xwind4 = pd.to_numeric(wind_intensities_num, errors='coerce')
+        xwind4 = pd.to_numeric(wind_intensities_num, errors="coerce")
 
         xwind4 = xwind4 * 1.852  # convert from kts to km/h
-
 
         hist4, _ = np.histogram(xwind4, bins=bins)
     else:
@@ -56,15 +55,19 @@ def plot_hist_cat(trajfile1, trajfile2, trajfile3, ibtracs_file=None):
 
     fig, ax = plt.subplots(figsize=(8, 3))
     if ibtracs_file is not None:
-        ax.bar(center - width/2, hist4 / total_traj4, align='center', width=width/4, label='IBTrACS', alpha=0.5)
-        ax.bar(center - width/6, hist3 / total_traj3, align='center', width=width/4, label='ERA5', alpha=0.5, color='black')
-        ax.bar(center + width/6, hist1 / total_traj1, align='center', width=width/4, label='tco1279-orca025-cycle3')
-        ax.bar(center + width/2, hist2 / total_traj2, align='center', width=width/4, label='tco2559-ng5-cycle3', alpha=0.5)
+        ax.bar(center - width / 2, hist4 / total_traj4, align="center", width=width / 4, label="IBTrACS", alpha=0.5)
+        ax.bar(
+            center - width / 6, hist3 / total_traj3, align="center", width=width / 4, label="ERA5", alpha=0.5, color="black"
+        )
+        ax.bar(center + width / 6, hist1 / total_traj1, align="center", width=width / 4, label="tco1279-orca025-cycle3")
+        ax.bar(center + width / 2, hist2 / total_traj2, align="center", width=width / 4, label="tco2559-ng5-cycle3", alpha=0.5)
 
     else:
-        ax.bar(center - width/6, hist3 / total_traj3, align='center', width=width/4, label='ERA5', alpha=0.5, color='black')
-        ax.bar(center + width/6, hist1 / total_traj1, align='center', width=width/4, label='tco1279-orca025-cycle3')
-        ax.bar(center + width/2, hist2 / total_traj2, align='center', width=width/4, label='tco2559-ng5-cycle3', alpha=0.5)
+        ax.bar(
+            center - width / 6, hist3 / total_traj3, align="center", width=width / 4, label="ERA5", alpha=0.5, color="black"
+        )
+        ax.bar(center + width / 6, hist1 / total_traj1, align="center", width=width / 4, label="tco1279-orca025-cycle3")
+        ax.bar(center + width / 2, hist2 / total_traj2, align="center", width=width / 4, label="tco2559-ng5-cycle3", alpha=0.5)
 
     ax.set_xticks(bins)
     ax.legend()
@@ -75,16 +78,16 @@ def plot_hist_cat(trajfile1, trajfile2, trajfile3, ibtracs_file=None):
     plt.ylabel("Frequency (Normalized)")
 
     # save figure
-    plt.savefig('/home/b/b382216/work/tc/PDF/hist_wind_all_fullres.pdf', bbox_inches="tight")
+    plt.savefig("/home/b/b382216/work/tc/PDF/hist_wind_all_fullres.pdf", bbox_inches="tight")
 
-    #show
+    # show
     plt.show()
 
 
 def plot_press_wind(trajfile1, trajfile2, trajfile3, ibtracs_file, dot_dim):
     # tempest settings
     n_vars = 10
-    header_str = 'start'
+    header_str = "start"
     is_unstruc = 0
 
     # Extract trajectories from tempest file and assign to arrays
@@ -100,45 +103,43 @@ def plot_press_wind(trajfile1, trajfile2, trajfile3, ibtracs_file, dot_dim):
     xpres2 = traj_data2[4, :, :] / 100.0  # SLP at node in hPa
     xpres3 = traj_data3[4, :, :] / 100.0  # SLP at node in hPa
 
-    #now deal with ibtracks file if present
+    # now deal with ibtracks file if present
 
     if ibtracs_file is not None:
-
         # Read the IBTrACS dataset
         ibtracs_data = pd.read_csv(ibtracs_file)
 
-
         # Filter the 'USA_PRES' column to include only the values without 'mb'
-        press_num = ibtracs_data.loc[~ibtracs_data['USA_PRES'].str.contains('mb'), 'USA_PRES']
+        press_num = ibtracs_data.loc[~ibtracs_data["USA_PRES"].str.contains("mb"), "USA_PRES"]
 
         # Convert the filtered values to numeric
-        xpres4 = pd.to_numeric(press_num, errors='coerce') #already in mb/hPa
+        xpres4 = pd.to_numeric(press_num, errors="coerce")  # already in mb/hPa
 
         # Filter the 'USA_WIND' column to include only the values without 'kts'
-        wind_intensities_num = ibtracs_data.loc[~ibtracs_data['USA_WIND'].str.contains('kts'), 'USA_WIND']
+        wind_intensities_num = ibtracs_data.loc[~ibtracs_data["USA_WIND"].str.contains("kts"), "USA_WIND"]
 
         # Convert the filtered values to numeric
-        xwind4 = pd.to_numeric(wind_intensities_num, errors='coerce')
+        xwind4 = pd.to_numeric(wind_intensities_num, errors="coerce")
 
-        xwind4=xwind4*1.852 #convert from kts to km/h
+        xwind4 = xwind4 * 1.852  # convert from kts to km/h
 
         fig, ax = plt.subplots(figsize=(8, 6))
-        ax.scatter(xwind4, xpres4, s=dot_dim, alpha=0.2, marker="x", label='IBTrACS')  # IBTrACS data
-        ax.scatter(xwind3, xpres3, s=dot_dim, alpha=0.2, marker="x", label='ERA5', color="black")  # ERA5 data
-        ax.scatter(xwind1, xpres1, s=dot_dim, alpha=0.2, marker="x", label='tco1279-orca025-cycle3')
-        ax.scatter(xwind2, xpres2, s=dot_dim, alpha=0.2, marker="x", label='tco2559-ng5-cycle3')
+        ax.scatter(xwind4, xpres4, s=dot_dim, alpha=0.2, marker="x", label="IBTrACS")  # IBTrACS data
+        ax.scatter(xwind3, xpres3, s=dot_dim, alpha=0.2, marker="x", label="ERA5", color="black")  # ERA5 data
+        ax.scatter(xwind1, xpres1, s=dot_dim, alpha=0.2, marker="x", label="tco1279-orca025-cycle3")
+        ax.scatter(xwind2, xpres2, s=dot_dim, alpha=0.2, marker="x", label="tco2559-ng5-cycle3")
 
     else:
         fig, ax = plt.subplots(figsize=(8, 6))
-        ax.scatter(xwind3, xpres3, s=dot_dim, alpha=0.4, marker="x", label='ERA5', color="black")  # ERA5 data
-        ax.scatter(xwind1, xpres1, s=dot_dim, alpha=0.6, marker="x", label='tco1279-orca025-cycle3')
-        ax.scatter(xwind2, xpres2, s=dot_dim, alpha=0.6, marker="x", label='tco2559-ng5-cycle3')
+        ax.scatter(xwind3, xpres3, s=dot_dim, alpha=0.4, marker="x", label="ERA5", color="black")  # ERA5 data
+        ax.scatter(xwind1, xpres1, s=dot_dim, alpha=0.6, marker="x", label="tco1279-orca025-cycle3")
+        ax.scatter(xwind2, xpres2, s=dot_dim, alpha=0.6, marker="x", label="tco2559-ng5-cycle3")
 
-    ax.set_xlabel('Max Wind Speed (km/h)')
-    ax.set_ylabel('Min slp (hPa)')
-    ax.set_title('Max Wind Speed vs min slp')
+    ax.set_xlabel("Max Wind Speed (km/h)")
+    ax.set_ylabel("Min slp (hPa)")
+    ax.set_title("Max Wind Speed vs min slp")
     ax.legend()
 
     # save figure
-    plt.savefig('/home/b/b382216/work/tc/PDFslp_vs_wind_all_fullres.pdf', format='pdf')
+    plt.savefig("/home/b/b382216/work/tc/PDFslp_vs_wind_all_fullres.pdf", format="pdf")
     plt.show()
