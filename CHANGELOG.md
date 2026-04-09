@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.24.0):
 
+- Fixes in CI/CD to ensure compatibility between pypi version and tag of repo (#90)
 - ECmean: time selection is now allowed (#178)
 
 ## [v0.23.0]
