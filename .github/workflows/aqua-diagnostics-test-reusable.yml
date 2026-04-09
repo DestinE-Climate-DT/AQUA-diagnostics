@@ -228,7 +228,7 @@ jobs:
           git fetch --tags --quiet
           echo "Installed PyPI version: $PYPI_VERSION"
           git checkout "v${PYPI_VERSION}"
-      
+
       # ========================================
       # 6. SETUP DVC AND TEST DATA
       # ========================================
