@@ -327,7 +327,7 @@ class Plot2DSeaIce:
 
         Raises a NotEnoughDataError if any requested month is missing.
         """
-        available = set(datarr.coords['month'].values)
+        available = set(datarr.coords["month"].values)
         for month in self.months:
             if month not in available:
                 raise NotEnoughDataError(f"Month {month} missing in {data_label}. Available months: {sorted(available)}")

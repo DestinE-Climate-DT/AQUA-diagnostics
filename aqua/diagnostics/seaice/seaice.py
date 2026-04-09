@@ -241,7 +241,6 @@ class SeaIce(Diagnostic):
         # return a tuple if standard deviation was computed, otherwise just the result
         return (self.result, self.result_std) if calc_std_freq else self.result
 
-
     def _compute_2d_bymethod(self, reader_kwargs: dict = {}, **kwargs):
         """
         This method computes 2D sea ice climatology for each region.
@@ -291,7 +290,6 @@ class SeaIce(Diagnostic):
 
         return self.result
 
-
     def _mask_data_bymethod(self):
         """
         Mask the data based on the specified method.
@@ -326,7 +324,6 @@ class SeaIce(Diagnostic):
 
         return method_masked_data
 
-
     def get_area_cells_and_coords(self, masked_data: xr.DataArray):
         """
         Get areacello and space coordinates
@@ -359,7 +356,6 @@ class SeaIce(Diagnostic):
             areacello = areacello[var_name]
 
         return areacello, space_coord
-
 
     def select_region_area_cell(self, areacello: xr.DataArray, region: str, drop: bool = True):
         """
@@ -464,13 +460,12 @@ class SeaIce(Diagnostic):
         """
         ensure_istype(computed_data, xr.DataArray, logger=self.logger)
 
-        if 'time' not in computed_data.dims:
+        if "time" not in computed_data.dims:
             raise ValueError(f"Cannot compute '{stat}' because 'time' dimension is missing.")
 
-        freq_map = {'monthly': 'time.month', 
-                    'annual': 'time.year'}
+        freq_map = {"monthly": "time.month", "annual": "time.year"}
 
-        stat_map = {'std', 'mean'}
+        stat_map = {"std", "mean"}
 
         if freq not in freq_map:
             self.logger.warning(f"Frequency '{freq}' not recognized. Using 'monthly'.")
@@ -484,7 +479,6 @@ class SeaIce(Diagnostic):
 
         grouped = computed_data.groupby(freq_map[freq])
         return getattr(grouped, stat)("time")
-
 
     def _compute_seasonal_cycle(self, monthly_data):
         """
