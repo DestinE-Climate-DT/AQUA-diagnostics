@@ -29,25 +29,34 @@ class Boxplots(Diagnostic):
     """
     MINIMUM_MONTHS_REQUIRED = 2
 
-    def __init__(self,
-                 catalog: str = None,
-                 model: str = None,
-                 exp: str = None,
-                 source: str = None,
-                 var: str | list[str] = None,
-                 startdate: str = None,
-                 enddate: str = None,
-                 regrid: str = None,
-                 diagnostic: str = "boxplots",
-                 save_netcdf: bool = False,
-                 outputdir: str = './',
-                 loglevel: str = 'WARNING'):
+    def __init__(
+        self,
+        catalog: str = None,
+        model: str = None,
+        exp: str = None,
+        source: str = None,
+        var: str | list[str] = None,
+        startdate: str = None,
+        enddate: str = None,
+        regrid: str = None,
+        diagnostic: str = "boxplots",
+        save_netcdf: bool = False,
+        outputdir: str = "./",
+        loglevel: str = "WARNING",
+    ):
 
-        super().__init__(catalog=catalog, model=model, exp=exp, source=source,
-                         startdate=startdate, enddate=enddate, regrid=regrid,
-                         loglevel=loglevel)
+        super().__init__(
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            startdate=startdate,
+            enddate=enddate,
+            regrid=regrid,
+            loglevel=loglevel,
+        )
 
-        self.logger = log_configure(log_level=loglevel, log_name='Boxplots')
+        self.logger = log_configure(log_level=loglevel, log_name="Boxplots")
         self.var = var
         self.diagnostic = diagnostic
         self.save_netcdf = save_netcdf
@@ -55,8 +64,7 @@ class Boxplots(Diagnostic):
         self.loglevel = loglevel
         self.fldmeans = None
 
-    def run(self, var: str = None, save_netcdf: bool = False,
-            units: str = None, reader_kwargs: dict = {}) -> None:
+    def run(self, var: str = None, save_netcdf: bool = False, units: str = None, reader_kwargs: dict = {}) -> None:
         """
         Retrieve and preprocess dataset, selecting pressure level and/or converting units if needed.
 
@@ -74,22 +82,24 @@ class Boxplots(Diagnostic):
         try:
             if var is not None:
                 self.var = [v.lstrip('-') for v in (var if isinstance(var, list) else [var])]
-            
+
             super().retrieve(var=self.var, reader_kwargs=reader_kwargs,
                              months_required=self.MINIMUM_MONTHS_REQUIRED)
         except NotEnoughDataError:
             raise
         except Exception as e:
-            self.logger.warning("Failed to retrieve variable(s) %s from %s, %s, %s: %s",
-                                var, self.model, self.exp, self.source, e)
+            self.logger.warning(
+                "Failed to retrieve variable(s) %s from %s, %s, %s: %s", var, self.model, self.exp, self.source, e
+            )
 
         if self.data is None:
-            self.logger.warning("Variable(s) %s not found in dataset %s, %s, %s. Skipping.",
-                                self.var, self.model, self.exp, self.source)
+            self.logger.warning(
+                "Variable(s) %s not found in dataset %s, %s, %s. Skipping.", self.var, self.model, self.exp, self.source
+            )
             return
 
-        self.startdate = self.startdate or pd.to_datetime(self.data.time[0].values).strftime('%Y-%m-%d')
-        self.enddate = self.enddate or pd.to_datetime(self.data.time[-1].values).strftime('%Y-%m-%d')
+        self.startdate = self.startdate or pd.to_datetime(self.data.time[0].values).strftime("%Y-%m-%d")
+        self.enddate = self.enddate or pd.to_datetime(self.data.time[-1].values).strftime("%Y-%m-%d")
 
         self.save_netcdf = save_netcdf or self.save_netcdf
 
@@ -100,7 +110,7 @@ class Boxplots(Diagnostic):
                 raise ValueError(f"Length of 'units' ({len(units)}) must match number of variables ({len(self.var)})")
 
             for var_name, target_unit in zip(self.var, units):
-                current_units = self.data[var_name].attrs.get('units')
+                current_units = self.data[var_name].attrs.get("units")
                 if current_units:
                     self.data[var_name] = super()._check_data(data=self.data[var_name], var=var_name, units=target_unit)
 
@@ -116,29 +126,27 @@ class Boxplots(Diagnostic):
         self.fldmeans = xr.Dataset(fldmeans)
         self.logger.info("Field means computed for variables: %s", self.var)
 
-        self.fldmeans.attrs.update({
-            'AQUA_catalog': self.catalog,
-            'AQUA_model': self.model,
-            'AQUA_exp': self.exp,
-            'AQUA_realization': self.realization,
-            'startdate': str(self.startdate),
-            'enddate': str(self.enddate)
-            })
+        self.fldmeans.attrs.update(
+            {
+                "AQUA_catalog": self.catalog,
+                "AQUA_model": self.model,
+                "AQUA_exp": self.exp,
+                "AQUA_realization": self.realization,
+                "startdate": str(self.startdate),
+                "enddate": str(self.enddate),
+            }
+        )
 
         # Save field means to NetCDF if required
         if self.save_netcdf:
             self.logger.info(self.var)
-            var_string = (
-                        '_'.join(self.var) if isinstance(self.var, list)
-                        else self.var if isinstance(self.var, str)
-                        else None
-                        )
-            extra_keys = {'var': var_string} if var_string else {}
+            var_string = "_".join(self.var) if isinstance(self.var, list) else self.var if isinstance(self.var, str) else None
+            extra_keys = {"var": var_string} if var_string else {}
             super().save_netcdf(
                 data=self.fldmeans,
                 diagnostic=self.diagnostic,
-                diagnostic_product='boxplot',
+                diagnostic_product="boxplot",
                 outputdir=self.outputdir,
-                extra_keys=extra_keys
-                )
+                extra_keys=extra_keys,
+            )
             self.logger.info("Field means saved to %s.", self.outputdir)

@@ -102,16 +102,14 @@ class Hovmoller(Diagnostic):
         # This will populate self.data
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         # HACK: some LRA datasets have levels in 'NEMO model layers' (also non NEMO models due to multi-IO)
-        if self.data[self.vert_coord].attrs['units']=='NEMO model layers':
-            self.data[self.vert_coord].attrs['units'] = 'm'
-        super()._check_data(data=self.data[self.vert_coord], var=self.vert_coord, units='m' )
+        if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
+            self.data[self.vert_coord].attrs["units"] = "m"
+        super()._check_data(data=self.data[self.vert_coord], var=self.vert_coord, units="m")
         self.logger.debug("Data retrieved successfully")
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
-            res_dict = super().select_region(
-                data=self.data, region=region, diagnostic="ocean3d", drop=True
-            )
+            res_dict = super().select_region(data=self.data, region=region, diagnostic="ocean3d", drop=True)
             self.region = res_dict["region"]
             self.lat_limits = res_dict["lat_limits"]
             self.lon_limits = res_dict["lon_limits"]
@@ -119,16 +117,12 @@ class Hovmoller(Diagnostic):
             self.region = "global"
             self.lat_limits = None
             self.lon_limits = None
-        self.stacked_data = self.compute_hovmoller(
-            dim_mean=dim_mean, anomaly_ref=anomaly_ref
-        )
+        self.stacked_data = self.compute_hovmoller(dim_mean=dim_mean, anomaly_ref=anomaly_ref)
 
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=self.region)
         self.logger.info("Hovmoller diagram saved to netCDF file")
 
-    def _get_anomaly(
-        self, data: xr.DataArray, anomaly_ref: str = None, dim: str = "time"
-    ):
+    def _get_anomaly(self, data: xr.DataArray, anomaly_ref: str = None, dim: str = "time"):
         """
         Compute anomaly for the given data along a specified dimension.
 
@@ -168,7 +162,7 @@ class Hovmoller(Diagnostic):
         data = data / data.std(dim=dim)
         data.attrs["units"] = "Stand. Units"
         data.attrs["AQUA_standardise"] = f"Standardised with {dim}"
-        #type_str = f"Std_{data.attrs.get('AQUA_type', 'full')}"
+        # type_str = f"Std_{data.attrs.get('AQUA_type', 'full')}"
         return data
 
     def _get_std_anomaly(
@@ -186,7 +180,8 @@ class Hovmoller(Diagnostic):
             anomaly_ref (str or None, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None.
                 If "t0" or "tmean", the anomaly is computed relative to the initial time or the mean, respectively.
                 If None, no anomaly is computed.
-            standardise (bool or None, optional): If True, standardise the anomaly. If None or False, no standardisation is applied.
+            standardise (bool or None, optional): If True, standardise the anomaly.
+                If None or False, no standardisation is applied.
             dim (str, optional): The dimension along which to compute the anomaly and/or standardisation. Default is "time".
 
         Returns:
@@ -220,7 +215,8 @@ class Hovmoller(Diagnostic):
         Args:
             dim_mean (str or None): The dimension along which to compute the mean.
                 If None, no mean is computed.
-            anomaly_ref (str or list, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None. By default, full values are used.
+            anomaly_ref (str or list, optional): Reference for anomaly calculation.
+                Can be "t0", "tmean", or None. By default, full values are used.
 
         Returns:
             xarray.DataArray: A concatenated DataArray containing processed data
@@ -238,15 +234,10 @@ class Hovmoller(Diagnostic):
                 lon_limits=self.lon_limits,
             )
 
-
         for standardise, anomaly_ref in product([False, True], anomaly_ref):
             if not (standardise is True and anomaly_ref is None):
-                self.logger.info(
-                    f"Processing data with standardise={standardise}, anomaly_ref={anomaly_ref}"
-                )
-                processed_data = self._get_std_anomaly(
-                    self.data, anomaly_ref, standardise, dim="time"
-                )
+                self.logger.info(f"Processing data with standardise={standardise}, anomaly_ref={anomaly_ref}")
+                processed_data = self._get_std_anomaly(self.data, anomaly_ref, standardise, dim="time")
                 self.logger.info("Loading data in memory")
                 processed_data.load()
                 self.logger.info("Loaded data in memory")
@@ -286,6 +277,5 @@ class Hovmoller(Diagnostic):
                 diagnostic_product=f"{diagnostic_product}",
                 outputdir=outputdir,
                 rebuild=rebuild,
-                extra_keys={"region": self.region,
-                            'ocean_drift_type': processed_data.attrs['AQUA_ocean_drift_type']}
+                extra_keys={"region": self.region, "ocean_drift_type": processed_data.attrs["AQUA_ocean_drift_type"]},
             )

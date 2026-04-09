@@ -1,4 +1,5 @@
 """Timeseries class for retrieve and netcdf saving of a single experiment"""
+
 import pandas as pd
 import xarray as xr
 
@@ -14,15 +15,24 @@ xr.set_options(keep_attrs=True)
 class Timeseries(BaseMixin):
     """Timeseries class for retrieve and netcdf saving of a single experiment"""
     MINIMUM_MONTHS_REQUIRED = 2
-    
-    def __init__(self, diagnostic_name: str = 'timeseries',
-                 catalog: str = None, model: str = None,
-                 exp: str = None, source: str = None,
-                 regrid: str = None,
-                 startdate: str = None, enddate: str = None,
-                 std_startdate: str = None, std_enddate: str = None,
-                 region: str = None, lon_limits: list = None, lat_limits: list = None,
-                 loglevel: str = 'WARNING'):
+
+    def __init__(
+        self,
+        diagnostic_name: str = "timeseries",
+        catalog: str = None,
+        model: str = None,
+        exp: str = None,
+        source: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        std_startdate: str = None,
+        std_enddate: str = None,
+        region: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the Timeseries class.
 
@@ -44,19 +54,41 @@ class Timeseries(BaseMixin):
             lat_limits (list): The latitude limits to be used. Overriden by region.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
-        super().__init__(diagnostic_name=diagnostic_name,
-                         catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
-                         startdate=startdate, enddate=enddate,
-                         std_startdate=std_startdate, std_enddate=std_enddate,
-                         region=region, lon_limits=lon_limits,
-                         lat_limits=lat_limits, loglevel=loglevel)
+        super().__init__(
+            diagnostic_name=diagnostic_name,
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            std_startdate=std_startdate,
+            std_enddate=std_enddate,
+            region=region,
+            lon_limits=lon_limits,
+            lat_limits=lat_limits,
+            loglevel=loglevel,
+        )
 
-    def run(self, var: str, formula: bool = False, long_name: str = None,
-            units: str = None, short_name: str = None, std: bool = False,
-            freq: list = ['monthly', 'annual'], extend: bool = True,
-            exclude_incomplete: bool = True, center_time: bool = True,
-            box_brd: bool = True, outputdir: str = './', rebuild: bool = True,
-            reader_kwargs: dict = {}, create_catalog_entry: bool = False):
+    def run(
+        self,
+        var: str,
+        formula: bool = False,
+        long_name: str = None,
+        units: str = None,
+        short_name: str = None,
+        std: bool = False,
+        freq: list = ["monthly", "annual"],
+        extend: bool = True,
+        exclude_incomplete: bool = True,
+        center_time: bool = True,
+        box_brd: bool = True,
+        outputdir: str = "./",
+        rebuild: bool = True,
+        reader_kwargs: dict = {},
+        create_catalog_entry: bool = False,
+    ):
         """
         Run all the steps necessary for the computation of the Timeseries.
         Save the results to netcdf files.
@@ -80,22 +112,29 @@ class Timeseries(BaseMixin):
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         """
-        self.logger.info('Running Timeseries for %s', var)
-        self.retrieve(var=var, formula=formula, long_name=long_name, units=units,
-                      short_name=short_name, reader_kwargs=reader_kwargs)
+        self.logger.info("Running Timeseries for %s", var)
+        self.retrieve(
+            var=var, formula=formula, long_name=long_name, units=units, short_name=short_name, reader_kwargs=reader_kwargs
+        )
         freq = to_list(freq)
 
         for f in freq:
-            self.compute(freq=f, extend=extend, exclude_incomplete=exclude_incomplete,
-                         center_time=center_time, box_brd=box_brd)
+            self.compute(
+                freq=f, extend=extend, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd
+            )
             if std:
-                self.compute_std(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time,
-                                 box_brd=box_brd)
-            self.save_netcdf(diagnostic_product='timeseries', freq=f, outputdir=outputdir,
-                             rebuild=rebuild, create_catalog_entry=create_catalog_entry)
+                self.compute_std(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
+            self.save_netcdf(
+                diagnostic_product="timeseries",
+                freq=f,
+                outputdir=outputdir,
+                rebuild=rebuild,
+                create_catalog_entry=create_catalog_entry,
+            )
 
-    def compute(self, freq: str, extend: bool = True, exclude_incomplete: bool = True,
-                center_time: bool = True, box_brd: bool = True):
+    def compute(
+        self, freq: str, extend: bool = True, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True
+    ):
         """
         Compute the mean of the data. Support for hourly, daily, monthly and annual means.
 
@@ -107,17 +146,22 @@ class Timeseries(BaseMixin):
                                 Default is True
         """
         if freq is None:
-            self.logger.error('Frequency not provided, cannot compute mean')
+            self.logger.error("Frequency not provided, cannot compute mean")
             return
 
         freq = frequency_string_to_pandas(freq)
         str_freq = pandas_freq_to_string(freq)
 
-        self.logger.info('Computing %s mean', str_freq)
+        self.logger.info("Computing %s mean", str_freq)
         data = self.data.sel(time=slice(self.plt_startdate, self.plt_enddate))
         if len(data.time) == 0:
-            self.logger.warning('No data available for the selected period %s - %s, using the standard period %s - %s',
-                                self.plt_startdate, self.plt_enddate, self.std_startdate, self.std_enddate)
+            self.logger.warning(
+                "No data available for the selected period %s - %s, using the standard period %s - %s",
+                self.plt_startdate,
+                self.plt_enddate,
+                self.std_startdate,
+                self.std_enddate,
+            )
             data = self.data.sel(time=slice(self.std_startdate, self.std_enddate))
 
         # Field and time average
@@ -126,7 +170,7 @@ class Timeseries(BaseMixin):
 
         # If no data is available after the time mean, return
         if data.time.size == 0:
-            self.logger.warning(f'Not enough data available to compute {str_freq} mean')
+            self.logger.warning(f"Not enough data available to compute {str_freq} mean")
             data = None
         else:
             if extend:
@@ -136,7 +180,7 @@ class Timeseries(BaseMixin):
                 data = extended_data
 
             if self.region is not None:
-                data.attrs['AQUA_region'] = self.region
+                data.attrs["AQUA_region"] = self.region
 
             # Due to the possible usage of the standard period, the time may need to be reselected correctly
             data = data.sel(time=slice(self.plt_startdate, self.plt_enddate))
@@ -146,17 +190,16 @@ class Timeseries(BaseMixin):
             data.load()
             self.logger.debug(f"Loaded data for frequency {str_freq} in memory")
 
-        if str_freq == 'hourly':
+        if str_freq == "hourly":
             self.hourly = data
-        elif str_freq == 'daily':
+        elif str_freq == "daily":
             self.daily = data
-        elif str_freq == 'monthly':
+        elif str_freq == "monthly":
             self.monthly = data
-        elif str_freq == 'annual':
+        elif str_freq == "annual":
             self.annual = data
 
-    def _extend_data(self, data: xr.DataArray,
-                     freq: str = None, center_time: bool = True):
+    def _extend_data(self, data: xr.DataArray, freq: str = None, center_time: bool = True):
         """
         Extend the data with a loop if needed.
         This works only for monthly and annual frequencies.
@@ -166,7 +209,7 @@ class Timeseries(BaseMixin):
             freq (str): The frequency of the data.
             center_time (bool): If True, the time will be centered.
         """
-        if freq == 'monthly' or freq == 'annual':
+        if freq == "monthly" or freq == "annual":
             # Use freq parameter for proper rounding
             class_startdate = round_startdate(pd.Timestamp(self.plt_startdate), freq=freq)
             class_enddate = round_enddate(pd.Timestamp(self.plt_enddate), freq=freq)
@@ -182,41 +225,53 @@ class Timeseries(BaseMixin):
             end_date = round_enddate(pd.Timestamp(data.time[-1].values), freq=freq)
             self.logger.debug(f"Start date of data: {start_date}, End date of data: {end_date}")
 
-            self.logger.debug(f'Extension check - Data has {len(data.time)} timesteps before extension')
+            self.logger.debug(f"Extension check - Data has {len(data.time)} timesteps before extension")
 
             # Extend the data if needed
             if class_startdate < start_date:
-                self.logger.info('Extending back the start date from %s to %s', start_date, class_startdate)
+                self.logger.info("Extending back the start date from %s to %s", start_date, class_startdate)
                 extend_enddate = start_date - pd.Timedelta(days=1)
-                loop = loop_seasonalcycle(data=data, startdate=class_startdate, enddate=extend_enddate,
-                                        freq=freq, center_time=center_time, loglevel=self.loglevel)
-                data = xr.concat([loop, data], dim='time', coords='different', compat='equals')
-                data = data.sortby('time')
+                loop = loop_seasonalcycle(
+                    data=data,
+                    startdate=class_startdate,
+                    enddate=extend_enddate,
+                    freq=freq,
+                    center_time=center_time,
+                    loglevel=self.loglevel,
+                )
+                data = xr.concat([loop, data], dim="time", coords="different", compat="equals")
+                data = data.sortby("time")
             else:
-                self.logger.debug(f'No extension needed for the start date: {start_date} >= {class_startdate}')
+                self.logger.debug(f"No extension needed for the start date: {start_date} >= {class_startdate}")
 
             if class_enddate > end_date:
-                self.logger.info('Extending the end date from %s to %s', end_date, class_enddate)
+                self.logger.info("Extending the end date from %s to %s", end_date, class_enddate)
                 # Start extension from the next period after end_date
-                if freq == 'annual':
+                if freq == "annual":
                     # Get the start of next year
-                    extend_startdate = pd.Timestamp(year=end_date.year + 1, month=1, day=1,
-                                                   hour=0, minute=0, second=0)
-                elif freq == 'monthly':
+                    extend_startdate = pd.Timestamp(year=end_date.year + 1, month=1, day=1, hour=0, minute=0, second=0)
+                elif freq == "monthly":
                     # Get the start of next month
                     next_month = end_date + pd.DateOffset(months=1)
-                    extend_startdate = pd.Timestamp(year=next_month.year, month=next_month.month, day=1,
-                                                   hour=0, minute=0, second=0)
+                    extend_startdate = pd.Timestamp(
+                        year=next_month.year, month=next_month.month, day=1, hour=0, minute=0, second=0
+                    )
 
-                self.logger.debug(f'Extension - Creating loop from {extend_startdate} to {class_enddate}')
-                loop = loop_seasonalcycle(data=data, startdate=extend_startdate, enddate=class_enddate,
-                                          freq=freq, center_time=center_time, loglevel=self.loglevel)
-                data = xr.concat([data, loop], dim='time', coords='different', compat='equals')
-                data = data.sortby('time')
+                self.logger.debug(f"Extension - Creating loop from {extend_startdate} to {class_enddate}")
+                loop = loop_seasonalcycle(
+                    data=data,
+                    startdate=extend_startdate,
+                    enddate=class_enddate,
+                    freq=freq,
+                    center_time=center_time,
+                    loglevel=self.loglevel,
+                )
+                data = xr.concat([data, loop], dim="time", coords="different", compat="equals")
+                data = data.sortby("time")
             else:
-                self.logger.debug(f'No extension needed for the end date: {class_enddate} >= {end_date}')
+                self.logger.debug(f"No extension needed for the end date: {class_enddate} >= {end_date}")
 
-            self.logger.debug(f'Extension complete - Final data has {len(data.time)} timesteps')
+            self.logger.debug(f"Extension complete - Final data has {len(data.time)} timesteps")
             return data
         else:
             self.logger.warning(f"The frequency {freq} does not support extension")

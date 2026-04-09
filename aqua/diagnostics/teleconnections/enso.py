@@ -14,13 +14,19 @@ class ENSO(BaseMixin):
     """
     MINIMUM_MONTHS_REQUIRED = 24
 
-    def __init__(self, catalog: str = None, model: str = None,
-                 exp: str = None, source: str = None,
-                 regrid: str = None,
-                 startdate: str = None, enddate: str = None,
-                 configdir: str = None,
-                 definition: str = 'teleconnections-destine',
-                 loglevel: str = 'WARNING'):
+    def __init__(
+        self,
+        catalog: str = None,
+        model: str = None,
+        exp: str = None,
+        source: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        configdir: str = None,
+        definition: str = "teleconnections-destine",
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the ENSO class.
 
@@ -37,13 +43,22 @@ class ENSO(BaseMixin):
                              This is used to deduce the variable name and the lat/lon for the index.
             loglevel (str): Logging level. Default is 'WARNING'.
         """
-        super().__init__(telecname='ENSO', catalog=catalog, model=model, exp=exp, source=source,
-                         regrid=regrid, startdate=startdate, enddate=enddate,
-                         configdir=configdir, definition=definition,
-                         loglevel=loglevel)
-        self.logger = log_configure(log_name='ENSO', log_level=loglevel)
+        super().__init__(
+            telecname="ENSO",
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            configdir=configdir,
+            definition=definition,
+            loglevel=loglevel,
+        )
+        self.logger = log_configure(log_name="ENSO", log_level=loglevel)
 
-        self.var = self.definition.get('field')
+        self.var = self.definition.get("field")
 
     def retrieve(self, reader_kwargs: dict = {}) -> None:
         """Retrieve the data for the ENSO index.
@@ -55,11 +70,10 @@ class ENSO(BaseMixin):
         # Assign self.data, self.reader, self.catalog
         super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
-        self.data = self.reader.timmean(self.data, freq='MS')
+        self.data = self.reader.timmean(self.data, freq="MS")
 
-    def compute_index(self, months_window: int = 3, box_brd: bool = True,
-                       rebuild: bool = False):
-        """"
+    def compute_index(self, months_window: int = 3, box_brd: bool = True, rebuild: bool = False):
+        """ "
         Evaluate station based index for a teleconnection.
         Field data must be monthly gridded data.
 
@@ -71,33 +85,32 @@ class ENSO(BaseMixin):
         """
 
         if self.index is not None and not rebuild:
-            self.logger.info('ENSO index already calculated, skipping.')
+            self.logger.info("ENSO index already calculated, skipping.")
             return
         if self.data is None:
             raise NotEnoughDataError('Data not retrieved')
 
-        latN = self.definition.get('latN') # noqa: N806
-        latS = self.definition.get('latS') # noqa: N806
-        lonW = self.definition.get('lonW') # noqa: N806
-        lonE = self.definition.get('lonE') # noqa: N806
+        latN = self.definition.get("latN")  # noqa: N806
+        latS = self.definition.get("latS")  # noqa: N806
+        lonW = self.definition.get("lonW")  # noqa: N806
+        lonE = self.definition.get("lonE")  # noqa: N806
 
         if self.data[self.var].lon.min() >= 0:
-            lonW = lon_to_360(lonW) # noqa: N806
-            lonE = lon_to_360(lonE) # noqa: N806
+            lonW = lon_to_360(lonW)  # noqa: N806
+            lonE = lon_to_360(lonE)  # noqa: N806
 
-        self.logger.debug(f'lonW: {lonW}, lonE: {lonE}')
-        self.logger.debug(f'latN: {latN}, latS: {latS}')
+        self.logger.debug(f"lonW: {lonW}, lonE: {lonE}")
+        self.logger.debug(f"latN: {latN}, latS: {latS}")
 
-        data = self.reader.fldmean(self.data[self.var], lon_limits=[lonW, lonE],
-                                   lat_limits=[latS, latN], box_brd=box_brd)
+        data = self.reader.fldmean(self.data[self.var], lon_limits=[lonW, lonE], lat_limits=[latS, latN], box_brd=box_brd)
 
         # For the groupby operation it is better to load the data in memory
         data.load()
 
-        data_an = data.groupby('time.month') - data.groupby('time.month').mean(dim='time')
+        data_an = data.groupby("time.month") - data.groupby("time.month").mean(dim="time")
         field_mean_an = data_an.rolling(time=months_window, center=True).mean(skipna=True)
-        field_mean_an = field_mean_an.rename('index')
+        field_mean_an = field_mean_an.rename("index")
 
-        self.logger.debug('Index evaluated')
+        self.logger.debug("Index evaluated")
 
         self.index = field_mean_an
