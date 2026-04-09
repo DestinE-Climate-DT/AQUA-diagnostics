@@ -102,8 +102,15 @@ class PlotMLD:
             sym=False,
         )
 
-        self.save_plot(fig, diagnostic_product=self.diagnostic_product, metadata={"description": self.description},
-                       rebuild=rebuild, extra_keys={'region': self.region}, format=save_format, dpi=dpi)
+        self.save_plot(
+            fig,
+            diagnostic_product=self.diagnostic_product,
+            metadata={"description": self.description},
+            rebuild=rebuild,
+            extra_keys={"region": self.region},
+            format=save_format,
+            dpi=dpi,
+        )
 
     def set_figsize(self):
         self.figsize = (9 * self.ncols, 8 * self.nrows)
@@ -157,9 +164,7 @@ class PlotMLD:
                         else:
                             data_level_var = data[var].sel(level=level)
 
-                        data_level_var.attrs["long_name"] = (
-                            f"{data_level_var.attrs.get('long_name', var)} at {level}m"
-                        )
+                        data_level_var.attrs["long_name"] = f"{data_level_var.attrs.get('long_name', var)} at {level}m"
                         self.data_map_list.append(data_level_var)
             else:
                 for var in self.vars:
@@ -167,17 +172,15 @@ class PlotMLD:
                     self.data_map_list.append(data_var)
 
     def set_cbar_labels(self, var: str = None):
-        self.cbar_label = cbar_get_label(
-            data=self.data[var], cbar_label=None, loglevel=self.loglevel
-        )
+        self.cbar_label = cbar_get_label(data=self.data[var], cbar_label=None, loglevel=self.loglevel)
+
     def set_convert_lon(self, data=None):
-        '''Convert longitude from 0-360 to -180 to 180 and sort accordingly.'''
+        """Convert longitude from 0-360 to -180 to 180 and sort accordingly."""
         data = data.assign_coords(lon=((data.lon + 180) % 360) - 180)
-        data = data.sortby('lon')
+        data = data.sortby("lon")
 
         # lat_limits = data.attrs['AQUA_lat_limits']
-        lon_limits = data.attrs['AQUA_lon_limits']
-
+        lon_limits = data.attrs["AQUA_lon_limits"]
 
         if lon_limits is not None:
             lon_min, lon_max = lon_limits
@@ -192,7 +195,7 @@ class PlotMLD:
                         ds_reg.sel(lon=slice(lon_min, 180)),
                         ds_reg.sel(lon=slice(-180, lon_max)),
                     ],
-                    dim="lon"
+                    dim="lon",
                 )
             data = ds_reg
         return data
@@ -219,15 +222,18 @@ class PlotMLD:
         else:
             nlevels = 50
         self.nlevels = nlevels
-        self.logger.debug(
-            f"Colorbar limits set to vmin: {self.vmin}, vmax: {self.vmax}, nlevels: {self.nlevels}"
-        )
+        self.logger.debug(f"Colorbar limits set to vmin: {self.vmin}, vmax: {self.vmax}, nlevels: {self.nlevels}")
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the MLD plot."""
-        self.suptitle = TitleBuilder(diagnostic="MLD", regions=self.region,
-                             catalog=self.catalog, model=self.model, exp=self.exp,
-                             timeseason=f"{self.clim_time} climatology").generate()
+        self.suptitle = TitleBuilder(
+            diagnostic="MLD",
+            regions=self.region,
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp,
+            timeseason=f"{self.clim_time} climatology",
+        ).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):
@@ -248,13 +254,25 @@ class PlotMLD:
         self.logger.debug("Title list set to: %s", self.title_list)
 
     def set_description(self):
-        self.description = f"Mixed layer depth plot of spatially averaged {self.region} region, {self.clim_time} climatology for the {self.catalog} {self.model} {self.exp} experiment"
+        self.description = (
+            f"Mixed layer depth plot of spatially averaged {self.region} region, {self.clim_time} climatology "
+            f"for the {self.catalog} {self.model} {self.exp} experiment"
+        )
         if self.obs:
-            self.description = self.description + (f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}")
+            self.description = self.description + (
+                f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}"
+            )
 
-    def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
-                  rebuild: bool = True,
-                  dpi: int = 300, format: str = SAVE_FORMAT, metadata: dict = None):
+    def save_plot(
+        self,
+        fig,
+        diagnostic_product: str = None,
+        extra_keys: dict = None,
+        rebuild: bool = True,
+        dpi: int = 300,
+        format: str = SAVE_FORMAT,
+        metadata: dict = None,
+    ):
         """
         Save the plot to a file.
 
@@ -269,5 +287,12 @@ class PlotMLD:
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                     extra_keys=extra_keys, metadata=metadata, dpi=dpi, extension=format)
+        self.outputsaver.save_figure(
+            fig,
+            diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
+            extra_keys=extra_keys,
+            metadata=metadata,
+            dpi=dpi,
+            extension=format,
+        )

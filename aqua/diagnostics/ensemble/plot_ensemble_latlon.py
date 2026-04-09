@@ -131,7 +131,8 @@ class PlotEnsembleLatLon(BaseMixin):
             dpi (int, optional): Resolution for saved figures. Default is 300.
             title_mean (str, optional): Title for mean plot. Auto-generated if None.
             title_std (str, optional): Title for standard deviation plot. Auto-generated if None.
-            save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg'). Default is SAVE_FORMAT.
+            save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg').
+                Default is SAVE_FORMAT.
             vmin_mean, vmax_mean (float, optional): Color scale limits for mean plot. Auto-set if None.
             vmin_std, vmax_std (float, optional): Color scale limits for std plot. Auto-set if None.
             proj (str, optional): Map projection. Default is "robinson".
@@ -174,9 +175,9 @@ class PlotEnsembleLatLon(BaseMixin):
             long_name = dataset_mean.attrs.get("long_name") or var
 
         if title_mean is None:
-            title_mean = TitleBuilder(diagnostic="Ensemble mean",variable=long_name, model=self.model).generate()
+            title_mean = TitleBuilder(diagnostic="Ensemble mean", variable=long_name, model=self.model).generate()
         if title_std is None:
-            title_std = TitleBuilder(diagnostic="Ensemble standard deviation",variable=long_name, model=self.model).generate()
+            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", variable=long_name, model=self.model).generate()
 
         proj = get_projection(proj, **proj_params)
 
@@ -238,6 +239,5 @@ class PlotEnsembleLatLon(BaseMixin):
         ax2.set_ylabel("Latitude")
 
         # Saving plots
-        self.save_figure(var=var, fig=fig1, fig_std=fig2,
-                         description=description, format=save_format, dpi=dpi)
+        self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format=save_format, dpi=dpi)
         return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}
