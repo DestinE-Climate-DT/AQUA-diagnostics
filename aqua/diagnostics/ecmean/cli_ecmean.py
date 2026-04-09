@@ -230,13 +230,13 @@ def set_description(diagnostic, model, exp, year1, year2, config):
 
     regions_phrase = f"Processed regions are {region_text}."
 
-    if diagnostic == 'performance_indices':
+    if diagnostic == "performance_indices":
         return (
             f"Reichler and Kim (2008) Performance Indices (normalized against an ensemble of CMIP6 models) "
             f"for different regions and seasons {model_time} "
             f"{regions_phrase}. Values smaller than one imply better results than the CMIP6 multi-model mean."
         )
-    elif diagnostic == 'global_mean':
+    elif diagnostic == "global_mean":
         return (
             f"Global mean differences with respect to observational references "
             f"(normalized to obsevational interannual variability) "
@@ -246,6 +246,7 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     else:
         # produce a generic description
         return f"Diagnostic {diagnostic} {model_time.strip()}"
+
 
 if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
