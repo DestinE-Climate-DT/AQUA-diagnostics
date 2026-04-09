@@ -9,24 +9,25 @@ from aqua.core.logger import log_configure
 from aqua.core.util import add_cyclic_lon, evaluate_colorbar_limits
 
 
-def plot_maps(maps: list[xr.DataArray],
-              style=None,
-              title: str = None,
-              titles: list = None,
-              proj: ccrs.Projection = ccrs.PlateCarree(),
-              extent: list = None,
-              cmap: str = "RdBu_r",
-              cbar_labels: list = None,
-              ytext: list = None,
-              nrows: int = 6,
-              ncols: int = 2,
-              transform_first: bool = False,
-              cyclic_lon: bool = True,
-              loglevel: str = "WARNING",
-              return_fig: bool = True,
-              nlevels: int = 12,
-              **kwargs
-              ):
+def plot_maps(
+    maps: list[xr.DataArray],
+    style=None,
+    title: str = None,
+    titles: list = None,
+    proj: ccrs.Projection = ccrs.PlateCarree(),
+    extent: list = None,
+    cmap: str = "RdBu_r",
+    cbar_labels: list = None,
+    ytext: list = None,
+    nrows: int = 6,
+    ncols: int = 2,
+    transform_first: bool = False,
+    cyclic_lon: bool = True,
+    loglevel: str = "WARNING",
+    return_fig: bool = True,
+    nlevels: int = 12,
+    **kwargs,
+):
     """
     Plot multiple 2D maps (xarray DataArrays) in a grid layout.
 
@@ -88,9 +89,10 @@ def plot_maps(maps: list[xr.DataArray],
 
     figsize = (ncols * 6.5, nrows * 3.5)
     fig, axs = plt.subplots(
-        nrows=nrows, ncols=ncols,
+        nrows=nrows,
+        ncols=ncols,
         figsize=figsize,
-        subplot_kw={'projection': ccrs.PlateCarree()},
+        subplot_kw={"projection": ccrs.PlateCarree()},
     )
     axs = axs.flatten()
 
@@ -101,7 +103,7 @@ def plot_maps(maps: list[xr.DataArray],
             logger.warning(f"Could not add cyclic longitude to map {i}: {e}")
 
         vmin, vmax = evaluate_colorbar_limits(maps=[maps[i]], sym=True)
-        ticks = np.linspace(vmin, vmax, int(nlevels/2) + 1)
+        ticks = np.linspace(vmin, vmax, int(nlevels / 2) + 1)
         if len(ticks) < 3:  # ensure at least 3 ticks for colorbar
             ticks = np.linspace(vmin, vmax, 3)
         logger.debug(f"Colorbar limits for map {i}: vmin={vmin}, vmax={vmax}")
@@ -132,14 +134,13 @@ def plot_maps(maps: list[xr.DataArray],
         ax.coastlines()
 
         if ytext:
-            ax.text(-0.3, 0.33, ytext[i], fontsize=15, color='dimgray',
-                    rotation=90, transform=ax.transAxes, ha='center')
+            ax.text(-0.3, 0.33, ytext[i], fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
 
         if titles and i < len(titles):
             ax.set_title(titles[i], fontsize=12)
 
     if title:
-        plt.suptitle(title, fontsize=ncols*12, y=0.95)
+        plt.suptitle(title, fontsize=ncols * 12, y=0.95)
 
     if return_fig:
         return fig

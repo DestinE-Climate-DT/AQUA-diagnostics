@@ -4,14 +4,14 @@ from collections import defaultdict
 
 
 def defaultdict_to_dict(d):
-    """ Recursively converts a defaultdict to a normal dict."""
+    """Recursively converts a defaultdict to a normal dict."""
     if isinstance(d, defaultdict):
         return {k: defaultdict_to_dict(v) for k, v in d.items()}
     return d
 
 
 def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains=None):
-    """ Filters a list of string regions based on config_file defined coords values and specified domain.
+    """Filters a list of string regions based on config_file defined coords values and specified domain.
     This function checks if regions fall within the appropriate hemisphere based on their latitude bounds.
 
     Args:
@@ -25,26 +25,28 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
         list or str: Filtered list of region names. If exactly one region is valid, returns a single string.
     """
     if not valid_domains:
-        valid_domains = ['nh', 'sh']
+        valid_domains = ["nh", "sh"]
 
     if domain not in valid_domains:
         raise ValueError(f"Invalid domain '{domain}'. Valid domains are: {valid_domains}")
 
     filtered_regions = []
     for r in regions_list:
-        if r in regions_dict['regions'].keys():
-            region_info = regions_dict['regions'][r]
-            lat_limits = region_info.get('lat_limits', [])
+        if r in regions_dict["regions"].keys():
+            region_info = regions_dict["regions"][r]
+            lat_limits = region_info.get("lat_limits", [])
 
             if len(lat_limits) >= 2:
                 min_lat, max_lat = lat_limits[0], lat_limits[1]
 
-            if domain == 'nh' and min_lat >= 0:   # Northern hemisphere
+            if domain == "nh" and min_lat >= 0:  # Northern hemisphere
                 filtered_regions.append(r)
-            elif domain == 'sh' and max_lat <= 0: # Southern hemisphere
+            elif domain == "sh" and max_lat <= 0:  # Southern hemisphere
                 filtered_regions.append(r)
             else:
-                logger.debug(f"Region '{r}' doesn't meet the data domain criteria for {domain}, not including in regions_list.")
+                logger.debug(
+                    f"Region '{r}' doesn't meet the data domain criteria for {domain}, not including in regions_list."
+                )
         else:
             logger.error(f"No region '{r}' defined in regions_dict from yaml. Check this mismatch.")
 
@@ -52,7 +54,7 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
 
 
 def ensure_istype(obj, expected_types, logger=None):
-    """ Ensure an object is of the expected type(s), otherwise raise ValueError.
+    """Ensure an object is of the expected type(s), otherwise raise ValueError.
 
     Args:
         obj: The object to check.
@@ -78,14 +80,16 @@ def extract_dates(data):
     Returns:
         tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM-DD` when possible.
     """
+
     def _fmt_dt(attr_name):
-        dt = data.attrs.get(attr_name, f'No {attr_name} found')
-        if hasattr(dt, 'strftime'):
-            return dt.strftime('%Y-%m-%d')
-        if isinstance(dt, str) and 'T' in dt:
-            return dt.split('T')[0]
+        dt = data.attrs.get(attr_name, f"No {attr_name} found")
+        if hasattr(dt, "strftime"):
+            return dt.strftime("%Y-%m-%d")
+        if isinstance(dt, str) and "T" in dt:
+            return dt.split("T")[0]
         return dt
-    return _fmt_dt('AQUA_startdate'), _fmt_dt('AQUA_enddate')
+
+    return _fmt_dt("AQUA_startdate"), _fmt_dt("AQUA_enddate")
 
 
 def _check_list_regions_type(regions_to_plot, logger=None):
@@ -106,9 +110,9 @@ def _check_list_regions_type(regions_to_plot, logger=None):
         return None
 
     if not isinstance(regions_to_plot, list):
-        raise TypeError(  f"Expected regions_to_plot to be a list, but got {type(regions_to_plot).__name__}.")
+        raise TypeError(f"Expected regions_to_plot to be a list, but got {type(regions_to_plot).__name__}.")
 
     if not all(isinstance(region, str) for region in regions_to_plot):
         invalid_types = [type(region).__name__ for region in regions_to_plot]
-        raise TypeError(  f"Expected a list of strings, but found element types: {invalid_types}.")
+        raise TypeError(f"Expected a list of strings, but found element types: {invalid_types}.")
     return regions_to_plot
