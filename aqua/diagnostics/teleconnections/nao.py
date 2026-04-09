@@ -12,6 +12,7 @@ class NAO(BaseMixin):
     It inherits from the BaseMixin class and implements the necessary methods
     to calculate the NAO index.
     """
+
     MINIMUM_MONTHS_REQUIRED = 24
 
     def __init__(
@@ -86,7 +87,7 @@ class NAO(BaseMixin):
             self.logger.info("NAO index already calculated, skipping.")
             return
         if self.data is None:
-            raise NotEnoughDataError('Data not retrieved')
+            raise NotEnoughDataError("Data not retrieved")
 
         lat1 = self.definition.get("lat1")
         lat2 = self.definition.get("lat2")

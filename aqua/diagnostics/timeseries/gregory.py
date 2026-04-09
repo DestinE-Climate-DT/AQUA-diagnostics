@@ -126,12 +126,18 @@ class Gregory(Diagnostic):
             net_toa_name (str): The name of the net TOA radiation data.
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
         """
-        data, self.reader, self.catalog = super()._retrieve(catalog=self.catalog, model=self.model,
-                                                            exp=self.exp, source=self.source,
-                                                            regrid=self.regrid, startdate=self.startdate,
-                                                            enddate=self.enddate, reader_kwargs=reader_kwargs,
-                                                            months_required=self.MINIMUM_MONTHS_REQUIRED)
-        self.realization = reader_kwargs['realization'] if 'realization' in reader_kwargs else DEFAULT_REALIZATION
+        data, self.reader, self.catalog = super()._retrieve(
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp,
+            source=self.source,
+            regrid=self.regrid,
+            startdate=self.startdate,
+            enddate=self.enddate,
+            reader_kwargs=reader_kwargs,
+            months_required=self.MINIMUM_MONTHS_REQUIRED,
+        )
+        self.realization = reader_kwargs["realization"] if "realization" in reader_kwargs else DEFAULT_REALIZATION
 
         if t2m:
             self.t2m = data[t2m_name]

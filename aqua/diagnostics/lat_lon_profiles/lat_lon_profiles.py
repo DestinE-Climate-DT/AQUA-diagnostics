@@ -16,19 +16,31 @@ class LatLonProfiles(Diagnostic):
 
     Supported Mean Types:
         - 'zonal': Average over longitude, producing latitude profiles
-        - 'meridional': Average over latitude, producing longitude profilesThe class evaluates a seasonal frequency and the entire period (longterm).
+        - 'meridional': Average over latitude, producing longitude profiles
 
     """
+
     MINIMUM_MONTHS_REQUIRED = 12
 
-    def __init__(self, model: str, exp: str, source: str,
-                   catalog: str = None, regrid: str = None,
-                 startdate: str = None, enddate: str = None,
-                 std_startdate: str = None, std_enddate: str = None,
-                 region: str = None, lon_limits: list = None, lat_limits: list = None,
-                 regions_file_path: str = None,
-                 mean_type: str = 'zonal', diagnostic_name: str = 'latlonprofile',
-                 loglevel: str = 'WARNING'):
+    def __init__(
+        self,
+        model: str,
+        exp: str,
+        source: str,
+        catalog: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        std_startdate: str = None,
+        std_enddate: str = None,
+        region: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+        regions_file_path: str = None,
+        mean_type: str = "zonal",
+        diagnostic_name: str = "latlonprofile",
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the LatLonProfiles class.
 
@@ -113,17 +125,15 @@ class LatLonProfiles(Diagnostic):
         if formula:
             super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             self.logger.debug("Evaluating formula %s", var)
-            self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
-                                        short_name=standard_name, units=units,
-                                        loglevel=self.loglevel).evaluate()
+            self.data = EvaluateFormula(
+                data=self.data, formula=var, long_name=long_name, short_name=standard_name, units=units, loglevel=self.loglevel
+            ).evaluate()
             if self.data is None:
-                raise ValueError(f'Error evaluating formula {var}. '
-                                    'Check the variable names and the formula syntax.')
+                raise ValueError(f"Error evaluating formula {var}. Check the variable names and the formula syntax.")
         else:
             super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             if self.data is None:
-                raise ValueError(f'Variable {var} not found in the data. '
-                                    'Check the variable name and the data source.')
+                raise ValueError(f"Variable {var} not found in the data. Check the variable name and the data source.")
             # Get the xr.DataArray to be aligned with the formula code
             self.data = self.data[var]
 

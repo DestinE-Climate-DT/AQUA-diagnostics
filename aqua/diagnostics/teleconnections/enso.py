@@ -12,6 +12,7 @@ class ENSO(BaseMixin):
     It inherits from the BaseMixin class and implements the necessary methods
     to calculate the ENSO index.
     """
+
     MINIMUM_MONTHS_REQUIRED = 24
 
     def __init__(
@@ -88,7 +89,7 @@ class ENSO(BaseMixin):
             self.logger.info("ENSO index already calculated, skipping.")
             return
         if self.data is None:
-            raise NotEnoughDataError('Data not retrieved')
+            raise NotEnoughDataError("Data not retrieved")
 
         latN = self.definition.get("latN")  # noqa: N806
         latS = self.definition.get("latS")  # noqa: N806

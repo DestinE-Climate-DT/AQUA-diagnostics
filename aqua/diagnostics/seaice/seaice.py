@@ -38,6 +38,7 @@ class SeaIce(Diagnostic):
         regions_definition (dict): The loaded regions definition from the YAML file.
         loglevel     (str, optional): The logging level. Defaults to 'WARNING'.
     """
+
     MINIMUM_MONTHS_REQUIRED = 1
     # 12 if seasonal cycle is requested (specified below), otherwise 1 month is enough
 
@@ -180,8 +181,7 @@ class SeaIce(Diagnostic):
         """
         months_required = 12 if get_seasonal_cycle else self.MINIMUM_MONTHS_REQUIRED
         # retrieve data with Diagnostic method
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs,
-                         months_required=months_required)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=months_required)
 
         # get the sea ice masked by method
         masked_data = self._mask_data_bymethod()
@@ -260,8 +260,7 @@ class SeaIce(Diagnostic):
         stat = kwargs.get("stat", "mean")
         freq = kwargs.get("freq", "monthly")
 
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs,
-                         months_required=self.MINIMUM_MONTHS_REQUIRED)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         original_masked_data = self._mask_data_bymethod()
 
         regional_2d_results = []
