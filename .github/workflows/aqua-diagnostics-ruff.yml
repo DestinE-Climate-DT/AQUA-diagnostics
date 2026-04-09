@@ -1,4 +1,4 @@
-name: Ruff
+name: AQUA-diagnostics Ruff
 
 on:
   push:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  ruff:
+  aqua-diagnostics-ruff:
     runs-on: ubuntu-latest
 
     steps:
