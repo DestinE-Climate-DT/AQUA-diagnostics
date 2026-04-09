@@ -175,10 +175,11 @@ Here we describe only the specific settings for the global biases diagnostic.
                 long_name: "Top net radiation"
 
 * ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.
-  ``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
-  ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant, based on a two-sample t-test (``significance_alpha`` defines the confidence level for the test, e.g., 0.05 for 95% confidence).
-  The default parameters are used if not specified for a specific variable.
-  Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
+* ``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
+* ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant, based on a two-sample t-test (``significance_alpha`` defines the confidence level for the test, e.g., 0.05 for 95% confidence).
+
+The default parameters are used if not specified for a specific variable.
+Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
 
 .. code-block:: yaml
 
