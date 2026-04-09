@@ -1,9 +1,9 @@
 """Time utilities for AQUA diagnostics"""
+
 import pandas as pd
 
 
-def start_end_dates(startdate=None, enddate=None,
-                    start_std=None, end_std=None):
+def start_end_dates(startdate=None, enddate=None, start_std=None, end_std=None):
     """
     Evaluate start and end dates for the reference data retrieve,
     in the case both are provided, to minimize the Reader calls.
@@ -33,7 +33,7 @@ def start_end_dates(startdate=None, enddate=None,
     return start_retrieve, end_retrieve
 
 
-def round_startdate(startdate, freq='monthly'):
+def round_startdate(startdate, freq="monthly"):
     """
     Round the start date to the start of the month or year.
 
@@ -44,17 +44,15 @@ def round_startdate(startdate, freq='monthly'):
     Returns:
         pd.Timestamp: rounded start date
     """
-    if freq == 'annual':
-        return pd.Timestamp(year=startdate.year, month=1, day=1,
-                           hour=0, minute=0, second=0)
-    elif freq == 'monthly':
-        return pd.Timestamp(year=startdate.year, month=startdate.month, day=1,
-                           hour=0, minute=0, second=0)
+    if freq == "annual":
+        return pd.Timestamp(year=startdate.year, month=1, day=1, hour=0, minute=0, second=0)
+    elif freq == "monthly":
+        return pd.Timestamp(year=startdate.year, month=startdate.month, day=1, hour=0, minute=0, second=0)
     else:
         raise ValueError(f"Unsupported frequency '{freq}'. Only 'monthly' and 'annual' are supported.")
 
 
-def round_enddate(enddate, freq='monthly'):
+def round_enddate(enddate, freq="monthly"):
     """
     Round the end date to the end of the month or year.
 
@@ -65,11 +63,13 @@ def round_enddate(enddate, freq='monthly'):
     Returns:
         pd.Timestamp: rounded end date
     """
-    if freq == 'annual':
-        return pd.Timestamp(year=enddate.year, month=12, day=31,
-                           hour=23, minute=59, second=59)
-    elif freq == 'monthly':
-        return pd.Timestamp(year=enddate.year, month=enddate.month, day=1,
-                           hour=0, minute=0, second=0) + pd.DateOffset(months=1) - pd.Timedelta(seconds=1)
+    if freq == "annual":
+        return pd.Timestamp(year=enddate.year, month=12, day=31, hour=23, minute=59, second=59)
+    elif freq == "monthly":
+        return (
+            pd.Timestamp(year=enddate.year, month=enddate.month, day=1, hour=0, minute=0, second=0)
+            + pd.DateOffset(months=1)
+            - pd.Timedelta(seconds=1)
+        )
     else:
         raise ValueError(f"Unsupported frequency '{freq}'. Only 'monthly' and 'annual' are supported.")
