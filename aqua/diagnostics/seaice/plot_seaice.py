@@ -342,9 +342,9 @@ class PlotSeaIce:
             self.model_labels_str = ""
 
         # generate dynamic string for reference data
-        monthly_ref_data = self._getdata_fromdict(data_dict, 'monthly_ref')
+        monthly_ref_data = self._getdata_fromdict(data_dict, "monthly_ref")
         if monthly_ref_data is not None:
-            if not hasattr(self, 'ref_label_list'):
+            if not hasattr(self, "ref_label_list"):
                 self.ref_label_list = []
 
             if isinstance(monthly_ref_data, xr.DataArray):
@@ -385,18 +385,17 @@ class PlotSeaIce:
 
         # generate plot type name
         if hasattr(self, "plot_type") and self.plot_type:
-            if self.plot_type == 'seasonalcycle':
-                pl_type = 'Seasonal cycle of '
-            elif self.plot_type == 'timeseries':
-                pl_type = 'Time series of '
+            if self.plot_type == "seasonalcycle":
+                pl_type = "Seasonal cycle of "
+            elif self.plot_type == "timeseries":
+                pl_type = "Time series of "
             else:
                 pl_type = ""
 
         # finally build the string caption (dynamically)
-        self._description = ('{}sea ice {} integrated over {}for {}{}{}').format(pl_type, method,
-                                                                                 self.region_str, self.model_labels_str,
-                                                                                 self.ref_label_str, self.std_label_str)
-
+        self._description = ("{}sea ice {} integrated over {}for {}{}{}").format(
+            pl_type, method, self.region_str, self.model_labels_str, self.ref_label_str, self.std_label_str
+        )
 
     def regions_type_plotter(self, region_dict, style, **kwargs):
         """

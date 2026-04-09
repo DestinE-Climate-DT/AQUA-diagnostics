@@ -303,8 +303,14 @@ class Plot2DSeaIce:
                 else ""
             )
         )
-        self._save_plots(fig=fig, data=monmod, data_ref=monref, diagnostic_product='bias',
-                         description=description, extra_keys={'method': self.method, 'region': region})
+        self._save_plots(
+            fig=fig,
+            data=monmod,
+            data_ref=monref,
+            diagnostic_product="bias",
+            description=description,
+            extra_keys={"method": self.method, "region": region},
+        )
         if self.show:
             plt.show()
         plt.close(fig)
@@ -389,20 +395,25 @@ class Plot2DSeaIce:
         fig.suptitle(f"{set_map_title(datarr)}", fontsize=13)
 
         description = (
-            f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method','')} climatology "
-            f"for the {mondat.attrs.get('AQUA_model','')} model, experiment {mondat.attrs.get('AQUA_exp','')} "
+            f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method', '')} climatology "
+            f"for the {mondat.attrs.get('AQUA_model', '')} model, experiment {mondat.attrs.get('AQUA_exp', '')} "
             f"in the {mondat.attrs.get('AQUA_region', 'geographic')} region "
-            f"(from {time_to_string(mondat.attrs.get('AQUA_startdate',''), format='%Y-%m')} "
-            f"to {time_to_string(mondat.attrs.get('AQUA_enddate',''), format='%Y-%m')}). "
+            f"(from {time_to_string(mondat.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(mondat.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
             + (
                 "The red contour line represent where the sea ice fraction is equal to 0.2."
                 if self.method == "fraction" and self.plot_ref_contour
                 else ""
             )
         )
-        self._save_plots(fig=fig, data=mondat, data_ref=None,
-                         diagnostic_product='varmap', description=description,
-                         extra_keys={'method': self.method, 'region': region})
+        self._save_plots(
+            fig=fig,
+            data=mondat,
+            data_ref=None,
+            diagnostic_product="varmap",
+            description=description,
+            extra_keys={"method": self.method, "region": region},
+        )
         if self.show:
             plt.show()
         plt.close(fig)
@@ -516,9 +527,8 @@ class Plot2DSeaIce:
             boundaries = None
         else:
             # Define custom boundaries for a discrete normalization
-            boundaries = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5,
-                          5.5, 6, 6.5, 7, 7.5, 8.0, 10, 15, 20, 30]
-            colormap = plt.get_cmap('turbo')
+            boundaries = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8.0, 10, 15, 20, 30]
+            colormap = plt.get_cmap("turbo")
             norm = mcolors.BoundaryNorm(boundaries, ncolors=colormap.N, clip=True)
 
         return {"colormap": colormap, "norm": norm, "boundaries": boundaries}

@@ -422,14 +422,14 @@ class SeaIce(Diagnostic):
 
         si_fldstat = FldStat(area=areacello, horizontal_dims=space_coord, grid_name=grid_name, loglevel=self.loglevel)
 
-        if self.method == 'extent':
+        if self.method == "extent":
             # compute sea ice extent: exclude areas with no sea ice and sum over the spatial dimension;
             # divide by 1e12 to convert to million km^2
-            seaice_integrated = si_fldstat.fldstat(masked_data_region.notnull(), stat='areasum', dims=space_coord) / 1e12
-        if self.method == 'volume':
+            seaice_integrated = si_fldstat.fldstat(masked_data_region.notnull(), stat="areasum", dims=space_coord) / 1e12
+        if self.method == "volume":
             # compute sea ice volume: exclude areas with no sea ice;
             # divide by 1e12 to convert to thousand km^3
-            seaice_integrated = si_fldstat.fldstat(masked_data_region, stat='integral', dims=space_coord) / 1e12
+            seaice_integrated = si_fldstat.fldstat(masked_data_region, stat="integral", dims=space_coord) / 1e12
 
             merge_attrs(seaice_integrated.attrs, masked_data.attrs)
             merge_attrs(seaice_integrated.attrs, areacello.attrs, overwrite=True)

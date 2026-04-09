@@ -84,11 +84,11 @@ def extract_dates(data):
     """
 
     def _fmt_dt(attr_name):
-        dt = data.attrs.get(attr_name, f'No {attr_name} found')
-        if hasattr(dt, 'strftime'):
-            return dt.strftime('%Y-%m')
-        if isinstance(dt, str) and 'T' in dt:
-            return dt.split('T')[0]
+        dt = data.attrs.get(attr_name, f"No {attr_name} found")
+        if hasattr(dt, "strftime"):
+            return dt.strftime("%Y-%m")
+        if isinstance(dt, str) and "T" in dt:
+            return dt.split("T")[0]
         return dt
 
     return _fmt_dt("AQUA_startdate"), _fmt_dt("AQUA_enddate")
