@@ -5,6 +5,7 @@ Command-line interface for ensemble global bias 2D lat-lon diagnostic.
 This CLI allows to plot ensemble of global bias 2D lat-lon of a variable
 defined in a yaml configuration file for a single model.
 """
+
 import argparse
 import sys
 
@@ -33,8 +34,8 @@ def parse_arguments(args):
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
@@ -60,10 +61,10 @@ if __name__ == "__main__":
 
     # Output options
     outputdir = config_dict["output"].get("outputdir", "./")
-    rebuild = config_dict['output'].get('rebuild', True)
+    rebuild = config_dict["output"].get("rebuild", True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
     save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
-    dpi = config_dict['output'].get('dpi', 300)
+    dpi = config_dict["output"].get("dpi", 300)
 
     # EnsembleLatLon diagnostic
     if "ensemble" in config_dict["diagnostics"]:
@@ -100,7 +101,7 @@ if __name__ == "__main__":
                     model_list=model,
                     exp_list=exp,
                     source_list=source,
-                    #region=region,
+                    # region=region,
                     realization=realization_dict,
                 )
                 if dataset is None:

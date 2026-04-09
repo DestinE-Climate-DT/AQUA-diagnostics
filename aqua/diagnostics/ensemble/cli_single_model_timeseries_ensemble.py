@@ -5,6 +5,7 @@ Command-line interface for ensemble global time series diagnostic.
 This CLI allows to plot ensemble of global timeseries of a variable
 defined in a yaml configuration file for multiple models.
 """
+
 import argparse
 import sys
 
@@ -31,8 +32,8 @@ def parse_arguments(args):
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
@@ -59,10 +60,10 @@ if __name__ == "__main__":
 
     # Output options
     outputdir = config_dict["output"].get("outputdir", "./")
-    rebuild = config_dict['output'].get('rebuild', True)
+    rebuild = config_dict["output"].get("rebuild", True)
     save_netcdf = config_dict["output"].get("save_netcdf", True)
     save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
-    dpi = config_dict['output'].get('dpi', 300)
+    dpi = config_dict["output"].get("dpi", 300)
 
     # EnsembleTimeseries diagnostic
     if "ensemble" in config_dict["diagnostics"]:
