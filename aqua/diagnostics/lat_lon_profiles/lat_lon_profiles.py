@@ -18,7 +18,7 @@ class LatLonProfiles(Diagnostic):
         - 'zonal': Average over longitude, producing latitude profiles
         - 'meridional': Average over latitude, producing longitude profilesThe class evaluates a seasonal frequency and the entire period (longterm).
 
-	"""
+    """
     MINIMUM_MONTHS_REQUIRED = 12
 
     def __init__(self, model: str, exp: str, source: str,
@@ -110,22 +110,22 @@ class LatLonProfiles(Diagnostic):
         self.logger.info("Retrieving data for variable %s", var)
         # If the user requires a formula the evaluation requires the retrieval
         # of all the variables
-		if formula:
-			super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
-			self.logger.debug("Evaluating formula %s", var)
-			self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
-										short_name=standard_name, units=units,
-										loglevel=self.loglevel).evaluate()
-			if self.data is None:
-				raise ValueError(f'Error evaluating formula {var}. '
-									'Check the variable names and the formula syntax.')
-		else:
-			super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
-			if self.data is None:
-				raise ValueError(f'Variable {var} not found in the data. '
-									'Check the variable name and the data source.')
-			# Get the xr.DataArray to be aligned with the formula code
-			self.data = self.data[var]
+        if formula:
+            super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+            self.logger.debug("Evaluating formula %s", var)
+            self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
+                                        short_name=standard_name, units=units,
+                                        loglevel=self.loglevel).evaluate()
+            if self.data is None:
+                raise ValueError(f'Error evaluating formula {var}. '
+                                    'Check the variable names and the formula syntax.')
+        else:
+            super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+            if self.data is None:
+                raise ValueError(f'Variable {var} not found in the data. '
+                                    'Check the variable name and the data source.')
+            # Get the xr.DataArray to be aligned with the formula code
+            self.data = self.data[var]
 
         if self.plt_startdate is None:
             self.plt_startdate = self.data.time.min().values
