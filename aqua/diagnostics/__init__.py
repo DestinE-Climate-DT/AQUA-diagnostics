@@ -1,5 +1,6 @@
 """AQUA Diagnostics Package"""
 
+from .version import __version__
 from .teleconnections import NAO, ENSO, MJO
 from .teleconnections import PlotNAO, PlotENSO, PlotMJO
 from .timeseries import Gregory, SeasonalCycles, Timeseries, PlotTimeseries, PlotSeasonalCycles, PlotGregory
