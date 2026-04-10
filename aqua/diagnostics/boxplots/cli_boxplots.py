@@ -137,6 +137,11 @@ if __name__ == "__main__":
                 )
             else:
                 TITLE = None
+
+            if not fldmeans:
+                cli.logger.warning("No datasets available for variables %s. Skipping plot.", variables)
+                continue
+
             plot = PlotBoxplots(
                 diagnostic=diagnostic_name,
                 save_format=cli.save_format,
