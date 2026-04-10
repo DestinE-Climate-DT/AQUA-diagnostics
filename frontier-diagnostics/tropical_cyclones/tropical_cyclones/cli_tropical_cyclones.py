@@ -92,16 +92,13 @@ if __name__ == "__main__":
         tropical.loop_streaming(config)
  
     elif run_detect:
-        # only DetectNodes, loop over the streaming time steps
-        tropical.data_retrieve()
-        tropical.detect_nodes_zoomin()
         while tropical.data_retrieve():
-            cli.logger.warning(
-                "Streaming from %s to %s",
-                tropical.stream_startdate,
-                tropical.stream_enddate,
-            )
-            tropical.detect_nodes_zoomin()
+        cli.logger.warning(
+            "Streaming from %s to %s",
+            tropical.stream_startdate,
+            tropical.stream_enddate,
+        )
+        tropical.detect_nodes_zoomin()
  
     elif run_stitch:
         # only StitchNodes over the full date range from config
