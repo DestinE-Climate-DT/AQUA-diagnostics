@@ -3,7 +3,6 @@
 import pandas as pd
 import xarray as xr
 
-from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
@@ -80,17 +79,10 @@ class Boxplots(Diagnostic):
             KeyError: If the variable is missing from the data.
         """
 
-        try:
-            if var is not None:
-                self.var = [v.lstrip("-") for v in (var if isinstance(var, list) else [var])]
+        if var is not None:
+            self.var = [v.lstrip("-") for v in (var if isinstance(var, list) else [var])]
 
-            super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
-        except NotEnoughDataError:
-            raise
-        except Exception as e:
-            self.logger.warning(
-                "Failed to retrieve variable(s) %s from %s, %s, %s: %s", var, self.model, self.exp, self.source, e
-            )
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         if self.data is None:
             self.logger.warning(

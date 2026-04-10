@@ -3,6 +3,7 @@
 import argparse
 import sys
 
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics import Boxplots, PlotBoxplots
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
@@ -69,7 +70,18 @@ if __name__ == "__main__":
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
-                boxplots.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                try:
+                    boxplots.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                except NotEnoughDataError:
+                    cli.logger.warning(
+                        "Skipping %s (%s, %s): not enough data", dataset["model"], dataset["exp"], dataset["source"]
+                    )
+                    continue
+                except Exception as e:
+                    cli.logger.error(
+                        "Unexpected error for %s (%s, %s): %s", dataset["model"], dataset["exp"], dataset["source"], e
+                    )
+                    continue
                 fldmeans.append(boxplots.fldmeans)
 
             fldmeans_ref = []
@@ -83,17 +95,25 @@ if __name__ == "__main__":
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
-                boxplots_ref.run(var=variables, reader_kwargs=cli.reader_kwargs)
-
-                if getattr(boxplots_ref, "fldmeans", None) is None:
+                try:
+                    boxplots_ref.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                except NotEnoughDataError:
                     cli.logger.warning(
-                        "No data retrieved for reference %s (%s, %s). Skipping.",
+                        "Skipping reference %s (%s, %s): not enough data",
                         reference["model"],
                         reference["exp"],
                         reference["source"],
                     )
                     continue
-
+                except Exception as e:
+                    cli.logger.error(
+                        "Unexpected error for reference %s (%s, %s): %s",
+                        reference["model"],
+                        reference["exp"],
+                        reference["source"],
+                        e,
+                    )
+                    continue
                 fldmeans_ref.append(boxplots_ref.fldmeans)
 
             model_exp_list = [f"{entry['model']} ({entry['exp']})" for entry in datasets]
