@@ -1,25 +1,23 @@
 # experiment
-dataset:
-# catalog: "obs"
-# model: "ERA5"
-# exp: "era5"
-# source2d: "6hrs" #"2D_1h_native"
-# source3d: "6hrs" #"3D_1h_native"
-
-  catalog: "climatedt-o25.1"
-  model: "IFS-NEMO"
-  exp: "historical-1990"
-  source2d: "hourly-hpz10-atm2d"
-  source3d: "hourly-hpz10-atm3d"
-  engine: "polytope"
-  reader_kwargs: {chunks: {"time": 1, "level": 1}}
+datasets:
+  - catalog: "climatedt-o25.1"
+    model: "IFS-FESOM"
+    exp: "historical-1990"
+    source: "hourly-hpz10-atm2d"
+    source2d: "hourly-hpz10-atm2d"
+    source3d: "hourly-hpz10-atm3d"
+    engine: "fdb"
+    #reader_kwargs: {chunks: {"time": 1, "level": 1}}
+    reader_kwargs: {chunks: {"time": '6h', "level": 1}}
 
 # folders for regridded data, temprorary and stored high res data
+output:
+  outputdir: "/users/silvcapr/tc_analysis/"
 paths: 
-  tmpdir: "/work/users/jost/tc/tc_analysis/tmpdir"
-  fulldir: "/work/users/jost/tc/tc_analysis/fulldir"
-  plotdir: "/work/users/jost/tc/tc_analysis/figures/"
-  trackdir: "/work/users/jost/tc/tc_analysis/trackdir"
+  tmpdir: "/users/silvcapr/tc_analysis/tmpdir"
+  fulldir: "/users/silvcapr/tc_analysis/fulldir"
+  plotdir: "/users/silvcapr/tc_analysis/figures"
+  trackdir: "/users/silvcapr/tc_analysis/trackdir"
 
 # log level
 setup:
@@ -57,4 +55,3 @@ orography:
   file_path: null #"/work/users/mccorda/data/orog_ERA5.nc"  # path to orography file, if not null, it will override the catalog
   source_oro: "daily-hpz10-atm2d"
   var_oro: "orog"
-  
