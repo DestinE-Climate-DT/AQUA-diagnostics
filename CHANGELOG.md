@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.24.0):
-
+Complete list:
+- Teleconnections: simplification of the cli to avoid code redundancy (#181)
 - ECmean: time selection is now allowed (#178)
 
 ## [v0.23.0]
