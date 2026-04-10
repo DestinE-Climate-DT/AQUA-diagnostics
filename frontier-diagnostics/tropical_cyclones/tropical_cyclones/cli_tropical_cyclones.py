@@ -11,7 +11,6 @@ from tropical_cyclones import TCs
 
 TOOLNAME = "TropicalCyclones"
 
-
 def parse_arguments(args):
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description=f"{TOOLNAME} CLI")
@@ -59,11 +58,14 @@ if __name__ == "__main__":
         "Detect: %s | Stitch: %s", run_detect, run_stitch
     )
 
-    # dataset (flat config)
-    dataset_cfg = config.get("dataset", {})
-    dataset_args = cli.dataset_args(dataset_cfg)
+    # dataset 
+    dataset_cfg = config.get("datasets", [{}])[0]
+    model = dataset_cfg.get("model")
+    exp = dataset_cfg.get("exp")
+    source2d = dataset_cfg.get("source2d")
+    source3d = dataset_cfg.get("source3d")
 
-    # execution params (flat config)
+    # execution params
     streaming = True
     stream_step = config.get("stream", {}).get("streamstep")
     startdate = config.get("time", {}).get("startdate")
@@ -93,12 +95,12 @@ if __name__ == "__main__":
  
     elif run_detect:
         while tropical.data_retrieve():
-        cli.logger.warning(
-            "Streaming from %s to %s",
-            tropical.stream_startdate,
-            tropical.stream_enddate,
-        )
-        tropical.detect_nodes_zoomin()
+            cli.logger.warning(
+                "Streaming from %s to %s",
+                tropical.stream_startdate,
+                tropical.stream_enddate,
+            )
+            tropical.detect_nodes_zoomin()
  
     elif run_stitch:
         # only StitchNodes over the full date range from config
