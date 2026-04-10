@@ -64,15 +64,16 @@ class TCs(DetectNodes, StitchNodes):
         if tdict is not None:
             tcdict = copy.deepcopy(tdict)
             self.paths = tdict['paths']
-            self.catalog = tdict['dataset'].get('catalog', None)
-            self.engine = tdict['dataset'].get('engine', 'fdb')
-            self.reader_kwargs = tdict['dataset'].get('reader_kwargs', {})
+            self.dataset = tdict.get("datasets", [{}])[0]
+            self.catalog = self.dataset.get('catalog', None)
+            self.engine = self.dataset.get('engine', 'fdb')
+            self.reader_kwargs = self.dataset.get('reader_kwargs', {})
             if not self.reader_kwargs:  # make sure it is an empty dictionary
                 self.reader_kwargs = {}
-            self.model = tdict['dataset']['model']
-            self.exp = tdict['dataset']['exp']
-            self.source2d = tdict['dataset']['source2d']
-            self.source3d = tdict['dataset']['source3d']
+            self.model = self.dataset['model']
+            self.exp = self.dataset['exp']
+            self.source2d = self.dataset['source2d']
+            self.source3d =self.dataset['source3d']
             self.boxdim = tdict['detect']['boxdim']
             self.lowgrid = tdict['grids']['lowgrid']
             self.highgrid = tdict['grids']['highgrid']
