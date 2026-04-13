@@ -168,22 +168,25 @@ def process_variable(
             except NotEnoughDataError:
                 cli.logger.warning(
                     "Skipping %s (%s, %s): not enough data",
-                    dataset["model"], dataset["exp"], dataset["source"],
+                    dataset["model"],
+                    dataset["exp"],
+                    dataset["source"],
                 )
                 continue
             except Exception as e:
                 cli.logger.error(
                     "Unexpected error for %s (%s, %s): %s",
-                    dataset["model"], dataset["exp"], dataset["source"], e,
+                    dataset["model"],
+                    dataset["exp"],
+                    dataset["source"],
+                    e,
                 )
                 continue
 
             profiles.append(profile)
 
         if not profiles:
-            cli.logger.warning(
-                "No datasets available for region %s, variable %s. Skipping.", region, var_name
-            )
+            cli.logger.warning("No datasets available for region %s, variable %s. Skipping.", region, var_name)
             continue
 
         # Process reference dataset (if any)
@@ -223,13 +226,18 @@ def process_variable(
             except NotEnoughDataError:
                 cli.logger.warning(
                     "Skipping reference %s (%s, %s): not enough data",
-                    ref["model"], ref["exp"], ref["source"],
+                    ref["model"],
+                    ref["exp"],
+                    ref["source"],
                 )
                 profile_ref = None
             except Exception as e:
                 cli.logger.error(
                     "Unexpected error for reference %s (%s, %s): %s",
-                    ref["model"], ref["exp"], ref["source"], e,
+                    ref["model"],
+                    ref["exp"],
+                    ref["source"],
+                    e,
                 )
                 profile_ref = None
 
