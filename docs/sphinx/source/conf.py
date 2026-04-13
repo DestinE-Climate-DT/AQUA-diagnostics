@@ -2,13 +2,8 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-from importlib.metadata import PackageNotFoundError, version as package_version
 
-try:
-    project_version = package_version("aqua-diagnostics")
-except PackageNotFoundError:
-    # Fallback for local/source builds where package metadata is unavailable.
-    project_version = "unknown"
+from aqua.diagnostics.version import __version__ as project_version
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
