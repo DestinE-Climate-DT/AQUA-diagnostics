@@ -41,6 +41,7 @@ class Stratification(Diagnostic):
     logger : logging.Logger
         Configured logger for the diagnostic.
     """
+
     MINIMUM_MONTHS_REQUIRED = 12
 
     def __init__(
@@ -78,7 +79,7 @@ class Stratification(Diagnostic):
         rebuild: bool = True,
         region: str = None,
         var: list = ["thetao", "so"],
-        dim_mean = None,
+        dim_mean=None,
         climatology: str = "month",
         reader_kwargs: dict = {},
         mld: bool = False,
@@ -119,21 +120,16 @@ class Stratification(Diagnostic):
         """
         self.climatology = climatology
         self.logger.info("Starting stratification diagnostic run.")
-        super().retrieve(var=var, reader_kwargs=reader_kwargs,
-                         months_required=self.MINIMUM_MONTHS_REQUIRED)
+        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         if "lev" in self.data.dims:
             self.data = self.data.rename({"lev": self.vert_coord})
-        self.logger.debug(
-            f"Variables retrieved: {var}, region: {region}, dim_mean: {dim_mean}"
-        )
+        self.logger.debug(f"Variables retrieved: {var}, region: {region}, dim_mean: {dim_mean}")
         self.logger.info("Computing stratification.")
         self.compute_stratification()
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
-            res_dict = super().select_region(
-                data=self.data, region=region, diagnostic="ocean3d", drop=True
-            )
+            res_dict = super().select_region(data=self.data, region=region, diagnostic="ocean3d", drop=True)
             self.region = res_dict["region"]
             self.lat_limits = res_dict["lat_limits"]
             self.lon_limits = res_dict["lon_limits"]
@@ -151,7 +147,7 @@ class Stratification(Diagnostic):
                 lon_limits=self.lon_limits,
             )
         else:
-            self.data = res_dict['data']
+            self.data = res_dict["data"]
         if mld:
             self.logger.info("Computing mixed layer depth (MLD).")
             self.compute_mld()
@@ -160,12 +156,15 @@ class Stratification(Diagnostic):
         self.data.load()
         self.logger.debug("Loaded data in memory.")
         if not mld:
-            self.save_netcdf(self.data, diagnostic_product='stratification', outputdir=outputdir, rebuild=rebuild, region=self.region)
+            self.save_netcdf(
+                self.data, diagnostic_product="stratification", outputdir=outputdir, rebuild=rebuild, region=self.region
+            )
             self.logger.info("Stratification diagnostic saved to netCDF file.")
         else:
-            self.save_netcdf(self.data['mld'], diagnostic_product='mld', outputdir=outputdir, rebuild=rebuild, region=self.region)
+            self.save_netcdf(
+                self.data["mld"], diagnostic_product="mld", outputdir=outputdir, rebuild=rebuild, region=self.region
+            )
             self.logger.info("MLD diagnostic saved to netCDF file.")
-
 
     def compute_stratification(self):
         """
@@ -209,7 +208,7 @@ class Stratification(Diagnostic):
         self.logger.debug(f"Computing {self.climatology} climatology.")
         month_list = list(calendar.month_name)[1:]
         season_list = ["DJF", "MAM", "JJA", "SON"]
-        month_season_list = month_list + season_list # noqa: F841
+        month_season_list = month_list + season_list  # noqa: F841
 
         if self.climatology in month_list:
             self.clim_type = "month"
@@ -223,16 +222,12 @@ class Stratification(Diagnostic):
                 self.data = self.data.groupby(f"time.{self.clim_type}").mean("time")
                 self.data = self.data.rename({f"{self.clim_type}": "time"})
                 if self.clim_type == "month":
-                    self.data = self.data.assign_coords(
-                        time=[calendar.month_name[m] for m in self.data["time"].values]
-                    )
+                    self.data = self.data.assign_coords(time=[calendar.month_name[m] for m in self.data["time"].values])
                 self.data = self.data.sel(time=self.climatology)
         elif self.climatology == "Total":
             self.data = self.data.mean("time", keep_attrs=True)
         self.data.attrs["AQUA_stratification_climatology"] = self.climatology
-        self.logger.debug(
-            f"{self.climatology.upper()} climatology computed successfully."
-        )
+        self.logger.debug(f"{self.climatology.upper()} climatology computed successfully.")
 
     def calculate_rho(self):
         """
@@ -244,21 +239,15 @@ class Stratification(Diagnostic):
         -------
         None
         """
-        self.logger.debug(
-            "Converting variables to absolute salinity and conservative temperature."
-        )
+        self.logger.debug("Converting variables to absolute salinity and conservative temperature.")
         # Convert practical salinity to absolute salinity
         abs_so = convert_so(self.data["so"])
         self.logger.debug("Practical salinity converted to absolute salinity.")
 
         # Convert potential temperature to conservative temperature
-        data_thetao = super()._check_data(
-            data=self.data["thetao"], var="thetao", units="degreeC"
-        )
+        data_thetao = super()._check_data(data=self.data["thetao"], var="thetao", units="degreeC")
         cons_thetao = convert_thetao(abs_so, data_thetao)
-        self.logger.debug(
-            "Potential temperature converted to conservative temperature."
-        )
+        self.logger.debug("Potential temperature converted to conservative temperature.")
 
         # Update the dataset with converted variables
         # self.data["cons_thetao"] = cons_thetao
@@ -317,7 +306,8 @@ class Stratification(Diagnostic):
             If True, force rebuild of NetCDF file even if it exists (default is True).
         """
         self.logger.info(
-            f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, outputdir={outputdir}, region={region}"
+            f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, "
+            f"outputdir={outputdir}, region={region}"
         )
         super().save_netcdf(
             data=data,

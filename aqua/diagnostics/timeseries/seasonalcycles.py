@@ -1,4 +1,5 @@
 """SeasonalCycles class for retrieve and netcdf saving of a single experiment"""
+
 import xarray as xr
 
 from .base import BaseMixin
@@ -8,16 +9,26 @@ xr.set_options(keep_attrs=True)
 
 class SeasonalCycles(BaseMixin):
     """SeasonalCycles class for retrieve and netcdf saving of a single experiment"""
+
     MINIMUM_MONTHS_REQUIRED = 2
 
-    def __init__(self, diagnostic_name: str = 'seasonalcycles',
-                 catalog: str = None, model: str = None,
-                 exp: str = None, source: str = None,
-                 regrid: str = None,
-                 startdate: str = None, enddate: str = None,
-                 std_startdate: str = None, std_enddate: str = None,
-                 region: str = None, lon_limits: list = None, lat_limits: list = None,
-                 loglevel: str = 'WARNING'):
+    def __init__(
+        self,
+        diagnostic_name: str = "seasonalcycles",
+        catalog: str = None,
+        model: str = None,
+        exp: str = None,
+        source: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        std_startdate: str = None,
+        std_enddate: str = None,
+        region: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the Timeseries class.
 
@@ -39,16 +50,39 @@ class SeasonalCycles(BaseMixin):
             lat_limits (list): The latitude limits to be used. Overriden by region.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
-        super().__init__(diagnostic_name=diagnostic_name,
-                         catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
-                         startdate=startdate, enddate=enddate, std_startdate=std_startdate, std_enddate=std_enddate,
-                         region=region, lon_limits=lon_limits, lat_limits=lat_limits, loglevel=loglevel)
+        super().__init__(
+            diagnostic_name=diagnostic_name,
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            std_startdate=std_startdate,
+            std_enddate=std_enddate,
+            region=region,
+            lon_limits=lon_limits,
+            lat_limits=lat_limits,
+            loglevel=loglevel,
+        )
 
-    def run(self, var: str, formula: bool = False, long_name: str = None,
-            units: str = None, short_name: str = None, std: bool = False,
-            exclude_incomplete: bool = True, center_time: bool = True,
-            box_brd: bool = True, outputdir: str = './', rebuild: bool = True,
-            reader_kwargs: dict = {}, create_catalog_entry: bool = False):
+    def run(
+        self,
+        var: str,
+        formula: bool = False,
+        long_name: str = None,
+        units: str = None,
+        short_name: str = None,
+        std: bool = False,
+        exclude_incomplete: bool = True,
+        center_time: bool = True,
+        box_brd: bool = True,
+        outputdir: str = "./",
+        rebuild: bool = True,
+        reader_kwargs: dict = {},
+        create_catalog_entry: bool = False,
+    ):
         """
         Run all the steps necessary for the computation of the SeasonalCyles.
         Save the results to netcdf files.
@@ -69,23 +103,27 @@ class SeasonalCycles(BaseMixin):
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         """
         self.logger.info("Running SeasonalCycles for %s", var)
-        self.retrieve(var=var, formula=formula, long_name=long_name, units=units,
-                      short_name=short_name, reader_kwargs=reader_kwargs)
+        self.retrieve(
+            var=var, formula=formula, long_name=long_name, units=units, short_name=short_name, reader_kwargs=reader_kwargs
+        )
 
         # Notice that if you compute after, self.monthly will be the seasonal cycle
         # and the compute_std routine will fail
         if std:
-            self.compute_std(freq='monthly', exclude_incomplete=exclude_incomplete, center_time=center_time,
-                             box_brd=box_brd)
+            self.compute_std(freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
 
         self.logger.info("Computing the seasonal cycles")
         self.compute(exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
 
-        self.save_netcdf(diagnostic_product='seasonalcycles', freq='monthly', outputdir=outputdir,
-                         rebuild=rebuild, create_catalog_entry=create_catalog_entry)
+        self.save_netcdf(
+            diagnostic_product="seasonalcycles",
+            freq="monthly",
+            outputdir=outputdir,
+            rebuild=rebuild,
+            create_catalog_entry=create_catalog_entry,
+        )
 
-    def compute(self, exclude_incomplete: bool = True, center_time: bool = True,
-                box_brd: bool = True):
+    def compute(self, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):
         """
         Compute the seasonal cycles.
 
@@ -97,15 +135,13 @@ class SeasonalCycles(BaseMixin):
         data = self.data
 
         # Field and time average
-        data = self.reader.fldmean(data, box_brd=box_brd,
-                                   lon_limits=self.lon_limits, lat_limits=self.lat_limits)
-        data = self.reader.timmean(data, freq='MS', exclude_incomplete=exclude_incomplete,
-                                   center_time=center_time)
+        data = self.reader.fldmean(data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits)
+        data = self.reader.timmean(data, freq="MS", exclude_incomplete=exclude_incomplete, center_time=center_time)
 
         if self.region is not None:
-            data.attrs['AQUA_region'] = self.region
+            data.attrs["AQUA_region"] = self.region
 
-        data = data.groupby('time.month').mean('time')
+        data = data.groupby("time.month").mean("time")
 
         # Load data in memory for faster plot
         self.logger.debug("Loading seasonal cycle data in memory")

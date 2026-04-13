@@ -2,12 +2,16 @@ import argparse
 import os
 from unittest.mock import patch
 
+import numpy as np
 import pandas as pd
 import pytest
+import xarray as xr
 from conftest import LOGLEVEL
 
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.util import dump_yaml
 from aqua.diagnostics.base import (
+    Diagnostic,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
@@ -17,20 +21,31 @@ from aqua.diagnostics.base import (
     start_end_dates,
     template_parse_arguments,
 )
+from aqua.diagnostics.lat_lon_profiles import LatLonProfiles
 
 loglevel = LOGLEVEL
 
 pytestmark = pytest.mark.aqua
 
+
 def test_template_parse_arguments():
     """Test the template_parse_arguments function"""
     parser = argparse.ArgumentParser()
     parser = template_parse_arguments(parser)
-    args = parser.parse_args(["--loglevel", "DEBUG", "--catalog", "test_catalog", "--model", "test_model",
-                              "--exp", "test_exp", "--source", "test_source", "--config", "test_config.yaml",
-                              "--regrid", "r100", "--outputdir", "test_outputdir", "--cluster", "test_cluster",
-                              "--nworkers", "2"])
-
+    # fmt: off
+    args = parser.parse_args([
+            "--loglevel", "DEBUG",
+            "--catalog", "test_catalog",
+            "--model", "test_model",
+            "--exp", "test_exp",
+            "--source", "test_source",
+            "--config", "test_config.yaml",
+            "--regrid", "r100",
+            "--outputdir", "test_outputdir",
+            "--cluster", "test_cluster",
+            "--nworkers", "2"]
+    )
+    # fmt: on
     assert args.loglevel == "DEBUG"
     assert args.catalog == "test_catalog"
     assert args.model == "test_model"
@@ -43,15 +58,14 @@ def test_template_parse_arguments():
     assert args.nworkers == 2
 
     with pytest.raises(FileNotFoundError):
-        load_diagnostic_config(diagnostic='pippo', config=None, loglevel=loglevel)
+        load_diagnostic_config(diagnostic="pippo", config=None, loglevel=loglevel)
 
 
 def test_load_diagnostic_config_from_args(tmp_path):
     """Test loading configuration from a file specified in arguments."""
 
     # Create a minimal config file
-    config_data = {'datasets': [{'model': 'TestModel', 'exp': 'test-exp'}],
-                   'output': {'outputdir': str(tmp_path / 'output')}}
+    config_data = {"datasets": [{"model": "TestModel", "exp": "test-exp"}], "output": {"outputdir": str(tmp_path / "output")}}
 
     config_file = os.path.join(str(tmp_path), "test_config_args.yaml")
     dump_yaml(outfile=config_file, cfg=config_data)
@@ -60,10 +74,10 @@ def test_load_diagnostic_config_from_args(tmp_path):
     parser = template_parse_arguments(parser)
     args = parser.parse_args(["--config", config_file, "--loglevel", "DEBUG"])
 
-    result = load_diagnostic_config(diagnostic='ignored_name', config=args.config, loglevel=loglevel)
+    result = load_diagnostic_config(diagnostic="ignored_name", config=args.config, loglevel=loglevel)
 
-    assert result['datasets'][0]['model'] == 'TestModel'
-    assert result['output']['outputdir'] == str(tmp_path / 'output')
+    assert result["datasets"][0]["model"] == "TestModel"
+    assert result["output"]["outputdir"] == str(tmp_path / "output")
 
 
 @patch("aqua.diagnostics.base.util.Client")
@@ -98,31 +112,47 @@ def test_load_diagnostic_config():
     parser = argparse.ArgumentParser()
     parser = template_parse_arguments(parser)
     args = parser.parse_args(["--loglevel", "DEBUG"])
-    ts_dict = load_diagnostic_config(diagnostic='timeseries',
-                                     default_config='config-timeseries.yaml',
-                                     folder="templates",
-                                     config=args.config, loglevel=loglevel)
+    ts_dict = load_diagnostic_config(
+        diagnostic="timeseries",
+        default_config="config-timeseries.yaml",
+        folder="templates",
+        config=args.config,
+        loglevel=loglevel,
+    )
 
-    assert ts_dict['datasets'] == [{'catalog': None, 'exp': None, 'model': None, 'source': 'lra-r100-monthly',
-                                    'regrid': None, 'reader_kwargs': None}]
+    assert ts_dict["datasets"] == [
+        {"catalog": None, "exp": None, "model": None, "source": "lra-r100-monthly", "regrid": None, "reader_kwargs": None}
+    ]
 
 
 def test_merge_config_args():
     """Test the merge_config_args function"""
     parser = argparse.ArgumentParser()
     parser = template_parse_arguments(parser)
-    args = parser.parse_args(["--loglevel", "DEBUG", "--catalog", "test_catalog", "--model", "test_model",
-                              "--exp", "test_exp", "--source", "test_source", "--outputdir", "test_outputdir"])
-
-    ts_dict = {'datasets': [{'catalog': None, 'model': None, 'exp': None, 'source': 'lra-r100-monthly'}],
-               'references': [{'catalog': 'obs', 'model': 'ERA5', 'exp': 'era5', 'source': 'monthly'}],
-               'output': {'outputdir': './'}}
+    # fmt: off
+    args = parser.parse_args(
+        [
+            "--loglevel", "DEBUG",
+            "--catalog", "test_catalog",
+            "--model", "test_model",
+            "--exp", "test_exp",
+            "--source", "test_source",
+            "--outputdir", "test_outputdir",
+        ]
+    )
+    # fmt: on
+    ts_dict = {
+        "datasets": [{"catalog": None, "model": None, "exp": None, "source": "lra-r100-monthly"}],
+        "references": [{"catalog": "obs", "model": "ERA5", "exp": "era5", "source": "monthly"}],
+        "output": {"outputdir": "./"},
+    }
 
     merged_config = merge_config_args(config=ts_dict, args=args, loglevel=loglevel)
 
-    assert merged_config['datasets'] == [{'catalog': 'test_catalog', 'exp': 'test_exp',
-                                          'model': 'test_model', 'source': 'test_source'}]
-    assert merged_config['output']['outputdir'] == 'test_outputdir'
+    assert merged_config["datasets"] == [
+        {"catalog": "test_catalog", "exp": "test_exp", "model": "test_model", "source": "test_source"}
+    ]
+    assert merged_config["output"]["outputdir"] == "test_outputdir"
 
 
 def test_start_end_dates():
@@ -134,47 +164,89 @@ def test_start_end_dates():
 
     # Two dates provided
     assert start_end_dates(startdate="2020-01-01", enddate="2020-01-02") == (
-        pd.Timestamp("2020-01-01"), pd.Timestamp("2020-01-02")
+        pd.Timestamp("2020-01-01"),
+        pd.Timestamp("2020-01-02"),
     )
     assert start_end_dates(startdate="20200101", enddate="20200102") == (
-        pd.Timestamp("2020-01-01"), pd.Timestamp("2020-01-02")
+        pd.Timestamp("2020-01-01"),
+        pd.Timestamp("2020-01-02"),
     )
-    assert start_end_dates(startdate="20200101", start_std="20200102") == (
-        pd.Timestamp("2020-01-01"), None
-    )
+    assert start_end_dates(startdate="20200101", start_std="20200102") == (pd.Timestamp("2020-01-01"), None)
     assert start_end_dates(startdate="2020-01-01", enddate="20200102") == (
-        pd.Timestamp("2020-01-01"), pd.Timestamp("2020-01-02")
+        pd.Timestamp("2020-01-01"),
+        pd.Timestamp("2020-01-02"),
     )
 
-    assert start_end_dates(start_std="2020-01-01", end_std="2020-01-02") == (
-        None, None
-    )
+    assert start_end_dates(start_std="2020-01-01", end_std="2020-01-02") == (None, None)
 
-    assert start_end_dates(startdate="2020-01-01", end_std="2020-01-02") == (
-        pd.Timestamp("2020-01-01"), None
-    )
+    assert start_end_dates(startdate="2020-01-01", end_std="2020-01-02") == (pd.Timestamp("2020-01-01"), None)
 
-@pytest.mark.parametrize("date,freq,expected", [
-    ('2020-03-15 14:30:00', 'monthly', '2020-03-01 00:00:00'),
-    ('2020-06-15 14:30:00', 'annual', '2020-01-01 00:00:00'),
-])
+
+@pytest.mark.parametrize(
+    "date,freq,expected",
+    [
+        ("2020-03-15 14:30:00", "monthly", "2020-03-01 00:00:00"),
+        ("2020-06-15 14:30:00", "annual", "2020-01-01 00:00:00"),
+    ],
+)
 def test_round_startdate(date, freq, expected):
     """Test rounding to start of month/year"""
     rounded = round_startdate(pd.Timestamp(date), freq=freq)
     assert rounded == pd.Timestamp(expected)
 
-@pytest.mark.parametrize("date,freq,expected", [
-    ('2020-02-15 14:30:00', 'monthly', '2020-02-29 23:59:59'),
-    ('2020-06-15 14:30:00', 'annual', '2020-12-31 23:59:59'),
-])
+
+@pytest.mark.parametrize(
+    "date,freq,expected",
+    [
+        ("2020-02-15 14:30:00", "monthly", "2020-02-29 23:59:59"),
+        ("2020-06-15 14:30:00", "annual", "2020-12-31 23:59:59"),
+    ],
+)
 def test_round_enddate(date, freq, expected):
     """Test rounding to end of month/year"""
     rounded = round_enddate(pd.Timestamp(date), freq=freq)
     assert rounded == pd.Timestamp(expected)
 
+
 def test_round_invalid_freq():
     """Test error handling for invalid frequency"""
     with pytest.raises(ValueError):
-        round_startdate(pd.Timestamp('2020-03-15'), freq='weekly')
+        round_startdate(pd.Timestamp("2020-03-15"), freq="weekly")
     with pytest.raises(ValueError):
-        round_enddate(pd.Timestamp('2020-03-15'), freq='weekly')
+        round_enddate(pd.Timestamp("2020-03-15"), freq="weekly")
+
+
+def _make_monthly_dataset(n_months: int, start: str = "2000-01-01") -> xr.Dataset:
+    """Helper: synthetic monthly dataset with n_months timesteps."""
+    times = pd.date_range(start, periods=n_months, freq="MS")
+    return xr.Dataset({"2t": xr.DataArray(np.ones(n_months), dims=["time"], coords={"time": times})})
+
+
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_not_enough(mock_reader_class):
+    """NotEnoughDataError is raised when available months < months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(6)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    with pytest.raises(NotEnoughDataError):
+        diag._retrieve(model="M", exp="E", source="S", months_required=12)
+
+
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_enough(mock_reader_class):
+    """No error when available months >= months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(12)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=12)
+    assert len(result.time) == 12
+
+
+def test_minimum_months_required_class_attribute():
+    """Concrete diagnostics expose MINIMUM_MONTHS_REQUIRED as a positive int class attribute."""
+    # LatLonProfiles is selected since is one of the easiest diagnostics on this perspective
+    assert hasattr(LatLonProfiles, "MINIMUM_MONTHS_REQUIRED")
+    assert isinstance(LatLonProfiles.MINIMUM_MONTHS_REQUIRED, int)
+    assert LatLonProfiles.MINIMUM_MONTHS_REQUIRED > 0

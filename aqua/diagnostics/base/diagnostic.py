@@ -7,7 +7,7 @@ from aqua import Reader
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml 
+from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml
 from aqua.core.util import pandas_freq_to_string, time_to_string, xarray_to_pandas_freq
 
 from .time_util import start_end_dates
@@ -44,7 +44,7 @@ class Diagnostic():
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
 
-        self.logger = log_configure(log_name='Diagnostic', log_level=loglevel)
+        self.logger = log_configure(log_name="Diagnostic", log_level=loglevel)
         self.loglevel = loglevel
         self.catalog = catalog
         self.model = model
@@ -67,8 +67,7 @@ class Diagnostic():
         # Data to be retrieved
         self.data = None
 
-    def retrieve(self, var: str | None = None, reader_kwargs: dict = {},
-                 months_required: int | None = None):
+    def retrieve(self, var: str | None = None, reader_kwargs: dict = {}, months_required: int | None = None):
         """
         Retrieve the data from the model.
 
@@ -81,13 +80,21 @@ class Diagnostic():
             self.data: The data retrieved from the model. If return_data is True, the data will be returned.
             self.catalog: The catalog used to retrieve the data if no catalog was provided.
         """
-        self.data, self.reader, self.catalog = self._retrieve(model=self.model, exp=self.exp, source=self.source,
-                                                              var=var, catalog=self.catalog, startdate=self.startdate,
-                                                              enddate=self.enddate, regrid=self.regrid,
-                                                              reader_kwargs=reader_kwargs, months_required=months_required,
-                                                              loglevel=self.logger.level)
+        self.data, self.reader, self.catalog = self._retrieve(
+            model=self.model,
+            exp=self.exp,
+            source=self.source,
+            var=var,
+            catalog=self.catalog,
+            startdate=self.startdate,
+            enddate=self.enddate,
+            regrid=self.regrid,
+            reader_kwargs=reader_kwargs,
+            months_required=months_required,
+            loglevel=self.logger.level,
+        )
 
-        self.realization = reader_kwargs['realization'] if 'realization' in reader_kwargs else DEFAULT_REALIZATION
+        self.realization = reader_kwargs["realization"] if "realization" in reader_kwargs else DEFAULT_REALIZATION
 
         if self.regrid is not None:
             self.logger.info(f'Regridded data to {self.regrid} grid')
@@ -95,10 +102,10 @@ class Diagnostic():
         # Fill retrieval dates from data if not provided
         if self.startdate is None:
             self.startdate = self.data.time.values[0]
-            self.logger.debug(f'Start date: {self.startdate}')
+            self.logger.debug(f"Start date: {self.startdate}")
         if self.enddate is None:
             self.enddate = self.data.time.values[-1]
-            self.logger.debug(f'End date: {self.enddate}')
+            self.logger.debug(f"End date: {self.enddate}")
 
         # Fill plot dates from data if not provided
         if self.plt_startdate is None:
@@ -137,22 +144,41 @@ class Diagnostic():
             **kwargs: Additional keyword arguments to be passed to the OutputSaver.save_netcdf method.
         """
         if isinstance(data, xr.Dataset) is False and isinstance(data, xr.DataArray) is False:
-            self.logger.error('Data to save as netcdf must be an xarray Dataset or DataArray')
+            self.logger.error("Data to save as netcdf must be an xarray Dataset or DataArray")
 
-        outputsaver = OutputSaver(diagnostic=diagnostic,
-                                  catalog=self.catalog, model=self.model, exp=self.exp,
-                                  realization=self.realization,
-                                  outputdir=outputdir, loglevel=self.loglevel)
+        outputsaver = OutputSaver(
+            diagnostic=diagnostic,
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp,
+            realization=self.realization,
+            outputdir=outputdir,
+            loglevel=self.loglevel,
+        )
 
+        outputsaver.save_netcdf(
+            dataset=data,
+            diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
+            create_catalog_entry=create_catalog_entry,
+            dict_catalog_entry=dict_catalog_entry,
+            **kwargs,
+        )
 
-        outputsaver.save_netcdf(dataset=data, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                create_catalog_entry=create_catalog_entry, dict_catalog_entry=dict_catalog_entry,
-                                **kwargs)
-
-    def _retrieve(self, model: str, exp: str, source: str, var: str = None, catalog: str = None,
-                  startdate: str = None, enddate: str = None, regrid: str = None,
-                  months_required: int | None = None,
-                  reader_kwargs: dict = {}, loglevel: str = 'WARNING'):
+    def _retrieve(
+        self,
+        model: str,
+        exp: str,
+        source: str,
+        var: str = None,
+        catalog: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        regrid: str = None,
+        months_required: int | None = None,
+        reader_kwargs: dict = {},
+        loglevel: str = "WARNING",
+    ):
         """
         Static method to retrieve data and return everything instead of updating class
         attributes. Used internally by the retrieve method
@@ -178,9 +204,9 @@ class Diagnostic():
             reader (aqua.Reader): The reader object used to retrieve the data.
             catalog (str): The catalog used to retrieve the data.
         """
-        reader = Reader(catalog=catalog, model=model, exp=exp, source=source,
-                        regrid=regrid,
-                        loglevel=loglevel, **reader_kwargs)
+        reader = Reader(
+            catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel, **reader_kwargs
+        )
 
         data = reader.retrieve(var=var)
 
@@ -203,19 +229,15 @@ class Diagnostic():
         if months_required is not None:
             timedelta = xarray_to_pandas_freq(data)
             freq = pandas_freq_to_string(timedelta)
-            factor = {
-                'hourly': 1/(24*30),
-                'daily': 1/30,
-                'weekly': 1/4,
-                'monthly': 1,
-                'seasonal': 3,
-                'annual': 12
-            }
+            factor = {"hourly": 1 / (24 * 30), "daily": 1 / 30, "weekly": 1 / 4, "monthly": 1, "seasonal": 3, "annual": 12}
             # We automatically raise an error if the frequency is not pandas compliant
-            months = len(data['time']) * factor.get(freq, 0)
+            months = len(data["time"]) * factor.get(freq, 0)
 
             if months < months_required:
-                raise NotEnoughDataError(f"Not enough months of data found for {model} {exp} {source}, at least {months_required} months required, only {months} found.")
+                raise NotEnoughDataError(
+                    f"Not enough months of data found for {model} {exp} {source}, "
+                    f"at least {months_required} months required, only {months} found."
+                )
 
         if catalog is None:
             catalog = reader.catalog
@@ -254,14 +276,13 @@ class Diagnostic():
 
         conversion = convert_units(initial_units, final_units)
 
-        factor = conversion.get('factor', 1)
-        offset = conversion.get('offset', 0)
+        factor = conversion.get("factor", 1)
+        offset = conversion.get("offset", 0)
 
         if factor != 1 or offset != 0:
-            self.logger.debug('Converting %s from %s to %s',
-                              var, initial_units, final_units)
+            self.logger.debug("Converting %s from %s to %s", var, initial_units, final_units)
             data = data * factor + offset
-            data.attrs['units'] = final_units
+            data.attrs["units"] = final_units
 
         return data
 
@@ -276,10 +297,10 @@ class Diagnostic():
             str: The path to the regions file.
         """
         regions_file = ConfigPath().get_config_dir()
-        regions_file = os.path.join(regions_file, 'tools', diagnostic, 'definitions', 'regions.yaml')
+        regions_file = os.path.join(regions_file, "tools", diagnostic, "definitions", "regions.yaml")
         if os.path.exists(regions_file):
             return regions_file
-        raise FileNotFoundError(f'Region file path not found at: {regions_file}')
+        raise FileNotFoundError(f"Region file path not found at: {regions_file}")
 
     def _read_regions_file(self, regions_file: str):
         """
@@ -310,8 +331,14 @@ class Diagnostic():
 
         return self._read_regions_file(regions_file_path)
 
-    def _set_region(self, diagnostic: str, region: str = None, regions_file_path: str = None,
-                    lon_limits: list = None, lat_limits: list = None):
+    def _set_region(
+        self,
+        diagnostic: str,
+        region: str = None,
+        regions_file_path: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+    ):
         """
         Set the region to be used.
 
@@ -330,17 +357,17 @@ class Diagnostic():
         if region is not None:
             regions_file = self._load_regions_from_file(diagnostic, regions_file_path)
 
-            if region in regions_file['regions']:
-                lon_limits = regions_file['regions'][region].get('lon_limits', None)
-                lat_limits = regions_file['regions'][region].get('lat_limits', None)
-                region = regions_file['regions'][region].get('longname', region)
-                self.logger.info(f'Region {region} found, using lon: {lon_limits}, lat: {lat_limits}')
+            if region in regions_file["regions"]:
+                lon_limits = regions_file["regions"][region].get("lon_limits", None)
+                lat_limits = regions_file["regions"][region].get("lat_limits", None)
+                region = regions_file["regions"][region].get("longname", region)
+                self.logger.info(f"Region {region} found, using lon: {lon_limits}, lat: {lat_limits}")
             else:
-                self.logger.error(f'Region {region} not found')
-                raise ValueError(f'Region {region} not found')
+                self.logger.error(f"Region {region} not found")
+                raise ValueError(f"Region {region} not found")
         else:
             region = None
-            self.logger.info(f'No region provided, using lon_limits: {lon_limits}, lat_limits: {lat_limits}')
+            self.logger.info(f"No region provided, using lon_limits: {lon_limits}, lat_limits: {lat_limits}")
 
         return region, lon_limits, lat_limits
 
@@ -369,23 +396,14 @@ class Diagnostic():
         if region is not None and diagnostic is not None:
             region, lon_limits, lat_limits = self._set_region(region=region, diagnostic=diagnostic)
             self.logger.info(f"Applying area selection for region: {region}")
-            data = self.reader.select_area(
-                data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs
-            )
-            data.attrs['AQUA_region'] = region
+            data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
+            data.attrs["AQUA_region"] = region
 
             if original_name is not None:
                 data.name = original_name
         else:
             region, lon_limits, lat_limits = None, None, None
-            self.logger.warning(
-                "Since region name is not specified, processing whole region in the dataset"
-            )
+            self.logger.warning("Since region name is not specified, processing whole region in the dataset")
 
-        res_dict = {
-            'data': data,
-            'region': region,
-            'lon_limits': lon_limits,
-            'lat_limits': lat_limits
-        }
+        res_dict = {"data": data, "region": region, "lon_limits": lon_limits, "lat_limits": lat_limits}
         return res_dict
