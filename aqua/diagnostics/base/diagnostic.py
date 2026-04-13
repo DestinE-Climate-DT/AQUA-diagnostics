@@ -7,21 +7,33 @@ from aqua import Reader
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml
-from aqua.core.util import pandas_freq_to_string, time_to_string, xarray_to_pandas_freq
-
-from .time_util import start_end_dates
+from aqua.core.util import (
+    DEFAULT_REALIZATION,
+    convert_units,
+    load_yaml,
+    pandas_freq_to_string,
+    time_to_string,
+    xarray_to_pandas_freq,
+)
 
 from .output_saver import OutputSaver
+from .time_util import start_end_dates
 
 
-class Diagnostic():
-
-    def __init__(self, model: str, exp: str, source: str,
-                 catalog: str | None = None, regrid: str | None = None,
-                 startdate: str | None = None, enddate: str | None = None,
-                 std_startdate: str | None = None, std_enddate: str | None = None,
-                 loglevel: str = 'WARNING'):
+class Diagnostic:
+    def __init__(
+        self,
+        model: str,
+        exp: str,
+        source: str,
+        catalog: str | None = None,
+        regrid: str | None = None,
+        startdate: str | None = None,
+        enddate: str | None = None,
+        std_startdate: str | None = None,
+        std_enddate: str | None = None,
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the diagnostic class. This is a general purpose class that can be used
         by the diagnostic classes to retrieve data from a single model and to save the data
@@ -55,8 +67,9 @@ class Diagnostic():
         self.regrid = regrid
 
         # Compute retrieval window as the widest range covering both plot and std periods
-        self.startdate, self.enddate = start_end_dates(startdate=startdate, enddate=enddate,
-                                                       start_std=std_startdate, end_std=std_enddate)
+        self.startdate, self.enddate = start_end_dates(
+            startdate=startdate, enddate=enddate, start_std=std_startdate, end_std=std_enddate
+        )
         # Plot/analysis window (user-provided; filled from data after retrieve if None)
         self.plt_startdate = startdate
         self.plt_enddate = enddate
@@ -97,7 +110,7 @@ class Diagnostic():
         self.realization = reader_kwargs["realization"] if "realization" in reader_kwargs else DEFAULT_REALIZATION
 
         if self.regrid is not None:
-            self.logger.info(f'Regridded data to {self.regrid} grid')
+            self.logger.info(f"Regridded data to {self.regrid} grid")
 
         # Fill retrieval dates from data if not provided
         if self.startdate is None:
@@ -110,10 +123,10 @@ class Diagnostic():
         # Fill plot dates from data if not provided
         if self.plt_startdate is None:
             self.plt_startdate = self.data.time.values[0]
-            self.logger.debug(f'Plot start date set from data: {self.plt_startdate}')
+            self.logger.debug(f"Plot start date set from data: {self.plt_startdate}")
         if self.plt_enddate is None:
             self.plt_enddate = self.data.time.values[-1]
-            self.logger.debug(f'Plot end date set from data: {self.plt_enddate}')
+            self.logger.debug(f"Plot end date set from data: {self.plt_enddate}")
 
         # Fill std dates from retrieval dates if still unset
         if self.std_startdate is None:
@@ -124,9 +137,17 @@ class Diagnostic():
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs(self.data)
 
-    def save_netcdf(self, data, diagnostic: str, diagnostic_product: str = None,
-                    outputdir: str = '.', rebuild: bool = True,
-                    create_catalog_entry: bool = False, dict_catalog_entry: dict = None, **kwargs):
+    def save_netcdf(
+        self,
+        data,
+        diagnostic: str,
+        diagnostic_product: str = None,
+        outputdir: str = ".",
+        rebuild: bool = True,
+        create_catalog_entry: bool = False,
+        dict_catalog_entry: dict = None,
+        **kwargs,
+    ):
         """
         Save the data to a netcdf file.
 
@@ -258,8 +279,8 @@ class Diagnostic():
         Returns:
             data: The same object with AQUA_startdate and AQUA_enddate set in attrs.
         """
-        data.attrs['AQUA_startdate'] = time_to_string(self.plt_startdate)
-        data.attrs['AQUA_enddate'] = time_to_string(self.plt_enddate)
+        data.attrs["AQUA_startdate"] = time_to_string(self.plt_startdate)
+        data.attrs["AQUA_enddate"] = time_to_string(self.plt_enddate)
         return data
 
     def _check_data(self, data: xr.DataArray, var: str, units: str):
