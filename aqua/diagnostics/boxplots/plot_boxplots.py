@@ -69,7 +69,7 @@ class PlotBoxplots:
         all_startdates = startdates + (startdates_ref or [])
         all_enddates = enddates + (enddates_ref or [])
         dataset_info = ", ".join(
-            f"{m} (exp: {e}) from {time_to_string(s)} to {time_to_string(en)}"
+            f"{m} {e} (from {time_to_string(s, format='%Y-%m')} to {time_to_string(en, format='%Y-%m')})"
             for m, e, s, en in zip(all_models, all_exps, all_startdates, all_enddates)
         )
         if not description:
