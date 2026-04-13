@@ -12,13 +12,20 @@ xr.set_options(keep_attrs=True)
 
 
 class BaseMixin(Diagnostic):
-    def __init__(self, telecname: str, catalog: str = None, model: str = None,
-                 exp: str = None, source: str = None,
-                 regrid: str = None,
-                 startdate: str = None, enddate: str = None,
-                 configdir: str = None,
-                 definition: str = 'teleconnections-destine',
-                 loglevel: str = 'WARNING'):
+    def __init__(
+        self,
+        telecname: str,
+        catalog: str = None,
+        model: str = None,
+        exp: str = None,
+        source: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        configdir: str = None,
+        definition: str = "teleconnections-destine",
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the Base class.
         Args:
@@ -38,16 +45,22 @@ class BaseMixin(Diagnostic):
                              Default is 'teleconnections-destine'.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
-        super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
-                         startdate=startdate, enddate=enddate, loglevel=loglevel)
+        super().__init__(
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            loglevel=loglevel,
+        )
 
-        self.definition = self.load_definition(configdir=configdir, definition=definition,
-                                               telecname=telecname)
+        self.definition = self.load_definition(configdir=configdir, definition=definition, telecname=telecname)
         # Initialize the possible results
         self.index = None
 
-    def compute_regression(self, var: str = None,
-                           dim: str = 'time', season: str = None):
+    def compute_regression(self, var: str = None, dim: str = "time", season: str = None):
         """
         Compute the regression of the data on the index.
 
@@ -60,11 +73,10 @@ class BaseMixin(Diagnostic):
             xr.DataArray: The regression of the data on the index.
         """
         data, index = self._prepare_statistic(var=var, season=season)
-        reg = xr.cov(index, data, dim=dim)/index.var(dim=dim, skipna=True).values
+        reg = xr.cov(index, data, dim=dim) / index.var(dim=dim, skipna=True).values
         return reg
 
-    def compute_correlation(self, var: str = None,
-                            dim: str = 'time', season: str = None):
+    def compute_correlation(self, var: str = None, dim: str = "time", season: str = None):
         """
         Compute the correlation of the data on the index.
 
@@ -80,9 +92,9 @@ class BaseMixin(Diagnostic):
         corr = xr.corr(index, data, dim=dim)
 
         # Modify the attributes to match the correlation
-        corr.attrs['long_name'] = f'Correlation of {data.long_name} with index evaluated with {index.long_name}'
-        corr.attrs['shortName'] = 'Pearson_correlation'
-        corr.attrs['units'] = '1'
+        corr.attrs["long_name"] = f"Correlation of {data.long_name} with index evaluated with {index.long_name}"
+        corr.attrs["shortName"] = "Pearson_correlation"
+        corr.attrs["units"] = "1"
 
         return corr
 
@@ -97,9 +109,17 @@ class BaseMixin(Diagnostic):
             if isinstance(self.data, xr.Dataset):
                 data = self.data[self.var]
         else:
-            data, _, _ = super()._retrieve(model=self.model, exp=self.exp, source=self.source,
-                                           var=var, catalog=self.catalog, startdate=self.startdate,
-                                           enddate=self.enddate, regrid=self.regrid, loglevel=self.loglevel)
+            data, _, _ = super()._retrieve(
+                model=self.model,
+                exp=self.exp,
+                source=self.source,
+                var=var,
+                catalog=self.catalog,
+                startdate=self.startdate,
+                enddate=self.enddate,
+                regrid=self.regrid,
+                loglevel=self.loglevel,
+            )
             data = data[var]
 
         if season:
@@ -108,8 +128,7 @@ class BaseMixin(Diagnostic):
 
         return data, index
 
-    def load_definition(self, configdir: str = None, definition: str = 'teleconnections-destine',
-                       telecname: str = None):
+    def load_definition(self, configdir: str = None, definition: str = "teleconnections-destine", telecname: str = None):
         """
         Load the definition for the teleconnections.
 
@@ -124,24 +143,32 @@ class BaseMixin(Diagnostic):
             dict: The definition file as a dictionary.
         """
         # Add yaml to definition if not present
-        if not definition.endswith('.yaml'):
-            definition = f'{definition}.yaml'
+        if not definition.endswith(".yaml"):
+            definition = f"{definition}.yaml"
         if not configdir:
             configdir = ConfigPath().get_config_dir()
-            configdir = os.path.join(configdir, 'tools', 'teleconnections', 'definitions')
+            configdir = os.path.join(configdir, "tools", "teleconnections", "definitions")
 
         definition_file = os.path.join(configdir, definition)
-        self.logger.debug(f'Loading definition file: {definition_file}')
+        self.logger.debug(f"Loading definition file: {definition_file}")
 
         definition_dict = load_yaml(definition_file)
 
         return definition_dict[telecname] if telecname else definition_dict
 
 
-class PlotBaseMixin():
+class PlotBaseMixin:
     """PlotBaseMixin class is used for the PlotNAO and the PlotENSO classes."""
-    def __init__(self, indexes=None, ref_indexes=None, diagnostic: str = None, outputdir: str = './',
-                 rebuild: bool = True, loglevel: str = 'WARNING'):
+
+    def __init__(
+        self,
+        indexes=None,
+        ref_indexes=None,
+        diagnostic: str = None,
+        outputdir: str = "./",
+        rebuild: bool = True,
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the PlotBaseMixin class.
 
@@ -155,7 +182,7 @@ class PlotBaseMixin():
         """
         # Data info initalized as empty
         self.loglevel = loglevel
-        self.logger = log_configure(self.loglevel, 'PlotBaseMixin')
+        self.logger = log_configure(self.loglevel, "PlotBaseMixin")
         self.catalogs = None
         self.models = None
         self.exps = None
@@ -171,10 +198,18 @@ class PlotBaseMixin():
 
         self.get_data_info()
 
-        self.outputsaver = OutputSaver(diagnostic=diagnostic,  catalog=self.catalogs, model=self.models,
-                                       exp=self.exps, catalog_ref=self.ref_catalogs, model_ref=self.ref_models,
-                                       exp_ref=self.ref_exps, outputdir=outputdir,
-                                       realization = self.realizations, loglevel=self.loglevel)
+        self.outputsaver = OutputSaver(
+            diagnostic=diagnostic,
+            catalog=self.catalogs,
+            model=self.models,
+            exp=self.exps,
+            catalog_ref=self.ref_catalogs,
+            model_ref=self.ref_models,
+            exp_ref=self.ref_exps,
+            outputdir=outputdir,
+            realization=self.realizations,
+            loglevel=self.loglevel,
+        )
 
     def get_data_info(self):
         """
@@ -188,17 +223,17 @@ class PlotBaseMixin():
             self.models = [d.AQUA_model for d in self.indexes]
             self.exps = [d.AQUA_exp for d in self.indexes]
             self.realizations = get_realizations(self.indexes)
-        self.logger.debug(f'Catalogs: {self.catalogs}')
-        self.logger.debug(f'Models: {self.models}')
-        self.logger.debug(f'Exps: {self.exps}')
+        self.logger.debug(f"Catalogs: {self.catalogs}")
+        self.logger.debug(f"Models: {self.models}")
+        self.logger.debug(f"Exps: {self.exps}")
 
         if self.ref_indexes is not None:
             self.ref_catalogs = [d.AQUA_catalog for d in self.ref_indexes]
             self.ref_models = [d.AQUA_model for d in self.ref_indexes]
             self.ref_exps = [d.AQUA_exp for d in self.ref_indexes]
-            self.logger.debug(f'Ref Catalogs: {self.ref_catalogs}')
-            self.logger.debug(f'Ref Models: {self.ref_models}')
-            self.logger.debug(f'Ref Exps: {self.ref_exps}')
+            self.logger.debug(f"Ref Catalogs: {self.ref_catalogs}")
+            self.logger.debug(f"Ref Models: {self.ref_models}")
+            self.logger.debug(f"Ref Exps: {self.ref_exps}")
 
     def set_index_title(self, diagnostic: str = None):
         """
@@ -212,16 +247,20 @@ class PlotBaseMixin():
         """
         titles_dataset = []
         for i in range(self.len_data):
-            title = TitleBuilder(diagnostic=f"{diagnostic} index" if diagnostic else "index",
-                                 model=self.models[i] if self.models else None,
-                                 exp=self.exps[i] if self.exps else None).generate()
+            title = TitleBuilder(
+                diagnostic=f"{diagnostic} index" if diagnostic else "index",
+                model=self.models[i] if self.models else None,
+                exp=self.exps[i] if self.exps else None,
+            ).generate()
             titles_dataset.append(title)
 
         titles_ref = []
         for i in range(self.len_ref):
-            title = TitleBuilder(diagnostic=f"{diagnostic} index" if diagnostic else "index",
-                                 model=self.ref_models[i] if self.ref_models else None,
-                                 exp=self.ref_exps[i] if self.ref_exps else None).generate()
+            title = TitleBuilder(
+                diagnostic=f"{diagnostic} index" if diagnostic else "index",
+                model=self.ref_models[i] if self.ref_models else None,
+                exp=self.ref_exps[i] if self.ref_exps else None,
+            ).generate()
             titles_ref.append(title)
 
         titles = titles_dataset + titles_ref
@@ -235,10 +274,8 @@ class PlotBaseMixin():
         Returns:
             list: The list of labels for the plot.
         """
-        labels_dataset = [f'{self.models[i]} {self.exps[i]}'
-                          for i in range(self.len_data)]
-        labels_ref = [f'{self.ref_models[i]} {self.ref_exps[i]}'
-                      for i in range(self.len_ref)]
+        labels_dataset = [f"{self.models[i]} {self.exps[i]}" for i in range(self.len_data)]
+        labels_ref = [f"{self.ref_models[i]} {self.ref_exps[i]}" for i in range(self.len_ref)]
         labels = labels_dataset + labels_ref
         return labels
 
@@ -265,12 +302,19 @@ class PlotBaseMixin():
             description += f" {', '.join(refs)}"
         description += "."
 
-        self.logger.debug(f'Index description: {description}')
+        self.logger.debug(f"Index description: {description}")
         return description
 
-    def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
-                  rebuild: bool = True, metadata: dict = None,
-                  dpi: int = 300, format: Union[str, list] = SAVE_FORMAT):
+    def save_plot(
+        self,
+        fig,
+        diagnostic_product: str = None,
+        extra_keys: dict = None,
+        rebuild: bool = True,
+        metadata: dict = None,
+        dpi: int = 300,
+        format: Union[str, list] = SAVE_FORMAT,
+    ):
         """
         Save the plot to a file.
 
@@ -285,8 +329,15 @@ class PlotBaseMixin():
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
         """
-        _ = self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                         extra_keys=extra_keys, metadata=metadata, extension=format, dpi=dpi)
+        _ = self.outputsaver.save_figure(
+            fig,
+            diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
+            extra_keys=extra_keys,
+            metadata=metadata,
+            extension=format,
+            dpi=dpi,
+        )
 
     def set_map_description(self, maps=None, ref_maps=None, statistic: str = None, telecname: str = None):
         """
@@ -306,35 +357,38 @@ class PlotBaseMixin():
         maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps)
 
         if isinstance(maps, xr.DataArray):
-            if statistic == 'correlation':
-                var = maps.long_name if hasattr(maps, 'long_name') else maps.shortName
+            if statistic == "correlation":
+                var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
             else:
-                var = maps.shortName if hasattr(maps, 'shortName') else maps.long_name
+                var = maps.shortName if hasattr(maps, "shortName") else maps.long_name
             description += f"({var}) "
             description += f"{maps.AQUA_model} {maps.AQUA_exp}"
-            if hasattr(maps, 'AQUA_season'):
+            if hasattr(maps, "AQUA_season"):
                 description += f" ({maps.AQUA_season})"
         elif isinstance(maps, list):
-            var = maps[0].shortName if hasattr(maps[0], 'shortName') else maps[0].long_name
+            var = maps[0].shortName if hasattr(maps[0], "shortName") else maps[0].long_name
             description += f"({var}) "
             for map in maps:
                 description += f"{map.AQUA_model} {map.AQUA_exp}, "
             description = description[:-2]
-            if hasattr(maps[0], 'AQUA_season'):
+            if hasattr(maps[0], "AQUA_season"):
                 description += f" ({maps[0].AQUA_season})"
         if isinstance(ref_maps, xr.DataArray):
-            var = ref_maps.shortName if hasattr(ref_maps, 'shortName') else ref_maps.long_name
+            var = ref_maps.shortName if hasattr(ref_maps, "shortName") else ref_maps.long_name
             description += f" compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
         elif isinstance(ref_maps, list):
-            var = ref_maps[0].shortName if hasattr(ref_maps[0], 'shortName') else ref_maps[0].long_name
+            var = ref_maps[0].shortName if hasattr(ref_maps[0], "shortName") else ref_maps[0].long_name
             description += f" compared to {ref_maps[0].AQUA_model} {ref_maps[0].AQUA_exp}"
             for map in ref_maps:
                 description += f"{map.AQUA_model} {map.AQUA_exp}, "
             description = description[:-2]
         description += "."
         if ref_maps is not None:
-            description += f" The contour lines are the model regression map and the filled contour map is the difference between the model and the reference {statistic} map."
-        self.logger.debug(f'Map description: {description}')
+            description += (
+                f" The contour lines are the model regression map and the filled contour map is the difference "
+                f"between the model and the reference {statistic} map."
+            )
+        self.logger.debug(f"Map description: {description}")
 
         return description
 
@@ -356,16 +410,18 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
     """
     maps = to_list(maps)
     maps = [
-        convert_data_units(data, var=data.name if var is None else var, units='hPa')
-        if getattr(data, 'units', None) == 'Pa' else data
+        convert_data_units(data, var=data.name if var is None else var, units="hPa")
+        if getattr(data, "units", None) == "Pa"
+        else data
         for data in maps
     ]
 
     if ref_maps is not None:
         ref_maps = to_list(ref_maps)
         ref_maps = [
-            convert_data_units(data, var=data.name if var is None else var, units='hPa')
-            if getattr(data, 'units', None) == 'Pa' else data
+            convert_data_units(data, var=data.name if var is None else var, units="hPa")
+            if getattr(data, "units", None) == "Pa"
+            else data
             for data in ref_maps
         ]
 
