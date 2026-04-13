@@ -154,14 +154,18 @@ class DiagnosticCLI:
             dict: kwargs ready to be passed to a Diagnostic subclass constructor.
         """
 
-        args = {'catalog': dataset['catalog'], 'model': dataset['model'],
-                'exp': dataset['exp'], 'source': dataset['source'],
-                'regrid': dataset.get('regrid') or self.regrid,
-                'startdate': dataset.get('startdate') or self.startdate,
-                'enddate': dataset.get('enddate') or self.enddate}
+        args = {
+            "catalog": dataset["catalog"],
+            "model": dataset["model"],
+            "exp": dataset["exp"],
+            "source": dataset["source"],
+            "regrid": dataset.get("regrid") or self.regrid,
+            "startdate": dataset.get("startdate") or self.startdate,
+            "enddate": dataset.get("enddate") or self.enddate,
+        }
         if params is not None:
-            args['std_startdate'] = params.get('std_startdate')
-            args['std_enddate'] = params.get('std_enddate')
+            args["std_startdate"] = params.get("std_startdate")
+            args["std_enddate"] = params.get("std_enddate")
         return args
 
     def reference_args(self, reference, params=None):
@@ -179,14 +183,18 @@ class DiagnosticCLI:
             dict: kwargs ready to be passed to a Diagnostic subclass constructor.
         """
 
-        args = {'catalog': reference['catalog'], 'model': reference['model'],
-                'exp': reference['exp'], 'source': reference['source'],
-                'regrid': reference.get('regrid'),
-                'startdate': reference.get('startdate'),
-                'enddate': reference.get('enddate')}
+        args = {
+            "catalog": reference["catalog"],
+            "model": reference["model"],
+            "exp": reference["exp"],
+            "source": reference["source"],
+            "regrid": reference.get("regrid"),
+            "startdate": reference.get("startdate"),
+            "enddate": reference.get("enddate"),
+        }
         if params is not None:
-            args['std_startdate'] = params.get('std_startdate')
-            args['std_enddate'] = params.get('std_enddate')
+            args["std_startdate"] = params.get("std_startdate")
+            args["std_enddate"] = params.get("std_enddate")
         return args
 
     def open_dask_cluster(self):
