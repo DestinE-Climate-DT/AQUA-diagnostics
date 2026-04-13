@@ -54,10 +54,18 @@ class BaseMixin(Diagnostic):
             lat_limits (list): The latitude limits to be used. Overriden by region.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
-        super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid,
-                         startdate=startdate, enddate=enddate,
-                         std_startdate=std_startdate, std_enddate=std_enddate,
-                         loglevel=loglevel)
+        super().__init__(
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            std_startdate=std_startdate,
+            std_enddate=std_enddate,
+            loglevel=loglevel,
+        )
 
         # Log name is the diagnostic name with the first letter capitalized
         self.logger = log_configure(log_level=loglevel, log_name=diagnostic_name.capitalize())

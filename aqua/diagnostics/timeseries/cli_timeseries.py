@@ -91,15 +91,17 @@ if __name__ == "__main__":
                         cli.logger.info(f"Start date: {startdate}, End date: {enddate}")
 
                         # Initialize a list of len from the number of references
-                        if 'references' in cli.config_dict:
-                            ts_ref = [None] * len(cli.config_dict['references'])
-                            for i, reference in enumerate(cli.config_dict['references']):
-                                cli.logger.info(f'Running reference: {reference}, variable: {var}')
+                        if "references" in cli.config_dict:
+                            ts_ref = [None] * len(cli.config_dict["references"])
+                            for i, reference in enumerate(cli.config_dict["references"]):
+                                cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference, params=var_config)
-                                reference_args.update({
-                                    'startdate': startdate,
-                                    'enddate': enddate,
-                                })
+                                reference_args.update(
+                                    {
+                                        "startdate": startdate,
+                                        "enddate": enddate,
+                                    }
+                                )
                                 cli.logger.info(f"Reference args: {reference_args}")
                                 ts_ref[i] = Timeseries(**init_args, **reference_args)
                                 ts_ref[i].run(
@@ -193,15 +195,17 @@ if __name__ == "__main__":
                         enddate = pd.Timestamp(max(t.plt_enddate for t in ts))
 
                         # Initialize a list of len from the number of references
-                        if 'references' in cli.config_dict:
-                            ts_ref = [None] * len(cli.config_dict['references'])
-                            for i, reference in enumerate(cli.config_dict['references']):
-                                cli.logger.info(f'Running reference: {reference}, variable: {var}')
+                        if "references" in cli.config_dict:
+                            ts_ref = [None] * len(cli.config_dict["references"])
+                            for i, reference in enumerate(cli.config_dict["references"]):
+                                cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference, params=var_config)
-                                reference_args.update({
-                                    'startdate': startdate,
-                                    'enddate': enddate,
-                                })
+                                reference_args.update(
+                                    {
+                                        "startdate": startdate,
+                                        "enddate": enddate,
+                                    }
+                                )
                                 ts_ref[i] = Timeseries(**init_args, **reference_args)
                                 ts_ref[i].run(
                                     **run_args,
@@ -297,15 +301,17 @@ if __name__ == "__main__":
                         enddate = pd.Timestamp(max(t.plt_enddate for t in ts))
 
                         # Initialize a list of len from the number of references
-                        if 'references' in cli.config_dict:
-                            sc_ref = [None] * len(cli.config_dict['references'])
-                            for i, reference in enumerate(cli.config_dict['references']):
-                                cli.logger.info(f'Running reference: {reference}, variable: {var}')
+                        if "references" in cli.config_dict:
+                            sc_ref = [None] * len(cli.config_dict["references"])
+                            for i, reference in enumerate(cli.config_dict["references"]):
+                                cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference, params=var_config)
-                                reference_args.update({
-                                    'startdate': startdate,
-                                    'enddate': enddate,
-                                })
+                                reference_args.update(
+                                    {
+                                        "startdate": startdate,
+                                        "enddate": enddate,
+                                    }
+                                )
                                 sc_ref[i] = SeasonalCycles(**init_args, **reference_args)
                                 sc_ref[i].run(
                                     **run_args,
