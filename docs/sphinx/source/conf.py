@@ -2,16 +2,19 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-import os
-import sys
+from importlib.metadata import PackageNotFoundError, version as package_version
 
-from aqua.diagnostics import __version__ as project_version
+try:
+    project_version = package_version("aqua-diagnostics")
+except PackageNotFoundError:
+    # Fallback for local/source builds where package metadata is unavailable.
+    project_version = "unknown"
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "AQUA-diagnostics"
-copyright = "2025, Climate DT Team"
+copyright = "2026, Climate DT Team"
 author = "Climate DT Team"
 version = str(project_version)
 
@@ -40,8 +43,3 @@ html_theme_options = {
     "sticky_navigation": True,
     "navigation_depth": 4,
 }
-
-# Add the path to the package root (where 'aqua' folder is located)
-# From: docs/sphinx/source/conf.py
-# To:   root of the project (3 levels up)
-sys.path.insert(0, os.path.abspath("../../.."))
