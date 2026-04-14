@@ -1,7 +1,7 @@
 import pytest
-from conftest import LOGLEVEL
 
 from aqua.diagnostics.base import Diagnostic
+from tests.shared_constants import LOGLEVEL
 
 loglevel = LOGLEVEL
 

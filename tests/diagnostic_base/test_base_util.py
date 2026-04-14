@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-from conftest import LOGLEVEL
 
 from aqua.core.util import dump_yaml
 from aqua.diagnostics.base import (
@@ -17,6 +16,7 @@ from aqua.diagnostics.base import (
     start_end_dates,
     template_parse_arguments,
 )
+from tests.shared_constants import LOGLEVEL
 
 loglevel = LOGLEVEL
 
