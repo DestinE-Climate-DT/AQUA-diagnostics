@@ -60,13 +60,17 @@ tests = [
     "cdo",
     "ruff==0.15.6"
 ]
+precommit = [
+    "pre-commit"
+]
 minimal = [
     "aqua-diagnostics[core]"
 ]
 dev = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]"
+    "aqua-diagnostics[tests]",
+    "aqua-diagnostics[precommit]"
 ]
 all = [
     "aqua-diagnostics[core]",
