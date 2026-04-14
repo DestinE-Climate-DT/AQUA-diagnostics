@@ -118,10 +118,13 @@ class TestMainExecutionFlow:
         """When seasons=True, plot_seasonal_bias should be called."""
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_cls.return_value.seasonal_climatology = {}
-        config_file = build_config("globalbiases", {
-            **BASE_DICT,
-            "params": {"default": {"seasons": True, "seasons_stat": "mean"}},
-        })
+        config_file = build_config(
+            "globalbiases",
+            {
+                **BASE_DICT,
+                "params": {"default": {"seasons": True, "seasons_stat": "mean"}},
+            },
+        )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -131,13 +134,14 @@ class TestMainExecutionFlow:
         """CLI flags --model, --catalog etc. should override the first dataset in config."""
         mock_gb_cls, _ = mock_gb
         config_file = build_config("globalbiases", BASE_DICT)
-
+        # fmt: off
         main([
             "--config", config_file,
             "--model", "OverrideModel",
             "--catalog", "override-catalog",
-            "--loglevel", "WARNING",
-        ])
+            "--loglevel", "WARNING"]
+        )
+        # fmt: on
 
         dataset_call = mock_gb_cls.call_args_list[0]
         assert dataset_call.kwargs["model"] == "OverrideModel"
@@ -164,11 +168,14 @@ class TestMainExecutionFlow:
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_instance = mock_gb_cls.return_value
         mock_gb_instance.data = _mock_data("2t", "tprate", "net_toa")
-        config_file = build_config("globalbiases", {
-            **BASE_DICT,
-            "variables": ["2t", "tprate"],
-            "formulae": ["net_toa"],
-        })
+        config_file = build_config(
+            "globalbiases",
+            {
+                **BASE_DICT,
+                "variables": ["2t", "tprate"],
+                "formulae": ["net_toa"],
+            },
+        )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -186,10 +193,13 @@ class TestMainExecutionFlow:
     def test_custom_diagnostic_name_passed_to_globalbiases(self, build_config, mock_cluster, mock_gb):
         """A custom diagnostic_name in config should be forwarded to GlobalBiases."""
         mock_gb_cls, _ = mock_gb
-        config_file = build_config("globalbiases", {
-            **BASE_DICT,
-            "diagnostic_name": "my_custom_gb",
-        })
+        config_file = build_config(
+            "globalbiases",
+            {
+                **BASE_DICT,
+                "diagnostic_name": "my_custom_gb",
+            },
+        )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
