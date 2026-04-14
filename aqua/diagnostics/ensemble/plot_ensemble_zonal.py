@@ -130,10 +130,7 @@ class PlotEnsembleZonal(BaseMixin):
         Returns:
             dict: Dictionary containing figure and axes objects for mean and std plots::
 
-                {
-                    'mean_plot': [fig1, ax1],
-                    'std_plot': [fig2, ax2]
-                }
+                {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}
 
         Raises:
             NoDataError: If `dataset_mean` or `dataset_std` is None.
