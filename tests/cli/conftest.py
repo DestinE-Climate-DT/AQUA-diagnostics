@@ -25,7 +25,7 @@ def cli_outputdir(tmp_path):
 def _build_config(
     tmp_path,
     diagnostic_key,
-    diagnostic_block,
+    diagnostic_dict,
     *,
     datasets=None,
     references=None,
@@ -36,7 +36,7 @@ def _build_config(
     Args:
         tmp_path: pytest tmp_path fixture.
         diagnostic_key: key under 'diagnostics' (e.g. 'globalbiases').
-        diagnostic_block: dict for the diagnostic section.
+        diagnostic_dict: dict for the diagnostic section.
         datasets: list of dataset dicts (sensible default provided).
         references: list of reference dicts (sensible default provided).
         output_overrides: dict merged into the 'output' section.
@@ -46,7 +46,8 @@ def _build_config(
 
     config = {
         "setup": {"loglevel": "WARNING"},
-        "datasets": datasets or [
+        "datasets": datasets
+        or [
             {
                 "catalog": "test-catalog",
                 "model": "TestModel",
@@ -54,7 +55,8 @@ def _build_config(
                 "source": "test-source",
             }
         ],
-        "references": references or [
+        "references": references
+        or [
             {
                 "catalog": "ref-catalog",
                 "model": "RefModel",
@@ -71,7 +73,7 @@ def _build_config(
             "create_catalog_entry": False,
             **(output_overrides or {}),
         },
-        "diagnostics": {diagnostic_key: diagnostic_block},
+        "diagnostics": {diagnostic_key: diagnostic_dict},
     }
 
     config_file = tmp_path / f"config_{diagnostic_key}.yaml"
@@ -81,10 +83,19 @@ def _build_config(
 
 @pytest.fixture
 def build_config(tmp_path):
-    """Factory fixture: call with (diagnostic_key, diagnostic_block, **kwargs)."""
-    def _factory(diagnostic_key, diagnostic_block, **kwargs):
-        return _build_config(tmp_path, diagnostic_key, diagnostic_block, **kwargs)
-    return _factory
+    """Build config file for a given diagnostic.
+
+    Args:
+        tmp_path: pytest tmp_path fixture.
+        diagnostic_key: key under 'diagnostics' (e.g. 'globalbiases').
+        diagnostic_dict: dict for the diagnostic section.
+        **kwargs: additional keyword arguments to pass to _build_config.
+    """
+
+    def _build_config_file(diagnostic_key, diagnostic_dict, **kwargs):
+        return _build_config(tmp_path, diagnostic_key, diagnostic_dict, **kwargs)
+
+    return _build_config_file
 
 
 @pytest.fixture
