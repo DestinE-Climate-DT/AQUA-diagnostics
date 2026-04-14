@@ -128,7 +128,8 @@ class PlotEnsembleZonal(BaseMixin):
             xlabel (str, optional): Label for x-axis. Default is "Latitude (in deg North)".
 
         Returns:
-            dict: Dictionary containing figure and axes objects for mean and std plots:
+            dict: Dictionary containing figure and axes objects for mean and std plots::
+
                 {
                     'mean_plot': [fig1, ax1],
                     'std_plot': [fig2, ax2]

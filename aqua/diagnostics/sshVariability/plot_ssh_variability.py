@@ -110,8 +110,8 @@ class SshVariabilityPlot(PlotBaseMixin):
             diagnostic_product (str, optional): Diagnostic type, e.g., ``'sshVariability'``. Default is ``'sshVariability'``.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             description (str, optional): Additional description to include in the plot or metadata.
-            tgt_grid_name='r1440x720',
-            regrid_method='ycon',
+            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
+            regrid_method (str, optional): Regridding method to use. Default is 'ycon'.
 
         Returns:
             matplotlib.figure.Figure: The generated plot figure object.
@@ -333,8 +333,9 @@ class SshVariabilityPlot(PlotBaseMixin):
             diagnostic_product (str, optional): Diagnostic product identifier. Default is 'sshVariability_Difference'.
             description (str, optional): Additional description for the plot metadata or title.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
-            tgt_grid_name='r1440x720',
-            regrid_method='ycon',
+            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
+            regrid_method (str, optional): Regridding method to use. Default is 'ycon'.
+
         Returns:
             matplotlib.figure.Figure: The generated figure object.
 
