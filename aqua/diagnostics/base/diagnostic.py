@@ -128,6 +128,7 @@ class Diagnostic:
                 time_to_string(self.startdate), time_to_string(eff_start),
             )
             self.startdate = eff_start
+        self.logger.info(("Start date: %s "), time_to_string(self.startdate))
 
         if self.enddate is None:
             self.enddate = eff_end
@@ -137,6 +138,7 @@ class Diagnostic:
                 time_to_string(self.enddate), time_to_string(eff_end),
             )
             self.enddate = eff_end
+        self.logger.info(("End date: %s "), time_to_string(self.enddate))
 
         if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < pd.Timestamp(eff_start):
             self.logger.warning(
@@ -144,6 +146,7 @@ class Diagnostic:
                 time_to_string(self.std_startdate), time_to_string(eff_start),
             )
             self.std_startdate = eff_start
+            self.logger.info(("Std start date: %s "), time_to_string(self.std_startdate))
 
         if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > pd.Timestamp(eff_end):
             self.logger.warning(
@@ -151,6 +154,7 @@ class Diagnostic:
                 time_to_string(self.std_enddate), time_to_string(eff_end),
             )
             self.std_enddate = eff_end
+            self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
 
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs(self.data)
