@@ -76,58 +76,64 @@ In the GitHub UI: **Actions** → **AQUA-diagnostics Cross-Check** → **Run wor
 
 ### Suggesting enhancements
 
-Enhancements of existing features or new features may be suggested by opening an issue in the AQUA-diagnostics repository. Please use the `improvements` label for existing features.
+Enhancements of existing features or new features may be suggested by opening an issue in the AQUA-diagnostics repository.
+Please use the `improvements` label for existing features.
 
-### Coding style
+### Coding style checks with Ruff and pre-commit in a Pull Request
 
-To enforce the coding style, we leverage on `pre-commit` hooks and `ruff` as a linter and formatter.
-We set the length limit of 127 characters per line. More information about the coding style chosen
-can be found in the `pyproject.toml` file.
+This project uses pre-commit hooks and Ruff as linter and formatter to enforce the coding style.
+The coding style is defined by the `pyproject.toml` file and the `pre-commit` configuration file in `.pre-commit-config.yaml`.
 
-### Manual trigger of lint and formatting checks for specific files in a Pull Request
+The pre-commit and Ruff dependencies are installed automatically when setting up
+the dev environment through the `environment-dev.yml` file.
+To check and align code changes introduced in a PR with the coding style, developers can choose between the following options:
 
-To manually trigger and align the code changes to the reference coding style, do the following steps:
+1. [Recommended option] Use `pre-commit` hooks to check and align code changes at commit time.
 
-1. Install the pre-commit hooks (if not already installed):
+
+This requires installing the `pre-commit` hooks first. From the root folder of the repository, run:
+
 ```bash
 pre-commit install
 ```
 
-2. If does not exist yet, create a file `.pre-commit-config.yaml` in the root of the repository with the following content:
+From this moment on, every time a commit is made, the `pre-commit` hooks will be run automatically to check and align
+the code changes with the coding style. If the code changes are not aligned, the commit will be rejected, and the
+proposed changes will appear as unstaged changes in the developer’s local repository.
+The developer can then review the changes, stage them again, and commit successfully.
 
-```yaml
-repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-```
-
-3. From AQUA-diagnostics root folder, manually run the pre-commit hooks:
+If, for any reason, the developer wants to disable the `pre-commit` hooks, they can run:
 ```bash
-pre-commit run --all-files
+pre-commit uninstall
 ```
 
-4. If not installed already, install `ruff` (check the version in the `.pre-commit-config.yaml` file):
-```bash
-pip install ruff==<version_number>
-```
-
-5. Run the linter fixer from the path to the file or folder that have been modified in the PR and need to be aligned to the reference coding style (it will use the rules set in the `pyproject.toml` file):
+2. Alternatively, developers can manually run the `pre-commit` hooks to check the coding style of the code changes.
+To trigger all the pre-commit hooks manually, from the root folder of the repository, run:
 
 ```bash
-ruff check --fix <file_or_folder_to_target> --no-cache
+pre-commit run -a
 ```
 
-Note:
-The extra flag `--unsafe-fix` allows Ruff to apply fixes that might change the behavior of your code, even if it is not safe to do so.  
+If the developer wants to run the pre-commit hooks only for specific file(s) or folder(s), they can run:
+```bash
+pre-commit run --files <file_or_folder_to_target>
+```
+
+Side note:
+During the manual run of the pre-commit hooks, some errors can be fixed automatically
+by Ruff. However, in some cases, Ruff may require the extra flag `--unsafe-fixes`.
+This flag allows Ruff to apply fixes that might change the behavior of your code, even when it is not safe to do so.  
 Use it with caution and review the diff!
+To run manually Ruff linter with the `--unsafe-fixes` flag:
+```bash
+ruff check --fix <file_or_folder_to_target> --no-cache --unsafe-fixes
+```
+(to run over all files, set "." as the target, from the root folder of the repository)
 
-6. Run the formatter from AQUA-diagnostics root folder:
+Then, to run the formatter manually:
+
 ```bash
 ruff format <file_or_folder_to_target> --no-cache
 ```
 
-This will format the code according to the formatting rules set in the `pyproject.toml` file.
+This manual run will also format the code according to the formatting rules defined by the `pyproject.toml` file.
