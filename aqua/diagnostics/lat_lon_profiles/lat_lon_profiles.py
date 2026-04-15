@@ -79,8 +79,7 @@ class LatLonProfiles(Diagnostic):
 
         self.logger = log_configure(log_level=loglevel, log_name="LatLonProfiles")
 
-        self.logger.debug(f"Retrieve start date: {self.startdate}, End date: {self.enddate}")
-        self.logger.debug(f"Plot start date: {self.plt_startdate}, End date: {self.plt_enddate}")
+        self.logger.debug(f"Start date: {self.startdate}, End date: {self.enddate}")
         self.logger.debug(f"Std start date: {self.std_startdate}, Std end date: {self.std_enddate}")
 
         # Set the region based on the region name or the lon and lat limits
@@ -199,8 +198,7 @@ class LatLonProfiles(Diagnostic):
             seasonal_std_list = []
             for season in seasons:
                 season_data = seasonal_std.sel(season=season)
-                season_data.attrs["AQUA_startdate"] = time_to_string(self.plt_startdate)
-                season_data.attrs["AQUA_enddate"] = time_to_string(self.plt_enddate)
+                self._set_date_attrs(season_data)
                 seasonal_std_list.append(season_data)
 
             self.std_seasonal = seasonal_std_list
@@ -343,7 +341,7 @@ class LatLonProfiles(Diagnostic):
             raise ValueError("Mean type %s not recognized", self.mean_type)
 
         self.logger.info("Computing %s mean", freq)
-        data = self.data.sel(time=slice(self.plt_startdate, self.plt_enddate))
+        data = self.data.sel(time=slice(self.startdate, self.enddate))
 
         if freq == "seasonal":
             data = self.reader.fldmean(
@@ -371,8 +369,7 @@ class LatLonProfiles(Diagnostic):
                 data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
             )
 
-            data.attrs["AQUA_startdate"] = time_to_string(self.plt_startdate)
-            data.attrs["AQUA_enddate"] = time_to_string(self.plt_enddate)
+            self._set_date_attrs(data)
 
             if self.region is not None:
                 data.attrs["AQUA_region"] = self.region
