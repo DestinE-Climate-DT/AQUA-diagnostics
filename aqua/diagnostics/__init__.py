@@ -1,5 +1,6 @@
 """AQUA Diagnostics Package"""
 
+from .version import __version__
 from .teleconnections import NAO, ENSO, MJO
 from .teleconnections import PlotNAO, PlotENSO, PlotMJO
 from .timeseries import Gregory, SeasonalCycles, Timeseries, PlotTimeseries, PlotSeasonalCycles, PlotGregory
@@ -21,7 +22,7 @@ from .ocean_trends import Trends, PlotTrends
 DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections"]
 DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["collections"]
 
-__all__ = ["NAO", "ENSO", "MJO",
+__all__ = ["__version__", "NAO", "ENSO", "MJO",
            "PlotNAO", "PlotENSO", "PlotMJO",
            "Gregory", "SeasonalCycles", "Timeseries",
            "PlotTimeseries", "PlotSeasonalCycles", "PlotGregory",

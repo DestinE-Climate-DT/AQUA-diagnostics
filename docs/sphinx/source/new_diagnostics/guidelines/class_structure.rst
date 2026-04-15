@@ -1,3 +1,5 @@
+.. _diagnostic-class_structure:
+
 Core Diagnostic: ``Diagnostic``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -105,10 +107,12 @@ Imagine for example to run the timeseries diagnostic in an analysis about precip
 This will allow the files to be named ``precipitation.timeseries.png`` instead of ``timeseries.timeseries.png``,
 which would be less informative.
 
+.. _aqua-console:
+
 Configuration Files and AQUA console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the section :ref:`aqua-install`, the tool to expose configuration files for the diagnostic or
+In the section :ref:`installation`, the tool to expose configuration files for the diagnostic or
 its CLI is described.
 This section provides more details on how to update the code if you want to expose a new configuration file or
 you are developing a new diagnostic.
