@@ -50,9 +50,9 @@ class Diagnostic:
             enddate (str | None): The end date of the plot/analysis period.
                      If None, all available data will be used.
             std_startdate (str | None): The start date of the standard deviation period.
-                           If None, defaults to startdate.
+                           If None, no std period is tracked at the Diagnostic level.
             std_enddate (str | None): The end date of the standard deviation period.
-                         If None, defaults to enddate.
+                         If None, no std period is tracked at the Diagnostic level.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
 
@@ -66,16 +66,10 @@ class Diagnostic:
 
         self.regrid = regrid
 
-        # Compute retrieval window as the widest range covering both plot and std periods
-        self.startdate, self.enddate = start_end_dates(
-            startdate=startdate, enddate=enddate, start_std=std_startdate, end_std=std_enddate
-        )
-        # Plot/analysis window (user-provided; filled from data after retrieve if None)
-        self.plt_startdate = startdate
-        self.plt_enddate = enddate
-        # Std window (defaults to retrieval window if not provided)
-        self.std_startdate = self.startdate if std_startdate is None else std_startdate
-        self.std_enddate = self.enddate if std_enddate is None else std_enddate
+        self.startdate = startdate
+        self.enddate = enddate
+        self.std_startdate = std_startdate
+        self.std_enddate = std_enddate
 
         # Data to be retrieved
         self.data = None
@@ -90,17 +84,26 @@ class Diagnostic:
             months_required (int | None): The number of months of data required. If None, no check will be performed.
 
         Attributes:
-            self.data: The data retrieved from the model. If return_data is True, the data will be returned.
+            self.data: The data retrieved from the model.
             self.catalog: The catalog used to retrieve the data if no catalog was provided.
         """
+        # Widest window covering both plot/analysis and std periods
+        time1, time2 = start_end_dates(
+            startdate=self.startdate,
+            enddate=self.enddate,
+            start_std=self.std_startdate,
+            end_std=self.std_enddate,
+        )
+
+        # Retrieve data using the widest window
         self.data, self.reader, self.catalog = self._retrieve(
             model=self.model,
             exp=self.exp,
             source=self.source,
             var=var,
             catalog=self.catalog,
-            startdate=self.startdate,
-            enddate=self.enddate,
+            startdate=time1,
+            enddate=time2,
             regrid=self.regrid,
             reader_kwargs=reader_kwargs,
             months_required=months_required,
@@ -112,27 +115,42 @@ class Diagnostic:
         if self.regrid is not None:
             self.logger.info(f"Regridded data to {self.regrid} grid")
 
-        # Fill retrieval dates from data if not provided
+        # Effective data bounds (what the catalog actually delivered)
+        eff_start = self.data.time.values[0]
+        eff_end = self.data.time.values[-1]
+
+        # Resolve user-requested dates against effective bounds
         if self.startdate is None:
-            self.startdate = self.data.time.values[0]
-            self.logger.debug(f"Start date: {self.startdate}")
+            self.startdate = eff_start
+        elif pd.Timestamp(self.startdate) < pd.Timestamp(eff_start):
+            self.logger.warning(
+                "Requested startdate %s not available; using %s instead.",
+                time_to_string(self.startdate), time_to_string(eff_start),
+            )
+            self.startdate = eff_start
+
         if self.enddate is None:
-            self.enddate = self.data.time.values[-1]
-            self.logger.debug(f"End date: {self.enddate}")
+            self.enddate = eff_end
+        elif pd.Timestamp(self.enddate) > pd.Timestamp(eff_end):
+            self.logger.warning(
+                "Requested enddate %s not available; using %s instead.",
+                time_to_string(self.enddate), time_to_string(eff_end),
+            )
+            self.enddate = eff_end
 
-        # Fill plot dates from data if not provided
-        if self.plt_startdate is None:
-            self.plt_startdate = self.data.time.values[0]
-            self.logger.debug(f"Plot start date set from data: {self.plt_startdate}")
-        if self.plt_enddate is None:
-            self.plt_enddate = self.data.time.values[-1]
-            self.logger.debug(f"Plot end date set from data: {self.plt_enddate}")
+        if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < pd.Timestamp(eff_start):
+            self.logger.warning(
+                "Requested std_startdate %s not available; using %s instead.",
+                time_to_string(self.std_startdate), time_to_string(eff_start),
+            )
+            self.std_startdate = eff_start
 
-        # Fill std dates from retrieval dates if still unset
-        if self.std_startdate is None:
-            self.std_startdate = self.startdate
-        if self.std_enddate is None:
-            self.std_enddate = self.enddate
+        if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > pd.Timestamp(eff_end):
+            self.logger.warning(
+                "Requested std_enddate %s not available; using %s instead.",
+                time_to_string(self.std_enddate), time_to_string(eff_end),
+            )
+            self.std_enddate = eff_end
 
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs(self.data)
@@ -270,17 +288,23 @@ class Diagnostic:
 
     def _set_date_attrs(self, data):
         """
-        Set AQUA_startdate and AQUA_enddate on a DataArray or Dataset using plt_startdate/plt_enddate.
+        Set AQUA_* date attributes on a DataArray or Dataset using the resolved
+        self.startdate/self.enddate (and self.std_startdate/self.std_enddate
+        when set by the user).
         Can be called by subclasses after converting self.data from Dataset to DataArray.
 
         Args:
             data (xr.DataArray or xr.Dataset): The data object to annotate.
 
         Returns:
-            data: The same object with AQUA_startdate and AQUA_enddate set in attrs.
+            data: The same object with AQUA_* date attributes set in attrs.
         """
-        data.attrs["AQUA_startdate"] = time_to_string(self.plt_startdate)
-        data.attrs["AQUA_enddate"] = time_to_string(self.plt_enddate)
+        data.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        data.attrs["AQUA_enddate"] = time_to_string(self.enddate)
+        if self.std_startdate is not None:
+            data.attrs["AQUA_std_startdate"] = time_to_string(self.std_startdate)
+        if self.std_enddate is not None:
+            data.attrs["AQUA_std_enddate"] = time_to_string(self.std_enddate)
         return data
 
     def _check_data(self, data: xr.DataArray, var: str, units: str):
