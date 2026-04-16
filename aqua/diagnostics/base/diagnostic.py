@@ -125,7 +125,8 @@ class Diagnostic:
         elif pd.Timestamp(self.startdate) < pd.Timestamp(eff_start):
             self.logger.warning(
                 "Requested startdate %s not available; using %s instead.",
-                time_to_string(self.startdate), time_to_string(eff_start),
+                time_to_string(self.startdate),
+                time_to_string(eff_start),
             )
             self.startdate = eff_start
         self.logger.info(("Start date: %s "), time_to_string(self.startdate))
@@ -135,7 +136,8 @@ class Diagnostic:
         elif pd.Timestamp(self.enddate) > pd.Timestamp(eff_end):
             self.logger.warning(
                 "Requested enddate %s not available; using %s instead.",
-                time_to_string(self.enddate), time_to_string(eff_end),
+                time_to_string(self.enddate),
+                time_to_string(eff_end),
             )
             self.enddate = eff_end
         self.logger.info(("End date: %s "), time_to_string(self.enddate))
@@ -143,7 +145,8 @@ class Diagnostic:
         if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < pd.Timestamp(eff_start):
             self.logger.warning(
                 "Requested std_startdate %s not available; using %s instead.",
-                time_to_string(self.std_startdate), time_to_string(eff_start),
+                time_to_string(self.std_startdate),
+                time_to_string(eff_start),
             )
             self.std_startdate = eff_start
             self.logger.info(("Std start date: %s "), time_to_string(self.std_startdate))
@@ -151,7 +154,8 @@ class Diagnostic:
         if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > pd.Timestamp(eff_end):
             self.logger.warning(
                 "Requested std_enddate %s not available; using %s instead.",
-                time_to_string(self.std_enddate), time_to_string(eff_end),
+                time_to_string(self.std_enddate),
+                time_to_string(eff_end),
             )
             self.std_enddate = eff_end
             self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
