@@ -19,7 +19,7 @@ repos:
         name: Check Valid Python
         description: check if python file is valid
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.6
+    rev: v0.15.10
     hooks:
     -   id: ruff-check
     -   id: ruff-format
