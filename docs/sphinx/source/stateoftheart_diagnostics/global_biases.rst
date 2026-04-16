@@ -30,8 +30,8 @@ There are three classes in the diagnostic:
   It generates the plots based on the data prepared by the GlobalBiases class.
 
 * **StatGlobalBiases**: statistical class including methods to compute global bias statistics and to assess the statistical significance of the bias.
-It computes global bias statistics such as mean bias and root mean square error (RMSE) between the model and reference datasets (area-weighted if grid cell areas are provided).
-It also performs a two-sample t-test at each grid point to determine if the difference between model and reference data is statistically significant.
+  It computes global bias statistics such as mean bias and root mean square error (RMSE) between the model and reference datasets (area-weighted if grid cell areas are provided).
+  It also performs a two-sample t-test at each grid point to determine if the difference between model and reference data is statistically significant.
 
 File structure
 --------------
@@ -175,8 +175,9 @@ Here we describe only the specific settings for the global biases diagnostic.
                 long_name: "Top net radiation"
 
 * ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.
-``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
-``show_significance`` enables the display of stippling to indicate where the bias is statistically significant, based on a two-sample t-test (``significance_alpha`` defines the confidence level for the test, e.g., 0.05 for 95% confidence).
+* ``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
+* ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant, based on a two-sample t-test (``significance_alpha`` defines the confidence level for the test, e.g., 0.05 for 95% confidence).
+
 The default parameters are used if not specified for a specific variable.
 Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
 
