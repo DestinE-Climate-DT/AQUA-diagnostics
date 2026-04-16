@@ -13,7 +13,7 @@ dependencies:
   - python>=3.10,<3.13
   - cdo>=2.5.0 #for smmregrid compatibility
   - eccodes==2.41.0
-  - cartopy<=0.24.1
+  - cartopy<=0.25.0
   - cartopy_offlinedata # this is needed for MN5 HPC
   - h5py>=3.12.1,<=3.16.0
   - hdf5<=1.14.6
