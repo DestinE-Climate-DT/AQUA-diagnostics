@@ -26,7 +26,7 @@ Inside each diagnostic folder, the output will be saved in a subfolder named wit
 
 The exact list of diagnostics to run and technical details of the analysis
 (such as the number of workers/thread/memory to use for the dask cluster) are specified in the configuration file ``config.aqua-analysis.yaml`` in the same folder.
-This file is available in the ``$AQUA/config/analysis`` folder and it is installed with AQUA (see :ref:`aqua-install`).
+This file is available in the ``$AQUA/config/analysis`` folder and it is installed with AQUA (see :ref:`installation`).
 
 Additional options
 ------------------
