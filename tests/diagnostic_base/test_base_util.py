@@ -5,7 +5,6 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import pytest
-
 import xarray as xr
 
 from aqua.core.exceptions import NotEnoughDataError
@@ -21,8 +20,8 @@ from aqua.diagnostics.base import (
     start_end_dates,
     template_parse_arguments,
 )
-from tests.shared_constants import LOGLEVEL
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles
+from tests.shared_constants import LOGLEVEL
 
 loglevel = LOGLEVEL
 
