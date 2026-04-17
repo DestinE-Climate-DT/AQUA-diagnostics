@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.24.0):
 Complete list:
 - Expose `__version__` from `aqua.core.version` module (#216)
 - ECmean: time selection is now allowed (#178)
+- Centralized management of months required thresholds (#162)
 
 ## [v0.23.0]
 
