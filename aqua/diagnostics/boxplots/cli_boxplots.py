@@ -73,7 +73,7 @@ if __name__ == "__main__":
                 try:
                     boxplots.run(var=variables, reader_kwargs=cli.reader_kwargs)
                 except NotEnoughDataError:
-                    cli.logger.warning(
+                    cli.logger.error(
                         "Skipping %s (%s, %s): not enough data", dataset["model"], dataset["exp"], dataset["source"]
                     )
                     continue
@@ -98,7 +98,7 @@ if __name__ == "__main__":
                 try:
                     boxplots_ref.run(var=variables, reader_kwargs=cli.reader_kwargs)
                 except NotEnoughDataError:
-                    cli.logger.warning(
+                    cli.logger.error(
                         "Skipping reference %s (%s, %s): not enough data",
                         reference["model"],
                         reference["exp"],
