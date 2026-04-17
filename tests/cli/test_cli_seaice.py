@@ -1,5 +1,7 @@
 """Tests for the SeaIce CLI (parse_arguments + main orchestration)."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from aqua.diagnostics.seaice.cli_seaice import main, parse_arguments
@@ -23,6 +25,15 @@ BASE_2D_SET = {
     "varname": {"fraction": "siconc"},
     "projections": {"orthographic": {"central_longitude": 0.0, "central_latitude": 90.0}},
 }
+
+# Two references: the first matches the method, the second is tagged for a
+# different method so the CLI 'use_for_method' skip branch is exercised.
+REFERENCES_TWO = [
+    {"catalog": "ref1", "model": "R1", "exp": "e1", "source": "s1",
+     "use_for_method": "fraction", "domain": "nh"},
+    {"catalog": "ref2", "model": "R2", "exp": "e2", "source": "s2",
+     "use_for_method": "thickness", "domain": "nh"},
+]
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
@@ -138,3 +149,67 @@ class TestMainExecutionFlow:
         assert plot_call.kwargs["plot_type"] == "bias"
         assert plot_call.kwargs["method"] == "fraction"
         assert plot_call.kwargs["months"] == [3, 9]
+
+    def test_timeseries_with_references_and_realization(self, build_config, mock_cluster, mock_si, mocker):
+        """
+        Enable the timeseries block with references + calc_ref_std and pass
+        --realization on the CLI. This covers the references loop (including
+        the use_for_method skip branch) and the realization reader_kwargs branch.
+        """
+        mock_seaice_cls, mock_plot_cls, _ = mock_si
+        # calc_ref_std=True makes compute_seaice return (data, std) for refs
+        mock_seaice_cls.return_value.compute_seaice.return_value = (MagicMock(), MagicMock())
+        mocker.patch(f"{CLI_MODULE}.filter_region_list", return_value=["arctic"])
+
+        config_file = build_config({
+            "seaice_timeseries": {
+                **BASE_SET,
+                "calc_ref_std": True,
+                "ref_std_freq": "monthly",
+                "references": REFERENCES_TWO,
+            },
+        })
+
+        main(["--config", config_file, "--loglevel", "WARNING", "--realization", "r1"])
+
+        mock_plot_cls.return_value.plot_seaice.assert_called_once()
+        # Only the matching reference (use_for_method='fraction') gets its
+        # compute_seaice invoked; the thickness one is skipped.
+        # Calls: 1 dataset + 1 matching ref = 2
+        assert mock_seaice_cls.return_value.compute_seaice.call_count == 2
+
+    def test_seasonal_cycle_with_references(self, build_config, mock_cluster, mock_si, mocker):
+        """Enable the seasonal-cycle block with references + calc_ref_std."""
+        mock_seaice_cls, mock_plot_cls, _ = mock_si
+        mock_seaice_cls.return_value.compute_seaice.return_value = (MagicMock(), MagicMock())
+        mocker.patch(f"{CLI_MODULE}.filter_region_list", return_value=["arctic"])
+
+        config_file = build_config({
+            "seaice_seasonal_cycle": {
+                **BASE_SET,
+                "calc_ref_std": True,
+                "ref_std_freq": "monthly",
+                "references": REFERENCES_TWO,
+            },
+        })
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        mock_plot_cls.return_value.plot_seaice.assert_called_once()
+        plot_call = mock_plot_cls.return_value.plot_seaice.call_args
+        assert plot_call.kwargs["plot_type"] == "seasonalcycle"
+
+    def test_2d_bias_with_references(self, build_config, mock_cluster, mock_si, mocker):
+        """Enable the 2D bias block with references (no calc_ref_std in this block)."""
+        mock_seaice_cls, _, mock_plot_2d_cls = mock_si
+        mocker.patch(f"{CLI_MODULE}.filter_region_list", return_value=["arctic"])
+
+        config_file = build_config({
+            "seaice_2d_bias": {**BASE_2D_SET, "references": REFERENCES_TWO},
+        })
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        mock_plot_2d_cls.return_value.plot_2d_seaice.assert_called_once()
+        # 1 dataset + 1 matching reference = 2 compute_seaice calls
+        assert mock_seaice_cls.return_value.compute_seaice.call_count == 2
