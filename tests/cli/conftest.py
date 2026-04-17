@@ -14,18 +14,9 @@ from aqua.core.util import dump_yaml
 CLI_BASE_MODULE = "aqua.diagnostics.base.cli_base"
 
 
-@pytest.fixture
-def cli_outputdir(tmp_path):
-    """Provide a temporary output directory for CLI tests."""
-    outdir = tmp_path / "output"
-    outdir.mkdir()
-    return str(outdir)
-
-
 def _build_config(
     tmp_path,
-    diagnostic_key,
-    diagnostic_dict,
+    diagnostics,
     *,
     datasets=None,
     references=None,
@@ -35,8 +26,9 @@ def _build_config(
 
     Args:
         tmp_path: pytest tmp_path fixture.
-        diagnostic_key: key under 'diagnostics' (e.g. 'globalbiases').
-        diagnostic_dict: dict for the diagnostic section.
+        diagnostics: mapping of diagnostic keys to their config dicts,
+            e.g. ``{"globalbiases": {...}}`` or
+            ``{"seaice_timeseries": {...}, "seaice_2d_bias": {...}}``.
         datasets: list of dataset dicts (sensible default provided).
         references: list of reference dicts (sensible default provided).
         output_overrides: dict merged into the 'output' section.
@@ -73,27 +65,27 @@ def _build_config(
             "create_catalog_entry": False,
             **(output_overrides or {}),
         },
-        "diagnostics": {diagnostic_key: diagnostic_dict},
+        "diagnostics": diagnostics,
     }
 
-    config_file = tmp_path / f"config_{diagnostic_key}.yaml"
+    first_key = next(iter(diagnostics), "test")
+    config_file = tmp_path / f"config_{first_key}.yaml"
     dump_yaml(outfile=str(config_file), cfg=config)
     return str(config_file)
 
 
 @pytest.fixture
 def build_config(tmp_path):
-    """Build config file for a given diagnostic.
+    """Build a minimal YAML config file for a diagnostic CLI test.
 
-    Args:
-        tmp_path: pytest tmp_path fixture.
-        diagnostic_key: key under 'diagnostics' (e.g. 'globalbiases').
-        diagnostic_dict: dict for the diagnostic section.
-        **kwargs: additional keyword arguments to pass to _build_config.
+    Usage::
+
+        config_file = build_config({"globalbiases": {...}})
+        config_file = build_config({"seaice_timeseries": {...}, "seaice_2d_bias": {...}})
     """
 
-    def _build_config_file(diagnostic_key, diagnostic_dict, **kwargs):
-        return _build_config(tmp_path, diagnostic_key, diagnostic_dict, **kwargs)
+    def _build_config_file(diagnostics, **kwargs):
+        return _build_config(tmp_path, diagnostics, **kwargs)
 
     return _build_config_file
 

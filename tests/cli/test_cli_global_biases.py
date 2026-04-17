@@ -9,7 +9,7 @@ from aqua.diagnostics.global_biases.cli_global_biases import main, parse_argumen
 CLI_MODULE = "aqua.diagnostics.global_biases.cli_global_biases"
 
 # Base configuration dictionary for GlobalBiases diagnostic
-BASE_DICT = {
+BASE_SET = {
     "run": True,
     "variables": ["2t"],
     "formulae": [],
@@ -65,7 +65,7 @@ class TestMainExecutionFlow:
     def test_diagnostic_disabled_skips_processing(self, build_config, mock_cluster, mock_gb):
         """When run=False, no GlobalBiases instance should be created."""
         mock_gb_cls, _ = mock_gb
-        config_file = build_config("globalbiases", {"run": False})
+        config_file = build_config({"globalbiases": {"run": False}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -79,7 +79,7 @@ class TestMainExecutionFlow:
         """
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_instance = mock_gb_cls.return_value
-        config_file = build_config("globalbiases", BASE_DICT)
+        config_file = build_config({"globalbiases": BASE_SET})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -107,7 +107,7 @@ class TestMainExecutionFlow:
 
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_cls.return_value.retrieve.side_effect = NoDataError("no data")
-        config_file = build_config("globalbiases", BASE_DICT)
+        config_file = build_config({"globalbiases": BASE_SET})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -119,49 +119,17 @@ class TestMainExecutionFlow:
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_cls.return_value.seasonal_climatology = {}
         config_file = build_config(
-            "globalbiases",
             {
-                **BASE_DICT,
-                "params": {"default": {"seasons": True, "seasons_stat": "mean"}},
-            },
+                "globalbiases": {
+                    **BASE_SET,
+                    "params": {"default": {"seasons": True, "seasons_stat": "mean"}},
+                },
+            }
         )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
         mock_plot_cls.return_value.plot_seasonal_bias.assert_called_once()
-
-    def test_cli_args_override_config_dataset(self, build_config, mock_cluster, mock_gb):
-        """CLI flags --model, --catalog etc. should override the first dataset in config."""
-        mock_gb_cls, _ = mock_gb
-        config_file = build_config("globalbiases", BASE_DICT)
-        # fmt: off
-        main([
-            "--config", config_file,
-            "--model", "OverrideModel",
-            "--catalog", "override-catalog",
-            "--loglevel", "WARNING"]
-        )
-        # fmt: on
-
-        dataset_call = mock_gb_cls.call_args_list[0]
-        assert dataset_call.kwargs["model"] == "OverrideModel"
-        assert dataset_call.kwargs["catalog"] == "override-catalog"
-
-    def test_dask_cluster_always_closed(self, build_config, mock_gb, mocker):
-        """close_dask_cluster must be called even when diagnostic is disabled."""
-        config_file = build_config("globalbiases", {"run": False})
-
-        mock_client, mock_cluster_obj = mocker.MagicMock(), mocker.MagicMock()
-        mock_open = mocker.patch(
-            "aqua.diagnostics.base.cli_base.open_cluster",
-            return_value=(mock_client, mock_cluster_obj, True),
-        )
-        mock_close = mocker.patch("aqua.diagnostics.base.cli_base.close_cluster")
-
-        main(["--config", config_file, "--loglevel", "WARNING"])
-
-        mock_open.assert_called_once()
-        mock_close.assert_called_once()
 
     def test_multiple_variables_and_formulae(self, build_config, mock_cluster, mock_gb):
         """Both variables and formulae are processed in order."""
@@ -169,12 +137,13 @@ class TestMainExecutionFlow:
         mock_gb_instance = mock_gb_cls.return_value
         mock_gb_instance.data = _mock_data("2t", "tprate", "net_toa")
         config_file = build_config(
-            "globalbiases",
             {
-                **BASE_DICT,
-                "variables": ["2t", "tprate"],
-                "formulae": ["net_toa"],
-            },
+                "globalbiases": {
+                    **BASE_SET,
+                    "variables": ["2t", "tprate"],
+                    "formulae": ["net_toa"],
+                },
+            }
         )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
@@ -194,11 +163,12 @@ class TestMainExecutionFlow:
         """A custom diagnostic_name in config should be forwarded to GlobalBiases."""
         mock_gb_cls, _ = mock_gb
         config_file = build_config(
-            "globalbiases",
             {
-                **BASE_DICT,
-                "diagnostic_name": "my_custom_gb",
-            },
+                "globalbiases": {
+                    **BASE_SET,
+                    "diagnostic_name": "my_custom_gb",
+                },
+            }
         )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
