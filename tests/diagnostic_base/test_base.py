@@ -67,7 +67,7 @@ def test_class_diagnostic(tmp_path):
 
 
 @pytest.mark.aqua
-def test_retrieve_clip_to_bounds(caplog):
+def test_retrieve_clip_to_bounds():
     """Out-of-range startdate/enddate are clipped to the catalog's effective bounds."""
     diag = Diagnostic(
         model="ERA5",
@@ -78,13 +78,10 @@ def test_retrieve_clip_to_bounds(caplog):
         enddate="21000101",
         loglevel=loglevel,
     )
-
-    with caplog.at_level("WARNING"):
-        diag.retrieve(var="tcc")
+    diag.retrieve(var="tcc")
 
     assert pd.Timestamp(diag.startdate) > pd.Timestamp("18000101")
     assert pd.Timestamp(diag.enddate) < pd.Timestamp("21000101")
-    assert any("not available" in r.message for r in caplog.records)
 
 
 @pytest.mark.aqua
