@@ -114,8 +114,8 @@ class Diagnostic:
             self.logger.info(f"Regridded data to {self.regrid} grid")
 
         # Effective data bounds (what the catalog actually delivered)
-        eff_start = self.data.time.values[0]
-        eff_end = self.data.time.values[-1]
+        eff_start = data.time.values[0]
+        eff_end = data.time.values[-1]
 
         # Resolve user-requested dates against effective bounds
         if self.startdate is None:
