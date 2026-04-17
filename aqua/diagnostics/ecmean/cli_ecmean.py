@@ -16,7 +16,7 @@ from aqua import __version__ as aquaversion
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import get_arg, lat_to_phrase, strlist_to_phrase
+from aqua.core.util import get_arg, lat_to_phrase, pandas_freq_to_string, strlist_to_phrase, xarray_to_pandas_freq
 from aqua.diagnostics import GlobalMean, PerformanceIndices
 from aqua.diagnostics.base import (
     OutputSaver,
@@ -163,10 +163,24 @@ def time_check(mydata, y1, y2, logger=None):
         if logger is not None:
             logger.info("Guessing ending year %s", y2)
 
-    # run the performance indices if you have at least 12 month of data
-    if len(mydata.time) < MINIMUM_MONTHS_REQUIRED:
+    # Warn if the data frequency is not monthly, since ECmean expects monthly data
+    data_freq = xarray_to_pandas_freq(mydata)
+    freq_str = pandas_freq_to_string(data_freq)
+    if logger is not None:
+        logger.debug("Detected data frequency: %s (%s)", data_freq, freq_str)
+    if freq_str != "monthly":
+        if logger is not None:
+            logger.warning("Data frequency '%s' does not appear to be monthly. ECmean expects monthly data.", freq_str)
+
+    # Count unique (year, month) pairs to correctly measure months of data
+    # regardless of the actual time frequency (daily, monthly, etc.)
+    n_months = len(set(zip(mydata.time.dt.year.values, mydata.time.dt.month.values)))
+    if logger is not None:
+        logger.debug("Unique months in data: %d", n_months)
+
+    if n_months < MINIMUM_MONTHS_REQUIRED:
         raise NotEnoughDataError(
-            f"Not enough data: {len(mydata.time)} months available, {MINIMUM_MONTHS_REQUIRED} required. Exiting..."
+            f"Not enough data: {n_months} months available, {MINIMUM_MONTHS_REQUIRED} required. Exiting..."
         )
 
     return y1, y2
