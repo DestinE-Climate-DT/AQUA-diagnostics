@@ -17,7 +17,7 @@ from aqua.core.util import (
 )
 
 from .output_saver import OutputSaver
-from .time_util import start_end_dates
+from .time_util import round_enddate, round_startdate, start_end_dates
 
 
 class Diagnostic:
@@ -117,10 +117,19 @@ class Diagnostic:
         eff_start = data.time.values[0]
         eff_end = data.time.values[-1]
 
+        # Avoid clipping when the user specifies e.g. an end-of-month date.
+        freq = pandas_freq_to_string(xarray_to_pandas_freq(data))
+        if freq in ("monthly", "annual"):
+            start_bound = round_startdate(pd.Timestamp(eff_start), freq=freq)
+            end_bound = round_enddate(pd.Timestamp(eff_end), freq=freq)
+        else:
+            start_bound = pd.Timestamp(eff_start)
+            end_bound = pd.Timestamp(eff_end)
+
         # Resolve user-requested dates against effective bounds
         if self.startdate is None:
             self.startdate = eff_start
-        elif pd.Timestamp(self.startdate) < pd.Timestamp(eff_start):
+        elif pd.Timestamp(self.startdate) < start_bound:
             self.logger.warning(
                 "Requested startdate %s not available; using %s instead.",
                 time_to_string(self.startdate),
@@ -131,7 +140,7 @@ class Diagnostic:
 
         if self.enddate is None:
             self.enddate = eff_end
-        elif pd.Timestamp(self.enddate) > pd.Timestamp(eff_end):
+        elif pd.Timestamp(self.enddate) > end_bound:
             self.logger.warning(
                 "Requested enddate %s not available; using %s instead.",
                 time_to_string(self.enddate),
@@ -140,7 +149,7 @@ class Diagnostic:
             self.enddate = eff_end
         self.logger.info(("End date: %s "), time_to_string(self.enddate))
 
-        if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < pd.Timestamp(eff_start):
+        if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < start_bound:
             self.logger.warning(
                 "Requested std_startdate %s not available; using %s instead.",
                 time_to_string(self.std_startdate),
@@ -149,7 +158,7 @@ class Diagnostic:
             self.std_startdate = eff_start
             self.logger.info(("Std start date: %s "), time_to_string(self.std_startdate))
 
-        if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > pd.Timestamp(eff_end):
+        if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > end_bound:
             self.logger.warning(
                 "Requested std_enddate %s not available; using %s instead.",
                 time_to_string(self.std_enddate),
