@@ -9,6 +9,7 @@ single or multiple experiments.
 import argparse
 import sys
 
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from aqua.diagnostics.lat_lon_profiles.util_cli import load_var_config
@@ -148,23 +149,45 @@ def process_variable(
                 loglevel=cli.loglevel,
             )
 
-            profile.run(
-                var=var_name,
-                formula=formula,
-                long_name=var_long_name,
-                units=var_units,
-                standard_name=var_standard_name,
-                std=compute_std,
-                freq=freq,
-                exclude_incomplete=exclude_incomplete,
-                center_time=center_time,
-                box_brd=box_brd,
-                outputdir=cli.outputdir,
-                rebuild=cli.rebuild,
-                reader_kwargs=cli.reader_kwargs,
-            )
+            try:
+                profile.run(
+                    var=var_name,
+                    formula=formula,
+                    long_name=var_long_name,
+                    units=var_units,
+                    standard_name=var_standard_name,
+                    std=compute_std,
+                    freq=freq,
+                    exclude_incomplete=exclude_incomplete,
+                    center_time=center_time,
+                    box_brd=box_brd,
+                    outputdir=cli.outputdir,
+                    rebuild=cli.rebuild,
+                    reader_kwargs=cli.reader_kwargs,
+                )
+            except NotEnoughDataError:
+                cli.logger.warning(
+                    "Skipping %s (%s, %s): not enough data",
+                    dataset["model"],
+                    dataset["exp"],
+                    dataset["source"],
+                )
+                continue
+            except Exception as e:
+                cli.logger.error(
+                    "Unexpected error for %s (%s, %s): %s",
+                    dataset["model"],
+                    dataset["exp"],
+                    dataset["source"],
+                    e,
+                )
+                continue
 
             profiles.append(profile)
+
+        if not profiles:
+            cli.logger.warning("No datasets available for region %s, variable %s. Skipping.", region, var_name)
+            continue
 
         # Process reference dataset (if any)
         profile_ref = None
@@ -190,21 +213,39 @@ def process_variable(
                 loglevel=cli.loglevel,
             )
 
-            profile_ref.run(
-                var=var_name,
-                formula=formula,
-                long_name=var_long_name,
-                units=var_units,
-                standard_name=var_standard_name,
-                std=True,  # Always compute std for reference
-                freq=freq,
-                exclude_incomplete=exclude_incomplete,
-                center_time=center_time,
-                box_brd=box_brd,
-                outputdir=cli.outputdir,
-                rebuild=cli.rebuild,
-                reader_kwargs={},  # No custom reader_kwargs for reference
-            )
+            try:
+                profile_ref.run(
+                    var=var_name,
+                    formula=formula,
+                    long_name=var_long_name,
+                    units=var_units,
+                    standard_name=var_standard_name,
+                    std=True,  # Always compute std for reference
+                    freq=freq,
+                    exclude_incomplete=exclude_incomplete,
+                    center_time=center_time,
+                    box_brd=box_brd,
+                    outputdir=cli.outputdir,
+                    rebuild=cli.rebuild,
+                    reader_kwargs={},  # No custom reader_kwargs for reference
+                )
+            except NotEnoughDataError:
+                cli.logger.warning(
+                    "Skipping reference %s (%s, %s): not enough data",
+                    ref["model"],
+                    ref["exp"],
+                    ref["source"],
+                )
+                profile_ref = None
+            except Exception as e:
+                cli.logger.error(
+                    "Unexpected error for reference %s (%s, %s): %s",
+                    ref["model"],
+                    ref["exp"],
+                    ref["source"],
+                    e,
+                )
+                profile_ref = None
 
         # Create plots using helper function
         if compute_longterm and "longterm" in freq:

@@ -58,8 +58,11 @@ tests = [
     "pytest-mock",
     "pytest-xdist",
     "coverage",
-    "cdo",
-    "ruff==0.15.6"
+    "cdo"
+]
+style = [
+    "pre-commit",
+    "ruff==0.15.10"
 ]
 minimal = [
     "aqua-diagnostics[core]"
@@ -67,13 +70,15 @@ minimal = [
 dev = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]"
+    "aqua-diagnostics[tests]",
+    "aqua-diagnostics[style]"
 ]
 all = [
     "aqua-diagnostics[core]",
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]"
+    "aqua-diagnostics[tests]",
+    "aqua-diagnostics[style]"
 ]
 
 [project.urls]

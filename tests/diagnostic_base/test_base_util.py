@@ -2,11 +2,16 @@ import argparse
 import os
 from unittest.mock import patch
 
+import numpy as np
 import pandas as pd
 import pytest
 
+import xarray as xr
+
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.util import dump_yaml
 from aqua.diagnostics.base import (
+    Diagnostic,
     close_cluster,
     load_diagnostic_config,
     merge_config_args,
@@ -17,6 +22,7 @@ from aqua.diagnostics.base import (
     template_parse_arguments,
 )
 from tests.shared_constants import LOGLEVEL
+from aqua.diagnostics.lat_lon_profiles import LatLonProfiles
 
 loglevel = LOGLEVEL
 
@@ -209,3 +215,39 @@ def test_round_invalid_freq():
         round_startdate(pd.Timestamp("2020-03-15"), freq="weekly")
     with pytest.raises(ValueError):
         round_enddate(pd.Timestamp("2020-03-15"), freq="weekly")
+
+
+def _make_monthly_dataset(n_months: int, start: str = "2000-01-01") -> xr.Dataset:
+    """Helper: synthetic monthly dataset with n_months timesteps."""
+    times = pd.date_range(start, periods=n_months, freq="MS")
+    return xr.Dataset({"2t": xr.DataArray(np.ones(n_months), dims=["time"], coords={"time": times})})
+
+
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_not_enough(mock_reader_class):
+    """NotEnoughDataError is raised when available months < months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(6)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    with pytest.raises(NotEnoughDataError):
+        diag._retrieve(model="M", exp="E", source="S", months_required=12)
+
+
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_enough(mock_reader_class):
+    """No error when available months >= months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(12)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=12)
+    assert len(result.time) == 12
+
+
+def test_minimum_months_required_class_attribute():
+    """Concrete diagnostics expose MINIMUM_MONTHS_REQUIRED as a positive int class attribute."""
+    # LatLonProfiles is selected since is one of the easiest diagnostics on this perspective
+    assert hasattr(LatLonProfiles, "MINIMUM_MONTHS_REQUIRED")
+    assert isinstance(LatLonProfiles.MINIMUM_MONTHS_REQUIRED, int)
+    assert LatLonProfiles.MINIMUM_MONTHS_REQUIRED > 0
