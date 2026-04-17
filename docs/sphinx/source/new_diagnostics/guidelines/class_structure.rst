@@ -10,7 +10,9 @@ It provides essential functionalities such as:
 - A unified ``__init__`` method for consistent initialization. Extra argument for the ``__init__`` should be added only if strictly necessary.
 - Initialization of the ``Reader`` class for data access as ``self.reader`` attribute.
 - A standardized data retrieval method: ``retrieve()``. This method stores the retrieved data in the ``self.data`` attribute.
-  It also populates the ``self.catalog`` and ``self.realization`` attributes if empty by deducing them.
+  When ``std_startdate`` and ``std_enddate`` are provided, it also populates ``self.std_data`` with the corresponding slice.
+  Both windows are covered by a single ``Reader`` call, and requested dates outside the catalog's effective bounds are
+  automatically clipped (with a warning). It also populates the ``self.catalog`` and ``self.realization`` attributes if empty by deducing them.
 - Built-in saving function ``save_netcdf()`` for NetCDF output. This includes the possibility to generate a catalog entry to be used in further analyses.
 
 Diagnostic Classes
@@ -40,6 +42,8 @@ using ``AQUA_`` as prefix of the metadata. Some metadata are added automatically
 - ``AQUA_exp``
 - ``AQUA_source``
 - ``AQUA_region`` when a region is selected
+- ``AQUA_startdate`` and ``AQUA_enddate``
+- ``AQUA_std_startdate`` and ``AQUA_std_enddate`` when the std window is set
 
 If multiple models (e.g. model and observational dataset) are needed, two different instances of the diagnostic should be created.
 
