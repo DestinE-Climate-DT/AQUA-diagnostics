@@ -50,13 +50,27 @@ mamba activate aqua-diagnostics
 pip install -e .
 ```
 
-> **Note:** The environment includes only the dependencies needed to run the diagnostics. AQUA-core must be separately accessible in the environment (installed or in editable mode).
+Next step is to install the [AQUA auxiliary files](https://aqua.readthedocs.io/en/latest/getting_started.html#auxiliary-files-installation) as:
+```bash
+aqua install <machine>
+```
+
+Final step is to add [AQUA catalogs](https://aqua.readthedocs.io/en/latest/getting_started.html#catalog-installation)
+```bash
+aqua add <catalog>
+```
+For example, to add the catalog for `climatedt-phase1`, run:
+```bash
+aqua add climatedt-phase1
+```
+
+> **Note:** The AQUA-core is installed via pypi dependency. AQUA-core can also be installed in an editable mode.
 
 ---
 
 ## Container Usage
 
-Diagnostics can also be executed inside the AQUA container. Refer to the Container chapter in the AQUA documentation for details.
+Diagnostics can also be executed inside the AQUA container. Refer to the Container chapter in the [AQUA documentation](https://aqua.readthedocs.io/en/latest/container.html) for details.
 
 ---
 
