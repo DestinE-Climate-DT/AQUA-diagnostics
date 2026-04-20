@@ -267,8 +267,9 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     return description
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the ECmean CLI."""
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
     loglevel = get_arg(args, "loglevel", "WARNING")
     logger = log_configure(log_level=loglevel, log_name="ECmean")
 
@@ -432,3 +433,7 @@ if __name__ == "__main__":
                 )
 
             logger.info("ECmean4 diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()
