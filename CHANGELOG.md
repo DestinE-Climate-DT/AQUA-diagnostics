@@ -23,7 +23,7 @@ Main changes:
 
 Complete list:
 - CI/CD: add framework to test diagnostics CLI and utils (#219)
-- Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #198, #215, #220)
+- Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #198, #215, #220, #226)
 - Apply ruff format (#202, #210, #209)
 - TitleBuilder: add wrapping of long titles (#199)
 - Temporarily exclude MJO test (#201)
