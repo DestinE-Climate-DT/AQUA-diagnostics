@@ -29,10 +29,8 @@ BASE_2D_SET = {
 # Two references: the first matches the method, the second is tagged for a
 # different method so the CLI 'use_for_method' skip branch is exercised.
 REFERENCES_TWO = [
-    {"catalog": "ref1", "model": "R1", "exp": "e1", "source": "s1",
-     "use_for_method": "fraction", "domain": "nh"},
-    {"catalog": "ref2", "model": "R2", "exp": "e2", "source": "s2",
-     "use_for_method": "thickness", "domain": "nh"},
+    {"catalog": "ref1", "model": "R1", "exp": "e1", "source": "s1", "use_for_method": "fraction", "domain": "nh"},
+    {"catalog": "ref2", "model": "R2", "exp": "e2", "source": "s2", "use_for_method": "thickness", "domain": "nh"},
 ]
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
@@ -161,14 +159,16 @@ class TestMainExecutionFlow:
         mock_seaice_cls.return_value.compute_seaice.return_value = (MagicMock(), MagicMock())
         mocker.patch(f"{CLI_MODULE}.filter_region_list", return_value=["arctic"])
 
-        config_file = build_config({
-            "seaice_timeseries": {
-                **BASE_SET,
-                "calc_ref_std": True,
-                "ref_std_freq": "monthly",
-                "references": REFERENCES_TWO,
-            },
-        })
+        config_file = build_config(
+            {
+                "seaice_timeseries": {
+                    **BASE_SET,
+                    "calc_ref_std": True,
+                    "ref_std_freq": "monthly",
+                    "references": REFERENCES_TWO,
+                },
+            }
+        )
 
         main(["--config", config_file, "--loglevel", "WARNING", "--realization", "r1"])
 
@@ -184,14 +184,16 @@ class TestMainExecutionFlow:
         mock_seaice_cls.return_value.compute_seaice.return_value = (MagicMock(), MagicMock())
         mocker.patch(f"{CLI_MODULE}.filter_region_list", return_value=["arctic"])
 
-        config_file = build_config({
-            "seaice_seasonal_cycle": {
-                **BASE_SET,
-                "calc_ref_std": True,
-                "ref_std_freq": "monthly",
-                "references": REFERENCES_TWO,
-            },
-        })
+        config_file = build_config(
+            {
+                "seaice_seasonal_cycle": {
+                    **BASE_SET,
+                    "calc_ref_std": True,
+                    "ref_std_freq": "monthly",
+                    "references": REFERENCES_TWO,
+                },
+            }
+        )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -204,9 +206,11 @@ class TestMainExecutionFlow:
         mock_seaice_cls, _, mock_plot_2d_cls = mock_si
         mocker.patch(f"{CLI_MODULE}.filter_region_list", return_value=["arctic"])
 
-        config_file = build_config({
-            "seaice_2d_bias": {**BASE_2D_SET, "references": REFERENCES_TWO},
-        })
+        config_file = build_config(
+            {
+                "seaice_2d_bias": {**BASE_2D_SET, "references": REFERENCES_TWO},
+            }
+        )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
