@@ -1,0 +1,53 @@
+name: Sync Environment Files
+
+on:
+  push:
+    paths:
+      - 'environment.yml'
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Sync environment files
+        run: |
+          python3 << 'EOF'
+          import yaml
+          
+          # Load main environment
+          with open('environment.yml') as f:
+              main = yaml.safe_load(f)
+          
+          # Extract common dependencies (everything except pip)
+          common_deps = [d for d in main['dependencies'] if not isinstance(d, dict) or 'pip' not in d]
+          
+          # Update environment-dev.yml
+          with open('environment-dev.yml') as f:
+              dev = yaml.safe_load(f)
+          dev_pip = [d for d in dev['dependencies'] if isinstance(d, dict) and 'pip' in d]
+          dev['dependencies'] = common_deps + dev_pip
+          with open('environment-dev.yml', 'w') as f:
+              yaml.dump(dev, f, sort_keys=False, default_flow_style=False)
+          
+          # Update environment_lumi.yml
+          with open('cli/lumi-install/environment_lumi.yml') as f:
+              lumi = yaml.safe_load(f)
+          lumi_pip = [d for d in lumi['dependencies'] if isinstance(d, dict) and 'pip' in d]
+          lumi['dependencies'] = common_deps + lumi_pip
+          with open('cli/lumi-install/environment_lumi.yml', 'w') as f:
+              yaml.dump(lumi, f, sort_keys=False, default_flow_style=False)
+          EOF
+      
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add environment-dev.yml cli/lumi-install/environment_lumi.yml
+          git diff --staged --quiet || git commit -m "chore: sync environment files from environment.yml"
+          git push
