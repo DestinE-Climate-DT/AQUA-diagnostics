@@ -127,15 +127,14 @@ The CLI test framework relies on one small refactor and a shared set of fixtures
        return mock_gb_cls, mock_plot_cls
    ```
 
-4. **Aim for this minimal template** per CLI (3–6 tests total):
-   - `test_parse_arguments_cli_options` — smoke-check the namespace and any diagnostic-specific flags (e.g. seaice's `--proj`).
-   - `test_<diagnostic>_disabled_skips_processing` — with `run: False`, assert the plot class is never instantiated.
-   - `test_<feature>_full_pipeline` — the path for each major branch of the CLI (one per distinct orchestration block or plot type).
-   - Optional: one test per distinct error path or non-trivial config branch (e.g. `NoDataError` handling) only if the behaviour is CLI-specific.
+4. **Use this minimal template** for each CLI:
+   - `test_parse_arguments_cli_options`: verify that parsed arguments include the expected values and any diagnostic-specific flags (e.g. seaice's `--proj` flag in seaice).
+   - `test_<diagnostic>_disabled_skips_processing`: when `run: False`, verify that the plot class is not instantiated.
+   - `test_<feature>_full_pipeline`: cover each main CLI execution branch (one test for each distinct orchestration block or plot type).
 
-   Do **not** test things already covered by `tests/diagnostic_base/` (argument merging, dataset overrides) — the shared `DiagnosticCLI` is tested there.
+Do not test things already covered by `tests/diagnostic_base/` (argument merging, dataset overrides). The shared `DiagnosticCLI` is tested there.
 
-Look at `tests/cli/test_cli_global_biases.py` and `tests/cli/test_cli_seaice.py` as reference implementations.
+Look at examples such as: `tests/cli/test_cli_global_biases.py` and `tests/cli/test_cli_seaice.py` as reference implementations.
 
 ### Coding style checks with ruff and pre-commit in a Pull Request
 

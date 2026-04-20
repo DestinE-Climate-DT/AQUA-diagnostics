@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 Complete list:
-- Add tests for diagnostics CLI (#219)
+- CI/CD: add framework to test diagnostics CLI and utils (#219)
 - Expose `__version__` from `aqua.core.version` module (#216)
 - ECmean: time selection is now allowed (#178)
 - Centralized management of months required thresholds (#162)
@@ -22,7 +22,6 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class
 
 Complete list:
-- CI/CD: add framework to test diagnostics CLI and utils (#219)
 - Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #198, #215, #220, #226)
 - Apply ruff format (#202, #210, #209)
 - TitleBuilder: add wrapping of long titles (#199)
