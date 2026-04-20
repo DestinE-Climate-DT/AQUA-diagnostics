@@ -13,6 +13,8 @@ class ENSO(BaseMixin):
     to calculate the ENSO index.
     """
 
+    MINIMUM_MONTHS_REQUIRED = 24
+
     def __init__(
         self,
         catalog: str = None,
@@ -67,7 +69,7 @@ class ENSO(BaseMixin):
                                   Default is an empty dictionary.
         """
         # Assign self.data, self.reader, self.catalog
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         self.data = self.reader.timmean(self.data, freq="MS")
 
@@ -88,8 +90,6 @@ class ENSO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError("Data not retrieved")
-        if len(self.data[self.var].time) < 24:
-            raise NotEnoughDataError("Data have less than 24 months")
 
         latN = self.definition.get("latN")  # noqa: N806
         latS = self.definition.get("latS")  # noqa: N806

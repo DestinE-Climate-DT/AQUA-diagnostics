@@ -149,26 +149,39 @@ Here you can find the minimum requirements for each diagnostic.
    * - Diagnostic
      - Minimum Data Required
    * - Global Biases
-     - 1 year of data
+     - 12 months (1 year)
    * - ecmean
-     - 1 year of data
+     - 12 months (1 year)
    * - Timeseries
-     - 2 months of data
-   * - Seasonal cycles
-     - 1 year of data
-   * - Ocean3d
-     - 1 year of data, 2 months for the timeseries
+     - 2 months
+   * - Seasonal Cycles
+     - 2 months
+   * - Gregory Plot
+     - 2 months
+   * - Lat-Lon Profiles
+     - 12 months (1 year)
+   * - Histogram
+     - 12 months (1 year)
+   * - Ocean Stratification
+     - 12 months (1 year)
+   * - Ocean Trends
+     - 12 months (1 year)
+   * - Ocean Drift (Hovmoller)
+     - 2 months
    * - Radiation
-     - 1 year of data
+     - 2 months
    * - Seaice
-     - 1 year of data
+     - 1 month (12 months when computing seasonal cycle)
    * - Teleconnections
-     - 2 years of data
+     - 24 months (2 years)
 
 .. note::
-   Some diagnostics will technically run with less data, but the results may not be meaningful.
-   Some other will raise errors in the log files if the data is not enough.
+   All diagnostics enforce the minimum data requirement at retrieval time via a ``NotEnoughDataError``.
+   If the available data falls below the threshold, the diagnostic will not run and the error will be
+   reported in the log. Some diagnostics (e.g. Seasonal Cycles) may produce less meaningful results
+   at their minimum threshold — the value reflects the technical lower bound, not the recommended input size.
 
 .. note::
-  If you are a developer you can enforce the minimum data requirements by using the `months_required` argument in the `retrieve` and `_retrieve` methods
-  available in the diagnostic core.
+  If you are a developer you can enforce the minimum data requirements by using the ``months_required`` argument in the ``retrieve`` and ``_retrieve`` methods
+  available in the diagnostic core. The conventional way is to define a class-level constant ``MINIMUM_MONTHS_REQUIRED``
+  and pass it to the ``retrieve`` call.

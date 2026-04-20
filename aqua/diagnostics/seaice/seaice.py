@@ -39,6 +39,9 @@ class SeaIce(Diagnostic):
         loglevel     (str, optional): The logging level. Defaults to 'WARNING'.
     """
 
+    MINIMUM_MONTHS_REQUIRED = 1
+    # 12 if seasonal cycle is requested (specified below), otherwise 1 month is enough
+
     def __init__(
         self,
         model: str,
@@ -176,8 +179,9 @@ class SeaIce(Diagnostic):
         Notes:
             - Standard deviation is computed across all years if `calc_std_freq` is provided.
         """
+        months_required = 12 if get_seasonal_cycle else self.MINIMUM_MONTHS_REQUIRED
         # retrieve data with Diagnostic method
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=months_required)
 
         # get the sea ice masked by method
         masked_data = self._mask_data_bymethod()
@@ -256,7 +260,7 @@ class SeaIce(Diagnostic):
         stat = kwargs.get("stat", "mean")
         freq = kwargs.get("freq", "monthly")
 
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         original_masked_data = self._mask_data_bymethod()
 
         regional_2d_results = []
