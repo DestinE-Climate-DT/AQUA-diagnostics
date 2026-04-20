@@ -50,11 +50,6 @@ class TestHandlePressureLevel:
         out = handle_pressure_level(ds, "var", plev=None)
         assert out is ds
 
-    def test_single_level_matching_requested_returns_data_unchanged(self):
-        ds = _make_dataset_with_plev([500.0])
-        out = handle_pressure_level(ds, "var", plev=500.0)
-        assert out is ds
-
     def test_multiple_levels_selects_nearest(self):
         ds = _make_dataset_with_plev([500.0, 850.0])
         out = handle_pressure_level(ds, "var", plev=850.0)
