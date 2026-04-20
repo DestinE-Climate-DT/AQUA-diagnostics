@@ -8,7 +8,7 @@ import xarray as xr
 
 from aqua.core.graphics import ConfigStyle, plot_seasonalcycle, plot_timeseries
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, to_list
+from aqua.core.util import get_realizations, strlist_to_phrase, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .util import _check_list_regions_type, defaultdict_to_dict, extract_dates
@@ -234,7 +234,7 @@ class PlotSeaIce:
         if datain is None:
             return None
 
-        required_attrs = ["AQUA_model", "AQUA_exp", "AQUA_source"]
+        required_attrs = ["AQUA_model", "AQUA_exp"]
         missing_attrs = [attr for attr in required_attrs if attr not in datain.attrs]
 
         if missing_attrs:
@@ -313,14 +313,13 @@ class PlotSeaIce:
             self._description = ""
 
         # generate dynamic string for regions
-        if region not in self._description:
-            if not hasattr(self, "region_str"):
-                self.region_str = region  # start with first region
-            else:
-                if region_idx == self.num_regions - 1:
-                    self.region_str += f" and {region} regions"
-                else:
-                    self.region_str += f", {region}"
+        if not hasattr(self, "regions"):
+            self.regions = []
+        if region not in self.regions:
+            self.regions.append(region)
+
+        regions_phrase = strlist_to_phrase(self.regions)
+        self.region_str = f"{regions_phrase} region{'s' if len(self.regions) != 1 else ''} "
 
         # generate dynamic string for model data
         if hasattr(self, "data_labels") and self.data_labels:
@@ -334,29 +333,37 @@ class PlotSeaIce:
             model_startdate_list = []
             if isinstance(model_data_dict, xr.DataArray):
                 stdate, endate = extract_dates(model_data_dict)
-                model_startdate_list = [f"{label} from {stdate} to {endate}" for label in unique_labels]
-                self._description += f" {method} data from {stdate} to {endate} for {region}."
+                model_startdate_list = [f"{label} (from {stdate} to {endate})" for label in unique_labels]
             elif isinstance(model_data_dict, list):
                 for model_data in model_data_dict:
                     stdate, endate = extract_dates(model_data)
-                    model_startdate_list.extend([f"{label} from {stdate} to {endate}" for label in unique_labels])
-                    self._description += f" {method} data from {stdate} to {endate} for {region}."
+                    model_startdate_list.extend([f"{label} (from {stdate} to {endate})" for label in unique_labels])
 
             # build the model data string
-            self.model_labels_str = (
-                f"{', '.join(model_startdate_list)} "
-                f"{'are' if len(model_startdate_list) > 1 else 'is'} "
-                f"used as {'models' if len(model_startdate_list) > 1 else 'model'} data."
-            )
+            self.model_labels_str = f"{strlist_to_phrase(model_startdate_list)} "
         else:
             self.model_labels_str = ""
 
         # generate dynamic string for reference data
-        if hasattr(self, "ref_label") and self.ref_label:
+        monthly_ref_data = self._getdata_fromdict(data_dict, "monthly_ref")
+        if monthly_ref_data is not None:
             if not hasattr(self, "ref_label_list"):
                 self.ref_label_list = []
-            if self.ref_label not in self.ref_label_list:
-                self.ref_label_list.append(f"{self.ref_label}")
+
+            if isinstance(monthly_ref_data, xr.DataArray):
+                label = self._gen_labelname(monthly_ref_data)
+                stdate, endate = extract_dates(monthly_ref_data)
+                ref_detail = f"{label} (from {stdate} to {endate})" if label else f"(from {stdate} to {endate})"
+                if ref_detail not in self.ref_label_list:
+                    self.ref_label_list.append(ref_detail)
+            elif isinstance(monthly_ref_data, list):
+                for ref_da in monthly_ref_data:
+                    label = self._gen_labelname(ref_da)
+                    stdate, endate = extract_dates(ref_da)
+                    ref_detail = f"{label} (from {stdate} to {endate})" if label else f"(from {stdate} to {endate})"
+                    if ref_detail not in self.ref_label_list:
+                        self.ref_label_list.append(ref_detail)
+
             # check ref list
             if len(self.ref_label_list) == 1:
                 self.ref_label_str = f" {self.ref_label_list[0]} is used as a reference."
@@ -375,21 +382,21 @@ class PlotSeaIce:
         if hasattr(self, "std_label") and self.std_label:
             sdtdata = self._getdata_fromdict(data_dict, "monthly_std_ref")
             std_sdate, std_edate = extract_dates(sdtdata[0])
-            self.std_label_str = f" Reference data std ranges from {std_sdate} to {std_edate}."
+            self.std_label_str = f" Shaded areas represent ±2σ uncertainty bands (from {std_sdate} to {std_edate})."
         else:
             self.std_label_str = ""
 
         # generate plot type name
         if hasattr(self, "plot_type") and self.plot_type:
             if self.plot_type == "seasonalcycle":
-                pl_type = "Seasonal cycle of the "
+                pl_type = "Seasonal cycle of "
             elif self.plot_type == "timeseries":
-                pl_type = "Time series of the "
+                pl_type = "Time series of "
             else:
                 pl_type = ""
 
         # finally build the string caption (dynamically)
-        self._description = ("{}Sea ice {} integrated over {}. {}{}{}").format(
+        self._description = ("{}sea ice {} integrated over {}for {}{}{}").format(
             pl_type, method, self.region_str, self.model_labels_str, self.ref_label_str, self.std_label_str
         )
 

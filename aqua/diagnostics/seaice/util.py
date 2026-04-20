@@ -71,20 +71,22 @@ def ensure_istype(obj, expected_types, logger=None):
 
 
 def extract_dates(data):
-    """Extract start and end dates from data attributes. If they are strings return them.
-    If the attributes are datetime-like objects, they are formatted as `YYYY-MM-DD`.
+    """
+    Extracts start and end dates from data attributes.
+    If the date is a datetime object, it is formatted as 'YYYY-MM'.
+    If the date is a string, it is returned as is.
 
     Args:
         data (xr.DataArray | xr.Dataset): Input object holding the `AQUA_*date` attributes.
 
     Returns:
-        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM-DD` when possible.
+        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM` when possible.
     """
 
     def _fmt_dt(attr_name):
         dt = data.attrs.get(attr_name, f"No {attr_name} found")
         if hasattr(dt, "strftime"):
-            return dt.strftime("%Y-%m-%d")
+            return dt.strftime("%Y-%m")
         if isinstance(dt, str) and "T" in dt:
             return dt.split("T")[0]
         return dt
