@@ -15,34 +15,35 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Sync environment files
+      - name: Sync changed dependencies
         run: |
-          python3 << 'EOF'
-          import yaml
+          # Get changed lines from the last commit (from dependabot)
+          CHANGED=$(git diff HEAD~1 HEAD -- environment.yml | grep '^[+-]  -' | grep -v '^[+-][+-][+-]' || true)
           
-          # Load main environment
-          with open('environment.yml') as f:
-              main = yaml.safe_load(f)
+          if [ -z "$CHANGED" ]; then
+            echo "No dependency changes detected"
+            exit 0
+          fi
           
-          # Extract common dependencies (everything except pip)
-          common_deps = [d for d in main['dependencies'] if not isinstance(d, dict) or 'pip' not in d]
-          
-          # Update environment-dev.yml
-          with open('environment-dev.yml') as f:
-              dev = yaml.safe_load(f)
-          dev_pip = [d for d in dev['dependencies'] if isinstance(d, dict) and 'pip' in d]
-          dev['dependencies'] = common_deps + dev_pip
-          with open('environment-dev.yml', 'w') as f:
-              yaml.dump(dev, f, sort_keys=False, default_flow_style=False)
-          
-          # Update environment_lumi.yml
-          with open('cli/lumi-install/environment_lumi.yml') as f:
-              lumi = yaml.safe_load(f)
-          lumi_pip = [d for d in lumi['dependencies'] if isinstance(d, dict) and 'pip' in d]
-          lumi['dependencies'] = common_deps + lumi_pip
-          with open('cli/lumi-install/environment_lumi.yml', 'w') as f:
-              yaml.dump(lumi, f, sort_keys=False, default_flow_style=False)
-          EOF
+          echo "$CHANGED" | while IFS= read -r line; do
+            if [[ $line =~ ^\+[[:space:]]*-[[:space:]]*(.+) ]]; then
+              NEW="${BASH_REMATCH[1]}"
+              PKG=$(echo "$NEW" | sed 's/[<>=].*//' | xargs)
+              
+              # Update in environment-dev.yml, preserving spaces and inline comments
+              sed -i.bak "s|^\\([[:space:]]*-[[:space:]]*\\)${PKG}[<>=][^[:space:]#]*\\([[:space:]].*\\)\$|\\1${NEW}\\2|" environment-dev.yml
+              # Handle case with no trailing comment/space
+              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*$|\1${NEW}|" environment-dev.yml
+              
+              # Update in environment_lumi.yml, preserving spaces and inline comments
+              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\([[:space:]].*\)$|\1${NEW}\2|" cli/lumi-install/environment_lumi.yml
+              # Handle case with no trailing comment/space
+              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*$|\1${NEW}|" cli/lumi-install/environment_lumi.yml
+              
+              rm -f environment-dev.yml.bak cli/lumi-install/environment_lumi.yml.bak
+              echo "Updated $PKG to: $NEW"
+            fi
+          done
       
       - name: Commit changes
         run: |
