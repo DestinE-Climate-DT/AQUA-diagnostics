@@ -94,6 +94,8 @@ def test_retrieve_without_std():
         regrid="r100",
         startdate="19900101",
         enddate="19910101",
+        std_startdate="19900601",
+        std_enddate="19900901",
         loglevel=loglevel,
     )
     diag.retrieve(var="tcc")
