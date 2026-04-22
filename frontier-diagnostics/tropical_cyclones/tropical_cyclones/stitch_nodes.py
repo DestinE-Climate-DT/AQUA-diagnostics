@@ -30,11 +30,10 @@ class StitchNodes():
             None
         """
 
-
         self.set_time_window(n_days_freq=n_days_freq, n_days_ext=n_days_ext)
 
         # periods specifies you want 1 block from startdate to enddate
-        for block in pd.date_range(start=startdate, end=enddate, periods=1):
+        for block in pd.date_range(start=startdate, end=enddate, freq=f'{n_days_freq}D'):
             tic = time()
             dates_freq, dates_ext = self.time_window(block)
             self.logger.info(
