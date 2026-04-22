@@ -22,7 +22,7 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class
 
 Complete list:
-- Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #198, #215)
+- Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #198, #215, #220, #226)
 - Apply ruff format (#202, #210, #209)
 - TitleBuilder: add wrapping of long titles (#199)
 - Temporarily exclude MJO test (#201)
@@ -54,6 +54,7 @@ Complete list:
 - Ensemble: improve the coverage of the tests (#88)
 - Ensemble: fix tests after datamodel working in issue #156 (#526)
 - Ensemble: implementing `find_vert_coord` in ensemble zonal plotting function (#175)
+- README: added Bash quotation in the main README of AQUA-diagnostics (#208)
 
 ## [v0.22.0]
 
