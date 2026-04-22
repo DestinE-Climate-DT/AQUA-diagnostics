@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.24.0):
 
 Complete list:
 - CI/CD: add framework to test diagnostics CLI and utils (#219)
+- Handling startdate and enddate centralisation in Diagnostic (#225)
 - Expose `__version__` from `aqua.core.version` module (#216)
 - ECmean: time selection is now allowed (#178)
 - Centralized management of months required thresholds (#162)
