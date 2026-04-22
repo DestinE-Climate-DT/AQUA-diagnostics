@@ -4,7 +4,7 @@ import pytest
 
 from aqua.diagnostics.base import TitleBuilder
 
-pytestmark = pytest.mark.aqua
+pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
 
 @pytest.mark.parametrize(

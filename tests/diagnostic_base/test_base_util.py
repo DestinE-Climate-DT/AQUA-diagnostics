@@ -26,7 +26,7 @@ from tests.shared_constants import LOGLEVEL
 
 loglevel = LOGLEVEL
 
-pytestmark = pytest.mark.aqua
+pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
 
 def test_template_parse_arguments():
