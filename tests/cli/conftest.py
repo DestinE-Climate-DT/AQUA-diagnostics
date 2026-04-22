@@ -36,26 +36,26 @@ def _build_config(
     outputdir = str(tmp_path / "output")
     os.makedirs(outputdir, exist_ok=True)
 
+    default_datasets = [
+        {
+            "catalog": "test-catalog",
+            "model": "TestModel",
+            "exp": "test-exp",
+            "source": "test-source",
+        }
+    ]
+    default_references = [
+        {
+            "catalog": "ref-catalog",
+            "model": "RefModel",
+            "exp": "ref-exp",
+            "source": "ref-source",
+        }
+    ]
     config = {
         "setup": {"loglevel": "WARNING"},
-        "datasets": datasets
-        or [
-            {
-                "catalog": "test-catalog",
-                "model": "TestModel",
-                "exp": "test-exp",
-                "source": "test-source",
-            }
-        ],
-        "references": references
-        or [
-            {
-                "catalog": "ref-catalog",
-                "model": "RefModel",
-                "exp": "ref-exp",
-                "source": "ref-source",
-            }
-        ],
+        "datasets": default_datasets if datasets is None else datasets,
+        "references": default_references if references is None else references,
         "output": {
             "outputdir": outputdir,
             "rebuild": False,
