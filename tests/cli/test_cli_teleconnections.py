@@ -7,10 +7,15 @@ from aqua.diagnostics.teleconnections.cli_teleconnections import main, parse_arg
 CLI_MODULE = "aqua.diagnostics.teleconnections.cli_teleconnections"
 
 # Minimal block shared by NAO and ENSO (they have identical orchestration shape).
-BASE_BLOCK = {
+BASE_TC_BLOCK = {
     "run": True,
     "seasons": ["annual"],
     "months_window": 3,
+}
+
+BASE_TC = {
+    "NAO": BASE_TC_BLOCK,
+    "ENSO": BASE_TC_BLOCK,
 }
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
@@ -84,7 +89,7 @@ class TestMainExecutionFlow:
         """
         config_file = build_config(
             {
-                "teleconnections": {"NAO": BASE_BLOCK},
+                "teleconnections": {"NAO": BASE_TC["NAO"]},
             }
         )
 
@@ -115,7 +120,7 @@ class TestMainExecutionFlow:
         """
         config_file = build_config(
             {
-                "teleconnections": {"ENSO": BASE_BLOCK},
+                "teleconnections": {"ENSO": BASE_TC["ENSO"]},
             }
         )
 

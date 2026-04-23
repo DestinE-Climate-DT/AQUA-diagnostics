@@ -16,6 +16,25 @@ from aqua.core.util import dump_yaml, load_yaml
 CLI_BASE_MODULE = "aqua.diagnostics.base.cli_base"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_COLLECTIONS_DIR = REPO_ROOT / "aqua" / "diagnostics" / "config" / "collections"
+DEFAULT_DATASET = {
+    "catalog": "test-catalog",
+    "model": "TestModel",
+    "exp": "test-exp",
+    "source": "test-source",
+}
+DEFAULT_REFERENCE = {
+    "catalog": "ref-catalog",
+    "model": "RefModel",
+    "exp": "ref-exp",
+    "source": "ref-source",
+}
+DEFAULT_OUTPUT = {
+    "rebuild": False,
+    "save_format": ["pdf"],
+    "save_netcdf": True,
+    "dpi": 50,
+    "create_catalog_entry": False,
+}
 
 
 def _find_matching_template(diagnostics):
@@ -53,6 +72,7 @@ def _build_config(
     datasets=None,
     references=None,
     output_overrides=None,
+    setup_overrides=None,
 ):
     """Build a YAML config from repository templates and return its path.
 
@@ -64,6 +84,7 @@ def _build_config(
         datasets: list of dataset dicts (override template datasets).
         references: list of reference dicts (override template references).
         output_overrides: dict merged into the 'output' section.
+        setup_overrides: dict merged into the 'setup' section.
     """
     outputdir = str(tmp_path / "output")
     os.makedirs(outputdir, exist_ok=True)
@@ -72,37 +93,15 @@ def _build_config(
     config = deepcopy(_find_matching_template(diagnostics))
 
     # Force deterministic values for test isolation
-    config["setup"] = {"loglevel": "WARNING"}
-    config["datasets"] = datasets or [
-        {
-            "catalog": "test-catalog",
-            "model": "TestModel",
-            "exp": "test-exp",
-            "source": "test-source",
-        }
-    ]
+    config["setup"] = {"loglevel": "WARNING", **(setup_overrides or {})}
+    config["datasets"] = datasets or [deepcopy(DEFAULT_DATASET)]
     if references is None:
         if "references" in config:
-            config["references"] = [
-                {
-                    "catalog": "ref-catalog",
-                    "model": "RefModel",
-                    "exp": "ref-exp",
-                    "source": "ref-source",
-                }
-            ]
+            config["references"] = [deepcopy(DEFAULT_REFERENCE)]
     else:
         config["references"] = references
 
-    config["output"] = {
-        "outputdir": outputdir,
-        "rebuild": False,
-        "save_format": ["pdf"],
-        "save_netcdf": True,
-        "dpi": 50,
-        "create_catalog_entry": False,
-        **(output_overrides or {}),
-    }
+    config["output"] = {"outputdir": outputdir, **deepcopy(DEFAULT_OUTPUT), **(output_overrides or {})}
     config["diagnostics"] = diagnostics
 
     first_key = next(iter(diagnostics), "test")

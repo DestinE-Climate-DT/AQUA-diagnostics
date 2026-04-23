@@ -6,13 +6,15 @@ from aqua.diagnostics.ocean_stratification.cli_ocean_stratification import main,
 
 CLI_MODULE = "aqua.diagnostics.ocean_stratification.cli_ocean_stratification"
 
-BASE_BLOCK = {
-    "run": True,
-    "regions": ["global_ocean"],
-    "climatology": ["annual"],
-    "diagnostic_name": "ocean_stratification",
-    "var": ["thetao", "so"],
-    "vert_coord": "lev",
+BASE_STRAT = {
+    "stratification": {
+        "run": True,
+        "regions": ["global_ocean"],
+        "climatology": ["annual"],
+        "diagnostic_name": "ocean_stratification",
+        "var": ["thetao", "so"],
+        "vert_coord": "lev",
+    }
 }
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
@@ -59,7 +61,7 @@ class TestMainExecutionFlow:
         - 4 Stratification runs (model+obs for stratification and MLD)
         - 1 PlotStratification and 1 PlotMLD call.
         """
-        config_file = build_config({"ocean_stratification": {"stratification": BASE_BLOCK}})
+        config_file = build_config({"ocean_stratification": BASE_STRAT})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 

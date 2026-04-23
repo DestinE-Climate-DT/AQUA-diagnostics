@@ -6,7 +6,7 @@ from aqua.diagnostics.histogram.cli_histogram import main, parse_arguments
 
 CLI_MODULE = "aqua.diagnostics.histogram.cli_histogram"
 
-BASE_DICT = {
+BASE_HIST = {
     "run": True,
     "variables": ["2t"],
     "formulae": [],
@@ -72,7 +72,7 @@ class TestMainExecutionFlow:
         config_file = build_config(
             {
                 "histogram": {
-                    **BASE_DICT,
+                    **BASE_HIST,
                     "variables": ["2t"],
                     "formulae": ["net_toa"],
                 },
@@ -105,7 +105,7 @@ class TestMainExecutionFlow:
         config_file = build_config(
             {
                 "histogram": {
-                    **BASE_DICT,
+                    **BASE_HIST,
                     "variables": [{"name": "2t", "units": "K", "long_name": "Temperature"}],
                 },
             }

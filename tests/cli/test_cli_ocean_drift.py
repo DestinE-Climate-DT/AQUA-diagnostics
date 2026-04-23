@@ -6,13 +6,15 @@ from aqua.diagnostics.ocean_drift.cli_ocean_drift import main, parse_arguments
 
 CLI_MODULE = "aqua.diagnostics.ocean_drift.cli_ocean_drift"
 
-BASE_BLOCK = {
-    "run": True,
-    "regions": ["global_ocean"],
-    "diagnostic_name": "ocean_drift",
-    "var": ["thetao"],
-    "dim_mean": ["lat", "lon"],
-    "vert_coord": "lev",
+BASE_DRIFT = {
+    "hovmoller": {
+        "run": True,
+        "regions": ["global_ocean"],
+        "diagnostic_name": "ocean_drift",
+        "var": ["thetao"],
+        "dim_mean": ["lat", "lon"],
+        "vert_coord": "lev",
+    }
 }
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
@@ -41,7 +43,7 @@ class TestMainExecutionFlow:
     def test_hovmoller_disabled_skips_processing(self, build_config, mock_cluster, mock_od):
         """When run=False, diagnostic and plot classes are not instantiated."""
         mock_hov_cls, mock_plot_cls = mock_od
-        config_file = build_config({"ocean_drift": {"hovmoller": {"run": False}}})
+        config_file = build_config({"ocean_drift": {"hovmoller": {**BASE_DRIFT["hovmoller"], "run": False}}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -53,7 +55,7 @@ class TestMainExecutionFlow:
         mock_hov_cls, mock_plot_cls = mock_od
         mock_hov_instance = mock_hov_cls.return_value
         mock_hov_instance.processed_data_list = [object()]
-        config_file = build_config({"ocean_drift": {"hovmoller": BASE_BLOCK}})
+        config_file = build_config({"ocean_drift": BASE_DRIFT})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 

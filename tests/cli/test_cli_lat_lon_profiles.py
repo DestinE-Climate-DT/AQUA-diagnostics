@@ -9,7 +9,7 @@ CLI_MODULE = "aqua.diagnostics.lat_lon_profiles.cli_lat_lon_profiles"
 
 # Enabling both longterm and seasonal exercises the two branches of the
 # internal _create_plot helper (one PlotLatLonProfiles call per mode).
-BASE_DICT = {
+BASE_LLP = {
     "run": True,
     "mean_type": "zonal",
     "longterm": True,
@@ -73,7 +73,7 @@ class TestMainExecutionFlow:
         """
         mock_llp_cls, mock_plot_cls = mock_llp
         mock_llp_instance = mock_llp_cls.return_value
-        config_file = build_config({"lat_lon_profiles": BASE_DICT})
+        config_file = build_config({"lat_lon_profiles": BASE_LLP})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -94,7 +94,7 @@ class TestMainExecutionFlow:
     def test_longterm_only_skips_seasonal_plot(self, build_config, mock_cluster, mock_llp):
         """With seasonal=False, only the longterm plot is produced."""
         _, mock_plot_cls = mock_llp
-        config_file = build_config({"lat_lon_profiles": {**BASE_DICT, "seasonal": False}})
+        config_file = build_config({"lat_lon_profiles": {**BASE_LLP, "seasonal": False}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -104,7 +104,7 @@ class TestMainExecutionFlow:
     def test_seasonal_only_skips_longterm_plot(self, build_config, mock_cluster, mock_llp):
         """With longterm=False, only the seasonal plot is produced."""
         _, mock_plot_cls = mock_llp
-        config_file = build_config({"lat_lon_profiles": {**BASE_DICT, "longterm": False}})
+        config_file = build_config({"lat_lon_profiles": {**BASE_LLP, "longterm": False}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -114,7 +114,7 @@ class TestMainExecutionFlow:
     def test_formula_flag_forwarded_to_profile_run(self, build_config, mock_cluster, mock_llp):
         """A formula in the 'formulae' list propagates formula=True to LatLonProfiles.run."""
         mock_llp_cls, _ = mock_llp
-        config_file = build_config({"lat_lon_profiles": {**BASE_DICT, "variables": [], "formulae": ["net_toa"]}})
+        config_file = build_config({"lat_lon_profiles": {**BASE_LLP, "variables": [], "formulae": ["net_toa"]}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -125,7 +125,7 @@ class TestMainExecutionFlow:
     def test_no_references_passes_none_ref_data(self, build_config, mock_cluster, mock_llp):
         """With references=[], PlotLatLonProfiles is called with ref_data=None."""
         mock_llp_cls, mock_plot_cls = mock_llp
-        config_file = build_config({"lat_lon_profiles": BASE_DICT}, references=[])
+        config_file = build_config({"lat_lon_profiles": BASE_LLP}, references=[])
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -140,7 +140,7 @@ class TestMainExecutionFlow:
         """All datasets are instantiated in order and their profiles bundled into one plot."""
         mock_llp_cls, mock_plot_cls = mock_llp
         config_file = build_config(
-            {"lat_lon_profiles": {**BASE_DICT, "seasonal": False}},
+            {"lat_lon_profiles": {**BASE_LLP, "seasonal": False}},
             datasets=[
                 {"catalog": "c1", "model": "M1", "exp": "e1", "source": "s1"},
                 {"catalog": "c2", "model": "M2", "exp": "e2", "source": "s2"},
@@ -164,7 +164,7 @@ class TestMainExecutionFlow:
         config_file = build_config(
             {
                 "lat_lon_profiles": {
-                    **BASE_DICT,
+                    **BASE_LLP,
                     "seasonal": False,
                     "default_variables": {
                         "2t": {"name": "2t", "regions": ["Global", "Tropics"]},
@@ -193,7 +193,7 @@ class TestMainExecutionFlow:
         """
         mock_llp_cls, mock_plot_cls = mock_llp
         mock_llp_cls.return_value.run.side_effect = NotEnoughDataError("no data")
-        config_file = build_config({"lat_lon_profiles": BASE_DICT})
+        config_file = build_config({"lat_lon_profiles": BASE_LLP})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -209,7 +209,7 @@ class TestMainExecutionFlow:
         mock_llp_cls, mock_plot_cls = mock_llp
         # Dataset run ok, reference run fails.
         mock_llp_cls.return_value.run.side_effect = [None, NotEnoughDataError("no data")]
-        config_file = build_config({"lat_lon_profiles": {**BASE_DICT, "seasonal": False}})
+        config_file = build_config({"lat_lon_profiles": {**BASE_LLP, "seasonal": False}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -236,7 +236,7 @@ class TestMainExecutionFlow:
         mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotLatLonProfiles")
 
         config_file = build_config(
-            {"lat_lon_profiles": {**BASE_DICT, "longterm": False}},
+            {"lat_lon_profiles": {**BASE_LLP, "longterm": False}},
             datasets=[
                 {"catalog": "c1", "model": "M1", "exp": "e1", "source": "s1"},
                 {"catalog": "c2", "model": "M2", "exp": "e2", "source": "s2"},
@@ -246,7 +246,7 @@ class TestMainExecutionFlow:
         main(["--config", config_file, "--loglevel", "WARNING"])
 
         assert mock_llp_cls.call_count == 3  # 2 datasets + 1 reference
-        mock_plot_cls.assert_called_once()
+        assert mock_plot_cls.call_count == 1
         kwargs = mock_plot_cls.call_args.kwargs
         assert kwargs["data_type"] == "seasonal"
         assert kwargs["data"] == [
@@ -261,7 +261,7 @@ class TestMainExecutionFlow:
     def test_meridional_mean_type_forwarded(self, build_config, mock_cluster, mock_llp):
         """mean_type from config is forwarded to LatLonProfiles."""
         mock_llp_cls, _ = mock_llp
-        config_file = build_config({"lat_lon_profiles": {**BASE_DICT, "mean_type": "meridional"}})
+        config_file = build_config({"lat_lon_profiles": {**BASE_LLP, "mean_type": "meridional"}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 

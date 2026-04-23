@@ -8,7 +8,7 @@ CLI_MODULE = "aqua.diagnostics.boxplots.cli_boxplots"
 
 # One variable group with a couple of plot kwargs. The CLI treats every
 # item in 'variables' as a group dict with 'vars' plus any plot kwargs.
-BASE_DICT = {
+BASE_BP = {
     "run": True,
     "variables": [
         {"vars": ["2t"], "ylabel": "temperature"},
@@ -69,7 +69,7 @@ class TestMainExecutionFlow:
         """
         mock_bp_cls, mock_plot_cls = mock_bp
         mock_bp_instance = mock_bp_cls.return_value
-        config_file = build_config({"boxplots": BASE_DICT})
+        config_file = build_config({"boxplots": BASE_BP})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -91,7 +91,7 @@ class TestMainExecutionFlow:
         mock_bp_cls, mock_plot_cls = mock_bp
         # First call (dataset) raises, second (reference) succeeds
         mock_bp_cls.return_value.run.side_effect = [NotEnoughDataError("no data"), mocker.DEFAULT]
-        config_file = build_config({"boxplots": BASE_DICT})
+        config_file = build_config({"boxplots": BASE_BP})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 

@@ -6,13 +6,15 @@ from aqua.diagnostics.ocean_trends.cli_ocean_trends import main, parse_arguments
 
 CLI_MODULE = "aqua.diagnostics.ocean_trends.cli_ocean_trends"
 
-BASE_BLOCK = {
-    "run": True,
-    "regions": ["global_ocean", "atlantic_ocean"],
-    "diagnostic_name": "ocean_trends",
-    "var": ["thetao"],
-    "dim_mean": ["lat", "lon"],
-    "vert_coord": "lev",
+BASE_OT = {
+    "multilevel": {
+        "run": True,
+        "regions": ["global_ocean", "atlantic_ocean"],
+        "diagnostic_name": "ocean_trends",
+        "var": ["thetao"],
+        "dim_mean": ["lat", "lon"],
+        "vert_coord": "lev",
+    }
 }
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
@@ -49,7 +51,7 @@ class TestMainExecutionFlow:
     def test_trends_disabled_skips_processing(self, build_config, mock_cluster, mock_ot):
         """When run=False, diagnostic and plot classes are not instantiated."""
         mock_trends_cls, mock_plot_cls = mock_ot
-        config_file = build_config({"ocean_trends": {"multilevel": {"run": False}}})
+        config_file = build_config({"ocean_trends": {"multilevel": {**BASE_OT["multilevel"], "run": False}}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -64,12 +66,12 @@ class TestMainExecutionFlow:
         - PlotTrends is instantiated twice per region (multilevel + zonal).
         """
         mock_trends_cls, mock_plot_cls = mock_ot
-        config_file = build_config({"ocean_trends": {"multilevel": BASE_BLOCK}})
+        config_file = build_config({"ocean_trends": BASE_OT})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
         inst = mock_trends_cls.return_value
-        inst.run.assert_called_once()
+        assert inst.run.call_count == 1
         assert inst.select_region.call_count == 2
 
         # 2 regions * 2 PlotTrends instances each

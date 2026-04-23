@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from aqua.diagnostics.timeseries.cli_timeseries import main, parse_arguments
+from tests.cli.conftest import DEFAULT_REFERENCE
 
 CLI_MODULE = "aqua.diagnostics.timeseries.cli_timeseries"
 
@@ -24,13 +25,6 @@ BASE_SEASONALCYCLES = {
     "params": {"default": {}},
 }
 
-REF_BLOCK = {
-    "catalog": "ref-catalog",
-    "model": "RefModel",
-    "exp": "ref-exp",
-    "source": "ref-source",
-}
-
 BASE_GREGORY = {
     "run": True,
     "annual": True,
@@ -40,8 +34,8 @@ BASE_GREGORY = {
     "net_toa_name": "tnlwrf+tnswrf",
     "std_startdate": "2000-01-01",
     "std_enddate": "2010-12-31",
-    "t2m_ref": REF_BLOCK,
-    "net_toa_ref": REF_BLOCK,
+    "t2m_ref": DEFAULT_REFERENCE,
+    "net_toa_ref": DEFAULT_REFERENCE,
 }
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
