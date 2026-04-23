@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, to_list
+from aqua.core.util import DEFAULT_REALIZATION, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
@@ -116,6 +116,7 @@ class PlotLatLonProfiles:
         self.long_name = None
         self.units = None
         self.mean_type = None
+        self.data_freq = None
 
         # Get all data items to extract metadata from
         data_items = []
@@ -155,19 +156,27 @@ class PlotLatLonProfiles:
                 if self.units is None and hasattr(data_item, "units"):
                     self.units = data_item.units
 
-        # Set mean_type from first data item if not already set
+        # Treat lowercase 'global' as no region (storyline runs set AQUA_region='global')
+        if self.region == "global":
+            self.region = None
+
+        # Set mean_type and data frequency from first data item if not already set
         first_data = data_items[0] if data_items else None
         if first_data is not None and hasattr(first_data, "AQUA_mean_type"):
             self.mean_type = first_data.AQUA_mean_type
+        if first_data is not None and hasattr(first_data, "AQUA_data_freq"):
+            self.data_freq = first_data.AQUA_data_freq
 
         self.logger.debug(f"Extracted metadata for {len(self.models)} datasets: {list(zip(self.models, self.exps))}")
         self.logger.debug(f"Extracted realizations: {self.realizations}")
         self.logger.debug(f"Extracted region: {self.region}")
 
-        # Handle std dates
+        # Handle std dates. ref_std_data may be a single DataArray (longterm)
+        # or a list of DataArrays (seasonal, one per season).
         if self.ref_std_data is not None:
-            self.std_startdate = getattr(self.ref_std_data, "std_startdate", None)
-            self.std_enddate = getattr(self.ref_std_data, "std_enddate", None)
+            ref_std_item = self.ref_std_data[0] if isinstance(self.ref_std_data, list) else self.ref_std_data
+            self.std_startdate = getattr(ref_std_item, "AQUA_std_startdate", None) if ref_std_item is not None else None
+            self.std_enddate = getattr(ref_std_item, "AQUA_std_enddate", None) if ref_std_item is not None else None
         else:
             self.std_startdate = None
             self.std_enddate = None
@@ -313,6 +322,18 @@ class PlotLatLonProfiles:
         self.logger.debug("Title: %s", title)
         return title
 
+    def _fmt_date(self, date):
+        """Format a date string for display, truncating to year-month when the
+        source data frequency is coarser than daily.
+
+        Returns None if date is None, so (None, None) pairs stay detectable.
+        """
+        if date is None:
+            return None
+        if self.data_freq in ("monthly", "seasonal", "annual"):
+            return time_to_string(date, format="%Y-%m")
+        return time_to_string(date, format="%Y-%m-%d")
+
     def set_description(self):
         """
         Set the caption for the plot.
@@ -359,10 +380,22 @@ class PlotLatLonProfiles:
         else:
             ref_item = None
 
-        # Smart date display: show dates only once if they are the same
-        data_pair = (getattr(data_item, "AQUA_startdate", None), getattr(data_item, "AQUA_enddate", None))
-        ref_pair = (getattr(ref_item, "AQUA_startdate", None), getattr(ref_item, "AQUA_enddate", None))
-        std_pair = (self.std_startdate, self.std_enddate) if self.ref_std_data is not None else (None, None)
+        # Smart date display: show dates only once if they are the same.
+        # Format according to data frequency before comparing so that equivalent
+        # dates at display granularity are condensed.
+        data_pair = (
+            self._fmt_date(getattr(data_item, "AQUA_startdate", None)),
+            self._fmt_date(getattr(data_item, "AQUA_enddate", None)),
+        )
+        ref_pair = (
+            self._fmt_date(getattr(ref_item, "AQUA_startdate", None)),
+            self._fmt_date(getattr(ref_item, "AQUA_enddate", None)),
+        )
+        std_pair = (
+            (self._fmt_date(self.std_startdate), self._fmt_date(self.std_enddate))
+            if self.ref_std_data is not None
+            else (None, None)
+        )
 
         if data_pair == ref_pair == std_pair and data_pair != (None, None):
             description += (
