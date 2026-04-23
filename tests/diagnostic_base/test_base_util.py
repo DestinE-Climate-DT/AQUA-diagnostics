@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
@@ -27,6 +28,7 @@ from tests.shared_constants import LOGLEVEL
 loglevel = LOGLEVEL
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
+REAL_CONFIG_DIR = Path(__file__).resolve().parents[2] / "aqua" / "diagnostics" / "config"
 
 
 def test_template_parse_arguments():
@@ -109,58 +111,41 @@ def test_cluster(mock_cluster, mock_client):
 
 
 def test_load_diagnostic_config(monkeypatch):
-    """Test the load_diagnostic_config function"""
+    """Test loading a real diagnostic configuration from repository config path."""
 
-    # Isolate this test from local AQUA catalog setup.
-    class _DummyConfigPath:
+    class _RepoConfigPath:
         def __init__(self, loglevel=None):
-            self.configdir = "config"
+            self.configdir = str(REAL_CONFIG_DIR)
 
-    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _DummyConfigPath)
-    monkeypatch.setattr(
-        "aqua.diagnostics.base.util.load_yaml",
-        lambda _: {
-            "datasets": [
-                {
-                    "catalog": None,
-                    "exp": None,
-                    "model": None,
-                    "source": "lra-r100-monthly",
-                    "regrid": None,
-                    "reader_kwargs": None,
-                }
-            ]
-        },
-    )
+    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _RepoConfigPath)
 
     parser = argparse.ArgumentParser()
     parser = template_parse_arguments(parser)
     args = parser.parse_args(["--loglevel", "DEBUG"])
     ts_dict = load_diagnostic_config(
-        diagnostic="timeseries",
-        default_config="config-timeseries.yaml",
-        folder="templates",
+        diagnostic="climate_metrics",
+        default_config="config-climate_metrics-gregory.yaml",
+        folder="collections",
         config=args.config,
         loglevel=loglevel,
     )
 
-    assert ts_dict["datasets"] == [
-        {"catalog": None, "exp": None, "model": None, "source": "lra-r100-monthly", "regrid": None, "reader_kwargs": None}
-    ]
+    assert ts_dict["datasets"][0]["source"] == "lra-r100-monthly"
+    assert "gregory" in ts_dict["diagnostics"]
 
 
 def test_get_diagnostic_configpath(monkeypatch):
     """Path resolver handles collections/tools/templates and rejects invalid folder names."""
 
-    class _DummyConfigPath:
+    class _RepoConfigPath:
         def __init__(self, loglevel=None):
-            self.configdir = "/tmp/aqua-config"
+            self.configdir = str(REAL_CONFIG_DIR)
 
-    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _DummyConfigPath)
+    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _RepoConfigPath)
 
-    assert get_diagnostic_configpath("timeseries", folder="collections") == "/tmp/aqua-config/collections/timeseries"
-    assert get_diagnostic_configpath("timeseries", folder="tools") == "/tmp/aqua-config/tools/timeseries"
-    assert get_diagnostic_configpath("timeseries", folder="templates") == "/tmp/aqua-config/templates/collections"
+    assert get_diagnostic_configpath("timeseries", folder="collections") == str(REAL_CONFIG_DIR / "collections" / "timeseries")
+    assert get_diagnostic_configpath("timeseries", folder="tools") == str(REAL_CONFIG_DIR / "tools" / "timeseries")
+    assert get_diagnostic_configpath("timeseries", folder="templates") == str(REAL_CONFIG_DIR / "templates" / "collections")
 
     with pytest.raises(ValueError, match="Invalid folder name"):
         get_diagnostic_configpath("timeseries", folder="invalid")
@@ -218,18 +203,18 @@ def test_merge_config_args():
     assert merged_config["output"]["outputdir"] == "test_outputdir"
 
 
-def test_close_cluster_closes_private_cluster_only_when_flag_true():
+def test_close_private_cluster_when_flag_true():
     """close_cluster always closes client, and closes cluster only if private_cluster=True."""
 
-    class _Dummy:
+    class _DummyCluster:
         def __init__(self):
             self.closed = 0
 
         def close(self):
             self.closed += 1
 
-    client = _Dummy()
-    cluster = _Dummy()
+    client = _DummyCluster()
+    cluster = _DummyCluster()
 
     close_cluster(client, cluster, private_cluster=False, loglevel=loglevel)
     assert client.closed == 1
