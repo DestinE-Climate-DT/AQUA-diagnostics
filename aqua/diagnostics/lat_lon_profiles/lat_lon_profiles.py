@@ -1,7 +1,7 @@
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import time_to_string, to_list
-from aqua.diagnostics.base import Diagnostic, start_end_dates
+from aqua.core.util import pandas_freq_to_string, time_to_string, to_list, xarray_to_pandas_freq
+from aqua.diagnostics.base import Diagnostic
 
 
 class LatLonProfiles(Diagnostic):
@@ -50,8 +50,8 @@ class LatLonProfiles(Diagnostic):
             source (str): The source to be used for the retrieval of the data.
             catalog (str, optional): The catalog to be used for the retrieval of the data.
             regrid (str, optional): The regridding method to be used for the retrieval of the data.
-            startdate (str, optional): The start date of the data to be retrieved.
-            enddate (str, optional): The end date of the data to be retrieved.
+            startdate (str, optional): The start date of the plot/analysis period.
+            enddate (str, optional): The end date of the plot/analysis period.
             std_startdate (str, optional): The start date of the standard deviation period.
             std_enddate (str, optional): The end date of the standard deviation period.
             region (str, optional): The region to be used for the retrieval of the data.
@@ -62,25 +62,22 @@ class LatLonProfiles(Diagnostic):
             diagnostic_name (str, optional): The name of the diagnostic.
             loglevel (str, optional): The log level to be used for the logging.
         """
-        # Initialize the Diagnostic class with the provided parameters
-        super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel)
+
+        super().__init__(
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            std_startdate=std_startdate,
+            std_enddate=std_enddate,
+            loglevel=loglevel,
+        )
         self.diagnostic_name = diagnostic_name
 
         self.logger = log_configure(log_level=loglevel, log_name="LatLonProfiles")
-
-        # We want to make sure we retrieve the required amount of data with a single Reader instance
-        self.startdate, self.enddate = start_end_dates(
-            startdate=startdate, enddate=enddate, start_std=std_startdate, end_std=std_enddate
-        )
-        # They need to be stored to evaluate the std on the correct period
-        self.std_startdate = self.startdate if std_startdate is None else std_startdate
-        self.std_enddate = self.enddate if std_enddate is None else std_enddate
-        # Finally we need to set the start and end dates of the data
-        self.plt_startdate = startdate
-        self.plt_enddate = enddate
-        self.logger.debug(f"Retrieve start date: {self.startdate}, End date: {self.enddate}")
-        self.logger.debug(f"Plot start date: {self.plt_startdate}, End date: {self.plt_enddate}")
-        self.logger.debug(f"Std start date: {self.std_startdate}, Std end date: {self.std_enddate}")
 
         # Set the region based on the region name or the lon and lat limits
         self.region, self.lon_limits, self.lat_limits = self._set_region(
@@ -94,7 +91,7 @@ class LatLonProfiles(Diagnostic):
         # Initialize the possible results
         self.seasonal = None  # Seasonal means [DJF, MAM, JJA, SON]
         self.longterm = None  # Temporal mean over the entire time period
-        self.std_seasonal = None  # Seasonal std deviations
+        self.std_seasonal = None  # Seasonal std deviations [DJF, MAM, JJA, SON]
         self.std_annual = None  # Annual std deviation, used by the longterm mean
 
         self.mean_type = mean_type
@@ -120,8 +117,7 @@ class LatLonProfiles(Diagnostic):
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
         """
         self.logger.info("Retrieving data for variable %s", var)
-        # If the user requires a formula the evaluation requires the retrieval
-        # of all the variables
+
         if formula:
             super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             self.logger.debug("Evaluating formula %s", var)
@@ -130,36 +126,55 @@ class LatLonProfiles(Diagnostic):
             ).evaluate()
             if self.data is None:
                 raise ValueError(f"Error evaluating formula {var}. Check the variable names and the formula syntax.")
+            if self.std_data is not None:
+                self.std_data = EvaluateFormula(
+                    data=self.std_data,
+                    formula=var,
+                    long_name=long_name,
+                    short_name=standard_name,
+                    units=units,
+                    loglevel=self.loglevel,
+                ).evaluate()
         else:
             super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
-            if self.data is None:
+            if var not in self.data:
                 raise ValueError(f"Variable {var} not found in the data. Check the variable name and the data source.")
             # Get the xr.DataArray to be aligned with the formula code
             self.data = self.data[var]
+            if self.std_data is not None:
+                self.std_data = self.std_data[var]
 
-        if self.plt_startdate is None:
-            self.plt_startdate = self.data.time.min().values
-            self.logger.debug("Plot start date set to %s", self.plt_startdate)
-        if self.plt_enddate is None:
-            self.plt_enddate = self.data.time.max().values
-            self.logger.debug("Plot end date set to %s", self.plt_enddate)
-
-        # Customization of the data, expecially needed for formula
-        if units is not None:
-            self.data = self._check_data(data=self.data, var=var, units=units)
-        if long_name is not None:
-            self.data.attrs["long_name"] = long_name
-
-        # Set standard name
-        if standard_name is not None:
-            self.data.attrs["standard_name"] = standard_name
-            self.data.name = standard_name
+        # Customization of the data, especially needed for formula
+        self.data = self._apply_variable_metadata(
+            self.data, var=var, units=units, long_name=long_name, standard_name=standard_name
+        )
+        if self.std_data is not None:
+            self.std_data = self._apply_variable_metadata(
+                self.std_data, var=var, units=units, long_name=long_name, standard_name=standard_name
+            )
         else:
-            self.data.attrs["standard_name"] = var
+            # Fallback: no std dates provided, use plot window for std too
+            self.std_data = self.data
+            self.std_startdate = self.startdate
+            self.std_enddate = self.enddate
+
+    def _apply_variable_metadata(self, data, var, units=None, long_name=None, standard_name=None):
+        """Apply unit conversion and set variable metadata attributes in-place."""
+        if units is not None:
+            data = self._check_data(data=data, var=var, units=units)
+        if long_name is not None:
+            data.attrs["long_name"] = long_name
+        if standard_name is not None:
+            data.attrs["standard_name"] = standard_name
+            data.name = standard_name
+        else:
+            data.attrs["standard_name"] = var
+        return data
 
     def compute_std(self, freq: str, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):
         """
-        Compute the standard deviation of the data. Support for seasonal and longterm frequencies.
+        Compute the standard deviation of the data over the std period.
+        Supports seasonal and longterm frequencies.
 
         Args:
             freq (str): The frequency to be used ('seasonal' or 'longterm').
@@ -169,29 +184,28 @@ class LatLonProfiles(Diagnostic):
         """
         self.logger.info("Computing %s standard deviation", freq)
 
-        # Determine dimensions for averaging based on mean_type
+        if self.std_data is None:
+            self.logger.warning("No std_data available; cannot compute %s std", freq)
+            return
+
         if self.mean_type == "zonal":
-            dims = ["lon"]  # Average over longitude, keep latitude
+            dims = ["lon"]
         elif self.mean_type == "meridional":
-            dims = ["lat"]  # Average over latitude, keep longitude
+            dims = ["lat"]
         else:
             raise ValueError(f"Mean type {self.mean_type} not recognized for std computation.")
 
-        # Start with monthly data for both seasonal and longterm std calculations
-        data = self.data
-        data = self.reader.fldmean(data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims)
+        data = self.reader.fldmean(
+            self.std_data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
+        )
         monthly_data = self.reader.timmean(
             data, freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time
         )
-        monthly_data = monthly_data.sel(time=slice(self.std_startdate, self.std_enddate))
 
-        if self.std_startdate is None or self.std_enddate is None:
-            self.std_startdate = monthly_data.time.min().values
-            self.std_enddate = monthly_data.time.max().values
-
-        # Load data in memory to avoid dask graph issues during groupby
         self.logger.debug("Loading monthly data in memory for std computation")
         monthly_data.load()
+
+        data_freq = pandas_freq_to_string(xarray_to_pandas_freq(self.data))
 
         if freq == "seasonal":
             # Group by season and compute std
@@ -202,28 +216,25 @@ class LatLonProfiles(Diagnostic):
             seasonal_std_list = []
             for season in seasons:
                 season_data = seasonal_std.sel(season=season)
-                season_data.attrs["AQUA_startdate"] = time_to_string(self.plt_startdate)
-                season_data.attrs["AQUA_enddate"] = time_to_string(self.plt_enddate)
+                season_data.attrs["AQUA_std_startdate"] = time_to_string(self.std_startdate)
+                season_data.attrs["AQUA_std_enddate"] = time_to_string(self.std_enddate)
+                season_data.attrs["AQUA_data_freq"] = data_freq
                 seasonal_std_list.append(season_data)
 
             self.std_seasonal = seasonal_std_list
 
-            self.logger.debug("Loading data in memory")
             for season_data in self.std_seasonal:
                 season_data.load()
-            self.logger.debug("Loaded data in memory")
 
         elif freq == "longterm":
-            # Group by year and compute std across years
             annual_data = monthly_data.groupby("time.year").mean("time")
             annual_std = annual_data.std("year")
-            annual_std.attrs["std_startdate"] = time_to_string(self.std_startdate)
-            annual_std.attrs["std_enddate"] = time_to_string(self.std_enddate)
+            annual_std.attrs["AQUA_std_startdate"] = time_to_string(self.std_startdate)
+            annual_std.attrs["AQUA_std_enddate"] = time_to_string(self.std_enddate)
+            annual_std.attrs["AQUA_data_freq"] = data_freq
             self.std_annual = annual_std
 
-            self.logger.debug("Loading data in memory")
             self.std_annual.load()
-            self.logger.debug("Loaded data in memory")
 
     def save_netcdf(self, freq: str, outputdir: str = "./", rebuild: bool = True):
         """
@@ -249,7 +260,6 @@ class LatLonProfiles(Diagnostic):
 
         diagnostic_product = f"{self.mean_type}_profile"
 
-        # Handle seasonal data (list of seasons)
         if freq == "seasonal":
             seasons = ["DJF", "MAM", "JJA", "SON"]
             for i, season_data in enumerate(data):
@@ -257,8 +267,7 @@ class LatLonProfiles(Diagnostic):
 
                 extra_keys = {"freq": freq, "season": seasons[i], "var": var}
                 if self.region is not None:
-                    region = self.region
-                    extra_keys["AQUA_region"] = region
+                    extra_keys["AQUA_region"] = self.region
 
                 self.logger.info("Saving %s data for %s to netcdf in %s", seasons[i], diagnostic_product, outputdir)
                 super().save_netcdf(
@@ -270,13 +279,11 @@ class LatLonProfiles(Diagnostic):
                     extra_keys=extra_keys,
                 )
         elif freq == "longterm":
-            # Handle longterm data
             var = getattr(data, "standard_name", "unknown")
 
             extra_keys = {"freq": freq, "var": var}
             if self.region is not None:
-                region = self.region
-                extra_keys["AQUA_region"] = region
+                extra_keys["AQUA_region"] = self.region
 
             self.logger.info("Saving %s data for %s to netcdf in %s", freq, diagnostic_product, outputdir)
             super().save_netcdf(
@@ -288,7 +295,6 @@ class LatLonProfiles(Diagnostic):
                 extra_keys=extra_keys,
             )
 
-        # Save std data if available
         if data_std is not None:
             if freq == "seasonal":
                 # Seasonal std data: always has 4 seasons (DJF, MAM, JJA, SON)
@@ -297,8 +303,7 @@ class LatLonProfiles(Diagnostic):
                     var = getattr(std_data, "standard_name", "unknown")
                     extra_keys = {"freq": freq, "season": seasons[i], "std": "std", "var": var}
                     if self.region is not None:
-                        region = self.region
-                        extra_keys["AQUA_region"] = region
+                        extra_keys["AQUA_region"] = self.region
 
                     super().save_netcdf(
                         data=std_data,
@@ -310,13 +315,11 @@ class LatLonProfiles(Diagnostic):
                     )
 
             elif freq == "longterm":
-                # Handle longterm std data
                 var = getattr(data_std, "standard_name", "unknown")
 
                 extra_keys = {"freq": "longterm", "std": "std", "var": var}
                 if self.region is not None:
-                    region = self.region
-                    extra_keys["AQUA_region"] = region
+                    extra_keys["AQUA_region"] = self.region
 
                 super().save_netcdf(
                     data=data_std,
@@ -346,7 +349,8 @@ class LatLonProfiles(Diagnostic):
             raise ValueError("Mean type %s not recognized", self.mean_type)
 
         self.logger.info("Computing %s mean", freq)
-        data = self.data.sel(time=slice(self.plt_startdate, self.plt_enddate))
+        data = self.data
+        data_freq = pandas_freq_to_string(xarray_to_pandas_freq(self.data))
 
         if freq == "seasonal":
             data = self.reader.fldmean(
@@ -356,11 +360,13 @@ class LatLonProfiles(Diagnostic):
                 data, freq=freq, exclude_incomplete=exclude_incomplete, center_time=center_time
             )
             seasonal_data = [seasonal_dataset.isel(time=i, drop=True) for i in range(4)]
-            if self.region is not None:
-                for season_data in seasonal_data:
-                    season_data.attrs["AQUA_region"] = self.region
             for season_data in seasonal_data:
+                if self.region is not None:
+                    season_data.attrs["AQUA_region"] = self.region
                 season_data.attrs["AQUA_mean_type"] = self.mean_type
+                season_data.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+                season_data.attrs["AQUA_enddate"] = time_to_string(self.enddate)
+                season_data.attrs["AQUA_data_freq"] = data_freq
                 self.logger.debug("Loading data in memory")
                 season_data.load()
                 self.logger.debug("Loaded data in memory")
@@ -368,14 +374,14 @@ class LatLonProfiles(Diagnostic):
             self.seasonal = seasonal_data
 
         elif freq == "longterm":
-            # Field and time average
             data = self.reader.timmean(data, freq=None, exclude_incomplete=exclude_incomplete, center_time=center_time)
             data = self.reader.fldmean(
                 data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
             )
 
-            data.attrs["AQUA_startdate"] = time_to_string(self.plt_startdate)
-            data.attrs["AQUA_enddate"] = time_to_string(self.plt_enddate)
+            data.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+            data.attrs["AQUA_enddate"] = time_to_string(self.enddate)
+            data.attrs["AQUA_data_freq"] = data_freq
 
             if self.region is not None:
                 data.attrs["AQUA_region"] = self.region
@@ -424,7 +430,6 @@ class LatLonProfiles(Diagnostic):
         """
         self.logger.info("Running LatLonProfiles for %s", var)
 
-        # Retrieve the data
         self.retrieve(
             var=var,
             formula=formula,
@@ -436,11 +441,6 @@ class LatLonProfiles(Diagnostic):
 
         self.logger.info("Mean type set to %s", self.mean_type)
 
-        # Check if data is valid
-        if units is not None:
-            self.data = self._check_data(data=self.data, var=var, units=units)
-
-        # Compute temporal means (seasonal/longterm)
         self.logger.info("Computing temporal means")
         freq = to_list(freq)
         for f in freq:
