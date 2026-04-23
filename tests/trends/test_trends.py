@@ -1,7 +1,7 @@
 import pytest
 from conftest import APPROX_REL, LOGLEVEL
 
-from aqua.diagnostics.ocean_trends import Trends
+from aqua.diagnostics.trends import Trends
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL * 10
