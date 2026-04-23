@@ -1,17 +1,49 @@
 """Shared fixtures for CLI tests.
 
-These fixtures provide minimal YAML configs and mock arguments that
-satisfy DiagnosticCLI.prepare() without needing real data or catalogs.
-They are designed to be reused across all diagnostic CLI test modules.
+These fixtures build test configs from real repository collection YAML files,
+then override only the sections needed by each test. This keeps tests aligned
+with the live CLI config schema and helps catch breaking config changes early.
 """
 
 import os
+from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
-from aqua.core.util import dump_yaml
+from aqua.core.util import dump_yaml, load_yaml
 
 CLI_BASE_MODULE = "aqua.diagnostics.base.cli_base"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CONFIG_COLLECTIONS_DIR = REPO_ROOT / "aqua" / "diagnostics" / "config" / "collections"
+
+
+def _find_matching_template(diagnostics):
+    """Find the repository config that best matches requested diagnostics.
+
+    The template is only used to decide whether a `references` section should
+    be injected by default (its other top-level sections are overwritten by
+    `_build_config`). Stricter schema/contract checks live in
+    `tests/config/test_diagnostic_key_coverage.py`.
+    """
+    collection_config_files = tuple(sorted(CONFIG_COLLECTIONS_DIR.rglob("config-*.yaml")))
+
+    requested_keys = frozenset(diagnostics)
+    best_template_cfg = None
+    best_overlap_size = -1
+
+    for template_file in collection_config_files:
+        cfg = load_yaml(str(template_file))
+        template_keys = set((cfg.get("diagnostics") or {}).keys())
+        overlap_size = len(requested_keys & template_keys)
+        if overlap_size > best_overlap_size:
+            best_overlap_size = overlap_size
+            best_template_cfg = cfg
+
+    if best_template_cfg is None:
+        raise ValueError("Could not select a repository collection configuration template.")
+
+    return best_template_cfg
 
 
 def _build_config(
@@ -22,21 +54,26 @@ def _build_config(
     references=None,
     output_overrides=None,
 ):
-    """Build a YAML config file and return its path.
+    """Build a YAML config from repository templates and return its path.
 
     Args:
         tmp_path: pytest tmp_path fixture.
         diagnostics: mapping of diagnostic keys to their config dicts,
             e.g. ``{"globalbiases": {...}}`` or
             ``{"seaice_timeseries": {...}, "seaice_2d_bias": {...}}``.
-        datasets: list of dataset dicts (sensible default provided).
-        references: list of reference dicts (sensible default provided).
+        datasets: list of dataset dicts (override template datasets).
+        references: list of reference dicts (override template references).
         output_overrides: dict merged into the 'output' section.
     """
     outputdir = str(tmp_path / "output")
     os.makedirs(outputdir, exist_ok=True)
 
-    default_datasets = [
+    # Use a real collection template so CLI tests match config structure.
+    config = deepcopy(_find_matching_template(diagnostics))
+
+    # Force deterministic values for test isolation
+    config["setup"] = {"loglevel": "WARNING"}
+    config["datasets"] = datasets or [
         {
             "catalog": "test-catalog",
             "model": "TestModel",
@@ -44,29 +81,29 @@ def _build_config(
             "source": "test-source",
         }
     ]
-    default_references = [
-        {
-            "catalog": "ref-catalog",
-            "model": "RefModel",
-            "exp": "ref-exp",
-            "source": "ref-source",
-        }
-    ]
-    config = {
-        "setup": {"loglevel": "WARNING"},
-        "datasets": default_datasets if datasets is None else datasets,
-        "references": default_references if references is None else references,
-        "output": {
-            "outputdir": outputdir,
-            "rebuild": False,
-            "save_format": ["pdf"],
-            "save_netcdf": True,
-            "dpi": 50,
-            "create_catalog_entry": False,
-            **(output_overrides or {}),
-        },
-        "diagnostics": diagnostics,
+    if references is None:
+        if "references" in config:
+            config["references"] = [
+                {
+                    "catalog": "ref-catalog",
+                    "model": "RefModel",
+                    "exp": "ref-exp",
+                    "source": "ref-source",
+                }
+            ]
+    else:
+        config["references"] = references
+
+    config["output"] = {
+        "outputdir": outputdir,
+        "rebuild": False,
+        "save_format": ["pdf"],
+        "save_netcdf": True,
+        "dpi": 50,
+        "create_catalog_entry": False,
+        **(output_overrides or {}),
     }
+    config["diagnostics"] = diagnostics
 
     first_key = next(iter(diagnostics), "test")
     config_file = tmp_path / f"config_{first_key}.yaml"
@@ -76,7 +113,7 @@ def _build_config(
 
 @pytest.fixture
 def build_config(tmp_path):
-    """Build a minimal YAML config file for a diagnostic CLI test.
+    """Build a temporary config file for a diagnostic CLI test.
 
     Usage::
 
@@ -94,7 +131,8 @@ def build_config(tmp_path):
 def mock_cluster(mocker):
     """Mock open_cluster/close_cluster where DiagnosticCLI uses them.
 
-    Returns (mock_open, mock_close) so tests can assert on them.
+    This keeps CLI tests fast and deterministic by avoiding real Dask startup.
+    Returns (mock_open, mock_close) so tests can assert on cluster orchestration.
     """
     mock_open = mocker.patch(
         f"{CLI_BASE_MODULE}.open_cluster",
