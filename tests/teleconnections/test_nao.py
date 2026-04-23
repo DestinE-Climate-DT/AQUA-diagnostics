@@ -2,9 +2,9 @@ import os
 
 import matplotlib
 import pytest
-from conftest import APPROX_REL, DPI, LOGLEVEL
 
 from aqua.diagnostics.teleconnections import NAO, PlotNAO
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL

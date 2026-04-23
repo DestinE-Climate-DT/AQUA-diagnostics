@@ -1,8 +1,8 @@
 import pytest
 import xarray as xr
-from conftest import LOGLEVEL
 
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles
+from tests.shared_constants import LOGLEVEL
 
 loglevel = LOGLEVEL
 

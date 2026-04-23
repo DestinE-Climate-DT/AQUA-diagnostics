@@ -55,6 +55,7 @@ notebooks = [
 tests = [
     "pytest",
     "pytest-cov",
+    "pytest-mock",
     "pytest-xdist",
     "coverage",
     "cdo"
