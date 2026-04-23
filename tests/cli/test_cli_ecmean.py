@@ -7,7 +7,15 @@ import pytest
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
-from aqua.diagnostics.ecmean.cli_ecmean import data_check, main, parse_arguments, reader_data, set_title, time_check
+from aqua.diagnostics.ecmean.cli_ecmean import (
+    data_check,
+    main,
+    parse_arguments,
+    reader_data,
+    set_description,
+    set_title,
+    time_check,
+)
 
 CLI_MODULE = "aqua.diagnostics.ecmean.cli_ecmean"
 
@@ -185,6 +193,16 @@ def test_set_title_rejects_unknown_diagnostic():
     """Unknown diagnostic names should fail fast during title generation."""
     with pytest.raises(ValueError):
         set_title("unknown_diag", "Model", "exp", 2000, 2001)
+
+
+def test_set_description_global_mean():
+    """Description text includes core context fields for known diagnostics."""
+    config = {"global_mean": {"regions": ["Global", "NH"]}}
+    description = set_description("global_mean", "IFS", "hist", 2000, 2001, config)
+
+    assert "IFS hist from 2000-01-01 to 2001-12-31" in description
+    assert "Global (90°S-90°N)" in description
+    assert "NH (20°N-90°N)" in description
 
 
 def test_time_check_infers_years_and_validates_minimum_months():
