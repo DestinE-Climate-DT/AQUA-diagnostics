@@ -6,23 +6,25 @@ def load_var_config(config_dict, var, diagnostic="lat_lon_profiles"):
 
     Args:
         config_dict (dict): Configuration dictionary.
-        var (str or dict): Variable name or variable configuration dictionary.
+        var (str or dict): Variable name or inline variable configuration dictionary.
         diagnostic (str): Diagnostic name.
 
     Returns:
         tuple: (var_config dict, regions list)
     """
+    params = config_dict.get("diagnostics", {}).get(diagnostic, {}).get("params", {})
+    default_params = params.get("default", {})
+
     if isinstance(var, dict):
-        var_config = var
+        var_name = var.get("name")
+        var_specific = params.get(var_name, {}) if var_name else {}
+        var_config = {**default_params, **var_specific, **var}
     else:
-        default_vars = config_dict.get("diagnostics", {}).get(diagnostic, {}).get("default_variables", {})
-        var_config = default_vars.get(var, {"name": var})
+        var_name = var
+        var_specific = params.get(var_name, {})
+        var_config = {**default_params, **var_specific}
+        var_config.setdefault("name", var_name)
 
-    # Ensure 'name' key exists
-    if "name" not in var_config:
-        var_config["name"] = var
-
-    # Get regions
     regions = var_config.get("regions", [None])
 
     return var_config, regions
