@@ -19,7 +19,7 @@ def sample_lat_lon_data():
         # Base attributes template
         base_attrs = {
             "AQUA_mean_type": mean_type,
-            "AQUA_region": "Global",
+            "AQUA_region": "global",
             "short_name": "skt",
             "standard_name": "skin_temperature",
             "long_name": "Skin Temperature",
@@ -62,7 +62,8 @@ class TestPlotLatLonProfilesCore:
 
         assert plotter.data_type == "longterm"
         assert plotter.mean_type == mean_type
-        assert plotter.region == "Global"
+        # 'global' is intentionally mapped to None (no regional label in title/filename)
+        assert plotter.region is None
         assert plotter.diagnostic_name == "lat_lon_profiles"
 
         title = plotter.set_title()
@@ -271,7 +272,7 @@ class TestPlotLatLonProfilesDescription:
         ref_data.attrs["AQUA_startdate"], ref_data.attrs["AQUA_enddate"] = ref_dates
 
         std_data = sample_lat_lon_data()
-        std_data.attrs["std_startdate"], std_data.attrs["std_enddate"] = std_dates
+        std_data.attrs["AQUA_std_startdate"], std_data.attrs["AQUA_std_enddate"] = std_dates
 
         plotter = PlotLatLonProfiles(
             data=data, ref_data=ref_data, ref_std_data=std_data, data_type="longterm", loglevel=loglevel
