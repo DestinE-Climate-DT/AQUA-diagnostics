@@ -1,0 +1,28 @@
+name: AQUA-diagnostics Ruff
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  aqua-diagnostics-ruff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run Ruff hooks from pre-commit config
+        run: |
+          pre-commit run ruff-check --all-files -v --show-diff-on-failure
+          pre-commit run ruff-format --all-files -v --show-diff-on-failure

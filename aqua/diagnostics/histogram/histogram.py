@@ -13,14 +13,28 @@ class Histogram(Diagnostic):
     over a specified region. Retrieves data from catalog, computes histograms/PDFs
     for the entire period, and saves results to netcdf files.
     """
-    def __init__(self, model: str, exp: str, source: str,
-                 catalog: str = None, regrid: str = None,
-                 startdate: str = None, enddate: str = None,
-                 region: str = None, lon_limits: list = None, lat_limits: list = None,
-                 regions_file_path: str = None,
-                 bins: int = 100, range: tuple = None, weighted: bool = True,
-                 diagnostic_name: str = 'histogram',
-                 loglevel: str = 'WARNING'):
+
+    MINIMUM_MONTHS_REQUIRED = 12
+
+    def __init__(
+        self,
+        model: str,
+        exp: str,
+        source: str,
+        catalog: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        region: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+        regions_file_path: str = None,
+        bins: int = 100,
+        range: tuple = None,
+        weighted: bool = True,
+        diagnostic_name: str = "histogram",
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the Histogram diagnostic class.
 
@@ -42,11 +56,10 @@ class Histogram(Diagnostic):
             diagnostic_name (str, optional): Name of diagnostic. Default 'histogram'.
             loglevel (str, optional): Log level.
         """
-        super().__init__(catalog=catalog, model=model, exp=exp, source=source,
-                        regrid=regrid, loglevel=loglevel)
+        super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel)
 
         self.diagnostic_name = diagnostic_name
-        self.logger = log_configure(log_level=loglevel, log_name='Histogram')
+        self.logger = log_configure(log_level=loglevel, log_name="Histogram")
 
         # Simple date management - no std dates needed
         self.startdate = startdate
@@ -56,9 +69,12 @@ class Histogram(Diagnostic):
 
         # Region setup using parent class method
         self.region, self.lon_limits, self.lat_limits = self._set_region(
-            region=region, diagnostic='histogram',
+            region=region,
+            diagnostic="histogram",
             regions_file_path=regions_file_path,
-            lon_limits=lon_limits, lat_limits=lat_limits)
+            lon_limits=lon_limits,
+            lat_limits=lat_limits,
+        )
 
         # Histogram parameters
         self.bins = bins
@@ -68,9 +84,15 @@ class Histogram(Diagnostic):
         # Results storage - only longterm histogram
         self.histogram_data = None
 
-    def retrieve(self, var: str, formula: bool = False, long_name: str = None,
-                 units: str = None, standard_name: str = None,
-                 reader_kwargs: dict = {}):
+    def retrieve(
+        self,
+        var: str,
+        formula: bool = False,
+        long_name: str = None,
+        units: str = None,
+        standard_name: str = None,
+        reader_kwargs: dict = {},
+    ):
         """
         Retrieve data for the specified variable using the parent Diagnostic class.
 
@@ -82,22 +104,22 @@ class Histogram(Diagnostic):
             standard_name (str): Standard name of variable.
             reader_kwargs (dict): Additional Reader kwargs.
         """
-        self.logger.info('Retrieving data for variable %s', var)
+        self.logger.info("Retrieving data for variable %s", var)
 
         if formula:
             # Call parent retrieve without var to get all variables needed for formula
-            super().retrieve(reader_kwargs=reader_kwargs, months_required=12)
+            super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             self.logger.debug("Evaluating formula %s", var)
-            self.data = EvaluateFormula(data=self.data, formula=var, long_name=long_name,
-                                       short_name=standard_name, units=units,
-                                       loglevel=self.loglevel).evaluate()
+            self.data = EvaluateFormula(
+                data=self.data, formula=var, long_name=long_name, short_name=standard_name, units=units, loglevel=self.loglevel
+            ).evaluate()
             if self.data is None:
-                raise ValueError(f'Error evaluating formula {var}')
+                raise ValueError(f"Error evaluating formula {var}")
         else:
             # Call parent retrieve with the specific variable
-            super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=12)
+            super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             if self.data is None:
-                raise ValueError(f'Variable {var} not found')
+                raise ValueError(f"Variable {var} not found")
             self.data = self.data[var]
 
         # Set dates if not specified
@@ -113,12 +135,12 @@ class Histogram(Diagnostic):
             else:
                 self.data = self._check_data(data=self.data, var=var, units=units)
         if long_name is not None:
-            self.data.attrs['long_name'] = long_name
+            self.data.attrs["long_name"] = long_name
         if standard_name is not None:
-            self.data.attrs['standard_name'] = standard_name
+            self.data.attrs["standard_name"] = standard_name
             self.data.name = standard_name
         else:
-            self.data.attrs['standard_name'] = var
+            self.data.attrs["standard_name"] = var
 
     def compute_histogram(self, box_brd: bool = True, density: bool = True):
         """
@@ -128,61 +150,55 @@ class Histogram(Diagnostic):
             box_brd (bool): Include box boundaries in area selection.
             density (bool): If True, returns PDF normalized to integrate to 1.
         """
-        self.logger.info('Computing histogram')
+        self.logger.info("Computing histogram")
 
         # Select data for specified period
         data = self.data.sel(time=slice(self.startdate, self.enddate))
 
         # Select region if specified
         if self.lon_limits is not None or self.lat_limits is not None:
-            data = self.reader.select_area(data, lon=self.lon_limits,
-                                           lat=self.lat_limits, box_brd=box_brd)
+            data = self.reader.select_area(data, lon=self.lon_limits, lat=self.lat_limits, box_brd=box_brd)
 
         # If range is not specified, compute it from the data
         hist_range = self.range
         if hist_range is None:
-            self.logger.debug('Computing range from data')
+            self.logger.debug("Computing range from data")
             # Compute min and max from data (this will trigger computation if using dask)
             data_min = float(data.min().values)
             data_max = float(data.max().values)
             # Add small buffer to avoid edge effects
             buffer = (data_max - data_min) * 0.01
             hist_range = (data_min - buffer, data_max + buffer)
-            self.logger.debug(f'Computed range: {hist_range}')
+            self.logger.debug(f"Computed range: {hist_range}")
 
         hist_data = histogram(
-            data,
-            bins=self.bins,
-            range=hist_range,
-            weighted=self.weighted,
-            density=density,
-            loglevel=self.loglevel
+            data, bins=self.bins, range=hist_range, weighted=self.weighted, density=density, loglevel=self.loglevel
         )
 
         # Add region metadata
         if self.region is not None:
-            hist_data.attrs['AQUA_region'] = self.region
+            hist_data.attrs["AQUA_region"] = self.region
 
         # Add date metadata
-        hist_data.attrs['AQUA_startdate'] = pd.Timestamp(str(self.startdate)).strftime("%Y-%m-%d")
-        hist_data.attrs['AQUA_enddate'] = pd.Timestamp(str(self.enddate)).strftime("%Y-%m-%d")
+        hist_data.attrs["AQUA_startdate"] = pd.Timestamp(str(self.startdate)).strftime("%Y-%m-%d")
+        hist_data.attrs["AQUA_enddate"] = pd.Timestamp(str(self.enddate)).strftime("%Y-%m-%d")
 
         # Add others metadata for description
-        hist_data.attrs['AQUA_catalog'] = self.catalog
-        hist_data.attrs['AQUA_model'] = self.model
-        hist_data.attrs['AQUA_exp'] = self.exp
+        hist_data.attrs["AQUA_catalog"] = self.catalog
+        hist_data.attrs["AQUA_model"] = self.model
+        hist_data.attrs["AQUA_exp"] = self.exp
 
         # Copy original variable metadata to center_of_bin for xlabel
-        if hasattr(data, 'standard_name'):
-            hist_data.center_of_bin.attrs['standard_name'] = data.standard_name
-        if hasattr(data, 'long_name'):
-            hist_data.center_of_bin.attrs['long_name'] = data.long_name
-        if hasattr(data, 'units'):
-            hist_data.center_of_bin.attrs['units'] = data.units
+        if hasattr(data, "standard_name"):
+            hist_data.center_of_bin.attrs["standard_name"] = data.standard_name
+        if hasattr(data, "long_name"):
+            hist_data.center_of_bin.attrs["long_name"] = data.long_name
+        if hasattr(data, "units"):
+            hist_data.center_of_bin.attrs["units"] = data.units
 
         self.histogram_data = hist_data
 
-    def save_netcdf(self, outputdir: str = './', rebuild: bool = True):
+    def save_netcdf(self, outputdir: str = "./", rebuild: bool = True):
         """
         Save histogram data to netcdf file.
 
@@ -191,26 +207,38 @@ class Histogram(Diagnostic):
             rebuild (bool): Rebuild if file exists.
         """
         if self.histogram_data is None:
-            self.logger.error('No histogram data available')
+            self.logger.error("No histogram data available")
             return
 
-        var = getattr(self.histogram_data, 'standard_name', 'unknown')
-        extra_keys = {'var': var}
+        var = getattr(self.histogram_data, "standard_name", "unknown")
+        extra_keys = {"var": var}
         if self.region is not None:
-            region = self.region.replace(' ', '').lower()
-            extra_keys['AQUA_region'] = region
+            region = self.region.replace(" ", "").lower()
+            extra_keys["AQUA_region"] = region
 
-        self.logger.info('Saving histogram for variable %s', var)
-        super().save_netcdf(data=self.histogram_data, diagnostic=self.diagnostic_name,
-                           diagnostic_product='histogram',
-                           outputdir=outputdir, rebuild=rebuild,
-                           extra_keys=extra_keys)
+        self.logger.info("Saving histogram for variable %s", var)
+        super().save_netcdf(
+            data=self.histogram_data,
+            diagnostic=self.diagnostic_name,
+            diagnostic_product="histogram",
+            outputdir=outputdir,
+            rebuild=rebuild,
+            extra_keys=extra_keys,
+        )
 
-    def run(self, var: str, formula: bool = False, long_name: str = None,
-            units: str = None, standard_name: str = None,
-            box_brd: bool = True, density: bool = True,
-            outputdir: str = './', rebuild: bool = True,
-            reader_kwargs: dict = {}):
+    def run(
+        self,
+        var: str,
+        formula: bool = False,
+        long_name: str = None,
+        units: str = None,
+        standard_name: str = None,
+        box_brd: bool = True,
+        density: bool = True,
+        outputdir: str = "./",
+        rebuild: bool = True,
+        reader_kwargs: dict = {},
+    ):
         """
         Run all steps for histogram computation.
 
@@ -226,19 +254,24 @@ class Histogram(Diagnostic):
             rebuild (bool): Rebuild existing files.
             reader_kwargs (dict): Additional Reader kwargs.
         """
-        self.logger.info('Running Histogram diagnostic for %s', var)
+        self.logger.info("Running Histogram diagnostic for %s", var)
 
         # Retrieve data
-        self.retrieve(var=var, formula=formula, long_name=long_name,
-                     units=units, standard_name=standard_name,
-                     reader_kwargs=reader_kwargs)
+        self.retrieve(
+            var=var,
+            formula=formula,
+            long_name=long_name,
+            units=units,
+            standard_name=standard_name,
+            reader_kwargs=reader_kwargs,
+        )
 
         # Compute histogram
-        self.logger.info('Computing histogram')
+        self.logger.info("Computing histogram")
         self.compute_histogram(box_brd=box_brd, density=density)
 
         # Save to netcdf
-        self.logger.info('Saving histogram to netcdf')
+        self.logger.info("Saving histogram to netcdf")
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
 
-        self.logger.info('Histogram diagnostic computation completed')
+        self.logger.info("Histogram diagnostic computation completed")

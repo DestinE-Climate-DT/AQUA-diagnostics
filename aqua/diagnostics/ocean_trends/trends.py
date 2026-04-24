@@ -13,6 +13,9 @@ xr.set_options(keep_attrs=True)
 
 class Trends(Diagnostic):
     """Class to compute trends over time."""
+
+    MINIMUM_MONTHS_REQUIRED = 12
+
     def __init__(
         self,
         model: str,
@@ -63,7 +66,7 @@ class Trends(Diagnostic):
         region: str = None,
         var: list = ["thetao", "so"],
         dim_mean: type = None,
-        reader_kwargs: dict = {}
+        reader_kwargs: dict = {},
     ):
         """Run the trend analysis workflow.
 
@@ -76,7 +79,7 @@ class Trends(Diagnostic):
             reader_kwargs (dict, optional): Additional keyword arguments for the data reader. Default is {}.
         """
         self.logger.info("Starting trend analysis workflow")
-        super().retrieve(var=var, reader_kwargs=reader_kwargs)
+        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         # self.data = self.data.chunk(chunks={"time": 12, "level": 1})  # this is needed to avoid a too large graph
 
         self.data, self.region = self.select_region(data=self.data, region=region, dim_mean=dim_mean)
@@ -87,20 +90,29 @@ class Trends(Diagnostic):
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
         self.logger.info("Trend analysis workflow completed")
 
-    def select_region(self, data, region=None,  drop=True, dim_mean=None):
+    def select_region(self, data, region=None, drop=True, dim_mean=None):
+        """Select a region and optionally compute mean over specified dimensions.
+
+        Args:
+            data (xr.Dataset): Input dataset.
+            region (str, optional): Geographical region to select.
+            drop (bool, optional): Whether to drop coordinates outside the region. Default is True.
+            dim_mean (str or list, optional): Dimension(s) over which to compute the mean.
+
+        Returns:
+            tuple: (data, region) - Processed data and region name.
+        """
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region}.")
-            res_dict = super().select_region(
-                data=data, region=region, diagnostic="ocean3d", drop=True
-            )
+            res_dict = super().select_region(data=data, region=region, diagnostic="ocean3d", drop=True)
             lat_limits = res_dict["lat_limits"]
             lon_limits = res_dict["lon_limits"]
             data = res_dict["data"]
             region = res_dict["region"]
         else:
             self.logger.debug("No region specified, using global data")
-            region = 'global'
+            region = "global"
             lat_limits = None
             lon_limits = None
 
@@ -108,8 +120,7 @@ class Trends(Diagnostic):
         # otherwise use the data as is, with a region selection if applied
         if dim_mean:
             self.logger.debug("Averaging data over dimension: %s", dim_mean)
-            data = self.reader.fldmean(data, dim=dim_mean,
-                                        lat=lat_limits, lon=lon_limits)
+            data = self.reader.fldmean(data, dim=dim_mean, lat=lat_limits, lon=lon_limits)
         return data, region
 
     def adjust_trend_for_time_frequency(self, trend, y_array):
@@ -135,9 +146,7 @@ class Trends(Diagnostic):
                 self.logger.debug("Data inferred as monthly")
             else:
                 self.logger.error("Unable to determine time frequency")
-                raise ValueError(
-                    "The frequency of the data must be in Daily/Monthly/Yearly"
-                )
+                raise ValueError("The frequency of the data must be in Daily/Monthly/Yearly")
 
         if time_frequency == "MS":
             self.logger.debug("Monthly data detected, scaling trend by 12")
@@ -150,9 +159,7 @@ class Trends(Diagnostic):
             trend = trend
         else:
             self.logger.error("Unsupported time frequency: %s", time_frequency)
-            raise ValueError(
-                f"The frequency: {time_frequency} of the data must be in Daily/Monthly/Yearly"
-            )
+            raise ValueError(f"The frequency: {time_frequency} of the data must be in Daily/Monthly/Yearly")
 
         units = trend.attrs.get("units", "")
         trend.attrs["units"] = f"{units}/year" if units else "per year"
@@ -177,9 +184,7 @@ class Trends(Diagnostic):
         for var in data.data_vars:
             self.logger.debug("Adjusting trend for variable: %s", var)
             trend_data[var].attrs = data[var].attrs
-            trend_dict[var] = self.adjust_trend_for_time_frequency(
-                trend_data[var], data
-            )
+            trend_dict[var] = self.adjust_trend_for_time_frequency(trend_data[var], data)
         trend_data = xr.Dataset(trend_dict)
         trend_data.attrs["AQUA_region"] = self.region
         self.logger.info("Trend value calculated")

@@ -2,32 +2,30 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-import os
-import sys
 
-from aqua.diagnostics import __version__ as project_version
+from aqua.diagnostics.version import __version__ as project_version
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "AQUA-diagnostics"
-copyright = "2025, Climate DT Team"
+copyright = "2026, Climate DT Team"
 author = "Climate DT Team"
 version = str(project_version)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', "sphinx.ext.todo"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.todo"]
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 
 templates_path = ["_templates"]
-autoclass_content = 'both'
+autoclass_content = "both"
 exclude_patterns = []
 
 # Mock imports for modules that are not available during docs build, can be expanded
-autodoc_mock_imports = ["dummy"]
+autodoc_mock_imports = ["dummy", "tropical_cyclones"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -40,8 +38,3 @@ html_theme_options = {
     "sticky_navigation": True,
     "navigation_depth": 4,
 }
-
-# Add the path to the package root (where 'aqua' folder is located)
-# From: docs/sphinx/source/conf.py
-# To:   root of the project (3 levels up)
-sys.path.insert(0, os.path.abspath('../../..'))

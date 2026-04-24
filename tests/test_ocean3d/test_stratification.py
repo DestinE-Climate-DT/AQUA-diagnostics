@@ -1,31 +1,27 @@
 import pytest
-from conftest import APPROX_REL, LOGLEVEL
 
 from aqua.diagnostics.ocean_stratification.stratification import Stratification
+from tests.shared_constants import APPROX_REL, LOGLEVEL
 
 loglevel = LOGLEVEL
-approx_rel = APPROX_REL*10
+approx_rel = APPROX_REL * 10
 
 # pytestmark groups tests that run sequentially on the same worker to avoid conflicts
-pytestmark = [
-    pytest.mark.diagnostics,
-    pytest.mark.xdist_group(name="dask_operations")
-]
+pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="dask_operations")]
+
 
 def test_stratification():
     """Test the stratification class."""
     # Create an instance of the stratification class
-    strat = Stratification(catalog='ci', model='FESOM',
-                          exp='hpz3', source='monthly-3d',
-                          regrid='r100', loglevel=loglevel)
+    strat = Stratification(catalog="ci", model="FESOM", exp="hpz3", source="monthly-3d", regrid="r100", loglevel=loglevel)
 
     strat.run(
-        dim_mean=["lat","lon"],
-        var=['thetao', 'so'],
-        climatology='January',
-        region='ls',
+        dim_mean=["lat", "lon"],
+        var=["thetao", "so"],
+        climatology="January",
+        region="ls",
         mld=True,
-        )
+    )
     assert strat is not None, "strat instance should not be None"
     # These are the correct expected values, to be uncommented once a new version of AQUA-core with correct fixer is released
     assert strat.data["mld"].values == pytest.approx(25.49270658, rel=approx_rel)

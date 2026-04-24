@@ -7,16 +7,33 @@ from aqua import Reader
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml, pandas_freq_to_string, xarray_to_pandas_freq
+from aqua.core.util import (
+    DEFAULT_REALIZATION,
+    convert_units,
+    load_yaml,
+    pandas_freq_to_string,
+    time_to_string,
+    xarray_to_pandas_freq,
+)
 
 from .output_saver import OutputSaver
+from .time_util import round_enddate, round_startdate, start_end_dates
 
 
-class Diagnostic():
-
-    def __init__(self, model: str, exp: str, source: str,
-                 catalog: str | None = None, regrid: str | None = None,
-                 startdate: str | None = None, enddate: str | None = None, loglevel: str = 'WARNING'):
+class Diagnostic:
+    def __init__(
+        self,
+        model: str,
+        exp: str,
+        source: str,
+        catalog: str | None = None,
+        regrid: str | None = None,
+        startdate: str | None = None,
+        enddate: str | None = None,
+        std_startdate: str | None = None,
+        std_enddate: str | None = None,
+        loglevel: str = "WARNING",
+    ):
         """
         Initialize the diagnostic class. This is a general purpose class that can be used
         by the diagnostic classes to retrieve data from a single model and to save the data
@@ -28,14 +45,16 @@ class Diagnostic():
             source (str): The source to be used.
             catalog (str): The catalog to be used. If None, the catalog will be determined by the Reader.
             regrid (str | None): The target grid to be used for regridding. If None, no regridding will be done.
-            startdate (str | None): The start date of the data to be retrieved.
-                        If None, all available data will be retrieved.
-            enddate (str | None): The end date of the data to be retrieved.
-                           If None, all available data will be retrieved.
+            startdate (str | None): The start date of the plot/analysis period. If None, all available data will be used.
+            enddate (str | None): The end date of the plot/analysis period. If None, all available data will be used.
+            std_startdate (str | None): The start date of the standard deviation period.
+                If None, no std period is tracked at the Diagnostic level.
+            std_enddate (str | None): The end date of the standard deviation period.
+                If None, no std period is tracked at the Diagnostic level.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
 
-        self.logger = log_configure(log_name='Diagnostic', log_level=loglevel)
+        self.logger = log_configure(log_name="Diagnostic", log_level=loglevel)
         self.loglevel = loglevel
         self.catalog = catalog
         self.model = model
@@ -46,12 +65,14 @@ class Diagnostic():
         self.regrid = regrid
         self.startdate = startdate
         self.enddate = enddate
+        self.std_startdate = std_startdate
+        self.std_enddate = std_enddate
 
         # Data to be retrieved
         self.data = None
+        self.std_data = None
 
-    def retrieve(self, var: str | None = None, reader_kwargs: dict = {},
-                 months_required: int | None = None):
+    def retrieve(self, var: str | None = None, reader_kwargs: dict = {}, months_required: int | None = None):
         """
         Retrieve the data from the model.
 
@@ -61,29 +82,109 @@ class Diagnostic():
             months_required (int | None): The number of months of data required. If None, no check will be performed.
 
         Attributes:
-            self.data: The data retrieved from the model. If return_data is True, the data will be returned.
+            self.data: The data retrieved from the model.
+            self.std_data: The data retrieved for the standard deviation period.
             self.catalog: The catalog used to retrieve the data if no catalog was provided.
         """
-        self.data, self.reader, self.catalog = self._retrieve(model=self.model, exp=self.exp, source=self.source,
-                                                              var=var, catalog=self.catalog, startdate=self.startdate,
-                                                              enddate=self.enddate, regrid=self.regrid,
-                                                              reader_kwargs=reader_kwargs, months_required=months_required,
-                                                              loglevel=self.logger.level)
+        # Widest window covering both plot/analysis and std periods
+        start_retrieve, end_retrieve = start_end_dates(
+            startdate=self.startdate,
+            enddate=self.enddate,
+            start_std=self.std_startdate,
+            end_std=self.std_enddate,
+        )
 
-        self.realization = reader_kwargs['realization'] if 'realization' in reader_kwargs else DEFAULT_REALIZATION
+        data, self.reader, self.catalog = self._retrieve(
+            model=self.model,
+            exp=self.exp,
+            source=self.source,
+            var=var,
+            catalog=self.catalog,
+            startdate=start_retrieve,
+            enddate=end_retrieve,
+            regrid=self.regrid,
+            reader_kwargs=reader_kwargs,
+            months_required=months_required,
+            loglevel=self.logger.level,
+        )
+
+        self.realization = reader_kwargs["realization"] if "realization" in reader_kwargs else DEFAULT_REALIZATION
 
         if self.regrid is not None:
-            self.logger.info(f'Regridded data to {self.regrid} grid')
-        if self.startdate is None:
-            self.startdate = self.data.time.values[0]
-            self.logger.debug(f'Start date: {self.startdate}')
-        if self.enddate is None:
-            self.enddate = self.data.time.values[-1]
-            self.logger.debug(f'End date: {self.enddate}')
+            self.logger.info(f"Regridded data to {self.regrid} grid")
 
-    def save_netcdf(self, data, diagnostic: str, diagnostic_product: str = None,
-                    outputdir: str = '.', rebuild: bool = True,
-                    create_catalog_entry: bool = False, dict_catalog_entry: dict = None, **kwargs):
+        # Effective data bounds (what the catalog actually delivered)
+        eff_start = data.time.values[0]
+        eff_end = data.time.values[-1]
+
+        # Avoid clipping when the user specifies e.g. an end-of-month date.
+        freq = pandas_freq_to_string(xarray_to_pandas_freq(data))
+        if freq in ("monthly", "annual"):
+            start_bound = round_startdate(pd.Timestamp(eff_start), freq=freq)
+            end_bound = round_enddate(pd.Timestamp(eff_end), freq=freq)
+        else:
+            start_bound = pd.Timestamp(eff_start)
+            end_bound = pd.Timestamp(eff_end)
+
+        # Resolve user-requested dates against effective bounds
+        if self.startdate is None:
+            self.startdate = eff_start
+        elif pd.Timestamp(self.startdate) < start_bound:
+            self.logger.warning(
+                "Requested startdate %s not available; using %s instead.",
+                time_to_string(self.startdate),
+                time_to_string(eff_start),
+            )
+            self.startdate = eff_start
+        self.logger.info(("Start date: %s "), time_to_string(self.startdate))
+
+        if self.enddate is None:
+            self.enddate = eff_end
+        elif pd.Timestamp(self.enddate) > end_bound:
+            self.logger.warning(
+                "Requested enddate %s not available; using %s instead.",
+                time_to_string(self.enddate),
+                time_to_string(eff_end),
+            )
+            self.enddate = eff_end
+        self.logger.info(("End date: %s "), time_to_string(self.enddate))
+
+        if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < start_bound:
+            self.logger.warning(
+                "Requested std_startdate %s not available; using %s instead.",
+                time_to_string(self.std_startdate),
+                time_to_string(eff_start),
+            )
+            self.std_startdate = eff_start
+            self.logger.info(("Std start date: %s "), time_to_string(self.std_startdate))
+
+        if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > end_bound:
+            self.logger.warning(
+                "Requested std_enddate %s not available; using %s instead.",
+                time_to_string(self.std_enddate),
+                time_to_string(eff_end),
+            )
+            self.std_enddate = eff_end
+            self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
+
+        self.data = data.sel(time=slice(self.startdate, self.enddate))
+        if self.std_startdate is not None and self.std_enddate is not None:
+            self.std_data = data.sel(time=slice(self.std_startdate, self.std_enddate))
+
+        # Attach date attributes to the retrieved dataset
+        self._set_date_attrs()
+
+    def save_netcdf(
+        self,
+        data,
+        diagnostic: str,
+        diagnostic_product: str = None,
+        outputdir: str = ".",
+        rebuild: bool = True,
+        create_catalog_entry: bool = False,
+        dict_catalog_entry: dict = None,
+        **kwargs,
+    ):
         """
         Save the data to a netcdf file.
 
@@ -101,22 +202,41 @@ class Diagnostic():
             **kwargs: Additional keyword arguments to be passed to the OutputSaver.save_netcdf method.
         """
         if isinstance(data, xr.Dataset) is False and isinstance(data, xr.DataArray) is False:
-            self.logger.error('Data to save as netcdf must be an xarray Dataset or DataArray')
+            self.logger.error("Data to save as netcdf must be an xarray Dataset or DataArray")
 
-        outputsaver = OutputSaver(diagnostic=diagnostic,
-                                  catalog=self.catalog, model=self.model, exp=self.exp,
-                                  realization=self.realization,
-                                  outputdir=outputdir, loglevel=self.loglevel)
+        outputsaver = OutputSaver(
+            diagnostic=diagnostic,
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp,
+            realization=self.realization,
+            outputdir=outputdir,
+            loglevel=self.loglevel,
+        )
 
+        outputsaver.save_netcdf(
+            dataset=data,
+            diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
+            create_catalog_entry=create_catalog_entry,
+            dict_catalog_entry=dict_catalog_entry,
+            **kwargs,
+        )
 
-        outputsaver.save_netcdf(dataset=data, diagnostic_product=diagnostic_product, rebuild=rebuild,
-                                create_catalog_entry=create_catalog_entry, dict_catalog_entry=dict_catalog_entry,
-                                **kwargs)
-
-    def _retrieve(self, model: str, exp: str, source: str, var: str = None, catalog: str = None,
-                  startdate: str = None, enddate: str = None, regrid: str = None,
-                  months_required: int | None = None,
-                  reader_kwargs: dict = {}, loglevel: str = 'WARNING'):
+    def _retrieve(
+        self,
+        model: str,
+        exp: str,
+        source: str,
+        var: str = None,
+        catalog: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        regrid: str = None,
+        months_required: int | None = None,
+        reader_kwargs: dict = {},
+        loglevel: str = "WARNING",
+    ):
         """
         Static method to retrieve data and return everything instead of updating class
         attributes. Used internally by the retrieve method
@@ -142,9 +262,9 @@ class Diagnostic():
             reader (aqua.Reader): The reader object used to retrieve the data.
             catalog (str): The catalog used to retrieve the data.
         """
-        reader = Reader(catalog=catalog, model=model, exp=exp, source=source,
-                        regrid=regrid,
-                        loglevel=loglevel, **reader_kwargs)
+        reader = Reader(
+            catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel, **reader_kwargs
+        )
 
         data = reader.retrieve(var=var)
 
@@ -167,19 +287,15 @@ class Diagnostic():
         if months_required is not None:
             timedelta = xarray_to_pandas_freq(data)
             freq = pandas_freq_to_string(timedelta)
-            factor = {
-                'hourly': 1/(24*30),
-                'daily': 1/30,
-                'weekly': 1/4,
-                'monthly': 1,
-                'seasonal': 3,
-                'annual': 12
-            }
+            factor = {"hourly": 1 / (24 * 30), "daily": 1 / 30, "weekly": 1 / 4, "monthly": 1, "seasonal": 3, "annual": 12}
             # We automatically raise an error if the frequency is not pandas compliant
-            months = len(data['time']) * factor.get(freq, 0)
+            months = len(data["time"]) * factor.get(freq, 0)
 
             if months < months_required:
-                raise NotEnoughDataError(f"Not enough months of data found for {model} {exp} {source}, at least {months_required} months required, only {months} found.")
+                raise NotEnoughDataError(
+                    f"Not enough months of data found for {model} {exp} {source}, "
+                    f"at least {months_required} months required, only {months} found."
+                )
 
         if catalog is None:
             catalog = reader.catalog
@@ -188,6 +304,20 @@ class Diagnostic():
             data = reader.regrid(data)
 
         return data, reader, catalog
+
+    def _set_date_attrs(self):
+        """
+        Set AQUA_* date attributes on a DataArray or Dataset using the resolved
+        self.startdate/self.enddate (and self.std_startdate/self.std_enddate
+        when set by the user).
+        Can be called by subclasses after converting self.data from Dataset to DataArray.
+        """
+        self.data.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        self.data.attrs["AQUA_enddate"] = time_to_string(self.enddate)
+        if self.std_startdate is not None:
+            self.std_data.attrs["AQUA_std_startdate"] = time_to_string(self.std_startdate)
+        if self.std_enddate is not None:
+            self.std_data.attrs["AQUA_std_enddate"] = time_to_string(self.std_enddate)
 
     def _check_data(self, data: xr.DataArray, var: str, units: str):
         """
@@ -203,14 +333,13 @@ class Diagnostic():
 
         conversion = convert_units(initial_units, final_units)
 
-        factor = conversion.get('factor', 1)
-        offset = conversion.get('offset', 0)
+        factor = conversion.get("factor", 1)
+        offset = conversion.get("offset", 0)
 
         if factor != 1 or offset != 0:
-            self.logger.debug('Converting %s from %s to %s',
-                              var, initial_units, final_units)
+            self.logger.debug("Converting %s from %s to %s", var, initial_units, final_units)
             data = data * factor + offset
-            data.attrs['units'] = final_units
+            data.attrs["units"] = final_units
 
         return data
 
@@ -225,10 +354,10 @@ class Diagnostic():
             str: The path to the regions file.
         """
         regions_file = ConfigPath().get_config_dir()
-        regions_file = os.path.join(regions_file, 'tools', diagnostic, 'definitions', 'regions.yaml')
+        regions_file = os.path.join(regions_file, "tools", diagnostic, "definitions", "regions.yaml")
         if os.path.exists(regions_file):
             return regions_file
-        raise FileNotFoundError(f'Region file path not found at: {regions_file}')
+        raise FileNotFoundError(f"Region file path not found at: {regions_file}")
 
     def _read_regions_file(self, regions_file: str):
         """
@@ -259,8 +388,14 @@ class Diagnostic():
 
         return self._read_regions_file(regions_file_path)
 
-    def _set_region(self, diagnostic: str, region: str = None, regions_file_path: str = None,
-                    lon_limits: list = None, lat_limits: list = None):
+    def _set_region(
+        self,
+        diagnostic: str,
+        region: str = None,
+        regions_file_path: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+    ):
         """
         Set the region to be used.
 
@@ -279,17 +414,17 @@ class Diagnostic():
         if region is not None:
             regions_file = self._load_regions_from_file(diagnostic, regions_file_path)
 
-            if region in regions_file['regions']:
-                lon_limits = regions_file['regions'][region].get('lon_limits', None)
-                lat_limits = regions_file['regions'][region].get('lat_limits', None)
-                region = regions_file['regions'][region].get('longname', region)
-                self.logger.info(f'Region {region} found, using lon: {lon_limits}, lat: {lat_limits}')
+            if region in regions_file["regions"]:
+                lon_limits = regions_file["regions"][region].get("lon_limits", None)
+                lat_limits = regions_file["regions"][region].get("lat_limits", None)
+                region = regions_file["regions"][region].get("longname", region)
+                self.logger.info(f"Region {region} found, using lon: {lon_limits}, lat: {lat_limits}")
             else:
-                self.logger.error(f'Region {region} not found')
-                raise ValueError(f'Region {region} not found')
+                self.logger.error(f"Region {region} not found")
+                raise ValueError(f"Region {region} not found")
         else:
             region = None
-            self.logger.info(f'No region provided, using lon_limits: {lon_limits}, lat_limits: {lat_limits}')
+            self.logger.info(f"No region provided, using lon_limits: {lon_limits}, lat_limits: {lat_limits}")
 
         return region, lon_limits, lat_limits
 
@@ -318,23 +453,14 @@ class Diagnostic():
         if region is not None and diagnostic is not None:
             region, lon_limits, lat_limits = self._set_region(region=region, diagnostic=diagnostic)
             self.logger.info(f"Applying area selection for region: {region}")
-            data = self.reader.select_area(
-                data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs
-            )
-            data.attrs['AQUA_region'] = region
+            data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
+            data.attrs["AQUA_region"] = region
 
             if original_name is not None:
                 data.name = original_name
         else:
             region, lon_limits, lat_limits = None, None, None
-            self.logger.warning(
-                "Since region name is not specified, processing whole region in the dataset"
-            )
+            self.logger.warning("Since region name is not specified, processing whole region in the dataset")
 
-        res_dict = {
-            'data': data,
-            'region': region,
-            'lon_limits': lon_limits,
-            'lat_limits': lat_limits
-        }
+        res_dict = {"data": data, "region": region, "lon_limits": lon_limits, "lat_limits": lat_limits}
         return res_dict

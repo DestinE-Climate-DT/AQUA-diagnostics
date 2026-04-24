@@ -2,6 +2,7 @@
 Module to plot multiple Hovmoller data.
 This function is custom for the Ocean Drift diagnostics in AQUA.
 """
+
 import matplotlib.pyplot as plt
 import xarray as xr
 
@@ -77,14 +78,14 @@ def plot_multi_timeseries(
                 ax=ax,
                 fig=fig,
                 loglevel=loglevel,
-                colors=line_plot_colours
+                colors=line_plot_colours,
             )
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
 
             if text:
                 logger.debug("Adding text in the plot: %s", text)
-                ax.text(-0.3, 0.33, text[k], fontsize=15, color='dimgray', rotation=90, transform=ax.transAxes, ha='center')
+                ax.text(-0.3, 0.33, text[k], fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
 
     # Adjust overall layout
     fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)
@@ -92,7 +93,7 @@ def plot_multi_timeseries(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10, fontweight='bold')
+        fig.suptitle(title, fontsize=ncols * 10, fontweight="bold")
 
     if return_fig:
         return fig
