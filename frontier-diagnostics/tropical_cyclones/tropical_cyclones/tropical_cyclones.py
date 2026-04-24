@@ -7,6 +7,7 @@ import xarray as xr
 
 from aqua import Reader
 from aqua.core.logger import log_configure
+
 from .detect_nodes import DetectNodes
 from .stitch_nodes import StitchNodes
 from .tools.tcs_utils import lonlatbox
@@ -50,7 +51,9 @@ class TCs(DetectNodes, StitchNodes):
         input arguments or tdict dictionary.
 
         Args:
-            tdict (dict): A dictionary containing various configurations for the TCs diagnostic. If tdict is provided, the configurations will be loaded from it, otherwise the configurations will be set based on the input arguments.
+            tdict (dict): A dictionary containing various configurations for the TCs diagnostic.
+                          If tdict is provided, the configurations will be loaded from it,
+                          otherwise the configurations will be set based on the input arguments.
             paths (dict): A dictionary containing file paths for input and output files.
             model (str): The name of the weather model to be used for the TCs diagnostic. Default is "IFS".
             exp (str): The name of the weather model experiment to be used for the TCs diagnostic. Default is "tco2559-ng5".
@@ -79,7 +82,7 @@ class TCs(DetectNodes, StitchNodes):
         self.nproc = nproc
 
         if tdict is not None:
-            tcdict = copy.deepcopy(tdict)
+            tdict = copy.deepcopy(tdict)
             self.paths = tdict["paths"]
             self.dataset = tdict.get("datasets", [{}])[0]
             self.catalog = self.dataset.get("catalog", None)
@@ -158,7 +161,8 @@ class TCs(DetectNodes, StitchNodes):
             None
         """
 
-        # do this to remove the last letter from streamstep! e.g. tdict['stream']['streamstep'] is defined as "10D" but we want only the value 10!
+        # do this to remove the last letter from streamstep! e.g. tdict['stream']['streamstep']
+        # is defined as "10D" but we want only the value 10!
         numbers = [int(i) for i in tdict["stream"]["streamstep"] if i.isdigit()]
         streamstep_n = int("".join(map(str, numbers)))  # noqa: F841
 

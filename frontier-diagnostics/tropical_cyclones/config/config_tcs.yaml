@@ -13,7 +13,7 @@ datasets:
 # folders for regridded data, temprorary and stored high res data
 output:
   outputdir: "/users/silvcapr/tc_analysis/"
-paths: 
+paths:
   tmpdir: "/users/silvcapr/tc_analysis/tmpdir"
   fulldir: "/users/silvcapr/tc_analysis/fulldir"
   plotdir: "/users/silvcapr/tc_analysis/figures"
@@ -28,11 +28,11 @@ grids:
   lowgrid: 'r100'
   highgrid: 'r025'
 
-# variables to stored 
+# variables to stored
 varlist: ['msl', '10u', '10v', 'tprate']
 
 # temporal definition (date format: YYYYMMDD)
-time: 
+time:
   startdate: '19900101'
   enddate: '20141231'
   frequency: '6h'

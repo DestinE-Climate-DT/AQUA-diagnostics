@@ -142,7 +142,8 @@ class DetectNodes:
     def run_detect_nodes(self, timestep):
         """ "
         Basic function to call from command line tempest extremes DetectNodes.
-        Runs the tempest extremes DetectNodes command on the regridded atmospheric data specified by the tempest_dictionary and tempest_filein attributes,
+        Runs the tempest extremes DetectNodes command on the regridded atmospheric data
+        specified by the tempest_dictionary and tempest_filein attributes,
         saves the output to disk, and updates the tempest_fileout attribute of the Detector object.
 
         Args:
@@ -165,17 +166,28 @@ class DetectNodes:
         if self.orography:
             self.logger.debug("Running DetectNodes with orography")
             detect_string = (
-                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr --out {tempest_fileout} --searchbymin {tempest_dictionary['psl']} "
-                f"--closedcontourcmd {tempest_dictionary['psl']},200.0,5.5,0;_DIFF({tempest_dictionary['zg']}(30000Pa),{tempest_dictionary['zg']}(50000Pa)),-58.8,6.5,1.0 --mergedist 6.0 "
-                f"--outputcmd {tempest_dictionary['psl']},min,0;_VECMAG({tempest_dictionary['uas']},{tempest_dictionary['vas']}),max,2;{tempest_dictionary['orog']},min,0 --latname {tempest_dictionary['lat']} --lonname {tempest_dictionary['lon']}"
+                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr "
+                f"--out {tempest_fileout} --searchbymin {tempest_dictionary['psl']} "
+                f"--closedcontourcmd {tempest_dictionary['psl']},200.0,5.5,0;"
+                f"_DIFF({tempest_dictionary['zg']}(30000Pa),{tempest_dictionary['zg']}(50000Pa)),"
+                "-58.8,6.5,1.0 --mergedist 6.0 "
+                f"--outputcmd {tempest_dictionary['psl']},min,0;"
+                f"_VECMAG({tempest_dictionary['uas']},{tempest_dictionary['vas']}),"
+                f"max,2;{tempest_dictionary['orog']},min,0 --latname {tempest_dictionary['lat']} "
+                f"--lonname {tempest_dictionary['lon']}"
             )
 
         else:
             self.logger.debug("Running DetectNodes without orography")
             detect_string = (
-                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr --out {tempest_fileout} --searchbymin {tempest_dictionary['psl']} "
-                f"--closedcontourcmd {tempest_dictionary['psl']},200.0,5.5,0;_DIFF({tempest_dictionary['zg']}(30000Pa),{tempest_dictionary['zg']}(50000Pa)),-58.8,6.5,1.0 --mergedist 6.0 "
-                f"--outputcmd {tempest_dictionary['psl']},min,0;_VECMAG({tempest_dictionary['uas']},{tempest_dictionary['vas']}),max,2 --latname {tempest_dictionary['lat']} --lonname {tempest_dictionary['lon']}"
+                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr --out {tempest_fileout} "
+                f"--searchbymin {tempest_dictionary['psl']} "
+                f"--closedcontourcmd {tempest_dictionary['psl']},200.0,5.5,0;"
+                f"_DIFF({tempest_dictionary['zg']}(30000Pa),"
+                f"{tempest_dictionary['zg']}(50000Pa)),-58.8,6.5,1.0 --mergedist 6.0 "
+                f"--outputcmd {tempest_dictionary['psl']},min,0;"
+                f"_VECMAG({tempest_dictionary['uas']},{tempest_dictionary['vas']}),max,2 "
+                f"--latname {tempest_dictionary['lat']} --lonname {tempest_dictionary['lon']}"
             )
 
         self.logger.debug(f"Running DetectNodes command: {detect_string}")

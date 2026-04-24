@@ -10,7 +10,7 @@ import pandas as pd
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import template_parse_arguments, DiagnosticCLI
+from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from tropical_cyclones import TCs
 
 TOOLNAME = "TropicalCyclones"
@@ -32,8 +32,7 @@ def parse_arguments(args):
         "--stitch-only",
         action="store_true",
         default=False,
-        help="Run only the StitchNodes step (skip DetectNodes). "
-             "Assumes DetectNodes output files are already present on disk.",
+        help="Run only the StitchNodes step (skip DetectNodes). Assumes DetectNodes output files are already present on disk.",
     )
     parser.add_argument(
         "--override-tmpdir",
@@ -46,7 +45,6 @@ def parse_arguments(args):
 
 
 if __name__ == "__main__":
-
     args = parse_arguments(sys.argv[1:])
 
     run_detect = not args.stitch_only
@@ -121,13 +119,11 @@ if __name__ == "__main__":
     elif run_stitch:
         tropical.lowres2d = xr.Dataset()
         startdate_stitch = pd.to_datetime(config.get("time", {}).get("startdate"))
-        enddate_stitch   = pd.to_datetime(config.get("time", {}).get("enddate"))
-        n_days_freq      = config.get("stitch", {}).get("n_days_freq", 30)
-        n_days_ext       = config.get("stitch", {}).get("n_days_ext", 10)
+        enddate_stitch = pd.to_datetime(config.get("time", {}).get("enddate"))
+        n_days_freq = config.get("stitch", {}).get("n_days_freq", 30)
+        n_days_ext = config.get("stitch", {}).get("n_days_ext", 10)
 
-        cli.logger.info(
-            "Running StitchNodes from %s to %s", startdate_stitch, enddate_stitch
-        )
+        cli.logger.info("Running StitchNodes from %s to %s", startdate_stitch, enddate_stitch)
         tropical.stitch_nodes_zoomin(
             startdate=startdate_stitch,
             enddate=enddate_stitch,
