@@ -365,13 +365,16 @@ class PlotLatLonProfiles:
         if self.region is not None and self.region.lower() != "global":
             description += f"over {self.region} "
 
-        # Get first items to extract dates for comparison
-        if self.data_type == "longterm" and self.data:
-            data_item = self.data[0]
-        elif self.data_type == "seasonal" and self.data:
-            data_item = self.data[0][0] if isinstance(self.data[0], list) and self.data[0] else None
-        else:
-            data_item = None
+        # Get first items to extract dates for comparison.
+        # Seasonal data may come flat [DJF_da, MAM_da, ...]
+        # or nested [[DJF_m1, DJF_m2, ...], ...]
+        data_item = None
+        if self.data:
+            first = self.data[0]
+            if isinstance(first, list):
+                data_item = first[0] if first else None
+            else:
+                data_item = first
 
         if self.data_type == "longterm":
             ref_item = self.ref_data
@@ -412,7 +415,7 @@ class PlotLatLonProfiles:
 
         description += "."
 
-        self.logger.debug("Description: %s", description)
+        self.logger.info("Description: %s", description)
         return description
 
     def run(self, outputdir="./", rebuild=True, dpi=300, style=None, format=SAVE_FORMAT, show=False):
