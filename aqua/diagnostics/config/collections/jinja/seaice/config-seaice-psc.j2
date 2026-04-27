@@ -26,9 +26,8 @@ references:
     source: 'monthly'
     regrid: 'r100'
     domain: "nh"
-    startdate: '1990-01-01'
-    enddate: '2020-12-31'
-
+    startdate: '{{ default.startdate }}
+    enddate: '{{ default.enddate }}'
   # ---- Volume in SH ----
   - &ref_psc_sh
     catalog: 'obs'
