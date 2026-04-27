@@ -3,26 +3,20 @@ datasets:
   - catalog: null
     model: null
     exp: null
-    source: 'lra-r100-monthly'
+    source: null
     regrid: null
     reader_kwargs: null # it can be a dictionary with reader kwargs
     startdate: null
     enddate: null
-  # Possible second/third/fourth datasets here, no present by default
-  # - catalog: 'obs'
-  #   model: 'ERA5'
-  #   exp: 'era5'
-  #   source: 'monthly'
-  #   regrid: r100
 
 references:
   - catalog: 'obs'
-    model: 'BERKELEY-EARTH'
-    exp: 'aqua-filled'
-    source: 'r100-monthly'
+    model: 'ERA5'
+    exp: 'era5'
+    source: 'monthly'
     regrid: 'r100'
-    startdate: {{ ref_startdate }}
-    enddate: {{ ref_enddate }}
+    startdate: '{{ ref_startdate }}'
+    enddate: '{{ ref_enddate }}'
 
 setup:
   loglevel: 'WARNING'
@@ -39,12 +33,16 @@ diagnostics:
   globalbiases:
     run: true
     diagnostic_name: 'atmosphere2d'
-    variables: ['2t']
+    variables: ['msl']
+    formulae: ['(10u^2+10v^2)^0.5']
     params:
       default:
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: false     # Vertical profile if variable 3d
+      (10u^2+10v^2)^0.5:
+        short_name: "10si"
+        long_name: "Wind speed at 10m"
     plot_params:
       default:
         projection: 'robinson'
@@ -52,55 +50,35 @@ diagnostics:
         show_stats: true
         show_significance: true    # Enable significance stippling
         significance_alpha: 0.05  # 95% confidence level
-      2t:
-        vmin: -7
-        vmax: 7
+      msl:
+        vmin: -1000
+        vmax: 1000
         cmap: 'RdBu_r'
+      (10u^2+10v^2)^0.5:
+        vmin: -2.5
+        vmax: 2.5
+        cmap: 'RdBu_r'
+
+  seasonalcycles:
+    run: true
+    diagnostic_name: 'atmosphere2d'
+    variables: ['ie', 'msl', 'tcc']
+    center_time: true
+    params:
+      default:
+        std_startdate: {{ default.std_startdate }}
+        std_enddate: {{ default.std_enddate }}
 
   timeseries:
     run: true
     diagnostic_name: 'atmosphere2d'
-    variables: ['2t']
+    variables: ['ie', 'msl', 'tcc']
     center_time: true
-    extend: false
     params:
       default:
         hourly: False
         daily: False
         monthly: True
         annual: True
-        std_startdate: {{ std_startdate_ts }}
-        std_enddate: {{ std_enddate_ts }}
-      2t:
-        regions: ['nh', 'sh', 'europe']
-
-  seasonalcycles:
-    run: true
-    diagnostic_name: 'atmosphere2d'
-    variables: ['2t']
-    center_time: true
-    params:
-      default:
-        std_startdate: {{ default.std_startdate }}
-        std_enddate: {{ default.std_enddate }}
-      2t:
-        regions: ['nh', 'sh', 'europe']
-
-  lat_lon_profiles:
-    run: true
-    diagnostic_name: 'atmosphere2d'
-    mean_type: 'zonal'
-    center_time: true
-    exclude_incomplete: true
-    box_brd: true
-    seasonal: true
-    longterm: true
-    params:
-      default:
-        startdate: {{ default.startdate }}
-        enddate: {{ default.enddate }}
-        std_startdate: {{ default.std_startdate }}
-        std_enddate: {{ default.std_enddate }}
-    variables:
-      - name: '2t'
-        regions: [null, 'tropics']  # global and tropics
+        std_startdate: {{ timeseries.std_startdate }}
+        std_enddate: {{ timeseries.std_enddate }}

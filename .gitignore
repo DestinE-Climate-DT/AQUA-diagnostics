@@ -26,6 +26,7 @@ dist/
 *.nc
 *.png
 *.pdf
+*.svg
 
 # tests
 AQUA_tests/
