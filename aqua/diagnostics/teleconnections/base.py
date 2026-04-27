@@ -5,7 +5,7 @@ import xarray as xr
 
 from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
-from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, to_list
+from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
@@ -302,10 +302,20 @@ class PlotBaseMixin:
         Returns:
             str: The caption of the figure.
         """
-        description = f"{index_name} index for"
+        description = f"{index_name} index time series for"
 
-        dataset = [f"{self.models[i]} {self.exps[i]}" for i in range(self.len_data)]
-        refs = [f"{self.ref_models[i]} {self.ref_exps[i]}" for i in range(self.len_ref)]
+        dataset = [
+            f"{self.models[i]} {self.exps[i]} "
+            f"(from {time_to_string(self.startdate[i], format='%Y-%m')} "
+            f"to {time_to_string(self.enddate[i], format='%Y-%m')})"
+            for i in range(self.len_data)
+        ]
+        refs = [
+            f"{self.ref_models[i]} {self.ref_exps[i]} "
+            f"(from {time_to_string(self.ref_startdate[i], format='%Y-%m')} "
+            f"to {time_to_string(self.ref_enddate[i], format='%Y-%m')})"
+            for i in range(self.len_ref)
+        ]
 
         if self.len_data > 0:
             description += f" {', '.join(dataset)}"
