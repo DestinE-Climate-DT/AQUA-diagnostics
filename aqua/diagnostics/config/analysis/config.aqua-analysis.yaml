@@ -38,6 +38,8 @@ job:
 
     script_path_base: "${AQUA_DIAGNOSTICS}"  # Base directory for the diagnostic scripts
 
+    experiment_kind: "${AQUA_CONFIG}/analysis/experiment_kind.yaml"  # experiment kind file configuraton
+
 cluster:  # options for dask cluster (this works well on lumi)
     workers: 32
     threads: 1  # per worker
@@ -81,8 +83,8 @@ run:
 diagnostics:
   atmosphere2d:
     biases:
-      config: ["${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-berkeley.yaml",
-               "${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-era5.yaml"]
+      config: ["${AQUA_CONFIG}/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
+               "${AQUA_CONFIG}/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
     timeseries:
       config: ["${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-berkeley.yaml",
                "${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-era5.yaml"]
