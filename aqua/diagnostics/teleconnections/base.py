@@ -223,13 +223,16 @@ class PlotBaseMixin:
         We extract the data needed for labels, description etc
         from the data arrays attributes.
 
-        The AQUA attributes are: AQUA_catalog, AQUA_model, AQUA_exp
+        The AQUA attributes are: AQUA_catalog, AQUA_model, AQUA_exp,
+        AQUA_startdate and AQUA_enddate
         """
         if self.indexes is not None:
             self.catalogs = [d.AQUA_catalog for d in self.indexes]
             self.models = [d.AQUA_model for d in self.indexes]
             self.exps = [d.AQUA_exp for d in self.indexes]
             self.realizations = get_realizations(self.indexes)
+            self.startdate = [d.AQUA_startdate for d in self.indexes]
+            self.enddate = [d.AQUA_enddate for d in self.indexes]
         self.logger.debug(f"Catalogs: {self.catalogs}")
         self.logger.debug(f"Models: {self.models}")
         self.logger.debug(f"Exps: {self.exps}")
@@ -238,6 +241,8 @@ class PlotBaseMixin:
             self.ref_catalogs = [d.AQUA_catalog for d in self.ref_indexes]
             self.ref_models = [d.AQUA_model for d in self.ref_indexes]
             self.ref_exps = [d.AQUA_exp for d in self.ref_indexes]
+            self.ref_startdate = [d.AQUA_startdate for d in self.ref_indexes]
+            self.ref_enddate = [d.AQUA_enddate for d in self.ref_indexes]
             self.logger.debug(f"Ref Catalogs: {self.ref_catalogs}")
             self.logger.debug(f"Ref Models: {self.ref_models}")
             self.logger.debug(f"Ref Exps: {self.ref_exps}")
