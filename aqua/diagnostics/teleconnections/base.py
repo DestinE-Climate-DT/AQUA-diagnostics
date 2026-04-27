@@ -324,6 +324,9 @@ class PlotBaseMixin:
             description += f" {', '.join(refs)}"
         description += "."
 
+        if index_name in ["ENSO", "Niño 3.4 index"]:
+            description += " El Niño and La Niña events are defined when exceeding a 0.5 °C threshold."
+
         self.logger.debug(f"Index description: {description}")
         return description
 
