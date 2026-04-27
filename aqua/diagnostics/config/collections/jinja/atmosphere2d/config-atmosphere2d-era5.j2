@@ -15,8 +15,8 @@ references:
     exp: 'era5'
     source: 'monthly'
     regrid: 'r100'
-    startdate: {{ ref_startdate }}
-    enddate: {{ ref_enddate }}
+    startdate: '{{ ref_startdate }}'
+    enddate: '{{ ref_enddate }}'
 
 setup:
   loglevel: 'WARNING'
@@ -66,8 +66,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: {{ std_startdate }}
-        std_enddate: {{ std_enddate }}
+        std_startdate: '{{ std_startdate }}'
+        std_enddate: '{{ std_enddate }}'
 
   timeseries:
     run: true
@@ -80,5 +80,5 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: {{ std_startdate }}
-        std_enddate: {{ std_enddate }}
+        std_startdate: '{{ std_startdate }}'
+        std_enddate: '{{ std_enddate }}'

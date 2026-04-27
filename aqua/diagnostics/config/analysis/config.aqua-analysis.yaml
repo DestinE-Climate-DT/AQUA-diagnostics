@@ -22,15 +22,15 @@ job:
 
     # Run a check analysis to test the configuration and the presence of needed data
     # This also rebuild the area files, to avoid error with corrupted files
-    run_checker: true
+    run_checker: false
 
     # Default output directory for the analysis. Can be overridden by the command line arguments
     outputdir: "./output"
 
     # Default values, overriden from command line arguments
-    catalog: null  # The catalog to use for the analysis
-    model: "IFS-NEMO"
-    exp: "historical-1990"
+    catalog: "climatedt-gen2"  # The catalog to use for the analysis
+    model: "IFS-NEMO-5km"
+    exp: "baseline-hist"
     source: "lra-r100-monthly"
     regrid: null
     startdate: null
@@ -41,7 +41,7 @@ job:
     experiment_kind: "${AQUA_CONFIG}/analysis/experiment_kind.yaml"  # experiment kind file configuraton
 
 cluster:  # options for dask cluster (this works well on lumi)
-    workers: 32
+    workers: 2
     threads: 1  # per worker
     memory_limit: 7GiB  # per worker
     connect_timeout: 120  # seconds to wait for client to connect to the cluster
@@ -65,9 +65,10 @@ cli:
   trends: "ocean_trends/cli_ocean_trends.py"
 
 run:
-    - ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
-    - ["atmosphere2d", "atmosphere3d", "ocean3d-part1", "ocean3d-part2", "water_cycle"]
-    - ["seaice", "radiation-toa",  "radiation-surface"]
+    - ["atmosphere2d"]  # these are the fastest ones, a few min
+    #- ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
+    #- ["atmosphere2d", "atmosphere3d", "ocean3d-part1", "ocean3d-part2", "water_cycle"]
+    #- ["seaice", "radiation-toa",  "radiation-surface"]
 
   # List of diagnostics
 
@@ -83,13 +84,13 @@ run:
 diagnostics:
   atmosphere2d:
     biases:
-      config: ["${AQUA_CONFIG}/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
-               "${AQUA_CONFIG}/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
     timeseries:
-      config: ["${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-berkeley.yaml",
-               "${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-era5.yaml"]
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
     lat_lon_profiles:
-      config: "${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-berkeley.yaml"
+      config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"
 
   atmosphere3d:
     biases:
