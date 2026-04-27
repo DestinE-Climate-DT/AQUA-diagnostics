@@ -57,6 +57,8 @@ class BaseMixin(Diagnostic):
         )
 
         self.definition = self.load_definition(configdir=configdir, definition=definition, telecname=telecname)
+        self.telecname = telecname
+
         # Initialize the possible results
         self.index = None
 
@@ -74,6 +76,11 @@ class BaseMixin(Diagnostic):
         """
         data, index = self._prepare_statistic(var=var, season=season)
         reg = xr.cov(index, data, dim=dim) / index.var(dim=dim, skipna=True).values
+
+        # Populate the attributes of the regression for backend functionalities
+        reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} with {index.long_name}"
+        reg.attrs["shortName"] = "linear_regression"
+
         return reg
 
     def compute_correlation(self, var: str = None, dim: str = "time", season: str = None):
@@ -92,7 +99,7 @@ class BaseMixin(Diagnostic):
         corr = xr.corr(index, data, dim=dim)
 
         # Modify the attributes to match the correlation
-        corr.attrs["long_name"] = f"Correlation of {data.long_name} with index evaluated with {index.long_name}"
+        corr.attrs["long_name"] = f"Correlation of {data.long_name.lower()} with {index.long_name}"
         corr.attrs["shortName"] = "Pearson_correlation"
         corr.attrs["units"] = "1"
 
