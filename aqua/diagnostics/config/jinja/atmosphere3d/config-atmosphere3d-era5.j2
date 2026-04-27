@@ -15,8 +15,8 @@ references:
     exp: 'era5'
     source: 'monthly'
     regrid: 'r100'
-    startdate: '{{ ref_startdate }}'
-    enddate: '{{ ref_enddate }}'
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
 setup:
   loglevel: 'WARNING'

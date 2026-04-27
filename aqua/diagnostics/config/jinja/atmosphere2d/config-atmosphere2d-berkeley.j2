@@ -81,8 +81,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: {{ std_startdate }}
-        std_enddate: {{ std_enddate }}
+        std_startdate: {{ default.std_startdate }}
+        std_enddate: {{ default.std_enddate }}
       2t:
         regions: ['nh', 'sh', 'europe']
 
@@ -97,10 +97,10 @@ diagnostics:
     longterm: true
     params:
       default:
-        startdate: {{ ref_startdate }}
-        enddate: {{ ref_enddate }}
-        std_startdate: {{ std_startdate }}
-        std_enddate: {{ std_enddate }}
+        startdate: {{ default.startdate }}
+        enddate: {{ default.enddate }}
+        std_startdate: {{ default.std_startdate }}
+        std_enddate: {{ default.std_enddate }}
     variables:
       - name: '2t'
         regions: [null, 'tropics']  # global and tropics

@@ -66,8 +66,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: {{ std_startdate }}
-        std_enddate: {{ std_enddate }}
+        std_startdate: {{ default.std_startdate }}
+        std_enddate: {{ default.std_enddate }}
 
   timeseries:
     run: true
@@ -80,5 +80,5 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: {{ std_startdate_ts }}
-        std_enddate: {{ std_enddate_ts }}
+        std_startdate: {{ timeseries.std_startdate }}
+        std_enddate: {{ timeseries.std_enddate }}

@@ -68,8 +68,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ std_startdate_ts }}'
-        std_enddate: '{{ std_enddate_ts }}'
+        std_startdate: '{{ timeseries.std_startdate }}'
+        std_enddate: '{{ timeseries.std_enddate }}'
       tos:
         regions: ['nh', 'sh']
 
@@ -80,8 +80,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ std_startdate }}'
-        std_enddate: '{{ std_enddate }}'
+        std_startdate: '{{ default.std_startdate }}'
+        std_enddate: '{{ default.std_enddate }}'
       tos:
         regions: ['nh', 'sh']
 
@@ -96,10 +96,10 @@ diagnostics:
     longterm: true
     params:
       default:
-        startdate: '{{ ref_startdate }}'}
-        enddate: '{{ ref_enddate }}'
-        std_startdate: '{{ std_startdate }}'
-        std_enddate: '{{ std_enddate }}'
+        startdate: '{{ default.ref_startdate }}'}
+        enddate: '{{ default.ref_enddate }}'
+        std_startdate: '{{ default.std_startdate }}'
+        std_enddate: '{{ default.std_enddate }}'
     variables:
       - name: 'tos'
         regions: [null]  #
