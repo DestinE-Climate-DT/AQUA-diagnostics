@@ -385,7 +385,8 @@ class PlotBaseMixin:
             var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
             description += f"{var} "
             description += f"for {maps.AQUA_model} {maps.AQUA_exp}"
-            description += f" (from {self.startdate[0].strftime('%Y-%m')} to {self.enddate[0].strftime('%Y-%m')})"
+            description += f" (from {time_to_string(self.startdate[0], format='%Y-%m')} "
+            description += f"to {time_to_string(self.enddate[0], format='%Y-%m')})"
             if hasattr(maps, "AQUA_season"):
                 description += f" ({maps.AQUA_season})"
         elif isinstance(maps, list):
@@ -393,7 +394,8 @@ class PlotBaseMixin:
             description += f"({var}) "
             for i, map in enumerate(maps):
                 description += f"{map.AQUA_model} {map.AQUA_exp} "
-                description += f"(from {self.startdate[i].strftime('%Y-%m')} to {self.enddate[i].strftime('%Y-%m')}), "
+                description += f"(from {time_to_string(self.startdate[i], format='%Y-%m')} "
+                description += f"to {time_to_string(self.enddate[i], format='%Y-%m')}), "
             description = description[:-2]
             if hasattr(maps[0], "AQUA_season"):
                 description += f" ({maps[0].AQUA_season})"
