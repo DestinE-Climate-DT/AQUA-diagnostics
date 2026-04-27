@@ -1,5 +1,6 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
+from aqua.core.util import time_to_string
 from aqua.core.util.sci_util import lon_to_360
 
 from .base import BaseMixin
@@ -134,6 +135,9 @@ class NAO(BaseMixin):
 
         indx.attrs["long_name"] = f"{self.telecname} index"
         indx.attrs["months_window"] = months_window
+
+        indx.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        indx.attrs["AQUA_enddate"] = time_to_string(self.enddate)
 
         self.logger.debug("Index evaluated")
 
