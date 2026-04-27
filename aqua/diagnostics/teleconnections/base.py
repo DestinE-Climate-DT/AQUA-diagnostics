@@ -377,42 +377,40 @@ class PlotBaseMixin:
         Returns:
             str: Description of the maps.
         """
-        description = f"{telecname} {statistic} map "
+        description = ""
 
         maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps)
 
         if isinstance(maps, xr.DataArray):
-            if statistic == "correlation":
-                var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
-            else:
-                var = maps.shortName if hasattr(maps, "shortName") else maps.long_name
-            description += f"({var}) "
-            description += f"{maps.AQUA_model} {maps.AQUA_exp}"
+            var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
+            description += f"{var} "
+            description += f"for {maps.AQUA_model} {maps.AQUA_exp}"
+            description += f" (from {self.startdate[0].strftime('%Y-%m')} to {self.enddate[0].strftime('%Y-%m')})"
             if hasattr(maps, "AQUA_season"):
                 description += f" ({maps.AQUA_season})"
         elif isinstance(maps, list):
-            var = maps[0].shortName if hasattr(maps[0], "shortName") else maps[0].long_name
+            var = maps[0].long_name if hasattr(maps[0], "long_name") else maps[0].shortName
             description += f"({var}) "
-            for map in maps:
-                description += f"{map.AQUA_model} {map.AQUA_exp}, "
+            for i, map in enumerate(maps):
+                description += f"{map.AQUA_model} {map.AQUA_exp} "
+                description += f"(from {self.startdate[i].strftime('%Y-%m')} to {self.enddate[i].strftime('%Y-%m')}), "
             description = description[:-2]
             if hasattr(maps[0], "AQUA_season"):
                 description += f" ({maps[0].AQUA_season})"
         if isinstance(ref_maps, xr.DataArray):
-            var = ref_maps.shortName if hasattr(ref_maps, "shortName") else ref_maps.long_name
+            var = ref_maps.long_name if hasattr(ref_maps, "long_name") else ref_maps.shortName
             description += f" compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
         elif isinstance(ref_maps, list):
-            var = ref_maps[0].shortName if hasattr(ref_maps[0], "shortName") else ref_maps[0].long_name
+            var = ref_maps[0].long_name if hasattr(ref_maps[0], "long_name") else ref_maps[0].shortName
             description += f" compared to {ref_maps[0].AQUA_model} {ref_maps[0].AQUA_exp}"
             for map in ref_maps:
                 description += f"{map.AQUA_model} {map.AQUA_exp}, "
             description = description[:-2]
         description += "."
         if ref_maps is not None:
-            description += (
-                f" The contour lines are the model regression map and the filled contour map is the difference "
-                f"between the model and the reference {statistic} map."
-            )
+            description += f" Contours represent the model {statistic}, "
+            description += "while shading is the difference between the model and the reference."
+
         self.logger.debug(f"Map description: {description}")
 
         return description
