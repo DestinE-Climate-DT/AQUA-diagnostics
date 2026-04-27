@@ -15,8 +15,15 @@ repos:
     -   id: check-yaml
         name: Check YAML
         description: Checks that YAML files are valid
+    -   id: check-toml
+        name: Check TOML
+        description: Checks that TOML files are valid
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.10
     hooks:
     -   id: ruff-check
     -   id: ruff-format
+-   repo: https://github.com/djlint/djLint
+    rev: v1.36.4
+    hooks:
+      - id: djlint-jinja
