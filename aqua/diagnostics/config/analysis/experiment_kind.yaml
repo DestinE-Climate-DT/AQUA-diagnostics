@@ -1,15 +1,26 @@
+# Default date for jinja templates for reference datasets:
+# ref_startdate, ref_enddate: default reference
+# std_startdate, std_enddate: default standard deviation
+# std_startdate_ts, std_enddate_ts: default standard deviation for timeseries
+
 default:
   ref_startdate: "1990-01-01"
-  ref_enddate: "2020-12-31"
+  ref_enddate: "2014-12-31"
   std_startdate: "1990-01-01"
-  std_enddate: "2020-12-31"
+  std_enddate: "2014-12-31"
+  std_startdate_ts: "1990-01-01"
+  std_enddate_ts: "2014-12-31"
 scenario:
   ref_startdate: "1990-01-01"
-  ref_enddate: "2020-12-31"
+  ref_enddate: "2014-12-31"
   std_startdate: "1990-01-01"
-  std_enddate: "2020-12-31"
+  std_enddate: "2014-12-31"
+  std_startdate_ts: "2020-01-01"
+  std_enddate_ts: "2024-12-31"
 storyline:
   ref_startdate: "2017-01-01"
   ref_enddate: "2024-12-31"
-  std_startdate: "2001-01-01"
+  std_startdate: "2000-01-01"
   std_enddate: "2024-12-31"
+  std_startdate_ts: "2020-01-01"
+  std_enddate_ts: "2024-12-31"

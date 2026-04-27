@@ -17,12 +17,12 @@ datasets:
 
 references:
   - catalog: 'obs'
-    model: 'BERKELEY-EARTH'
-    exp: 'aqua-filled'
+    model: 'ESA-CCI-L4'
+    exp: 'v3.0.1'
     source: 'r100-monthly'
     regrid: 'r100'
-    startdate: {{ ref_startdate }}
-    enddate: {{ ref_enddate }}
+    startdate: '{{ ref_startdate }}'
+    enddate: '{{ ref_enddate }}'
 
 setup:
   loglevel: 'WARNING'
@@ -38,8 +38,8 @@ output:
 diagnostics:
   globalbiases:
     run: true
-    diagnostic_name: 'atmosphere2d'
-    variables: ['2t']
+    diagnostic_name: 'ocean2d'
+    variables: ['tos']
     params:
       default:
         seasons: true
@@ -51,44 +51,43 @@ diagnostics:
         projection_params: {}
         show_stats: true
         show_significance: true    # Enable significance stippling
-        significance_alpha: 0.05  # 95% confidence level
-      2t:
-        vmin: -7
-        vmax: 7
+        significance_alpha: 0.05
+      tos:
+        vmin: -5
+        vmax: 5
         cmap: 'RdBu_r'
 
   timeseries:
     run: true
-    diagnostic_name: 'atmosphere2d'
-    variables: ['2t']
+    diagnostic_name: 'ocean2d'
+    variables: ['tos']
     center_time: true
-    extend: false
     params:
       default:
         hourly: False
         daily: False
         monthly: True
         annual: True
-        std_startdate: {{ std_startdate_ts }}
-        std_enddate: {{ std_enddate_ts }}
-      2t:
-        regions: ['nh', 'sh', 'europe']
+        std_startdate: '{{ std_startdate_ts }}'
+        std_enddate: '{{ std_enddate_ts }}'
+      tos:
+        regions: ['nh', 'sh']
 
   seasonalcycles:
     run: true
-    diagnostic_name: 'atmosphere2d'
-    variables: ['2t']
+    diagnostic_name: 'ocean2d'
+    variables: ['tos']
     center_time: true
     params:
       default:
-        std_startdate: {{ std_startdate }}
-        std_enddate: {{ std_enddate }}
-      2t:
-        regions: ['nh', 'sh', 'europe']
+        std_startdate: '{{ std_startdate }}'
+        std_enddate: '{{ std_enddate }}'
+      tos:
+        regions: ['nh', 'sh']
 
-  lat_lon_profiles:
+ lat_lon_profiles:
     run: true
-    diagnostic_name: 'atmosphere2d'
+    diagnostic_name: 'ocean2d'
     mean_type: 'zonal'
     center_time: true
     exclude_incomplete: true
@@ -97,10 +96,10 @@ diagnostics:
     longterm: true
     params:
       default:
-        startdate: {{ ref_startdate }}
-        enddate: {{ ref_enddate }}
-        std_startdate: {{ std_startdate }}
-        std_enddate: {{ std_enddate }}
+        startdate: '{{ ref_startdate }}'}
+        enddate: '{{ ref_enddate }}'
+        std_startdate: '{{ std_startdate }}'
+        std_enddate: '{{ std_enddate }}'
     variables:
-      - name: '2t'
-        regions: [null, 'tropics']  # global and tropics
+      - name: 'tos'
+        regions: [null]  #
