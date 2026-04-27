@@ -48,8 +48,8 @@ diagnostics:
         #TODO: to remove
         startdate_data: null
         enddate_data: null
-        startdate_ref: "1990-01-01"
-        enddate_ref: "2020-12-31"
+        startdate_ref: '{{ default.startdate }}'
+        enddate_ref: '{{ default.enddate }}'
       tprate:
         units: 'mm/day'
     plot_params:
@@ -75,8 +75,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '19900101'
-        std_enddate: '20201231'
+        std_startdate: '{{ timeseries.std_startdate }}'
+        std_enddate: '{{ timeseries.std_enddate }}'
       tprate:
         regions: ['nh', 'sh', 'europe']
 
@@ -87,8 +87,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '19900101'
-        std_enddate: '20201231'
+        std_startdate: '{{ default.std_startdate }}'
+        std_enddate: '{{ default.std_enddate }}'
       tprate:
         regions: ['nh', 'sh', 'europe']
 
@@ -102,8 +102,8 @@ diagnostics:
     ylogscale: true       # already default
     params:
       default:
-        std_startdate: '19900101'
-        std_enddate: '20201231'
+        std_startdate: '{{ default.std_startdate }}'
+        std_enddate: '{{ default.std_enddate }}'
       tprate:
         units: 'mm/day'
         regions: [null, 'tropics']  # global and tropics; MUST be a list
@@ -119,8 +119,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '19900101'
-        std_enddate: '20201231'
+        std_startdate: '{{ default.std_startdate }}'
+        std_enddate: '{{ default.std_enddate }}'
     variables:
       - name: 'tprate'
         units: 'mm/day'
