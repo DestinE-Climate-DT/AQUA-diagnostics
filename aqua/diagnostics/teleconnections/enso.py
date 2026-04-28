@@ -1,5 +1,6 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
+from aqua.core.util import time_to_string
 from aqua.core.util.sci_util import lon_to_360
 
 from .base import BaseMixin
@@ -111,7 +112,11 @@ class ENSO(BaseMixin):
         data_an = data.groupby("time.month") - data.groupby("time.month").mean(dim="time")
         field_mean_an = data_an.rolling(time=months_window, center=True).mean(skipna=True)
         field_mean_an = field_mean_an.rename("index")
+        field_mean_an.attrs["long_name"] = "Niño 3.4 index"
 
         self.logger.debug("Index evaluated")
+
+        field_mean_an.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        field_mean_an.attrs["AQUA_enddate"] = time_to_string(self.enddate)
 
         self.index = field_mean_an

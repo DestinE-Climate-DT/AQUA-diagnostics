@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.24.0):
 
 Complete list:
 - Tropical cyclones: simplification, reader kwargs, orography from catalogue (#184)
+- Teleconnections: backporting of dashboard updates, including startdate and enddate cli features (#231)
 - CI/CD: add framework to test diagnostics CLI and utils (#219)
 - Handling startdate and enddate centralisation in Diagnostic (#225)
 - Expose `__version__` from `aqua.core.version` module (#216)
