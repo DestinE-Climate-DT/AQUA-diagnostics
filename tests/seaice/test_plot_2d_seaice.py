@@ -4,9 +4,9 @@ import os
 import numpy as np
 import pytest
 import xarray as xr
-from conftest import APPROX_REL, DPI, LOGLEVEL
 
 from aqua.diagnostics import Plot2DSeaIce, SeaIce
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL

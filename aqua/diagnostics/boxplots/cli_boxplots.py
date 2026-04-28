@@ -3,6 +3,7 @@
 import argparse
 import sys
 
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics import Boxplots, PlotBoxplots
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
@@ -22,10 +23,13 @@ def parse_arguments(arguments):
     return parser.parse_args(arguments)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the Boxplots diagnostic CLI.
 
-    # set tool name for config lookup
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize CLI handler
     cli = DiagnosticCLI(
@@ -69,7 +73,18 @@ if __name__ == "__main__":
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
-                boxplots.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                try:
+                    boxplots.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                except NotEnoughDataError:
+                    cli.logger.error(
+                        "Skipping %s (%s, %s): not enough data", dataset["model"], dataset["exp"], dataset["source"]
+                    )
+                    continue
+                except Exception as e:
+                    cli.logger.error(
+                        "Unexpected error for %s (%s, %s): %s", dataset["model"], dataset["exp"], dataset["source"], e
+                    )
+                    continue
                 fldmeans.append(boxplots.fldmeans)
 
             fldmeans_ref = []
@@ -83,17 +98,25 @@ if __name__ == "__main__":
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
-                boxplots_ref.run(var=variables, reader_kwargs=cli.reader_kwargs)
-
-                if getattr(boxplots_ref, "fldmeans", None) is None:
-                    cli.logger.warning(
-                        "No data retrieved for reference %s (%s, %s). Skipping.",
+                try:
+                    boxplots_ref.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                except NotEnoughDataError:
+                    cli.logger.error(
+                        "Skipping reference %s (%s, %s): not enough data",
                         reference["model"],
                         reference["exp"],
                         reference["source"],
                     )
                     continue
-
+                except Exception as e:
+                    cli.logger.error(
+                        "Unexpected error for reference %s (%s, %s): %s",
+                        reference["model"],
+                        reference["exp"],
+                        reference["source"],
+                        e,
+                    )
+                    continue
                 fldmeans_ref.append(boxplots_ref.fldmeans)
 
             model_exp_list = [f"{entry['model']} ({entry['exp']})" for entry in datasets]
@@ -102,21 +125,26 @@ if __name__ == "__main__":
             ref_exp_list_unique = list(dict.fromkeys(ref_exp_list))
 
             if variables == ["-snlwrf", "snswrf", "slhtf", "ishf"]:
-                TITLE = (
+                title = (
                     "Boxplot of Surface Radiation Fluxes for "
                     + ", ".join(model_exp_list_unique)
                     + "\nrelative to "
                     + ", ".join(ref_exp_list_unique)
                 )
             elif variables == ["-tnlwrf", "tnswrf"]:
-                TITLE = (
+                title = (
                     "Boxplot of TOA Radiation Fluxes for "
                     + ", ".join(model_exp_list_unique)
                     + "\nrelative to "
                     + ", ".join(ref_exp_list_unique)
                 )
             else:
-                TITLE = None
+                title = None
+
+            if not fldmeans:
+                cli.logger.warning("No datasets available for variables %s. Skipping plot.", variables)
+                continue
+
             plot = PlotBoxplots(
                 diagnostic=diagnostic_name,
                 save_format=cli.save_format,
@@ -124,8 +152,12 @@ if __name__ == "__main__":
                 outputdir=cli.outputdir,
                 loglevel=cli.loglevel,
             )
-            plot.plot_boxplots(data=fldmeans, data_ref=fldmeans_ref, var=variables, title=TITLE, **plot_kwargs)
+            plot.plot_boxplots(data=fldmeans, data_ref=fldmeans_ref, var=variables, title=title, **plot_kwargs)
 
     cli.close_dask_cluster()
 
     cli.logger.info("Boxplots diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

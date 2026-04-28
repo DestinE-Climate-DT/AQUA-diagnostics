@@ -45,7 +45,14 @@ class PlotNAO(PlotBaseMixin):
         return fig, axs
 
     def set_index_description(self):
-        return super().set_index_description(index_name="NAO")
+        """
+        Build the description for the NAO index plot.
+        Adds information about the months window used to compute the index.
+        """
+        description = super().set_index_description(index_name="NAO")
+        months_window = self.indexes[0].attrs["months_window"]
+        description += f" The index is computed as a {months_window}-month running mean."
+        return description
 
     def plot_maps(
         self,
