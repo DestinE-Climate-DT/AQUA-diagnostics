@@ -1,0 +1,54 @@
+name: Sync Environment Files
+
+on:
+  push:
+    paths:
+      - 'environment.yml'
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Sync changed dependencies
+        run: |
+          # Get changed lines from the last commit (from dependabot)
+          CHANGED=$(git diff HEAD~1 HEAD -- environment.yml | grep '^[+-]  -' | grep -v '^[+-][+-][+-]' || true)
+          
+          if [ -z "$CHANGED" ]; then
+            echo "No dependency changes detected"
+            exit 0
+          fi
+          
+          echo "$CHANGED" | while IFS= read -r line; do
+            if [[ $line =~ ^\+[[:space:]]*-[[:space:]]*(.+) ]]; then
+              NEW="${BASH_REMATCH[1]}"
+              PKG=$(echo "$NEW" | sed 's/[<>=].*//' | xargs)
+              
+              # Update in environment-dev.yml, preserving spaces and inline comments
+              sed -i.bak "s|^\\([[:space:]]*-[[:space:]]*\\)${PKG}[<>=][^[:space:]#]*\\([[:space:]].*\\)\$|\\1${NEW}\\2|" environment-dev.yml
+              # Handle case with no trailing comment/space
+              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*$|\1${NEW}|" environment-dev.yml
+              
+              # Update in environment_lumi.yml, preserving spaces and inline comments
+              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\([[:space:]].*\)$|\1${NEW}\2|" cli/lumi-install/environment_lumi.yml
+              # Handle case with no trailing comment/space
+              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*$|\1${NEW}|" cli/lumi-install/environment_lumi.yml
+              
+              rm -f environment-dev.yml.bak cli/lumi-install/environment_lumi.yml.bak
+              echo "Updated $PKG to: $NEW"
+            fi
+          done
+      
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add environment-dev.yml cli/lumi-install/environment_lumi.yml
+          git diff --staged --quiet || git commit -m "chore: sync environment files from environment.yml"
+          git push
