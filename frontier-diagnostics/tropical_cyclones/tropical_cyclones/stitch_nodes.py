@@ -33,7 +33,7 @@ class StitchNodes:
         self.set_time_window(n_days_freq=n_days_freq, n_days_ext=n_days_ext)
 
         # periods specifies you want 1 block from startdate to enddate
-        for block in pd.date_range(start=startdate, end=enddate, periods=1):
+        for block in pd.date_range(start=startdate, end=enddate, freq=f"{n_days_freq}D"):
             tic = time()
             dates_freq, dates_ext = self.time_window(block)
             self.logger.info(f"running stitch nodes from {block.strftime('%Y-%m-%d')}-{enddate.strftime('%Y-%m-%d')}")
@@ -139,18 +139,18 @@ class StitchNodes:
         # if the orography is found run stitch nodes accordingly
         if "z" in self.lowres2d.data_vars or self.orography:
             stitch_string = (
-                f"StitchNodes --in {full_nodes} --out {self.track_file} --in_fmt lon,lat,slp,wind,zs "
-                f"--range 8.0 --mintime {mintime} --maxgap {maxgap} "
-                f"--threshold wind,>=,10.0,10;lat,<=,50.0,10;lat,>=,-50.0,10;zs,<=,1500.0,10"
+                f"StitchNodes --in {full_nodes} --out {self.track_file} "
+                f"--in_fmt lon,lat,slp,wind,zs --range 8.0 --mintime {mintime} "
+                f"--maxgap {maxgap} --threshold wind,>=,10.0,10;lat,<=,50.0,10;lat,>=,-50.0,10;zs,<=,1500.0,10"
             )
             self.logger.info(stitch_string)
 
         # if the orography is found run stitch nodes accordingly
         else:
             stitch_string = (
-                f"StitchNodes --in {full_nodes} --out {self.track_file} --in_fmt lon,lat,slp,wind "
-                f"--range 8.0 --mintime {mintime} --maxgap {maxgap} "
-                f"--threshold wind,>=,10.0,10;lat,<=,50.0,10;lat,>=,-50.0,10"
+                f"StitchNodes --in {full_nodes} --out {self.track_file} "
+                f"--in_fmt lon,lat,slp,wind --range 8.0 --mintime {mintime} "
+                f"--maxgap {maxgap} --threshold wind,>=,10.0,10;lat,<=,50.0,10;lat,>=,-50.0,10"
             )
             self.logger.info(stitch_string)
 
@@ -237,7 +237,7 @@ class StitchNodes:
                 store_file = os.path.join(
                     self.paths["fulldir"], f"tempest_tracks_{block.strftime('%Y%m%d')}-{dates_freq[-1].strftime('%Y%m%d')}.nc"
                 )
-                write_fullres_field(xfield, store_file, self.aquadask.dask)
+                write_fullres_field(xfield, store_file)
                 fullres_field.close()
             # clean_files([fullres_file])
 
@@ -260,7 +260,6 @@ class StitchNodes:
             #     self.logger.info(f"writing netcdf file")
 
             #     # store the file
-            #     store_file = os.path.join(
-            #         self.paths['fulldir'], f'tempest_tracks_{var}_{block.strftime("%Y%m%d")}-'
-            #         f'{dates_freq[-1].strftime("%Y%m%d")}.nc')
+            #     store_file = os.path.join(self.paths['fulldir'],
+            #        f'tempest_tracks_{var}_{block.strftime("%Y%m%d")}-{dates_freq[-1].strftime("%Y%m%d")}.nc')
             #     write_fullres_field(xfield, store_file, self.nproc)
