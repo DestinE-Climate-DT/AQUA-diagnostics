@@ -254,6 +254,7 @@ class SeaIce(Diagnostic):
             **kwargs: Additional keyword arguments.
                 - stat (str): The statistic to compute ('mean' or 'std'). Default is 'mean'.
                 - freq (str): The frequency for grouping the data ('monthly' or 'annual'). Default is 'monthly'.
+
         Returns:
             xr.Dataset: A dataset containing the computed 2D sea ice climatologies for all requested regions.
         """
@@ -461,30 +462,27 @@ class SeaIce(Diagnostic):
         Returns:
             xarray.DataArray: A DataArray containing the computed time statistic.
         """
-        if freq not in ["monthly", "annual"]:
-            self.logger.warning(f"Frequency str: '{freq}' not recognized. Set to 'monthly' by default.")
-            freq = "monthly"
-
-        if stat not in ["std", "mean"]:
-            self.logger.warning(f"Statistic '{stat}' not recognized. Set to 'mean' by default.")
-            stat = "mean"
-
-        freq_dict = {"monthly": "time.month", "annual": "time.year"}
-
         ensure_istype(computed_data, xr.DataArray, logger=self.logger)
 
-        self.logger.debug(f"Computing '{stat}' for '{freq}' frequency")
-
         if "time" not in computed_data.dims:
-            raise ValueError(f"Cannot compute '{stat}' as 'time' dimension not present in data.")
+            raise ValueError(f"Cannot compute '{stat}' because 'time' dimension is missing.")
 
-        # select time, if None, the whole time will be taken in one or both boundaries
-        # computed_data = computed_data.sel(time=slice(self.startdate, self.enddate))
+        freq_map = {"monthly": "time.month", "annual": "time.year"}
 
-        if stat == "std":
-            return computed_data.groupby(freq_dict[freq]).std("time")
-        else:
-            return computed_data.groupby(freq_dict[freq]).mean("time")
+        stat_map = {"std", "mean"}
+
+        if freq not in freq_map:
+            self.logger.warning(f"Frequency '{freq}' not recognized. Using 'monthly'.")
+            freq = "monthly"
+
+        if stat not in stat_map:
+            self.logger.warning(f"Statistic '{stat}' not recognized. Using 'mean'.")
+            stat = "mean"
+
+        self.logger.debug(f"Computing '{stat}' grouped by '{freq}'")
+
+        grouped = computed_data.groupby(freq_map[freq])
+        return getattr(grouped, stat)("time")
 
     def _compute_seasonal_cycle(self, monthly_data):
         """
