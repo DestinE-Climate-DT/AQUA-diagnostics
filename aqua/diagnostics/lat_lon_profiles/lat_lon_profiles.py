@@ -349,12 +349,11 @@ class LatLonProfiles(Diagnostic):
             raise ValueError("Mean type %s not recognized", self.mean_type)
 
         self.logger.info("Computing %s mean", freq)
-        data = self.data
         data_freq = pandas_freq_to_string(xarray_to_pandas_freq(self.data))
 
         if freq == "seasonal":
             data = self.reader.fldmean(
-                data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
+                self.data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
             )
             seasonal_dataset = self.reader.timmean(
                 data, freq=freq, exclude_incomplete=exclude_incomplete, center_time=center_time
@@ -374,7 +373,7 @@ class LatLonProfiles(Diagnostic):
             self.seasonal = seasonal_data
 
         elif freq == "longterm":
-            data = self.reader.timmean(data, freq=None, exclude_incomplete=exclude_incomplete, center_time=center_time)
+            data = self.reader.timmean(self.data, freq=None, exclude_incomplete=exclude_incomplete, center_time=center_time)
             data = self.reader.fldmean(
                 data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
             )
