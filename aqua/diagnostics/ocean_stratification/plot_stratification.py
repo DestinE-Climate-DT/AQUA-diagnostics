@@ -4,7 +4,7 @@ from typing import Union
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label, get_realizations
+from aqua.core.util import cbar_get_label, get_realizations, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -162,7 +162,6 @@ class PlotStratification:
         self.suptitle = TitleBuilder(
             diagnostic="Stratification",
             regions=self.region,
-            catalog=self.catalog,
             model=self.model,
             exp=self.exp,
             timeseason=f"{self.clim_time} climatology",
@@ -189,14 +188,18 @@ class PlotStratification:
     def set_description(
         self,
     ):
-        self.description = (
-            f"Stratification plot of spatially averaged {self.region} region, {self.clim_time} climatology "
-            f"for the {self.catalog} {self.model} {self.exp} experiment"
-        )
+        model_startdate = self.data.attrs.get("startdate", None)
+        model_enddate = self.data.attrs.get("enddate", None)
+        self.description = f"Vertical profiles of temperature, salinity and density for the spatially averaged {self.region} region, {self.clim_time} climatology for {self.model} {self.exp} (solid)"
+        if model_startdate and model_enddate:
+            self.description += f" (from {time_to_string(model_startdate, format='%Y-%m')} to {time_to_string(model_enddate, format='%Y-%m')})"
         if self.obs:
-            self.description = self.description + (
-                f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}"
-            )
+            obs_startdate = self.obs.attrs.get("startdate", None)
+            obs_enddate = self.obs.attrs.get("enddate", None)
+            self.description = self.description + (f" with reference {self.obs.attrs['model']} {self.obs.attrs['exp']} (dashed)")
+            if obs_startdate and obs_enddate:
+                self.description += f" (from {time_to_string(obs_startdate, format='%Y-%m')} to {time_to_string(obs_enddate, format='%Y-%m')})"
+        self.description += "."
 
     def save_plot(
         self,

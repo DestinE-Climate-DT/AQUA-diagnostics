@@ -123,6 +123,11 @@ class Stratification(Diagnostic):
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         if "lev" in self.data.dims:
             self.data = self.data.rename({"lev": self.vert_coord})
+        if self.data['level'].attrs['units'] == 'NEMO model layers':
+            self.data['level'].attrs['units'] = 'm'
+            
+        self.data.attrs["startdate"] = f"{self.data.time[0].values.astype('datetime64[D]')}"
+        self.data.attrs["enddate"] = f"{self.data.time[-1].values.astype('datetime64[D]')}"
         self.logger.debug(f"Variables retrieved: {var}, region: {region}, dim_mean: {dim_mean}")
         self.logger.info("Computing stratification.")
         self.compute_stratification()
