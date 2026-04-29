@@ -113,6 +113,18 @@ def main(argv=None):
                     loglevel=cli.loglevel,
                 )
                 strat_plot.plot_stratification(save_format=cli.save_format, dpi=cli.dpi)
+                
+    if "mld" in config_dict["diagnostics"]["ocean_stratification"]:
+        mld_config = config_dict["diagnostics"]["ocean_stratification"]["mld"]
+        logger.info(f"Stratification diagnostic is set to {mld_config['run']}")
+        if mld_config["run"]:
+            regions = to_list(mld_config.get("regions", None))
+            diagnostic_name = mld_config.get("diagnostic_name", "ocean_stratification")
+            climatologies = mld_config.get("climatology", None)
+            vert_coord = mld_config.get("vert_coord", None)
+            for region, climatology in zip(regions, climatologies):
+                logger.info(f"Processing region: {region}, climatology: {climatology}")
+                var = mld_config.get("var", None)
                 # Mixed Layer Depth instance
                 # Model data
                 model_stratification = Stratification(
@@ -122,7 +134,7 @@ def main(argv=None):
                     loglevel=cli.loglevel,
                 )
                 model_stratification.run(
-                    region=region,
+                    region='go',
                     var=var,
                     # dim_mean=dim_mean,
                     mld=True,
@@ -141,7 +153,7 @@ def main(argv=None):
                         loglevel=cli.loglevel,
                     )
                     obs_stratification.run(
-                        region=region,
+                        region='go',
                         var=var,
                         # dim_mean=dim_mean,
                         mld=True,
@@ -159,7 +171,10 @@ def main(argv=None):
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
-                mld_plot.plot_mld(save_format=cli.save_format, dpi=cli.dpi)
+                mld_plot.plot_mld(
+                    region=region,
+                    proj_name="Orthographic",
+                    save_format=cli.save_format, dpi=cli.dpi)
 
     cli.close_dask_cluster()
 
