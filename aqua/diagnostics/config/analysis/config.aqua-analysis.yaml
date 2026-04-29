@@ -22,7 +22,7 @@ job:
 
     # Run a check analysis to test the configuration and the presence of needed data
     # This also rebuild the area files, to avoid error with corrupted files
-    run_checker: false
+    run_checker: true
 
     # Default output directory for the analysis. Can be overridden by the command line arguments
     outputdir: "./output"
@@ -38,7 +38,7 @@ job:
 
     script_path_base: "${AQUA_DIAGNOSTICS}"  # Base directory for the diagnostic scripts
 
-    experiment_kind: "${AQUA_CONFIG}/analysis/experiment_kind.yaml"  # experiment kind file configuraton
+    experiment_kind: "${AQUA_CONFIG}/analysis/climatedt-experiment-kind.yaml"  # experiment kind file configuraton
 
 cluster:  # options for dask cluster (this works well on lumi)
     workers: 2
@@ -65,10 +65,9 @@ cli:
   trends: "ocean_trends/cli_ocean_trends.py"
 
 run:
-    - ["atmosphere2d"]  # these are the fastest ones, a few min
-    #- ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
-    #- ["atmosphere2d", "atmosphere3d", "ocean3d-part1", "ocean3d-part2", "water_cycle"]
-    #- ["seaice", "radiation-toa",  "radiation-surface"]
+    - ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
+    - ["atmosphere2d", "atmosphere3d", "ocean3d-part1", "ocean3d-part2", "water_cycle"]
+    - ["seaice", "radiation-toa",  "radiation-surface"]
 
   # List of diagnostics
 
