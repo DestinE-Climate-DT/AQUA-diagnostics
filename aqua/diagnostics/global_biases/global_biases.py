@@ -302,8 +302,8 @@ class GlobalBiases(Diagnostic):
                     "AQUA_model": self.model,
                     "AQUA_exp": self.exp,
                     "AQUA_realization": self.realization,
-                    "startdate": str(self.startdate),
-                    "enddate": str(self.enddate),
+                    "AQUA_startdate": str(self.startdate),
+                    "AQUA_enddate": str(self.enddate),
                 }
             )
 
