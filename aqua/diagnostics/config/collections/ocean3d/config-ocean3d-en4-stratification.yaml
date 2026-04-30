@@ -40,3 +40,12 @@ diagnostics:
       regions: ['ls', 'is', 'ws', 'gs', 'ros']  # removed ros/DJF
       climatology: ['DJF', 'JJA', 'JJA', 'DJF', 'DJF']
       # dim_mean: ['lat', 'lon']
+    mld:
+      vert_coord: depth  # optional, default is 'level'
+      diagnostic_name: 'ocean3d'
+      run: true
+      var: ['thetao', 'so']
+      # Note: region and climatology are zipped together, so if you want the same region with different climatologies, you need to repeat it
+      regions: ['arctic', 'antarctic']
+      climatology: ['DJF', 'JJA']
+      # dim_mean: ['lat', 'lon']

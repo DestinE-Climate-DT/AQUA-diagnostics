@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, unit_to_latex
+from aqua.core.util import get_realizations, unit_to_latex, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -52,6 +52,8 @@ class PlotHovmoller:
         # Getting metadata from the first dataset
         self.catalog = self.data[0][self.vars[0]].AQUA_catalog
         self.model = self.data[0][self.vars[0]].AQUA_model
+        self.startdate = self.data[0].time[0].values
+        self.enddate = self.data[0].time[-1].values
         self.exp = self.data[0][self.vars[0]].AQUA_exp
         self.region = self.data[0].AQUA_region
         self.levels = None  # To be set when plotting timeseries
@@ -85,7 +87,7 @@ class PlotHovmoller:
         """
         self.set_suptitle(content="Hovmöller")
         self.set_title()
-        self.set_description(content="Hovmöller plot of spatially averaged")
+        self.set_description(content="Hovmöller plot of temperature (left column) and salinity (right column) of spatially averaged")
         self.set_data_type()
         self.set_texts()
         self.set_vmax_vmin()
@@ -132,9 +134,9 @@ class PlotHovmoller:
         self.levels = levels
         self.set_levels()
         self.set_data_for_levels()
-        self.set_suptitle(content="Timeseries")
+        self.set_suptitle(content="Time series")
         self.set_title()
-        self.set_description(content="Timeseries of spatially averaged")
+        self.set_description(content="Time series of temperature (left column) and salinity (right column) at multiple depths, spatially averaged")
         self.set_data_type()
         self.set_texts()
         self.set_vmax_vmin()
@@ -207,7 +209,7 @@ class PlotHovmoller:
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
         self.suptitle = TitleBuilder(
-            diagnostic=f"{content} plot", regions=self.region, catalog=self.catalog, model=self.model, exp=self.exp
+            diagnostic=f"{content} plot", regions=self.region, model=self.model, exp=self.exp
         ).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
@@ -231,8 +233,9 @@ class PlotHovmoller:
     def set_description(self, content: str = None):
         """Set the description for the Hovmoller plot."""
 
-        self.description = f"{content} {self.region} region for experiment {self.catalog} {self.model} {self.exp}"
-
+        self.description = f"{content} over {self.region} for experiment {self.model} {self.exp}"
+        self.description += f" (from {time_to_string(self.startdate, format='%Y-%m')} to {time_to_string(self.enddate, format='%Y-%m')})."
+        self.description += f" The first row of the plot shows the full values, the second row shows the anomalies from the initial time, the third row shows the standardized anomalies from the initial time."
     def set_vmax_vmin(self):
         """
         Set the vmax and vmin for the Hovmoller plot.

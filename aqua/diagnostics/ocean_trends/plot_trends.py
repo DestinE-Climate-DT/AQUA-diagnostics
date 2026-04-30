@@ -4,7 +4,7 @@ import cartopy.crs as ccrs
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, unit_to_latex
+from aqua.core.util import get_realizations, unit_to_latex, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -59,7 +59,13 @@ class PlotTrends:
             loglevel=self.loglevel,
         )
 
-    def plot_multilevel(self, levels=None, rebuild: bool = True, save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
+    def plot_multilevel(self, 
+                        levels: list = None, 
+                        rebuild: bool = True, 
+                        cbar_limits: dict = None,
+                        sym: bool = False,
+                        save_format: Union[str, list] = SAVE_FORMAT, 
+                        dpi: int = 300):
         """Plot multi-level maps of trends.
 
         Args:
@@ -67,9 +73,15 @@ class PlotTrends:
             save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
         """
         self.diagnostic_product = "multilevel_trend"
-        if levels is None:
+        if levels:
+            self.levels = levels
+        else:
             self.levels = [10, 100, 500, 1000, 3000, 5000]
         self.logger.debug(f"Levels set to: {self.levels}")
+        self.cbar_limits = cbar_limits
+        self.vmin = None
+        self.vmax = None
+        self.sym = sym
         self.set_central_longitude()
         self.set_data_list()
         self.set_suptitle(plot_type="Multi-level Trends")
@@ -78,13 +90,18 @@ class PlotTrends:
         self.set_ytext()
         self.set_cbar_labels()
         self.set_nrowcol()
+        self.set_extent()
         fig = plot_maps(
             maps=self.data_list,
             nrows=self.nrows,
             ncols=self.ncols,
             proj=ccrs.PlateCarree(central_longitude=self.central_longitude),
             title=self.suptitle,
+            col_vmin=self.vmin,
+            col_vmax=self.vmax,
+            sym=self.sym,
             titles=self.title_list,
+            extent=self.extent,
             cbar_labels=self.cbar_labels,
             ytext=self.ytext,
             return_fig=True,
@@ -111,9 +128,9 @@ class PlotTrends:
         """
         self.diagnostic_product = "zonal_mean"
         self.set_data_list()
-        self.set_suptitle(plot_type="Zonal mean Trends")
+        self.set_suptitle(plot_type='Trends of zonal mean')
         self.set_title()
-        self.set_description(content="Zonal mean Trends")
+        self.set_description(content="Trends of zonal mean of temperature (left) and salinity (right)")
         self.set_ytext()
         self.set_cbar_labels()
         self.set_nrowcol()
@@ -140,6 +157,12 @@ class PlotTrends:
             format=save_format,
             dpi=dpi,
         )
+    def set_vmin_vmax(self):
+        self.vmin = []
+        self.vmax = []
+        if self.cbar_limits:
+            self.vmin = [self.cbar_limits[var]['vmin'] for var in self.vars]
+            self.vmax = [self.cbar_limits[var]['vmax'] for var in self.vars]
 
     def set_nrowcol(self):
         if hasattr(self, "levels") and self.levels:
@@ -147,6 +170,12 @@ class PlotTrends:
         else:
             self.nrows = 1
         self.ncols = len(self.vars)
+
+    def set_extent(self):
+        """Set the extent for the plot."""
+        self.extent = [self.data_list[0].lon.min().values, self.data_list[0].lon.max().values,
+                       self.data_list[0].lat.min().values, self.data_list[0].lat.max().values]
+        self.logger.debug(f"Extent set to: {self.extent}")
 
     def set_ytext(self):
         """Set the y-axis text for the multi-level plots."""
@@ -190,7 +219,7 @@ class PlotTrends:
     def set_suptitle(self, plot_type=None):
         """Set the title for the plot."""
         self.suptitle = TitleBuilder(
-            diagnostic=plot_type, regions=self.region, catalog=self.catalog, model=self.model, exp=self.exp
+            diagnostic=plot_type, regions=self.region, model=self.model, exp=self.exp
         ).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
@@ -230,7 +259,7 @@ class PlotTrends:
         Set the description metadata for the plot.
         """
 
-        self.description = f"{content} in the {self.region} region of {self.catalog} {self.model} {self.exp}."
+        self.description = f"{content} in the {self.region} region of {self.model} {self.exp}."
 
     def save_plot(
         self,
