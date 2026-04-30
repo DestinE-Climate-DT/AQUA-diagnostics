@@ -117,28 +117,52 @@ class BaseMixin(Diagnostic):
             ).evaluate()
             if self.data is None:
                 raise ValueError(f"Error evaluating formula {var}. Check the variable names and the formula syntax.")
+            if self.std_data is not None:
+                self.std_data = EvaluateFormula(
+                    data=self.std_data,
+                    formula=var,
+                    long_name=long_name,
+                    short_name=short_name,
+                    units=units,
+                    loglevel=self.loglevel,
+                ).evaluate()
+                if self.std_data is None:
+                    raise ValueError(f"Error evaluating formula {var}. Check the variable names and the formula syntax.")
         else:
             super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             if self.data is None:
                 raise ValueError(f"Variable {var} not found in the data. Check the variable name and the data source.")
             # Get the xr.DataArray to be aligned with the formula code
             self.data = self.data[var]
+            if self.std_data is not None:
+                self.std_data = self.std_data[var]
 
         # Customization of the data, expecially needed for formula
         if units is not None:
-            self._check_data(var, units)
+            self.data = super()._check_data(data=self.data, var=var, units=units)
+            if self.std_data is not None:
+                self.std_data = super()._check_data(data=self.std_data, var=var, units=units)
         if long_name is not None:
             self.data.attrs["long_name"] = long_name
+            if self.std_data is not None:
+                self.std_data.attrs["long_name"] = long_name
         # We want to be sure that a long_name is always defined for description setup
         elif self.data.attrs.get("long_name") is None:
             self.data.attrs["long_name"] = var
+            if self.std_data is not None and self.std_data.attrs.get("long_name") is None:
+                self.std_data.attrs["long_name"] = var
         # We use the short_name as the name of the variable
         # to be always used in plots
         if short_name is not None:
             self.data.attrs["short_name"] = short_name
             self.data.name = short_name
+            if self.std_data is not None:
+                self.std_data.attrs["short_name"] = short_name
+                self.std_data.name = short_name
         else:
             self.data.attrs["short_name"] = var
+            if self.std_data is not None:
+                self.std_data.attrs["short_name"] = var
 
     def compute_std(self, freq: str, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):
         """
@@ -278,16 +302,6 @@ class BaseMixin(Diagnostic):
                 rebuild=rebuild,
                 extra_keys=extra_keys,
             )
-
-    def _check_data(self, var: str, units: str):
-        """
-        Make sure that the data is in the correct units.
-
-        Args:
-            var (str): The variable to be checked.
-            units (str): The units to be checked.
-        """
-        self.data = super()._check_data(data=self.data, var=var, units=units)
 
 
 class PlotBaseMixin:
