@@ -78,7 +78,6 @@ class Timeseries(BaseMixin):
         short_name: str = None,
         std: bool = False,
         freq: list = ["monthly", "annual"],
-        extend: bool = True,
         exclude_incomplete: bool = True,
         center_time: bool = True,
         box_brd: bool = True,
@@ -101,7 +100,6 @@ class Timeseries(BaseMixin):
             std (bool): If True, compute the standard deviation. Default is False.
             freq (list): The frequencies to be used for the computation. Available options are 'hourly', 'daily',
                          'monthly' and 'annual'. Default is ['monthly', 'annual'].
-            extend (bool): If True, extend the data if needed.
             exclude_incomplete (bool): If True, exclude incomplete periods.
             center_time (bool): If True, the time will be centered.
             box_brd (bool): choose if coordinates are comprised or not in area selection.
@@ -117,9 +115,7 @@ class Timeseries(BaseMixin):
         freq = to_list(freq)
 
         for f in freq:
-            self.compute(
-                freq=f, extend=extend, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd
-            )
+            self.compute(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
             if std:
                 if self.std_startdate is None or self.std_enddate is None:
                     self.logger.error(
