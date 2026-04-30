@@ -39,13 +39,13 @@ class PlotBoxplots:
         catalog = extract_attrs(data, "AQUA_catalog")
         model = extract_attrs(data, "AQUA_model")
         exp = extract_attrs(data, "AQUA_exp")
-        startdates = extract_attrs(data, "startdate")
-        enddates = extract_attrs(data, "enddate")
+        startdates = extract_attrs(data, "AQUA_startdate")
+        enddates = extract_attrs(data, "AQUA_enddate")
 
         model_ref = extract_attrs(data_ref, "AQUA_model")
         exp_ref = extract_attrs(data_ref, "AQUA_exp")
-        startdates_ref = extract_attrs(data_ref, "startdate")
-        enddates_ref = extract_attrs(data_ref, "enddate")
+        startdates_ref = extract_attrs(data_ref, "AQUA_startdate")
+        enddates_ref = extract_attrs(data_ref, "AQUA_enddate")
 
         self.logger.info(f"catalogs: {catalog}, models: {model}, experiments: {exp}")
         self.logger.info(f"ref catalogs: {extract_attrs(data_ref, 'catalog')}, models: {model_ref}, experiments: {exp_ref}")
