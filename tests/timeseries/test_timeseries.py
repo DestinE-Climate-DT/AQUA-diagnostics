@@ -195,12 +195,10 @@ class TestTimeseries:
 
         ts.retrieve(var=self.var)
 
-        # Test compute with extend=False (no extension)
-        ts.compute(freq="monthly", extend=False)
+        ts.compute(freq="monthly")
         assert ts.monthly is not None
 
-        # Test annual frequency with extension
-        ts.compute(freq="annual", extend=True, center_time=False)
+        ts.compute(freq="annual", center_time=False)
         assert ts.annual is not None
 
         # Test case where dates match exactly (no extension needed - both else branches)
@@ -217,7 +215,7 @@ class TestTimeseries:
             regrid=self.regrid,
         )
         ts_exact.retrieve(var=self.var)
-        ts_exact.compute(freq="monthly", extend=True)
+        ts_exact.compute(freq="monthly")
         assert len(ts_exact.monthly.time) == 2
 
         # Test extension only at end (class_enddate > end_date)
@@ -234,7 +232,7 @@ class TestTimeseries:
             regrid=self.regrid,
         )
         ts_end.retrieve(var=self.var)
-        ts_end.compute(freq="monthly", extend=True)
+        ts_end.compute(freq="monthly")
         assert len(ts_end.monthly.time) == 24  # 2 years
 
         # Test extension at both start and end
@@ -251,7 +249,7 @@ class TestTimeseries:
             regrid=self.regrid,
         )
         ts_both.retrieve(var=self.var)
-        ts_both.compute(freq="monthly", extend=True)
+        ts_both.compute(freq="monthly")
         assert len(ts_both.monthly.time) == 36  # 3 years
 
         # Test that retrieve with no data raises ValueError
