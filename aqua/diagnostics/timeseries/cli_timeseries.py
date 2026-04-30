@@ -50,7 +50,6 @@ def main(argv=None):
             diagnostic_name = cli.config_dict["diagnostics"]["timeseries"].get("diagnostic_name", "timeseries")
             center_time = cli.config_dict["diagnostics"]["timeseries"].get("center_time", True)
             exclude_incomplete = cli.config_dict["diagnostics"]["timeseries"].get("exclude_incomplete", True)
-            extend = cli.config_dict["diagnostics"]["timeseries"].get("extend", True)
 
             for var in cli.config_dict["diagnostics"]["timeseries"].get("variables", []):
                 var_config, regions = load_var_config(cli.config_dict, var)
@@ -74,7 +73,6 @@ def main(argv=None):
                             "rebuild": cli.rebuild,
                             "center_time": center_time,
                             "exclude_incomplete": exclude_incomplete,
-                            "extend": extend,
                         }
 
                         # Initialize a list of len from the number of datasets
@@ -164,7 +162,6 @@ def main(argv=None):
                 diagnostic_name = cli.config_dict["diagnostics"]["timeseries"].get("diagnostic_name", "timeseries")
                 center_time = cli.config_dict["diagnostics"]["timeseries"].get("center_time", True)
                 exclude_incomplete = cli.config_dict["diagnostics"]["timeseries"].get("exclude_incomplete", True)
-                extend = cli.config_dict["diagnostics"]["timeseries"].get("extend", True)
 
                 for region in regions:
                     try:
@@ -182,7 +179,6 @@ def main(argv=None):
                             "rebuild": cli.rebuild,
                             "center_time": center_time,
                             "exclude_incomplete": exclude_incomplete,
-                            "extend": extend,
                         }
 
                         # Initialize a list of len from the number of datasets
