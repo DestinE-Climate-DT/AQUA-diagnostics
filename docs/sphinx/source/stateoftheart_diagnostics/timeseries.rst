@@ -121,7 +121,6 @@ Here we describe only the specific settings for the time series diagnostic.
         variables: ['2t', 'tprate']
         formulae: ['tnlwrf+tnswrf']
         center_time: true # center the time axis of the time series
-        extend: true # extend the time series with climatology if data is missing at the beginning or end
         exclude_incomplete: true # check if all chunks are complete present before computing the time average
         params:
           default:
