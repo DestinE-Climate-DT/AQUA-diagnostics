@@ -111,15 +111,23 @@ class BaseMixin(Diagnostic):
         # of all the variables
         if formula:
             super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+            source_data = self.data
+            source_std_data = self.std_data
             self.logger.debug("Evaluating formula %s", var)
             self.data = EvaluateFormula(
-                data=self.data, formula=var, long_name=long_name, short_name=short_name, units=units, loglevel=self.loglevel
+                data=source_data,
+                formula=var,
+                long_name=long_name,
+                short_name=short_name,
+                units=units,
+                loglevel=self.loglevel,
             ).evaluate()
             if self.data is None:
                 raise ValueError(f"Error evaluating formula {var}. Check the variable names and the formula syntax.")
+            self._copy_aqua_attrs(source=source_data, target=self.data)
             if self.std_data is not None:
                 self.std_data = EvaluateFormula(
-                    data=self.std_data,
+                    data=source_std_data,
                     formula=var,
                     long_name=long_name,
                     short_name=short_name,
@@ -128,14 +136,19 @@ class BaseMixin(Diagnostic):
                 ).evaluate()
                 if self.std_data is None:
                     raise ValueError(f"Error evaluating formula {var}. Check the variable names and the formula syntax.")
+                self._copy_aqua_attrs(source=source_std_data, target=self.std_data)
         else:
             super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             if self.data is None:
                 raise ValueError(f"Variable {var} not found in the data. Check the variable name and the data source.")
             # Get the xr.DataArray to be aligned with the formula code
-            self.data = self.data[var]
+            source_data = self.data
+            self.data = source_data[var]
+            self._copy_aqua_attrs(source=source_data, target=self.data)
             if self.std_data is not None:
-                self.std_data = self.std_data[var]
+                source_std_data = self.std_data
+                self.std_data = source_std_data[var]
+                self._copy_aqua_attrs(source=source_std_data, target=self.std_data)
 
         # Customization of the data, expecially needed for formula
         if units is not None:
@@ -163,6 +176,18 @@ class BaseMixin(Diagnostic):
             self.data.attrs["short_name"] = var
             if self.std_data is not None:
                 self.std_data.attrs["short_name"] = var
+
+    @staticmethod
+    def _copy_aqua_attrs(source, target):
+        """Copy AQUA_* attributes from source to target without overriding existing values."""
+        if source is None or target is None:
+            return
+
+        source_attrs = getattr(source, "attrs", {})
+        target_attrs = getattr(target, "attrs", {})
+        for key, value in source_attrs.items():
+            if key.startswith("AQUA_") and key not in target_attrs:
+                target.attrs[key] = value
 
     def compute_std(self, freq: str, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):
         """
