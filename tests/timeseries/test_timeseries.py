@@ -66,6 +66,8 @@ class TestTimeseries:
             loglevel=loglevel,
             startdate="19900101",
             enddate="19911231",
+            std_startdate="19900101",
+            std_enddate="19911231",
             regrid=self.regrid,
         )
 
@@ -96,6 +98,7 @@ class TestTimeseries:
         assert ts.annual.values[0] == pytest.approx(60.31101797654943, rel=approx_rel)
 
         assert ts.std_annual.values == pytest.approx(0.009666691494246038, rel=approx_rel)
+        assert ts.std_annual.AQUA_std_startdate == "1990-01-01"
 
         filename = (
             f"{self.diagnostic_name}.timeseries.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.annual.{self.region}.nc"
