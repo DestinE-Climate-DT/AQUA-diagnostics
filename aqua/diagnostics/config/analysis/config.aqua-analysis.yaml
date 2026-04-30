@@ -28,9 +28,9 @@ job:
     outputdir: "./output"
 
     # Default values, overriden from command line arguments
-    catalog: null  # The catalog to use for the analysis
-    model: "IFS-NEMO"
-    exp: "historical-1990"
+    catalog: "climatedt-gen2"  # The catalog to use for the analysis
+    model: "IFS-NEMO-5km"
+    exp: "baseline-hist"
     source: "lra-r100-monthly"
     regrid: null
     startdate: null
@@ -38,8 +38,10 @@ job:
 
     script_path_base: "${AQUA_DIAGNOSTICS}"  # Base directory for the diagnostic scripts
 
+    experiment_kind: "${AQUA_CONFIG}/analysis/climatedt-experiment-kind.yaml"  # experiment kind file configuraton
+
 cluster:  # options for dask cluster (this works well on lumi)
-    workers: 32
+    workers: 2
     threads: 1  # per worker
     memory_limit: 7GiB  # per worker
     connect_timeout: 120  # seconds to wait for client to connect to the cluster
@@ -81,13 +83,13 @@ run:
 diagnostics:
   atmosphere2d:
     biases:
-      config: ["${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-berkeley.yaml",
-               "${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-era5.yaml"]
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
     timeseries:
-      config: ["${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-berkeley.yaml",
-               "${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-era5.yaml"]
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
     lat_lon_profiles:
-      config: "${AQUA_CONFIG}/collections/atmosphere2d/config-atmosphere2d-berkeley.yaml"
+      config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"
 
   atmosphere3d:
     biases:
