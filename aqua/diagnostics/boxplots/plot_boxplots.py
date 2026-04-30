@@ -39,13 +39,13 @@ class PlotBoxplots:
         catalog = extract_attrs(data, "AQUA_catalog")
         model = extract_attrs(data, "AQUA_model")
         exp = extract_attrs(data, "AQUA_exp")
-        startdates = extract_attrs(data, "startdate")
-        enddates = extract_attrs(data, "enddate")
+        startdates = extract_attrs(data, "AQUA_startdate")
+        enddates = extract_attrs(data, "AQUA_enddate")
 
         model_ref = extract_attrs(data_ref, "AQUA_model")
         exp_ref = extract_attrs(data_ref, "AQUA_exp")
-        startdates_ref = extract_attrs(data_ref, "startdate")
-        enddates_ref = extract_attrs(data_ref, "enddate")
+        startdates_ref = extract_attrs(data_ref, "AQUA_startdate")
+        enddates_ref = extract_attrs(data_ref, "AQUA_enddate")
 
         self.logger.info(f"catalogs: {catalog}, models: {model}, experiments: {exp}")
         self.logger.info(f"ref catalogs: {extract_attrs(data_ref, 'catalog')}, models: {model_ref}, experiments: {exp_ref}")
@@ -69,20 +69,19 @@ class PlotBoxplots:
         all_startdates = startdates + (startdates_ref or [])
         all_enddates = enddates + (enddates_ref or [])
         dataset_info = ", ".join(
-            f"{m} (exp: {e}) from {time_to_string(s)} to {time_to_string(en)}"
+            f"{m} {e} (from {time_to_string(s, format='%Y-%m')} to {time_to_string(en, format='%Y-%m')})"
             for m, e, s, en in zip(all_models, all_exps, all_startdates, all_enddates)
         )
         if not description:
-            description = f"Boxplot for: {dataset_info}."
+            description = f"Boxplots of {dataset_info}."
 
         if self.anomalies:
             ref_name = extract_attrs(data_ref[self.ref_number], "AQUA_model")
             description += (
-                f" Anomalies with respect to {ref_name} mean value are shown. "
+                f" Anomalies with respect to {ref_name} mean values are shown. "
                 "The dashed line represents the mean value, the solid line the median value, "
                 "and the number indicates the absolute mean value."
             )
-
         metadata = {"Description": description}
         extra_keys = {"var": "_".join(var) if isinstance(var, list) else var}
 
