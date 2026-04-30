@@ -159,15 +159,15 @@ class TestMainExecutionFlow:
         assert len(mock_plot_cls.call_args.kwargs["data"]) == 2
 
     def test_multiple_regions_processed_independently(self, build_config, mock_cluster, mock_llp):
-        """Each region in default_variables triggers its own dataset/ref pair and plot."""
+        """Each region in params triggers its own dataset/ref pair and plot."""
         mock_llp_cls, mock_plot_cls = mock_llp
         config_file = build_config(
             {
                 "lat_lon_profiles": {
                     **BASE_LLP,
                     "seasonal": False,
-                    "default_variables": {
-                        "2t": {"name": "2t", "regions": ["Global", "Tropics"]},
+                    "params": {
+                        "2t": {"regions": ["Global", "Tropics"]},
                     },
                 }
             }

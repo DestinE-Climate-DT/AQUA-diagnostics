@@ -126,6 +126,9 @@ def process_variable(
     var_units = var_config.get("units")
     var_long_name = var_config.get("long_name")
     var_standard_name = var_config.get("standard_name")
+    # Std period taken from the merged var config (params.default or per-variable)
+    var_std_startdate = var_config.get("std_startdate")
+    var_std_enddate = var_config.get("std_enddate")
 
     cli.logger.info(f"Processing {'formula' if formula else 'variable'}: {var_name}")
 
@@ -139,9 +142,14 @@ def process_variable(
             cli.logger.info(f"Processing dataset: {dataset['model']}/{dataset['exp']}")
 
             dataset_args = cli.dataset_args(dataset)
+            # Std dates: dataset-specific override > variable/default config
+            std_startdate = dataset.get("std_startdate") or var_std_startdate
+            std_enddate = dataset.get("std_enddate") or var_std_enddate
 
             profile = LatLonProfiles(
                 **dataset_args,
+                std_startdate=std_startdate,
+                std_enddate=std_enddate,
                 region=region,
                 regions_file_path=regions_file_path,
                 mean_type=mean_type,
@@ -195,17 +203,15 @@ def process_variable(
             ref = references[0]  # Take first reference
             cli.logger.info(f"Processing reference: {ref['model']}/{ref['exp']}")
 
-            # Get base reference args
             ref_args = cli.dataset_args(ref)
-
-            # For reference, use std dates if specified
-            if ref.get("std_startdate"):
-                ref_args["startdate"] = ref["std_startdate"]
-            if ref.get("std_enddate"):
-                ref_args["enddate"] = ref["std_enddate"]
+            # Std dates for the reference: reference-specific override > variable/default config
+            ref_std_startdate = ref.get("std_startdate") or var_std_startdate
+            ref_std_enddate = ref.get("std_enddate") or var_std_enddate
 
             profile_ref = LatLonProfiles(
                 **ref_args,
+                std_startdate=ref_std_startdate,
+                std_enddate=ref_std_enddate,
                 region=region,
                 regions_file_path=regions_file_path,
                 mean_type=mean_type,
