@@ -83,8 +83,8 @@ class PlotSeasonalCycles(PlotBaseMixin):
         - AQUA_catalog
         - AQUA_model
         - AQUA_exp
-        - std_startdate
-        - std_enddate
+        - AQUA_std_startdate
+        - AQUA_std_enddate
         - short_name
         - long_name
         - units
@@ -113,8 +113,8 @@ class PlotSeasonalCycles(PlotBaseMixin):
 
         if self.std_monthly_data is not None:
             for std in self.std_monthly_data:
-                self.std_startdate = std.std_startdate if std.std_startdate is not None else None
-                self.std_enddate = std.std_enddate if std.std_enddate is not None else None
+                self.std_startdate = std.AQUA_std_startdate if std.AQUA_std_startdate is not None else None
+                self.std_enddate = std.AQUA_std_enddate if std.AQUA_std_enddate is not None else None
                 self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
                 break
 
