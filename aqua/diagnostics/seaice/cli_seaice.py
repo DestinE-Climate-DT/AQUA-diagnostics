@@ -37,8 +37,13 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the SeaIce diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
     cli = DiagnosticCLI(
@@ -52,7 +57,7 @@ if __name__ == "__main__":
     # Load region dict through dummy method access
     regions_dict = SeaIce(model="", exp="", source="")._load_regions_from_file(diagnostic="seaice")
 
-    regrid = get_arg(args, "regrid", None)
+    regrid = get_arg(args, "regrid", None)  # noqa: F841
 
     realization = get_arg(args, "realization", None)
     if realization:
@@ -435,3 +440,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     cli.logger.info("Sea Ice diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

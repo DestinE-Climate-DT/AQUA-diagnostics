@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
-from conftest import DPI, LOGLEVEL
 
 from aqua.diagnostics.histogram import PlotHistogram
+from tests.shared_constants import DPI, LOGLEVEL
 
 loglevel = LOGLEVEL
 

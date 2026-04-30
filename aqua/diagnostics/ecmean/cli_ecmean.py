@@ -16,7 +16,7 @@ from aqua import __version__ as aquaversion
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import get_arg, lat_to_phrase, strlist_to_phrase
+from aqua.core.util import get_arg, lat_to_phrase, pandas_freq_to_string, strlist_to_phrase, xarray_to_pandas_freq
 from aqua.diagnostics import GlobalMean, PerformanceIndices
 from aqua.diagnostics.base import (
     OutputSaver,
@@ -26,6 +26,8 @@ from aqua.diagnostics.base import (
     merge_config_args,
     template_parse_arguments,
 )
+
+MINIMUM_MONTHS_REQUIRED = 12
 
 
 def parse_arguments(arguments):
@@ -161,9 +163,25 @@ def time_check(mydata, y1, y2, logger=None):
         if logger is not None:
             logger.info("Guessing ending year %s", y2)
 
-    # run the performance indices if you have at least 12 month of data
-    if len(mydata.time) < 12:
-        raise NotEnoughDataError("Not enough data, exiting...")
+    # Warn if the data frequency is not monthly, since ECmean expects monthly data
+    data_freq = xarray_to_pandas_freq(mydata)
+    freq_str = pandas_freq_to_string(data_freq)
+    if logger is not None:
+        logger.debug("Detected data frequency: %s (%s)", data_freq, freq_str)
+    if freq_str != "monthly":
+        if logger is not None:
+            logger.warning("Data frequency '%s' does not appear to be monthly. ECmean expects monthly data.", freq_str)
+
+    # Count unique (year, month) pairs to correctly measure months of data
+    # regardless of the actual time frequency (daily, monthly, etc.)
+    n_months = len(set(zip(mydata.time.dt.year.values, mydata.time.dt.month.values)))
+    if logger is not None:
+        logger.debug("Unique months in data: %d", n_months)
+
+    if n_months < MINIMUM_MONTHS_REQUIRED:
+        raise NotEnoughDataError(
+            f"Not enough data: {n_months} months available, {MINIMUM_MONTHS_REQUIRED} required. Exiting..."
+        )
 
     return y1, y2
 
@@ -249,8 +267,9 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     return description
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the ECmean CLI."""
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
     loglevel = get_arg(args, "loglevel", "WARNING")
     logger = log_configure(log_level=loglevel, log_name="ECmean")
 
@@ -414,3 +433,7 @@ if __name__ == "__main__":
                 )
 
             logger.info("ECmean4 diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

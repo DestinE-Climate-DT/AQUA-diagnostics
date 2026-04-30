@@ -2,9 +2,9 @@ import os
 
 import pytest
 import xarray as xr
-from conftest import APPROX_REL, DPI, LOGLEVEL
 
 from aqua.diagnostics import Boxplots, PlotBoxplots
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance for numerical comparisons
 approx_rel = APPROX_REL

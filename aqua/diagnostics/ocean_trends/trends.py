@@ -14,6 +14,8 @@ xr.set_options(keep_attrs=True)
 class Trends(Diagnostic):
     """Class to compute trends over time."""
 
+    MINIMUM_MONTHS_REQUIRED = 12
+
     def __init__(
         self,
         model: str,
@@ -77,7 +79,7 @@ class Trends(Diagnostic):
             reader_kwargs (dict, optional): Additional keyword arguments for the data reader. Default is {}.
         """
         self.logger.info("Starting trend analysis workflow")
-        super().retrieve(var=var, reader_kwargs=reader_kwargs)
+        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         # self.data = self.data.chunk(chunks={"time": 12, "level": 1})  # this is needed to avoid a too large graph
 
         self.data, self.region = self.select_region(data=self.data, region=region, dim_mean=dim_mean)
@@ -89,6 +91,17 @@ class Trends(Diagnostic):
         self.logger.info("Trend analysis workflow completed")
 
     def select_region(self, data, region=None, drop=True, dim_mean=None):
+        """Select a region and optionally compute mean over specified dimensions.
+
+        Args:
+            data (xr.Dataset): Input dataset.
+            region (str, optional): Geographical region to select.
+            drop (bool, optional): Whether to drop coordinates outside the region. Default is True.
+            dim_mean (str or list, optional): Dimension(s) over which to compute the mean.
+
+        Returns:
+            tuple: (data, region) - Processed data and region name.
+        """
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region}.")

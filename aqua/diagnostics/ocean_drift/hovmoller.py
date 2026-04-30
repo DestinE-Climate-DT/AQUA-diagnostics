@@ -25,6 +25,8 @@ class Hovmoller(Diagnostic):
         stacked_data (xarray.Dataset): Processed data for Hovmoller diagrams.
     """
 
+    MINIMUM_MONTHS_REQUIRED = 2
+
     def __init__(
         self,
         model: str,
@@ -99,7 +101,7 @@ class Hovmoller(Diagnostic):
         """
         self.logger.info("Running Hovmoller diagram generation")
         # This will populate self.data
-        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=2)
+        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         # HACK: some LRA datasets have levels in 'NEMO model layers' (also non NEMO models due to multi-IO)
         if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
             self.data[self.vert_coord].attrs["units"] = "m"

@@ -38,11 +38,11 @@ class PlotENSO(PlotBaseMixin):
         labels = super().set_labels()
 
         title = TitleBuilder(
-            diagnostic="ENSO3.4 index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
+            diagnostic="Niño 3.4 index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
         ).generate()
 
         fig, axs = indexes_plot(
-            indexes=indexes, thresh=thresh, suptitle=title, ylabel="ENSO3.4 index", labels=labels, loglevel=self.loglevel
+            indexes=indexes, thresh=thresh, suptitle=title, ylabel="Niño 3.4 index", labels=labels, loglevel=self.loglevel
         )
 
         if isinstance(axs, plt.Axes):
@@ -64,7 +64,7 @@ class PlotENSO(PlotBaseMixin):
         return fig, axs
 
     def set_index_description(self):
-        return super().set_index_description(index_name="ENSO3.4")
+        return super().set_index_description(index_name="Niño 3.4 index")
 
     def plot_maps(
         self,
@@ -113,7 +113,7 @@ class PlotENSO(PlotBaseMixin):
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
                 title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     timeseason=getattr(maps, "AQUA_season", None),
@@ -129,7 +129,7 @@ class PlotENSO(PlotBaseMixin):
                 titles = []
                 for map in maps:
                     title = TitleBuilder(
-                        diagnostic=f"ENSO {statistic} map ({var})",
+                        diagnostic=f"Niño 3.4 {statistic} map ({var})",
                         model=map.AQUA_model,
                         exp=map.AQUA_exp,
                         timeseason=getattr(map, "AQUA_season", None),
@@ -145,7 +145,7 @@ class PlotENSO(PlotBaseMixin):
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
                 title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     ref_model=ref_maps.AQUA_model,
@@ -175,7 +175,7 @@ class PlotENSO(PlotBaseMixin):
                     title = f"{map.AQUA_model} {map.AQUA_exp}"
                     titles.append(title)
                 title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
                     timeseason=getattr(ref_maps, "AQUA_season", None),
@@ -208,7 +208,7 @@ class PlotENSO(PlotBaseMixin):
                     title = f"Compared to {map.AQUA_model} {map.AQUA_exp}"
                     titles.append(title)
                 title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     timeseason=getattr(maps, "AQUA_season", None),
@@ -251,4 +251,4 @@ class PlotENSO(PlotBaseMixin):
         Returns:
             str: Description of the maps.
         """
-        return super().set_map_description(maps=maps, ref_maps=ref_maps, statistic=statistic, telecname="ENSO3.4")
+        return super().set_map_description(maps=maps, ref_maps=ref_maps, statistic=statistic, telecname="Niño 3.4")

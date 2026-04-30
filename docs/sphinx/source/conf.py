@@ -25,7 +25,7 @@ autoclass_content = "both"
 exclude_patterns = []
 
 # Mock imports for modules that are not available during docs build, can be expanded
-autodoc_mock_imports = ["dummy"]
+autodoc_mock_imports = ["dummy", "tropical_cyclones"]
 
 
 # -- Options for HTML output -------------------------------------------------
