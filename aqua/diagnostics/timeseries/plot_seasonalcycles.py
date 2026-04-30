@@ -112,11 +112,9 @@ class PlotSeasonalCycles(PlotBaseMixin):
             self.logger.debug(f"Reference: {self.ref_catalogs} {self.ref_models} {self.ref_exps}")
 
         if self.std_monthly_data is not None:
-            for std in self.std_monthly_data:
-                self.std_startdate = std.AQUA_std_startdate if std.AQUA_std_startdate is not None else None
-                self.std_enddate = std.AQUA_std_enddate if std.AQUA_std_enddate is not None else None
-                self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
-                break
+            self.std_startdate = getattr(self.std_monthly_data, "AQUA_std_startdate", None)
+            self.std_enddate = getattr(self.std_monthly_data, "AQUA_std_enddate", None)
+            self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
 
     def set_title(self):
         """
