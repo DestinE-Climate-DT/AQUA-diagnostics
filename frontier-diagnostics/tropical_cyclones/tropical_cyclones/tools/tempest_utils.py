@@ -33,7 +33,9 @@ def getTrajectories(filename, nVars, headerDelimStr, isUnstruc):
     # Find total number of trajectories and maximum length of trajectories
     numtraj = 0
     numPts = []
+    print("header DelimStr", headerDelimStr)
     for line in data:
+        print(line)
         if headerDelimStr in line:
             # if header line, store number of points in given traj in numPts
             headArr = line.split()
@@ -67,6 +69,7 @@ def getTrajectories(filename, nVars, headerDelimStr, isUnstruc):
             lineOfTraj = 0    # reset trajectory line to zero
         else:
             ptArr = line.split()
+            print(line)
             for jj in range(nVars):
                 if isUnstruc:
                     prodata[jj+1, stormID, lineOfTraj] = ptArr[jj]

@@ -3,58 +3,10 @@
 # TROPICAL CYCLONE DATA MANAGER - IN-MEMORY STORAGE
 # ==================================================
 #
+# # Version: LIST numerical ID and sequential
 # This module provides a class to load TC trajectory data once and keep it
 # in memory for fast repeated access, avoiding slow disk I/O operations.
-#
-# PERFORMANCE BENEFITS:
-# ---------------------
-# - Reading from file: ~100-1000 ms per operation (disk I/O)
-# - Reading from memory: ~0.1-1 ms per operation (RAM access)
-# - Speed improvement: 100-10,000x faster!
-#
-# WHY IT'S FASTER:
-# ----------------
-# 1. DISK I/O is SLOW:
-#    - Physical disk read/write operations take milliseconds
-#    - File system overhead (opening, seeking, buffering)
-#    - Operating system caching may not always help
-#
-# 2. RAM ACCESS is FAST:
-#    - Direct memory access takes nanoseconds
-#    - No file system overhead
-#    - Data is immediately available
-#
-# 3. ONE-TIME COST:
-#    - Load data ONCE from disk → pay the I/O cost once
-#    - Access data MANY TIMES from RAM → instant access
-#
-# USAGE:
-# ------
-# # Load data once (cella 5 nel notebook)
-# from tc_data_manager import TCDataManager
-# tc_data = TCDataManager(filtered_file)
-# tc_data.summary()
-#
-# # Use multiple times - instant! (cella 6, 7, 8...)
-# plot_trajectories_direct(tc_data, config)
-# plot_density_scatter(tc_data, config)
-# plot_track_density_grid(tc_data, config, grid_size=1.5)
-#
-# HOW IT WORKS:
-# -------------
-# The class loads the entire trajectory file into structured numpy arrays:
-#   - storm_id, year, month, day, hour
-#   - lon, lat, slp, wind, zs
-#
-# All data is stored in RAM as numpy arrays (very fast access).
-# Additional structures:
-#   - trajectories: dictionary organized by storm_id
-#   - metadata: time period, statistics, etc.
-#
-# When a plotting function needs data, it retrieves it directly from RAM
-# instead of reading from disk → 1000x faster!
-#
-# ===============================================================================
+
 
 
 import numpy as np
@@ -71,7 +23,7 @@ class TCDataManager:
     Attributes:
         trajfile: Original file path
         data: Dictionary of numpy arrays (all observations)
-        trajectories: Dictionary organized by storm
+        trajectories: LIST of storm dictionaries (ordered)
         n_obs: Total number of observations
         n_storms: Total number of unique storms
     """
@@ -85,7 +37,7 @@ class TCDataManager:
         """
         self.trajfile = trajfile
         self.data = None
-        self.trajectories = None
+        self.trajectories = None  # Now a LIST!
         self.metadata = {}
         
         print(f"\n{'='*70}")
@@ -146,7 +98,7 @@ class TCDataManager:
         
         print(f"  Parsed {line_count:,} observations from file")
         
-        # Convert to numpy arrays (even faster access!)
+        # Convert to numpy arrays
         print(f"  Converting to numpy arrays...")
         self.data = {
             'storm_id': np.array(storm_ids),
@@ -167,18 +119,29 @@ class TCDataManager:
         self.n_obs = len(self.data['storm_id'])
         self.n_storms = len(np.unique(self.data['storm_id']))
         
-        # Build trajectory dictionary (organized by storm)
-        print(f"  Building trajectory dictionary...")
+        # Build trajectory LIST (not dict!)
+        print(f"  Building trajectory list...")
         self._build_trajectories()
     
     def _build_trajectories(self):
-        """Organize data by individual storm trajectories."""
-        self.trajectories = {}
+        """Organize data by individual storm trajectories - AS A LIST."""
+        self.trajectories = []  # LISTA invece di dizionario!
         
-        for storm_id in np.unique(self.data['storm_id']):
+        # Get unique storm IDs and sort them numerically
+        unique_ids = np.unique(self.data['storm_id'])
+        
+        # Sort numerically (importante per avere ordine corretto!)
+        try:
+            unique_ids_sorted = sorted(unique_ids, key=lambda x: int(x))
+        except ValueError:
+            # Se non sono tutti numerici, ordina come stringhe
+            unique_ids_sorted = sorted(unique_ids)
+        
+        for storm_id in unique_ids_sorted:
             mask = self.data['storm_id'] == storm_id
             
-            self.trajectories[storm_id] = {
+            storm_dict = {
+                'id': storm_id,  # Memorizziamo l'ID dentro il dict
                 'lon': self.data['lon'][mask],
                 'lat': self.data['lat'][mask],
                 'slp': self.data['slp'][mask],
@@ -188,6 +151,8 @@ class TCDataManager:
                 'day': self.data['day'][mask],
                 'hour': self.data['hour'][mask]
             }
+            
+            self.trajectories.append(storm_dict)
     
     def get_all_points(self):
         """
@@ -209,10 +174,11 @@ class TCDataManager:
     
     def get_trajectories(self):
         """
-        Get trajectory dictionary organized by storm.
+        Get trajectory list.
         
         Returns:
-            dict: {storm_id: {'lon': array, 'lat': array, 'slp': array, ...}}
+            list: List of storm dictionaries, each with:
+                  {'id': str, 'lon': array, 'lat': array, 'slp': array, ...}
         """
         return self.trajectories
     
@@ -257,11 +223,19 @@ class TCDataManager:
         print(f"\nMemory usage:")
         total_mb = sum(arr.nbytes for arr in self.data.values()) / 1024 / 1024
         print(f"  Total: {total_mb:.2f} MB")
+        
+        print(f"\nTrajectory structure:")
+        print(f"  Type: LIST (not dict)")
+        print(f"  Length: {len(self.trajectories)}")
+        if len(self.trajectories) > 0:
+            print(f"  First storm ID: '{self.trajectories[0]['id']}'")
+            print(f"  Last storm ID: '{self.trajectories[-1]['id']}'")
+        
         print(f"{'='*70}\n")
     
     def __repr__(self):
         """String representation of the manager."""
-        return f"TCDataManager({self.n_obs:,} obs, {self.n_storms} storms)"
+        return f"TCDataManager({self.n_obs:,} obs, {self.n_storms} storms, LIST structure)"
 
 
 # ===============================================================================
@@ -288,30 +262,3 @@ def ensure_tc_data(data_or_file):
     else:
         # Load from file
         return TCDataManager(data_or_file)
-
-
-# ===============================================================================
-# USAGE EXAMPLE
-# ===============================================================================
-#if __name__ == "__main__":
-#    print("TC Data Manager - Example Usage")
-#    print("="*70)
-    
-    # Example 1: Load data
-#    filtered_file = "path/to/filtered_trajectories.txt"
-#    tc_data = TCDataManager(filtered_file)
-    
-    # Example 2: Print summary
-#    tc_data.summary()
-    
-    # Example 3: Access data
-#    lon, lat = tc_data.get_all_points()
-#    print(f"Got {len(lon):,} points from memory (instant!)")
-    
-#    trajectories = tc_data.get_trajectories()
-#    print(f"Got {len(trajectories)} storm trajectories from memory (instant!)")
-    
-    # Example 4: Use with plotting functions
-    # (These would be in your plotting_TCs_custom_memory.py)
-    # plot_trajectories_direct(tc_data, config)
-    # plot_density_scatter(tc_data, config)

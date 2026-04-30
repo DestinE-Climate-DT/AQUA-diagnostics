@@ -71,8 +71,8 @@ def multi_plot(tracks_nc_file, tdict, title=None, units=None, save=False):
     
 def plot_trajectories(trajfile, tdict):
     # tempest settings
-    nVars=10
-    headerStr='start'
+    nVars=10 #12
+    headerStr='start' #start track_id?
     isUnstruc = 0
 
     # Extract trajectories from tempest file and assign to arrays
