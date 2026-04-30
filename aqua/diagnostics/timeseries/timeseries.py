@@ -1,13 +1,10 @@
 """Timeseries class for retrieve and netcdf saving of a single experiment"""
 
-import pandas as pd
 import xarray as xr
 
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, to_list
-from aqua.diagnostics.base import round_enddate, round_startdate
 
 from .base import BaseMixin
-from .util import loop_seasonalcycle
 
 xr.set_options(keep_attrs=True)
 
@@ -81,7 +78,6 @@ class Timeseries(BaseMixin):
         short_name: str = None,
         std: bool = False,
         freq: list = ["monthly", "annual"],
-        extend: bool = True,
         exclude_incomplete: bool = True,
         center_time: bool = True,
         box_brd: bool = True,
@@ -104,7 +100,6 @@ class Timeseries(BaseMixin):
             std (bool): If True, compute the standard deviation. Default is False.
             freq (list): The frequencies to be used for the computation. Available options are 'hourly', 'daily',
                          'monthly' and 'annual'. Default is ['monthly', 'annual'].
-            extend (bool): If True, extend the data if needed.
             exclude_incomplete (bool): If True, exclude incomplete periods.
             center_time (bool): If True, the time will be centered.
             box_brd (bool): choose if coordinates are comprised or not in area selection.
@@ -120,11 +115,14 @@ class Timeseries(BaseMixin):
         freq = to_list(freq)
 
         for f in freq:
-            self.compute(
-                freq=f, extend=extend, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd
-            )
+            self.compute(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
             if std:
-                self.compute_std(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
+                if self.std_startdate is None or self.std_enddate is None:
+                    self.logger.error(
+                        "Skipping std evaluation. Std start and end dates must be provided to compute the standard deviation."
+                    )
+                else:
+                    self.compute_std(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
             self.save_netcdf(
                 diagnostic_product="timeseries",
                 freq=f,
@@ -133,9 +131,7 @@ class Timeseries(BaseMixin):
                 create_catalog_entry=create_catalog_entry,
             )
 
-    def compute(
-        self, freq: str, extend: bool = True, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True
-    ):
+    def compute(self, freq: str, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):
         """
         Compute the mean of the data. Support for hourly, daily, monthly and annual means.
 
@@ -154,16 +150,7 @@ class Timeseries(BaseMixin):
         str_freq = pandas_freq_to_string(freq)
 
         self.logger.info("Computing %s mean", str_freq)
-        data = self.data.sel(time=slice(self.plt_startdate, self.plt_enddate))
-        if len(data.time) == 0:
-            self.logger.warning(
-                "No data available for the selected period %s - %s, using the standard period %s - %s",
-                self.plt_startdate,
-                self.plt_enddate,
-                self.std_startdate,
-                self.std_enddate,
-            )
-            data = self.data.sel(time=slice(self.std_startdate, self.std_enddate))
+        data = self.data
 
         # Field and time average
         data = self.reader.fldmean(data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits)
@@ -173,18 +160,9 @@ class Timeseries(BaseMixin):
         if data.time.size == 0:
             self.logger.warning(f"Not enough data available to compute {str_freq} mean")
             data = None
-        else:
-            if extend:
-                self.logger.info(f"Extending data for frequency {str_freq}")
-                extended_data = self._extend_data(data=data, freq=str_freq, center_time=center_time)
-                extended_data.attrs = data.attrs.copy()
-                data = extended_data
-
+        else:  # Enough data is available, we can proceed with the computation and saving
             if self.region is not None:
                 data.attrs["AQUA_region"] = self.region
-
-            # Due to the possible usage of the standard period, the time may need to be reselected correctly
-            data = data.sel(time=slice(self.plt_startdate, self.plt_enddate))
 
             # Load data in memory for faster plot
             self.logger.debug(f"Loading data for frequency {str_freq} in memory")
@@ -199,81 +177,3 @@ class Timeseries(BaseMixin):
             self.monthly = data
         elif str_freq == "annual":
             self.annual = data
-
-    def _extend_data(self, data: xr.DataArray, freq: str = None, center_time: bool = True):
-        """
-        Extend the data with a loop if needed.
-        This works only for monthly and annual frequencies.
-
-        Args:
-            data (xr.DataArray): The data to be extended.
-            freq (str): The frequency of the data.
-            center_time (bool): If True, the time will be centered.
-        """
-        if freq == "monthly" or freq == "annual":
-            # Use freq parameter for proper rounding
-            class_startdate = round_startdate(pd.Timestamp(self.plt_startdate), freq=freq)
-            class_enddate = round_enddate(pd.Timestamp(self.plt_enddate), freq=freq)
-            self.logger.debug(f"Start date of class: {class_startdate}, End date of class: {class_enddate}")
-
-            # Handle case where data might be None
-            if data is None or len(data.time) == 0:
-                self.logger.warning("Cannot extend data: data is None or empty")
-                return data
-
-            self.logger.debug(f"Start date of data: {data.time[0].values}, End date of data: {data.time[-1].values}")
-            start_date = round_startdate(pd.Timestamp(data.time[0].values), freq=freq)
-            end_date = round_enddate(pd.Timestamp(data.time[-1].values), freq=freq)
-            self.logger.debug(f"Start date of data: {start_date}, End date of data: {end_date}")
-
-            self.logger.debug(f"Extension check - Data has {len(data.time)} timesteps before extension")
-
-            # Extend the data if needed
-            if class_startdate < start_date:
-                self.logger.info("Extending back the start date from %s to %s", start_date, class_startdate)
-                extend_enddate = start_date - pd.Timedelta(days=1)
-                loop = loop_seasonalcycle(
-                    data=data,
-                    startdate=class_startdate,
-                    enddate=extend_enddate,
-                    freq=freq,
-                    center_time=center_time,
-                    loglevel=self.loglevel,
-                )
-                data = xr.concat([loop, data], dim="time", coords="different", compat="equals")
-                data = data.sortby("time")
-            else:
-                self.logger.debug(f"No extension needed for the start date: {start_date} >= {class_startdate}")
-
-            if class_enddate > end_date:
-                self.logger.info("Extending the end date from %s to %s", end_date, class_enddate)
-                # Start extension from the next period after end_date
-                if freq == "annual":
-                    # Get the start of next year
-                    extend_startdate = pd.Timestamp(year=end_date.year + 1, month=1, day=1, hour=0, minute=0, second=0)
-                elif freq == "monthly":
-                    # Get the start of next month
-                    next_month = end_date + pd.DateOffset(months=1)
-                    extend_startdate = pd.Timestamp(
-                        year=next_month.year, month=next_month.month, day=1, hour=0, minute=0, second=0
-                    )
-
-                self.logger.debug(f"Extension - Creating loop from {extend_startdate} to {class_enddate}")
-                loop = loop_seasonalcycle(
-                    data=data,
-                    startdate=extend_startdate,
-                    enddate=class_enddate,
-                    freq=freq,
-                    center_time=center_time,
-                    loglevel=self.loglevel,
-                )
-                data = xr.concat([data, loop], dim="time", coords="different", compat="equals")
-                data = data.sortby("time")
-            else:
-                self.logger.debug(f"No extension needed for the end date: {class_enddate} >= {end_date}")
-
-            self.logger.debug(f"Extension complete - Final data has {len(data.time)} timesteps")
-            return data
-        else:
-            self.logger.warning(f"The frequency {freq} does not support extension")
-            return data
