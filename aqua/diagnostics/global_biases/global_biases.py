@@ -244,8 +244,8 @@ class GlobalBiases(Diagnostic):
                 "AQUA_model": self.model,
                 "AQUA_exp": self.exp,
                 "AQUA_realization": self.realization,
-                "startdate": str(self.startdate),
-                "enddate": str(self.enddate),
+                "AQUA_startdate": str(self.startdate),
+                "AQUA_enddate": str(self.enddate),
             }
         )
 
@@ -293,15 +293,17 @@ class GlobalBiases(Diagnostic):
                 season_stat = getattr(season_data, stat_funcs[seasons_stat])(dim="time")
                 seasonal_data.append(season_stat.expand_dims(season=[season]))
 
-            self.seasonal_climatology = xr.concat(seasonal_data, dim="season", coords="different").to_dataset(name=var)
+            self.seasonal_climatology = xr.concat(seasonal_data, dim="season", coords="different", compat="equals").to_dataset(
+                name=var
+            )
             self.seasonal_climatology.attrs.update(
                 {
                     "AQUA_catalog": self.catalog,
                     "AQUA_model": self.model,
                     "AQUA_exp": self.exp,
                     "AQUA_realization": self.realization,
-                    "startdate": str(self.startdate),
-                    "enddate": str(self.enddate),
+                    "AQUA_startdate": str(self.startdate),
+                    "AQUA_enddate": str(self.enddate),
                 }
             )
 
