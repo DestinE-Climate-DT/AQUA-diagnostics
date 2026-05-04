@@ -135,7 +135,7 @@ def main(argv=None):
                     loglevel=cli.loglevel,
                 )
                 model_stratification.run(
-                    region='go',
+                    region="go",
                     var=var,
                     # dim_mean=dim_mean,
                     mld=True,
@@ -154,7 +154,7 @@ def main(argv=None):
                         loglevel=cli.loglevel,
                     )
                     obs_stratification.run(
-                        region='go',
+                        region="go",
                         var=var,
                         # dim_mean=dim_mean,
                         mld=True,
@@ -172,10 +172,7 @@ def main(argv=None):
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
-                mld_plot.plot_mld(
-                    region=region,
-                    proj_name="Orthographic",
-                    save_format=cli.save_format, dpi=cli.dpi)
+                mld_plot.plot_mld(region=region, proj_name="Orthographic", save_format=cli.save_format, dpi=cli.dpi)
 
     cli.close_dask_cluster()
 

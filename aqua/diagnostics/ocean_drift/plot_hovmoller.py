@@ -229,8 +229,7 @@ class PlotHovmoller:
         """Set the description for the Hovmoller plot."""
         self.description = f"{content} over {self.region} for experiment {self.model} {self.exp}"
         self.description += (
-            f" (from {time_to_string(self.startdate, format='%Y-%m')}"
-            f" to {time_to_string(self.enddate, format='%Y-%m')})."
+            f" (from {time_to_string(self.startdate, format='%Y-%m')} to {time_to_string(self.enddate, format='%Y-%m')})."
         )
         self.description += (
             " The first row of the plot shows the full values,"

@@ -124,7 +124,7 @@ class PlotMLD:
             vmin=self.vmin,
             nlevels=self.nlevels,
             sym=False,
-            loglevel=self.loglevel
+            loglevel=self.loglevel,
         )
 
         self.save_plot(
@@ -330,13 +330,11 @@ class PlotMLD:
         model_startdate = self.data.attrs.get("startdate", None)
         model_enddate = self.data.attrs.get("enddate", None)
         self.description = (
-            f"{self.clim_time} climatology of mixed layer depth"
-            f" in the {self.region} region for {self.model} {self.exp}"
+            f"{self.clim_time} climatology of mixed layer depth in the {self.region} region for {self.model} {self.exp}"
         )
         if model_startdate and model_enddate:
             self.description += (
-                f" (from {time_to_string(model_startdate, format='%Y-%m')}"
-                f" to {time_to_string(model_enddate, format='%Y-%m')})"
+                f" (from {time_to_string(model_startdate, format='%Y-%m')} to {time_to_string(model_enddate, format='%Y-%m')})"
             )
         if self.obs:
             obs_startdate = self.obs.attrs.get("startdate", None)
@@ -344,8 +342,7 @@ class PlotMLD:
             self.description += f" with reference {self.obs_model} {self.obs_exp}"
             if obs_startdate and obs_enddate:
                 self.description += (
-                    f" (from {time_to_string(obs_startdate, format='%Y-%m')}"
-                    f" to {time_to_string(obs_enddate, format='%Y-%m')})"
+                    f" (from {time_to_string(obs_startdate, format='%Y-%m')} to {time_to_string(obs_enddate, format='%Y-%m')})"
                 )
 
         self.description += "."

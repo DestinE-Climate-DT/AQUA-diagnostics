@@ -114,7 +114,6 @@ def plot_maps(
         except Exception as e:
             logger.warning(f"Could not add cyclic longitude to map {i}: {e}")
 
-
         row = i // ncols
         col = i % ncols
 
@@ -156,16 +155,15 @@ def plot_maps(
             **kwargs,
         )
         ax.set_aspect("auto")  # NEW: stretch plot to fill subplot
-        ax.set_facecolor(color='grey')  # adding land
+        ax.set_facecolor(color="grey")  # adding land
 
-        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.3)
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.3)
 
-        gl.xlabel_style = {'color': 'gray'}
-        gl.ylabel_style = {'color': 'gray'}
+        gl.xlabel_style = {"color": "gray"}
+        gl.ylabel_style = {"color": "gray"}
 
         gl.top_labels = False
         gl.right_labels = False
-
 
         if row == nrows - 1:
             gl.bottom_labels = True

@@ -64,13 +64,15 @@ class PlotTrends:
             loglevel=self.loglevel,
         )
 
-    def plot_multilevel(self,
-                        levels: list = None,
-                        rebuild: bool = True,
-                        cbar_limits: dict = None,
-                        sym: bool = False,
-                        save_format: Union[str, list] = SAVE_FORMAT,
-                        dpi: int = 300):
+    def plot_multilevel(
+        self,
+        levels: list = None,
+        rebuild: bool = True,
+        cbar_limits: dict = None,
+        sym: bool = False,
+        save_format: Union[str, list] = SAVE_FORMAT,
+        dpi: int = 300,
+    ):
         """Plot multi-level maps of trends.
 
         Args:
@@ -139,7 +141,7 @@ class PlotTrends:
         """
         self.diagnostic_product = "zonal_mean"
         self.set_data_list()
-        self.set_suptitle(plot_type='Trends of zonal mean')
+        self.set_suptitle(plot_type="Trends of zonal mean")
         self.set_title()
         self.set_description(content="Trends of zonal mean of temperature (left) and salinity (right)")
         self.set_ytext()
@@ -168,13 +170,14 @@ class PlotTrends:
             format=save_format,
             dpi=dpi,
         )
+
     def set_vmin_vmax(self):
         """Set per-variable colorbar min/max from cbar_limits if provided."""
         self.vmin = []
         self.vmax = []
         if self.cbar_limits:
-            self.vmin = [self.cbar_limits[var]['vmin'] for var in self.vars]
-            self.vmax = [self.cbar_limits[var]['vmax'] for var in self.vars]
+            self.vmin = [self.cbar_limits[var]["vmin"] for var in self.vars]
+            self.vmax = [self.cbar_limits[var]["vmax"] for var in self.vars]
 
     def set_nrowcol(self):
         """Set the number of rows and columns for the subplot grid."""
@@ -186,8 +189,12 @@ class PlotTrends:
 
     def set_extent(self):
         """Set the extent for the plot."""
-        self.extent = [self.data_list[0].lon.min().values, self.data_list[0].lon.max().values,
-                       self.data_list[0].lat.min().values, self.data_list[0].lat.max().values]
+        self.extent = [
+            self.data_list[0].lon.min().values,
+            self.data_list[0].lon.max().values,
+            self.data_list[0].lat.min().values,
+            self.data_list[0].lat.max().values,
+        ]
         self.logger.debug(f"Extent set to: {self.extent}")
 
     def set_ytext(self):
@@ -232,9 +239,7 @@ class PlotTrends:
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the plot."""
-        self.suptitle = TitleBuilder(
-            diagnostic=plot_type, regions=self.region, model=self.model, exp=self.exp
-        ).generate()
+        self.suptitle = TitleBuilder(diagnostic=plot_type, regions=self.region, model=self.model, exp=self.exp).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):

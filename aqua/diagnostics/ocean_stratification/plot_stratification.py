@@ -226,19 +226,15 @@ class PlotStratification:
         )
         if model_startdate and model_enddate:
             self.description += (
-                f" (from {time_to_string(model_startdate, format='%Y-%m')}"
-                f" to {time_to_string(model_enddate, format='%Y-%m')})"
+                f" (from {time_to_string(model_startdate, format='%Y-%m')} to {time_to_string(model_enddate, format='%Y-%m')})"
             )
         if self.obs:
             obs_startdate = self.obs.attrs.get("startdate", None)
             obs_enddate = self.obs.attrs.get("enddate", None)
-            self.description += (
-                f" with reference {self.obs.attrs['model']} {self.obs.attrs['exp']} (dashed)"
-            )
+            self.description += f" with reference {self.obs.attrs['model']} {self.obs.attrs['exp']} (dashed)"
             if obs_startdate and obs_enddate:
                 self.description += (
-                    f" (from {time_to_string(obs_startdate, format='%Y-%m')}"
-                    f" to {time_to_string(obs_enddate, format='%Y-%m')})"
+                    f" (from {time_to_string(obs_startdate, format='%Y-%m')} to {time_to_string(obs_enddate, format='%Y-%m')})"
                 )
         self.description += "."
 

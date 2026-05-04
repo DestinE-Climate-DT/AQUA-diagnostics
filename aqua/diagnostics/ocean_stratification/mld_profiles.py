@@ -182,9 +182,9 @@ def plot_maps(
             #             zorder=10)
 
         else:
-            gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.3)
-            gl.xlabel_style = {'color': 'gray'}
-            gl.ylabel_style = {'color': 'gray'}
+            gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.3)
+            gl.xlabel_style = {"color": "gray"}
+            gl.ylabel_style = {"color": "gray"}
 
             gl.top_labels = False
             gl.right_labels = False
@@ -193,7 +193,6 @@ def plot_maps(
             else:
                 gl.left_labels = True
             gl.bottom_labels = True
-
 
         ax.set_facecolor("lightgray")
         if ytext:
