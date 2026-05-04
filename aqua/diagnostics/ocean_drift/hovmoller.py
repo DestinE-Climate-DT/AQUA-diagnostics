@@ -1,3 +1,5 @@
+"""Module for computing Hovmoller diagrams from ocean drift diagnostics."""
+
 from itertools import product
 
 import xarray as xr
@@ -11,8 +13,7 @@ xr.set_options(keep_attrs=True)
 
 
 class Hovmoller(Diagnostic):
-    """
-    A class for generating Hovmoller diagrams from ocean model data.
+    """A class for generating Hovmoller diagrams from ocean model data.
 
     This class provides methods to retrieve, process, and save netCDF files
     for Hovmoller diagrams. It inherits from the `Diagnostic` class.
@@ -23,6 +24,7 @@ class Hovmoller(Diagnostic):
         region (str): Region for area selection.
         var (list): List of variables to process.
         stacked_data (xarray.Dataset): Processed data for Hovmoller diagrams.
+
     """
 
     MINIMUM_MONTHS_REQUIRED = 2
@@ -40,8 +42,7 @@ class Hovmoller(Diagnostic):
         vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
         loglevel: str = "WARNING",
     ):
-        """
-        Initializes the Hovmoller class.
+        """Initialize the Hovmoller class.
 
         Args:
             model (str): Model name.
@@ -54,6 +55,7 @@ class Hovmoller(Diagnostic):
             diagnostic_name (str, optional): Name of the diagnostic for filenames. Defaults to "oceandrift".
             vert_coord (str, optional): Name of the vertical dimension coordinate. Defaults to DEFAULT_OCEAN_VERT_COORD.
             loglevel (str, optional): Logging level. Defaults to "WARNING".
+
         """
         super().__init__(
             catalog=catalog,
@@ -83,8 +85,7 @@ class Hovmoller(Diagnostic):
         anomaly_ref: str = None,
         reader_kwargs: dict = {},
     ):
-        """
-        Run the Hovmoller diagram generation workflow.
+        """Run the Hovmoller diagram generation workflow.
 
         This method retrieves the specified variables, applies region selection if provided,
         computes Hovmoller diagrams with optional mean and anomaly processing, and saves the
@@ -98,6 +99,7 @@ class Hovmoller(Diagnostic):
             dim_mean (list, optional): List of dimensions over which to compute the mean. Defaults to ["lat", "lon"].
             anomaly_ref (str or None, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None.
             reader_kwargs (dict, optional): Additional keyword arguments for the Reader. Defaults to {}.
+
         """
         self.logger.info("Running Hovmoller diagram generation")
         # This will populate self.data
@@ -124,8 +126,7 @@ class Hovmoller(Diagnostic):
         self.logger.info("Hovmoller diagram saved to netCDF file")
 
     def _get_anomaly(self, data: xr.DataArray, anomaly_ref: str = None, dim: str = "time"):
-        """
-        Compute anomaly for the given data along a specified dimension.
+        """Compute anomaly for the given data along a specified dimension.
 
         Args:
             data : (xarray.DataArray) The input data array to process.
@@ -137,6 +138,7 @@ class Hovmoller(Diagnostic):
         Returns:
             xarray.DataArray
                 The anomaly data array with updated attributes and an added "type" dimension.
+
         """
         if anomaly_ref is None:
             return data
@@ -149,8 +151,7 @@ class Hovmoller(Diagnostic):
         return data
 
     def _get_standardise(self, data, dim="time"):
-        """
-        Standardise the data along a specified dimension.
+        """Standardise the data along a specified dimension.
 
         Args:
             data : (xarray.DataArray) The input data array to standardise.
@@ -159,6 +160,7 @@ class Hovmoller(Diagnostic):
         Returns:
             xarray.DataArray
                 The standardised data array with updated attributes and an added "type" dimension.
+
         """
         data = data / data.std(dim=dim)
         data.attrs["units"] = "Stand. Units"
@@ -173,8 +175,7 @@ class Hovmoller(Diagnostic):
         standardise: bool = False,
         dim: str = "time",
     ):
-        """
-        Compute anomaly and/or standardised anomaly for the given data along a specified dimension.
+        """Compute anomaly and/or standardised anomaly for the given data along a specified dimension.
 
         Args:
             data (xarray.DataArray): The input data array to process.
@@ -192,6 +193,7 @@ class Hovmoller(Diagnostic):
         Notes:
             The function updates the 'AQUA_type' attribute of the returned DataArray to indicate
             the type of anomaly and/or standardisation performed.
+
         """
         if anomaly_ref is not None:
             if anomaly_ref in ["t0", "tmean"]:
@@ -209,9 +211,7 @@ class Hovmoller(Diagnostic):
         return data
 
     def compute_hovmoller(self, dim_mean: str = None, anomaly_ref: str | list = None):
-        """
-        Processes input data for drift analysis by applying various transformations
-        and aggregations.
+        """Process input data for drift analysis by applying various transformations and aggregations.
 
         Args:
             dim_mean (str or None): The dimension along which to compute the mean.
@@ -222,6 +222,7 @@ class Hovmoller(Diagnostic):
         Returns:
             xarray.DataArray: A concatenated DataArray containing processed data
             for different combinations of anomaly, standardization, and anomaly reference types.
+
         """
         anomaly_ref = to_list(anomaly_ref)
         anomaly_ref.append(None)
@@ -246,6 +247,7 @@ class Hovmoller(Diagnostic):
         self.processed_data_list = sorted(self.processed_data_list, key=self.sort_key)
 
     def sort_key(self, data):
+        """Return a sort key for ordering processed data by drift type."""
         type = data.attrs["AQUA_ocean_drift_type"]
         if type == "full":
             return (0, type)
@@ -261,16 +263,15 @@ class Hovmoller(Diagnostic):
         outputdir: str = ".",
         rebuild: bool = True,
     ):
-        """
-        Saves the processed data to a netCDF file.
+        """Save the processed data to a netCDF file.
 
         Args:
             diagnostic_product (str): Name of the diagnostic product.
             region (str): Region for area selection. Defaults to None.
             outputdir (str): Directory to save the output files. Defaults to '.'.
             rebuild (bool, optional): Whether to rebuild the netCDF file. Defaults to True.
-        """
 
+        """
         for processed_data in self.processed_data_list:
             super().save_netcdf(
                 data=processed_data,
