@@ -5,65 +5,104 @@
 [![codecov](https://codecov.io/gh/DestinE-Climate-DT/AQUA-diagnostics/graph/badge.svg?token=UIJTBR9ID0)](https://codecov.io/gh/DestinE-Climate-DT/AQUA-diagnostics)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17776618.svg)](https://doi.org/10.5281/zenodo.17776618)
 
-
 # AQUA-diagnostics
 
-AQUA-diagnostics contains the full set of diagnostic tools developed for the Destination Earth Adaptation Climate Digital Twin (ClimateDT).
-It is designed to be used together with the [AQUA core framework](https://github.com/DestinE-Climate-DT/AQUA), which provides data access and preprocessing functionalities.
+AQUA-diagnostics contains the full set of diagnostic tools developed for the Destination Earth Adaptation Climate Digital Twin (ClimateDT). It is designed to be used together with the [AQUA core framework](https://github.com/DestinE-Climate-DT/AQUA), which provides data access and preprocessing functionalities.
 
-This repository includes only the scientific tools which are configured as diagnostics to run for online monitoring of climate simulations.
+This repository includes only the scientific tools configured as diagnostics to run for online monitoring of climate simulations. Diagnostics can be executed standalone via the Python API, or through the `aqua analysis` wrapper provided by AQUA-core.
 
-The diagnostics can be executed standalone (Python API), or through the AQUA analysis wrapper (aqua analysis) provided by AQUA-core.
+---
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Container Usage](#container-usage)
+- [Documentation](#documentation)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Requirements
+
+- Python `>=3.10,<3.13`
+- A working installation of [AQUA-core](https://github.com/DestinE-Climate-DT/AQUA)
+- A conda/mamba environment using packages from `conda-forge`
+
+---
 
 ## Installation
 
-AQUA-diagnostics requires:
-- Python >=3.10,<3.13
-- A working installation of AQUA-core
-- A conda/mamba environment using packages from conda-forge
+### 1. Install AQUA-core
 
-### Install AQUA-core
+Follow the installation instructions in the AQUA-core repository:
 
-Follow installation instructions in the AQUA-core repository:
-📘 https://github.com/DestinE-Climate-DT/AQUA
+> 📘 https://github.com/DestinE-Climate-DT/AQUA
 
-### Install AQUA-diagnostics
-
+### 2. Install AQUA-diagnostics
+```bash
 git clone git@github.com:DestinE-Climate-DT/AQUA-diagnostics.git
 cd AQUA-diagnostics
 mamba env create -f environment.yml
 mamba activate aqua-diagnostics
 pip install -e .
+```
 
-The environment contains only the dependencies needed to run the diagnostics;
-AQUA-core must be accessible in the environment (installed or in editable mode).
+Next step is to install the [AQUA auxiliary files](https://aqua.readthedocs.io/en/latest/getting_started.html#auxiliary-files-installation) as:
+```bash
+aqua install <machine>
+```
 
-## Container usage
+Final step is to add [AQUA catalogs](https://aqua.readthedocs.io/en/latest/getting_started.html#catalog-installation)
+```bash
+aqua add <catalog>
+```
+For example, to add the catalog for `climatedt-phase1`, run:
+```bash
+aqua add climatedt-phase1
+```
 
-Diagnostics can also be executed inside the AQUA container.
-Refer to the Container chapter in the AQUA documentation for details.
+> **Note:** The AQUA-core is installed via pypi dependency. AQUA-core can also be installed in an editable mode.
+
+---
+
+## Container Usage
+
+Diagnostics can also be executed inside the AQUA container. Refer to the Container chapter in the [AQUA documentation](https://aqua.readthedocs.io/en/latest/container.html) for details.
+
+---
 
 ## Documentation
 
-Full [AQUA Documentation](https://aqua-diagnostics.readthedocs.io/en/latest/) is available on ReadTheDocs.
+Full documentation is available on ReadTheDocs:
+📖 [AQUA-diagnostics](https://aqua-diagnostics.readthedocs.io/en/latest/)
 
-This includes:
+Topics covered include:
+
 - Usage examples for each diagnostic
 - Configuration files (YAML)
-- How to run the analysis wrapper (aqua analysis)
+- How to run the analysis wrapper (`aqua analysis`)
 - Guidance for writing custom diagnostics
+
+---
 
 ## Examples
 
-Examples and notebooks demonstrating the diagnostics are available in the notebooks directory.
+Notebooks and usage examples are available in the [`notebooks/`](./notebooks) directory.
+
+---
 
 ## Contributing
 
-Contributions are welcome!
-Please refer to the Contribution Guidelines in this repository.
+Contributions are welcome! Please refer to the [Contribution Guidelines](./CONTRIBUTING.md) in this repository.
+
+---
 
 ## License
 
-AQUA-diagnostics is open-source under the Apache 2.0 License.
+AQUA-diagnostics is open-source software licensed under the **Apache 2.0 License**.
+
 Copyright belongs to the European Union, represented by the European Commission.
-The work is funded by Contract DE_340_CSC — Destination Earth Programme Climate Adaptation Digital Twin (Climate DT).
+Funded by Contract **DE_340_CSC** — Destination Earth Programme Climate Adaptation Digital Twin (Climate DT).

@@ -120,8 +120,13 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
     plot.run(format=cli.save_format, **plot_params)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the Histogram diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
         args, diagnostic_name="histogram", default_config="config-histogram.yaml", log_name="Histogram CLI"
@@ -185,3 +190,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     cli.logger.info("Histogram diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

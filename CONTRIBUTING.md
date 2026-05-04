@@ -79,6 +79,63 @@ In the GitHub UI: **Actions** → **AQUA-diagnostics Cross-Check** → **Run wor
 Enhancements of existing features or new features may be suggested by opening an issue in the AQUA-diagnostics repository.
 Please use the `improvements` label for existing features.
 
+### Writing tests
+
+Tests live under `tests/` and use `pytest` (+ `pytest-mock` for the `mocker` fixture). Run the full suite from the repo root with:
+
+```bash
+pytest tests/
+```
+
+Two kinds of tests cover a diagnostic:
+
+1. **Diagnostic-logic tests** (`tests/<diagnostic>/test_<diagnostic>.py`) — exercise the diagnostic classes (`GlobalBiases`, `SeaIce`, …) against the real `ci` catalog. These validate the *scientific* behaviour and data handling.
+2. **CLI tests** (`tests/cli/test_cli_<diagnostic>.py`) — validate the CLI script itself: argument parsing, configuration loading, and that the right diagnostic/plot classes are invoked for each branch of the config. These are fast (seconds) because every external dependency is mocked.
+
+Keep the two layers separate: CLI tests should **not** re-test diagnostic logic, and diagnostic-logic tests should **not** go through the CLI.
+
+#### Adding tests for a new CLI
+
+The CLI test framework relies on one small refactor and a shared set of fixtures.
+
+1. **Expose a callable entry point.** In `aqua/diagnostics/<name>/cli_<name>.py`, wrap the body of `if __name__ == "__main__":` in a `main(argv=None)` function, leaving only a two-line stub at the bottom:
+
+   ```python
+   def main(argv=None):
+       args = parse_arguments(argv if argv is not None else sys.argv[1:])
+       cli = DiagnosticCLI(args, ...).prepare()
+       # ... orchestration ...
+       cli.close_dask_cluster()
+
+   if __name__ == "__main__":
+       main()
+   ```
+
+   This is a mechanical, behaviour-preserving change that makes the CLI importable and testable.
+
+2. **Reuse the shared fixtures** in `tests/cli/conftest.py`:
+   - `build_config(diagnostics, **kwargs)` — writes a minimal valid YAML config to a temp dir and returns its path. Pass a mapping of diagnostic blocks, e.g. `{"globalbiases": {"run": True, ...}}` or `{"seaice_timeseries": {...}, "seaice_2d_bias": {...}}`.
+   - `mock_cluster` — no-ops `open_cluster`/`close_cluster` so tests don't spawn a Dask cluster.
+
+3. **Patch diagnostic classes at the CLI module path**, not where they are defined. In a per-file fixture, e.g.:
+
+   ```python
+   @pytest.fixture
+   def mock_gb(self, mocker):
+       mock_gb_cls   = mocker.patch(f"{CLI_MODULE}.GlobalBiases")
+       mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotGlobalBiases")
+       return mock_gb_cls, mock_plot_cls
+   ```
+
+4. **Use this minimal template** for each CLI:
+   - `test_parse_arguments_cli_options`: verify that parsed arguments include the expected values and any diagnostic-specific flags (e.g. seaice's `--proj` flag in seaice).
+   - `test_<diagnostic>_disabled_skips_processing`: when `run: False`, verify that the plot class is not instantiated.
+   - `test_<feature>_full_pipeline`: cover each main CLI execution branch (one test for each distinct orchestration block or plot type).
+
+Do not test things already covered by `tests/diagnostic_base/` (argument merging, dataset overrides). The shared `DiagnosticCLI` is tested there.
+
+Look at examples such as: `tests/cli/test_cli_global_biases.py` and `tests/cli/test_cli_seaice.py` as reference implementations.
+
 ### Coding style checks with ruff and pre-commit in a Pull Request
 
 This project uses pre-commit hooks and ruff as linter and formatter to enforce the coding style.

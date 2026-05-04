@@ -29,8 +29,13 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the Timeseries diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
     cli = DiagnosticCLI(args=args, diagnostic_name="timeseries", default_config="config_timeseries_atm.yaml")
@@ -458,3 +463,7 @@ if __name__ == "__main__":
                 cli.logger.error(f"Error running Gregory diagnostic: {e}")
 
     cli.close_dask_cluster()
+
+
+if __name__ == "__main__":
+    main()

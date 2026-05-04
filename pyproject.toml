@@ -55,13 +55,14 @@ notebooks = [
 tests = [
     "pytest",
     "pytest-cov",
+    "pytest-mock",
     "pytest-xdist",
     "coverage",
     "cdo"
 ]
 style = [
     "pre-commit",
-    "ruff==0.15.10"
+    "ruff==0.15.12"
 ]
 minimal = [
     "aqua-diagnostics[core]"

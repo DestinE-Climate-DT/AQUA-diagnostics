@@ -23,10 +23,13 @@ def parse_arguments(arguments):
     return parser.parse_args(arguments)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the Boxplots diagnostic CLI.
 
-    # set tool name for config lookup
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize CLI handler
     cli = DiagnosticCLI(
@@ -122,21 +125,21 @@ if __name__ == "__main__":
             ref_exp_list_unique = list(dict.fromkeys(ref_exp_list))
 
             if variables == ["-snlwrf", "snswrf", "slhtf", "ishf"]:
-                TITLE = (
+                title = (
                     "Boxplot of Surface Radiation Fluxes for "
                     + ", ".join(model_exp_list_unique)
                     + "\nrelative to "
                     + ", ".join(ref_exp_list_unique)
                 )
             elif variables == ["-tnlwrf", "tnswrf"]:
-                TITLE = (
+                title = (
                     "Boxplot of TOA Radiation Fluxes for "
                     + ", ".join(model_exp_list_unique)
                     + "\nrelative to "
                     + ", ".join(ref_exp_list_unique)
                 )
             else:
-                TITLE = None
+                title = None
 
             if not fldmeans:
                 cli.logger.warning("No datasets available for variables %s. Skipping plot.", variables)
@@ -149,8 +152,12 @@ if __name__ == "__main__":
                 outputdir=cli.outputdir,
                 loglevel=cli.loglevel,
             )
-            plot.plot_boxplots(data=fldmeans, data_ref=fldmeans_ref, var=variables, title=TITLE, **plot_kwargs)
+            plot.plot_boxplots(data=fldmeans, data_ref=fldmeans_ref, var=variables, title=title, **plot_kwargs)
 
     cli.close_dask_cluster()
 
     cli.logger.info("Boxplots diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()
