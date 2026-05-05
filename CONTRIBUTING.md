@@ -76,58 +76,131 @@ In the GitHub UI: **Actions** → **AQUA-diagnostics Cross-Check** → **Run wor
 
 ### Suggesting enhancements
 
-Enhancements of existing features or new features may be suggested by opening an issue in the AQUA-diagnostics repository. Please use the `improvements` label for existing features.
+Enhancements of existing features or new features may be suggested by opening an issue in the AQUA-diagnostics repository.
+Please use the `improvements` label for existing features.
 
-### Coding style
+### Writing tests
 
-To enforce the coding style, we leverage on `pre-commit` hooks and `ruff` as a linter and formatter.
-We set the length limit of 127 characters per line. More information about the coding style chosen
-can be found in the `pyproject.toml` file.
+Tests live under `tests/` and use `pytest` (+ `pytest-mock` for the `mocker` fixture). Run the full suite from the repo root with:
 
-### Manual trigger of lint and formatting checks for specific files in a Pull Request
+```bash
+pytest tests/
+```
 
-To manually trigger and align the code changes to the reference coding style, do the following steps:
+Two kinds of tests cover a diagnostic:
 
-1. Install the pre-commit hooks (if not already installed):
+1. **Diagnostic-logic tests** (`tests/<diagnostic>/test_<diagnostic>.py`) — exercise the diagnostic classes (`GlobalBiases`, `SeaIce`, …) against the real `ci` catalog. These validate the *scientific* behaviour and data handling.
+2. **CLI tests** (`tests/cli/test_cli_<diagnostic>.py`) — validate the CLI script itself: argument parsing, configuration loading, and that the right diagnostic/plot classes are invoked for each branch of the config. These are fast (seconds) because every external dependency is mocked.
+
+Keep the two layers separate: CLI tests should **not** re-test diagnostic logic, and diagnostic-logic tests should **not** go through the CLI.
+
+#### Adding tests for a new CLI
+
+The CLI test framework relies on one small refactor and a shared set of fixtures.
+
+1. **Expose a callable entry point.** In `aqua/diagnostics/<name>/cli_<name>.py`, wrap the body of `if __name__ == "__main__":` in a `main(argv=None)` function, leaving only a two-line stub at the bottom:
+
+   ```python
+   def main(argv=None):
+       args = parse_arguments(argv if argv is not None else sys.argv[1:])
+       cli = DiagnosticCLI(args, ...).prepare()
+       # ... orchestration ...
+       cli.close_dask_cluster()
+
+   if __name__ == "__main__":
+       main()
+   ```
+
+   This is a mechanical, behaviour-preserving change that makes the CLI importable and testable.
+
+2. **Reuse the shared fixtures** in `tests/cli/conftest.py`:
+   - `build_config(diagnostics, **kwargs)` — writes a minimal valid YAML config to a temp dir and returns its path. Pass a mapping of diagnostic blocks, e.g. `{"globalbiases": {"run": True, ...}}` or `{"seaice_timeseries": {...}, "seaice_2d_bias": {...}}`.
+   - `mock_cluster` — no-ops `open_cluster`/`close_cluster` so tests don't spawn a Dask cluster.
+
+3. **Patch diagnostic classes at the CLI module path**, not where they are defined. In a per-file fixture, e.g.:
+
+   ```python
+   @pytest.fixture
+   def mock_gb(self, mocker):
+       mock_gb_cls   = mocker.patch(f"{CLI_MODULE}.GlobalBiases")
+       mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotGlobalBiases")
+       return mock_gb_cls, mock_plot_cls
+   ```
+
+4. **Use this minimal template** for each CLI:
+   - `test_parse_arguments_cli_options`: verify that parsed arguments include the expected values and any diagnostic-specific flags (e.g. seaice's `--proj` flag in seaice).
+   - `test_<diagnostic>_disabled_skips_processing`: when `run: False`, verify that the plot class is not instantiated.
+   - `test_<feature>_full_pipeline`: cover each main CLI execution branch (one test for each distinct orchestration block or plot type).
+
+Do not test things already covered by `tests/diagnostic_base/` (argument merging, dataset overrides). The shared `DiagnosticCLI` is tested there.
+
+Look at examples such as: `tests/cli/test_cli_global_biases.py` and `tests/cli/test_cli_seaice.py` as reference implementations.
+
+### Coding style checks with ruff and pre-commit in a Pull Request
+
+This project uses pre-commit hooks and ruff as linter and formatter to enforce the coding style.
+The coding style is defined by the `pyproject.toml` file and the `pre-commit` configuration file in `.pre-commit-config.yaml`.
+
+The pre-commit and ruff dependencies are installed automatically when setting up
+the dev environment through the `environment-dev.yml` file.
+The pre-commit configuration enforces two groups of checks:
+
+- **General file cleaning hooks** from `pre-commit-hooks`: large-file check, trailing whitespace trimming (except `.md` and `Makefile`), end-of-file newline fix, YAML validation, and overall Python syntax validation.
+- **Ruff hooks**: `ruff-check` and `ruff-format`.
+
+Ruff has two complementary roles in this workflow:
+
+- `ruff check` runs linting rules and reports code-quality/style violations; with `--fix` (and optionally `--unsafe-fixes`) it can also auto-fix part of them.
+- `ruff format` only applies formatting (layout/style normalization), similar to a code formatter, without running lint-rule diagnostics.
+
+To check and align code changes introduced in a PR with the coding style, developers can choose between the following options:
+
+1. [Recommended option] Use `pre-commit` hooks to check and align code changes at commit time.
+
+
+This requires installing the `pre-commit` hooks first. From the root folder of the repository, run:
+
 ```bash
 pre-commit install
 ```
 
-2. If does not exist yet, create a file `.pre-commit-config.yaml` in the root of the repository with the following content:
+From this moment on, every time a commit is made, the `pre-commit` hooks will be run automatically to check and align
+the code changes with the coding style. If the code changes are not aligned, the commit will be rejected, and the
+proposed changes will appear as unstaged changes in the developer’s local repository.
+The developer can then review the changes, stage them again, and commit successfully.
 
-```yaml
-repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-```
-
-3. From AQUA-diagnostics root folder, manually run the pre-commit hooks:
+If, for any reason, the developer wants to disable the `pre-commit` hooks, they can run:
 ```bash
-pre-commit run --all-files
+pre-commit uninstall
 ```
 
-4. If not installed already, install `ruff` (check the version in the `.pre-commit-config.yaml` file):
-```bash
-pip install ruff==<version_number>
-```
-
-5. Run the linter fixer from the path to the file or folder that have been modified in the PR and need to be aligned to the reference coding style (it will use the rules set in the `pyproject.toml` file):
+2. Alternatively, developers can manually run the `pre-commit` hooks to check the coding style of the code changes.
+To trigger all the pre-commit hooks manually, from the root folder of the repository, run:
 
 ```bash
-ruff check --fix <file_or_folder_to_target> --no-cache
+pre-commit run -a
 ```
 
-Note:
-The extra flag `--unsafe-fix` allows Ruff to apply fixes that might change the behavior of your code, even if it is not safe to do so.  
+If the developer wants to run the pre-commit hooks only for specific file(s) or folder(s), they can run:
+```bash
+pre-commit run --files <file_or_folder_to_target>
+```
+
+Side note:
+During the manual run of the pre-commit hooks, some errors can be fixed automatically
+by ruff. However, in some cases, ruff may require the extra flag `--unsafe-fixes`.
+This flag allows ruff to apply fixes that might change the behavior of your code, even when it is not safe to do so.  
 Use it with caution and review the diff!
+To run manually ruff linter with the `--unsafe-fixes` flag:
+```bash
+ruff check --fix <file_or_folder_to_target> --no-cache --unsafe-fixes
+```
+(to run over all files, set "." as the target, from the root folder of the repository)
 
-6. Run the formatter from AQUA-diagnostics root folder:
+Then, to run the formatter manually:
+
 ```bash
 ruff format <file_or_folder_to_target> --no-cache
 ```
 
-This will format the code according to the formatting rules set in the `pyproject.toml` file.
+This manual run will also format the code according to the formatting rules defined by the `pyproject.toml` file.

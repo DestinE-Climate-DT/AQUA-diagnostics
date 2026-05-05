@@ -11,6 +11,25 @@ xr.set_options(keep_attrs=True)
 
 
 class Gregory(Diagnostic):
+    """
+    Initialize the Gregory Plot class. This evaluates values necessary for the Gregory Plot
+    from a single model and to save the data to a netcdf file.
+
+    Args:
+        catalog (str): The catalog to be used. If None, the catalog will be determined by the Reader.
+        model (str): The model to be used.
+        exp (str): The experiment to be used.
+        source (str): The source to be used.
+        regrid (str): The target grid to be used for regridding. If None, no regridding will be done.
+        startdate (str): The start date of the data to be retrieved.
+                            If None, all available data will be retrieved.
+        enddate (str): The end date of the data to be retrieved.
+                        If None, all available data will be retrieved.
+        loglevel (str): The log level to be used. Default is 'WARNING'.
+    """
+
+    MINIMUM_MONTHS_REQUIRED = 2
+
     def __init__(
         self,
         diagnostic_name: str = "gregory",
@@ -23,22 +42,6 @@ class Gregory(Diagnostic):
         enddate: str = None,
         loglevel: str = "WARNING",
     ):
-        """
-        Initialize the Gregory Plot class. This evaluates values necessary for the Gregory Plot
-        from a single model and to save the data to a netcdf file.
-
-        Args:
-            catalog (str): The catalog to be used. If None, the catalog will be determined by the Reader.
-            model (str): The model to be used.
-            exp (str): The experiment to be used.
-            source (str): The source to be used.
-            regrid (str): The target grid to be used for regridding. If None, no regridding will be done.
-            startdate (str): The start date of the data to be retrieved.
-                             If None, all available data will be retrieved.
-            enddate (str): The end date of the data to be retrieved.
-                           If None, all available data will be retrieved.
-            loglevel (str): The log level to be used. Default is 'WARNING'.
-        """
         super().__init__(
             catalog=catalog,
             model=model,
@@ -132,7 +135,7 @@ class Gregory(Diagnostic):
             startdate=self.startdate,
             enddate=self.enddate,
             reader_kwargs=reader_kwargs,
-            months_required=2,
+            months_required=self.MINIMUM_MONTHS_REQUIRED,
         )
         self.realization = reader_kwargs["realization"] if "realization" in reader_kwargs else DEFAULT_REALIZATION
 
