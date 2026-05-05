@@ -166,18 +166,24 @@ def load_var_config(
 
     Args:
         config_dict (dict): full configuration dictionary.
-        var (str | dict): variable name or inline variable configuration.
+        var (str | dict): variable name, or inline dict (any keys the diagnostic expects, e.g. ``units``,
+            ``long_name``, ``regions``); the optional ``name`` key is the only one read here, to look up ``params.<name>``.
         diagnostic (str): key under ``config_dict["diagnostics"]`` to read from.
-        prepend_global (bool): if True, always prepend ``None`` to the regions list (deduped).
+        prepend_global (bool): if True, always prepend ``None`` to the regions list (deduped), so the diagnostic
+            is also run on the full (global) domain in addition to any configured regions.
         collapse_freq_keys (tuple | None): if set, pop these boolean flags and combine the True ones into a ``freq`` list.
 
     Returns:
         tuple: ``(var_config, regions)``; ``regions`` is always popped from ``var_config``.
     """
+    # Read the diagnostic-specific config block. Per-variable settings live
+    # under params.<var_name>; shared defaults under params.default.
     diag_block = config_dict.get("diagnostics", {}).get(diagnostic, {}) or {}
     params = diag_block.get("params", {}) or {}
     default_params = params.get("default", {}) or {}
 
+    # Merge precedence: params.default < params.<var_name> < inline dict.
+    # Rightmost dict wins, so an inline override beats per-var which beats default.
     if isinstance(var, dict):
         var_name = var.get("name")
         var_specific = (params.get(var_name, {}) or {}) if var_name else {}
@@ -188,12 +194,17 @@ def load_var_config(
         var_config = {**default_params, **var_specific}
         var_config.setdefault("name", var_name)
 
+    # Collapse boolean frequency flags (e.g. hourly/daily/monthly/annual) into a single `freq` list,
+    # because Timeseries.run() expects a list of active frequencies, not separate booleans.
     if collapse_freq_keys:
         freq = [key for key in collapse_freq_keys if var_config.get(key)]
         for key in collapse_freq_keys:
+            # The flags are then popped so they do not propagate as stray kwargs downstream
             var_config.pop(key, None)
         var_config["freq"] = freq
 
+    # Regions are returned separately and not consumed as a kwarg by the diagnostic,
+    # so with prepend_global=True the global case (None) is always run first.
     regions_in_config = var_config.pop("regions", None)
     if prepend_global:
         regions = [None]
