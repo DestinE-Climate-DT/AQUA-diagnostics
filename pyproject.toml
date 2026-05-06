@@ -50,7 +50,7 @@ docs = [
 ]
 notebooks = [
     "ipykernel",
-    "healpy"
+    "astropy-healpix"
 ]
 tests = [
     "pytest",
