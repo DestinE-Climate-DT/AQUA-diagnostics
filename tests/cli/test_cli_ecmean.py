@@ -187,7 +187,7 @@ def test_set_description_global_mean():
     config = {"global_mean": {"regions": ["Global", "NH"]}}
     description = set_description("global_mean", "IFS", "hist", 2000, 2001, config)
 
-    assert "IFS hist from 2000-01-01 to 2001-12-31" in description
+    assert "IFS hist from 2000-01 to 2001-12" in description
     assert "Global (90°S-90°N)" in description
     assert "NH (20°N-90°N)" in description
 
