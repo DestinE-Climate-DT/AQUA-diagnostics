@@ -83,8 +83,11 @@ class PlotSeasonalCycles(PlotBaseMixin):
         - AQUA_catalog
         - AQUA_model
         - AQUA_exp
+        - AQUA_startdate
+        - AQUA_enddate
         - AQUA_std_startdate
         - AQUA_std_enddate
+        - AQUA_region
         - short_name
         - long_name
         - units
