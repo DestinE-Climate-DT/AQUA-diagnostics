@@ -129,15 +129,47 @@ def main(argv=None):
                                 f"Plotting Timeseries diagnostic for variable {var} in region "
                                 f"{region if region else 'global'} with formats: {cli.save_format}"
                             )
+
+                            # We populate the ref data with None if any of the reference
+                            # were not successfully run to avoid errors in the plotting function.
+                            if ts_ref and any(t is None for t in ts_ref) or "references" not in cli.config_dict:
+                                # We want to raise a warning only if reference were originally requested.
+                                if ts_ref and any(t is None for t in ts_ref):
+                                    cli.logger.warning(
+                                        f"No reference datasetes were successfully run for variable {var} \
+                                            in region {region if region else 'global'}."
+                                    )
+                                ref_monthly_data = None
+                                ref_annual_data = None
+                                std_monthly_data = None
+                                std_annual_data = None
+                            else:
+                                ref_monthly_data = (
+                                    [ts_ref[i].monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                ref_annual_data = (
+                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
+                                )
+                                std_monthly_data = (
+                                    [ts_ref[i].std_monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                std_annual_data = (
+                                    [ts_ref[i].std_annual for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
                                 "annual_data": [t.annual for t in ts],
-                                "ref_monthly_data": [t.monthly for t in ts_ref] if "references" in cli.config_dict else None,
-                                "ref_annual_data": [t.annual for t in ts_ref] if "references" in cli.config_dict else None,
-                                "std_monthly_data": [t.std_monthly for t in ts_ref]
-                                if "references" in cli.config_dict
-                                else None,
-                                "std_annual_data": [t.std_annual for t in ts_ref] if "references" in cli.config_dict else None,
+                                "ref_monthly_data": ref_monthly_data,
+                                "ref_annual_data": ref_annual_data,
+                                "std_monthly_data": std_monthly_data,
+                                "std_annual_data": std_annual_data,
                                 "diagnostic_name": diagnostic_name,
                                 "loglevel": cli.loglevel,
                             }
@@ -238,15 +270,47 @@ def main(argv=None):
                                 f"Plotting Timeseries diagnostic for variable {var} in region "
                                 f"{region if region else 'global'} with formats: {cli.save_format}"
                             )
+
+                            # We populate the ref data with None if any of the reference
+                            # were not successfully run to avoid errors in the plotting function.
+                            if ts_ref and any(t is None for t in ts_ref) or "references" not in cli.config_dict:
+                                # We want to raise a warning only if reference were originally requested.
+                                if ts_ref and any(t is None for t in ts_ref):
+                                    cli.logger.warning(
+                                        f"No reference datasetes were successfully run for variable {var} \
+                                            in region {region if region else 'global'}."
+                                    )
+                                ref_monthly_data = None
+                                ref_annual_data = None
+                                std_monthly_data = None
+                                std_annual_data = None
+                            else:
+                                ref_monthly_data = (
+                                    [ts_ref[i].monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                ref_annual_data = (
+                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
+                                )
+                                std_monthly_data = (
+                                    [ts_ref[i].std_monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                std_annual_data = (
+                                    [ts_ref[i].std_annual for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
                                 "annual_data": [t.annual for t in ts],
-                                "ref_monthly_data": [t.monthly for t in ts_ref] if "references" in cli.config_dict else None,
-                                "ref_annual_data": [t.annual for t in ts_ref] if "references" in cli.config_dict else None,
-                                "std_monthly_data": [t.std_monthly for t in ts_ref]
-                                if "references" in cli.config_dict
-                                else None,
-                                "std_annual_data": [t.std_annual for t in ts_ref] if "references" in cli.config_dict else None,
+                                "ref_monthly_data": ref_monthly_data,
+                                "ref_annual_data": ref_annual_data,
+                                "std_monthly_data": std_monthly_data,
+                                "std_annual_data": std_annual_data,
                                 "diagnostic_name": diagnostic_name,
                                 "loglevel": cli.loglevel,
                             }
