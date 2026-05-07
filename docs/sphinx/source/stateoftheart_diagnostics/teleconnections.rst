@@ -36,7 +36,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-teleconnections.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/config-teleconnections.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
 * Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
 

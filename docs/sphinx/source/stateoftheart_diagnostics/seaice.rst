@@ -58,7 +58,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/seaice`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-seaice.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/config-seaice.yaml``
 * Regional definitions are available in ``aqua/diagnostics/config/tools/seaice/definitions/regions.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/seaice`` directory and contain examples of how to use the diagnostic.
 

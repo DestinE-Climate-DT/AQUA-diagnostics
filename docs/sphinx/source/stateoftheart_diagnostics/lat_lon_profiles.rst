@@ -44,7 +44,7 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/lat_lon_profiles`` directory, which contains both the source code and
   the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-lat_lon_profiles.yaml``.
+* A template configuration file is available at ``aqua/diagnostics/templates/config-lat_lon_profiles.yaml``.
 * Regional definitions are available in ``aqua/diagnostics/config/tools/lat_lon_profiles/definitions/regions.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/lat_lon_profiles`` directory and contain examples of how to use the diagnostic.
 

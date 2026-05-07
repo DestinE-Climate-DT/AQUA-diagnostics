@@ -37,7 +37,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/global_biases`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-global_biases.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/config-global_biases.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/global_biases`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets

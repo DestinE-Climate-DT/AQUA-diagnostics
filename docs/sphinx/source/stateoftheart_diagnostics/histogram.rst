@@ -36,7 +36,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/histogram/`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-histogram.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/config-histogram.yaml``
 * Region definitions are available in ``aqua/diagnostics/config/tools/histogram/definitions/regions.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/histogram/`` directory and contain examples of how to use the diagnostic.
 

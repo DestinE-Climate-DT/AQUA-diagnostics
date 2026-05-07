@@ -27,7 +27,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command line interface (CLI) scripts.
-* Template configuration files are available in the ``aqua/diagnostics/templates/diagnostics/config-ensemble_latlon.yaml`` directory.
+* Template configuration files are available in the ``aqua/diagnostics/templates/config-ensemble_latlon.yaml`` directory.
 * Notebooks are available in the ``notebooks/diagnostics/ensemble`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets

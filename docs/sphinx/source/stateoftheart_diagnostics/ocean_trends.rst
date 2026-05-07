@@ -39,7 +39,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ocean_trends`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-trends.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/config-trends.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/trends`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
