@@ -4,7 +4,7 @@
 import argparse
 import sys
 
-from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, load_var_config, template_parse_arguments
 from aqua.diagnostics.histogram import Histogram, PlotHistogram
 
 
@@ -149,23 +149,11 @@ def main(argv=None):
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
 
         for var, is_formula in all_vars:
-            # Handle both dict and string formats
-            if isinstance(var, dict):
-                var_name = var.get("name")
-                var_config = var.copy()  # Use the dict directly
-            else:
-                var_name = var
-                var_config = {}
-
-            cli.logger.info("Running Histogram diagnostic for %s: %s", "formula" if is_formula else "variable", var_name)
-
-            # Get params for this variable and merge with var_config
-            param_dict = diag_config.get("params", {}).get(var_name, {})
-            var_config = {**var_config, **param_dict}
+            var_config, regions = load_var_config(cli.config_dict, var, diagnostic="histogram")
+            var_name = var_config.get("name")
             var_config["is_formula"] = is_formula
 
-            # Get regions from merged config
-            regions = var_config.get("regions", [None])
+            cli.logger.info("Running Histogram diagnostic for %s: %s", "formula" if is_formula else "variable", var_name)
 
             for region in regions:
                 cli.logger.info("Region: %s", region if region else "global")

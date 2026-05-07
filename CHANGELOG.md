@@ -7,7 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.24.0):
 Complete list:
-- Rename template folder from collections to tools (#224)
+- Move yaml templates outside `collections` folder (#224)
+- Dashboard porting: ECmean (#192)
+- CLI `load_var_config` centralization (#246)
+- LatLonProfiles: major diagnostic refactor (#229)
 - GlobalBiases: improve descriptions (#191)
 - Tropical cyclones: simplification, reader kwargs, orography from catalogue (#184)
 - Teleconnections: backporting of dashboard updates, including startdate and enddate cli features (#231)

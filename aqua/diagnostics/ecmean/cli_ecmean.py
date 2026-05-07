@@ -108,6 +108,8 @@ def reader_data(
         except Exception as err:
             reader_logger.error("Error while regridding model %s: %s", model, err)
             return None
+    # if no regridding is needed, return the data as is
+    return xfield
 
 
 def data_check(data_atm, data_oce, logger=None):
@@ -155,13 +157,13 @@ def time_check(mydata, y1, y2, logger=None):
 
     # guessing years from the dataset
     if y1 is None:
-        y1 = int(mydata.time[0].values.astype("datetime64[Y]").astype(str))
+        y1 = int(mydata.time.dt.year.values[0])
         if logger is not None:
-            logger.info("Guessing starting year %s", y1)
+            logger.info("Guessing starting year: %s", y1)
     if y2 is None:
-        y2 = int(mydata.time[-1].values.astype("datetime64[Y]").astype(str))
+        y2 = int(mydata.time.dt.year.values[-1])
         if logger is not None:
-            logger.info("Guessing ending year %s", y2)
+            logger.info("Guessing ending year: %s", y2)
 
     # Warn if the data frequency is not monthly, since ECmean expects monthly data
     data_freq = xarray_to_pandas_freq(mydata)
@@ -225,7 +227,7 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     Returns:
         description (str)
     """
-    model_time = f"for {model} {exp} from {year1}-01-01 to {year2}-12-31. "
+    model_time = f"for {model} {exp} from {year1}-01 to {year2}-12."
 
     region_bounds = {
         "Global": (-90.0, 90.0),
@@ -246,25 +248,24 @@ def set_description(diagnostic, model, exp, year1, year2, config):
         ]
     )
 
-    regions_phrase = f"Processed regions are {region_text}."
+    regions_phrase = f"Processed regions are {region_text}"
 
     if diagnostic == "performance_indices":
-        description = (
-            f"Performance Indices normalized to the CMIP6 average "
-            f"for different regions and seasons {model_time}"
-            f"{regions_phrase}. Numbers < 1 imply better results than CMIP6 mean."
+        return (
+            f"Reichler and Kim (2008) Performance Indices (normalized against an ensemble of CMIP6 models) "
+            f"for different regions and seasons {model_time} "
+            f"{regions_phrase}. Values smaller than one imply better results than the CMIP6 multi-model mean."
         )
     elif diagnostic == "global_mean":
-        description = (
-            f"Global mean biases normalized to observed interannual variability "
-            f"with respect to references for different regions and seasons {model_time}"
-            f"{regions_phrase}"
+        return (
+            f"Global mean differences with respect to observational references "
+            f"(normalized to observational interannual variability) "
+            f"for different regions and seasons {model_time} "
+            f"{regions_phrase}. Darker colors imply larger differences."
         )
     else:
         # produce a generic description
-        description = f"Diagnostic {diagnostic} {model_time.strip()}"
-
-    return description
+        return f"Diagnostic {diagnostic} {model_time.strip()}"
 
 
 def main(argv=None):
@@ -275,7 +276,10 @@ def main(argv=None):
 
     # load the configuration files and override with command line arguments
     config_dict = load_diagnostic_config(
-        diagnostic="ecmean", config=args.config, default_config="config_ecmean_cli.yaml", loglevel=loglevel
+        diagnostic="climate_metrics",
+        config=args.config,
+        default_config="config-climate_metrics-ecmean.yaml",
+        loglevel=loglevel,
     )
     config_dict = merge_config_args(config_dict, args)
 
@@ -325,7 +329,7 @@ def main(argv=None):
         # activate override from command line
         realization = get_arg(args, "realization", None)
         # This reader_kwargs will be used if the dataset corresponding value is None or not present
-        reader_kwargs = config_dict["datasets"][0].get("reader_kwargs") or {}
+        reader_kwargs = dataset.get("reader_kwargs") or {}
         if realization:
             reader_kwargs["realization"] = realization
 
@@ -359,6 +363,7 @@ def main(argv=None):
                 startdate=startdate,
                 enddate=enddate,
                 reader_kwargs=reader_kwargs,
+                loglevel=loglevel,
             )
 
             logger.info("Loading oceanic data from %s", model)
@@ -372,6 +377,7 @@ def main(argv=None):
                 startdate=startdate,
                 enddate=enddate,
                 reader_kwargs=reader_kwargs,
+                loglevel=loglevel,
             )
 
             # check the data
