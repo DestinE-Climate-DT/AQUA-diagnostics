@@ -20,7 +20,7 @@ from .ocean_trends import Trends, PlotTrends
 
 
 DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections"]
-DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["tools"]
+DIAGNOSTIC_TEMPLATE_DIRECTORIES = [""]
 
 __all__ = ["__version__", "NAO", "ENSO", "MJO",
            "PlotNAO", "PlotENSO", "PlotMJO",
