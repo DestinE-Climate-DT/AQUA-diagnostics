@@ -70,8 +70,8 @@ class TestMainExecutionFlow:
         Patch Timeseries, SeasonalCycles, Gregory and their plot counterparts.
         Returns a dict of mocks keyed by class name.
 
-        Timeseries/SeasonalCycles instances get pd.Timestamp plt_startdate and
-        plt_enddate so the min()/max() aggregations in main() succeed.
+        Timeseries/SeasonalCycles instances get pd.Timestamp startdate and
+        enddate so the min()/max() aggregations in main() succeed.
         """
         mocks = {
             "Timeseries": mocker.patch(f"{CLI_MODULE}.Timeseries"),
@@ -82,10 +82,10 @@ class TestMainExecutionFlow:
             "PlotGregory": mocker.patch(f"{CLI_MODULE}.PlotGregory"),
         }
         start, end = pd.Timestamp("2020-01-01"), pd.Timestamp("2020-12-31")
-        mocks["Timeseries"].return_value.plt_startdate = start
-        mocks["Timeseries"].return_value.plt_enddate = end
-        mocks["SeasonalCycles"].return_value.plt_startdate = start
-        mocks["SeasonalCycles"].return_value.plt_enddate = end
+        mocks["Timeseries"].return_value.startdate = start
+        mocks["Timeseries"].return_value.enddate = end
+        mocks["SeasonalCycles"].return_value.startdate = start
+        mocks["SeasonalCycles"].return_value.enddate = end
         return mocks
 
     def test_all_diagnostics_disabled_skip_processing(self, build_config, mock_cluster, mock_ts):
