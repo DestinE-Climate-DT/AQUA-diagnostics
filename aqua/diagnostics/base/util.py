@@ -121,7 +121,7 @@ def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel="W
     """
     configdir = ConfigPath(loglevel=loglevel).configdir
     if folder == "templates":
-        return os.path.join(configdir, folder, "tools")
+        return os.path.join(configdir, folder)
     if folder in ["collections", "tools"]:
         return os.path.join(configdir, folder, diagnostic)
     raise ValueError(f"Invalid folder name: {folder}. Must be 'collections', 'tools', or 'templates'.")

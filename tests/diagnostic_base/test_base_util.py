@@ -145,7 +145,7 @@ def test_get_diagnostic_configpath(monkeypatch):
 
     assert get_diagnostic_configpath("timeseries", folder="collections") == str(REAL_CONFIG_DIR / "collections" / "timeseries")
     assert get_diagnostic_configpath("timeseries", folder="tools") == str(REAL_CONFIG_DIR / "tools" / "timeseries")
-    assert get_diagnostic_configpath("timeseries", folder="templates") == str(REAL_CONFIG_DIR / "templates" / "collections")
+    assert get_diagnostic_configpath("timeseries", folder="templates") == str(REAL_CONFIG_DIR / "templates")
 
     with pytest.raises(ValueError, match="Invalid folder name"):
         get_diagnostic_configpath("timeseries", folder="invalid")
