@@ -166,7 +166,7 @@ class DetectNodes:
         if self.orography:
             self.logger.debug("Running DetectNodes with orography")
             detect_string = (
-                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr "
+                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr --out_header "
                 f"--out {tempest_fileout} --searchbymin {tempest_dictionary['psl']} "
                 f"--closedcontourcmd {tempest_dictionary['psl']},200.0,5.5,0;"
                 f"_DIFF({tempest_dictionary['zg']}(30000Pa),{tempest_dictionary['zg']}(50000Pa)),"
@@ -180,7 +180,7 @@ class DetectNodes:
         else:
             self.logger.debug("Running DetectNodes without orography")
             detect_string = (
-                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr --out {tempest_fileout} "
+                f"DetectNodes --in_data {tempest_filein} --timefilter 6hr --out_header --out {tempest_fileout} "
                 f"--searchbymin {tempest_dictionary['psl']} "
                 f"--closedcontourcmd {tempest_dictionary['psl']},200.0,5.5,0;"
                 f"_DIFF({tempest_dictionary['zg']}(30000Pa),"
@@ -197,6 +197,15 @@ class DetectNodes:
             subprocess.run(detect_string.split(), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
         self.logger.debug(f"DetectNodes output saved to {tempest_fileout}")
+       # result = subprocess.run(detect_string,shell=True,capture_output=True,text=True)
+       # print("STDOUT:")
+       # print(result.stdout)
+
+       # print("STDERR:")
+       # print(result.stderr)
+
+       # print("RETURN CODE:", result.returncode)
+       # print(detect_string)
 
     def store_detect_nodes(self, timestep, write_fullres=False):
         """
