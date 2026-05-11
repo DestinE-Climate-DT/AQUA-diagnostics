@@ -117,7 +117,7 @@ class TestExtractDates:
                 "AQUA_enddate": datetime(2021, 4, 2),
             },
         )
-        assert extract_dates(da) == ("2020-03-01", "2021-04-02")
+        assert extract_dates(da) == ("2020-03", "2021-04")
 
     def test_iso_string_with_time_part_is_trimmed(self):
         da = xr.DataArray(
