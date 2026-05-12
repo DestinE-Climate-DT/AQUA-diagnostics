@@ -6,7 +6,7 @@ import xarray as xr
 
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, strlist_to_phrase, time_to_string
+from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
@@ -353,8 +353,14 @@ class PlotBaseMixin:
         self.ref_catalogs = None
         self.ref_models = None
         self.ref_exps = None
+        # Dates
+        self.startdate = None
+        self.enddate = None
+        self.ref_startdate = None
+        self.ref_enddate = None
         self.std_startdate = None
         self.std_enddate = None
+        # Other info
         self.region = None
         self.short_name = None
         self.long_name = None
@@ -448,30 +454,43 @@ class PlotBaseMixin:
             description += f"({self.short_name}) "
 
         if self.region is not None:
-            description += f"for region {self.region} "
+            description += f"for {self.region} "
 
         description += "for "
-        description += strlist_to_phrase(
-            items=[f"{self.catalogs[i]} {self.models[i]} {self.exps[i]}" for i in range(self.len_data)]
-        )
+        for i in range(self.len_data):
+            description += f"{self.models[i]} {self.exps[i]}"
+            if self.startdate[i] is not None and self.enddate[i] is not None:
+                start_str = time_to_string(self.startdate[i], format="%Y-%m")
+                end_str = time_to_string(self.enddate[i], format="%Y-%m")
+                description += f" (from {start_str} to {end_str})"
 
         if self.len_ref > 0:
             description += " with reference"
             for i in range(self.len_ref):
-                if self.ref_models[i] == "ERA5" or self.ref_models == "ERA5":
-                    description += " ERA5 "
-                elif isinstance(self.ref_models, list):
-                    description += f" {self.ref_models[i]} {self.ref_exps[i]} "
+                if isinstance(self.ref_models, list):
+                    description += f" {self.ref_models[i]} {self.ref_exps[i]}"
+                    if self.ref_startdate is not None and self.ref_enddate is not None:
+                        ref_start_str = time_to_string(self.ref_startdate[i], format="%Y-%m")
+                        ref_end_str = time_to_string(self.ref_enddate[i], format="%Y-%m")
+                        description += f" (from {ref_start_str} to {ref_end_str})"
                 else:
-                    description += f" {self.ref_models} {self.ref_exps} "
-        elif self.len_ref == 0:
-            description += "."
+                    description += f" {self.ref_models} {self.ref_exps}"
+                    if self.ref_startdate is not None and self.ref_enddate is not None:
+                        ref_start_str = time_to_string(self.ref_startdate, format="%Y-%m")
+                        ref_end_str = time_to_string(self.ref_enddate, format="%Y-%m")
+                        description += f" (from {ref_start_str} to {ref_end_str})"
+                # HACK: rename ERA5 with a more readable name in the description,
+                # since it is the most common reference dataset for timeseries and seasonal cycles diagnostics
+                if "ERA5 era5" in description:
+                    description = description.replace("ERA5 era5", "ERA5")
+        description += ". "
 
+        # TODO: info on yearly and montlhly data should be controlled if the data are actually plotted
+        # description += 'Dashed line represent yearly data, solid line represent monthly data. '
         if self.std_startdate is not None and self.std_enddate is not None:
-            description += (
-                f"with standard deviation from {time_to_string(self.std_startdate)} to {time_to_string(self.std_enddate)}."
-            )
-            description += " The shaded area represents 2 standard deviations."
+            std_start_str = time_to_string(self.std_startdate, format="%Y-%m")
+            std_end_str = time_to_string(self.std_enddate, format="%Y-%m")
+            description += f"The shaded area represents ±2σ uncertainty bands computed from {std_start_str} to {std_end_str}."
 
         self.logger.debug("Description: %s", description)
         return description

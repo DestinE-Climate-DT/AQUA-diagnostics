@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.24.0):
 Complete list:
+- Timeseries: backporting of dashboard updates (#250)
 - Timeseries: adapt to startdate and enddate centralisation in Diagnostic, remove extend feauture (#244)
 - Dashboard porting: ECmean (#192)
 - CLI `load_var_config` centralization (#246)
