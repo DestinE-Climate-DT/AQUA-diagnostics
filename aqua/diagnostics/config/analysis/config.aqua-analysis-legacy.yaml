@@ -38,10 +38,8 @@ job:
 
     script_path_base: "${AQUA_DIAGNOSTICS}"  # Base directory for the diagnostic scripts
 
-    experiment_kind: "${AQUA_CONFIG}/analysis/climatedt-experiment-kind.yaml"  # experiment kind file configuraton
-
 cluster:  # options for dask cluster (this works well on lumi)
-    workers: 2
+    workers: 32
     threads: 1  # per worker
     memory_limit: 7GiB  # per worker
     connect_timeout: 120  # seconds to wait for client to connect to the cluster
@@ -83,78 +81,78 @@ run:
 diagnostics:
   atmosphere2d:
     biases:
-      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
-               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
+      config: ["${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley.j2",
+               "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-era5.j2"]
     timeseries:
-      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
-               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
+      config: ["${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley.j2",
+               "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-era5.j2"]
     lat_lon_profiles:
-      config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"
+      config: "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley.j2"
 
   atmosphere3d:
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/atmosphere3d/config-atmosphere3d-era5.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/atmosphere3d/config-atmosphere3d-era5.yaml"
 
   climate_metrics:
     ecmean:
-      config: "${AQUA_CONFIG}/collections/jinja/climate_metrics/config-climate_metrics-ecmean.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/climate_metrics/config-climate_metrics-ecmean.yaml"
       nocluster: true  # ECmean does not use the global dask cluster
       source_oce: true  # if a --source_oce argument was passed use it
     gregory:
-      config: "${AQUA_CONFIG}/collections/jinja/climate_metrics/config-climate_metrics-gregory.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/climate_metrics/config-climate_metrics-gregory.yaml"
 
   ocean2d:
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
 
   ocean3d-part1:
     trends:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-en4-trend-drift.yaml"  # these diagnostics need a different chunking
+      config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-trend-drift.yaml"  # these diagnostics need a different chunking
       outname: "ocean3d"
     drift:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-en4-trend-drift.yaml"  # these diagnostics need a different chunking
+      config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-trend-drift.yaml"  # these diagnostics need a different chunking
       outname: "ocean3d"
 
   ocean3d-part2:
     stratification:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-en4-stratification.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-stratification.yaml"
       outname: "ocean3d"
 
   radiation-toa:
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-ceres.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/radiation_toa/config-radiation_toa-ceres.yaml"
     boxplots:
-      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-boxplots.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/radiation_toa/config-radiation_toa-boxplots.yaml"
     timeseries:
-      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-ceres.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/radiation_toa/config-radiation_toa-ceres.yaml"
 
   radiation-surface:
     biases:
-      config: ["${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-ceres.yaml",
-               "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-era5.yaml"]
+      config: ["${AQUA_CONFIG}/collections/legacy/radiation_surface/config-radiation_surface-ceres.yaml",
+               "${AQUA_CONFIG}/collections/legacy/radiation_surface/config-radiation_surface-era5.yaml"]
     boxplots:
-      config: "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-boxplots.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/radiation_surface/config-radiation_surface-boxplots.yaml"
     timeseries:
-      config: ["${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-ceres.yaml",
-               "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-era5.yaml"]
+      config: ["${AQUA_CONFIG}/collections/legacy/radiation_surface/config-radiation_surface-ceres.yaml",
+               "${AQUA_CONFIG}/collections/legacy/radiation_surface/config-radiation_surface-era5.yaml"]
 
   seaice:
     seaice:
-      config: ["${AQUA_CONFIG}/collections/jinja/seaice/config-seaice-osi.yaml",
-               "${AQUA_CONFIG}/collections/jinja/seaice/config-seaice-psc.yaml"]
+      config: ["${AQUA_CONFIG}/collections/legacy/seaice/config-seaice-osi.yaml",
+               "${AQUA_CONFIG}/collections/legacy/seaice/config-seaice-psc.yaml"]
 
   teleconnections:
     nao:
-      config: "${AQUA_CONFIG}/collections/jinja/teleconnections/config-teleconnections-nao.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/teleconnections/config-teleconnections-nao.yaml"
     enso:
-      config: "${AQUA_CONFIG}/collections/jinja/teleconnections/config-teleconnections-enso.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/teleconnections/config-teleconnections-enso.yaml"
 
   water_cycle:
     timeseries:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
     histogram:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
     lat_lon_profiles:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.yaml"
+      config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
