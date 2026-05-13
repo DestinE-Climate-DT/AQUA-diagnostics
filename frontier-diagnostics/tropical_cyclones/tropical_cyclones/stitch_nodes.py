@@ -139,7 +139,7 @@ class StitchNodes:
         # if the orography is found run stitch nodes accordingly
         if "z" in self.lowres2d.data_vars or self.orography:
             stitch_string = (
-                f"StitchNodes --in {full_nodes} --out {self.track_file} "
+                f"StitchNodes --in {full_nodes} --out {self.track_file} --out_file_format csv"
                 f"--in_fmt lon,lat,slp,wind,zs --range 8.0 --mintime {mintime} "
                 f"--maxgap {maxgap} --threshold wind,>=,10.0,10;lat,<=,50.0,10;lat,>=,-50.0,10;zs,<=,1500.0,10"
             )
@@ -148,7 +148,7 @@ class StitchNodes:
         # if the orography is found run stitch nodes accordingly
         else:
             stitch_string = (
-                f"StitchNodes --in {full_nodes} --out {self.track_file} "
+                f"StitchNodes --in {full_nodes} --out {self.track_file} --out_file_format csv"
                 f"--in_fmt lon,lat,slp,wind --range 8.0 --mintime {mintime} "
                 f"--maxgap {maxgap} --threshold wind,>=,10.0,10;lat,<=,50.0,10;lat,>=,-50.0,10"
             )
