@@ -1,6 +1,7 @@
 import pytest
 import xarray as xr
 
+from aqua.core.util import time_to_string
 from aqua.diagnostics import SeaIce
 from tests.shared_constants import APPROX_REL, LOGLEVEL
 
@@ -225,7 +226,7 @@ class TestSeaIce:
         _, result_std = seaice.compute_seaice(method="extent", var="siconc", calc_std_freq="annual")
         std_var_name = "std_sea_ice_extent_arctic"
 
-        assert result_std[std_var_name].attrs["AQUA_std_startdate"] == "1994-01"
-        assert result_std[std_var_name].attrs["AQUA_std_enddate"] == "1996-12"
+        assert result_std[std_var_name].attrs["AQUA_std_startdate"] == time_to_string(seaice.std_startdate, format="%Y-%m")
+        assert result_std[std_var_name].attrs["AQUA_std_enddate"] == time_to_string(seaice.std_enddate, format="%Y-%m")
         assert "AQUA_startdate" not in result_std[std_var_name].attrs
         assert "AQUA_enddate" not in result_std[std_var_name].attrs
