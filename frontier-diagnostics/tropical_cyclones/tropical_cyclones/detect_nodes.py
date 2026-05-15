@@ -197,15 +197,7 @@ class DetectNodes:
             subprocess.run(detect_string.split(), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
         self.logger.debug(f"DetectNodes output saved to {tempest_fileout}")
-       # result = subprocess.run(detect_string,shell=True,capture_output=True,text=True)
-       # print("STDOUT:")
-       # print(result.stdout)
 
-       # print("STDERR:")
-       # print(result.stderr)
-
-       # print("RETURN CODE:", result.returncode)
-       # print(detect_string)
 
     def store_detect_nodes(self, timestep, write_fullres=False):
         """

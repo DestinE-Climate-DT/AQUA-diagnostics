@@ -104,11 +104,12 @@ class TCs(DetectNodes, StitchNodes):
             self.orography = orography
             self.write_fullres = tdict["detect"].get("write_fullres", False)
             if self.orography:
-                import os
-                self.orography_file = os.path.join(
-                   tdict["orography"]["file_path"],
-                   tdict["orography"]["file_name"]
-                )
+                self.orography_file = tdict["orography"]["file_path"]
+           #     import os
+           #     self.orography_file = os.path.join(
+           #        tdict["orography"]["file_path"],
+           #        tdict["orography"]["file_name"]
+           #     )
                 #self.orography_file = tdict["orography"]["file_path"]
                 self.source_oro = tdict["orography"].get("source_oro", None)
                 self.var_oro = tdict["orography"].get("var_oro", None)
