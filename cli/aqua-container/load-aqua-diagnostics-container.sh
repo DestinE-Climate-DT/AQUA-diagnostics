@@ -3,7 +3,7 @@ set -e
 
 #--------------------------------------------------------------#
 #----- Script to load AQUA-diagnostics container on multiple machines -----#
-#------------ Support for levante, lumi and MN5 ---------------#
+#-------- Support for levante, lumi, MN5 and nord4 -------------#
 #--------------------------------------------------------------#
 
 # Set default AQUA-diagnostics container version
@@ -19,7 +19,7 @@ usage() {
 
     Mandatory Argument:
         machine_name             The name of the machine to set.
-                                 Machine supported are lumi, levante and MN5
+                                 Machines supported are lumi, levante, MN5 and nord4
 
     Options:
         --native                 Enable native mode: AQUA-diagnostics will read from native env variable.
@@ -96,7 +96,7 @@ parse_machine() {
         echo "Selecting the AQUA-diagnostics path $AQUA_DIAGNOSTICS from the container."
         echo "AQUA-diagnostics version is set to: $version"
     else
-        if [ -z $AQUA_DIAGNOSTICS ]; then
+        if [ -z "$AQUA_DIAGNOSTICS" ]; then
             echo "ERROR: AQUA_DIAGNOSTICS directory is not set!"
             exit 1
         fi
@@ -138,18 +138,18 @@ function setup_container_path(){
     machine=$1
     case "$machine" in
         "lumi")
-            AQUA_folder="/project/project_465000454/containers"
+            AQUA_DIAGNOSTICS_folder="/pfs/lustrep4/projappl/project_465002727/containers/aqua-diagnostics"
             ;;
 
         "levante")
-            AQUA_folder="/work/bb1153/b382289/container/aqua"
+            AQUA_DIAGNOSTICS_folder="/work/bb1153/b382289/container/aqua-diagnostics"
             ;;
 
         "MN5")
-            AQUA_folder="/gpfs/projects/ehpc01/containers/aqua"
+            AQUA_DIAGNOSTICS_folder="/gpfs/projects/ehpc01/containers/aqua-diagnostics"
             ;;
         "nord4")
-            AQUA_folder="/esarchive/scratch/AQUA/containers"
+            AQUA_DIAGNOSTICS_folder="/esarchive/scratch/AQUA/containers/aqua-diagnostics"
             ;;
         *)
             echo "ERROR: The machine $machine is not supported" >&2
@@ -159,30 +159,30 @@ function setup_container_path(){
 
 
     if [ ${version} == "latest" ] ; then
-        echo "Asking for latest AQUA-diagnostics version, detecting the more recent available in ${AQUA_folder}" >&2
-        available_versions=$(find ${AQUA_folder}/ -type f -name 'aqua-diagnostics_*.sif' -exec basename {} .sif \; | sed 's/^aqua-diagnostics_//')
+        echo "Asking for latest AQUA-diagnostics version, detecting the more recent available in ${AQUA_DIAGNOSTICS_folder}" >&2
+        available_versions=$(find ${AQUA_DIAGNOSTICS_folder}/ -type f -name 'aqua-diagnostics_*.sif' -exec basename {} .sif \; | sed 's/^aqua-diagnostics_//')
         version=$(printf "%s\n" "${available_versions[@]}" | sort -V -r | head -n 1 )
         echo "AQUA-diagnostics v${version} selected! If you are not happy, please specify your version with -v flag" >&2
     fi
 
-    AQUA_container="$AQUA_folder/aqua-diagnostics_${version}.sif"
+    AQUA_DIAGNOSTICS_container="$AQUA_DIAGNOSTICS_folder/aqua-diagnostics_${version}.sif"
 
-    if [ ! -f "$AQUA_container" ]; then
-        echo "ERROR: The AQUA-diagnostics container does not exist at: $AQUA_container" >&2
+    if [ ! -f "$AQUA_DIAGNOSTICS_container" ]; then
+        echo "ERROR: The AQUA-diagnostics container does not exist at: $AQUA_DIAGNOSTICS_container" >&2
         return 1
     fi
 
     # if [ ${version} == "latest" ] ; then
-    #     resolved_path=$(readlink "$AQUA_container")
+    #     resolved_path=$(readlink "$AQUA_DIAGNOSTICS_container")
 
     #     if [ -n "$resolved_path" ]; then
-    #         AQUA_container="$AQUA_folder/$resolved_path"
+    #         AQUA_DIAGNOSTICS_container="$AQUA_DIAGNOSTICS_folder/$resolved_path"
     #     else
-    #         echo "Warning: Unable to resolve the symlink for $AQUA_container. Using the specified path instead." >&2
+    #         echo "Warning: Unable to resolve the symlink for $AQUA_DIAGNOSTICS_container. Using the specified path instead." >&2
     #     fi
     # fi
 
-    echo "${AQUA_container}"
+    echo "${AQUA_DIAGNOSTICS_container}"
 }
 
 function setup_envs(){
@@ -284,13 +284,13 @@ function setup_binds(){
 parse_machine "$@"
 
 # Call the function and assign its output to a variable
-AQUA_container="$(setup_container_path $machine)"
+AQUA_DIAGNOSTICS_container="$(setup_container_path $machine)"
 if [ $? -ne 0 ]; then
     echo "Cannot find the container!"
     exit 1
 fi
 
-echo "Container to be loaded is: $AQUA_container"
+echo "Container to be loaded is: $AQUA_DIAGNOSTICS_container"
 
 ENVS=$(setup_envs $machine)
 if [ $? -ne 0 ]; then
@@ -317,8 +317,8 @@ done
 
 echo "Perfect! Now it's time to ride with AQUA-diagnostics ⛵"
 
-#echo "singularity $cmd --cleanenv $env_args $bind_args $AQUA_container $script"
-singularity $cmd --cleanenv $env_args --no-mount /etc/localtime $bind_args $AQUA_container $script
+#echo "singularity $cmd --cleanenv $env_args $bind_args $AQUA_DIAGNOSTICS_container $script"
+singularity $cmd --cleanenv $env_args --no-mount /etc/localtime $bind_args $AQUA_DIAGNOSTICS_container $script
 
 ##### To update any python package e.g. gsv interface, opa, aqua, aqua-diagnostics ######
 # Do "pip install /path/to/repo/package_name" inside the singularity container.
