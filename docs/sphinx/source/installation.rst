@@ -71,9 +71,6 @@ It is possible to use Mamba/Conda package manager for the installation process.
 AQUA-diagnostics is not yet available on the conda-forge repository, so the installation process requires the use of an environment file
 that contains all the required dependencies.
 
-
-.. _installation-conda:
-
 Installation with Miniforge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

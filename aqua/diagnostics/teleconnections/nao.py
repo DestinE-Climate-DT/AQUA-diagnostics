@@ -1,5 +1,6 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
+from aqua.core.util import time_to_string
 from aqua.core.util.sci_util import lon_to_360
 
 from .base import BaseMixin
@@ -12,6 +13,8 @@ class NAO(BaseMixin):
     It inherits from the BaseMixin class and implements the necessary methods
     to calculate the NAO index.
     """
+
+    MINIMUM_MONTHS_REQUIRED = 24
 
     def __init__(
         self,
@@ -67,7 +70,7 @@ class NAO(BaseMixin):
                                   Default is an empty dictionary.
         """
         # Assign self.data, self.reader, self.catalog
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         self.data = self.reader.timmean(self.data, freq="MS")
 
@@ -86,8 +89,6 @@ class NAO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError("Data not retrieved")
-        if len(self.data[self.var].time) < 24:
-            raise NotEnoughDataError("Data have less than 24 months")
 
         lat1 = self.definition.get("lat1")
         lat2 = self.definition.get("lat2")
@@ -131,6 +132,12 @@ class NAO(BaseMixin):
 
         # Drop NaNs
         indx = indx.dropna(dim="time")
+
+        indx.attrs["long_name"] = f"{self.telecname} index"
+        indx.attrs["months_window"] = months_window
+
+        indx.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        indx.attrs["AQUA_enddate"] = time_to_string(self.enddate)
 
         self.logger.debug("Index evaluated")
 

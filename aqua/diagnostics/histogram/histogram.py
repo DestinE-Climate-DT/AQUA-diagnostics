@@ -14,6 +14,8 @@ class Histogram(Diagnostic):
     for the entire period, and saves results to netcdf files.
     """
 
+    MINIMUM_MONTHS_REQUIRED = 12
+
     def __init__(
         self,
         model: str,
@@ -106,7 +108,7 @@ class Histogram(Diagnostic):
 
         if formula:
             # Call parent retrieve without var to get all variables needed for formula
-            super().retrieve(reader_kwargs=reader_kwargs, months_required=12)
+            super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             self.logger.debug("Evaluating formula %s", var)
             self.data = EvaluateFormula(
                 data=self.data, formula=var, long_name=long_name, short_name=standard_name, units=units, loglevel=self.loglevel
@@ -115,7 +117,7 @@ class Histogram(Diagnostic):
                 raise ValueError(f"Error evaluating formula {var}")
         else:
             # Call parent retrieve with the specific variable
-            super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=12)
+            super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             if self.data is None:
                 raise ValueError(f"Variable {var} not found")
             self.data = self.data[var]

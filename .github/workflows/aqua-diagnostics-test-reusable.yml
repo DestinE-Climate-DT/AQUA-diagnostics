@@ -102,13 +102,13 @@ jobs:
       # 1. CHECKOUT REPOSITORIES
       # ========================================
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: AQUA-diagnostics
 
       - name: Checkout aqua-core (cross-check mode)
         if: ${{ inputs.install-mode == 'cross-check' }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: DestinE-Climate-DT/AQUA
           ref: ${{ inputs.aqua-core-ref }} # checkout aqua-core at specified ref
@@ -116,14 +116,14 @@ jobs:
           token: ${{ secrets.AQUA_GITHUB_PAT }}
 
       - name: Checkout Climate-DT-catalog repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: DestinE-Climate-DT/Climate-DT-catalog
           path: Climate-DT-catalog
           token: ${{ secrets.AQUA_GITHUB_PAT }}
 
       - name: Checkout DVC repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: DestinE-Climate-DT/aqua-dvc
           path: aqua-dvc
@@ -152,7 +152,7 @@ jobs:
       # ========================================
       - name: Set up Micromamba (local mode)
         if: ${{ inputs.install-mode == 'local' }}
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@v3
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment.yml
@@ -167,7 +167,7 @@ jobs:
 
       - name: Set up Micromamba (cross-check mode)
         if: ${{ inputs.install-mode == 'cross-check' }}
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@v3
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment-dev.yml
@@ -182,7 +182,7 @@ jobs:
 
       - name: Set up Micromamba (PyPI mode)
         if: ${{ inputs.install-mode == 'pypi' }}
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@v3
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment-pypi.yml
@@ -402,7 +402,7 @@ jobs:
       # ========================================
       - name: Upload coverage reports to Codecov
         if: ${{ inputs.enable-coverage && github.actor != 'dependabot[bot]' && !cancelled() }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: AQUA-diagnostics/coverage.xml
           flags: unittests
@@ -421,7 +421,7 @@ jobs:
       # ========================================
       - name: Upload test artifacts
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: aqua-test-artifacts-py${{ matrix.python-version }}
           path: |

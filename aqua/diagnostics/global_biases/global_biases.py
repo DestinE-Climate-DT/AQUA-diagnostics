@@ -38,6 +38,8 @@ class GlobalBiases(Diagnostic):
         loglevel (str): Log level. Default is 'WARNING'.
     """
 
+    MINIMUM_MONTHS_REQUIRED = 12
+
     def __init__(
         self,
         catalog=None,
@@ -115,7 +117,7 @@ class GlobalBiases(Diagnostic):
         if var is not None:
             self.var = var
         if formula:
-            super().retrieve(reader_kwargs=reader_kwargs)
+            super().retrieve(reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
             self.logger.info("Evaluating formula: %s", self.var)
             formula_values = EvaluateFormula(
                 data=self.data,
@@ -129,7 +131,7 @@ class GlobalBiases(Diagnostic):
                 raise ValueError(f"Error evaluating formula {var}. Check the variable names and the formula syntax.")
             self.data[self.var] = formula_values
         else:
-            super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
+            super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         if self.data is None:
             self.logger.error("Data could not be retrieved for %s, %s, %s", self.AQUA_model, self.AQUA_exp, self.AQUA_source)
@@ -172,14 +174,16 @@ class GlobalBiases(Diagnostic):
         extra_keys=None,
         dict_catalog_entry: dict = {"jinjalist": ["realization"], "wildcardlist": ["var"]},
     ):
-        """
-        data (xr.Dataset): Input dataset.
-        diagnostic_product (str): The product name to be used in the filename (e.g., 'annual_climatology').
-        rebuild (bool): If True, rebuild the data from the original files.
-        create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
-        extra_keys (dict): Extra keys for filename generation.
-        dict_catalog_entry (dict): A dictionary with catalog entry information.
-            Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
+        """Save data to NetCDF with proper metadata.
+
+        Args:
+            data (xr.Dataset): Input dataset.
+            diagnostic_product (str): The product name to be used in the filename (e.g., 'annual_climatology').
+            rebuild (bool): If True, rebuild the data from the original files.
+            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
+            extra_keys (dict): Extra keys for filename generation.
+            dict_catalog_entry (dict): A dictionary with catalog entry information.
+                Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
         super().save_netcdf(
             data=data,
@@ -240,8 +244,8 @@ class GlobalBiases(Diagnostic):
                 "AQUA_model": self.model,
                 "AQUA_exp": self.exp,
                 "AQUA_realization": self.realization,
-                "startdate": str(self.startdate),
-                "enddate": str(self.enddate),
+                "AQUA_startdate": str(self.startdate),
+                "AQUA_enddate": str(self.enddate),
             }
         )
 
@@ -289,15 +293,17 @@ class GlobalBiases(Diagnostic):
                 season_stat = getattr(season_data, stat_funcs[seasons_stat])(dim="time")
                 seasonal_data.append(season_stat.expand_dims(season=[season]))
 
-            self.seasonal_climatology = xr.concat(seasonal_data, dim="season", coords="different").to_dataset(name=var)
+            self.seasonal_climatology = xr.concat(seasonal_data, dim="season", coords="different", compat="equals").to_dataset(
+                name=var
+            )
             self.seasonal_climatology.attrs.update(
                 {
                     "AQUA_catalog": self.catalog,
                     "AQUA_model": self.model,
                     "AQUA_exp": self.exp,
                     "AQUA_realization": self.realization,
-                    "startdate": str(self.startdate),
-                    "enddate": str(self.enddate),
+                    "AQUA_startdate": str(self.startdate),
+                    "AQUA_enddate": str(self.enddate),
                 }
             )
 

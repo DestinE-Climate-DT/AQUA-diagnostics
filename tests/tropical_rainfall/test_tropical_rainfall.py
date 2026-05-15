@@ -17,7 +17,7 @@ try:
 except ModuleNotFoundError:
     print("The module tropical_rainfall.py is not found.")
 
-from conftest import DPI, LOGLEVEL
+from tests.shared_constants import DPI, LOGLEVEL
 
 
 @pytest.fixture
