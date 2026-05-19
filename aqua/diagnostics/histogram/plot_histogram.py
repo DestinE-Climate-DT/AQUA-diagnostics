@@ -48,7 +48,6 @@ class PlotHistogram:
         self.standard_name = None
         self.long_name = None
         self.units = None
-        self.data_freq = None
 
         # Extract metadata from data arrays
         for data_item in self.data:
@@ -78,10 +77,6 @@ class PlotHistogram:
                     self.long_name = data_item.long_name
                 if self.units is None and hasattr(data_item, "center_of_bin"):
                     self.units = getattr(data_item.center_of_bin, "units", None)
-
-                # Extract data frequency if not already set
-                if self.data_freq is None and hasattr(data_item, "AQUA_data_freq"):
-                    self.data_freq = data_item.AQUA_data_freq
 
         self.logger.debug(f"Extracted metadata for {len(self.models)} datasets: {list(zip(self.models, self.exps))}")
         self.logger.debug(f"Extracted realizations: {self.realizations}")
@@ -127,16 +122,6 @@ class PlotHistogram:
         self.logger.debug("Title: %s", title)
         return title
 
-    def _fmt_date(self, date):
-        """Format a date for display, truncating to year-month when the source
-        data frequency is coarser than daily. Returns None if date is None.
-        """
-        if date is None:
-            return None
-        if self.data_freq in ("monthly", "seasonal", "annual"):
-            return time_to_string(date, format="%Y-%m")
-        return time_to_string(date, format="%Y-%m-%d")
-
     def set_description(self):
         """Set the description for the plot."""
         description = ""
@@ -174,12 +159,12 @@ class PlotHistogram:
             ref_item = self.ref_data
 
             data_pair = (
-                self._fmt_date(getattr(data_item, "AQUA_startdate", None)),
-                self._fmt_date(getattr(data_item, "AQUA_enddate", None)),
+                time_to_string(data_item.AQUA_startdate, format="%Y-%m") if data_item is not None else None,
+                time_to_string(data_item.AQUA_enddate, format="%Y-%m") if data_item is not None else None,
             )
             ref_pair = (
-                self._fmt_date(getattr(ref_item, "AQUA_startdate", None)),
-                self._fmt_date(getattr(ref_item, "AQUA_enddate", None)),
+                time_to_string(ref_item.AQUA_startdate, format="%Y-%m") if ref_item is not None else None,
+                time_to_string(ref_item.AQUA_enddate, format="%Y-%m") if ref_item is not None else None,
             )
 
             # Smart date display: show dates only once if they are the same
@@ -213,9 +198,10 @@ class PlotHistogram:
 
             # Add common date range if all datasets share it
             if self.data:
+                first_item = self.data[0]
                 first_dates = (
-                    self._fmt_date(getattr(self.data[0], "AQUA_startdate", None)),
-                    self._fmt_date(getattr(self.data[0], "AQUA_enddate", None)),
+                    time_to_string(first_item.AQUA_startdate, format="%Y-%m") if first_item is not None else None,
+                    time_to_string(first_item.AQUA_enddate, format="%Y-%m") if first_item is not None else None,
                 )
                 if first_dates != (None, None):
                     description += f" from {first_dates[0]} to {first_dates[1]}"

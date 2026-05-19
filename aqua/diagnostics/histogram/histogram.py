@@ -1,7 +1,6 @@
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.histogram import histogram
 from aqua.core.logger import log_configure
-from aqua.core.util import pandas_freq_to_string, xarray_to_pandas_freq
 from aqua.diagnostics.base import Diagnostic
 
 
@@ -129,7 +128,6 @@ class Histogram(Diagnostic):
         self.data.attrs["AQUA_model"] = self.model
         self.data.attrs["AQUA_exp"] = self.exp
         self.data.attrs["AQUA_realization"] = self.realization
-        self.data.attrs["AQUA_data_freq"] = pandas_freq_to_string(xarray_to_pandas_freq(self.data))
         if self.region is not None:
             self.data.attrs["AQUA_region"] = self.region
 
