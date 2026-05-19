@@ -86,9 +86,9 @@ class TestPlotHistogram:
 
         # PDF prefix
         assert desc.startswith("Probability density function (PDF)")
-        # Both date ranges present (different periods)
-        assert "2000-01-01" in desc and "2005-12-31" in desc
-        assert "1980-01-01" in desc and "2020-12-31" in desc
+        # Both date ranges present (different periods), in %Y-%m form
+        assert "2000-01" in desc and "2005-12" in desc
+        assert "1980-01" in desc and "2020-12" in desc
         # Model names
         assert "IFS" in desc and "ERA5" in desc
 
@@ -98,8 +98,8 @@ class TestPlotHistogram:
         plotter = PlotHistogram(data=self.hist_data, ref_data=ref_same, loglevel=loglevel)
         desc = plotter.set_description()
 
-        # Dates should appear only once
-        assert desc.count("2000-01-01") == 1
+        # Dates should appear only once, in %Y-%m form
+        assert desc.count("2000-01") == 1
         assert "vs" in desc
 
     def test_description_counts_mode(self):
