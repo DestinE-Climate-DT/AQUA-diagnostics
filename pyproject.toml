@@ -49,8 +49,7 @@ docs = [
     "sphinx-rtd-theme"
 ]
 notebooks = [
-    "ipykernel",
-    "healpy"
+    "ipykernel"
 ]
 tests = [
     "pytest",
