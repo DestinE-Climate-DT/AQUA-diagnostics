@@ -306,6 +306,11 @@ def main(argv=None):
     config = load_diagnostic_config(
         diagnostic="ecmean", folder="tools", config=None, default_config=ecmean_config.get("config_file"), loglevel=loglevel
     )
+
+    # this prevents ecmean from creating its own dirs
+    config["dirs"]["tab"] = os.path.join(outputdir, "yml")
+    config["dirs"]["fig"] = os.path.join(outputdir, "pdf")
+
     # this is required to access the predefined areas and masks
     config["dirs"]["exp"] = ecmeandir
     logger.debug("Default config file: %s", config)
@@ -402,7 +407,6 @@ def main(argv=None):
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )
@@ -416,7 +420,6 @@ def main(argv=None):
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )
