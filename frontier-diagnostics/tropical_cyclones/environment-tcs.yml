@@ -28,7 +28,6 @@ dependencies:
   - tempest-extremes
 # these below are only required for running notebooks
   - ipykernel
-  - astropy-healpix
 # these below are only required for documentation
   - sphinx
   - sphinx-rtd-theme
