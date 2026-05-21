@@ -244,6 +244,12 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     datasets[0]["model"] = get_arg(args, "model", datasets[0]["model"])
     datasets[0]["exp"] = get_arg(args, "exp", datasets[0]["exp"])
     datasets[0]["source"] = get_arg(args, "source", datasets[0]["source"])
+    # If the realization argument is provided, it has to be added to the reader_kwargs dictionary
+    # of the first dataset.
+    if get_arg(args, "realization", None):
+        if "reader_kwargs" not in datasets[0]:
+            datasets[0]["reader_kwargs"] = {}
+        datasets[0]["reader_kwargs"]["realization"] = get_arg(args, "realization", None)
 
     config["output"]["outputdir"] = get_arg(args, "outputdir", config["output"]["outputdir"])
 
