@@ -135,6 +135,7 @@ def load_diagnostic_config(
 
     Args:
         diagnostic (str): diagnostic name
+        default_config (str): default config file name. If not provided, it defaults to "config-{diagnostic}.yaml".
         config (str): config argument can modify the default configuration file.
         folder (str): folder name. Default is "collections". Can be "tools" or "templates" as well.
         loglevel (str): logging level. Default is 'WARNING'.
