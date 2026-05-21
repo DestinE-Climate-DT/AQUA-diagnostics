@@ -125,12 +125,12 @@ class DiagnosticCLI:
         if self.enddate:
             self.logger.info("End date is set to %s", self.enddate)
 
-        # Realization option and reader_kwargs
-        self.reader_kwargs = self.config_dict.get("datasets", [{}])[0].get("reader_kwargs") or {}
-        self.realization = get_arg(self.args, "realization", None)
-        if self.realization:
-            self.logger.info("Realization option is set to: %s", self.realization)
-            self.reader_kwargs.update({"realization": self.realization})
+        # # Realization option and reader_kwargs
+        # self.reader_kwargs = self.config_dict.get("datasets", [{}])[0].get("reader_kwargs") or {}
+        # self.realization = get_arg(self.args, "realization", None)
+        # if self.realization:
+        #     self.logger.info("Realization option is set to: %s", self.realization)
+        #     self.reader_kwargs.update({"realization": self.realization})
 
         # Output options
         output_config = self.config_dict.get("output", {})
@@ -154,6 +154,7 @@ class DiagnosticCLI:
             "regrid": dataset.get("regrid") or self.regrid,
             "startdate": dataset.get("startdate") or self.startdate,
             "enddate": dataset.get("enddate") or self.enddate,
+            "reader_kwargs": dataset.get("reader_kwargs", {}) or self.reader_kwargs,
         }
 
     def reference_args(self, reference):
@@ -171,6 +172,7 @@ class DiagnosticCLI:
             "regrid": reference.get("regrid"),
             "startdate": reference.get("startdate"),
             "enddate": reference.get("enddate"),
+            "reader_kwargs": reference.get("reader_kwargs", {}) or self.reader_kwargs,
         }
 
     def open_dask_cluster(self):
