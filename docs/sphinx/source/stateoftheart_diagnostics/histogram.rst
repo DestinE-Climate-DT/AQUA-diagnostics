@@ -188,15 +188,15 @@ Other common reference datasets include MSWEP (Multi-Source Weighted-Ensemble Pr
 
 Custom reference datasets can be configured in the configuration file.
 
-Example Plots
--------------
-
-.. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
-   :align: center
-   :width: 100%
-
-   Probability density function (PDF) of precipitation rate (mm/day) for the global region,
-   showing ICON model output compared to ERA5 reference data.
+.. Example Plots
+.. -------------
+..
+.. .. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
+..    :align: center
+..    :width: 100%
+..
+..    Probability density function (PDF) of precipitation rate (mm/day) for the global region,
+..    showing ICON model output compared to ERA5 reference data.
 
 
 Available demo notebooks

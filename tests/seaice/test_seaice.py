@@ -1,8 +1,8 @@
 import pytest
 import xarray as xr
-from conftest import APPROX_REL, LOGLEVEL
 
 from aqua.diagnostics import SeaIce
+from tests.shared_constants import APPROX_REL, LOGLEVEL
 
 # pytest approximation, to bear with different machines
 approx_rel = APPROX_REL * 10

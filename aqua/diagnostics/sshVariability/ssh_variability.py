@@ -45,13 +45,14 @@ class SshVariabilityCompute(BaseMixin):
         Initialize the 'SshVariabilityCompute' class.
 
         This class is designed to load an xarray.Dataset and computes STD.
+
         Args:
             diagnostic_name (str): Default is 'sshVariability'.
             catalog (str): catalog. It is Mandatory, if 'save_netcdf=True'.
             model (str): Name of the data
             exp (str): Name of the experiment
-            source (str): the source.
-            It is important to give these dates and input. Otherwise the whole dataset is retrieved.
+            source (str): the source. It is important to give these dates and input.
+                Otherwise the whole dataset is retrieved.
             startdate (str): Start date.
             enddate  (str): End date.
             freq (str): Frequency of the data. In the TODO list. This becomes important when

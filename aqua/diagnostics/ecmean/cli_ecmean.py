@@ -16,7 +16,14 @@ from aqua import __version__ as aquaversion
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import get_arg, lat_to_phrase, strlist_to_phrase
+from aqua.core.util import (
+    get_arg,
+    lat_to_phrase,
+    pandas_freq_to_string,
+    strlist_to_phrase,
+    to_list,
+    xarray_to_pandas_freq,
+)
 from aqua.diagnostics import GlobalMean, PerformanceIndices
 from aqua.diagnostics.base import (
     OutputSaver,
@@ -26,6 +33,8 @@ from aqua.diagnostics.base import (
     merge_config_args,
     template_parse_arguments,
 )
+
+MINIMUM_MONTHS_REQUIRED = 12
 
 
 def parse_arguments(arguments):
@@ -106,6 +115,8 @@ def reader_data(
         except Exception as err:
             reader_logger.error("Error while regridding model %s: %s", model, err)
             return None
+    # if no regridding is needed, return the data as is
+    return xfield
 
 
 def data_check(data_atm, data_oce, logger=None):
@@ -153,17 +164,33 @@ def time_check(mydata, y1, y2, logger=None):
 
     # guessing years from the dataset
     if y1 is None:
-        y1 = int(mydata.time[0].values.astype("datetime64[Y]").astype(str))
+        y1 = int(mydata.time.dt.year.values[0])
         if logger is not None:
-            logger.info("Guessing starting year %s", y1)
+            logger.info("Guessing starting year: %s", y1)
     if y2 is None:
-        y2 = int(mydata.time[-1].values.astype("datetime64[Y]").astype(str))
+        y2 = int(mydata.time.dt.year.values[-1])
         if logger is not None:
-            logger.info("Guessing ending year %s", y2)
+            logger.info("Guessing ending year: %s", y2)
 
-    # run the performance indices if you have at least 12 month of data
-    if len(mydata.time) < 12:
-        raise NotEnoughDataError("Not enough data, exiting...")
+    # Warn if the data frequency is not monthly, since ECmean expects monthly data
+    data_freq = xarray_to_pandas_freq(mydata)
+    freq_str = pandas_freq_to_string(data_freq)
+    if logger is not None:
+        logger.debug("Detected data frequency: %s (%s)", data_freq, freq_str)
+    if freq_str != "monthly":
+        if logger is not None:
+            logger.warning("Data frequency '%s' does not appear to be monthly. ECmean expects monthly data.", freq_str)
+
+    # Count unique (year, month) pairs to correctly measure months of data
+    # regardless of the actual time frequency (daily, monthly, etc.)
+    n_months = len(set(zip(mydata.time.dt.year.values, mydata.time.dt.month.values)))
+    if logger is not None:
+        logger.debug("Unique months in data: %d", n_months)
+
+    if n_months < MINIMUM_MONTHS_REQUIRED:
+        raise NotEnoughDataError(
+            f"Not enough data: {n_months} months available, {MINIMUM_MONTHS_REQUIRED} required. Exiting..."
+        )
 
     return y1, y2
 
@@ -207,7 +234,7 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     Returns:
         description (str)
     """
-    model_time = f"for {model} {exp} from {year1}-01-01 to {year2}-12-31. "
+    model_time = f"for {model} {exp} from {year1}-01 to {year2}-12."
 
     region_bounds = {
         "Global": (-90.0, 90.0),
@@ -228,35 +255,38 @@ def set_description(diagnostic, model, exp, year1, year2, config):
         ]
     )
 
-    regions_phrase = f"Processed regions are {region_text}."
+    regions_phrase = f"Processed regions are {region_text}"
 
     if diagnostic == "performance_indices":
-        description = (
-            f"Performance Indices normalized to the CMIP6 average "
-            f"for different regions and seasons {model_time}"
-            f"{regions_phrase}. Numbers < 1 imply better results than CMIP6 mean."
+        return (
+            f"Reichler and Kim (2008) Performance Indices (normalized against an ensemble of CMIP6 models) "
+            f"for different regions and seasons {model_time} "
+            f"{regions_phrase}. Values smaller than one imply better results than the CMIP6 multi-model mean."
         )
     elif diagnostic == "global_mean":
-        description = (
-            f"Global mean biases normalized to observed interannual variability "
-            f"with respect to references for different regions and seasons {model_time}"
-            f"{regions_phrase}"
+        return (
+            f"Global mean differences with respect to observational references "
+            f"(normalized to observational interannual variability) "
+            f"for different regions and seasons {model_time} "
+            f"{regions_phrase}. Darker colors imply larger differences."
         )
     else:
         # produce a generic description
-        description = f"Diagnostic {diagnostic} {model_time.strip()}"
-
-    return description
+        return f"Diagnostic {diagnostic} {model_time.strip()}"
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the ECmean CLI."""
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
     loglevel = get_arg(args, "loglevel", "WARNING")
     logger = log_configure(log_level=loglevel, log_name="ECmean")
 
     # load the configuration files and override with command line arguments
     config_dict = load_diagnostic_config(
-        diagnostic="ecmean", config=args.config, default_config="config_ecmean_cli.yaml", loglevel=loglevel
+        diagnostic="climate_metrics",
+        config=args.config,
+        default_config="config-climate_metrics-ecmean.yaml",
+        loglevel=loglevel,
     )
     config_dict = merge_config_args(config_dict, args)
 
@@ -283,6 +313,15 @@ if __name__ == "__main__":
     config = load_diagnostic_config(
         diagnostic="ecmean", folder="tools", config=None, default_config=ecmean_config.get("config_file"), loglevel=loglevel
     )
+
+    # this prevents ecmean from creating its own dirs
+    config["dirs"]["tab"] = os.path.join(outputdir, "yml")
+    if save_format:
+        config["dirs"]["fig"] = os.path.join(outputdir, to_list(save_format)[0])
+    else:
+        # this will create an empy pdf directory if no figures are produced
+        config["dirs"]["fig"] = os.path.join(outputdir, "pdf")
+
     # this is required to access the predefined areas and masks
     config["dirs"]["exp"] = ecmeandir
     logger.debug("Default config file: %s", config)
@@ -306,7 +345,7 @@ if __name__ == "__main__":
         # activate override from command line
         realization = get_arg(args, "realization", None)
         # This reader_kwargs will be used if the dataset corresponding value is None or not present
-        reader_kwargs = config_dict["datasets"][0].get("reader_kwargs") or {}
+        reader_kwargs = dataset.get("reader_kwargs") or {}
         if realization:
             reader_kwargs["realization"] = realization
 
@@ -340,6 +379,7 @@ if __name__ == "__main__":
                 startdate=startdate,
                 enddate=enddate,
                 reader_kwargs=reader_kwargs,
+                loglevel=loglevel,
             )
 
             logger.info("Loading oceanic data from %s", model)
@@ -353,6 +393,7 @@ if __name__ == "__main__":
                 startdate=startdate,
                 enddate=enddate,
                 reader_kwargs=reader_kwargs,
+                loglevel=loglevel,
             )
 
             # check the data
@@ -377,7 +418,6 @@ if __name__ == "__main__":
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )
@@ -391,7 +431,6 @@ if __name__ == "__main__":
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )
@@ -414,3 +453,7 @@ if __name__ == "__main__":
                 )
 
             logger.info("ECmean4 diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

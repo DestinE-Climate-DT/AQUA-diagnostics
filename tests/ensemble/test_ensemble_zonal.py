@@ -4,10 +4,10 @@ import os
 
 import pytest
 import xarray as xr
-from conftest import APPROX_REL, DPI, LOGLEVEL
 
 from aqua.diagnostics import EnsembleZonal, PlotEnsembleZonal
 from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance and Logging
 approx_rel = APPROX_REL
@@ -96,9 +96,9 @@ class TestEnsembleZonal:
         # Execution
         ens.run()
 
-        # Check attributes exist
-        assert hasattr(ens, "dataset_mean")
-        assert hasattr(ens, "dataset_std")
+        # Check computed datasets are available
+        assert ens.dataset_mean is not None
+        assert ens.dataset_std is not None
 
         # Construct filenames
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
@@ -115,8 +115,8 @@ class TestEnsembleZonal:
         """Test the statistical correctness of the ensemble."""
         ens = ensemble_zonal_instance
 
-        # Ensure run() has been called
-        if not hasattr(ens, "dataset_mean"):
+        # Ensure run() has populated computed data
+        if ens.dataset_mean is None or ens.dataset_std is None:
             ens.run()
 
         # Test if mean is present and std is zero (identical inputs)
@@ -129,7 +129,7 @@ class TestEnsembleZonal:
         plot_ens = plot_zonal_instance
         conf = zonal_config
 
-        if not hasattr(ens, "dataset_mean"):
+        if ens.dataset_mean is None or ens.dataset_std is None:
             ens.run()
 
         # STD values are zero. Using mean value as std to test visualization pipeline (consistent with comments)

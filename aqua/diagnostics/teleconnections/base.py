@@ -5,7 +5,7 @@ import xarray as xr
 
 from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
-from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, to_list
+from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
@@ -57,6 +57,8 @@ class BaseMixin(Diagnostic):
         )
 
         self.definition = self.load_definition(configdir=configdir, definition=definition, telecname=telecname)
+        self.telecname = telecname
+
         # Initialize the possible results
         self.index = None
 
@@ -74,6 +76,11 @@ class BaseMixin(Diagnostic):
         """
         data, index = self._prepare_statistic(var=var, season=season)
         reg = xr.cov(index, data, dim=dim) / index.var(dim=dim, skipna=True).values
+
+        # Populate the attributes of the regression for backend functionalities
+        reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} with {index.long_name}"
+        reg.attrs["shortName"] = "linear_regression"
+
         return reg
 
     def compute_correlation(self, var: str = None, dim: str = "time", season: str = None):
@@ -92,7 +99,7 @@ class BaseMixin(Diagnostic):
         corr = xr.corr(index, data, dim=dim)
 
         # Modify the attributes to match the correlation
-        corr.attrs["long_name"] = f"Correlation of {data.long_name} with index evaluated with {index.long_name}"
+        corr.attrs["long_name"] = f"Correlation of {data.long_name.lower()} with {index.long_name}"
         corr.attrs["shortName"] = "Pearson_correlation"
         corr.attrs["units"] = "1"
 
@@ -216,13 +223,16 @@ class PlotBaseMixin:
         We extract the data needed for labels, description etc
         from the data arrays attributes.
 
-        The AQUA attributes are: AQUA_catalog, AQUA_model, AQUA_exp
+        The AQUA attributes are: AQUA_catalog, AQUA_model, AQUA_exp,
+        AQUA_startdate and AQUA_enddate
         """
         if self.indexes is not None:
             self.catalogs = [d.AQUA_catalog for d in self.indexes]
             self.models = [d.AQUA_model for d in self.indexes]
             self.exps = [d.AQUA_exp for d in self.indexes]
             self.realizations = get_realizations(self.indexes)
+            self.startdate = [d.AQUA_startdate for d in self.indexes]
+            self.enddate = [d.AQUA_enddate for d in self.indexes]
         self.logger.debug(f"Catalogs: {self.catalogs}")
         self.logger.debug(f"Models: {self.models}")
         self.logger.debug(f"Exps: {self.exps}")
@@ -231,6 +241,8 @@ class PlotBaseMixin:
             self.ref_catalogs = [d.AQUA_catalog for d in self.ref_indexes]
             self.ref_models = [d.AQUA_model for d in self.ref_indexes]
             self.ref_exps = [d.AQUA_exp for d in self.ref_indexes]
+            self.ref_startdate = [d.AQUA_startdate for d in self.ref_indexes]
+            self.ref_enddate = [d.AQUA_enddate for d in self.ref_indexes]
             self.logger.debug(f"Ref Catalogs: {self.ref_catalogs}")
             self.logger.debug(f"Ref Models: {self.ref_models}")
             self.logger.debug(f"Ref Exps: {self.ref_exps}")
@@ -290,10 +302,20 @@ class PlotBaseMixin:
         Returns:
             str: The caption of the figure.
         """
-        description = f"{index_name} index for"
+        description = f"{index_name} index time series for"
 
-        dataset = [f"{self.models[i]} {self.exps[i]}" for i in range(self.len_data)]
-        refs = [f"{self.ref_models[i]} {self.ref_exps[i]}" for i in range(self.len_ref)]
+        dataset = [
+            f"{self.models[i]} {self.exps[i]} "
+            f"(from {time_to_string(self.startdate[i], format='%Y-%m')} "
+            f"to {time_to_string(self.enddate[i], format='%Y-%m')})"
+            for i in range(self.len_data)
+        ]
+        refs = [
+            f"{self.ref_models[i]} {self.ref_exps[i]} "
+            f"(from {time_to_string(self.ref_startdate[i], format='%Y-%m')} "
+            f"to {time_to_string(self.ref_enddate[i], format='%Y-%m')})"
+            for i in range(self.len_ref)
+        ]
 
         if self.len_data > 0:
             description += f" {', '.join(dataset)}"
@@ -301,6 +323,9 @@ class PlotBaseMixin:
             description += " using reference data from"
             description += f" {', '.join(refs)}"
         description += "."
+
+        if index_name in ["ENSO", "Niño 3.4 index"]:
+            description += " El Niño and La Niña events are defined when exceeding a 0.5 °C threshold."
 
         self.logger.debug(f"Index description: {description}")
         return description
@@ -352,42 +377,42 @@ class PlotBaseMixin:
         Returns:
             str: Description of the maps.
         """
-        description = f"{telecname} {statistic} map "
+        description = ""
 
         maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps)
 
         if isinstance(maps, xr.DataArray):
-            if statistic == "correlation":
-                var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
-            else:
-                var = maps.shortName if hasattr(maps, "shortName") else maps.long_name
-            description += f"({var}) "
-            description += f"{maps.AQUA_model} {maps.AQUA_exp}"
+            var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
+            description += f"{var} "
+            description += f"for {maps.AQUA_model} {maps.AQUA_exp}"
+            description += f" (from {time_to_string(self.startdate[0], format='%Y-%m')} "
+            description += f"to {time_to_string(self.enddate[0], format='%Y-%m')})"
             if hasattr(maps, "AQUA_season"):
                 description += f" ({maps.AQUA_season})"
         elif isinstance(maps, list):
-            var = maps[0].shortName if hasattr(maps[0], "shortName") else maps[0].long_name
+            var = maps[0].long_name if hasattr(maps[0], "long_name") else maps[0].shortName
             description += f"({var}) "
-            for map in maps:
-                description += f"{map.AQUA_model} {map.AQUA_exp}, "
+            for i, map in enumerate(maps):
+                description += f"{map.AQUA_model} {map.AQUA_exp} "
+                description += f"(from {time_to_string(self.startdate[i], format='%Y-%m')} "
+                description += f"to {time_to_string(self.enddate[i], format='%Y-%m')}), "
             description = description[:-2]
             if hasattr(maps[0], "AQUA_season"):
                 description += f" ({maps[0].AQUA_season})"
         if isinstance(ref_maps, xr.DataArray):
-            var = ref_maps.shortName if hasattr(ref_maps, "shortName") else ref_maps.long_name
+            var = ref_maps.long_name if hasattr(ref_maps, "long_name") else ref_maps.shortName
             description += f" compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
         elif isinstance(ref_maps, list):
-            var = ref_maps[0].shortName if hasattr(ref_maps[0], "shortName") else ref_maps[0].long_name
+            var = ref_maps[0].long_name if hasattr(ref_maps[0], "long_name") else ref_maps[0].shortName
             description += f" compared to {ref_maps[0].AQUA_model} {ref_maps[0].AQUA_exp}"
             for map in ref_maps:
                 description += f"{map.AQUA_model} {map.AQUA_exp}, "
             description = description[:-2]
         description += "."
         if ref_maps is not None:
-            description += (
-                f" The contour lines are the model regression map and the filled contour map is the difference "
-                f"between the model and the reference {statistic} map."
-            )
+            description += f" Contours represent the model {statistic}, "
+            description += "while shading is the difference between the model and the reference."
+
         self.logger.debug(f"Map description: {description}")
 
         return description

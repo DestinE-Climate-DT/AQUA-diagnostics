@@ -11,7 +11,7 @@ channels:
   - nodefaults
 dependencies:
   - python>=3.10,<3.13
-  - cdo>=2.5.0
+  - cdo>=2.5.0,<2.6.1
   - eccodes==2.41.0
   - esmpy
   - tempest-extremes

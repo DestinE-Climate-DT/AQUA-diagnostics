@@ -18,7 +18,7 @@ jobs:
        contents: read
     steps:
       - name: "Check out code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set build arguments based on tag
         id: set_build_args
         run: echo "BUILD_ARGS=--build-arg EXTRA_PACKAGES=cartopy_offlinedata" >> $GITHUB_ENV

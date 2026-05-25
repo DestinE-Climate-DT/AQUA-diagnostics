@@ -139,7 +139,8 @@ Here we describe only the specific settings for the lat_lon_profiles diagnostic.
     - ``mean_type``: type of spatial averaging (``zonal`` or ``meridional``).
     - ``seasonal``: enable seasonal profiles computation.
     - ``longterm``: enable long-term mean computation.
-    - ``variables``: list of variables to analyse with their regions.
+    - ``params``: optional block of variable parameters. Contains a ``default`` sub-block with values applied to all variables, and optional per-variable sub-blocks (keyed by variable name) that override the defaults.
+    - ``variables``: list of variables to analyse with their regions. Inline values defined here take precedence over ``params``.
 
 .. code-block:: yaml
 
@@ -153,6 +154,12 @@ Here we describe only the specific settings for the lat_lon_profiles diagnostic.
         box_brd: true
         seasonal: true
         longterm: true
+        params:
+          default:
+            std_startdate: '1990-01-01'
+            std_enddate: '2019-12-31'
+          2t:
+            units: 'degC'
         variables:
           - name: '2t'
             regions: [null, 'tropics']  # global and tropics
@@ -181,6 +188,9 @@ Details are available on the `MSWEP website <https://www.gloh2o.org/mswep/>`_.
 
 Standard deviation can be computed over a custom period using ``std_startdate`` and
 ``std_enddate`` to provide ±2σ uncertainty bands in plots.
+These dates can be set at three levels, in order of increasing priority: in the
+``params.default`` block, in a per-variable ``params.<variable>`` block, or directly
+in the configuration of an individual dataset or reference.
 
 Custom reference datasets can be configured in the configuration file.
 
