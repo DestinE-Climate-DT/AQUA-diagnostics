@@ -159,6 +159,7 @@ class Stratification(Diagnostic):
         self.data.attrs["enddate"] = f"{self.data.time[-1].values.astype('datetime64[D]')}"
         self.logger.debug(f"Variables retrieved: {var}, region: {region}, dim_mean: {dim_mean}")
         self.logger.info("Computing stratification.")
+        self.compute_stratification()
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
@@ -182,7 +183,6 @@ class Stratification(Diagnostic):
             )
         else:
             self.data = res_dict["data"]
-        self.compute_stratification()
         if mld:
             self.logger.info("Computing mixed layer depth (MLD).")
             self.compute_mld()
