@@ -7,12 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.24.0):
 Complete list:
+- Jinja templates for configuration files for collections (#230)
+- Histogram: diagnostic updates (#255)
+- Seaice: Port changes from Dashboard v0.19-op  (#190)
+- ECmean: prevent creation of default empty dirs (#263)
+- Remove `healpy` dependency (#248)
+- Timeseries: backporting of dashboard updates (#250)
+- Timeseries: adapt to startdate and enddate centralisation in Diagnostic, remove extend feauture (#244)
+- Dashboard porting: ECmean (#192)
+- CLI `load_var_config` centralization (#246)
+- LatLonProfiles: major diagnostic refactor (#229)
 - GlobalBiases: improve descriptions (#191)
 - Tropical cyclones: simplification, reader kwargs, orography from catalogue (#184)
 - Teleconnections: backporting of dashboard updates, including startdate and enddate cli features (#231)
 - CI/CD: add framework to test diagnostics CLI and utils (#219)
 - Handling startdate and enddate centralisation in Diagnostic (#225)
 - Expose `__version__` from `aqua.core.version` module (#216)
+- Boxplots: improved descriptions (#193)
 - ECmean: time selection is now allowed (#178)
 - Centralized management of months required thresholds (#162)
 

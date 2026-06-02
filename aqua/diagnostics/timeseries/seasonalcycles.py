@@ -110,7 +110,14 @@ class SeasonalCycles(BaseMixin):
         # Notice that if you compute after, self.monthly will be the seasonal cycle
         # and the compute_std routine will fail
         if std:
-            self.compute_std(freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
+            if self.std_startdate is None or self.std_enddate is None:
+                self.logger.error(
+                    "Skipping std evaluation. Std start and end dates must be provided to compute the standard deviation."
+                )
+            else:
+                self.compute_std(
+                    freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd
+                )
 
         self.logger.info("Computing the seasonal cycles")
         self.compute(exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)

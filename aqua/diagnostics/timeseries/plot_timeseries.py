@@ -1,5 +1,5 @@
 from aqua.core.graphics import plot_timeseries
-from aqua.core.util import get_realizations, to_list
+from aqua.core.util import get_realizations, time_to_string, to_list
 
 from .base import PlotBaseMixin
 
@@ -113,8 +113,10 @@ class PlotTimeseries(PlotBaseMixin):
         - AQUA_model
         - AQUA_exp
         - AQUA_region
-        - std_startdate
-        - std_enddate
+        - AQUA_startdate
+        - AQUA_enddate
+        - AQUA_std_startdate
+        - AQUA_std_enddate
         - short_name
         - long_name
         - units
@@ -129,6 +131,14 @@ class PlotTimeseries(PlotBaseMixin):
                 self.short_name = data[0].short_name if hasattr(data[0], "short_name") else None
                 self.long_name = data[0].long_name if hasattr(data[0], "long_name") else None
                 self.units = data[0].units if hasattr(data[0], "units") else None
+                self.startdate = [
+                    d.AQUA_startdate if hasattr(d, "AQUA_startdate") else time_to_string(d.time.values[0], format="%Y-%m")
+                    for d in data
+                ]
+                self.enddate = [
+                    d.AQUA_enddate if hasattr(d, "AQUA_enddate") else time_to_string(d.time.values[-1], format="%Y-%m")
+                    for d in data
+                ]
                 if self.units is not None:
                     self.units = str(self.units)
                 break
@@ -136,6 +146,10 @@ class PlotTimeseries(PlotBaseMixin):
         self.logger.debug(f"Catalogs: {self.catalogs}")
         self.logger.debug(f"Models: {self.models}")
         self.logger.debug(f"Experiments: {self.exps}")
+
+        # HACK: if the region is global, we do not want to include it in the title and description, so we set it to None
+        if self.region == "global":
+            self.region = None
         self.logger.debug(f"Region: {self.region}")
 
         # TODO: support ref list
@@ -144,13 +158,21 @@ class PlotTimeseries(PlotBaseMixin):
                 self.ref_catalogs = ref.AQUA_catalog
                 self.ref_models = ref.AQUA_model
                 self.ref_exps = ref.AQUA_exp
+                self.ref_startdate = (
+                    ref.AQUA_startdate
+                    if hasattr(ref, "AQUA_startdate")
+                    else time_to_string(ref.time.values[0], format="%Y-%m")
+                )
+                self.ref_enddate = (
+                    ref.AQUA_enddate if hasattr(ref, "AQUA_enddate") else time_to_string(ref.time.values[-1], format="%Y-%m")
+                )
                 self.logger.debug(f"Reference: {self.ref_catalogs} {self.ref_models} {self.ref_exps}")
                 break
 
         for std in [self.std_monthly_data, self.std_annual_data]:
             if std is not None:
-                self.std_startdate = std.std_startdate if std.std_startdate is not None else None
-                self.std_enddate = std.std_enddate if std.std_enddate is not None else None
+                self.std_startdate = getattr(std, "AQUA_std_startdate", None)
+                self.std_enddate = getattr(std, "AQUA_std_enddate", None)
                 self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
                 break
 
@@ -173,7 +195,10 @@ class PlotTimeseries(PlotBaseMixin):
         Returns:
             description (str): Caption for the plot.
         """
-        return super().set_description(diagnostic="Time series")
+        description = super().set_description(diagnostic="Time series")
+        # TODO: info on yearly and montlhly data should be controlled if the data are actually plotted
+        description += " Dashed lines represent yearly data, solid lines represent monthly data."
+        return description
 
     def plot_timeseries(self, data_labels=None, ref_label=None, title=None):
         """
