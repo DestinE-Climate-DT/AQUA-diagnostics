@@ -23,16 +23,16 @@ references:
     model: 'ERA5'
     exp: 'era5'
     source: 'monthly'
-    startdate: '{{ default.ref_startdate }}'
-    enddate: '{{ default.ref_enddate }}'
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
   - catalog: 'obs'
     model: 'CERES'
     exp: 'ebaf-sfc421'
     source: 'monthly'
     regrid: 'r100'
     reader_kwargs: null
-    startdate: '{{ radiation.ref_startdate }}'
-    enddate: '{{ radiation.ref_enddate }}'
+    startdate: '{{ radiation.startdate }}'
+    enddate: '{{ radiation.enddate }}'
 
 output:
   outputdir: "./"
