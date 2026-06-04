@@ -21,8 +21,8 @@ references:
     exp: 'v3.0.1'
     source: 'r100-monthly'
     regrid: 'r100'
-    startdate: '{{ ref_startdate }}'
-    enddate: '{{ ref_enddate }}'
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
 setup:
   loglevel: 'WARNING'
@@ -96,8 +96,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        startdate: '{{ default.ref_startdate }}'
-        enddate: '{{ default.ref_enddate }}'
+        startdate: '{{ default.startdate }}'
+        enddate: '{{ default.enddate }}'
         std_startdate: '{{ default.std_startdate }}'
         std_enddate: '{{ default.std_enddate }}'
     variables:
