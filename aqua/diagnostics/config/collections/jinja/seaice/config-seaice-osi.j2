@@ -26,6 +26,8 @@ references:
     source: 'nh-monthly'       # mandatory
     regrid: 'r100'
     domain: "nh"
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
   # ---- Extent in SH ----
   - &ref_osi_sh
@@ -35,6 +37,8 @@ references:
     source: 'sh-monthly'       # mandatory
     regrid: 'r100'
     domain: "sh"
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:
