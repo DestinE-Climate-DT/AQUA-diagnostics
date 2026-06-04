@@ -36,8 +36,8 @@ references:
     source: 'monthly'
     regrid: 'r100'
     domain: "sh"
-    startdate: '1990-01-01'
-    enddate: '2020-12-31'
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:
