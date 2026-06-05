@@ -11,6 +11,8 @@ pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DIAGNOSTICS_ROOT = REPO_ROOT / "aqua" / "diagnostics"
 ANALYSIS_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "config.aqua-analysis.yaml"
+EXPERIMENT_KIND_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "climatedt-experiment-kind.yaml"
+JINJA_COLLECTIONS_DIR = DIAGNOSTICS_ROOT / "config" / "collections" / "jinja"
 
 
 def _load_analysis_config():
@@ -89,3 +91,31 @@ def test_analysis_config_collection_files_exist():
                     missing_collection_files.append((diagnostic_group, cli_alias, str(config_path)))
 
     assert not missing_collection_files, f"Diagnostics reference missing collection config files: {missing_collection_files}."
+
+
+def test_jinja_collection_templates_render_with_experiment_kinds():
+    """Every jinja collection template must render to a valid config for all experiment kinds.
+
+    Mirrors production (``load_yaml(strict=True)``): a variable missing from the kind raises
+    ``UndefinedError``, only logged, which silently skips the collection at runtime. Guards
+    render-ability and YAML validity, not the rendered values.
+    """
+    experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
+    templates = sorted(JINJA_COLLECTIONS_DIR.glob("**/*.j2"))
+    assert templates, f"No jinja templates found under {JINJA_COLLECTIONS_DIR}."
+
+    render_failures = []
+    for template in templates:
+        relative_template = template.relative_to(JINJA_COLLECTIONS_DIR)
+        for kind_name, kind_definitions in experiment_kinds.items():
+            label = f"{relative_template} [{kind_name}]"
+            # Catch broadly: both UndefinedError and YAML parse errors are silent failures at runtime.
+            try:
+                rendered = load_yaml(str(template), definitions=kind_definitions, strict=True)
+            except Exception as error:
+                render_failures.append(f"{label}: {type(error).__name__}: {error}")
+                continue
+            if not isinstance(rendered, dict):
+                render_failures.append(f"{label}: rendered to {type(rendered).__name__}, not a mapping")
+
+    assert not render_failures, "Jinja templates failed to render to a valid config:\n" + "\n".join(render_failures)
