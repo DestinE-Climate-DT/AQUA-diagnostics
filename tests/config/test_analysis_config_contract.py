@@ -3,6 +3,8 @@
 from pathlib import Path
 
 import pytest
+from jinja2 import Environment, StrictUndefined
+from ruamel.yaml import YAML
 
 from aqua.core.util import load_yaml
 
@@ -93,6 +95,20 @@ def test_analysis_config_collection_files_exist():
     assert not missing_collection_files, f"Diagnostics reference missing collection config files: {missing_collection_files}."
 
 
+# TODO(aqua-core #2834): this local renderer exists only because the CI-pinned aqua-core (from PyPI)
+# does not yet expose load_yaml(strict=...). Once the pinned aqua-core ships #2834, remove this block
+# and the jinja2/ruamel imports, and render via the real production function:
+#     rendered = load_yaml(str(template), definitions=kind_definitions, strict=True)
+# Mirror of aqua-core's strict jinja env (StrictUndefined + trim/lstrip/keep):
+_STRICT_JINJA_ENV = Environment(undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+
+
+def _render_template_strict(template_path, definitions):
+    """Render a jinja template with StrictUndefined and parse the result as YAML."""
+    rendered = _STRICT_JINJA_ENV.from_string(template_path.read_text()).render(definitions)
+    return YAML(typ="rt").load(rendered)
+
+
 def test_jinja_collection_templates_render_with_experiment_kinds():
     """Every jinja collection template must render to a valid config for all experiment kinds.
 
@@ -111,7 +127,7 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
             label = f"{relative_template} [{kind_name}]"
             # Catch broadly: both UndefinedError and YAML parse errors are silent failures at runtime.
             try:
-                rendered = load_yaml(str(template), definitions=kind_definitions, strict=True)
+                rendered = _render_template_strict(template, kind_definitions)
             except Exception as error:
                 render_failures.append(f"{label}: {type(error).__name__}: {error}")
                 continue
