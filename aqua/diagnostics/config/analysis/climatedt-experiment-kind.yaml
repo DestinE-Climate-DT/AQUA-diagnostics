@@ -19,6 +19,8 @@ default:
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
   timeseries:
+    startdate: "1990-01-01"
+    enddate: "2014-12-31"
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
 scenario:
@@ -33,6 +35,8 @@ scenario:
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
   timeseries:
+    startdate: "2000-01-01"
+    enddate: "2024-12-31"
     std_startdate: "2020-01-01"
     std_enddate: "2024-12-31"
 storyline:
@@ -47,5 +51,7 @@ storyline:
     std_startdate: "2000-01-01"
     std_enddate: "2024-12-31"
   timeseries:
+    startdate: "2017-01-01"
+    enddate: "2024-12-31"
     std_startdate: "2020-01-01"
     std_enddate: "2024-12-31"
