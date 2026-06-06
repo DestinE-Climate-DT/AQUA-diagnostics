@@ -22,7 +22,7 @@ output:
 diagnostics:
   ocean_drift:
     hovmoller:
-      vert_coord: depth  # optional, default is 'level'
+      vert_coord: level  # LRA r100 (IFS-NEMO/FESOM) stores the vertical dim as 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']
@@ -32,13 +32,13 @@ diagnostics:
   ocean_trends:
     multilevel:
       diagnostic_name: 'ocean3d'
-      vert_coord: depth  # optional, default is 'level'
+      vert_coord: level  # LRA r100 (IFS-NEMO/FESOM) stores the vertical dim as 'level'
       run: true
       var: ['thetao', 'so']
-      regions: ['go'] 
+      regions: ['go']
     zonal:
       diagnostic_name: 'ocean3d'
-      vert_coord: depth  # optional, default is 'level'
+      vert_coord: level  # LRA r100 (IFS-NEMO/FESOM) stores the vertical dim as 'level'
       run: true
       var: ['thetao', 'so']
       regions: ['go', 'io', 'ao', 'so', 'arc_o', 'po']

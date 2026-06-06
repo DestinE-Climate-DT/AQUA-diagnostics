@@ -32,7 +32,7 @@ output:
 diagnostics:
   ocean_stratification:
     stratification:
-      vert_coord: depth  # optional, default is 'level'
+      vert_coord: level  # LRA r100 (IFS-NEMO/FESOM) stores the vertical dim as 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']
@@ -43,7 +43,7 @@ diagnostics:
       climatology: ['DJF', 'DJF', 'JJA', 'DJF', 'JJA']
       # dim_mean: ['lat', 'lon']
     mld:
-      vert_coord: depth  # optional, default is 'level'
+      vert_coord: level  # LRA r100 (IFS-NEMO/FESOM) stores the vertical dim as 'level'
       diagnostic_name: 'ocean3d'
       run: true
       var: ['thetao', 'so']
