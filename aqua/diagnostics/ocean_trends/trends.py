@@ -42,6 +42,7 @@ class Trends(Diagnostic):
             diagnostic_name (str, optional): Name of the diagnostic for filenames. Defaults to "trends".
             vert_coord (str, optional): Name of the vertical dimension coordinate. Defaults to DEFAULT_OCEAN_VERT_COORD.
             loglevel (str, optional): Logging level. Default is "WARNING".
+
         """
         super().__init__(
             catalog=catalog,
@@ -77,6 +78,7 @@ class Trends(Diagnostic):
             var (list, optional): List of variable names to analyze. Default is ['thetao', 'so'].
             dim_mean (str or list, optional): Dimension(s) over which to compute the mean. Default is None.
             reader_kwargs (dict, optional): Additional keyword arguments for the data reader. Default is {}.
+
         """
         self.logger.info("Starting trend analysis workflow")
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
@@ -101,6 +103,7 @@ class Trends(Diagnostic):
 
         Returns:
             tuple: (data, region) - Processed data and region name.
+
         """
         # If a region is specified, apply area selection to self.data
         if region:
@@ -132,6 +135,7 @@ class Trends(Diagnostic):
 
         Returns:
             xr.DataArray: Adjusted trend values.
+
         """
         self.logger.debug("Adjusting trend for time frequency")
         time_frequency = y_array["time"].to_index().inferred_freq
@@ -174,6 +178,7 @@ class Trends(Diagnostic):
 
         Returns:
             xr.DataArray or xr.Dataset: Trend coefficients adjusted for time frequency.
+
         """
         self.logger.info("Calculating linear trend")
         trend_init = Trender()
@@ -208,6 +213,7 @@ class Trends(Diagnostic):
             region (str, optional): Geographical region for analysis.
             outputdir (str, optional): Directory to save output files. Default is current directory.
             rebuild (bool, optional): If True, rebuild existing files. Default is True.
+
         """
         self.logger.info("Saving trend coefficients to NetCDF file")
         super().save_netcdf(
