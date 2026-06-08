@@ -112,7 +112,7 @@ class Hovmoller(Diagnostic):
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
-            res_dict = super().select_region(data=self.data, region=region, diagnostic="ocean3d", drop=True)
+            res_dict = super().select_region(data=self.data, region=region, drop=True)
             self.region = res_dict["region"]
             self.lat_limits = res_dict["lat_limits"]
             self.lon_limits = res_dict["lon_limits"]

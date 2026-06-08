@@ -108,7 +108,7 @@ class Trends(Diagnostic):
         # If a region is specified, apply area selection to self.data
         if region:
             self.logger.info(f"Selecting region: {region}.")
-            res_dict = super().select_region(data=data, region=region, diagnostic="ocean3d", drop=True)
+            res_dict = super().select_region(data=data, region=region, drop=True)
             lat_limits = res_dict["lat_limits"]
             lon_limits = res_dict["lon_limits"]
             data = res_dict["data"]

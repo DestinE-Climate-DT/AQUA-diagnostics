@@ -82,33 +82,34 @@ class SeaIce(Diagnostic):
 
     def load_regions(self, regions_file=None, regions=None):
         """
-        Loads region definitions from a .yaml configuration file and sets the selected regions.
+        Loads region definitions from the centralized regions YAML and sets the selected regions.
 
         Args:
-            regions_file (str): Full path to the region file. If None, a default path is used.
-            regions (str or list of str): A region or list of region names to load.
-                If None, all regions from the configuration are used.
+            regions_file (str): Full path to a custom region file. If None, the centralized
+                file is used.
+            regions (str or list of str): A region or list of region names to load. If empty
+                or None, falls back to ``["arctic", "antarctic"]``.
         """
-        if regions_file is None:
-            regions_file = self._get_default_regions_file(diagnostic="seaice")
-
-        region_definitions = self._read_regions_file(regions_file).get("regions", {})
+        region_definitions = self._load_regions_from_file(regions_file_path=regions_file)
         self.regions_definition = region_definitions
 
         selected_regions = to_list(regions)
 
         if not selected_regions:
-            self.logger.warning("No regions specified. Using all available regions.")
-            self.regions = list(region_definitions.keys())
-            return
+            selected_regions = ["arctic", "antarctic"]
+            self.logger.warning(
+                "No regions specified. Falling back to default sea-ice regions: %s",
+                selected_regions,
+            )
 
         invalid_regions = [reg for reg in selected_regions if reg not in region_definitions]
 
         if invalid_regions:
             invalid_regions_str = ", ".join(str(i) for i in invalid_regions)
+            source = regions_file or "centralized regions file"
             raise ValueError(
                 f"Invalid region name(s): [{invalid_regions_str}]. "
-                f"Please check regions names are lower case or the region file at: '{regions_file}'."
+                f"Please check regions names are lower case or the region file at: '{source}'."
             )
 
         self.regions = selected_regions
@@ -287,7 +288,7 @@ class SeaIce(Diagnostic):
             # areacello, space_coord = self.get_area_cells_and_coords(masked_data)
             # areacello = self.select_region_area_cell(areacello, region)
 
-            masked_data_region = self.select_region(masked_data, region=region, diagnostic="seaice").get("data")
+            masked_data_region = self.select_region(masked_data, region=region).get("data")
 
             if self.method in ["fraction", "thickness"]:
                 seaice_2d_result = self._calc_time_stat(masked_data_region, stat=stat, freq=freq)
@@ -409,7 +410,6 @@ class SeaIce(Diagnostic):
         res_dict = self.select_region(
             areacello,
             region=region,
-            diagnostic="seaice",
             drop=drop,
             default_coords={"lon_min": lonmin, "lon_max": lonmax, "lat_min": -90, "lat_max": 90},
         )
@@ -432,7 +432,7 @@ class SeaIce(Diagnostic):
         areacello, space_coord = self.get_area_cells_and_coords(masked_data)
         areacello = self.select_region_area_cell(areacello, region)
 
-        masked_data_region = self.select_region(masked_data, region=region, diagnostic="seaice").get("data")
+        masked_data_region = self.select_region(masked_data, region=region).get("data")
 
         self.logger.info(f"Computing sea ice {self.method} for {region}")
 
