@@ -30,12 +30,24 @@ class PlotENSO(PlotBaseMixin):
         )
         self.logger = log_configure(log_name="PlotENSO", log_level=loglevel)
 
-    def plot_index(self, thresh: float = 0.5):
+    def plot_index(self, thresh: float = 0.5, labels: list = None):
+        """
+        Plot the indexes for the ENSO products.
+
+        Args:
+            thresh (float): Threshold for the indexes. Default is 0.5.
+            labels (list): List of labels for the indexes. Default is None, in this case
+                           labels will be set by the set_labels method if not provided.
+        
+        Returns:
+            fig: Figure object.
+            axs: Axes object.
+        """
 
         # Join the indexes in a single list
         indexes = self.indexes + self.ref_indexes
 
-        labels = super().set_labels()
+        labels = super().set_labels() if labels is None else labels
 
         title = TitleBuilder(
             diagnostic="Niño 3.4 index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps

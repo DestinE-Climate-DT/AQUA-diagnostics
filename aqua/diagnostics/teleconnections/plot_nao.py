@@ -27,12 +27,22 @@ class PlotNAO(PlotBaseMixin):
         )
         self.logger = log_configure(log_name="PlotNAO", log_level=loglevel)
 
-    def plot_index(self, thresh: float = 0.0):
+    def plot_index(self, thresh: float = 0.0, labels: list = None):
+        """
+        Plot the NAO index.
 
+        Args:
+            thresh (float): Threshold for the index. Default is 0.0.
+            labels (list): List of labels for the indexes. Default is None, in which case the labels are set automatically.
+                           
+        Returns:
+            fig: Figure object.
+            axs: Axes object.
+        """
         # Join the indexes in a single list
         indexes = self.indexes + self.ref_indexes
 
-        labels = super().set_labels()
+        labels = super().set_labels() if labels is None else labels
 
         title = TitleBuilder(
             diagnostic="NAO index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
