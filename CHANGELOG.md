@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 Complete list:
+- Teleconnections: added the possibility to override default labels in the plot_index method (#273)
 - Regions config file centralization (#267)
 - Jinja templates for configuration files for collections (#230)
 - Fallback test download from wilma (#269)
