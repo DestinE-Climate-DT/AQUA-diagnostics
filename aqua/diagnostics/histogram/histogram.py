@@ -70,7 +70,6 @@ class Histogram(Diagnostic):
         # Region setup using parent class method
         self.region, self.lon_limits, self.lat_limits = self._set_region(
             region=region,
-            diagnostic="histogram",
             regions_file_path=regions_file_path,
             lon_limits=lon_limits,
             lat_limits=lat_limits,

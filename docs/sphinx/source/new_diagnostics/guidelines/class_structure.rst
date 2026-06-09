@@ -152,17 +152,24 @@ The folder structure should follow this pattern:
 .. code-block:: text
 
     $HOME/.aqua/
-        ├── diagnostics/
+        ├── definitions/
+        │   └── regions.yaml
+        ├── tools/
         │   ├── diagnostic_name/
         │   │   ├── definitions/
         │   │   │   └── definitions.yaml
         │   │   └── config_diagnostic_name.yaml
 
-The ``diagnostics/`` folder contains a subfolder for each diagnostic, which in turn may contain a
-``definitions/`` folder with possible files defining options for the diagnostic, such as available
-regions for the diagnostic or default variable names to be used.
-The file used to run the diagnostic are contained in the main diagnostic folder, and should be
-used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
+The ``definitions/`` top-level folder contains shared lookup files used by all diagnostics.
+``regions.yaml`` is the centralized registry of all available geographic regions:
+any diagnostic can refer to a region by name (e.g. ``nh``, ``arctic``, ``io``) and the
+``Diagnostic`` base class resolves it against this single file.
+
+The ``tools/`` folder contains a subfolder for each diagnostic, which in turn may contain a
+``definitions/`` folder with lookup files that are *specific to that diagnostic only* (e.g. custom
+index definitions for teleconnections).
+The configuration files used to run each diagnostic are contained in the main diagnostic folder and
+should be used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
 
 .. note::
     After the implementation of the diagnostic in the aqua console, be sure that the configuration files are

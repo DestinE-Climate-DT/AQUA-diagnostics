@@ -1,20 +1,28 @@
+# Centralized region definitions for all AQUA diagnostics.
+#
+# To use a custom regions file, pass ``regions_file_path`` to a diagnostic.
+
 regions:
-  io:
-    longname: Indian Ocean
-    lon_limits: [30, 110]
-    lat_limits: [-30, 30]
-  ls:
-    longname: Labrador Sea
-    lon_limits: [300, 316]
-    lat_limits: [52, 65]
-  lgs:
-    longname: Labrador Gin Seas
-    lon_limits: [-70, 20]
-    lat_limits: [50, 80]
-  is:
-    longname: Irminger Sea
-    lon_limits: [316, 330]
-    lat_limits: [60, 70]
+
+  # Atmospheric / generic geographical bands
+  nh:
+    longname: North Midlatitudes
+    lon_limits: [-180, 180]
+    lat_limits: [30, 90]
+  sh:
+    longname: South Midlatitudes
+    lon_limits: [-180, 180]
+    lat_limits: [-90, -30]
+  tropics:
+    longname: Tropics
+    lon_limits: [-180, 180]
+    lat_limits: [-15, 15]
+  europe:
+    longname: Europe
+    lon_limits: [-10, 40]
+    lat_limits: [35, 70]
+
+  # Ocean basins and seas
   go:
     longname: Global Ocean
     lon_limits: [0, 360]
@@ -27,6 +35,10 @@ regions:
     longname: Pacific Ocean
     lon_limits: [120, 290]
     lat_limits: [-55, 65]
+  io:
+    longname: Indian Ocean
+    lon_limits: [30, 110]
+    lat_limits: [-30, 30]
   arc_o:
     longname: Arctic Ocean
     lon_limits: [0, 360]
@@ -35,6 +47,18 @@ regions:
     longname: Southern Ocean
     lon_limits: [0, 360]
     lat_limits: [-80, -50]
+  ls:
+    longname: Labrador Sea
+    lon_limits: [300, 316]
+    lat_limits: [52, 65]
+  lgs:
+    longname: Labrador Gin Seas
+    lon_limits: [-70, 20]
+    lat_limits: [50, 80]
+  is:
+    longname: Irminger Sea
+    lon_limits: [316, 330]
+    lat_limits: [60, 70]
   gs:
     longname: Gin Sea
     lon_limits: [-10, 20]
@@ -135,3 +159,37 @@ regions:
     longname: Beaufort Sea
     lon_limits: [-148, -140]
     lat_limits: [68, 79]
+
+  # Sea ice — hemispheric and sea ice sector geometries
+  arctic:
+    longname: Arctic
+    lon_limits: [0, 360]
+    lat_limits: [0, 90]
+  hudson_bay:
+    longname: Hudson Bay
+    lon_limits: [265, 285]
+    lat_limits: [50, 63]
+  antarctic:
+    longname: Antarctic
+    lon_limits: [0, 360]
+    lat_limits: [-90, 0]
+  ross_sea:
+    longname: Ross Sea
+    lon_limits: [160, 230]
+    lat_limits: [-90, 0]
+  amundsen_bellingshausen_seas:
+    longname: Amundsen-Bellingshausen Seas
+    lon_limits: [230, 300]
+    lat_limits: [-90, 0]
+  weddell_sea:
+    longname: Weddell Sea
+    lon_limits: [300, 20]
+    lat_limits: [-90, 0]
+  indian_ocean:
+    longname: Indian Ocean
+    lon_limits: [20, 90]
+    lat_limits: [-90, 0]
+  pacific_ocean:
+    longname: Pacific Ocean
+    lon_limits: [90, 160]
+    lat_limits: [-90, 0]

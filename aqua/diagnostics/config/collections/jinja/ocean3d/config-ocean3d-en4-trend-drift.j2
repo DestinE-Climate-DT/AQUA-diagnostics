@@ -31,9 +31,14 @@ diagnostics:
 
   ocean_trends:
     multilevel:
-      vert_coord: depth  # optional, default is 'level'
       diagnostic_name: 'ocean3d'
+      vert_coord: depth  # optional, default is 'level'
+      run: true
+      var: ['thetao', 'so']
+      regions: ['go'] 
+    zonal:
+      diagnostic_name: 'ocean3d'
+      vert_coord: depth  # optional, default is 'level'
       run: true
       var: ['thetao', 'so']
       regions: ['go', 'io', 'ao', 'so', 'arc_o', 'po']
-      # dim_mean: ['lat']

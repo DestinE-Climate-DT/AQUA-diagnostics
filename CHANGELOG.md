@@ -6,8 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.24.0):
+
 Complete list:
+- Regions config file centralization (#267)
 - Jinja templates for configuration files for collections (#230)
+- Fallback test download from wilma (#269)
+- Jinja templates for configuration files for collections (#230, #270)
 - Histogram: diagnostic updates (#255)
 - Seaice: Port changes from Dashboard v0.19-op  (#190)
 - ECmean: prevent creation of default empty dirs (#263)

@@ -110,23 +110,15 @@ def test_cluster(mock_cluster, mock_client):
     close_cluster(client, cluster, private_cluster)
 
 
-def test_load_diagnostic_config(monkeypatch):
-    """Test loading a real diagnostic configuration from repository config path."""
+def test_load_diagnostic_config():
+    """Test loading a real diagnostic configuration from the repository config path."""
 
-    class _RepoConfigPath:
-        def __init__(self, loglevel=None):
-            self.configdir = str(REAL_CONFIG_DIR)
-
-    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _RepoConfigPath)
-
-    parser = argparse.ArgumentParser()
-    parser = template_parse_arguments(parser)
-    args = parser.parse_args(["--loglevel", "DEBUG"])
+    default_config = os.path.join(
+        REAL_CONFIG_DIR, "collections", "jinja", "climate_metrics", "config-climate_metrics-gregory.j2"
+    )
     ts_dict = load_diagnostic_config(
         diagnostic="climate_metrics",
-        default_config="config-climate_metrics-gregory.yaml",
-        folder="collections",
-        config=args.config,
+        config=default_config,
         loglevel=loglevel,
     )
 
