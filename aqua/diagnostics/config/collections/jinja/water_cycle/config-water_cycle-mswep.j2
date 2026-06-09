@@ -125,3 +125,11 @@ diagnostics:
       - name: 'tprate'
         units: 'mm/day'
         regions: [null, 'tropics']  # global and tropics
+
+  boxplots:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables:
+      - vars: ['tprate']
+        anomalies: true
+        add_mean_line: true
