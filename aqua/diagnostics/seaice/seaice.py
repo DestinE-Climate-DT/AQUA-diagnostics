@@ -5,7 +5,7 @@ import xarray as xr
 from aqua.core.exceptions import NoDataError
 from aqua.core.fldstat import FldStat
 from aqua.core.logger import log_configure, log_history
-from aqua.core.util import merge_attrs, to_list
+from aqua.core.util import merge_attrs, time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.seaice.util import ensure_istype
 
@@ -69,6 +69,8 @@ class SeaIce(Diagnostic):
             catalog=catalog,
             startdate=startdate,
             enddate=enddate,
+            std_startdate=std_startdate,
+            std_enddate=std_enddate,
             loglevel=loglevel,
         )
         self.logger = log_configure(loglevel, "SeaIce")
@@ -80,33 +82,34 @@ class SeaIce(Diagnostic):
 
     def load_regions(self, regions_file=None, regions=None):
         """
-        Loads region definitions from a .yaml configuration file and sets the selected regions.
+        Loads region definitions from the centralized regions YAML and sets the selected regions.
 
         Args:
-            regions_file (str): Full path to the region file. If None, a default path is used.
-            regions (str or list of str): A region or list of region names to load.
-                If None, all regions from the configuration are used.
+            regions_file (str): Full path to a custom region file. If None, the centralized
+                file is used.
+            regions (str or list of str): A region or list of region names to load. If empty
+                or None, falls back to ``["arctic", "antarctic"]``.
         """
-        if regions_file is None:
-            regions_file = self._get_default_regions_file(diagnostic="seaice")
-
-        region_definitions = self._read_regions_file(regions_file).get("regions", {})
+        region_definitions = self._load_regions_from_file(regions_file_path=regions_file)
         self.regions_definition = region_definitions
 
         selected_regions = to_list(regions)
 
         if not selected_regions:
-            self.logger.warning("No regions specified. Using all available regions.")
-            self.regions = list(region_definitions.keys())
-            return
+            selected_regions = ["arctic", "antarctic"]
+            self.logger.warning(
+                "No regions specified. Falling back to default sea-ice regions: %s",
+                selected_regions,
+            )
 
         invalid_regions = [reg for reg in selected_regions if reg not in region_definitions]
 
         if invalid_regions:
             invalid_regions_str = ", ".join(str(i) for i in invalid_regions)
+            source = regions_file or "centralized regions file"
             raise ValueError(
                 f"Invalid region name(s): [{invalid_regions_str}]. "
-                f"Please check regions names are lower case or the region file at: '{regions_file}'."
+                f"Please check regions names are lower case or the region file at: '{source}'."
             )
 
         self.regions = selected_regions
@@ -185,6 +188,7 @@ class SeaIce(Diagnostic):
 
         # get the sea ice masked by method
         masked_data = self._mask_data_bymethod()
+        masked_std_data = self._mask_data_bymethod(data=self.std_data) if self.std_data is not None else None
 
         self.monthly = ts_monthly
         self.annual = ts_annual
@@ -215,12 +219,24 @@ class SeaIce(Diagnostic):
 
             # compute standard deviation if frequency is provided
             if calc_std_freq is not None:
-                seaice_std_result = self._calc_time_stat(original_si_result, stat="std", freq=calc_std_freq)
+                std_input = (
+                    self.integrate_seaice(masked_std_data, region) if masked_std_data is not None else original_si_result
+                )
+                seaice_std_result = self._calc_time_stat(std_input, stat="std", freq=calc_std_freq)
                 log_history(seaice_std_result, f"Method used for standard deviation seaice computation: {self.method}")
+
+                if masked_std_data is not None:
+                    std_period_start, std_period_end = self.std_startdate, self.std_enddate
+                else:
+                    std_period_start, std_period_end = self.startdate, self.enddate
 
                 # update attributes and history
                 seaice_std_result = self.add_seaice_attrs(
-                    seaice_std_result, region, self.startdate, self.enddate, std_flag=True
+                    seaice_std_result,
+                    region,
+                    std_period_start,
+                    std_period_end,
+                    std_flag=True,
                 )
                 self.logger.debug("Attributes updated")
 
@@ -272,14 +288,14 @@ class SeaIce(Diagnostic):
             # areacello, space_coord = self.get_area_cells_and_coords(masked_data)
             # areacello = self.select_region_area_cell(areacello, region)
 
-            masked_data_region = self.select_region(masked_data, region=region, diagnostic="seaice").get("data")
+            masked_data_region = self.select_region(masked_data, region=region).get("data")
 
             if self.method in ["fraction", "thickness"]:
                 seaice_2d_result = self._calc_time_stat(masked_data_region, stat=stat, freq=freq)
             else:
                 raise ValueError(f"Method '{self.method}' is not supported for 2D computation.")
 
-            seaice_result = self.add_seaice_attrs(seaice_2d_result, region, self.startdate, self.enddate)  # noqa: F841
+            seaice_2d_result = self.add_seaice_attrs(seaice_2d_result, region, self.startdate, self.enddate)
 
             regional_2d_results.append(seaice_2d_result)
 
@@ -293,7 +309,7 @@ class SeaIce(Diagnostic):
 
         return self.result
 
-    def _mask_data_bymethod(self):
+    def _mask_data_bymethod(self, data: xr.Dataset | None = None):
         """
         Mask the data based on the specified method.
 
@@ -303,20 +319,22 @@ class SeaIce(Diagnostic):
         Returns:
             method_masked_data (xr.DataArray): The masked data based on the specified method.
         """
-        if self.data is None:
+        target_data = self.data if data is None else data
+
+        if target_data is None:
             self.logger.error(f"Variable {self.var} not found in dataset {self.model}, {self.exp}, {self.source}")
             raise NoDataError("Variable not found in dataset")
 
         self.logger.debug(f"Masking data for {self.var} with method {self.method}")
 
         if self.method == "extent":
-            method_masked_data = self.data[self.var].where(
-                (self.data[self.var] > self.threshold) & (self.data[self.var] < 1.0)
+            method_masked_data = target_data[self.var].where(
+                (target_data[self.var] > self.threshold) & (target_data[self.var] < 1.0)
             )
         elif self.method == "volume":
-            method_masked_data = self.data[self.var].where((self.data[self.var] > 0) & (self.data[self.var] < 99.0))
+            method_masked_data = target_data[self.var].where((target_data[self.var] > 0) & (target_data[self.var] < 99.0))
         else:
-            method_masked_data = self.data[self.var].copy(deep=True)
+            method_masked_data = target_data[self.var].copy(deep=True)
 
         if method_masked_data is None:
             self.logger.error(
@@ -392,7 +410,6 @@ class SeaIce(Diagnostic):
         res_dict = self.select_region(
             areacello,
             region=region,
-            diagnostic="seaice",
             drop=drop,
             default_coords={"lon_min": lonmin, "lon_max": lonmax, "lat_min": -90, "lat_max": 90},
         )
@@ -415,7 +432,7 @@ class SeaIce(Diagnostic):
         areacello, space_coord = self.get_area_cells_and_coords(masked_data)
         areacello = self.select_region_area_cell(areacello, region)
 
-        masked_data_region = self.select_region(masked_data, region=region, diagnostic="seaice").get("data")
+        masked_data_region = self.select_region(masked_data, region=region).get("data")
 
         self.logger.info(f"Computing sea ice {self.method} for {region}")
 
@@ -431,7 +448,8 @@ class SeaIce(Diagnostic):
             # divide by 1e12 to convert to million km^2
             seaice_integrated = si_fldstat.fldstat(masked_data_region.notnull(), stat="areasum", dims=space_coord) / 1e12
         if self.method == "volume":
-            # compute sea ice volume: exclude areas with no sea ice; divide by 1e12 to convert to thousand km^3
+            # compute sea ice volume: exclude areas with no sea ice;
+            # divide by 1e12 to convert to thousand km^3
             seaice_integrated = si_fldstat.fldstat(masked_data_region, stat="integral", dims=space_coord) / 1e12
 
             merge_attrs(seaice_integrated.attrs, masked_data.attrs)
@@ -522,10 +540,10 @@ class SeaIce(Diagnostic):
         Args:
             da_seaice_computed (xr.DataArray): The computed sea ice data to which attributes will be added.
             region (str): The geographical region over which sea ice data is computed.
-            startdate (str, optional): The start date of the data (format "YYYY-MM-DD"). Default to None.
-            enddate (str, optional): The end date of the data (format "YYYY-MM-DD"). Default to None.
-            std_flag (bool, optional): If True, add the metadata related to the computed standard deviation.
-                Defaults to False.
+            startdate (str, optional): The start date of the data (format "%Y-%m"). Default to None.
+            enddate (str, optional): The end date of the data (format "%Y-%m"). Default to None.
+            std_flag (bool, optional): If True, add the std computation as ``AQUA_std_startdate`` and
+                ``AQUA_std_enddate``. Defaults to False.
 
         Returns:
             xr.DataArray
@@ -547,11 +565,23 @@ class SeaIce(Diagnostic):
         )
         da_seaice_computed.attrs["standard_name"] = f"{region}_{'std_' if std_flag else ''}sea_ice_{self.method}"
         da_seaice_computed.attrs["AQUA_method"] = f"{self.method}"
-        if startdate is not None:
-            da_seaice_computed.attrs["AQUA_startdate"] = f"{startdate}"
-        if enddate is not None:
-            da_seaice_computed.attrs["AQUA_enddate"] = f"{enddate}"
+
+        if std_flag:
+            if startdate is not None:
+                da_seaice_computed.attrs["AQUA_std_startdate"] = f"{time_to_string(startdate, format='%Y-%m')}"
+            if enddate is not None:
+                da_seaice_computed.attrs["AQUA_std_enddate"] = f"{time_to_string(enddate, format='%Y-%m')}"
+        else:
+            if startdate is not None:
+                da_seaice_computed.attrs["AQUA_startdate"] = f"{time_to_string(startdate, format='%Y-%m')}"
+            if enddate is not None:
+                da_seaice_computed.attrs["AQUA_enddate"] = f"{time_to_string(enddate, format='%Y-%m')}"
         da_seaice_computed.name = f"{'std_' if std_flag else ''}sea_ice_{self.method}_{region}"
+
+        time_coord = da_seaice_computed.coords.get("time", None)
+        if time_coord is not None:
+            time_coord.attrs["long_name"] = "Time"
+            time_coord.attrs.setdefault("standard_name", "time")
 
         return da_seaice_computed
 

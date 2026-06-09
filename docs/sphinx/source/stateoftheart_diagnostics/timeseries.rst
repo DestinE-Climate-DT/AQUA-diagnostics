@@ -43,7 +43,7 @@ File structure
 * The diagnostic is located in the ``aqua/diagnostics/timeseries`` directory, which contains both the source code and the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-timeseries.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/timeseries`` directory and contain examples of how to use the diagnostic.
-* A list of available regions is available in the ``aqua/diagnostics/config/tools/timeseries/definitions/regions.yaml`` file.
+* A list of available regions is available in the ``aqua/diagnostics/config/definitions/regions.yaml`` file.
 
 Input variables and datasets
 ----------------------------
