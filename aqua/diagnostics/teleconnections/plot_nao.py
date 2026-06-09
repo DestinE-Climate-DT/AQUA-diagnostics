@@ -34,7 +34,7 @@ class PlotNAO(PlotBaseMixin):
         Args:
             thresh (float): Threshold for the index. Default is 0.0.
             labels (list): List of labels for the indexes. Default is None, in which case the labels are set automatically.
-                           
+
         Returns:
             fig: Figure object.
             axs: Axes object.

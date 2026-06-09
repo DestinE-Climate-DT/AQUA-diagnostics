@@ -38,7 +38,7 @@ class PlotENSO(PlotBaseMixin):
             thresh (float): Threshold for the indexes. Default is 0.5.
             labels (list): List of labels for the indexes. Default is None, in this case
                            labels will be set by the set_labels method if not provided.
-        
+
         Returns:
             fig: Figure object.
             axs: Axes object.
