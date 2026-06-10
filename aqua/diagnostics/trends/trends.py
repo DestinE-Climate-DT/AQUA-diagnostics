@@ -1,4 +1,4 @@
-"""Module for computing trends using xarray."""
+"""Module for computing trends of one or more variables along the time dimension."""
 
 import pandas as pd
 import xarray as xr
@@ -7,13 +7,18 @@ from aqua.core.logger import log_configure
 from aqua.core.reader import Trender
 from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
-from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 xr.set_options(keep_attrs=True)
 
 
 class Trends(Diagnostic):
-    """Class to compute trends over time."""
+    """
+    Class to compute linear trends along the time dimension for one or more variables.
+    The trend is computed via polynomial fit and rescaled to per-year units based on the inferred time frequency of the data.
+    Supported 2D and 3d fields.
+    """
+
+    MINIMUM_MONTHS_REQUIRED = 12
 
     def __init__(
         self,
@@ -24,25 +29,35 @@ class Trends(Diagnostic):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
+        region: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+        regions_file_path: str = None,
+        vert_coord: str = None,
         diagnostic_name: str = "trends",
-        vert_coord: bool = False,
-        vert_coord_type: str = "depth",
         loglevel: str = "WARNING",
     ):
-        """Initialize the Trends class.
+        """
+        Initialize the Trends class.
 
         Args:
-            model (str): Climate model name.
+            model (str): Model name.
             exp (str): Experiment name.
-            source (str): Data source name.
-            catalog (str, optional): Path to the data catalog.
-            regrid (str, optional): Regridding method.
-            startdate (str, optional): Start date for data selection.
-            enddate (str, optional): End date for data selection.
-            diagnostic_name (str, optional): Name of the diagnostic for filenames. Defaults to "trends".
-            vert_coord (bool, optional): Whether to include vertical coordinate in the analysis. Defaults to False.
-            vert_coord_type (str, optional): Type of the vertical dimension coordinate to include. Defaults to 'depth'.
-            loglevel (str, optional): Logging level. Default is "WARNING".
+            source (str): Data source.
+            catalog (str, optional): Catalog name. Resolved by the Reader if None.
+            regrid (str, optional): Target grid for regridding. No regridding if None.
+            startdate (str, optional): Analysis start date.
+            enddate (str, optional): Analysis end date.
+            region (str, optional): Region name in the centralized regions file.
+            lon_limits (list, optional): Custom longitude limits ``[lon_min, lon_max]``.
+            lat_limits (list, optional): Custom latitude limits ``[lat_min, lat_max]``.
+            regions_file_path (str, optional): Custom regions YAML. Defaults to the
+                centralized AQUA regions file.
+            vert_coord (str, optional): Name of the vertical coordinate (e.g. ``'level'``,
+                ``'plev'``). If None the data is treated as 2D.
+            diagnostic_name (str, optional): Diagnostic name used in output filenames.
+                Defaults to ``'trends'``.
+            loglevel (str, optional): Logging level. Defaults to ``'WARNING'``.
         """
         super().__init__(
             catalog=catalog,
@@ -54,91 +69,132 @@ class Trends(Diagnostic):
             enddate=enddate,
             loglevel=loglevel,
         )
-        self.logger = log_configure(log_name="Trends", log_level=loglevel)
+        self.logger = log_configure(log_level=loglevel, log_name="Trends")
         self.diagnostic_name = diagnostic_name
-        if vert_coord is True:
-            self.logger.info(f"Vertical coordinate inclusion enabled. Selecting vertical coordinate type: {vert_coord_type}")
-            if vert_coord_type == "depth":
-                self.vert_coord = DEFAULT_OCEAN_VERT_COORD
-        else:
-            self.logger.info("Vertical coordinate inclusion disabled.")
-            self.vert_coord = None
+        self.vert_coord = vert_coord
+
+        self.region, self.lon_limits, self.lat_limits = self._set_region(
+            region=region,
+            regions_file_path=regions_file_path,
+            lon_limits=lon_limits,
+            lat_limits=lat_limits,
+        )
+
+        self.trend_coef = None
+
+    def retrieve(self, var, reader_kwargs: dict = {}):
+        """
+        Retrieve the data for one or more variables.
+
+        Args:
+            var (str or list): Variable name(s) to retrieve.
+            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
+        """
+        var = to_list(var)
+        self.logger.info("Retrieving variable(s): %s", var)
+        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
     def run(
         self,
-        var: list | str,
-        outputdir: str = ".",
+        var,
+        dim_mean=None,
+        outputdir: str = "./",
         rebuild: bool = True,
-        region: str = None,
-        dim_mean: type = None,
         reader_kwargs: dict = {},
     ):
-        """Run the trend analysis workflow.
+        """
+        Run the full trend analysis workflow.
+
+        Steps: retrieve → region selection → optional dimensional mean → trend → save.
 
         Args:
-            var (list or str): Variable(s) to analyze.
-            outputdir (str, optional): Directory to save output files. Default is current directory.
-            rebuild (bool, optional): If True, rebuild existing files. Default is True.
-            region (str, optional): Geographical region for analysis.
-            dim_mean (str or list, optional): Dimension(s) over which to compute the mean. Default is None.
-            reader_kwargs (dict, optional): Additional keyword arguments for the data reader. Default is {}.
+            var (str or list): Variable(s) to analyse.
+            dim_mean (str or list, optional): Dimension(s) over which to take an areal mean
+                before the trend is computed (e.g. ``['lat', 'lon']`` for a regional time series).
+            outputdir (str, optional): Output directory. Defaults to ``'./'``.
+            rebuild (bool, optional): Whether to overwrite existing output files. Defaults to True.
+            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
         """
         self.logger.info("Starting trend analysis")
-        var = to_list(var)
-        super().retrieve(var=var, reader_kwargs=reader_kwargs)
-
-        self.data, self.region = self.select_region(data=self.data, region=region, dim_mean=dim_mean)
+        self.retrieve(var=var, reader_kwargs=reader_kwargs)
+        self.data = self._apply_region(self.data, dim_mean=dim_mean)
 
         self.logger.info("Computing trend coefficients")
         self.trend_coef = self.compute_trend(data=self.data)
+
         self.logger.info("Saving results to NetCDF")
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
         self.logger.info("Trend analysis completed")
 
-    def select_region(self, data, region=None, drop=True, dim_mean=None):
+    def _apply_region(self, data, dim_mean=None):
         """
-        Select a geographical region from the data and optionally compute the mean over specified dimensions.
+        Apply region selection and optional field mean to a dataset.
 
         Args:
-            data (xr.DataArray or xr.Dataset): Input data to select from.
-            region (str, optional): Geographical region to select. If None, no selection is made. Default is None.
-            drop (bool, optional): Whether to drop the original coordinates after selection. Default is True.
-            dim_mean (str or list, optional): Dimension(s) over which to compute the mean. If None, no mean is computed.
-                                              Default is None.
+            data (xr.Dataset): Input data.
+            dim_mean (str or list, optional): Dimension(s) over which to compute the mean.
 
         Returns:
-            tuple: A tuple containing the selected (and possibly averaged) data and the region name.
+            xr.Dataset: The (possibly subset and averaged) data.
         """
-        # If a region is specified, apply area selection to self.data
-        if region:
-            self.logger.info(f"Selecting region: {region}.")
-            res_dict = super().select_region(data=data, region=region, diagnostic="trends", drop=True)
-            lat_limits = res_dict["lat_limits"]
-            lon_limits = res_dict["lon_limits"]
-            data = res_dict["data"]
-            region = res_dict["region"]
-        else:
-            self.logger.info("No region specified, using global data")
-            region = "global"
-            lat_limits = None
-            lon_limits = None
+        has_limits = self.lon_limits is not None or self.lat_limits is not None
+        if self.region is not None or has_limits:
+            label = self.region if self.region is not None else "custom limits"
+            self.logger.info("Applying region selection: %s", label)
+            data = self.reader.select_area(data=data, lat=self.lat_limits, lon=self.lon_limits, drop=True)
+            if self.region is not None:
+                data.attrs["AQUA_region"] = self.region
 
-        # If a dimension mean is specified, compute the mean over that dimension
-        # otherwise use the data as is, with a region selection if applied
-        if dim_mean:
-            self.logger.info("Averaging data over dimension: %s", dim_mean)
-            data = self.reader.fldmean(data, dim=dim_mean, lat=lat_limits, lon=lon_limits)
-        return data, region
+        if dim_mean is not None:
+            self.logger.info("Averaging data over dimension(s): %s", dim_mean)
+            data = self.reader.fldmean(
+                data,
+                dims=to_list(dim_mean),
+                lat_limits=self.lat_limits,
+                lon_limits=self.lon_limits,
+            )
+        return data
 
-    def adjust_trend_for_time_frequency(self, trend, y_array):
-        """Adjust trend values based on the time frequency of the data.
+    def compute_trend(self, data: xr.Dataset) -> xr.Dataset:
+        """
+        Compute the linear trend coefficients along ``time`` and rescale them to per-year.
 
         Args:
-            trend (xr.DataArray): Trend values to adjust.
-            y_array (xr.DataArray): Original data array with time coordinate.
+            data (xr.Dataset): Input dataset with a ``time`` dimension.
 
         Returns:
-            xr.DataArray: Adjusted trend values.
+            xr.Dataset: Trend coefficients (one per variable) with adjusted units.
+        """
+        self.logger.info("Calculating linear trend")
+        trender = Trender(loglevel=self.loglevel)
+        trend_data = trender.coeffs(data, dim="time", skipna=True, normalize=True)
+        trend_data = trend_data.sel(degree=1)
+        trend_data.attrs = data.attrs
+
+        trend_dict = {}
+        for var in data.data_vars:
+            self.logger.debug("Adjusting trend for variable: %s", var)
+            trend_data[var].attrs = data[var].attrs
+            trend_dict[var] = self.adjust_trend_for_time_frequency(trend_data[var], data)
+        trend_data = xr.Dataset(trend_dict)
+        trend_data.attrs.update(data.attrs)
+        if self.region is not None:
+            trend_data.attrs["AQUA_region"] = self.region
+
+        self.logger.debug("Loading trend data in memory")
+        trend_data.load()
+        return trend_data
+
+    def adjust_trend_for_time_frequency(self, trend: xr.DataArray, y_array: xr.Dataset):
+        """
+        Scale the trend coefficient to per-year units based on the inferred input frequency.
+
+        Args:
+            trend (xr.DataArray): Trend coefficient (slope of the linear fit).
+            y_array (xr.Dataset or xr.DataArray): Original data carrying the time coordinate.
+
+        Returns:
+            xr.DataArray: Trend scaled to per-year and with updated ``units`` attribute.
         """
         self.logger.debug("Adjusting trend for time frequency")
         time_frequency = y_array["time"].to_index().inferred_freq
@@ -163,7 +219,6 @@ class Trends(Diagnostic):
             trend = trend * 24 * 30 * 12
         elif time_frequency in ("Y", "YE-DEC"):
             self.logger.debug("Yearly data detected, no scaling applied")
-            trend = trend
         else:
             self.logger.error("Unsupported time frequency: %s", time_frequency)
             raise ValueError(f"The frequency: {time_frequency} of the data must be in Daily/Monthly/Yearly")
@@ -173,56 +228,35 @@ class Trends(Diagnostic):
         self.logger.debug("Trend units updated to: %s", trend.attrs["units"])
         return trend
 
-    def compute_trend(self, data: xr.DataArray | xr.Dataset):
-        """Compute linear trend coefficients over time.
-
-        Args:
-            data (xr.DataArray or xr.Dataset): Input data with a time dimension.
-
-        Returns:
-            xr.DataArray or xr.Dataset: Trend coefficients adjusted for time frequency.
-        """
-        self.logger.info("Calculating linear trend")
-        trend_init = Trender()
-        trend_data = trend_init.coeffs(data, dim="time", skipna=True, normalize=True)
-        trend_data = trend_data.sel(degree=1)
-        trend_data.attrs = data.attrs
-        trend_dict = {}
-        for var in data.data_vars:
-            self.logger.debug("Adjusting trend for variable: %s", var)
-            trend_data[var].attrs = data[var].attrs
-            trend_dict[var] = self.adjust_trend_for_time_frequency(trend_data[var], data)
-        trend_data = xr.Dataset(trend_dict)
-        trend_data.attrs["AQUA_region"] = self.region
-        self.logger.info("Trend value calculated")
-
-        self.logger.debug("Loading trend data in memory")
-        trend_data.load()
-        self.logger.debug("Loaded trend data in memory")
-        return trend_data
-
     def save_netcdf(
         self,
         diagnostic_product: str = "trend",
         outputdir: str = ".",
         rebuild: bool = True,
     ):
-        """Save trend coefficients to a NetCDF file.
+        """
+        Save the trend coefficients to a NetCDF file.
 
         Args:
-            diagnostic (str, optional): Diagnostic name for filenames. Default is "trends".
-            diagnostic_product (str, optional): Product type for filenames. Default is "spatial_trend".
-            region (str, optional): Geographical region for analysis.
-            outputdir (str, optional): Directory to save output files. Default is current directory.
-            rebuild (bool, optional): If True, rebuild existing files. Default is True.
+            diagnostic_product (str, optional): Diagnostic product tag for the filename.
+                Defaults to ``'trend'``.
+            outputdir (str, optional): Output directory.
+            rebuild (bool, optional): Overwrite existing files.
         """
+        if self.trend_coef is None:
+            self.logger.error("No trend data to save. Run compute_trend first.")
+            return
+
         self.logger.info("Saving trend coefficients to NetCDF file")
+        extra_keys = {}
+        if self.region is not None:
+            extra_keys["region"] = self.region
         super().save_netcdf(
             diagnostic=self.diagnostic_name,
             diagnostic_product=diagnostic_product,
             outputdir=outputdir,
             rebuild=rebuild,
             data=self.trend_coef,
-            extra_keys={"region": self.region, "var": ".".join(self.trend_coef.data_vars)},
+            extra_keys=extra_keys,
         )
         self.logger.info("Trend coefficients saved to NetCDF file")
