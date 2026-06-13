@@ -222,7 +222,7 @@ class PlotEnsembleLatLon(BaseMixin):
             self.logger.info("STD is Zero everywhere")
             self.save_figure(var=var, fig=fig1, description=description, format=save_format, dpi=dpi)
             return {"mean_plot": [fig1, ax1]}
-        
+
         fig2, ax2 = plot_single_map(
             dataset_std,
             proj=proj,

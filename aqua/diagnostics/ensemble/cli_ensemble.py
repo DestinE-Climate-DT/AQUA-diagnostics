@@ -41,12 +41,13 @@ from aqua.diagnostics.base import (
 # Default config filenames (resolved by load_diagnostic_config from the
 # package's config/collections/legacy/ensemble/ directory)
 _DEFAULT_CONFIG_TIMESERIES = "config_single_model_timeseries_ensemble.yaml"
-_DEFAULT_CONFIG_LATLON     = "config_single_model_latlon_ensemble.yaml"
+_DEFAULT_CONFIG_LATLON = "config_single_model_latlon_ensemble.yaml"
 
 
 # ---------------------------------------------------------------------------
 # Argument parsing
 # ---------------------------------------------------------------------------
+
 
 def parse_arguments(args):
     """Parse command-line arguments for the unified ensemble diagnostic CLI.
@@ -74,19 +75,13 @@ def parse_arguments(args):
         "--config-timeseries",
         dest="config_timeseries",
         default=None,
-        help=(
-            "Path to the timeseries config YAML. "
-            f"Defaults to {_DEFAULT_CONFIG_TIMESERIES}."
-        ),
+        help=(f"Path to the timeseries config YAML. Defaults to {_DEFAULT_CONFIG_TIMESERIES}."),
     )
     parser.add_argument(
         "--config-latlon",
         dest="config_latlon",
         default=None,
-        help=(
-            "Path to the latlon config YAML. "
-            f"Defaults to {_DEFAULT_CONFIG_LATLON}."
-        ),
+        help=(f"Path to the latlon config YAML. Defaults to {_DEFAULT_CONFIG_LATLON}."),
     )
     return parser.parse_args(args)
 
@@ -94,6 +89,7 @@ def parse_arguments(args):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _output_options(config_dict):
     """Extract output options from a configuration dictionary.
@@ -106,11 +102,11 @@ def _output_options(config_dict):
     """
     out = config_dict.get("output", {})
     return {
-        "outputdir":   out.get("outputdir",   "./"),
-        "rebuild":     out.get("rebuild",     True),
+        "outputdir": out.get("outputdir", "./"),
+        "rebuild": out.get("rebuild", True),
         "save_netcdf": out.get("save_netcdf", True),
         "save_format": out.get("save_format", SAVE_FORMAT),
-        "dpi":         out.get("dpi",         300),
+        "dpi": out.get("dpi", 300),
     }
 
 
@@ -131,18 +127,18 @@ def _resolve_dataset(args, config_dict, logger):
         logger.error("No datasets configured in config file. Aborting.")
         sys.exit(1)
 
-    first   = datasets[0]
+    first = datasets[0]
     catalog = get_arg(args, "catalog", first["catalog"])
-    model   = get_arg(args, "model",   first["model"])
-    exp     = get_arg(args, "exp",     first["exp"])
-    source  = get_arg(args, "source",  first["source"])
-    regrid  = get_arg(args, "regrid",  first.get("regrid"))
+    model = get_arg(args, "model", first["model"])
+    exp = get_arg(args, "exp", first["exp"])
+    source = get_arg(args, "source", first["source"])
+    regrid = get_arg(args, "regrid", first.get("regrid"))
     return catalog, model, exp, source, regrid
 
 
-def _retrieve_dataset(variable, catalog, model, exp, source,
-                      realization_dict, region=None,
-                      startdate=None, enddate=None, logger=None):
+def _retrieve_dataset(
+    variable, catalog, model, exp, source, realization_dict, region=None, startdate=None, enddate=None, logger=None
+):
     """Retrieve and merge ensemble data for one variable.
 
     Args:
@@ -172,15 +168,14 @@ def _retrieve_dataset(variable, catalog, model, exp, source,
         realization=realization_dict,
     )
     if dataset is None and logger is not None:
-        logger.warning(
-            "Ensemble data retrieval returned None for variable '%s'.", variable
-        )
+        logger.warning("Ensemble data retrieval returned None for variable '%s'.", variable)
     return dataset
 
 
 # ---------------------------------------------------------------------------
 # Diagnostic runners
 # ---------------------------------------------------------------------------
+
 
 def run_timeseries(config_dict, args, loglevel, logger):
     """Execute the EnsembleTimeseries diagnostic and plot loop.
@@ -198,22 +193,19 @@ def run_timeseries(config_dict, args, loglevel, logger):
     diag_config = config_dict["diagnostics"]["ensemble"]
     output_opts = _output_options(config_dict)
 
-    params      = diag_config.get("params", {}).get("default", {})
+    params = diag_config.get("params", {}).get("default", {})
     plot_params = diag_config.get("plot_params", {}).get("default", {})
 
-    startdate_data        = params.get("startdate_data")
-    enddate_data          = params.get("enddate_data")
-    title                 = plot_params.get("title")
+    startdate_data = params.get("startdate_data")
+    enddate_data = params.get("enddate_data")
+    title = plot_params.get("title")
     plot_ensemble_members = plot_params.get("plot_ensemble_members", True)
 
     variables = diag_config.get("variable") or []
-    regions   = diag_config.get("region") or []
+    regions = diag_config.get("region") or []
 
-    catalog, model, exp, source, _regrid = _resolve_dataset(
-        args, config_dict, logger
-    )
-    realization      = extract_realizations(catalog=catalog, model=model,
-                                            exp=exp,     source=source)
+    catalog, model, exp, source, _regrid = _resolve_dataset(args, config_dict, logger)
+    realization = extract_realizations(catalog=catalog, model=model, exp=exp, source=source)
     realization_dict = {model: realization}
 
     for variable in variables:
@@ -222,7 +214,10 @@ def run_timeseries(config_dict, args, loglevel, logger):
 
             dataset = _retrieve_dataset(
                 variable=variable,
-                catalog=catalog, model=model, exp=exp, source=source,
+                catalog=catalog,
+                model=model,
+                exp=exp,
+                source=source,
                 realization_dict=realization_dict,
                 region=region,
                 startdate=startdate_data,
@@ -232,7 +227,8 @@ def run_timeseries(config_dict, args, loglevel, logger):
             if dataset is None:
                 logger.warning(
                     "Skipping timeseries for variable '%s', region '%s'.",
-                    variable, region,
+                    variable,
+                    region,
                 )
                 continue
 
@@ -251,8 +247,12 @@ def run_timeseries(config_dict, args, loglevel, logger):
             has_data = any(
                 getattr(ts, attr, None) is not None
                 for attr in (
-                    "monthly_data", "monthly_data_mean", "monthly_data_std",
-                    "annual_data",  "annual_data_mean",  "annual_data_std",
+                    "monthly_data",
+                    "monthly_data_mean",
+                    "monthly_data_std",
+                    "annual_data",
+                    "annual_data_mean",
+                    "annual_data_std",
                 )
             )
             if not has_data:
@@ -272,9 +272,9 @@ def run_timeseries(config_dict, args, loglevel, logger):
             )
 
             # Derive time bounds; prefer monthly, fall back to annual
-            _time_src      = ts.monthly_data if ts.monthly_data is not None else ts.annual_data
+            _time_src = ts.monthly_data if ts.monthly_data is not None else ts.annual_data
             startdate_plot = _time_src.time.isel(time=0).values
-            enddate_plot   = _time_src.time.isel(time=-1).values
+            enddate_plot = _time_src.time.isel(time=-1).values
 
             ts_plot.plot(
                 var=variable,
@@ -288,9 +288,7 @@ def run_timeseries(config_dict, args, loglevel, logger):
                 enddate=enddate_plot,
             )
 
-            logger.info(
-                "Timeseries diagnostic finished for variable '%s'.", variable
-            )
+            logger.info("Timeseries diagnostic finished for variable '%s'.", variable)
 
 
 def run_latlon(config_dict, args, loglevel, logger):
@@ -306,18 +304,15 @@ def run_latlon(config_dict, args, loglevel, logger):
         loglevel (str): log level string passed to class constructors.
         logger: configured logger instance.
     """
-    diag_config     = config_dict["diagnostics"]["ensemble"]
-    output_opts     = _output_options(config_dict)
+    diag_config = config_dict["diagnostics"]["ensemble"]
+    output_opts = _output_options(config_dict)
     all_plot_params = diag_config.get("plot_params", {})
-    default_plot    = all_plot_params.get("default", {})
+    default_plot = all_plot_params.get("default", {})
 
     variables = diag_config.get("variable") or []
 
-    catalog, model, exp, source, _regrid = _resolve_dataset(
-        args, config_dict, logger
-    )
-    realization      = extract_realizations(catalog=catalog, model=model,
-                                            exp=exp,     source=source)
+    catalog, model, exp, source, _regrid = _resolve_dataset(args, config_dict, logger)
+    realization = extract_realizations(catalog=catalog, model=model, exp=exp, source=source)
     realization_dict = {model: realization}
 
     for variable in variables:
@@ -325,7 +320,10 @@ def run_latlon(config_dict, args, loglevel, logger):
 
         dataset = _retrieve_dataset(
             variable=variable,
-            catalog=catalog, model=model, exp=exp, source=source,
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
             realization_dict=realization_dict,
             logger=logger,
         )
@@ -347,7 +345,7 @@ def run_latlon(config_dict, args, loglevel, logger):
 
         # Merge default and per-variable plot parameters
         plot_params = {**default_plot, **all_plot_params.get(variable, {})}
-        param_dict  = diag_config.get("params", {}).get(variable, {}) or {}
+        param_dict = diag_config.get("params", {}).get(variable, {}) or {}
 
         ens_latlon_plot = PlotEnsembleLatLon(
             catalog_list=catalog,
@@ -390,14 +388,12 @@ if __name__ == "__main__":
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
-    logger   = log_configure(loglevel, "CLI Ensemble")
+    logger = log_configure(loglevel, "CLI Ensemble")
     logger.info("Starting unified Ensemble diagnostic.")
 
-    cluster  = get_arg(args, "cluster",  None)
+    cluster = get_arg(args, "cluster", None)
     nworkers = get_arg(args, "nworkers", None)
-    client, cluster, private_cluster = open_cluster(
-        nworkers=nworkers, cluster=cluster, loglevel=loglevel
-    )
+    client, cluster, private_cluster = open_cluster(nworkers=nworkers, cluster=cluster, loglevel=loglevel)
 
     # ------------------------------------------------------------------
     # Load each config independently, then apply CLI overrides to both
@@ -425,27 +421,24 @@ if __name__ == "__main__":
 
     if ts_config.get("diagnostics", {}).get("ensemble", {}).get("run", False):
         logger.info("EnsembleTimeseries is enabled.")
-        run_timeseries(config_dict=ts_config, args=args,
-                       loglevel=loglevel, logger=logger)
+        run_timeseries(config_dict=ts_config, args=args, loglevel=loglevel, logger=logger)
         ran_something = True
     else:
         logger.info("EnsembleTimeseries is disabled (run: false).")
 
     if ll_config.get("diagnostics", {}).get("ensemble", {}).get("run", False):
         logger.info("EnsembleLatLon is enabled.")
-        run_latlon(config_dict=ll_config, args=args,
-                   loglevel=loglevel, logger=logger)
+        run_latlon(config_dict=ll_config, args=args, loglevel=loglevel, logger=logger)
         ran_something = True
     else:
         logger.info("EnsembleLatLon is disabled (run: false).")
 
     if not ran_something:
-        logger.warning(
-            "No diagnostics ran. Set 'run: true' under diagnostics.ensemble "
-            "in at least one of the config files."
-        )
+        logger.warning("No diagnostics ran. Set 'run: true' under diagnostics.ensemble in at least one of the config files.")
 
     close_cluster(
-        client=client, cluster=cluster,
-        private_cluster=private_cluster, loglevel=loglevel,
+        client=client,
+        cluster=cluster,
+        private_cluster=private_cluster,
+        loglevel=loglevel,
     )

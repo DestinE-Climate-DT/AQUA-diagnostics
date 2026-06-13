@@ -415,11 +415,10 @@ def center_timestamp(time: pd.Timestamp, freq: str):
 
     return center_time
 
+
 def extract_realizations(catalog, model, exp, source):
     configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
-    cat, catalog_file, machine_file = configurer.deliver_intake_catalog(
-        catalog=catalog, model=model, exp=exp, source=source
-    )
+    cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
     expcat = cat()[model][exp]
     entry = expcat[source]
 
