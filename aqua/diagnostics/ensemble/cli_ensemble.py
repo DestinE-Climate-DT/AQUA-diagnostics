@@ -357,6 +357,7 @@ def run_latlon(config_dict, args, loglevel, logger):
             outputdir=output_opts["outputdir"],
             loglevel=loglevel,
         )
+
         ens_latlon_plot.plot(
             var=variable,
             dataset_mean=ens_latlon.dataset_mean,
@@ -365,14 +366,12 @@ def run_latlon(config_dict, args, loglevel, logger):
             dpi=output_opts["dpi"],
             proj=plot_params.get("projection", "robinson"),
             proj_params=plot_params.get("projection_params", {}),
-            cmap=plot_params.get("cmap", "RdBu_r"),
             vmin_mean=plot_params.get("vmin"),
             vmax_mean=plot_params.get("vmax"),
             vmin_std=plot_params.get("vmin_std"),
             vmax_std=plot_params.get("vmax_std"),
             units=param_dict.get("units"),
             long_name=param_dict.get("long_name"),
-            short_name=param_dict.get("short_name"),
             transform_first=False,
             cyclic_lon=True,
             contour=True,
