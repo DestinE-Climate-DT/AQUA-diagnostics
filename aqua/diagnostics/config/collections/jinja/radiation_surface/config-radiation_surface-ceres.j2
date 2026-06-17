@@ -25,8 +25,8 @@ references:
     source: 'monthly'
     regrid: 'r100'
     reader_kwargs: null
-    startdate: '{{ ref_startdate_rad }}'
-    enddate: '{{ ref_enddate_rad }}'
+    startdate: '{{ radiation.startdate }}'
+    enddate: '{{ radiation.enddate }}'
 
 output:
   outputdir: "./"
@@ -60,10 +60,6 @@ diagnostics:
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: false     # Vertical profile if variable 3d
-        startdate_data: null
-        enddate_data: null
-        startdate_obs: "{{ radiation.ref_startdate }}"
-        enddate_obs: "{{ radiation.ref_enddate }}"
     plot_params:
       default:
         projection: 'robinson'
