@@ -417,12 +417,23 @@ def center_timestamp(time: pd.Timestamp, freq: str):
 
 
 def extract_realizations(catalog, model, exp, source):
+    """
+    Extract the realizations available for a given catalog, model, exp and source.
+
+    Args:
+        catalog (str): Intake catalog name.
+        model (str): Model name.
+        exp (str): Experiment name.
+        source (str): Source name.
+
+    Returns:
+        list: List of available realizations.
+    """
     configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
     cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
     expcat = cat()[model][exp]
     entry = expcat[source]
 
-    # intake >= 0.7 removed .describe(); access user_parameters directly
     user_parameters = {}
     if hasattr(entry, "describe"):
         user_parameters = entry.describe().get("user_parameters", {})
