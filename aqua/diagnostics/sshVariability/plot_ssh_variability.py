@@ -1,11 +1,13 @@
-import healpy as hp
 import numpy as np
 import xarray as xr
 
+# from astropy_healpix import healpy as hp
 from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
 from aqua.core.graphics import plot_single_map
-from aqua.core.util import get_projection, healpix_resample
+from aqua.core.util import get_projection
+
+# from aqua.core.util.graphics import isnpixok
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # import matplotlib.pyplot as plt
@@ -154,13 +156,13 @@ class SshVariabilityPlot(PlotBaseMixin):
         description = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
 
         # Check if the dataset is in HEALPix format
-        npix = dataset_std.size  # Number of cells in the data
-        nside = hp.npix2nside(npix) if hp.isnpixok(npix) else None
+        # npix = dataset_std.size  # Number of cells in the data
+        # nside = hp.npix2nside(npix) if isnpixok(npix) else None
 
-        if nside is not None:
-            self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
-            dataset_std = healpix_resample(dataset_std)
-            self.logger.debug("resampling HEALPix dataset_std")
+        # if nside is not None:
+        #    self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
+        #    dataset_std = healpix_resample(dataset_std)
+        #    self.logger.debug("resampling HEALPix dataset_std")
 
         if tgt_grid_name is not None:
             self.logger.info(
@@ -360,23 +362,23 @@ class SshVariabilityPlot(PlotBaseMixin):
         else:
             dataset_std_ref = dataset_std_ref
 
-        # Check if the dataset is in HEALPix format
-        npix = dataset_std.size  # Number of cells in the data
-        nside = hp.npix2nside(npix) if hp.isnpixok(npix) else None
+            # Check if the dataset is in HEALPix format
+            # npix = dataset_std.size  # Number of cells in the data
+            # nside = hp.npix2nside(npix) if isnpixok(npix) else None
 
-        if nside is not None:
-            self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
-            dataset_std = healpix_resample(dataset_std)
-            self.logger.debug("resampling HEALPix dataset_std")
+            # if nside is not None:
+            #     self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
+            #     dataset_std = healpix_resample(dataset_std)
+            # self.logger.debug("resampling HEALPix dataset_std")
 
         # Check if the data is in HEALPix format
-        npix_ref = dataset_std_ref.size  # Number of cells in the data
-        nside_ref = hp.npix2nside(npix_ref) if hp.isnpixok(npix_ref) else None
+        # npix_ref = dataset_std_ref.size  # Number of cells in the data
+        # nside_ref = hp.npix2nside(npix_ref) if isnpixok(npix_ref) else None
 
-        if nside_ref is not None:
-            self.logger.info(f"Reference data is in HEALPix format with nside={nside_ref}.")
-            dataset_std_ref = healpix_resample(dataset_std_ref)
-            self.logger.debug("resampling HEALPix dataset_ref_std")
+        # if nside_ref is not None:
+        #    self.logger.info(f"Reference data is in HEALPix format with nside={nside_ref}.")
+        #    dataset_std_ref = healpix_resample(dataset_std_ref)
+        #    self.logger.debug("resampling HEALPix dataset_ref_std")
 
         if tgt_grid_name is not None:
             self.logger.info(

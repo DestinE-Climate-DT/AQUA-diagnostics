@@ -1,3 +1,5 @@
+"""Functions to compute the Mixed Layer Depth (MLD) from ocean density profiles."""
+
 import xarray as xr
 
 from aqua.core.logger import log_configure
@@ -5,8 +7,7 @@ from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
 def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING"):
-    """
-    Compute the Mixed Layer Depth (MLD) from a continuous density profile.
+    """Compute the Mixed Layer Depth (MLD) from a continuous density profile.
 
     Uses the threshold method from de Boyer Montegut et al. (2004), identifying
     the depth where density exceeds surface density by 0.03 kg/m³, with linear
@@ -29,6 +30,7 @@ def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING
     -------
     xarray.DataArray
         Estimated MLD with same horizontal dimensions as `rho`.
+
     """
     # HACK: ensure level units are in meters, not model layers
     if rho[vert_coord].attrs["units"] == "NEMO model layers":

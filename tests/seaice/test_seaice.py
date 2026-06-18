@@ -1,6 +1,7 @@
 import pytest
 import xarray as xr
 
+from aqua.core.util import time_to_string
 from aqua.diagnostics import SeaIce
 from tests.shared_constants import APPROX_REL, LOGLEVEL
 
@@ -205,3 +206,27 @@ class TestSeaIce:
         meanres = result_data.mean(skipna=True).values
 
         assert meanres == pytest.approx(value, rel=approx_rel, abs=abs_rel)
+
+    def test_seaice_std_uses_std_window_dates(self):
+        """Std result metadata uses std_startdate/std_enddate when provided."""
+        seaice = SeaIce(
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            startdate="1991-01-01",
+            enddate="2000-01-01",
+            std_startdate="1994-01-01",
+            std_enddate="1996-12-31",
+            regions="arctic",
+            regrid="r100",
+            loglevel=loglevel,
+        )
+
+        _, result_std = seaice.compute_seaice(method="extent", var="siconc", calc_std_freq="annual")
+        std_var_name = "std_sea_ice_extent_arctic"
+
+        assert result_std[std_var_name].attrs["AQUA_std_startdate"] == time_to_string(seaice.std_startdate, format="%Y-%m")
+        assert result_std[std_var_name].attrs["AQUA_std_enddate"] == time_to_string(seaice.std_enddate, format="%Y-%m")
+        assert "AQUA_startdate" not in result_std[std_var_name].attrs
+        assert "AQUA_enddate" not in result_std[std_var_name].attrs

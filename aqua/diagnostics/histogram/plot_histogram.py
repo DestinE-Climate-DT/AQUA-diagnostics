@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, to_list
+from aqua.core.util import DEFAULT_REALIZATION, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
@@ -158,8 +158,14 @@ class PlotHistogram:
             data_item = self.data[0] if self.data else None
             ref_item = self.ref_data
 
-            data_pair = (getattr(data_item, "AQUA_startdate", None), getattr(data_item, "AQUA_enddate", None))
-            ref_pair = (getattr(ref_item, "AQUA_startdate", None), getattr(ref_item, "AQUA_enddate", None))
+            data_pair = (
+                time_to_string(data_item.AQUA_startdate, format="%Y-%m") if data_item is not None else None,
+                time_to_string(data_item.AQUA_enddate, format="%Y-%m") if data_item is not None else None,
+            )
+            ref_pair = (
+                time_to_string(ref_item.AQUA_startdate, format="%Y-%m") if ref_item is not None else None,
+                time_to_string(ref_item.AQUA_enddate, format="%Y-%m") if ref_item is not None else None,
+            )
 
             # Smart date display: show dates only once if they are the same
             if data_pair == ref_pair and data_pair != (None, None):
@@ -192,13 +198,17 @@ class PlotHistogram:
 
             # Add common date range if all datasets share it
             if self.data:
-                first_dates = (getattr(self.data[0], "AQUA_startdate", None), getattr(self.data[0], "AQUA_enddate", None))
+                first_item = self.data[0]
+                first_dates = (
+                    time_to_string(first_item.AQUA_startdate, format="%Y-%m") if first_item is not None else None,
+                    time_to_string(first_item.AQUA_enddate, format="%Y-%m") if first_item is not None else None,
+                )
                 if first_dates != (None, None):
                     description += f" from {first_dates[0]} to {first_dates[1]}"
 
         description += "."
 
-        self.logger.debug("Description: %s", description)
+        self.logger.info("Description: %s", description)
         return description
 
     def plot(

@@ -1,5 +1,5 @@
-"""
-Module to plot multiple Hovmoller data.
+"""Module to plot multiple Hovmoller data.
+
 This function is custom for the Ocean Drift diagnostics in AQUA.
 """
 
@@ -33,8 +33,7 @@ def plot_multi_hovmoller(
     loglevel="WARNING",
     **kwargs,
 ):
-    """
-    Plot multiple hovmoller diagrams in a grid layout.
+    """Plot multiple hovmoller diagrams in a grid layout.
 
     Args:
         maps (list): List of xarray datasets containing the data to be plotted.
@@ -63,6 +62,7 @@ def plot_multi_hovmoller(
 
     Returns:
         plt.Figure: The matplotlib figure object containing the hovmoller plots.
+
     """
     logger = log_configure(loglevel, "plot_multi_hovmoller")
     ConfigStyle(style=style, loglevel=loglevel)

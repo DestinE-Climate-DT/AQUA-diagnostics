@@ -51,8 +51,7 @@ docs = [
     "sphinx-rtd-theme"
 ]
 notebooks = [
-    "ipykernel",
-    "healpy"
+    "ipykernel"
 ]
 tests = [
     "pytest",
@@ -64,7 +63,7 @@ tests = [
 ]
 style = [
     "pre-commit",
-    "ruff==0.15.12"
+    "ruff==0.15.16"
 ]
 minimal = [
     "aqua-diagnostics[core]"

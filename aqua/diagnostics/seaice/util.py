@@ -70,26 +70,42 @@ def ensure_istype(obj, expected_types, logger=None):
         raise ValueError(f"Expected type {expected_names_type}, but got {type(obj).__name__}.")
 
 
+def _fmt_time_attr(data, attr_name):
+    """Format a single date-like attribute for captions."""
+    dt = data.attrs.get(attr_name, f"No {attr_name} found")
+    if hasattr(dt, "strftime"):
+        return dt.strftime("%Y-%m")
+    if isinstance(dt, str) and "T" in dt:
+        return dt.split("T")[0]
+    return dt
+
+
 def extract_dates(data):
-    """Extract start and end dates from data attributes. If they are strings return them.
-    If the attributes are datetime-like objects, they are formatted as `YYYY-MM-DD`.
+    """
+    Extracts start and end dates from data attributes.
+    If the date is a datetime object, it is formatted as 'YYYY-MM'.
+    If the date is a string, it is returned as is.
 
     Args:
-        data (xr.DataArray | xr.Dataset): Input object holding the `AQUA_*date` attributes.
+        data (xr.DataArray | xr.Dataset): Input object holding the `AQUA_startdate` / `AQUA_enddate` attributes.
 
     Returns:
-        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM-DD` when possible.
+        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM`.
     """
+    return _fmt_time_attr(data, "AQUA_startdate"), _fmt_time_attr(data, "AQUA_enddate")
 
-    def _fmt_dt(attr_name):
-        dt = data.attrs.get(attr_name, f"No {attr_name} found")
-        if hasattr(dt, "strftime"):
-            return dt.strftime("%Y-%m-%d")
-        if isinstance(dt, str) and "T" in dt:
-            return dt.split("T")[0]
-        return dt
 
-    return _fmt_dt("AQUA_startdate"), _fmt_dt("AQUA_enddate")
+def extract_std_period_dates(data):
+    """
+    Extract the time span from ``AQUA_std_startdate`` and ``AQUA_std_enddate``.
+
+    Args:
+        data (xr.DataArray | xr.Dataset): Object with std-dates (see ``add_seaice_attrs(..., std_flag=True)``).
+
+    Returns:
+        tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM`.
+    """
+    return _fmt_time_attr(data, "AQUA_std_startdate"), _fmt_time_attr(data, "AQUA_std_enddate")
 
 
 def _check_list_regions_type(regions_to_plot, logger=None):
