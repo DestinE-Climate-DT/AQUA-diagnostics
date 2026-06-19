@@ -151,8 +151,9 @@ class Stratification(Diagnostic):
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         if "lev" in self.data.dims:
             self.data = self.data.rename({"lev": self.vert_coord})
-        if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
-            self.data[self.vert_coord].attrs["units"] = "m"
+        if self.vert_coord in self.data:
+            if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
+                self.data[self.vert_coord].attrs["units"] = "m"
         super()._check_data(data=self.data[self.vert_coord], var=self.vert_coord, units="m")
 
         self.data.attrs["startdate"] = f"{self.data.time[0].values.astype('datetime64[D]')}"
