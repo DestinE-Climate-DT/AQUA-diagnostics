@@ -273,7 +273,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Global difference ",
+            diagnostic="Global difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
