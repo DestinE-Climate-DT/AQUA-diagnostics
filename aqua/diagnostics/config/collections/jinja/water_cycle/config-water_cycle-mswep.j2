@@ -4,7 +4,7 @@ datasets:
     model: null
     exp: null
     source: null
-    regrid: null
+    regrid: 'r010'
     reader_kwargs:
       engine: polytope
     startdate: null
@@ -21,7 +21,7 @@ references:
     model: 'MSWEP'
     exp: 'v2.8'
     source: 'monthly'
-    regrid: 'r100'
+    regrid: 'r010'
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
 
@@ -122,11 +122,11 @@ diagnostics:
         units: 'mm/day'
         regions: [null, 'tropics']  # global and tropics
 
-  boxplots:
-    run: true
-    diagnostic_name: 'water_cycle'
-    variables:
-      - vars: ['tprate']
-        anomalies: true
-        add_mean_line: true
-        ref_number: 0
+  # boxplots:
+  #   run: true
+  #   diagnostic_name: 'water_cycle'
+  #   variables:
+  #     - vars: ['tprate']
+  #       anomalies: true
+  #       add_mean_line: true
+  #       ref_number: 0
