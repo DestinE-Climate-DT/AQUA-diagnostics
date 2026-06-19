@@ -462,9 +462,11 @@ class Diagnostic:
             if region_object is not None:
                 self.logger.info("Using regionmask object: %s", region_object)
                 data = self.reader.select_area(data=data, region=region_object, region_sel=longname, drop=drop, **kwargs)
-            else:
+            elif lon_limits is not None and lat_limits is not None:
                 self.logger.info("Using custom lon/lat limits: %s, %s", lon_limits, lat_limits)
                 data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
+            else:
+                raise ValueError(f"Region '{region}' does not have valid lon/lat limits or a regionmask object.")
             data.attrs["AQUA_region"] = longname
 
             if original_name is not None:
