@@ -477,8 +477,8 @@ class PlotGlobalBiases:
         description = (
             f"Seasonal differences of {data[var].attrs.get('long_name', var).lower()}"
             f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"(from {time_to_string(data.startdate, format='%Y-%m')} "
-            f"to {time_to_string(data.enddate, format='%Y-%m')}) "
+            f"(from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')}) "
             f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
         )
 
