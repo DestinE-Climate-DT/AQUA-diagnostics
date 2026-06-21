@@ -1,7 +1,11 @@
+import xarray as xr
+
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic
+
+xr.set_options(keep_attrs=True)
 
 
 class LatLonProfiles(Diagnostic):
@@ -349,11 +353,14 @@ class LatLonProfiles(Diagnostic):
             data = self.reader.fldmean(
                 self.data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
             )
-            seasonal_dataset = self.reader.timmean(
-                data, freq=freq, exclude_incomplete=exclude_incomplete, center_time=center_time
+            monthly_data = self.reader.timmean(
+                data, freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time
             )
-            seasonal_data = [seasonal_dataset.isel(time=i, drop=True) for i in range(4)]
-            for season_data in seasonal_data:
+            seasonal_dataset = monthly_data.groupby("time.season").mean("time")
+            seasons = ["DJF", "MAM", "JJA", "SON"]
+            seasonal_data = []
+            for season in seasons:
+                season_data = seasonal_dataset.sel(season=season)
                 if self.region is not None:
                     season_data.attrs["AQUA_region"] = self.region
                 season_data.attrs["AQUA_mean_type"] = self.mean_type
@@ -362,6 +369,7 @@ class LatLonProfiles(Diagnostic):
                 self.logger.debug("Loading data in memory")
                 season_data.load()
                 self.logger.debug("Loaded data in memory")
+                seasonal_data.append(season_data)
 
             self.seasonal = seasonal_data
 
