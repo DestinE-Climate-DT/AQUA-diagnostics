@@ -1,6 +1,8 @@
+import numpy as np
 import pytest
 import xarray as xr
 
+from aqua.core.util import select_season
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles
 from tests.shared_constants import LOGLEVEL
 
@@ -62,6 +64,23 @@ class TestLatLonProfilesZonal:
                 assert isinstance(season_data, xr.DataArray)
                 assert "AQUA_mean_type" in season_data.attrs
                 assert season_data.attrs["AQUA_mean_type"] == "zonal"
+
+            # Each slot must be the climatology of the CORRECT season
+            ref = self.diagnostic.reader.fldmean(
+                self.diagnostic.data,
+                lon_limits=self.diagnostic.lon_limits,
+                lat_limits=self.diagnostic.lat_limits,
+                dims=["lon"],
+            )
+            monthly_ref = self.diagnostic.reader.timmean(ref, freq="monthly", exclude_incomplete=True, center_time=True)
+            for i, season in enumerate(["DJF", "MAM", "JJA", "SON"]):
+                expected = select_season(monthly_ref, season).mean("time")
+                np.testing.assert_allclose(
+                    data[i].values,
+                    expected.values,
+                    rtol=1e-4,
+                    err_msg=f"Seasonal slot {i} does not match the '{season}' climatology",
+                )
         else:
             assert isinstance(data, xr.DataArray)
             assert "AQUA_mean_type" in data.attrs
