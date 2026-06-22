@@ -420,10 +420,8 @@ class PlotBaseMixin:
             diagnostic=diagnostic,
             variable=self.long_name,
             regions=self.region,
-            catalog=self.catalogs,
             model=self.models,
             exp=self.exps,
-            ref_catalog=self.ref_catalogs if self.ref_catalogs else None,
             ref_model=self.ref_models if self.ref_models else None,
             ref_exp=self.ref_exps if self.ref_exps else None,
         ).generate()
