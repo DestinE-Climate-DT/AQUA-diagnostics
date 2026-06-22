@@ -189,7 +189,11 @@ class TitleBuilder:
             title += f"{self.diagnostic}"
 
         if self.variable:
-            title += f" of {self.variable}" if self.diagnostic else f" {self.variable}"
+            if self.diagnostic:
+                variable = self.variable[0].lower() + self.variable[1:]
+                title += f" of {variable}"
+            else:
+                title += f" {self.variable}"
 
         if self.regions:
             regions_list = to_list(self.regions)
