@@ -54,7 +54,7 @@ def test_title_references():
         conjunction="in",
     ).generate()
     assert "  " not in result
-    assert "Bias of Temperature" in result
+    assert "Bias of temperature" in result
     assert "in IFS" in result
     assert "vs ERA5 era5" in result
     assert "1980-1990" in result
