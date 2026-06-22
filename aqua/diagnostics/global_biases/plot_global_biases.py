@@ -102,7 +102,7 @@ class PlotGlobalBiases:
         return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
     def _add_significance_stippling(
-        self, ax, significance_mask, lat, lon, stipple_density=3, stipple_size=0.5, stipple_color="black", invert_mask=False
+        self, ax, significance_mask, lat, lon, stipple_density=30, stipple_size=0.5, stipple_color="black", invert_mask=False
     ):
         """
         Add stippling to indicate statistical significance on a map.
