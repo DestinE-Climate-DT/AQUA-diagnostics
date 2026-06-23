@@ -1,71 +1,39 @@
 #!/bin/bash
 # =============================================================================
-# submit_tcs_parallel.sh — Submit one detect job per month in parallel,
-# then chain a single stitch job that runs after all of them complete.
+# submit_tcs_parallel.sh — Submit one detect job per year in parallel (1990–2014).
 # Usage: ./submit_tcs_parallel.sh
 # =============================================================================
-
+ 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-MONTHS=(
-    "19900501 19900601"
-    "19900601 19900701"
-    "19900701 19900801"
-    "19900801 19900901"
-)
-
-# calcola automaticamente start e end dell'intero range
-export GLOBAL_START=$(echo ${MONTHS[0]} | awk '{print $1}')
-export GLOBAL_END=$(echo ${MONTHS[-1]} | awk '{print $2}')
-
+ 
 mkdir -p logs
-
-# --- submit one detect job per month -----------------------------------------
-DETECT_IDS=()
-
-for month in "${MONTHS[@]}"; do
-    export START=$(echo $month | awk '{print $1}')
-    export END=$(echo $month | awk '{print $2}')
-    export MONTH_TMPDIR=/users/silvcapr/tc_analysis/tmpdir/${START}
-
+ 
+for YEAR in 1990; do
+ 
+    export START="${YEAR}0101"
+    export END="${YEAR}-12-31T23:00:00"
+    export YEAR_TMPDIR=/scratch/project_465002727/scaprioli/TC_analysis/tmpdir/${YEAR}
+ 
+    mkdir -p ${YEAR_TMPDIR}
+ 
     JOB_ID=$(sbatch --parsable \
-        --job-name="tcs_detect_${START}" \
-        --account=project_462000911 \
+        --job-name="tcs_detect_${YEAR}" \
+        --account=project_465002727 \
         --partition=standard \
         --nodes=1 \
         --ntasks-per-node=1 \
-        --cpus-per-task=128 \
-        --time=08:00:00 \
-        --output="logs/tcs_detect_${START}_%j.out" \
-        --error="logs/tcs_detect_${START}_%j.err" \
+        --cpus-per-task=16 \
+        --time=48:00:00 \
+        --output="logs/tcs_detect_${YEAR}_%j.out" \
+        --error="logs/tcs_detect_${YEAR}_%j.err" \
         --export=ALL \
         "${SCRIPT_DIR}/tcs_detect.sh")
-
-    echo "Submitted detect job for ${START} → ${END} : job ID ${JOB_ID}"
-    DETECT_IDS+=($JOB_ID)
+ 
+    echo "Submitted detect job for ${YEAR} (${START} → ${END}) : job ID ${JOB_ID}"
+ 
 done
-
-# --- build afterok dependency string -----------------------------------------
-DEPENDENCY=$(IFS=:; echo "afterok:${DETECT_IDS[*]}")
-
-# --- submit stitch job that waits for all detect jobs ------------------------
-STITCH_ID=$(sbatch --parsable \
-    --job-name="tcs_stitch_full" \
-    --account=project_462000911 \
-    --partition=standard \
-    --nodes=1 \
-    --ntasks-per-node=1 \
-    --cpus-per-task=128 \
-    --time=04:00:00 \
-    --output="logs/tcs_stitch_%j.out" \
-    --error="logs/tcs_stitch_%j.err" \
-    --dependency=${DEPENDENCY} \
-    --export=ALL \
-    "${SCRIPT_DIR}/tcs_stitch.sh")
-
+ 
 echo ""
-echo "Submitted stitch job : ${STITCH_ID} (depends on: ${DETECT_IDS[*]})"
-echo "Full period          : ${GLOBAL_START} → ${GLOBAL_END}"
-echo ""
-echo "Monitor with:"
-echo "  squeue -j $(IFS=,; echo "${DETECT_IDS[*]},${STITCH_ID}")"
+echo "All years submitted. Monitor with:"
+echo "  squeue -u \$USER --format='%.10i %.20j %.8T %.10M %.9l' | grep tcs_detect"
+ 

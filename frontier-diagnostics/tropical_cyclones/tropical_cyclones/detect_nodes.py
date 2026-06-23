@@ -88,10 +88,8 @@ class DetectNodes:
 
             # drop 'time' whether it's a coord or a data var
             if "time" in orog_first_timestep.coords:
-                # remove coordinate (keeps any underlying data var if present)
                 orog_first_timestep = orog_first_timestep.reset_coords("time", drop=True)
             elif "time" in orog_first_timestep.data_vars:
-                # remove data variable entirely
                 orog_first_timestep = orog_first_timestep.drop_vars("time")
 
             self.logger.debug(orog_first_timestep)
@@ -145,6 +143,7 @@ class DetectNodes:
         Runs the tempest extremes DetectNodes command on the regridded atmospheric data
         specified by the tempest_dictionary and tempest_filein attributes,
         saves the output to disk, and updates the tempest_fileout attribute of the Detector object.
+        The temporary NetCDF input file is removed immediately after DetectNodes completes.
 
         Args:
             tempest_dictionary: python dictionary with variable names for tempest commands
@@ -197,6 +196,12 @@ class DetectNodes:
             subprocess.run(detect_string.split(), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
         self.logger.debug(f"DetectNodes output saved to {tempest_fileout}")
+
+        # remove the temporary NetCDF input file immediately after use
+        if os.path.exists(tempest_filein):
+            os.remove(tempest_filein)
+            self.logger.debug(f"Removed temporary file {tempest_filein}")
+
        # result = subprocess.run(detect_string,shell=True,capture_output=True,text=True)
        # print("STDOUT:")
        # print(result.stdout)

@@ -3,21 +3,21 @@ datasets:
   - catalog: "climatedt-o25.1"
     model: "IFS-FESOM"
     exp: "historical-1990"
-    source: "hourly-hpz10-atm2d"
-    source2d: "hourly-hpz10-atm2d"
-    source3d: "hourly-hpz10-atm3d"
+    source: "hourly-hpz7-atm2d"
+    source2d: "hourly-hpz7-atm2d"
+    source3d: "hourly-hpz7-atm3d"
     engine: "fdb"
     #reader_kwargs: {chunks: {"time": 1, "level": 1}}
     reader_kwargs: {chunks: {"time": '6h', "level": 1}}
 
 # folders for regridded data, temprorary and stored high res data
 output:
-  outputdir: "/users/silvcapr/tc_analysis/"
+  outputdir: "/scratch/project_465002727/scaprioli/TC_analysis"
 paths:
-  tmpdir: "/users/silvcapr/tc_analysis/tmpdir"
-  fulldir: "/users/silvcapr/tc_analysis/fulldir"
-  plotdir: "/users/silvcapr/tc_analysis/figures"
-  trackdir: "/users/silvcapr/tc_analysis/trackdir"
+  tmpdir: "/scratch/project_465002727/scaprioli/TC_analysis/tmpdir"
+  fulldir: "/scratch/project_465002727/scaprioli/TC_analysis/fulldir"
+  plotdir: "/scratch/project_465002727/scaprioli/TC_analysis/figures"
+  trackdir: "/scratch/project_465002727/scaprioli/TC_analysis/trackdir"
 
 # log level
 setup:
@@ -53,5 +53,5 @@ stitch:
 # path to orography in case file (in case var is not found in the catalog)
 orography:
   file_path: null #"/work/users/mccorda/data/orog_ERA5.nc"  # path to orography file, if not null, it will override the catalog
-  source_oro: "daily-hpz10-atm2d"
+  source_oro: "daily-hpz7-atm2d"
   var_oro: "orog"

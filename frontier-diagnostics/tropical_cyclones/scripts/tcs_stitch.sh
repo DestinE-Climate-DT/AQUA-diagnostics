@@ -29,6 +29,7 @@ srun python -m tropical_cyclones.cli_tropical_cyclones \
     -c config/config_tcs.yaml \
     --startdate ${GLOBAL_START} \
     --enddate ${GLOBAL_END} \
+    --override-tmpdir ${MONTH_TMPDIR} \
     --stitch-only
 
 echo "Finished: $(date)"

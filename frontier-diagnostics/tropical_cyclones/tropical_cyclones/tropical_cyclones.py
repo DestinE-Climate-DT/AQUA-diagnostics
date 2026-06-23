@@ -104,11 +104,7 @@ class TCs(DetectNodes, StitchNodes):
             self.orography = orography
             self.write_fullres = tdict["detect"].get("write_fullres", False)
             if self.orography:
-                import os
-                self.orography_file = os.path.join(
-                   tdict["orography"]["file_path"],
-                   tdict["orography"]["file_name"]
-                )
+                self.orography_file = tdict["orography"]["file_path"]
                 #self.orography_file = tdict["orography"]["file_path"]
                 self.source_oro = tdict["orography"].get("source_oro", None)
                 self.var_oro = tdict["orography"].get("var_oro", None)
@@ -301,8 +297,7 @@ class TCs(DetectNodes, StitchNodes):
                 self.orog = self.reader_oro.retrieve(var=self.var_oro).isel(time=0)
                 self.logger.debug("Orography retrieved from catalog source %s", self.source_oro)
             else:
-                self.orog = xr.open_dataset(self.orography_file, engine="netcdf4")
-                self.orog = self.orog.rename({"z": "zs"})
+                self.orog = xr.open_dataset(self.orography_file)
                 #self.orog = xr.open_dataset(self.orography_file)
                 self.logger.debug("Orography retrieved from file %s", self.orography_file)
 
