@@ -169,8 +169,8 @@ def main(argv=None):
                     show_stats=show_stats,
                     show_significance=show_significance,
                     significance_alpha=significance_alpha,
-                    stipple_density=stipple_density, 
-                    stipple_size=stipple_size,   
+                    stipple_density=stipple_density,
+                    stipple_size=stipple_size,
                 )
 
                 if seasons:
