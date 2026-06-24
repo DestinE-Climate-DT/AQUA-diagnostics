@@ -56,7 +56,8 @@ def test_title_references():
     assert "  " not in result
     assert "Bias of temperature" in result
     assert "in IFS" in result
-    assert "vs ERA5 era5" in result
+    assert "vs ERA5" in result
+    assert "era5" not in result
     assert "1980-1990" in result
 
 
