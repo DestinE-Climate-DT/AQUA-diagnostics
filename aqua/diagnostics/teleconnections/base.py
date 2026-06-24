@@ -6,7 +6,7 @@ import xarray as xr
 from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 xr.set_options(keep_attrs=True)
 
@@ -288,7 +288,7 @@ class PlotBaseMixin:
         """
         labels_dataset = [f"{self.models[i]} {self.exps[i]}" for i in range(self.len_data)]
         labels_ref = [f"{self.ref_models[i]} {self.ref_exps[i]}" for i in range(self.len_ref)]
-        labels = labels_dataset + labels_ref
+        labels = [collapse_era5_duplicate(label) for label in labels_dataset + labels_ref]
         return labels
 
     def set_index_description(self, index_name: str = None):
@@ -327,6 +327,7 @@ class PlotBaseMixin:
         if index_name in ["ENSO", "Niño 3.4 index"]:
             description += " El Niño and La Niña events are defined when exceeding a 0.5 °C threshold."
 
+        description = collapse_era5_duplicate(description)
         self.logger.debug(f"Index description: {description}")
         return description
 
@@ -413,6 +414,7 @@ class PlotBaseMixin:
             description += f" Contours represent the model {statistic}, "
             description += "while shading is the difference between the model and the reference."
 
+        description = collapse_era5_duplicate(description)
         self.logger.debug(f"Map description: {description}")
 
         return description
