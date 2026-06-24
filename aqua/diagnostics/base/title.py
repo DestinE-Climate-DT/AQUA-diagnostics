@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 from aqua.core.util import strlist_to_phrase, to_list
 
-from .strings import harmonize_lists
+from .strings import collapse_era5_duplicate, harmonize_lists
 
 
 class TitleBuilder:
@@ -233,5 +233,6 @@ class TitleBuilder:
         if self.extra_info:
             title += f" {' '.join(to_list(self.extra_info))}"
 
+        title = collapse_era5_duplicate(title)
         title = title.strip()
         return self._wrap_title(title, max_chars=max_chars, split_on=markers) if max_chars else title
