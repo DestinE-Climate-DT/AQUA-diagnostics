@@ -211,7 +211,7 @@ def set_title(diagnostic: str, model: str, exp: str, year1: int | None, year2: i
     if diagnostic == "performance_indices":
         diag_name = "Performance Indices"
     elif diagnostic == "global_mean":
-        diag_name = "Global Mean Bias"
+        diag_name = "Global Mean differences"
     else:
         raise ValueError(f"Unknown diagnostic {diagnostic} for title generation")
 
@@ -234,7 +234,7 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     Returns:
         description (str)
     """
-    model_time = f"for {model} {exp} from {year1}-01 to {year2}-12."
+    model_time = f"for {model} {exp} (from {year1}-01 to {year2}-12)."
 
     region_bounds = {
         "Global": (-90.0, 90.0),
