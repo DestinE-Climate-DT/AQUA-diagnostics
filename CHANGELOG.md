@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 Complete list:
+- Ocean3d: set `vert_coord` to `depth` in stratification/trends/drift configs (#293) 
 - Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)
 - Bug report template update (#283)
 - Upgrade to aqua-core==1.0.0a5, to python <=3.14 and to eccodes<=2.47 (#254)
