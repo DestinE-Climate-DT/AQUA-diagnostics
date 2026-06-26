@@ -59,6 +59,8 @@ diagnostics:
         show_stats: true
         show_significance: true    # Enable significance stippling
         significance_alpha: 0.05  # 95% confidence level
+        stipple_density: 30       # Subsampling step: higher = sparser dots (use 50-100 on high-res grids)
+        stipple_size: 0.5         # Size of stipple dots
       tprate:
         vmin: -8
         vmax: 8
