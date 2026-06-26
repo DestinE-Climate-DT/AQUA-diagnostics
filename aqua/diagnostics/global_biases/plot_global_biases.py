@@ -114,7 +114,7 @@ class PlotGlobalBiases:
         significance_mask (xarray.DataArray): Boolean mask indicating significant points.
         lat (xarray.DataArray): Latitude coordinates.
         lon (xarray.DataArray): Longitude coordinates.
-        stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point). Default is 3.
+        stipple_density (int, optional): Subsampling factor for the mask (e.g., 30 means every 30th point). Default is 30.
         stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
         stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
         invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
@@ -240,7 +240,7 @@ class PlotGlobalBiases:
         data_ref_timeseries=None,
         show_significance=False,
         significance_alpha=0.05,
-        stipple_density=3,
+        stipple_density=30,
         stipple_size=0.5,
         invert_stippling=False,
     ):

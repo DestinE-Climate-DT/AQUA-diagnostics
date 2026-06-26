@@ -108,7 +108,7 @@ def main(argv=None):
             show_stats = default_params.get("show_stats", False)
             show_significance = plot_params.get("show_significance", False)
             significance_alpha = plot_params.get("significance_alpha", 0.05)
-            stipple_density = plot_params.get("stipple_density", 3)
+            stipple_density = plot_params.get("stipple_density", 30)
             stipple_size = plot_params.get("stipple_size", 0.5)
             invert_stippling = plot_params.get("invert_stippling", False)
 
