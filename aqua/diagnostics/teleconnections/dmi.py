@@ -1,7 +1,6 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import time_to_string
-from aqua.core.util.sci_util import lon_to_360
 
 from .base import BaseMixin
 
@@ -90,9 +89,9 @@ class DMI(BaseMixin):
         weio_coords = self.definition.get("weio")
         eeio_coords = self.definition.get("eeio")
 
-        if self.data[self.var].lon.min() >= 0: # we need to convert to 0-360 if the data is in -180,180
-            weio_lon = [lon_to_360(weio_coords["lon_limits"][i]) for i in range(2)]
-            eeio_lon = [lon_to_360(eeio_coords["lon_limits"][i]) for i in range(2)]
+        # if self.data[self.var].lon.min() >= 0: # we need to convert to 0-360 if the data is in -180,180
+        # weio_lon = [lon_to_360(weio_coords["lon_limits"][i]) for i in range(2)]
+        # eeio_lon = [lon_to_360(eeio_coords["lon_limits"][i]) for i in range(2)]
 
         self.logger.debug(f"WEIO coordinates: {weio_coords}")
         self.logger.debug(f"EEIO coordinates: {eeio_coords}")
@@ -103,8 +102,12 @@ class DMI(BaseMixin):
         # For the two regions, evaluate the anomalies with respect to the global climatology month by month
         grouped_data = self.data[self.var].groupby("time.month")
 
-        anom_weio = self.reader.fldmean(grouped_data - clim, lat_limits=weio_coords["lat_limits"], lon_limits=weio_coords["lon_limits"])
-        anom_eeio = self.reader.fldmean(grouped_data - clim, lat_limits=eeio_coords["lat_limits"], lon_limits=eeio_coords["lon_limits"])
+        anom_weio = self.reader.fldmean(
+            grouped_data - clim, lat_limits=weio_coords["lat_limits"], lon_limits=weio_coords["lon_limits"]
+        )
+        anom_eeio = self.reader.fldmean(
+            grouped_data - clim, lat_limits=eeio_coords["lat_limits"], lon_limits=eeio_coords["lon_limits"]
+        )
 
         # DMI index is the difference between the two anomalies
         dmi = anom_weio - anom_eeio
