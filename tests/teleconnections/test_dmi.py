@@ -32,8 +32,8 @@ def test_dmi(tmp_path):
     dmi.compute_index()
     assert dmi.index is not None, "Index should not be None"
     assert dmi.index.size > 0
-    assert dmi.index.AQUA_startdate == "1989-01-01"
-    assert dmi.index.AQUA_enddate == "1995-12-01"
+    assert dmi.index.AQUA_startdate == dmi.data.AQUA_startdate
+    assert dmi.index.AQUA_enddate == dmi.data.AQUA_enddate
 
     dmi.save_netcdf(dmi.index, diagnostic="dmi", diagnostic_product="index", outputdir=tmp_path)
     netcdf_path = os.path.join(tmp_path, "netcdf")
