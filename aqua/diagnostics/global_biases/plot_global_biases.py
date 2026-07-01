@@ -345,7 +345,6 @@ class PlotGlobalBiases:
                 target_stipple_points=target_stipple_points,
                 stipple_size=stipple_size,
                 invert_mask=invert_stippling,
-        target_stipple_points=target_stipple_points,
             )
 
             pct_sig = significance_mask.attrs.get("percent_significant", 0)
