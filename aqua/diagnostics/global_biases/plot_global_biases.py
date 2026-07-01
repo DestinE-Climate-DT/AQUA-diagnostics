@@ -101,8 +101,18 @@ class PlotGlobalBiases:
 
         return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
-    def _add_significance_stippling(self, ax, significance_mask, lat, lon, stipple_density=None,
-                                    target_stipple_points=1000, stipple_size=0.5, stipple_color="black", invert_mask=False):
+    def _add_significance_stippling(
+        self,
+        ax,
+        significance_mask,
+        lat,
+        lon,
+        stipple_density=None,
+        target_stipple_points=1000,
+        stipple_size=0.5,
+        stipple_color="black",
+        invert_mask=False,
+    ):
         """
         Add stippling to indicate statistical significance on a map.
 
@@ -271,7 +281,8 @@ class PlotGlobalBiases:
             area (xr.DataArray, optional): Grid cell areas for computing weighted statistics.
             show_stats (bool, optional): Whether to show statistical information on the plot.
             stipple_density (int, optional): Subsampling factor for stippling. If None, computed adaptively.
-            target_stipple_points (int, optional): Target number of stipple points when stipple_density is None.Default is 1000.
+            target_stipple_points (int, optional): Target number of stipple points when stipple_density is None.
+                Default is 1000.
         """
         self.logger.info("Plotting global biases.")
 
