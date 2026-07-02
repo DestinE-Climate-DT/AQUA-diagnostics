@@ -102,7 +102,7 @@ class PlotGlobalBiases:
         return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
     def _add_significance_stippling(
-        self, ax, significance_mask, lat, lon, stipple_density=30, stipple_size=0.5, stipple_color="black", invert_mask=False
+        self, ax, significance_mask, lat, lon, stipple_density=30, stipple_size=0.8, stipple_color="black", invert_mask=False
     ):
         """
         Add stippling to indicate statistical significance on a map.
@@ -115,7 +115,7 @@ class PlotGlobalBiases:
         lat (xarray.DataArray): Latitude coordinates.
         lon (xarray.DataArray): Longitude coordinates.
         stipple_density (int, optional): Subsampling factor for the mask (e.g., 30 means every 30th point). Default is 30.
-        stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
+        stipple_size (float, optional): Size of the stipple dots. Default is 0.8.
         stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
         invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
             Default is False (stippling where significant).
@@ -241,7 +241,7 @@ class PlotGlobalBiases:
         show_significance=False,
         significance_alpha=0.05,
         stipple_density=30,
-        stipple_size=0.5,
+        stipple_size=0.8,
         invert_stippling=False,
     ):
         """
