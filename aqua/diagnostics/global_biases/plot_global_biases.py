@@ -280,9 +280,15 @@ class PlotGlobalBiases:
             cbar_label (str, optional): Label for the colorbar.
             area (xr.DataArray, optional): Grid cell areas for computing weighted statistics.
             show_stats (bool, optional): Whether to show statistical information on the plot.
+            data_timeseries (xr.Dataset, optional): Model dataset with time dimension, used for significance testing.
+            data_ref_timeseries (xr.Dataset, optional): Reference dataset with time dimension, used for significance testing.
+            show_significance (bool, optional): Whether to overlay significance stippling on the plot. Default is False.
+            significance_alpha (float, optional): Significance level for the t-test. Default is 0.05.
             stipple_density (int, optional): Subsampling factor for stippling. If None, computed adaptively.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
             target_stipple_points (int, optional): Target number of stipple points when stipple_density is None.
                 Default is 1000.
+            invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
         """
         self.logger.info("Plotting global biases.")
 
