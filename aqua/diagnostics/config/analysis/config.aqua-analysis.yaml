@@ -106,6 +106,10 @@ diagnostics:
   ocean2d:
     biases:
       config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.j2"
+    timeseries:
+      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.j2"
+    lat_lon_profiles:
+      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.j2"
 
   ocean3d-part1:
     trends:
