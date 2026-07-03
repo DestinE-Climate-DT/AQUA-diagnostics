@@ -192,3 +192,45 @@ class TestGlobalBiases:
         assert short_name in gb.climatology.data_vars
         assert gb.data[short_name].attrs.get("long_name") == long_name
         assert gb.data[short_name].attrs.get("short_name") == short_name
+
+    def test_adaptive_stipple_density(self, plot_global_biases_instance):
+        """Test that adaptive stipple_density is computed correctly for different grid resolutions."""
+        import numpy as np
+        import xarray as xr
+
+        plotgb = plot_global_biases_instance
+
+        for n_lat, n_lon, target, expected_density in [
+            (180, 360, 1000, 8),  # r100-like
+            (1800, 3600, 1000, 80),  # hpz10-like
+        ]:
+            lat = xr.DataArray(np.linspace(-90, 90, n_lat), dims=["lat"])
+            lon = xr.DataArray(np.linspace(-180, 180, n_lon), dims=["lon"])
+            significance_mask = xr.DataArray(
+                np.ones((n_lat, n_lon), dtype=bool),
+                coords={"lat": lat, "lon": lon},
+                dims=["lat", "lon"],
+            )
+
+            import matplotlib
+
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+            import cartopy.crs as ccrs
+
+            fig, ax = plt.subplots(subplot_kw={"projection": ccrs.Robinson()})
+            # Should not raise and should use adaptive density
+            plotgb._add_significance_stippling(
+                ax,
+                significance_mask,
+                lat,
+                lon,
+                stipple_density=None,
+                target_stipple_points=target,
+            )
+            plt.close(fig)
+
+            computed_density = max(1, int(np.sqrt((n_lat * n_lon) / target)))
+            assert computed_density == expected_density, (
+                f"Expected density {expected_density} for grid {n_lat}x{n_lon}, got {computed_density}"
+            )
