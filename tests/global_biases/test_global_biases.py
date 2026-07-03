@@ -1,9 +1,9 @@
 import os
+from unittest.mock import MagicMock
 
+import numpy as np
 import pytest
 import xarray as xr
-import numpy as np
-from unittest.mock import MagicMock
 
 from aqua.core.exceptions import NoDataError
 from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
