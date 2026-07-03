@@ -2,6 +2,7 @@ import os
 
 import pytest
 import xarray as xr
+from unittest.mock import MagicMock
 
 from aqua.core.exceptions import NoDataError
 from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
@@ -195,10 +196,9 @@ class TestGlobalBiases:
 
     def test_adaptive_stipple_density(self, plot_global_biases_instance):
         """Test that adaptive stipple_density is computed correctly for different grid resolutions."""
-        import numpy as np
-        import xarray as xr
 
         plotgb = plot_global_biases_instance
+        mock_ax = MagicMock()
 
         for n_lat, n_lon, target, expected_density in [
             (180, 360, 1000, 8),  # r100-like
@@ -212,23 +212,15 @@ class TestGlobalBiases:
                 dims=["lat", "lon"],
             )
 
-            import matplotlib
-
-            matplotlib.use("Agg")
-            import matplotlib.pyplot as plt
-            import cartopy.crs as ccrs
-
-            fig, ax = plt.subplots(subplot_kw={"projection": ccrs.Robinson()})
             # Should not raise and should use adaptive density
             plotgb._add_significance_stippling(
-                ax,
+                mock_ax,
                 significance_mask,
                 lat,
                 lon,
                 stipple_density=None,
                 target_stipple_points=target,
             )
-            plt.close(fig)
 
             computed_density = max(1, int(np.sqrt((n_lat * n_lon) / target)))
             assert computed_density == expected_density, (
