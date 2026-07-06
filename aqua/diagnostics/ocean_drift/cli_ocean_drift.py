@@ -55,13 +55,13 @@ def main(argv=None):
             # if regions != [None]:
             #    regions.append(None)
 
-            data_hovmoller = Hovmoller(
-                **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
-            )
 
             for region in regions:
                 logger.info("Processing region: %s", region)
                 try:
+                    data_hovmoller = Hovmoller(
+                        **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
+                    )
                     data_hovmoller.run(
                         region=region,
                         var=var,
