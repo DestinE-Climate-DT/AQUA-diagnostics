@@ -33,14 +33,10 @@ body:
       options:
       - ci
       - climatedt-phase1
-      - leonardo
       - levante
-      - lumi-phase1
-      - lumi-phase2
-      - mn5-phase2
-      - nextgems3
-      - nextgems4
       - obs
+      - climatedt-gen2
+      - test-phase3
       - Others (specify)
     validations:
       required: true
@@ -50,10 +46,10 @@ body:
       label: version
       description: Which AQUA version are you using?
       options:
-      - v0.23.0
-      - v0.22.0
-      - v0.21.0
       - main
+      - v1.0.0a5
+      - v1.0.0a4
+      - v1.0.0a3
       - older -> not compatible with AQUA-diagnostic repository
     validations:
       required: true
@@ -64,6 +60,10 @@ body:
       description: Which AQUA-diagnostic version are you using?
       options:
       - main
+      - v0.24.0
+      - v0.23.0
+      - v0.22.0
+      - v0.21.0
     validations:
       required: true
   - type: textarea
