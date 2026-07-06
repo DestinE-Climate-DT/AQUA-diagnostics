@@ -1,28 +1,31 @@
 name: Sync Environment Files
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
     paths:
       - 'environment.yml'
-    branches:
-      - main
 
 jobs:
   sync:
+    # Evita loop: non rieseguire se l'ultimo commit è già del bot
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sync changed dependencies
         run: |
-          # Get changed lines from the last commit (from dependabot)
-          CHANGED=$(git diff HEAD~1 HEAD -- environment.yml | grep '^[+-]  -' | grep -v '^[+-][+-][+-]' || true)
+          set -e
+          BASE_SHA=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
 
+          CHANGED=$(git diff "$BASE_SHA" HEAD -- environment.yml | grep '^[+-]  -' | grep -v '^[+-][+-][+-]' || true)
           if [ -z "$CHANGED" ]; then
             echo "No dependency changes detected"
             exit 0
@@ -33,17 +36,12 @@ jobs:
               NEW="${BASH_REMATCH[1]}"
               PKG=$(echo "$NEW" | sed 's/[<>=].*//' | xargs)
 
-              # Update in environment-dev.yml, preserving spaces and inline comments
-              sed -i.bak "s|^\\([[:space:]]*-[[:space:]]*\\)${PKG}[<>=][^[:space:]#]*\\([[:space:]].*\\)\$|\\1${NEW}\\2|" environment-dev.yml
-              # Handle case with no trailing comment/space
-              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*$|\1${NEW}|" environment-dev.yml
+              for f in environment-dev.yml cli/lumi-install/environment_lumi.yml; do
+                sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\([[:space:]].*\)\$|\1${NEW}\2|" "$f"
+                sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\$|\1${NEW}|" "$f"
+                rm -f "$f.bak"
+              done
 
-              # Update in environment_lumi.yml, preserving spaces and inline comments
-              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\([[:space:]].*\)$|\1${NEW}\2|" cli/lumi-install/environment_lumi.yml
-              # Handle case with no trailing comment/space
-              sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*$|\1${NEW}|" cli/lumi-install/environment_lumi.yml
-
-              rm -f environment-dev.yml.bak cli/lumi-install/environment_lumi.yml.bak
               echo "Updated $PKG to: $NEW"
             fi
           done
@@ -54,4 +52,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add environment-dev.yml cli/lumi-install/environment_lumi.yml
           git diff --staged --quiet || git commit -m "chore: sync environment files from environment.yml"
-          git push
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
