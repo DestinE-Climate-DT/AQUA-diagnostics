@@ -1,6 +1,6 @@
 import pytest
 
-from aqua.diagnostics.ocean_trends import Trends
+from aqua.diagnostics.trends import Trends
 from tests.shared_constants import APPROX_REL, LOGLEVEL
 
 loglevel = LOGLEVEL
