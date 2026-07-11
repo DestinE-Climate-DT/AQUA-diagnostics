@@ -11,6 +11,7 @@ import sys
 
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.ocean_trends import PlotTrends, Trends
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
 def parse_arguments(args):
@@ -52,7 +53,7 @@ def main(argv=None):
             diagnostic_name = trends_config.get("diagnostic_name", "ocean_trends")
             var = trends_config.get("var", None)
             # dim_mean = trends_config.get("dim_mean", None)
-            vert_coord = trends_config.get("vert_coord", None)
+            vert_coord = trends_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
             #     regions.append('go')
@@ -82,7 +83,24 @@ def main(argv=None):
                         rebuild=rebuild,
                         loglevel=cli.loglevel,
                     )
-                    trends_plot.plot_multilevel(save_format=save_format, dpi=dpi)
+
+                    trends_plot.plot_multilevel(
+                        levels = [10, 100, 500, 1000],
+                        cbar_limits=
+                        {
+                            "thetao":
+                                {
+                                    'vmin': -0.7,
+                                    'vmax': 0.7,
+                                },
+                            "so":
+                                {
+                                    'vmin': -.12,
+                                    'vmax': .12,
+                                }
+                        },
+                        sym = True,
+                        save_format=save_format, dpi=dpi)
 
                     zonal_trend_plot = PlotTrends(
                         data=data_trends_region.mean("lon"),

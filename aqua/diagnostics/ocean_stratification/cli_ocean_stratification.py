@@ -13,6 +13,7 @@ from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.ocean_stratification import PlotMLD, PlotStratification
 from aqua.diagnostics.ocean_stratification.stratification import Stratification
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
 def parse_arguments(args):
@@ -60,7 +61,7 @@ def main(argv=None):
             regions = to_list(stratification_config.get("regions", None))
             diagnostic_name = stratification_config.get("diagnostic_name", "ocean_stratification")
             climatologies = stratification_config.get("climatology", None)
-            vert_coord = stratification_config.get("vert_coord", None)
+            vert_coord = stratification_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
             for region, climatology in zip(regions, climatologies):
                 logger.info(f"Processing region: {region}, climatology: {climatology}")
                 var = stratification_config.get("var", None)

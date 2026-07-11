@@ -13,7 +13,7 @@ from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.ocean_drift.hovmoller import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
-
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 def parse_arguments(args):
     """Parse command-line arguments for OceanDrift diagnostic.
@@ -50,7 +50,7 @@ def main(argv=None):
             diagnostic_name = hovmoller_config.get("diagnostic_name", "ocean_drift")
             var = hovmoller_config.get("var", None)
             dim_mean = hovmoller_config.get("dim_mean", ["lat", "lon"])
-            vert_coord = hovmoller_config.get("vert_coord", None)
+            vert_coord = hovmoller_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
             # Add the global region if not present
             # if regions != [None]:
             #    regions.append(None)
