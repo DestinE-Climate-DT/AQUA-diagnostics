@@ -11,9 +11,10 @@ import sys
 
 from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.ocean_drift.hovmoller import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
-from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
+
 
 def parse_arguments(args):
     """Parse command-line arguments for OceanDrift diagnostic.
@@ -54,7 +55,6 @@ def main(argv=None):
             # Add the global region if not present
             # if regions != [None]:
             #    regions.append(None)
-
 
             for region in regions:
                 logger.info("Processing region: %s", region)

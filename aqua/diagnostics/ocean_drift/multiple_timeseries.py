@@ -82,7 +82,7 @@ def plot_multi_timeseries(
             )
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
-            
+
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
                 ax.title.set_fontweight("bold")
@@ -90,10 +90,15 @@ def plot_multi_timeseries(
             if text and text[k]:
                 logger.debug("Setting text position for %s", text[k])
                 ax.text(
-                    -0.3, 0.5, text[k],
-                    fontsize=15, color="dimgray", rotation=90,
+                    -0.3,
+                    0.5,
+                    text[k],
+                    fontsize=15,
+                    color="dimgray",
+                    rotation=90,
                     transform=ax.transAxes,
-                    ha="center", va="center",
+                    ha="center",
+                    va="center",
                 )
     # Adjust overall layout
     fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)

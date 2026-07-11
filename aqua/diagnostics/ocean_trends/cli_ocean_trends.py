@@ -10,8 +10,8 @@ import argparse
 import sys
 
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
-from aqua.diagnostics.ocean_trends import PlotTrends, Trends
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
+from aqua.diagnostics.ocean_trends import PlotTrends, Trends
 
 
 def parse_arguments(args):
@@ -85,22 +85,21 @@ def main(argv=None):
                     )
 
                     trends_plot.plot_multilevel(
-                        levels = [10, 100, 500, 1000],
-                        cbar_limits=
-                        {
-                            "thetao":
-                                {
-                                    'vmin': -0.7,
-                                    'vmax': 0.7,
-                                },
-                            "so":
-                                {
-                                    'vmin': -.12,
-                                    'vmax': .12,
-                                }
+                        levels=[10, 100, 500, 1000],
+                        cbar_limits={
+                            "thetao": {
+                                "vmin": -0.7,
+                                "vmax": 0.7,
+                            },
+                            "so": {
+                                "vmin": -0.12,
+                                "vmax": 0.12,
+                            },
                         },
-                        sym = True,
-                        save_format=save_format, dpi=dpi)
+                        sym=True,
+                        save_format=save_format,
+                        dpi=dpi,
+                    )
 
                     zonal_trend_plot = PlotTrends(
                         data=data_trends_region.mean("lon"),
