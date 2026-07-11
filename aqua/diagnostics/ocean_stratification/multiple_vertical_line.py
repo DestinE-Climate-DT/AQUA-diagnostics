@@ -96,7 +96,7 @@ def plot_multi_vertical_lines(
                 ax.set_xlabel(xtext[i])
             if ytext:
                 ax.set_ylabel(ytext[i])
-            if i == 0:   # only first column
+            if i == 0:  # only first column
                 ax.legend(fontsize=14)
             else:
                 ax.legend().remove()

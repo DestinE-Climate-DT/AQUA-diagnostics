@@ -211,7 +211,6 @@ def plot_maps(
         if titles and titles[i]:
             ax.set_title(titles[i], fontsize=9, fontweight="bold")
 
-
     if title:
         plt.suptitle(title, fontsize=ncols * 7, y=0.95, fontweight="bold")
 

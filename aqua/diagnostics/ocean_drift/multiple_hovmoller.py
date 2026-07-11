@@ -105,7 +105,7 @@ def plot_multi_hovmoller(
                 for t in ax.texts:
                     if t.get_text() == text[k]:
                         logger.debug("Setting text position for %s", text[k])
-                        t.set_position((-0.3, 0.5))   # x left margin, y middle
+                        t.set_position((-0.3, 0.5))  # x left margin, y middle
                         t.set_verticalalignment("center")
             # Retrieve last plotted object for colorbar (QuadMesh or ContourSet)
             if ax.collections:
