@@ -141,7 +141,6 @@ class PlotMLD:
         """Set the figure size based on the number of rows and columns."""
         self.figsize = (3.5 * self.ncols, 3.5 * self.nrows)
 
-
     def set_nrowcol(self):
         """Set the number of rows and columns for the subplot grid."""
         if hasattr(self, "levels") and self.levels:
