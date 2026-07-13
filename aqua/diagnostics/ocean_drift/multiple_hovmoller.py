@@ -100,7 +100,6 @@ def plot_multi_hovmoller(
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
-                ax.title.set_fontweight("bold")
             if text and text[k]:
                 for t in ax.texts:
                     if t.get_text() == text[k]:
@@ -132,7 +131,7 @@ def plot_multi_hovmoller(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10, fontweight="bold")
+        fig.suptitle(title, fontsize=ncols * 10)
 
     if return_fig:
         return fig

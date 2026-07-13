@@ -209,10 +209,10 @@ def plot_maps(
             cbar.ax.xaxis.set_major_formatter(formatter)
             cbar.ax.xaxis.offsetText.set_fontsize(8)
         if titles and titles[i]:
-            ax.set_title(titles[i], fontsize=9, fontweight="bold")
+            ax.set_title(titles[i], fontsize=9)
 
     if title:
-        plt.suptitle(title, fontsize=ncols * 7, y=0.95, fontweight="bold")
+        plt.suptitle(title, fontsize=ncols * 7, y=0.95)
 
     if return_fig:
         return fig

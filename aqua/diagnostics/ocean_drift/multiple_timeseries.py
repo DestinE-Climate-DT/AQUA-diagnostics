@@ -85,7 +85,6 @@ def plot_multi_timeseries(
 
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
-                ax.title.set_fontweight("bold")
 
             if text and text[k]:
                 logger.debug("Setting text position for %s", text[k])
@@ -106,7 +105,7 @@ def plot_multi_timeseries(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10, fontweight="bold")
+        fig.suptitle(title, fontsize=ncols * 10)
 
     if return_fig:
         return fig
