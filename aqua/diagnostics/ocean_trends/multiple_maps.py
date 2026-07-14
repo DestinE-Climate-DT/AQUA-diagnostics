@@ -198,7 +198,7 @@ def plot_maps(
             cbar_ticks = generate_colorbar_ticks(
                 vmin=vmin,
                 vmax=vmax,
-                sym=True,
+                sym=sym,
                 nlevels=4,
                 ticks_rounding=4,
                 loglevel=loglevel,
@@ -208,8 +208,8 @@ def plot_maps(
             formatter.set_powerlimits((0, 0))  # always scientific notation
             cbar.ax.xaxis.set_major_formatter(formatter)
             cbar.ax.xaxis.offsetText.set_fontsize(8)
-        if titles and i < len(titles):
-            ax.set_title(titles[i], fontsize=12)
+        if titles and titles[i]:
+            ax.set_title(titles[i], fontsize=9)
 
     if title:
         plt.suptitle(title, fontsize=ncols * 7, y=0.95)

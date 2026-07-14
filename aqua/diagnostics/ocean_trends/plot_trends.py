@@ -248,9 +248,7 @@ class PlotTrends:
         for j in range(len(self.data_list)):
             for var in self.vars:
                 if j == 0:
-                    units = self.data[var].attrs.get("units", "")
-                    units_latex = unit_to_latex(units) if units else ""
-                    title = f"{self.data[var].attrs.get('long_name', var)} ({units_latex})"
+                    title = f"{self.data[var].attrs.get('long_name', var)}"
                     self.title_list.append(title)
                 else:
                     self.title_list.append(" ")

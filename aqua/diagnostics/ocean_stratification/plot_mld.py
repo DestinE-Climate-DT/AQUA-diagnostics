@@ -139,21 +139,7 @@ class PlotMLD:
 
     def set_figsize(self):
         """Set the figure size based on the number of rows and columns."""
-        self.figsize = (9 * self.ncols, 8 * self.nrows)
-
-        # lon_span = abs(self.data.lon.max() - self.data.lon.min())
-        # lat_span = abs(self.data.lat.max() - self.data.lat.min())
-
-        # # Avoid division by zero
-        # if lat_span == 0:
-        #     lat_span = 1e-6
-
-        # # Set figure size proportional to lon:lat ratio
-        # base_width = 9 * self.ncols
-        # base_height = 8 * self.nrows
-
-        # aspect_ratio = lon_span / lat_span * 0.6
-        # self.figsize = (base_width * aspect_ratio, base_height)
+        self.figsize = (3.5 * self.ncols, 3.5 * self.nrows)
 
     def set_nrowcol(self):
         """Set the number of rows and columns for the subplot grid."""

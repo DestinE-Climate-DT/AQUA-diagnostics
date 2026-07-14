@@ -11,6 +11,7 @@ import sys
 
 from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.ocean_drift.hovmoller import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
 
@@ -50,18 +51,17 @@ def main(argv=None):
             diagnostic_name = hovmoller_config.get("diagnostic_name", "ocean_drift")
             var = hovmoller_config.get("var", None)
             dim_mean = hovmoller_config.get("dim_mean", ["lat", "lon"])
-            vert_coord = hovmoller_config.get("vert_coord", None)
+            vert_coord = hovmoller_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
             # Add the global region if not present
             # if regions != [None]:
             #    regions.append(None)
 
-            data_hovmoller = Hovmoller(
-                **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
-            )
-
             for region in regions:
                 logger.info("Processing region: %s", region)
                 try:
+                    data_hovmoller = Hovmoller(
+                        **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
+                    )
                     data_hovmoller.run(
                         region=region,
                         var=var,
