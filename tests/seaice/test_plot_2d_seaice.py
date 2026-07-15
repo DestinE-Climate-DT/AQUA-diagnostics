@@ -19,7 +19,6 @@ pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="diagnostic_
 class TestPlot2DSeaIce:
     @classmethod
     def setup_class(cls):
-        cls.tmp_path = "./"
         cls.catalog = "ci"
         cls.model = "FESOM"
         cls.exp = "hpz3"
@@ -232,19 +231,19 @@ class TestPlot2DSeaIce:
         with pytest.raises(ValueError):
             p2d.plot_2d_seaice(method="invalid_method", projkw=self.projkw, save_format=[])
 
-    def test_plot_saves_outputs(self):
+    def test_plot_saves_outputs(self, diag_outdir):
         p2d = Plot2DSeaIce(
             ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
             models=self.frac_model,
-            outputdir=self.tmp_path,
+            outputdir=diag_outdir,
             loglevel="INFO",
             dpi=DPI,
         )
 
         p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, save_format=["png", "pdf"], months=[3])
 
-        png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
-        pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)
+        png_files = glob.glob(os.path.join(diag_outdir, "**/*.png"), recursive=True)
+        pdf_files = glob.glob(os.path.join(diag_outdir, "**/*.pdf"), recursive=True)
 
         assert len(png_files) > 0, "No PNG file saved."
         assert len(pdf_files) > 0, "No PDF file saved."

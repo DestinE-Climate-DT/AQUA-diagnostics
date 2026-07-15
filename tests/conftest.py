@@ -1,5 +1,5 @@
 """
-Shared fixtures for AQUA test suite.
+Shared fixtures for AQUA-diagnostics test suite.
 These fixtures use scope="session" to retrieve data once and share across all tests.
 Reference: https://docs.pytest.org/en/stable/reference/fixtures.html
 """
@@ -9,11 +9,42 @@ import pytest
 
 from aqua import Reader  # type: ignore
 from tests.shared_constants import LOGLEVEL
+from tests.support.tempdirs import cleanup_worker_tmpdir, configure_worker_tmpdir
 
 matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 
 plt.ioff()  # Turn off interactive mode explicitly
+
+
+# ======================================================================
+# Per-worker OS temp directory (pytest-xdist)
+# ======================================================================
+def pytest_configure(config):
+    """Set per-worker TMPDIR to avoid CDO/temp contention in parallel runs."""
+    configure_worker_tmpdir(config)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Remove per-worker TMPDIR after the worker session ends."""
+    cleanup_worker_tmpdir(session)
+
+
+# ======================================================================
+# Diagnostic output directories (pytest temp, xdist-safe)
+# ======================================================================
+@pytest.fixture
+def diag_outdir(tmp_path):
+    """Isolated output directory for a single test."""
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    return str(output_dir)
+
+
+@pytest.fixture(scope="module")
+def module_outdir(tmp_path_factory):
+    """Shared output directory for module-scoped diagnostic tests."""
+    return str(tmp_path_factory.mktemp("diagnostic_output"))
 
 
 # ======================================================================

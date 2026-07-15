@@ -30,12 +30,6 @@ def ensemble_config():
     }
 
 
-@pytest.fixture
-def tmp_path_str():
-    """Provide consistent tmp_path as string."""
-    return "./"
-
-
 @pytest.fixture(scope="module")
 def dataset_instance(ensemble_config):
     """Retrieve and merge data once for the module."""
@@ -52,9 +46,8 @@ def dataset_instance(ensemble_config):
 
 
 @pytest.fixture(scope="module")
-def ensemble_latlon_instance(ensemble_config, dataset_instance):
+def ensemble_latlon_instance(ensemble_config, dataset_instance, module_outdir):
     """Create an EnsembleLatLon instance."""
-    # Note: outputdir is set to current dir here, but tests can override or check relative paths
     ens = EnsembleLatLon(
         var=ensemble_config["var"],
         dataset=dataset_instance,
@@ -63,13 +56,13 @@ def ensemble_latlon_instance(ensemble_config, dataset_instance):
         exp_list=ensemble_config["exp_list"],
         source_list=ensemble_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir="./",
+        outputdir=module_outdir,
     )
     return ens
 
 
 @pytest.fixture(scope="module")
-def plot_ensemble_instance(ensemble_config):
+def plot_ensemble_instance(ensemble_config, module_outdir):
     """Create a PlotEnsembleLatLon instance."""
     plot_args = {
         "catalog_list": ensemble_config["catalog_list"],
@@ -77,7 +70,7 @@ def plot_ensemble_instance(ensemble_config):
         "exp_list": ensemble_config["exp_list"],
         "source_list": ensemble_config["source_list"],
     }
-    return PlotEnsembleLatLon(**plot_args, outputdir="./")
+    return PlotEnsembleLatLon(**plot_args, outputdir=module_outdir)
 
 
 class TestEnsembleLatLon:
@@ -88,7 +81,7 @@ class TestEnsembleLatLon:
         assert dataset_instance is not None
         assert isinstance(dataset_instance, xr.Dataset)
 
-    def test_run(self, ensemble_latlon_instance, ensemble_config, tmp_path_str):
+    def test_run(self, ensemble_latlon_instance, ensemble_config, module_outdir):
         """Test the computation and NetCDF output generation."""
         ens = ensemble_latlon_instance
         conf = ensemble_config
@@ -105,10 +98,10 @@ class TestEnsembleLatLon:
         var = conf["var"]
 
         # Check NetCDF outputs
-        nc_mean = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
+        nc_mean = os.path.join(module_outdir, "netcdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
         assert os.path.exists(nc_mean)
 
-        nc_std = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.nc")
+        nc_std = os.path.join(module_outdir, "netcdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.nc")
         assert os.path.exists(nc_std)
 
     def test_statistics(self, ensemble_latlon_instance):
@@ -123,7 +116,7 @@ class TestEnsembleLatLon:
         assert ens.dataset_mean is not None
         assert ens.dataset_std.all() == 0
 
-    def test_plotting(self, ensemble_latlon_instance, plot_ensemble_instance, ensemble_config, tmp_path_str):
+    def test_plotting(self, ensemble_latlon_instance, plot_ensemble_instance, ensemble_config, module_outdir):
         """Test the plotting functionality."""
         ens = ensemble_latlon_instance
         plot_ens = plot_ensemble_instance
@@ -153,15 +146,15 @@ class TestEnsembleLatLon:
         var = conf["var"]
 
         # Check PNGs
-        png_mean = os.path.join(tmp_path_str, "png", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.png")
+        png_mean = os.path.join(module_outdir, "png", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.png")
         assert os.path.exists(png_mean)
 
-        png_std = os.path.join(tmp_path_str, "png", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.png")
+        png_std = os.path.join(module_outdir, "png", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.png")
         assert os.path.exists(png_std)
 
         # Check PDFs
-        pdf_mean = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
+        pdf_mean = os.path.join(module_outdir, "pdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
         assert os.path.exists(pdf_mean)
 
-        pdf_std = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.pdf")
+        pdf_std = os.path.join(module_outdir, "pdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.pdf")
         assert os.path.exists(pdf_std)

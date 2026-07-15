@@ -17,27 +17,23 @@ pytestmark = [pytest.mark.diagnostics]
 
 # Common fixtures
 @pytest.fixture(scope="module")
-def boxplots_instance():
+def boxplots_instance(module_outdir):
     """Create a Boxplots instance."""
-    return Boxplots(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly")
+    return Boxplots(
+        catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", outputdir=module_outdir
+    )
 
 
 @pytest.fixture(scope="module")
-def plot_boxplots_instance():
+def plot_boxplots_instance(module_outdir):
     """Create a PlotBoxplots instance."""
-    return PlotBoxplots(diagnostic="test", dpi=DPI)
-
-
-@pytest.fixture
-def tmp_path_str():
-    """Provide consistent tmp_path as string."""
-    return "./"
+    return PlotBoxplots(diagnostic="test", dpi=DPI, outputdir=module_outdir)
 
 
 class TestBoxplots:
     """Test suite for Boxplots diagnostic."""
 
-    def test_run_basic(self, boxplots_instance, plot_boxplots_instance, tmp_path_str):
+    def test_run_basic(self, boxplots_instance, plot_boxplots_instance, module_outdir):
         """Test basic boxplots run."""
         bp = boxplots_instance
         plotbp = plot_boxplots_instance
@@ -48,16 +44,20 @@ class TestBoxplots:
         assert isinstance(bp.fldmeans, xr.Dataset)
         assert all(v in bp.fldmeans for v in var)
 
-        nc = os.path.join(tmp_path_str, "netcdf", "boxplots.boxplot.ci.ERA5.era5-hpz3.r1.tnlwrf_tnswrf.nc")
+        nc = os.path.join(module_outdir, "netcdf", "boxplots.boxplot.ci.ERA5.era5-hpz3.r1.tnlwrf_tnswrf.nc")
         assert os.path.exists(nc)
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var)
 
-        pdf = os.path.join(tmp_path_str, "pdf", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf")
+        pdf = os.path.join(
+            module_outdir, "pdf", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf"
+        )
         assert os.path.exists(pdf)
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var, anomalies=True, add_mean_line=True)
-        png = os.path.join(tmp_path_str, "png", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png")
+        png = os.path.join(
+            module_outdir, "png", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png"
+        )
         assert os.path.exists(png)
 
     def test_run_with_units(self, boxplots_instance):

@@ -19,7 +19,6 @@ pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="diagnostic_
 class TestPlotSeaIce:
     @classmethod
     def setup_class(cls):
-        cls.tmp_path = "./"
         cls.catalog = "ci"
         cls.model = "FESOM"
         cls.exp = "hpz3"
@@ -246,7 +245,7 @@ class TestPlotSeaIce:
         assert "png" in formats
         assert "pdf" in formats
 
-    def test_plot_saves_outputs(self):
+    def test_plot_saves_outputs(self, diag_outdir):
         """Test that plotting saves output files."""
         psi = PlotSeaIce(
             monthly_models=self.siext,
@@ -258,13 +257,13 @@ class TestPlotSeaIce:
             catalog=self.catalog,
             loglevel=self.loglevel,
             dpi=DPI,
-            outputdir=self.tmp_path,
+            outputdir=diag_outdir,
         )
 
         psi.plot_seaice(plot_type="timeseries", save_format=["png", "pdf"])
 
-        png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
-        pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)
+        png_files = glob.glob(os.path.join(diag_outdir, "**/*.png"), recursive=True)
+        pdf_files = glob.glob(os.path.join(diag_outdir, "**/*.pdf"), recursive=True)
 
         assert len(png_files) > 0, "No PNG file saved."
         assert len(pdf_files) > 0, "No PDF file saved."
