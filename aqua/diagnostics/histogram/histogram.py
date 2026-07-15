@@ -1,6 +1,3 @@
-import pandas as pd
-import xarray as xr
-
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.histogram import histogram
 from aqua.core.logger import log_configure
@@ -56,21 +53,23 @@ class Histogram(Diagnostic):
             diagnostic_name (str, optional): Name of diagnostic. Default 'histogram'.
             loglevel (str, optional): Log level.
         """
-        super().__init__(catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel)
+        super().__init__(
+            catalog=catalog,
+            model=model,
+            exp=exp,
+            source=source,
+            regrid=regrid,
+            startdate=startdate,
+            enddate=enddate,
+            loglevel=loglevel,
+        )
 
         self.diagnostic_name = diagnostic_name
         self.logger = log_configure(log_level=loglevel, log_name="Histogram")
 
-        # Simple date management - no std dates needed
-        self.startdate = startdate
-        self.enddate = enddate
-
-        self.logger.debug(f"Period: {self.startdate} to {self.enddate}")
-
         # Region setup using parent class method
         self.region, self.lon_limits, self.lat_limits = self._set_region(
             region=region,
-            diagnostic="histogram",
             regions_file_path=regions_file_path,
             lon_limits=lon_limits,
             lat_limits=lat_limits,
@@ -122,18 +121,18 @@ class Histogram(Diagnostic):
                 raise ValueError(f"Variable {var} not found")
             self.data = self.data[var]
 
-        # Set dates if not specified
-        if self.startdate is None:
-            self.startdate = self.data.time.min().values
-        if self.enddate is None:
-            self.enddate = self.data.time.max().values
+        # Re-apply AQUA_* attrs lost when restricting from Dataset to DataArray.
+        self._set_date_attrs()
+        self.data.attrs["AQUA_catalog"] = self.catalog
+        self.data.attrs["AQUA_model"] = self.model
+        self.data.attrs["AQUA_exp"] = self.exp
+        self.data.attrs["AQUA_realization"] = self.realization
+        if self.region is not None:
+            self.data.attrs["AQUA_region"] = self.region
 
         # Customize data attributes
         if units is not None:
-            if isinstance(self.data, xr.Dataset):
-                self.data[var] = self._check_data(data=self.data[var], var=var, units=units)
-            else:
-                self.data = self._check_data(data=self.data, var=var, units=units)
+            self.data = self._check_data(data=self.data, var=var, units=units)
         if long_name is not None:
             self.data.attrs["long_name"] = long_name
         if standard_name is not None:
@@ -152,8 +151,8 @@ class Histogram(Diagnostic):
         """
         self.logger.info("Computing histogram")
 
-        # Select data for specified period
-        data = self.data.sel(time=slice(self.startdate, self.enddate))
+        # self.data is already sliced to [startdate, enddate] by the base class.
+        data = self.data
 
         # Select region if specified
         if self.lon_limits is not None or self.lat_limits is not None:
@@ -169,32 +168,18 @@ class Histogram(Diagnostic):
             # Add small buffer to avoid edge effects
             buffer = (data_max - data_min) * 0.01
             hist_range = (data_min - buffer, data_max + buffer)
-            self.logger.debug(f"Computed range: {hist_range}")
+            self.logger.debug("Computed range: %s", hist_range)
 
         hist_data = histogram(
             data, bins=self.bins, range=hist_range, weighted=self.weighted, density=density, loglevel=self.loglevel
         )
 
-        # Add region metadata
-        if self.region is not None:
-            hist_data.attrs["AQUA_region"] = self.region
-
-        # Add date metadata
-        hist_data.attrs["AQUA_startdate"] = pd.Timestamp(str(self.startdate)).strftime("%Y-%m-%d")
-        hist_data.attrs["AQUA_enddate"] = pd.Timestamp(str(self.enddate)).strftime("%Y-%m-%d")
-
-        # Add others metadata for description
-        hist_data.attrs["AQUA_catalog"] = self.catalog
-        hist_data.attrs["AQUA_model"] = self.model
-        hist_data.attrs["AQUA_exp"] = self.exp
-
         # Copy original variable metadata to center_of_bin for xlabel
+        # (histogram() overrides hist_data.attrs["units"] with the PDF/count unit).
         if hasattr(data, "standard_name"):
             hist_data.center_of_bin.attrs["standard_name"] = data.standard_name
         if hasattr(data, "long_name"):
             hist_data.center_of_bin.attrs["long_name"] = data.long_name
-        if hasattr(data, "units"):
-            hist_data.center_of_bin.attrs["units"] = data.units
 
         self.histogram_data = hist_data
 
@@ -213,8 +198,7 @@ class Histogram(Diagnostic):
         var = getattr(self.histogram_data, "standard_name", "unknown")
         extra_keys = {"var": var}
         if self.region is not None:
-            region = self.region.replace(" ", "").lower()
-            extra_keys["AQUA_region"] = region
+            extra_keys["region"] = self.region.replace(" ", "").lower()
 
         self.logger.info("Saving histogram for variable %s", var)
         super().save_netcdf(

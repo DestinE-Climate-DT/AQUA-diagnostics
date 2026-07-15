@@ -46,13 +46,14 @@ jobs:
     if: needs.check-trigger.outputs.should-run == 'true'
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
-      python-versions: '["3.12"]'
+      python-versions: '["3.14"]'
       pytest-markers: 'diagnostics'
       enable-parallel: true
       enable-coverage: true
       fail-fast: false
       install-mode: 'cross-check'
       aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+      test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
       AQUA_DVC_PAT: ${{ secrets.AQUA_DVC_PAT }}

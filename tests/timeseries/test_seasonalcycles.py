@@ -27,6 +27,8 @@ class TestSeasonalCycles:
         self.regrid = "r100"
         self.startdate = "1990-01-01"
         self.enddate = "1991-12-31"
+        self.std_startdate = "1990-01-01"
+        self.std_enddate = "1991-12-31"
 
     def test_no_region(self, tmp_path):
         sc = SeasonalCycles(
@@ -38,6 +40,8 @@ class TestSeasonalCycles:
             regrid=self.regrid,
             startdate=self.startdate,
             enddate=self.enddate,
+            std_startdate=self.std_startdate,
+            std_enddate=self.std_enddate,
             loglevel=loglevel,
         )
 

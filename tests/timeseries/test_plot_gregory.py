@@ -83,7 +83,7 @@ def test_set_ref_label_and_description_with_and_without_reference():
     desc = p_ref.set_description()
     assert ref_label == "ERA5 era5 CERES obs"
     assert "using as a reference ERA5 era5" in desc
-    assert "CERES obs (net TOA)." in desc
+    assert "CERES obs (net TOA)" in desc
 
 
 def test_check_data_length_mismatch_raises():

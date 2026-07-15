@@ -66,6 +66,8 @@ class TestTimeseries:
             loglevel=loglevel,
             startdate="19900101",
             enddate="19911231",
+            std_startdate="19900101",
+            std_enddate="19911231",
             regrid=self.regrid,
         )
 
@@ -96,6 +98,7 @@ class TestTimeseries:
         assert ts.annual.values[0] == pytest.approx(60.31101797654943, rel=approx_rel)
 
         assert ts.std_annual.values == pytest.approx(0.009666691494246038, rel=approx_rel)
+        assert ts.std_annual.AQUA_std_startdate == "1990-01-01"
 
         filename = (
             f"{self.diagnostic_name}.timeseries.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.annual.{self.region}.nc"
@@ -174,98 +177,5 @@ class TestTimeseries:
         assert ts.monthly.values[0] == pytest.approx(117.40372092960037, rel=approx_rel)
         assert ts.monthly.values[-1] == pytest.approx(123.01323353753897, rel=approx_rel)
 
-        # Test extend with non supported frequency
-        ts.compute(freq="hourly", extend=True)
+        ts.compute(freq="hourly")
         assert ts.hourly is not None
-
-    def test_extend_edge_cases(self):
-        """Test _extend_data edge cases"""
-        ts = Timeseries(
-            diagnostic_name=self.diagnostic_name,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            region=self.region,
-            loglevel=loglevel,
-            startdate="19900101",
-            enddate="19901231",
-            regrid=self.regrid,
-        )
-
-        ts.retrieve(var=self.var)
-
-        # Test compute with extend=False (no extension)
-        ts.compute(freq="monthly", extend=False)
-        assert ts.monthly is not None
-
-        # Test annual frequency with extension
-        ts.compute(freq="annual", extend=True, center_time=False)
-        assert ts.annual is not None
-
-        # Test case where dates match exactly (no extension needed - both else branches)
-        ts_exact = Timeseries(
-            diagnostic_name=self.diagnostic_name,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            region=self.region,
-            loglevel=loglevel,
-            startdate="19900101",
-            enddate="19900228",
-            regrid=self.regrid,
-        )
-        ts_exact.retrieve(var=self.var)
-        ts_exact.compute(freq="monthly", extend=True)
-        assert len(ts_exact.monthly.time) == 2
-
-        # Test extension only at end (class_enddate > end_date)
-        ts_end = Timeseries(
-            diagnostic_name=self.diagnostic_name,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            region=self.region,
-            loglevel=loglevel,
-            startdate="19900101",
-            enddate="19911231",  # Extends only at end
-            regrid=self.regrid,
-        )
-        ts_end.retrieve(var=self.var)
-        ts_end.compute(freq="monthly", extend=True)
-        assert len(ts_end.monthly.time) == 24  # 2 years
-
-        # Test extension at both start and end
-        ts_both = Timeseries(
-            diagnostic_name=self.diagnostic_name,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            region=self.region,
-            loglevel=loglevel,
-            startdate="19890101",
-            enddate="19911231",  # Extends both
-            regrid=self.regrid,
-        )
-        ts_both.retrieve(var=self.var)
-        ts_both.compute(freq="monthly", extend=True)
-        assert len(ts_both.monthly.time) == 36  # 3 years
-
-        # Test that retrieve with no data raises ValueError
-        ts_nodata = Timeseries(
-            diagnostic_name=self.diagnostic_name,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            source=self.source,
-            region=self.region,
-            loglevel=loglevel,
-            startdate="19500101",
-            enddate="19500201",
-            regrid=self.regrid,
-        )
-        with pytest.raises(ValueError, match="No data found"):
-            ts_nodata.retrieve(var=self.var)

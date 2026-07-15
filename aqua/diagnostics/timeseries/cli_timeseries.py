@@ -13,9 +13,10 @@ import sys
 
 import pandas as pd
 
-from aqua.diagnostics.base import DiagnosticCLI, round_enddate, round_startdate, template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, load_var_config, round_enddate, round_startdate, template_parse_arguments
 from aqua.diagnostics.timeseries import Gregory, PlotGregory, PlotSeasonalCycles, PlotTimeseries, SeasonalCycles, Timeseries
-from aqua.diagnostics.timeseries.util_cli import load_var_config
+
+_TIMESERIES_FREQ_KEYS = ("hourly", "daily", "monthly", "annual")
 
 
 def parse_arguments(args):
@@ -50,10 +51,15 @@ def main(argv=None):
             diagnostic_name = cli.config_dict["diagnostics"]["timeseries"].get("diagnostic_name", "timeseries")
             center_time = cli.config_dict["diagnostics"]["timeseries"].get("center_time", True)
             exclude_incomplete = cli.config_dict["diagnostics"]["timeseries"].get("exclude_incomplete", True)
-            extend = cli.config_dict["diagnostics"]["timeseries"].get("extend", True)
 
             for var in cli.config_dict["diagnostics"]["timeseries"].get("variables", []):
-                var_config, regions = load_var_config(cli.config_dict, var)
+                var_config, regions = load_var_config(
+                    cli.config_dict,
+                    var,
+                    diagnostic="timeseries",
+                    prepend_global=True,
+                    collapse_freq_keys=_TIMESERIES_FREQ_KEYS,
+                )
                 cli.logger.info(
                     f"Running Timeseries diagnostic for variable {var} with config {var_config} "
                     f"in regions {[region if region else 'global' for region in regions]}"
@@ -74,7 +80,6 @@ def main(argv=None):
                             "rebuild": cli.rebuild,
                             "center_time": center_time,
                             "exclude_incomplete": exclude_incomplete,
-                            "extend": extend,
                         }
 
                         # Initialize a list of len from the number of datasets
@@ -91,9 +96,9 @@ def main(argv=None):
                             )
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
-                        startdate = round_startdate(pd.Timestamp(min(t.plt_startdate for t in ts)))
-                        enddate = round_enddate(pd.Timestamp(max(t.plt_enddate for t in ts)))
-                        cli.logger.info(f"Start date: {startdate}, End date: {enddate}")
+                        startdate = round_startdate(pd.Timestamp(min(t.startdate for t in ts)))
+                        enddate = round_enddate(pd.Timestamp(max(t.enddate for t in ts)))
+                        cli.logger.info(f"Total start date: {startdate}, end date: {enddate}")
 
                         # Initialize a list of len from the number of references
                         if "references" in cli.config_dict:
@@ -124,15 +129,46 @@ def main(argv=None):
                                 f"Plotting Timeseries diagnostic for variable {var} in region "
                                 f"{region if region else 'global'} with formats: {cli.save_format}"
                             )
+
+                            # We populate the ref data with None if any of the reference
+                            # were not successfully run to avoid errors in the plotting function.
+                            if ts_ref and any(t is None for t in ts_ref) or "references" not in cli.config_dict:
+                                # We want to raise a warning only if reference were originally requested.
+                                if ts_ref and any(t is None for t in ts_ref):
+                                    cli.logger.warning(
+                                        f"No reference datasetes were successfully run for variable {var} in region {region if region else 'global'}."  # noqa: E501
+                                    )
+                                ref_monthly_data = None
+                                ref_annual_data = None
+                                std_monthly_data = None
+                                std_annual_data = None
+                            else:
+                                ref_monthly_data = (
+                                    [ts_ref[i].monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                ref_annual_data = (
+                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
+                                )
+                                std_monthly_data = (
+                                    [ts_ref[i].std_monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                std_annual_data = (
+                                    [ts_ref[i].std_annual for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
                                 "annual_data": [t.annual for t in ts],
-                                "ref_monthly_data": [t.monthly for t in ts_ref] if "references" in cli.config_dict else None,
-                                "ref_annual_data": [t.annual for t in ts_ref] if "references" in cli.config_dict else None,
-                                "std_monthly_data": [t.std_monthly for t in ts_ref]
-                                if "references" in cli.config_dict
-                                else None,
-                                "std_annual_data": [t.std_annual for t in ts_ref] if "references" in cli.config_dict else None,
+                                "ref_monthly_data": ref_monthly_data,
+                                "ref_annual_data": ref_annual_data,
+                                "std_monthly_data": std_monthly_data,
+                                "std_annual_data": std_annual_data,
                                 "diagnostic_name": diagnostic_name,
                                 "loglevel": cli.loglevel,
                             }
@@ -158,13 +194,18 @@ def main(argv=None):
                         )
 
             for var in cli.config_dict["diagnostics"]["timeseries"].get("formulae", []):
-                var_config, regions = load_var_config(cli.config_dict, var)
+                var_config, regions = load_var_config(
+                    cli.config_dict,
+                    var,
+                    diagnostic="timeseries",
+                    prepend_global=True,
+                    collapse_freq_keys=_TIMESERIES_FREQ_KEYS,
+                )
                 cli.logger.info(f"Running Timeseries diagnostic for variable {var} with config {var_config}")
 
                 diagnostic_name = cli.config_dict["diagnostics"]["timeseries"].get("diagnostic_name", "timeseries")
                 center_time = cli.config_dict["diagnostics"]["timeseries"].get("center_time", True)
                 exclude_incomplete = cli.config_dict["diagnostics"]["timeseries"].get("exclude_incomplete", True)
-                extend = cli.config_dict["diagnostics"]["timeseries"].get("extend", True)
 
                 for region in regions:
                     try:
@@ -182,7 +223,6 @@ def main(argv=None):
                             "rebuild": cli.rebuild,
                             "center_time": center_time,
                             "exclude_incomplete": exclude_incomplete,
-                            "extend": extend,
                         }
 
                         # Initialize a list of len from the number of datasets
@@ -198,8 +238,8 @@ def main(argv=None):
                             )
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
-                        startdate = pd.Timestamp(min(t.plt_startdate for t in ts))
-                        enddate = pd.Timestamp(max(t.plt_enddate for t in ts))
+                        startdate = pd.Timestamp(min(t.startdate for t in ts))
+                        enddate = pd.Timestamp(max(t.enddate for t in ts))
 
                         # Initialize a list of len from the number of references
                         if "references" in cli.config_dict:
@@ -229,15 +269,46 @@ def main(argv=None):
                                 f"Plotting Timeseries diagnostic for variable {var} in region "
                                 f"{region if region else 'global'} with formats: {cli.save_format}"
                             )
+
+                            # We populate the ref data with None if any of the reference
+                            # were not successfully run to avoid errors in the plotting function.
+                            if ts_ref and any(t is None for t in ts_ref) or "references" not in cli.config_dict:
+                                # We want to raise a warning only if reference were originally requested.
+                                if ts_ref and any(t is None for t in ts_ref):
+                                    cli.logger.warning(
+                                        f"No reference datasetes were successfully run for variable {var} in region {region if region else 'global'}."  # noqa: E501
+                                    )
+                                ref_monthly_data = None
+                                ref_annual_data = None
+                                std_monthly_data = None
+                                std_annual_data = None
+                            else:
+                                ref_monthly_data = (
+                                    [ts_ref[i].monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                ref_annual_data = (
+                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
+                                )
+                                std_monthly_data = (
+                                    [ts_ref[i].std_monthly for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                std_annual_data = (
+                                    [ts_ref[i].std_annual for i in range(len(ts_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
                                 "annual_data": [t.annual for t in ts],
-                                "ref_monthly_data": [t.monthly for t in ts_ref] if "references" in cli.config_dict else None,
-                                "ref_annual_data": [t.annual for t in ts_ref] if "references" in cli.config_dict else None,
-                                "std_monthly_data": [t.std_monthly for t in ts_ref]
-                                if "references" in cli.config_dict
-                                else None,
-                                "std_annual_data": [t.std_annual for t in ts_ref] if "references" in cli.config_dict else None,
+                                "ref_monthly_data": ref_monthly_data,
+                                "ref_annual_data": ref_annual_data,
+                                "std_monthly_data": std_monthly_data,
+                                "std_annual_data": std_annual_data,
                                 "diagnostic_name": diagnostic_name,
                                 "loglevel": cli.loglevel,
                             }
@@ -273,7 +344,12 @@ def main(argv=None):
 
             for var in cli.config_dict["diagnostics"]["seasonalcycles"].get("variables", []):
                 try:
-                    var_config, regions = load_var_config(cli.config_dict, var, diagnostic="seasonalcycles")
+                    var_config, regions = load_var_config(
+                        cli.config_dict,
+                        var,
+                        diagnostic="seasonalcycles",
+                        prepend_global=True,
+                    )
                     cli.logger.info(f"Running SeasonalCycles diagnostic for variable {var} with config {var_config}")
 
                     for region in regions:
@@ -306,8 +382,8 @@ def main(argv=None):
                             )
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
-                        startdate = pd.Timestamp(min(t.plt_startdate for t in ts))
-                        enddate = pd.Timestamp(max(t.plt_enddate for t in ts))
+                        startdate = pd.Timestamp(min(s.startdate for s in sc))
+                        enddate = pd.Timestamp(max(s.enddate for s in sc))
 
                         # Initialize a list of len from the number of references
                         if "references" in cli.config_dict:

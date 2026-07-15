@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line interface for Ocean trends diagnostic.
+"""Command-line interface for Ocean trends diagnostic.
 
 This CLI allows to run the trends, OceanTrends diagnostics.
 Details of the run are defined in a yaml configuration file for a
@@ -19,6 +18,7 @@ def parse_arguments(args):
 
     Args:
         args (list): list of command-line arguments to parse.
+
     """
     parser = argparse.ArgumentParser(description="OceanTrends CLI")
     parser = template_parse_arguments(parser)
@@ -26,6 +26,7 @@ def parse_arguments(args):
 
 
 def main(argv=None):
+    """Run the OceanTrends diagnostic CLI."""
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(args, "ocean3d", "config-ocean3d-en4-trend-drift.yaml", log_name="OceanTrends CLI").prepare()

@@ -343,21 +343,17 @@ class Diagnostic:
 
         return data
 
-    def _get_default_regions_file(self, diagnostic):
+    def _get_default_regions_file(self):
         """
-        Get the default path to the regions file for the given diagnostic.
-
-        Args:
-            diagnostic (str): The diagnostic name. Used for creating the diagnostic file paths.
+        Get the default path to the centralized regions file.
 
         Returns:
-            str: The path to the regions file.
+            str: The path to the regions file under ``<config>/definitions/regions.yaml``.
         """
-        regions_file = ConfigPath().get_config_dir()
-        regions_file = os.path.join(regions_file, "tools", diagnostic, "definitions", "regions.yaml")
+        regions_file = os.path.join(ConfigPath().get_config_dir(), "definitions", "regions.yaml")
         if os.path.exists(regions_file):
             return regions_file
-        raise FileNotFoundError(f"Region file path not found at: {regions_file}")
+        raise FileNotFoundError(f"Regions file path not found at: {regions_file}")
 
     def _read_regions_file(self, regions_file: str):
         """
@@ -367,30 +363,29 @@ class Diagnostic:
             regions_file (str): The path to the regions file.
 
         Returns:
-            dict: A dictionary containing the regions and their properties form parsed YAML file.
+            dict: A dictionary containing the regions and their properties from the parsed YAML file.
         """
         return load_yaml(regions_file)
 
-    def _load_regions_from_file(self, diagnostic: str = None, regions_file_path: str = None) -> dict:
+    def _load_regions_from_file(self, regions_file_path: str = None) -> dict:
         """
         Retrieve the regions dictionary from the specified or default regions file.
 
         Args:
-            diagnostic (str): The diagnostic name.
             regions_file_path (str, optional): Path to a custom regions file.
-                If None, the default path for the diagnostic will be used.
+                If None, the centralized file under ``<config>/definitions/regions.yaml`` is used.
 
         Returns:
-            dict: A dictionary containing the regions and their properties.
+            dict: A dictionary mapping region name to its spec
+                (``{longname, lon_limits, lat_limits}``).
         """
         if regions_file_path is None:
-            regions_file_path = self._get_default_regions_file(diagnostic)
+            regions_file_path = self._get_default_regions_file()
 
-        return self._read_regions_file(regions_file_path)
+        return self._read_regions_file(regions_file_path).get("regions", {}) or {}
 
     def _set_region(
         self,
-        diagnostic: str,
         region: str = None,
         regions_file_path: str = None,
         lon_limits: list = None,
@@ -400,43 +395,42 @@ class Diagnostic:
         Set the region to be used.
 
         Args:
-            diagnostic (str): The diagnostic name. Used for creating the diagnostic file paths.
             region (str): The region to select. This will define the lon and lat limits.
-            regions_file_path (str): The path to the regions file. If None, the default regions file will be used.
+            regions_file_path (str): The path to the regions file. If None, the centralized
+                regions file will be used.
             lon_limits (list): The longitude limits to be used. Overridden by region.
             lat_limits (list): The latitude limits to be used. Overridden by region.
 
         Returns:
-            region (str): The region name to be used.
+            region (str): The region long name to be used (or None if no region was provided).
             lon_limits (list): The longitude limits to be used.
             lat_limits (list): The latitude limits to be used.
         """
-        if region is not None:
-            regions_file = self._load_regions_from_file(diagnostic, regions_file_path)
+        if region is None:
+            self.logger.info(
+                "No region provided, using lon_limits: %s, lat_limits: %s",
+                lon_limits,
+                lat_limits,
+            )
+            return None, lon_limits, lat_limits
 
-            if region in regions_file["regions"]:
-                lon_limits = regions_file["regions"][region].get("lon_limits", None)
-                lat_limits = regions_file["regions"][region].get("lat_limits", None)
-                region = regions_file["regions"][region].get("longname", region)
-                self.logger.info(f"Region {region} found, using lon: {lon_limits}, lat: {lat_limits}")
-            else:
-                self.logger.error(f"Region {region} not found")
-                raise ValueError(f"Region {region} not found")
-        else:
-            region = None
-            self.logger.info(f"No region provided, using lon_limits: {lon_limits}, lat_limits: {lat_limits}")
+        regions_dict = self._load_regions_from_file(regions_file_path=regions_file_path)
+        if region not in regions_dict:
+            raise ValueError(f"Region '{region}' not found")
+        spec = regions_dict[region]
+        long_name = spec.get("longname", region)
+        lon_limits = spec.get("lon_limits", lon_limits)
+        lat_limits = spec.get("lat_limits", lat_limits)
+        self.logger.info("Region %s found, using lon: %s, lat: %s", long_name, lon_limits, lat_limits)
+        return long_name, lon_limits, lat_limits
 
-        return region, lon_limits, lat_limits
-
-    def select_region(self, data: xr.Dataset, region: str = None, diagnostic: str = None, drop: bool = True, **kwargs):
+    def select_region(self, data: xr.Dataset, region: str = None, drop: bool = True, **kwargs):
         """
         Select a geographic region from the dataset. Used when selection is not on the self.data attribute.
 
         Args:
             data (xarray Dataset or DataArray): The dataset to select the region from.
-            region (str): The region to select.
-            lon_limits (list): The longitude limits to select.
-            lat_limits (list): The latitude limits to select.
+            region (str): The region to select from the centralized regions file.
             drop (bool): Whether to drop coordinates outside the selected region.
             **kwargs: Additional keyword arguments passed to the select_area reader method.
 
@@ -450,9 +444,9 @@ class Diagnostic:
         """
         original_name = data.name if isinstance(data, xr.DataArray) else None
 
-        if region is not None and diagnostic is not None:
-            region, lon_limits, lat_limits = self._set_region(region=region, diagnostic=diagnostic)
-            self.logger.info(f"Applying area selection for region: {region}")
+        if region is not None:
+            region, lon_limits, lat_limits = self._set_region(region=region)
+            self.logger.info("Applying area selection for region: %s", region)
             data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
             data.attrs["AQUA_region"] = region
 
