@@ -45,6 +45,7 @@ class TCs(DetectNodes, StitchNodes):
         engine="fdb",
         nproc=1,
         write_fullres=False,
+        detect=True,
     ):
         """
         Constructor method that initializes the class attributes based on the
@@ -71,6 +72,7 @@ class TCs(DetectNodes, StitchNodes):
             stream_startdate (str): The start date for processing the TCs diagnostic in streaming mode.
             loglevel (str): The logging level for the TCs diagnostic. Default is 'INFO'.
             write_fullres (bool): A flag indicating whether to write full-resolution output files. Default is False.
+            detect (bool): We will run detect, so initialize the catalog. Default is True.
 
         Returns:
             A TCs object
@@ -151,7 +153,8 @@ class TCs(DetectNodes, StitchNodes):
         for path in self.paths:
             os.makedirs(self.paths[path], exist_ok=True)
 
-        self.catalog_init()
+        if detect:    
+            self.catalog_init()
 
     def loop_streaming(self, tdict):
         """
