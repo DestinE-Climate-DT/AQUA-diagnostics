@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.24.0):
 
 Complete list:
 - Global Biases: fix titles and descriptions (#284)
+- Environment LUMI dependencies update (#297)
 - Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)
 - Bug report template update (#283)
 - Upgrade to aqua-core==1.0.0a5, to python <=3.14 and to eccodes<=2.47 (#254)
