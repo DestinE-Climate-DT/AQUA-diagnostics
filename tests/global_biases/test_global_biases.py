@@ -155,9 +155,9 @@ class TestGlobalBiases:
         plotgb = plot_global_biases_instance
         var = test_var
 
-        # Ensure climatology is computed
-        if not hasattr(gb, "climatology"):
-            gb.compute_climatology(var=var, seasonal=True)
+        # Full vertical profile required (due to parallelisation,
+        # earlier tests may have selected a single plev)
+        gb.compute_climatology(var=var, seasonal=True)
 
         plotgb.plot_vertical_bias(data=gb.climatology, data_ref=gb.climatology, var=var, vmin=-0.002, vmax=0.002)
         pdf = os.path.join(module_outdir, "pdf", f"globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.pdf")

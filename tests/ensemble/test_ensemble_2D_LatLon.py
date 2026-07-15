@@ -108,8 +108,8 @@ class TestEnsembleLatLon:
         """Test the statistical correctness of the ensemble."""
         ens = ensemble_latlon_instance
 
-        # Ensure run() has been called (handled by module scope order, but safe to check)
-        if not hasattr(ens, "dataset_mean"):
+        # Ensure run() has been called (tests may run out of order under xdist)
+        if ens.dataset_mean is None or ens.dataset_std is None:
             ens.run()
 
         # test if mean is non-zero and variance is zero (since inputs are identical)
@@ -122,7 +122,7 @@ class TestEnsembleLatLon:
         plot_ens = plot_ensemble_instance
         conf = ensemble_config
 
-        if not hasattr(ens, "dataset_mean"):
+        if ens.dataset_mean is None or ens.dataset_std is None:
             ens.run()
 
         # STD values are zero. Using mean value as std to test implementation visualization
