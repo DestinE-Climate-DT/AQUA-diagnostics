@@ -82,7 +82,7 @@ class TestEnsembleZonal:
         assert zonal_dataset is not None
         assert isinstance(zonal_dataset, xr.Dataset)
 
-    def test_run(self, ensemble_zonal_instance, zonal_config, module_outdir
+    def test_run(self, ensemble_zonal_instance, zonal_config, module_outdir):
         """Test the computation and NetCDF output generation."""
         ens = ensemble_zonal_instance
         conf = zonal_config

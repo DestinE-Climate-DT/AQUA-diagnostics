@@ -19,9 +19,7 @@ pytestmark = [pytest.mark.diagnostics]
 @pytest.fixture(scope="module")
 def boxplots_instance(module_outdir):
     """Create a Boxplots instance."""
-    return Boxplots(
-        catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", outputdir=module_outdir
-    )
+    return Boxplots(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", outputdir=module_outdir)
 
 
 @pytest.fixture(scope="module")
@@ -49,15 +47,11 @@ class TestBoxplots:
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var)
 
-        pdf = os.path.join(
-            module_outdir, "pdf", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf"
-        )
+        pdf = os.path.join(module_outdir, "pdf", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf")
         assert os.path.exists(pdf)
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var, anomalies=True, add_mean_line=True)
-        png = os.path.join(
-            module_outdir, "png", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png"
-        )
+        png = os.path.join(module_outdir, "png", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png")
         assert os.path.exists(png)
 
     def test_run_with_units(self, boxplots_instance):
