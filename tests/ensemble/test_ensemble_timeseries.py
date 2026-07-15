@@ -47,8 +47,7 @@ def ts_dataset(ts_config):
 
 @pytest.fixture(scope="module")
 def ensemble_ts_instance(ts_config, ts_dataset, module_outdir):
-    """Create an EnsembleTimeseries instance."""
-    # Using the same dataset for both monthly and annual as per original test logic
+    """Create an EnsembleTimeseries instance with statistics already computed."""
     ts = EnsembleTimeseries(
         var=ts_config["var"],
         monthly_data=ts_dataset,
@@ -60,6 +59,7 @@ def ensemble_ts_instance(ts_config, ts_dataset, module_outdir):
         ensemble_dimension_name="ensemble",
         outputdir=module_outdir,
     )
+    ts.run()
     return ts
 
 
@@ -88,12 +88,8 @@ class TestEnsembleTimeseries:
         ts = ensemble_ts_instance
         conf = ts_config
 
-        # Execution
-        ts.run()
-
-        # Check attributes exist
-        assert hasattr(ts, "monthly_data_mean")
-        assert hasattr(ts, "annual_data_mean")
+        assert ts.monthly_data_mean is not None
+        assert ts.annual_data_mean is not None
 
         # Construct filenames
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
@@ -114,11 +110,6 @@ class TestEnsembleTimeseries:
         """Test the statistical correctness of the ensemble."""
         ts = ensemble_ts_instance
 
-        # Ensure run() has been called
-        if getattr(ts, "monthly_data_mean", None) is None:
-            ts.run()
-
-        # Test if mean is present
         assert ts.monthly_data_mean is not None
         assert ts.annual_data_mean is not None
 
@@ -131,9 +122,6 @@ class TestEnsembleTimeseries:
         ts = ensemble_ts_instance
         plot_ts = plot_ts_instance
         conf = ts_config
-
-        if getattr(ts, "monthly_data_mean", None) is None:
-            ts.run()
 
         # STD values are zero. Using mean value as std to test visualization pipeline
         plot_arguments = {

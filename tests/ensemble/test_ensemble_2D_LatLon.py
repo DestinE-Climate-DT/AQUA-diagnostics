@@ -47,7 +47,7 @@ def dataset_instance(ensemble_config):
 
 @pytest.fixture(scope="module")
 def ensemble_latlon_instance(ensemble_config, dataset_instance, module_outdir):
-    """Create an EnsembleLatLon instance."""
+    """Create an EnsembleLatLon instance with statistics already computed."""
     ens = EnsembleLatLon(
         var=ensemble_config["var"],
         dataset=dataset_instance,
@@ -58,6 +58,7 @@ def ensemble_latlon_instance(ensemble_config, dataset_instance, module_outdir):
         ensemble_dimension_name="ensemble",
         outputdir=module_outdir,
     )
+    ens.run()
     return ens
 
 
@@ -86,12 +87,8 @@ class TestEnsembleLatLon:
         ens = ensemble_latlon_instance
         conf = ensemble_config
 
-        # execution
-        ens.run()
-
-        # Check attributes
-        assert hasattr(ens, "dataset_mean")
-        assert hasattr(ens, "dataset_std")
+        assert ens.dataset_mean is not None
+        assert ens.dataset_std is not None
 
         # Construct filenames based on the first element of the config lists (as per original logic)
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
@@ -108,11 +105,6 @@ class TestEnsembleLatLon:
         """Test the statistical correctness of the ensemble."""
         ens = ensemble_latlon_instance
 
-        # Ensure run() has been called (tests may run out of order under xdist)
-        if ens.dataset_mean is None or ens.dataset_std is None:
-            ens.run()
-
-        # test if mean is non-zero and variance is zero (since inputs are identical)
         assert ens.dataset_mean is not None
         assert ens.dataset_std.all() == 0
 
@@ -121,9 +113,6 @@ class TestEnsembleLatLon:
         ens = ensemble_latlon_instance
         plot_ens = plot_ensemble_instance
         conf = ensemble_config
-
-        if ens.dataset_mean is None or ens.dataset_std is None:
-            ens.run()
 
         # STD values are zero. Using mean value as std to test implementation visualization
         plot_arguments = {

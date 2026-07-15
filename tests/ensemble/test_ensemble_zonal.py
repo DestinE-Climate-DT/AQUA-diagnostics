@@ -48,7 +48,7 @@ def zonal_dataset(zonal_config):
 
 @pytest.fixture(scope="module")
 def ensemble_zonal_instance(zonal_config, zonal_dataset, module_outdir):
-    """Create an EnsembleZonal instance."""
+    """Create an EnsembleZonal instance with statistics already computed."""
     ens = EnsembleZonal(
         var=zonal_config["var"],
         dataset=zonal_dataset,
@@ -59,6 +59,7 @@ def ensemble_zonal_instance(zonal_config, zonal_dataset, module_outdir):
         ensemble_dimension_name="ensemble",
         outputdir=module_outdir,
     )
+    ens.run()
     return ens
 
 
@@ -87,10 +88,6 @@ class TestEnsembleZonal:
         ens = ensemble_zonal_instance
         conf = zonal_config
 
-        # Execution
-        ens.run()
-
-        # Check computed datasets are available
         assert ens.dataset_mean is not None
         assert ens.dataset_std is not None
 
@@ -109,11 +106,6 @@ class TestEnsembleZonal:
         """Test the statistical correctness of the ensemble."""
         ens = ensemble_zonal_instance
 
-        # Ensure run() has populated computed data
-        if ens.dataset_mean is None or ens.dataset_std is None:
-            ens.run()
-
-        # Test if mean is present and std is zero (identical inputs)
         assert ens.dataset_mean is not None
         assert ens.dataset_std.all() == 0
 
@@ -122,9 +114,6 @@ class TestEnsembleZonal:
         ens = ensemble_zonal_instance
         plot_ens = plot_zonal_instance
         conf = zonal_config
-
-        if ens.dataset_mean is None or ens.dataset_std is None:
-            ens.run()
 
         # STD values are zero. Using mean value as std to test visualization pipeline (consistent with comments)
         plot_arguments = {
