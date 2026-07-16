@@ -46,8 +46,9 @@ def ts_dataset(ts_config):
 
 
 @pytest.fixture(scope="module")
-def ensemble_ts_instance(ts_config, ts_dataset, module_outdir):
+def ensemble_ts_instance(ts_config, ts_dataset, tmp_path_factory):
     """Create an EnsembleTimeseries instance with statistics already computed."""
+    outputdir = str(tmp_path_factory.mktemp("output"))
     ts = EnsembleTimeseries(
         var=ts_config["var"],
         monthly_data=ts_dataset,
@@ -57,14 +58,14 @@ def ensemble_ts_instance(ts_config, ts_dataset, module_outdir):
         exp_list=ts_config["exp_list"],
         source_list=ts_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir=module_outdir,
+        outputdir=outputdir,
     )
     ts.run()
     return ts
 
 
 @pytest.fixture(scope="module")
-def plot_ts_instance(ts_config, module_outdir):
+def plot_ts_instance(ts_config, ensemble_ts_instance):
     """Create a PlotEnsembleTimeseries instance."""
     plot_args = {
         "catalog_list": ts_config["catalog_list"],
@@ -72,7 +73,7 @@ def plot_ts_instance(ts_config, module_outdir):
         "exp_list": ts_config["exp_list"],
         "source_list": ts_config["source_list"],
     }
-    return PlotEnsembleTimeseries(**plot_args, outputdir=module_outdir)
+    return PlotEnsembleTimeseries(**plot_args, outputdir=ensemble_ts_instance.outputdir)
 
 
 class TestEnsembleTimeseries:
@@ -83,10 +84,11 @@ class TestEnsembleTimeseries:
         assert ts_dataset is not None
         assert isinstance(ts_dataset, xr.Dataset)
 
-    def test_run(self, ensemble_ts_instance, ts_config, module_outdir):
+    def test_run(self, ensemble_ts_instance, ts_config):
         """Test the computation and NetCDF output generation."""
         ts = ensemble_ts_instance
         conf = ts_config
+        outdir = ts.outputdir
 
         assert ts.monthly_data_mean is not None
         assert ts.annual_data_mean is not None
@@ -97,12 +99,12 @@ class TestEnsembleTimeseries:
 
         # Check NetCDF outputs (Monthly and Annual)
         nc_monthly = os.path.join(
-            module_outdir, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc"
+            outdir, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc"
         )
         assert os.path.exists(nc_monthly)
 
         nc_annual = os.path.join(
-            module_outdir, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc"
+            outdir, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc"
         )
         assert os.path.exists(nc_annual)
 
@@ -117,11 +119,12 @@ class TestEnsembleTimeseries:
         assert ts.monthly_data_std.values.all() == 0
         assert ts.annual_data_std.values.all() == 0
 
-    def test_plotting(self, ensemble_ts_instance, plot_ts_instance, ts_config, module_outdir):
+    def test_plotting(self, ensemble_ts_instance, plot_ts_instance, ts_config):
         """Test the plotting functionality."""
         ts = ensemble_ts_instance
         plot_ts = plot_ts_instance
         conf = ts_config
+        outdir = ts.outputdir
 
         # STD values are zero. Using mean value as std to test visualization pipeline
         plot_arguments = {
@@ -151,8 +154,8 @@ class TestEnsembleTimeseries:
         var = conf["var"]
 
         # Check Output Files
-        png_file = os.path.join(module_outdir, "png", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.png")
+        png_file = os.path.join(outdir, "png", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.png")
         assert os.path.exists(png_file)
 
-        pdf_file = os.path.join(module_outdir, "pdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
+        pdf_file = os.path.join(outdir, "pdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
         assert os.path.exists(pdf_file)

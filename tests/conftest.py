@@ -4,47 +4,41 @@ These fixtures use scope="session" to retrieve data once and share across all te
 Reference: https://docs.pytest.org/en/stable/reference/fixtures.html
 """
 
+import os
+import shutil
+import tempfile
+
 import matplotlib
 import pytest
 
 from aqua import Reader  # type: ignore
 from tests.shared_constants import LOGLEVEL
-from tests.support.tempdirs import cleanup_worker_tmpdir, configure_worker_tmpdir
 
 matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 
 plt.ioff()  # Turn off interactive mode explicitly
 
+_WORKER_TMPDIR_ATTR = "_worker_tmpdir"
 
-# ======================================================================
-# Per-worker OS temp directory (pytest-xdist)
-# ======================================================================
+
 def pytest_configure(config):
-    """Set per-worker TMPDIR to avoid CDO/temp contention in parallel runs."""
-    configure_worker_tmpdir(config)
+    """Set per-worker TMPDIR to avoid CDO/temp contention under pytest-xdist."""
+    workerinput = getattr(config, "workerinput", None)
+    if workerinput is None:
+        return
+
+    worker_id = workerinput.get("workerid", "master")
+    worker_tmpdir = tempfile.mkdtemp(prefix=f"aqua_diag_pytest_{worker_id}_")
+    os.environ["TMPDIR"] = worker_tmpdir
+    setattr(config, _WORKER_TMPDIR_ATTR, worker_tmpdir)
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """Remove per-worker TMPDIR after the worker session ends."""
-    cleanup_worker_tmpdir(session)
-
-
-# ======================================================================
-# Diagnostic output directories (pytest temp, xdist-safe)
-# ======================================================================
-@pytest.fixture
-def diag_outdir(tmp_path):
-    """Isolated output directory for a single test."""
-    output_dir = tmp_path / "output"
-    output_dir.mkdir()
-    return str(output_dir)
-
-
-@pytest.fixture(scope="module")
-def module_outdir(tmp_path_factory):
-    """Shared output directory for module-scoped diagnostic tests."""
-    return str(tmp_path_factory.mktemp("diagnostic_output"))
+    """Remove the per-worker TMPDIR created in pytest_configure."""
+    worker_tmpdir = getattr(session.config, _WORKER_TMPDIR_ATTR, None)
+    if worker_tmpdir:
+        shutil.rmtree(worker_tmpdir, ignore_errors=True)
 
 
 # ======================================================================

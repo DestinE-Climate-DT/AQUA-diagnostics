@@ -17,21 +17,22 @@ pytestmark = [pytest.mark.diagnostics]
 
 # Common fixtures
 @pytest.fixture(scope="module")
-def boxplots_instance(module_outdir):
+def boxplots_instance(tmp_path_factory):
     """Create a Boxplots instance."""
-    return Boxplots(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", outputdir=module_outdir)
+    outputdir = str(tmp_path_factory.mktemp("output"))
+    return Boxplots(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", outputdir=outputdir)
 
 
 @pytest.fixture(scope="module")
-def plot_boxplots_instance(module_outdir):
+def plot_boxplots_instance(boxplots_instance):
     """Create a PlotBoxplots instance."""
-    return PlotBoxplots(diagnostic="test", dpi=DPI, outputdir=module_outdir)
+    return PlotBoxplots(diagnostic="test", dpi=DPI, outputdir=boxplots_instance.outputdir)
 
 
 class TestBoxplots:
     """Test suite for Boxplots diagnostic."""
 
-    def test_run_basic(self, boxplots_instance, plot_boxplots_instance, module_outdir):
+    def test_run_basic(self, boxplots_instance, plot_boxplots_instance):
         """Test basic boxplots run."""
         bp = boxplots_instance
         plotbp = plot_boxplots_instance
@@ -42,16 +43,17 @@ class TestBoxplots:
         assert isinstance(bp.fldmeans, xr.Dataset)
         assert all(v in bp.fldmeans for v in var)
 
-        nc = os.path.join(module_outdir, "netcdf", "boxplots.boxplot.ci.ERA5.era5-hpz3.r1.tnlwrf_tnswrf.nc")
+        outdir = boxplots_instance.outputdir
+        nc = os.path.join(outdir, "netcdf", "boxplots.boxplot.ci.ERA5.era5-hpz3.r1.tnlwrf_tnswrf.nc")
         assert os.path.exists(nc)
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var)
 
-        pdf = os.path.join(module_outdir, "pdf", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf")
+        pdf = os.path.join(outdir, "pdf", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.pdf")
         assert os.path.exists(pdf)
 
         plotbp.plot_boxplots(data=bp.fldmeans, data_ref=bp.fldmeans, var=var, anomalies=True, add_mean_line=True)
-        png = os.path.join(module_outdir, "png", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png")
+        png = os.path.join(outdir, "png", "test.boxplot.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.tnlwrf_tnswrf.png")
         assert os.path.exists(png)
 
     def test_run_with_units(self, boxplots_instance):

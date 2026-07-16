@@ -245,7 +245,7 @@ class TestPlotSeaIce:
         assert "png" in formats
         assert "pdf" in formats
 
-    def test_plot_saves_outputs(self, diag_outdir):
+    def test_plot_saves_outputs(self, tmp_path):
         """Test that plotting saves output files."""
         psi = PlotSeaIce(
             monthly_models=self.siext,
@@ -257,13 +257,13 @@ class TestPlotSeaIce:
             catalog=self.catalog,
             loglevel=self.loglevel,
             dpi=DPI,
-            outputdir=diag_outdir,
+            outputdir=str(tmp_path),
         )
 
         psi.plot_seaice(plot_type="timeseries", save_format=["png", "pdf"])
 
-        png_files = glob.glob(os.path.join(diag_outdir, "**/*.png"), recursive=True)
-        pdf_files = glob.glob(os.path.join(diag_outdir, "**/*.pdf"), recursive=True)
+        png_files = glob.glob(os.path.join(str(tmp_path), "**/*.png"), recursive=True)
+        pdf_files = glob.glob(os.path.join(str(tmp_path), "**/*.pdf"), recursive=True)
 
         assert len(png_files) > 0, "No PNG file saved."
         assert len(pdf_files) > 0, "No PDF file saved."
