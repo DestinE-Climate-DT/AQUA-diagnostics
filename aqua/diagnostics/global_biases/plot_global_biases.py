@@ -162,15 +162,9 @@ class PlotGlobalBiases:
         # Number of stipples that will actually be plotted
         n_stipples = np.count_nonzero(mask_to_plot.values)
 
-        self.logger.debug(
-            f"Stippling: density={stipple_density}, plotted points={n_stipples}"
-        )
+        self.logger.debug(f"Stippling: density={stipple_density}, plotted points={n_stipples}")
 
-        self.logger.debug(
-            f"Subsampled grid: {mask_sub.shape}, "
-            f"cells={mask_sub.size}, "
-            f"significant={mask_to_plot.sum().item()}"
-        )
+        self.logger.debug(f"Subsampled grid: {mask_sub.shape}, cells={mask_sub.size}, significant={mask_to_plot.sum().item()}")
 
         # Plot stippling using a scatter plot:
         # dots are placed only at grid points where mask_to_plot is True
@@ -300,7 +294,8 @@ class PlotGlobalBiases:
             significance_alpha (float, optional): Significance level for the t-test. Default is 0.05.
             stipple_density (int, optional): Subsampling factor for stippling. If None, computed adaptively.
             stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
-            target_spacing_deg (float, optional): Desired approximate spacing in degrees between plotted stipples when stipple_density is None. Default is 2.0.
+            target_spacing_deg (float, optional): Desired approximate spacing in degrees
+                                                  between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
         """
         self.logger.info("Plotting global biases.")

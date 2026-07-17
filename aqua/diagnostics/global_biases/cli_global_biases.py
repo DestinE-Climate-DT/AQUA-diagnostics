@@ -172,7 +172,7 @@ def main(argv=None):
                     significance_alpha=significance_alpha,
                     stipple_density=stipple_density,
                     stipple_size=stipple_size,
-                    target_spacing_deg=target_spacing_deg
+                    target_spacing_deg=target_spacing_deg,
                 )
 
                 if seasons:
