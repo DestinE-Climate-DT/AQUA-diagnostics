@@ -1,11 +1,9 @@
-import xarray as xr
-
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic
 
-xr.set_options(keep_attrs=True)
+SEASONS = ["DJF", "MAM", "JJA", "SON"]
 
 
 class LatLonProfiles(Diagnostic):
@@ -213,9 +211,8 @@ class LatLonProfiles(Diagnostic):
             seasonal_std = monthly_data.groupby("time.season").std("time")
 
             # Convert to list [DJF, MAM, JJA, SON]
-            seasons = ["DJF", "MAM", "JJA", "SON"]
             seasonal_std_list = []
-            for season in seasons:
+            for season in SEASONS:
                 season_data = seasonal_std.sel(season=season)
                 season_data.attrs["AQUA_std_startdate"] = time_to_string(self.std_startdate)
                 season_data.attrs["AQUA_std_enddate"] = time_to_string(self.std_enddate)
@@ -260,15 +257,14 @@ class LatLonProfiles(Diagnostic):
         diagnostic_product = f"{self.mean_type}_profile"
 
         if freq == "seasonal":
-            seasons = ["DJF", "MAM", "JJA", "SON"]
             for i, season_data in enumerate(data):
                 var = getattr(season_data, "standard_name", "unknown")
 
-                extra_keys = {"freq": freq, "season": seasons[i], "var": var}
+                extra_keys = {"freq": freq, "season": SEASONS[i], "var": var}
                 if self.region is not None:
                     extra_keys["region"] = self.region
 
-                self.logger.info("Saving %s data for %s to netcdf in %s", seasons[i], diagnostic_product, outputdir)
+                self.logger.info("Saving %s data for %s to netcdf in %s", SEASONS[i], diagnostic_product, outputdir)
                 super().save_netcdf(
                     data=season_data,
                     diagnostic=self.diagnostic_name,
@@ -297,10 +293,9 @@ class LatLonProfiles(Diagnostic):
         if data_std is not None:
             if freq == "seasonal":
                 # Seasonal std data: always has 4 seasons (DJF, MAM, JJA, SON)
-                seasons = ["DJF", "MAM", "JJA", "SON"]
                 for i, std_data in enumerate(data_std):
                     var = getattr(std_data, "standard_name", "unknown")
-                    extra_keys = {"freq": freq, "season": seasons[i], "std": "std", "var": var}
+                    extra_keys = {"freq": freq, "season": SEASONS[i], "std": "std", "var": var}
                     if self.region is not None:
                         extra_keys["region"] = self.region
 
@@ -357,9 +352,8 @@ class LatLonProfiles(Diagnostic):
                 data, freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time
             )
             seasonal_dataset = monthly_data.groupby("time.season").mean("time")
-            seasons = ["DJF", "MAM", "JJA", "SON"]
             seasonal_data = []
-            for season in seasons:
+            for season in SEASONS:
                 season_data = seasonal_dataset.sel(season=season)
                 if self.region is not None:
                     season_data.attrs["AQUA_region"] = self.region
