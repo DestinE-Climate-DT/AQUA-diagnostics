@@ -94,12 +94,13 @@ The basic structure of the analysis is the following:
     pg.plot_bias(data=biases_ifs_nemo.climatology, data_ref=biases_era5.climatology, var='q', plev=18000,
                  area=biases_ifs_nemo.climatology['cell_area'], show_stats=True,
 
-                # Statistical test options
-                show_significance = True,             # Enable significance stippling
-                significance_alpha = 0.05,            # 95% confidence level
-                stipple_density = 3,                  # Stippling density (higher = more sparse)
-                stipple_size = 0.5,                   # Size of stipple dots
-                invert_stippling = False,             # False = stipple where differences ARE significant
+                # Statistical significance options
+                show_significance=True,           # Enable significance stippling
+                significance_alpha=0.05,          # 95% confidence level
+                stipple_density=None,             # If None, computed adaptively based on grid resolution
+                target_stipple_points=1000,       # Target number of stipple points (used when stipple_density is None)
+                stipple_size=0.5,                 # Size of stipple dots
+                invert_stippling=False,           # False = stipple where differences ARE significant
     )
 
 .. note::
@@ -176,20 +177,26 @@ Here we describe only the specific settings for the global biases diagnostic.
 
 * ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.
 * ``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
-* ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant, based on a two-sample t-test (``significance_alpha`` defines the confidence level for the test, e.g., 0.05 for 95% confidence).
+* ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant,
+  based on a two-sample Welch t-test (``significance_alpha`` defines the confidence level, e.g., 0.05 for 95% confidence).
+  The stippling density can be set explicitly via ``stipple_density``, or left unset to trigger an adaptive mode
+  that automatically computes the subsampling factor based on the grid size and ``target_stipple_points`` (default: 1000).
+  This ensures readable stippling across different resolutions, from coarse grids such as r100 to high-resolution ones such as hpz10.
 
 The default parameters are used if not specified for a specific variable.
 Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
 
 .. code-block:: yaml
 
-    plot_params:
+plot_params:
         default:
             projection: 'robinson'
             projection_params: {}
             show_stats: true
-            show_significance: true    # Enable significance stippling
-            significance_alpha: 0.05  # 95% confidence level
+            show_significance: true       # Enable significance stippling
+            significance_alpha: 0.05      # 95% confidence level
+            stipple_density: null         # If null, computed adaptively
+            target_stipple_points: 1000   # Target stipple points for adaptive density
         2t:
             cmap: 'RdBu_r'
             vmin: -15
