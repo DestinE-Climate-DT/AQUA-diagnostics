@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.24.0):
 
 Complete list:
 - Ocean3d: set `vert_coord` to `depth` in stratification/trends/drift configs (#293)
+- CI/CD: improve temporary folders handling (#302)
 - LatLonProfiles: seasonal profiles computation fix (#288)
 - Environment LUMI dependencies update (#297)
 - Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)

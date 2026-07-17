@@ -30,12 +30,6 @@ def zonal_config():
     }
 
 
-@pytest.fixture
-def tmp_path_str():
-    """Provide consistent tmp_path as string."""
-    return "./"
-
-
 @pytest.fixture(scope="module")
 def zonal_dataset(zonal_config):
     """Retrieve and merge data once for the module."""
@@ -53,8 +47,9 @@ def zonal_dataset(zonal_config):
 
 
 @pytest.fixture(scope="module")
-def ensemble_zonal_instance(zonal_config, zonal_dataset):
-    """Create an EnsembleZonal instance."""
+def ensemble_zonal_instance(zonal_config, zonal_dataset, tmp_path_factory):
+    """Create an EnsembleZonal instance with statistics already computed."""
+    outputdir = str(tmp_path_factory.mktemp("output"))
     ens = EnsembleZonal(
         var=zonal_config["var"],
         dataset=zonal_dataset,
@@ -63,13 +58,14 @@ def ensemble_zonal_instance(zonal_config, zonal_dataset):
         exp_list=zonal_config["exp_list"],
         source_list=zonal_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir="./",
+        outputdir=outputdir,
     )
+    ens.run()
     return ens
 
 
 @pytest.fixture(scope="module")
-def plot_zonal_instance(zonal_config):
+def plot_zonal_instance(zonal_config, ensemble_zonal_instance):
     """Create a PlotEnsembleZonal instance."""
     plot_args = {
         "catalog_list": zonal_config["catalog_list"],
@@ -77,7 +73,7 @@ def plot_zonal_instance(zonal_config):
         "exp_list": zonal_config["exp_list"],
         "source_list": zonal_config["source_list"],
     }
-    return PlotEnsembleZonal(**plot_args, outputdir="./")
+    return PlotEnsembleZonal(**plot_args, outputdir=ensemble_zonal_instance.outputdir)
 
 
 class TestEnsembleZonal:
@@ -88,15 +84,12 @@ class TestEnsembleZonal:
         assert zonal_dataset is not None
         assert isinstance(zonal_dataset, xr.Dataset)
 
-    def test_run(self, ensemble_zonal_instance, zonal_config, tmp_path_str):
+    def test_run(self, ensemble_zonal_instance, zonal_config):
         """Test the computation and NetCDF output generation."""
         ens = ensemble_zonal_instance
         conf = zonal_config
+        outdir = ens.outputdir
 
-        # Execution
-        ens.run()
-
-        # Check computed datasets are available
         assert ens.dataset_mean is not None
         assert ens.dataset_std is not None
 
@@ -105,32 +98,25 @@ class TestEnsembleZonal:
         var = conf["var"]
 
         # Check NetCDF outputs
-        nc_mean = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
+        nc_mean = os.path.join(outdir, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
         assert os.path.exists(nc_mean)
 
-        nc_std = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.nc")
+        nc_std = os.path.join(outdir, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.nc")
         assert os.path.exists(nc_std)
 
     def test_statistics(self, ensemble_zonal_instance):
         """Test the statistical correctness of the ensemble."""
         ens = ensemble_zonal_instance
 
-        # Ensure run() has populated computed data
-        if ens.dataset_mean is None or ens.dataset_std is None:
-            ens.run()
-
-        # Test if mean is present and std is zero (identical inputs)
         assert ens.dataset_mean is not None
         assert ens.dataset_std.all() == 0
 
-    def test_plotting(self, ensemble_zonal_instance, plot_zonal_instance, zonal_config, tmp_path_str):
+    def test_plotting(self, ensemble_zonal_instance, plot_zonal_instance, zonal_config):
         """Test the plotting functionality."""
         ens = ensemble_zonal_instance
         plot_ens = plot_zonal_instance
         conf = zonal_config
-
-        if ens.dataset_mean is None or ens.dataset_std is None:
-            ens.run()
+        outdir = ens.outputdir
 
         # STD values are zero. Using mean value as std to test visualization pipeline (consistent with comments)
         plot_arguments = {
@@ -153,14 +139,14 @@ class TestEnsembleZonal:
         var = conf["var"]
 
         # Check Output Files
-        png_mean = os.path.join(tmp_path_str, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.png")
+        png_mean = os.path.join(outdir, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.png")
         assert os.path.exists(png_mean)
 
-        png_std = os.path.join(tmp_path_str, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.png")
+        png_std = os.path.join(outdir, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.png")
         assert os.path.exists(png_std)
 
-        pdf_mean = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
+        pdf_mean = os.path.join(outdir, "pdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
         assert os.path.exists(pdf_mean)
 
-        pdf_std = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.pdf")
+        pdf_std = os.path.join(outdir, "pdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.pdf")
         assert os.path.exists(pdf_std)
