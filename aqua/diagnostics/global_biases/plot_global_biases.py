@@ -102,7 +102,16 @@ class PlotGlobalBiases:
         return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
     def _add_significance_stippling(
-        self, ax, significance_mask, lat, lon, stipple_density=3, stipple_size=0.5, stipple_color="black", invert_mask=False
+        self,
+        ax,
+        significance_mask,
+        lat,
+        lon,
+        stipple_density=None,
+        target_stipple_points=1000,
+        stipple_size=0.5,
+        stipple_color="black",
+        invert_mask=False,
     ):
         """
         Add stippling to indicate statistical significance on a map.
@@ -110,16 +119,27 @@ class PlotGlobalBiases:
         The function subsamples the significance mask to avoid overcrowding
         and plots small dots (stipples) at grid points where the mask is True.
         Args:
-        ax (matplotlib.axes.Axes): The axes to plot on.
-        significance_mask (xarray.DataArray): Boolean mask indicating significant points.
-        lat (xarray.DataArray): Latitude coordinates.
-        lon (xarray.DataArray): Longitude coordinates.
-        stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point). Default is 3.
-        stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
-        stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
-        invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
-            Default is False (stippling where significant).
+            ax (matplotlib.axes.Axes): The axes to plot on.
+            significance_mask (xarray.DataArray): Boolean mask indicating significant points.
+            lat (xarray.DataArray): Latitude coordinates.
+            lon (xarray.DataArray): Longitude coordinates.
+            stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point).
+                If None, an adaptive value is computed based on target_stipple_points.
+            target_stipple_points (int, optional): Target number of stipple points when stipple_density is None.
+                Default is 1000.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
+            stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
+            invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
+                Default is False (stippling where significant).
         """
+        if stipple_density is None:
+            n_lat_full = len(lat)
+            n_lon_full = len(lon)
+            stipple_density = max(1, int(np.sqrt((n_lat_full * n_lon_full) / target_stipple_points)))
+            self.logger.debug(
+                f"Adaptive stipple_density={stipple_density} computed for grid {n_lat_full}x{n_lon_full} "
+                f"(target_stipple_points={target_stipple_points})."
+            )
 
         # Subsample the significance mask along latitude and longitude
         # (e.g. every Nth grid point) to control stippling density
@@ -240,8 +260,9 @@ class PlotGlobalBiases:
         data_ref_timeseries=None,
         show_significance=False,
         significance_alpha=0.05,
-        stipple_density=3,
+        stipple_density=None,
         stipple_size=0.5,
+        target_stipple_points=1000,
         invert_stippling=False,
     ):
         """
@@ -259,6 +280,15 @@ class PlotGlobalBiases:
             cbar_label (str, optional): Label for the colorbar.
             area (xr.DataArray, optional): Grid cell areas for computing weighted statistics.
             show_stats (bool, optional): Whether to show statistical information on the plot.
+            data_timeseries (xr.Dataset, optional): Model dataset with time dimension, used for significance testing.
+            data_ref_timeseries (xr.Dataset, optional): Reference dataset with time dimension, used for significance testing.
+            show_significance (bool, optional): Whether to overlay significance stippling on the plot. Default is False.
+            significance_alpha (float, optional): Significance level for the t-test. Default is 0.05.
+            stipple_density (int, optional): Subsampling factor for stippling. If None, computed adaptively.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
+            target_stipple_points (int, optional): Target number of stipple points when stipple_density is None.
+                Default is 1000.
+            invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
         """
         self.logger.info("Plotting global biases.")
 
@@ -329,6 +359,7 @@ class PlotGlobalBiases:
                 lat,
                 lon,
                 stipple_density=stipple_density,
+                target_stipple_points=target_stipple_points,
                 stipple_size=stipple_size,
                 invert_mask=invert_stippling,
             )

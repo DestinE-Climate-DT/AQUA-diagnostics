@@ -74,10 +74,13 @@ class StatGlobalBiases:
         return stats
 
     def compute_yearly_temporal_means(self, data: xr.Dataset, var: str) -> xr.DataArray:
-        """Compute yearly temporal means for a given variable.
+        """
+        Compute yearly temporal means for a given variable.
+
         Args:
             data (xr.Dataset): Input dataset with time dimension.
             var (str): Variable name to compute means for.
+
         Returns:
             xr.DataArray: Yearly temporal means of the variable.
         """
@@ -91,11 +94,14 @@ class StatGlobalBiases:
         return yearly_means[var]
 
     def ttest_at_grid_point(self, model_vals, ref_vals, min_samples: int = 3):
-        """Perform t-test at a single grid point.
+        """
+        Perform t-test at a single grid point.
+
         Args:
             model_vals (np.ndarray): 1D array of model values at a grid point.
             ref_vals (np.ndarray): 1D array of reference values at the same grid point.
             min_samples (int): Minimum number of samples required to perform the t-test. Default is 3.
+
         Returns:
             float: p-value from the t-test.
         """

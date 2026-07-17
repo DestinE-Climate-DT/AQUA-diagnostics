@@ -25,8 +25,8 @@ references:
     source: 'monthly'
     regrid: 'r100'
     reader_kwargs: null
-    startdate: '{{ radiation.startdate }}'
-    enddate: '{{ radiation.enddate }}'
+    startdate: '{{ radiation_ceres.startdate }}'
+    enddate: '{{ radiation_ceres.enddate }}'
 
 output:
   outputdir: "./"
@@ -48,8 +48,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ radiation.std_startdate }}'
-        std_enddate: '{{ radiation.std_enddate }}'
+        std_startdate: '{{ radiation_ceres.std_startdate }}'
+        std_enddate: '{{ radiation_ceres.std_enddate }}'
       tnlwrf+tnswrf:
         standard_name: "top_net_radiation"
         long_name: "Top net radiation"
@@ -65,8 +65,6 @@ diagnostics:
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: false     # Vertical profile if variable 3d
-        startdate_ref: '{{ radiation.startdate }}'
-        enddate_ref: '{{ radiation.enddate }}'
       tnlwrf+tnswrf:
         short_name: "tnr"
         long_name: "Top net radiation"

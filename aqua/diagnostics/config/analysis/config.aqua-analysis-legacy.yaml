@@ -104,6 +104,11 @@ diagnostics:
   ocean2d:
     biases:
       config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
+    timeseries:
+      config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
+    lat_lon_profiles:
+      config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
+
 
   ocean3d-part1:
     trends:

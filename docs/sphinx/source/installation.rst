@@ -4,7 +4,7 @@ Installation
 ============
 
 In this section we will provide a step-by-step guide to install the Python package ``aqua-diagnostics``.
-AQUA-diagnostics is developed and tested with Python 3.12 and it supports Python 3.9 or later (with the exclusions of 3.13).
+AQUA-diagnostics is developed and tested with Python 3.14 and it supports Python 3.10,<3.15.
 
 AQUA-diagnostics extends the AQUA-core package (https://github.com/DestinE-Climate-DT/AQUA), which provides
 the core functionalities required for running diagnostics. When you install AQUA-diagnostics, AQUA-core
@@ -29,10 +29,10 @@ This can be achieved with:
 
 .. code-block:: bash
 
-    mamba create -n aquarium -c conda-forge python=3.12 cdo eccodes=2.41.0 esmpy
+    mamba create -n aquarium -c conda-forge python=3.14 cdo eccodes esmpy
     mamba activate aquarium
     pip install aqua-diagnostics[core]
-
+å
 The same environment is available in the AQUA-diagnostics GitHub repository in the ``environment-pypi.yml`` file.
 
 .. note::
