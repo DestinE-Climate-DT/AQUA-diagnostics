@@ -95,6 +95,17 @@ class DiagnosticCLI:
 
         return self
 
+    def _load_config(self):
+        """Load diagnostic config and merge with CLI args."""
+        loglevel = get_arg(self.args, "loglevel", "WARNING")
+        self.config_dict = load_diagnostic_config(
+            diagnostic=self.diagnostic_name,
+            config=self.args.config,
+            default_config=self.default_config,
+            loglevel=loglevel,
+        )
+        self.config_dict = merge_config_args(config=self.config_dict, args=self.args, loglevel=loglevel)
+
     def _setup_logging(self):
         """Setup logger.
 
@@ -106,17 +117,6 @@ class DiagnosticCLI:
         self.loglevel = get_arg(self.args, "loglevel", config_loglevel or "WARNING")
         self.logger = log_configure(log_level=self.loglevel, log_name=self.log_name)
         self.logger.info("Running %s diagnostic with AQUA version %s", self.diagnostic_name, aqua_version)
-
-    def _load_config(self):
-        """Load diagnostic config and merge with CLI args."""
-        loglevel = self.loglevel or "WARNING"
-        self.config_dict = load_diagnostic_config(
-            diagnostic=self.diagnostic_name,
-            config=self.args.config,
-            default_config=self.default_config,
-            loglevel=loglevel,
-        )
-        self.config_dict = merge_config_args(config=self.config_dict, args=self.args, loglevel=loglevel)
 
     def _extract_options(self):
         """Extract common options from config and args."""
