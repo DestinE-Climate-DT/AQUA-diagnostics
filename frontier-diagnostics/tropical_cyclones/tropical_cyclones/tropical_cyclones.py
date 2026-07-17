@@ -45,6 +45,7 @@ class TCs(DetectNodes, StitchNodes):
         engine="fdb",
         nproc=1,
         write_fullres=False,
+        detect=True,
     ):
         """
         Constructor method that initializes the class attributes based on the
@@ -71,6 +72,7 @@ class TCs(DetectNodes, StitchNodes):
             stream_startdate (str): The start date for processing the TCs diagnostic in streaming mode.
             loglevel (str): The logging level for the TCs diagnostic. Default is 'INFO'.
             write_fullres (bool): A flag indicating whether to write full-resolution output files. Default is False.
+            detect (bool): We will run detect, so initialize the catalog. Default is True.
 
         Returns:
             A TCs object
@@ -105,6 +107,12 @@ class TCs(DetectNodes, StitchNodes):
             self.write_fullres = tdict["detect"].get("write_fullres", False)
             if self.orography:
                 self.orography_file = tdict["orography"]["file_path"]
+           #     import os
+           #     self.orography_file = os.path.join(
+           #        tdict["orography"]["file_path"],
+           #        tdict["orography"]["file_name"]
+           #     )
+                #self.orography_file = tdict["orography"]["file_path"]
                 self.source_oro = tdict["orography"].get("source_oro", None)
                 self.var_oro = tdict["orography"].get("var_oro", None)
                 if not (self.source_oro and self.var_oro) and not self.orography_file:
@@ -145,7 +153,8 @@ class TCs(DetectNodes, StitchNodes):
         for path in self.paths:
             os.makedirs(self.paths[path], exist_ok=True)
 
-        self.catalog_init()
+        if detect:    
+            self.catalog_init()
 
     def loop_streaming(self, tdict):
         """
@@ -296,7 +305,9 @@ class TCs(DetectNodes, StitchNodes):
                 self.orog = self.reader_oro.retrieve(var=self.var_oro).isel(time=0)
                 self.logger.debug("Orography retrieved from catalog source %s", self.source_oro)
             else:
-                self.orog = xr.open_dataset(self.orography_file)
+                self.orog = xr.open_dataset(self.orography_file, engine="netcdf4")
+                self.orog = self.orog.rename({"z": "zs"})
+                #self.orog = xr.open_dataset(self.orography_file)
                 self.logger.debug("Orography retrieved from file %s", self.orography_file)
 
             # in this diagnostic we need orography to be called zs

@@ -1,0 +1,52 @@
+datasets:
+  - model: "ERA5"
+    exp: "era5"
+    source2d: "6hrs"
+    source3d: "6hrs"
+
+# folders for regridded data, temprorary and stored high res data
+output:
+  outputdir: "/work/users/mccorda/tc_analysis_csv/"
+
+paths:
+  tmpdir: "/work/users/mccorda/tc_analysis_csv/tmpdir"
+  fulldir: "/work/users/mccorda/tc_analysis_csv/fulldir"
+  plotdir: "/work/users/mccorda/tc_analysis_csv/Figures/"
+  trackdir: "/work/users/mccorda/tc_analysis_csv/trackdir"  
+
+# log level
+setup:
+  loglevel: 'WARNING'
+
+# grid on which operate
+grids:
+  lowgrid: 'r100'
+  highgrid: 'r025'
+
+# variables to stored
+varlist: ['msl', '10u', '10v', 'tprate']
+
+# temporal definition (date format: YYYYMMDD)
+time: 
+  startdate: '19790101'
+  enddate: '19790105'
+  frequency: '6h'
+
+stream:
+  streamstep: "1D" # n of days for streaming (check reader args options, IMPORTANT: must be specified in days, "D")
+
+# detect nodes options
+detect:
+  boxdim: 10    # dimension of lat/lon box to save data in the vicinity of the TCs centres (in degrees)
+  write_fullres: false  # Option to write zoom-in full resolution data
+
+# stich nodes options
+stitch:
+  n_days_freq: 30 # run stitch nodes (tracks computation) and save tracks every n days
+  n_days_ext: 2  # n of days to extend time boundaries not to miss tracks which may start/end before/after the chosen n of days
+
+# path to orography in case file (in case var is not found in the catalog)
+orography:
+  file_path: "/work/users/mccorda/data/orog_ERA5.nc"
+  #file_name: "orog_ERA5.nc"
+  #unire due righe

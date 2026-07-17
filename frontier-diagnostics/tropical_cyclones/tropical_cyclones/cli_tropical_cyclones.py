@@ -100,6 +100,7 @@ if __name__ == "__main__":
         loglevel=cli.loglevel,
         orography=orography,
         nproc=nproc,
+        detect=run_detect,
     )
 
     cli.logger.info("Starting Tropical Cyclones pipeline")
