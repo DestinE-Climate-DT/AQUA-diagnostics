@@ -84,8 +84,8 @@ class DiagnosticCLI:
         Returns:
             self: For method chaining
         """
-        self._setup_logging()
         self._load_config()
+        self._setup_logging()
         self._extract_options()
 
         # option to override arguments
@@ -96,20 +96,27 @@ class DiagnosticCLI:
         return self
 
     def _setup_logging(self):
-        """Setup logger."""
-        self.loglevel = get_arg(self.args, "loglevel", "WARNING")
+        """Setup logger.
+
+        Precedence: ``--loglevel`` from CLI, then ``setup.loglevel`` from config YAML, then ``WARNING``.
+        """
+        config_loglevel = None
+        if self.config_dict:
+            config_loglevel = self.config_dict.get("setup", {}).get("loglevel")
+        self.loglevel = get_arg(self.args, "loglevel", config_loglevel or "WARNING")
         self.logger = log_configure(log_level=self.loglevel, log_name=self.log_name)
         self.logger.info("Running %s diagnostic with AQUA version %s", self.diagnostic_name, aqua_version)
 
     def _load_config(self):
         """Load diagnostic config and merge with CLI args."""
+        loglevel = self.loglevel or "WARNING"
         self.config_dict = load_diagnostic_config(
             diagnostic=self.diagnostic_name,
             config=self.args.config,
             default_config=self.default_config,
-            loglevel=self.loglevel,
+            loglevel=loglevel,
         )
-        self.config_dict = merge_config_args(config=self.config_dict, args=self.args, loglevel=self.loglevel)
+        self.config_dict = merge_config_args(config=self.config_dict, args=self.args, loglevel=loglevel)
 
     def _extract_options(self):
         """Extract common options from config and args."""

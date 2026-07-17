@@ -9,7 +9,6 @@ import sys
 import pandas as pd
 import xarray as xr
 
-from aqua.core.logger import log_configure
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from tropical_cyclones import TCs
 
@@ -60,10 +59,6 @@ if __name__ == "__main__":
     cli.open_dask_cluster()
 
     config = cli.config_dict
-
-    # loglevel: CLI arg takes precedence, then config, then default WARNING
-    cli.loglevel = args.loglevel or config.get("setup", {}).get("loglevel", "WARNING")
-    cli.logger = log_configure(log_level=cli.loglevel, log_name="Tcs CLI")
 
     cli.logger.info(f"Running {TOOLNAME} diagnostic")
     cli.logger.info("Mode → detect: %s | stitch: %s", run_detect, run_stitch)
