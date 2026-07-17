@@ -20,23 +20,25 @@ pytestmark = [pytest.mark.diagnostics]
 
 # Module-level fixtures
 @pytest.fixture(scope="module")
-def global_biases_instance():
+def global_biases_instance(tmp_path_factory):
     """Create a GlobalBiases instance with pre-fetched data."""
-    gb = GlobalBiases(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", regrid="r100")
+    outputdir = str(tmp_path_factory.mktemp("output"))
+    gb = GlobalBiases(
+        catalog="ci",
+        model="ERA5",
+        exp="era5-hpz3",
+        source="monthly",
+        regrid="r100",
+        outputdir=outputdir,
+    )
     gb.retrieve()
     return gb
 
 
 @pytest.fixture(scope="module")
-def plot_global_biases_instance():
+def plot_global_biases_instance(global_biases_instance):
     """Create a PlotGlobalBiases instance."""
-    return PlotGlobalBiases(dpi=DPI)
-
-
-@pytest.fixture
-def tmp_path_str():
-    """Provide consistent tmp_path as string."""
-    return "./"
+    return PlotGlobalBiases(dpi=DPI, outputdir=global_biases_instance.outputdir)
 
 
 @pytest.fixture
@@ -48,11 +50,12 @@ def test_var():
 class TestGlobalBiases:
     """Test suite for GlobalBiases diagnostic."""
 
-    def test_climatology(self, global_biases_instance, plot_global_biases_instance, tmp_path_str, test_var):
+    def test_climatology(self, global_biases_instance, plot_global_biases_instance, test_var):
 
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
+        outdir = gb.outputdir
 
         gb.compute_climatology(var=var, seasonal=True)
         assert hasattr(gb, "climatology")
@@ -64,35 +67,36 @@ class TestGlobalBiases:
         assert "season" in gb.seasonal_climatology[var].dims
         assert set(gb.seasonal_climatology["season"].values) == {"DJF", "MAM", "JJA", "SON"}
 
-        nc = os.path.join(tmp_path_str, "netcdf", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
+        nc = os.path.join(outdir, "netcdf", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
         assert os.path.exists(nc)
 
-        nc_seasonal = os.path.join(tmp_path_str, "netcdf", f"globalbiases.seasonal_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
+        nc_seasonal = os.path.join(outdir, "netcdf", f"globalbiases.seasonal_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
         assert os.path.exists(nc_seasonal)
 
         plotgb.plot_climatology(data=gb.climatology, var=var, plev=85000)
 
-        pdf = os.path.join(tmp_path_str, "pdf", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.pdf")
+        pdf = os.path.join(outdir, "pdf", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.pdf")
         assert os.path.exists(pdf)
 
-        png = os.path.join(tmp_path_str, "png", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.png")
+        png = os.path.join(outdir, "png", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_bias(self, global_biases_instance, plot_global_biases_instance, tmp_path_str, test_var):
+    def test_bias(self, global_biases_instance, plot_global_biases_instance, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
+        outdir = gb.outputdir
 
         gb.compute_climatology(var=var, seasonal=True, areas=True)
         assert "cell_area" in gb.climatology
 
         plotgb.plot_bias(data=gb.climatology, data_ref=gb.climatology, var=var, plev=85000, show_stats=True)
-        pdf = os.path.join(tmp_path_str, "pdf", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
+        pdf = os.path.join(outdir, "pdf", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(tmp_path_str, "png", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
+        png = os.path.join(outdir, "png", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_stat_global_biases(self, global_biases_instance, tmp_path_str, test_var):
+    def test_stat_global_biases(self, global_biases_instance, test_var):
         gb = global_biases_instance
         var = test_var
         gb.compute_climatology(var=var, areas=True, plev=85000)
@@ -109,10 +113,11 @@ class TestGlobalBiases:
         assert result.dtype == bool
         assert bool(result.all())
 
-    def test_bias_with_stat(self, global_biases_instance, plot_global_biases_instance, tmp_path_str, test_var):
+    def test_bias_with_stat(self, global_biases_instance, plot_global_biases_instance, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
+        outdir = gb.outputdir
 
         gb.compute_climatology(var=var)
         plotgb.plot_bias(
@@ -125,43 +130,41 @@ class TestGlobalBiases:
             show_significance=True,
         )
 
-        pdf = os.path.join(tmp_path_str, "pdf", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
+        pdf = os.path.join(outdir, "pdf", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(tmp_path_str, "png", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
+        png = os.path.join(outdir, "png", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_seasonal_bias(self, global_biases_instance, plot_global_biases_instance, tmp_path_str, test_var):
+    def test_seasonal_bias(self, global_biases_instance, plot_global_biases_instance, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
+        outdir = gb.outputdir
 
         # Ensure seasonal climatology is computed
         if not hasattr(gb, "seasonal_climatology"):
             gb.compute_climatology(var=var, seasonal=True)
 
         plotgb.plot_seasonal_bias(data=gb.seasonal_climatology, data_ref=gb.seasonal_climatology, var=var, plev=85000)
-        pdf = os.path.join(
-            tmp_path_str, "pdf", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf"
-        )
+        pdf = os.path.join(outdir, "pdf", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(
-            tmp_path_str, "png", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png"
-        )
+        png = os.path.join(outdir, "png", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_vertical_bias(self, global_biases_instance, plot_global_biases_instance, tmp_path_str, test_var):
+    def test_vertical_bias(self, global_biases_instance, plot_global_biases_instance, test_var):
         gb = global_biases_instance
         plotgb = plot_global_biases_instance
         var = test_var
+        outdir = gb.outputdir
 
-        # Ensure climatology is computed
-        if not hasattr(gb, "climatology"):
-            gb.compute_climatology(var=var, seasonal=True)
+        # Full vertical profile required (due to parallelisation,
+        # earlier tests may have selected a single plev)
+        gb.compute_climatology(var=var, seasonal=True)
 
         plotgb.plot_vertical_bias(data=gb.climatology, data_ref=gb.climatology, var=var, vmin=-0.002, vmax=0.002)
-        pdf = os.path.join(tmp_path_str, "pdf", f"globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.pdf")
+        pdf = os.path.join(outdir, "pdf", f"globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(tmp_path_str, "png", f"globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.png")
+        png = os.path.join(outdir, "png", f"globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.png")
         assert os.path.exists(png)
 
     def test_plev_selection(self, test_var):
