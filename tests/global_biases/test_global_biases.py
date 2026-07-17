@@ -146,13 +146,9 @@ class TestGlobalBiases:
             gb.compute_climatology(var=var, seasonal=True)
 
         plotgb.plot_seasonal_bias(data=gb.seasonal_climatology, data_ref=gb.seasonal_climatology, var=var, plev=85000)
-        pdf = os.path.join(
-            outdir, "pdf", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf"
-        )
+        pdf = os.path.join(outdir, "pdf", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(
-            outdir, "png", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png"
-        )
+        png = os.path.join(outdir, "png", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
     def test_vertical_bias(self, global_biases_instance, plot_global_biases_instance, test_var):
