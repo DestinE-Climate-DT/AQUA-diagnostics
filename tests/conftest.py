@@ -4,10 +4,6 @@ These fixtures use scope="session" to retrieve data once and share across all te
 Reference: https://docs.pytest.org/en/stable/reference/fixtures.html
 """
 
-import os
-import shutil
-import tempfile
-
 import matplotlib
 import pytest
 
@@ -18,27 +14,6 @@ matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 
 plt.ioff()  # Turn off interactive mode explicitly
-
-_WORKER_TMPDIR_ATTR = "_worker_tmpdir"
-
-
-def pytest_configure(config):
-    """Set per-worker TMPDIR to avoid CDO/temp contention under pytest-xdist."""
-    workerinput = getattr(config, "workerinput", None)
-    if workerinput is None:
-        return
-
-    worker_id = workerinput.get("workerid", "master")
-    worker_tmpdir = tempfile.mkdtemp(prefix=f"aqua_diag_pytest_{worker_id}_")
-    os.environ["TMPDIR"] = worker_tmpdir
-    setattr(config, _WORKER_TMPDIR_ATTR, worker_tmpdir)
-
-
-def pytest_sessionfinish(session, exitstatus):
-    """Remove the per-worker TMPDIR created in pytest_configure."""
-    worker_tmpdir = getattr(session.config, _WORKER_TMPDIR_ATTR, None)
-    if worker_tmpdir:
-        shutil.rmtree(worker_tmpdir, ignore_errors=True)
 
 
 # ======================================================================
