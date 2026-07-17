@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.24.0):
 
 Complete list:
 - Ocean3d: set `vert_coord` to `depth` in stratification/trends/drift configs (#293)
+- LatLonProfiles: seasonal profiles computation fix (#288)
 - Environment LUMI dependencies update (#297)
 - Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)
 - Bug report template update (#283)
@@ -20,7 +21,7 @@ Complete list:
 - Fallback test download from wilma (#269)
 - Jinja templates for configuration files for collections (#230, #270, #271, #281)
 - Histogram: diagnostic updates (#255)
-- Seaice: Port changes from Dashboard v0.19-op  (#190)
+- Seaice: Port changes from Dashboard v0.19-op (#190)
 - ECmean: prevent creation of default empty dirs (#263)
 - Remove `healpy` dependency (#248)
 - Timeseries: backporting of dashboard updates (#250)
