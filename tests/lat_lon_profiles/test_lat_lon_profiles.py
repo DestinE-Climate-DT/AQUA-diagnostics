@@ -31,6 +31,31 @@ class TestLatLonProfilesZonal:
         assert len(files) >= min_files, f"Expected at least {min_files} .nc files in {tmp_path}"
         return files
 
+    def _assert_seasons_are_whole_period_climatologies(self, seasonal, dims):
+        """Check that seasonal[i] is the whole-period climatology of the i-th season of [DJF, MAM, JJA, SON].
+
+        The expected profile of each season is rebuilt independently, pooling every month of that season over
+        every year via select_season, i.e. a different code path from the groupby('time.season') used to compute
+        it. This pins down both the labelling (slot i really is that season) and the averaging window (all years,
+        not just the first one). The season order is spelled out here on purpose, so that reordering the SEASONS
+        constant in the diagnostic cannot keep this test green.
+        """
+        ref = self.diagnostic.reader.fldmean(
+            self.diagnostic.data,
+            lon_limits=self.diagnostic.lon_limits,
+            lat_limits=self.diagnostic.lat_limits,
+            dims=dims,
+        )
+        monthly_ref = self.diagnostic.reader.timmean(ref, freq="monthly", exclude_incomplete=True, center_time=True)
+        for i, season in enumerate(["DJF", "MAM", "JJA", "SON"]):
+            expected = select_season(monthly_ref, season).mean("time")
+            np.testing.assert_allclose(
+                seasonal[i].values,
+                expected.values,
+                rtol=1e-4,
+                err_msg=f"Seasonal slot {i} does not match the '{season}' climatology",
+            )
+
     def test_retrieve_simple_var(self):
         """Test retrieve method with a simple variable"""
         self.diagnostic.retrieve(var="skt")
@@ -65,22 +90,7 @@ class TestLatLonProfilesZonal:
                 assert "AQUA_mean_type" in season_data.attrs
                 assert season_data.attrs["AQUA_mean_type"] == "zonal"
 
-            # Each slot must be the climatology of the CORRECT season
-            ref = self.diagnostic.reader.fldmean(
-                self.diagnostic.data,
-                lon_limits=self.diagnostic.lon_limits,
-                lat_limits=self.diagnostic.lat_limits,
-                dims=["lon"],
-            )
-            monthly_ref = self.diagnostic.reader.timmean(ref, freq="monthly", exclude_incomplete=True, center_time=True)
-            for i, season in enumerate(["DJF", "MAM", "JJA", "SON"]):
-                expected = select_season(monthly_ref, season).mean("time")
-                np.testing.assert_allclose(
-                    data[i].values,
-                    expected.values,
-                    rtol=1e-4,
-                    err_msg=f"Seasonal slot {i} does not match the '{season}' climatology",
-                )
+            self._assert_seasons_are_whole_period_climatologies(data, dims=["lon"])
         else:
             assert isinstance(data, xr.DataArray)
             assert "AQUA_mean_type" in data.attrs
