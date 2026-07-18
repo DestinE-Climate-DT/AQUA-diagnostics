@@ -23,6 +23,7 @@ def test_stratification():
         mld=True,
     )
     assert strat is not None, "strat instance should not be None"
-    # These are the correct expected values, to be uncommented once a new version of AQUA-core with correct fixer is released
+    # Expected values valid with aqua-core >=1.0.0a6, which renames the FESOM/NEMO
+    # vertical coordinate 'level' -> 'depth' (CoordIdentifier NEMO-layers rule).
     assert strat.data["mld"].values == pytest.approx(25.49270658, rel=approx_rel)
-    assert strat.data["rho"].isel(level=1).values == pytest.approx(26.8719114, rel=approx_rel)
+    assert strat.data["rho"].isel({strat.vert_coord: 1}).values == pytest.approx(26.8719114, rel=approx_rel)
