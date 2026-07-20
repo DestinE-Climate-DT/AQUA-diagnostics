@@ -16,7 +16,14 @@ from aqua import __version__ as aquaversion
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import get_arg, lat_to_phrase, pandas_freq_to_string, strlist_to_phrase, xarray_to_pandas_freq
+from aqua.core.util import (
+    get_arg,
+    lat_to_phrase,
+    pandas_freq_to_string,
+    strlist_to_phrase,
+    to_list,
+    xarray_to_pandas_freq,
+)
 from aqua.diagnostics import GlobalMean, PerformanceIndices
 from aqua.diagnostics.base import (
     OutputSaver,
@@ -306,6 +313,15 @@ def main(argv=None):
     config = load_diagnostic_config(
         diagnostic="ecmean", folder="tools", config=None, default_config=ecmean_config.get("config_file"), loglevel=loglevel
     )
+
+    # this prevents ecmean from creating its own dirs
+    config["dirs"]["tab"] = os.path.join(outputdir, "yml")
+    if save_format:
+        config["dirs"]["fig"] = os.path.join(outputdir, to_list(save_format)[0])
+    else:
+        # this will create an empy pdf directory if no figures are produced
+        config["dirs"]["fig"] = os.path.join(outputdir, "pdf")
+
     # this is required to access the predefined areas and masks
     config["dirs"]["exp"] = ecmeandir
     logger.debug("Default config file: %s", config)
@@ -402,7 +418,6 @@ def main(argv=None):
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )
@@ -416,7 +431,6 @@ def main(argv=None):
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )

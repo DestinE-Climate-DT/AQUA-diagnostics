@@ -54,8 +54,9 @@ def main(argv=None):
     # Diagnostic-specific options
     projection = get_arg(args, "proj", "orthographic")
 
-    # Load region dict through dummy method access
-    regions_dict = SeaIce(model="", exp="", source="")._load_regions_from_file(diagnostic="seaice")
+    # Load region definitions from the centralized regions file. The downstream
+    # helpers (filter_region_list, plotting) expect the ``{"regions": {name: spec}}`` shape.
+    regions_dict = {"regions": SeaIce(model="", exp="", source="")._load_regions_from_file()}
 
     regrid = get_arg(args, "regrid", None)  # noqa: F841
 

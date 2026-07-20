@@ -78,6 +78,8 @@ class GlobalBiases(Diagnostic):
         self.startdate = startdate
         self.enddate = enddate
         self.diagnostic = diagnostic
+        self.climatology = None
+        self.seasonal_climatology = None
 
     def _check_data(self, var: str, units: str):
         """
@@ -189,6 +191,7 @@ class GlobalBiases(Diagnostic):
             data=data,
             diagnostic=self.diagnostic,
             diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
             outputdir=self.outputdir,
             create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,

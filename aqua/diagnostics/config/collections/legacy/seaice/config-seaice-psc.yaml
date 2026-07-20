@@ -61,7 +61,7 @@ diagnostics:
     run: true
     # List of methods to plot.
     methods: ["volume"]
-    # List of regions to plot. The default regions are defined in config/diagnostics/seaice
+    # List of regions to plot. The default regions are defined in config/definitions/regions.yaml
     regions: ['arctic','antarctic']
     calc_ref_std: true
     ref_std_freq: 'monthly' # set to 'monthly' 'annual'
