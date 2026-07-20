@@ -1,5 +1,5 @@
 """
-Shared fixtures for AQUA test suite.
+Shared fixtures for AQUA-diagnostics test suite.
 These fixtures use scope="session" to retrieve data once and share across all tests.
 Reference: https://docs.pytest.org/en/stable/reference/fixtures.html
 """
