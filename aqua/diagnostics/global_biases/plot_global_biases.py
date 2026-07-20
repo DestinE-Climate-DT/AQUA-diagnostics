@@ -311,7 +311,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Global bias",
+            diagnostic="Global difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -479,7 +479,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Seasonal bias",
+            diagnostic="Seasonal difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -514,12 +514,11 @@ class PlotGlobalBiases:
         fig = plot_maps(**plot_kwargs)
 
         description = (
-            f"Seasonal climatology of {data[var].attrs.get('long_name', var).lower()}"
+            f"Seasonal differences of {data[var].attrs.get('long_name', var).lower()}"
             f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"for {data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')}, contours) "
-            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data_ref.AQUA_enddate, format='%Y-%m')}, shading)."
+            f"(from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')}) "
+            f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
         )
 
         if self.format_to_save:
@@ -571,7 +570,7 @@ class PlotGlobalBiases:
         realization = get_realizations(data)
 
         title = TitleBuilder(
-            diagnostic="Vertical bias",
+            diagnostic="Vertical difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
