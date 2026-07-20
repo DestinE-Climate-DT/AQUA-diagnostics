@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 Complete list:
+- Global Biases: fix titles and descriptions (#284)
 - CI/CD: improve temporary folders handling (#302)
 - LatLonProfiles: seasonal profiles computation fix (#288)
 - Environment LUMI dependencies update (#297)
