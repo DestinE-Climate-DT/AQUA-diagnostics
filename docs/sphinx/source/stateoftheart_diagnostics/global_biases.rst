@@ -99,7 +99,7 @@ The basic structure of the analysis is the following:
                 significance_alpha=0.05,          # 95% confidence level
                 stipple_density=None,             # If None, computed adaptively based on grid resolution
                 target_spacing_deg=2              # Target spacing in degrees for stippling
-                stipple_size=0.5,                 # Size of stipple dots
+                stipple_size=0.8,                 # Size of stipple dots
                 invert_stippling=False,           # False = stipple where differences ARE significant
     )
 

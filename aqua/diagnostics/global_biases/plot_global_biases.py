@@ -109,7 +109,7 @@ class PlotGlobalBiases:
         lon,
         stipple_density=None,
         target_spacing_deg=2.0,
-        stipple_size=0.5,
+        stipple_size=0.8,
         stipple_color="black",
         invert_mask=False,
     ):
@@ -127,7 +127,7 @@ class PlotGlobalBiases:
                 If None, an adaptive value is computed based on target_spacing_deg and grid resolution.
             target_spacing_deg (float, optional): Desired approximate spacing in degrees between plotted
                 stipples when stipple_density is None. Default is 2.0.
-            stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.8.
             stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
             invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
                 Default is False (stippling where significant).
@@ -269,7 +269,7 @@ class PlotGlobalBiases:
         show_significance=False,
         significance_alpha=0.05,
         stipple_density=None,
-        stipple_size=0.5,
+        stipple_size=0.8,
         target_spacing_deg=2,
         invert_stippling=False,
     ):
@@ -293,7 +293,7 @@ class PlotGlobalBiases:
             show_significance (bool, optional): Whether to overlay significance stippling on the plot. Default is False.
             significance_alpha (float, optional): Significance level for the t-test. Default is 0.05.
             stipple_density (int, optional): Subsampling factor for stippling. If None, computed adaptively.
-            stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.8.
             target_spacing_deg (float, optional): Desired approximate spacing in degrees
                                                   between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
