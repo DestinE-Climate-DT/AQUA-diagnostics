@@ -40,6 +40,7 @@ Complete list:
 - Boxplots: improved descriptions (#193)
 - ECmean: time selection is now allowed (#178)
 - Centralized management of months required thresholds (#162)
+- A single CLI to run ensemble timeseries and ensemble 2D diagnostics (#277)
 
 ## [v0.23.0]
 

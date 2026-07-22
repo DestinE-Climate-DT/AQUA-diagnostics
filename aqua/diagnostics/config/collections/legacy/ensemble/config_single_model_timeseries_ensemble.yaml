@@ -4,10 +4,10 @@
 
 # This yaml file will only have either annual or monthly
 datasets:
-  - catalog: null
-    model: 'IFS-NEMO'
-    exp: 'hist-1990-ensemble'
-    source: 'aqua-atmosphere2d-timeseries'
+  - catalog: 'climatedt-gen2'
+    model: 'IFS-FESOM-10km'
+    exp: 'story-nudging-hist'
+    source: 'aqua-timeseries-timeseries'
     regrid: null
 
 
@@ -29,10 +29,10 @@ diagnostics:
     region: ['global',]
     params:
       default:
-        startdate_data: "1990-01-16"
-        enddate_data: "2014-11-16"
-        startdate_ref: "1990-01-16"
-        enddate_ref: "2014-11-16"
+        startdate_data:
+        enddate_data:
+        startdate_ref:
+        enddate_ref:
     plot_params:
       default:
         title:
