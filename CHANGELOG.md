@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 Complete list:
+- Update image to latest core container (#308)
 - GlobalBiases: add target spacing option for stippling (#305)
 - Global Biases: fix titles and descriptions (#284)
 - CI/CD: improve temporary folders handling (#302)
