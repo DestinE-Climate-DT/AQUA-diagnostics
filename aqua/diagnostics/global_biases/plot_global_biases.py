@@ -108,8 +108,8 @@ class PlotGlobalBiases:
         lat,
         lon,
         stipple_density=None,
-        target_stipple_points=1000,
-        stipple_size=0.5,
+        target_spacing_deg=2.0,
+        stipple_size=0.8,
         stipple_color="black",
         invert_mask=False,
     ):
@@ -124,21 +124,22 @@ class PlotGlobalBiases:
             lat (xarray.DataArray): Latitude coordinates.
             lon (xarray.DataArray): Longitude coordinates.
             stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point).
-                If None, an adaptive value is computed based on target_stipple_points.
-            target_stipple_points (int, optional): Target number of stipple points when stipple_density is None.
-                Default is 1000.
-            stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
+                If None, an adaptive value is computed based on target_spacing_deg and grid resolution.
+            target_spacing_deg (float, optional): Desired approximate spacing in degrees between plotted
+                stipples when stipple_density is None. Default is 2.0.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.8.
             stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
             invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
                 Default is False (stippling where significant).
         """
         if stipple_density is None:
-            n_lat_full = len(lat)
-            n_lon_full = len(lon)
-            stipple_density = max(1, int(np.sqrt((n_lat_full * n_lon_full) / target_stipple_points)))
+            lat_res = abs(float(lat[1] - lat[0]))
+            lon_res = abs(float(lon[1] - lon[0]))
+            grid_res = min(lat_res, lon_res)
+            stipple_density = max(1, round(target_spacing_deg / grid_res))
             self.logger.debug(
-                f"Adaptive stipple_density={stipple_density} computed for grid {n_lat_full}x{n_lon_full} "
-                f"(target_stipple_points={target_stipple_points})."
+                f"Adaptive stipple_density={stipple_density} computed for grid resolution "
+                f"{lat_res:.3f}x{lon_res:.3f} deg (target_spacing_deg={target_spacing_deg})."
             )
 
         # Subsample the significance mask along latitude and longitude
@@ -157,6 +158,13 @@ class PlotGlobalBiases:
         # - False (default): stipple where differences ARE significant
         # - True: stipple where differences are NOT significant
         mask_to_plot = ~mask_sub if invert_mask else mask_sub
+
+        # Number of stipples that will actually be plotted
+        n_stipples = np.count_nonzero(mask_to_plot.values)
+
+        self.logger.debug(f"Stippling: density={stipple_density}, plotted points={n_stipples}")
+
+        self.logger.debug(f"Subsampled grid: {mask_sub.shape}, cells={mask_sub.size}, significant={mask_to_plot.sum().item()}")
 
         # Plot stippling using a scatter plot:
         # dots are placed only at grid points where mask_to_plot is True
@@ -261,8 +269,8 @@ class PlotGlobalBiases:
         show_significance=False,
         significance_alpha=0.05,
         stipple_density=None,
-        stipple_size=0.5,
-        target_stipple_points=1000,
+        stipple_size=0.8,
+        target_spacing_deg=2,
         invert_stippling=False,
     ):
         """
@@ -285,9 +293,9 @@ class PlotGlobalBiases:
             show_significance (bool, optional): Whether to overlay significance stippling on the plot. Default is False.
             significance_alpha (float, optional): Significance level for the t-test. Default is 0.05.
             stipple_density (int, optional): Subsampling factor for stippling. If None, computed adaptively.
-            stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
-            target_stipple_points (int, optional): Target number of stipple points when stipple_density is None.
-                Default is 1000.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.8.
+            target_spacing_deg (float, optional): Desired approximate spacing in degrees
+                                                  between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
         """
         self.logger.info("Plotting global biases.")
@@ -303,7 +311,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Global bias",
+            diagnostic="Global difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -359,7 +367,7 @@ class PlotGlobalBiases:
                 lat,
                 lon,
                 stipple_density=stipple_density,
-                target_stipple_points=target_stipple_points,
+                target_spacing_deg=target_spacing_deg,
                 stipple_size=stipple_size,
                 invert_mask=invert_stippling,
             )
@@ -471,7 +479,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Seasonal bias",
+            diagnostic="Seasonal difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -506,12 +514,11 @@ class PlotGlobalBiases:
         fig = plot_maps(**plot_kwargs)
 
         description = (
-            f"Seasonal climatology of {data[var].attrs.get('long_name', var).lower()}"
+            f"Seasonal differences of {data[var].attrs.get('long_name', var).lower()}"
             f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"for {data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')}, contours) "
-            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data_ref.AQUA_enddate, format='%Y-%m')}, shading)."
+            f"(from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')}) "
+            f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
         )
 
         if self.format_to_save:
@@ -563,7 +570,7 @@ class PlotGlobalBiases:
         realization = get_realizations(data)
 
         title = TitleBuilder(
-            diagnostic="Vertical bias",
+            diagnostic="Vertical difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,

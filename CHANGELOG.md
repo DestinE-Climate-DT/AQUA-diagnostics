@@ -9,6 +9,8 @@ Unreleased in the current development version (target v0.24.0):
 
 Complete list:
 - Fix loglevel setup from YAML in DiagnosticCLI (#304)
+- GlobalBiases: add target spacing option for stippling (#305)
+- Global Biases: fix titles and descriptions (#284)
 - CI/CD: improve temporary folders handling (#302)
 - LatLonProfiles: seasonal profiles computation fix (#288)
 - Environment LUMI dependencies update (#297)
