@@ -10,9 +10,10 @@ channels:
 # please note that some of these dependencies are made explicit on purpose, but are not directly required by conda/mamba
 dependencies:
   # binaries
-  - python>=3.11,<=3.14.5
+  - python>=3.11,<3.15
   - cdo>=2.5.0,<2.6.1 #for smmregrid compatibility
   - eccodes>=2.41.0,<=2.47.0
+  - cartopy>=0.24.1,<=0.25.0
   - cartopy_offlinedata # this is needed for MN5 HPC
   - netcdf4<=1.7.4
   - hdf5<=2.10.0
@@ -34,7 +35,6 @@ dependencies:
   - metpy<=1.7.1
   - numpy<=2.4.1
   - pandas>=3.0.0,<=3.0.3
-  - pyogrio<=0.12.1
   - pypdf<=6.7.5
   - pyyaml<=6.0.3
   - regionmask<=0.13.0
@@ -43,10 +43,8 @@ dependencies:
   - seaborn<=0.13.2
   - smmregrid==0.1.5
   - typeguard<=4.5.1
-  - xarray>=2025.12.0,<=2026.4.0
+  - xarray>=2025.12.0,<=2026.7.0
   - zarr>=3.0,<=3.2.1
-  # HACK to solve regionmask/pyogrio/geopandas issue
-  - libjxl<0.12.0
   # extra required by diagnostics
   - tempest-extremes<=2.3.1 # for TCs
   - xesmf<=0.9.2 # for ECmean
