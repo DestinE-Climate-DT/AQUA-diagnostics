@@ -36,7 +36,7 @@ jobs:
               NEW="${BASH_REMATCH[1]}"
               PKG=$(echo "$NEW" | sed 's/[<>=].*//' | xargs)
 
-              for f in environment-dev.yml cli/lumi-install/environment_lumi.yml; do
+              for f in environment-pypi.yml environment-dev.yml cli/lumi-install/environment_lumi.yml; do
                 sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\([[:space:]].*\)\$|\1${NEW}\2|" "$f"
                 sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\$|\1${NEW}|" "$f"
                 rm -f "$f.bak"
