@@ -7,7 +7,7 @@ on:
         description: 'JSON array of Python versions to test'
         required: true
         type: string
-        default: '["3.12"]'
+        default: '["3.14"]'
       pytest-markers:
         description: 'Pytest markers to run (e.g., "aqua or slow")'
         required: true
@@ -53,8 +53,6 @@ on:
         required: true
       AQUA_DVC_PAT:
         required: true
-      BSC_GITLAB:
-        required: true
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
@@ -92,7 +90,7 @@ jobs:
 
     container:
       # To run FDB tests we need to use a Docker image with FDB installed.
-      image: ghcr.io/destine-climate-dt/ubuntu24.04-fdb5.17.3-eccodes2.41.0-aqua:aqua-base-container
+      image: ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container
       options: --user root
 
     permissions:
@@ -116,13 +114,13 @@ jobs:
       # 1. CHECKOUT REPOSITORIES
       # ========================================
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: AQUA-diagnostics
 
       - name: Checkout aqua-core (cross-check mode)
         if: ${{ inputs.install-mode == 'cross-check' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/AQUA
           ref: ${{ inputs.aqua-core-ref }} # checkout aqua-core at specified ref
@@ -130,14 +128,14 @@ jobs:
           token: ${{ secrets.AQUA_GITHUB_PAT }}
 
       - name: Checkout Climate-DT-catalog repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/Climate-DT-catalog
           path: Climate-DT-catalog
           token: ${{ secrets.AQUA_GITHUB_PAT }}
 
       - name: Checkout DVC repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/aqua-dvc
           path: aqua-dvc
@@ -154,12 +152,6 @@ jobs:
               curl \
               git \
               gpg
-
-      - name: Clone GitLab data-portfolio repository
-        run: |
-          git clone https://oauth2:${{ secrets.BSC_GITLAB }}@gitlab.earth.bsc.es/digital-twins/de_340-3/data-portfolio data-portfolio
-          cd data-portfolio
-          git checkout tags/v2.1.0
 
       # ========================================
       # 3. SETUP PYTHON ENVIRONMENT
@@ -349,6 +341,7 @@ jobs:
           echo "=========================================="
 
           pytest -n 4 \
+            --dist loadgroup \
             --max-worker-restart=3 \
             --cov \
             --junitxml=junit.xml \
@@ -373,6 +366,7 @@ jobs:
           echo "=========================================="
 
           pytest -n 4 \
+            --dist loadgroup \
             --max-worker-restart=3 \
             --junitxml=junit.xml \
             -o junit_family=legacy \

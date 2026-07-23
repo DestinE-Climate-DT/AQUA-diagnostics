@@ -19,7 +19,7 @@ repos:
         name: Check TOML
         description: Checks that TOML files are valid
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.22
     hooks:
     -   id: ruff-check
     -   id: ruff-format

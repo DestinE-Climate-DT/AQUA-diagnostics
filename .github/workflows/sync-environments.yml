@@ -1,0 +1,55 @@
+name: Sync Environment Files
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'environment.yml'
+
+jobs:
+  sync:
+    # Evita loop: non rieseguire se l'ultimo commit è già del bot
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync changed dependencies
+        run: |
+          set -e
+          BASE_SHA=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+
+          CHANGED=$(git diff "$BASE_SHA" HEAD -- environment.yml | grep '^[+-]  -' | grep -v '^[+-][+-][+-]' || true)
+          if [ -z "$CHANGED" ]; then
+            echo "No dependency changes detected"
+            exit 0
+          fi
+
+          echo "$CHANGED" | while IFS= read -r line; do
+            if [[ $line =~ ^\+[[:space:]]*-[[:space:]]*(.+) ]]; then
+              NEW="${BASH_REMATCH[1]}"
+              PKG=$(echo "$NEW" | sed 's/[<>=].*//' | xargs)
+
+              for f in environment-pypi.yml environment-dev.yml cli/lumi-install/environment_lumi.yml; do
+                sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\([[:space:]].*\)\$|\1${NEW}\2|" "$f"
+                sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\$|\1${NEW}|" "$f"
+                rm -f "$f.bak"
+              done
+
+              echo "Updated $PKG to: $NEW"
+            fi
+          done
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add environment-pypi.yml environment-dev.yml cli/lumi-install/environment_lumi.yml
+          git diff --staged --quiet || git commit -m "chore: sync environment files from environment.yml"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}

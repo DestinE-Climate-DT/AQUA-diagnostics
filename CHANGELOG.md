@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 Complete list:
+- Setting up aqua-like fixed environment (#314)
+- Update image to latest core container (#308)
+- Fix loglevel setup from YAML in DiagnosticCLI (#304)
+- GlobalBiases: add target spacing option for stippling (#305)
+- Global Biases: fix titles and descriptions (#284)
+- CI/CD: improve temporary folders handling (#302)
+- LatLonProfiles: seasonal profiles computation fix (#288)
+- Environment LUMI dependencies update (#297)
 - Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)
 - Bug report template update (#283)
 - Upgrade to aqua-core==1.0.0a5, to python <=3.14 and to eccodes<=2.47 (#254)
@@ -18,7 +26,7 @@ Complete list:
 - Fallback test download from wilma (#269)
 - Jinja templates for configuration files for collections (#230, #270, #271, #281)
 - Histogram: diagnostic updates (#255)
-- Seaice: Port changes from Dashboard v0.19-op  (#190)
+- Seaice: Port changes from Dashboard v0.19-op (#190)
 - ECmean: prevent creation of default empty dirs (#263)
 - Remove `healpy` dependency (#248)
 - Timeseries: backporting of dashboard updates (#250)
