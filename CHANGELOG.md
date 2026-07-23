@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 Complete list:
+- Setting up aqua-like fixed environment (#314)
 - Update image to latest core container (#308)
 - Fix loglevel setup from YAML in DiagnosticCLI (#304)
 - GlobalBiases: add target spacing option for stippling (#305)

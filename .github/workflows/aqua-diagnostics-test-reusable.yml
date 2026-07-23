@@ -53,8 +53,6 @@ on:
         required: true
       AQUA_DVC_PAT:
         required: true
-      BSC_GITLAB:
-        required: true
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
@@ -154,12 +152,6 @@ jobs:
               curl \
               git \
               gpg
-
-      - name: Clone GitLab data-portfolio repository
-        run: |
-          git clone https://oauth2:${{ secrets.BSC_GITLAB }}@gitlab.earth.bsc.es/digital-twins/de_340-3/data-portfolio data-portfolio
-          cd data-portfolio
-          git checkout tags/v2.1.0
 
       # ========================================
       # 3. SETUP PYTHON ENVIRONMENT

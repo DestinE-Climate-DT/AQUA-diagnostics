@@ -36,7 +36,7 @@ jobs:
               NEW="${BASH_REMATCH[1]}"
               PKG=$(echo "$NEW" | sed 's/[<>=].*//' | xargs)
 
-              for f in environment-dev.yml cli/lumi-install/environment_lumi.yml; do
+              for f in environment-pypi.yml environment-dev.yml cli/lumi-install/environment_lumi.yml; do
                 sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\([[:space:]].*\)\$|\1${NEW}\2|" "$f"
                 sed -i.bak "s|^\([[:space:]]*-[[:space:]]*\)${PKG}[<>=][^[:space:]#]*\$|\1${NEW}|" "$f"
                 rm -f "$f.bak"
@@ -50,6 +50,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add environment-dev.yml cli/lumi-install/environment_lumi.yml
+          git add environment-pypi.yml environment-dev.yml cli/lumi-install/environment_lumi.yml
           git diff --staged --quiet || git commit -m "chore: sync environment files from environment.yml"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
