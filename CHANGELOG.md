@@ -10,6 +10,8 @@ Unreleased in the current development version (target v0.25.0):
 ## [v0.24.0]
 
 Complete list:
+- Update image to latest core container (#308)
+- Fix loglevel setup from YAML in DiagnosticCLI (#304)
 - GlobalBiases: add target spacing option for stippling (#305)
 - Global Biases: fix titles and descriptions (#284)
 - CI/CD: improve temporary folders handling (#302)
