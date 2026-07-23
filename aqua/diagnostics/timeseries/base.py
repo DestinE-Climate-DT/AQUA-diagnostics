@@ -447,11 +447,7 @@ class PlotBaseMixin:
 
         description = f"{diagnostic} "
 
-        description += f"of {self.long_name} "
-        if self.units is not None:
-            description += f"[{self.units}] "
-        if self.short_name is not None:
-            description += f"({self.short_name}) "
+        description += f"of {self.long_name.lower()} "
 
         if self.region is not None:
             description += f"for {self.region} "
