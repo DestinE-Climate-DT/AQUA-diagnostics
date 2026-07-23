@@ -35,7 +35,6 @@ dependencies:
   - metpy<=1.7.1
   - numpy<=2.4.1
   - pandas>=3.0.0,<=3.0.3
-  - pyogrio<=0.12.1
   - pypdf<=6.7.5
   - pyyaml<=6.0.3
   - regionmask<=0.13.0
@@ -46,8 +45,6 @@ dependencies:
   - typeguard<=4.5.1
   - xarray>=2025.12.0,<=2026.7.0
   - zarr>=3.0,<=3.2.1
-  # HACK to solve regionmask/pyogrio/geopandas issue
-  - libjxl<0.12.0
   # extra diagnostics
   - tempest-extremes<=2.3.1 # for TCs
   - xesmf<=0.9.2 # for ECmean
