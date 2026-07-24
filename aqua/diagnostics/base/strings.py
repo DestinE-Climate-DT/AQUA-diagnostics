@@ -11,11 +11,13 @@ def collapse_era5_duplicate(text: str) -> str:
     otherwise render as the duplicate 'ERA5 era5' in titles and captions.
 
     Args:
-        text (str): Title or caption text.
+        text (str): Title or caption text. Falsy values (None, '') are returned unchanged.
 
     Returns:
         str: Text with 'ERA5 era5' collapsed to 'ERA5'.
     """
+    if not text:
+        return text
     return re.sub(r"ERA5 era5(?![\w-])", "ERA5", text)
 
 

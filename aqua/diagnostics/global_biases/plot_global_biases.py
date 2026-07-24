@@ -70,7 +70,7 @@ class PlotGlobalBiases:
             **kwargs,
         )
 
-        metadata = {"Description": collapse_era5_duplicate(description) if description else description}
+        metadata = {"Description": collapse_era5_duplicate(description)}
         extra_keys = {}
 
         if var is not None:
