@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
             "MLD [global] for ci ERA5 era5-hpz3 climatology",
         ),
         ({}, ""),  # Empty result
-        ({"variable": "Temperature"}, "Temperature"),
+        ({"variable": "Temperature"}, "temperature"),
         ({"diagnostic": "Test", "startyear": 2020}, "Test 2020"),
         ({"diagnostic": "Test", "endyear": 2021}, "Test 2021"),
         ({"diagnostic": "Bias", "realizations": ["r1", "r2"]}, "Bias Multi-realization"),
