@@ -59,9 +59,12 @@ class TestPlotHistogram:
         assert p.models[0] == "IFS" and p.exps[0] == "test-tco79"
         assert p.region == "global"
         assert "IFS test-tco79" in p.set_data_labels()[0]
-        assert "ERA5 era5" in p.set_ref_label()
+        assert p.set_ref_label() == "ERA5"
+        assert "era5" not in p.set_ref_label()
         title = p.set_title()
-        assert "Skin Temperature" in title or "skin_temperature" in title
+        # Variable rendered lower case, but title still starts with a capital letter
+        assert "Skin temperature" in title or "skin_temperature" in title
+        assert "Skin Temperature" not in title
 
     def test_realization_propagation(self):
         """AQUA_realization attribute extracted to plotter.realizations."""
@@ -74,18 +77,28 @@ class TestPlotHistogram:
         p = PlotHistogram(data=self.data, density=density, loglevel=loglevel)
         assert p.set_description().startswith(prefix)
 
+    def test_description_variable_lowercase_no_units_compared_to(self):
+        """Variable rendered lower case, units removed, 'compared to' replaces 'vs'."""
+        ref_same = _make_hist_data(model="ERA5", exp="era5")  # same period as self.data
+        desc = PlotHistogram(data=self.data, ref_data=ref_same, loglevel=loglevel).set_description()
+        assert "skin temperature" in desc
+        assert "[K]" not in desc
+        assert " vs " not in desc
+        assert "compared to ERA5" in desc
+
     def test_description_different_periods(self):
         """Both date ranges shown in %Y-%m when data/ref periods differ."""
         desc = PlotHistogram(data=self.data, ref_data=self.ref, loglevel=loglevel).set_description()
-        assert "2000-01" in desc and "2005-12" in desc
-        assert "1980-01" in desc and "2020-12" in desc
+        assert "(from 2000-01 to 2005-12)" in desc
+        assert "(from 1980-01 to 2020-12)" in desc
         assert "IFS" in desc and "ERA5" in desc
 
     def test_description_same_period_collapses(self):
         """Description collapses to a single range when data/ref periods match."""
         ref_same = _make_hist_data(model="ERA5", exp="era5")  # default startdate/enddate match self.data
         desc = PlotHistogram(data=self.data, ref_data=ref_same, loglevel=loglevel).set_description()
-        assert desc.count("2000-01") == 1 and "vs" in desc
+        assert desc.count("2000-01") == 1 and "compared to" in desc
+        assert "(from 2000-01 to 2005-12)" in desc
 
     def test_description_multi_and_region(self):
         """Multi-dataset description lists pairs; non-global region surfaces in description."""

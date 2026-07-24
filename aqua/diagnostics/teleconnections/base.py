@@ -6,7 +6,7 @@ import xarray as xr
 from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 xr.set_options(keep_attrs=True)
 
@@ -288,7 +288,7 @@ class PlotBaseMixin:
         """
         labels_dataset = [f"{self.models[i]} {self.exps[i]}" for i in range(self.len_data)]
         labels_ref = [f"{self.ref_models[i]} {self.ref_exps[i]}" for i in range(self.len_ref)]
-        labels = labels_dataset + labels_ref
+        labels = [collapse_era5_duplicate(label) for label in labels_dataset + labels_ref]
         return labels
 
     def set_index_description(self, index_name: str = None):
@@ -320,13 +320,14 @@ class PlotBaseMixin:
         if self.len_data > 0:
             description += f" {', '.join(dataset)}"
         if self.len_ref > 0:
-            description += " using reference data from"
+            description += " and for"
             description += f" {', '.join(refs)}"
         description += "."
 
         if index_name in ["ENSO", "Niño 3.4 index"]:
             description += " El Niño and La Niña events are defined when exceeding a 0.5 °C threshold."
 
+        description = collapse_era5_duplicate(description)
         self.logger.debug(f"Index description: {description}")
         return description
 
@@ -363,6 +364,41 @@ class PlotBaseMixin:
             extension=format,
             dpi=dpi,
         )
+
+    def set_map_title(
+        self,
+        telecname: str = None,
+        statistic: str = None,
+        model: str = None,
+        exp: str = None,
+        season: str = None,
+        ref_model: str = None,
+        ref_exp: str = None,
+    ):
+        """
+        Build the title for a correlation/regression map.
+
+        Args:
+            telecname (str): Teleconnection prefix (e.g. "NAO", "Niño 3.4").
+            statistic (str): Statistic name (e.g. "correlation", "regression").
+            model (str): Model name.
+            exp (str): Experiment name.
+            season (str): Season label (e.g. "DJF"); rendered in parentheses.
+            ref_model (str): Reference model name.
+            ref_exp (str): Reference experiment name.
+
+        Returns:
+            str: The map title.
+        """
+        return TitleBuilder(
+            diagnostic=f"{telecname} {statistic} map",
+            model=model,
+            exp=exp,
+            comparison="compared to" if ref_model else None,
+            ref_model=ref_model,
+            ref_exp=ref_exp,
+            timeseason=f"({season})" if season else None,
+        ).generate()
 
     def set_map_description(self, maps=None, ref_maps=None, statistic: str = None, telecname: str = None):
         """
@@ -402,18 +438,27 @@ class PlotBaseMixin:
         if isinstance(ref_maps, xr.DataArray):
             var = ref_maps.long_name if hasattr(ref_maps, "long_name") else ref_maps.shortName
             description += f" compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
+            description += (
+                f" (from {time_to_string(self.ref_startdate[0], format='%Y-%m')} "
+                f"to {time_to_string(self.ref_enddate[0], format='%Y-%m')})"
+            )
         elif isinstance(ref_maps, list):
             var = ref_maps[0].long_name if hasattr(ref_maps[0], "long_name") else ref_maps[0].shortName
-            description += f" compared to {ref_maps[0].AQUA_model} {ref_maps[0].AQUA_exp}"
-            for map in ref_maps:
-                description += f"{map.AQUA_model} {map.AQUA_exp}, "
+            description += " compared to "
+            for i, map in enumerate(ref_maps):
+                description += (
+                    f"{map.AQUA_model} {map.AQUA_exp} "
+                    f"(from {time_to_string(self.ref_startdate[i], format='%Y-%m')} "
+                    f"to {time_to_string(self.ref_enddate[i], format='%Y-%m')}), "
+                )
             description = description[:-2]
         description += "."
         if ref_maps is not None:
             description += f" Contours represent the model {statistic}, "
             description += "while shading is the difference between the model and the reference."
 
-        self.logger.debug(f"Map description: {description}")
+        description = collapse_era5_duplicate(description)
+        self.logger.info(f"Map description: {description}")
 
         return description
 
