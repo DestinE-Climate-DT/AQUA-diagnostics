@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
 from aqua.core.util import DEFAULT_REALIZATION, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 
 class PlotHistogram:
@@ -103,7 +103,7 @@ class PlotHistogram:
         if self.ref_data is not None:
             model = self.ref_data.attrs.get("AQUA_model", "Unknown")
             exp = self.ref_data.attrs.get("AQUA_exp", "Unknown")
-            ref_label = f"{model} {exp}"
+            ref_label = collapse_era5_duplicate(f"{model} {exp}")
 
         self.logger.debug("Reference label: %s", ref_label)
         return ref_label

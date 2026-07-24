@@ -59,9 +59,11 @@ class TestPlotHistogram:
         assert p.models[0] == "IFS" and p.exps[0] == "test-tco79"
         assert p.region == "global"
         assert "IFS test-tco79" in p.set_data_labels()[0]
-        assert "ERA5 era5" in p.set_ref_label()
+        assert p.set_ref_label() == "ERA5"
+        assert "era5" not in p.set_ref_label()
         title = p.set_title()
-        assert "Skin Temperature" in title or "skin_temperature" in title
+        assert "skin Temperature" in title or "skin_temperature" in title
+        assert "Skin Temperature" not in title
 
     def test_realization_propagation(self):
         """AQUA_realization attribute extracted to plotter.realizations."""
