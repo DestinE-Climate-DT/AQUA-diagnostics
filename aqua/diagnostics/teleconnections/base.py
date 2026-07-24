@@ -320,7 +320,7 @@ class PlotBaseMixin:
         if self.len_data > 0:
             description += f" {', '.join(dataset)}"
         if self.len_ref > 0:
-            description += " using reference data from"
+            description += " and for"
             description += f" {', '.join(refs)}"
         description += "."
 
@@ -365,6 +365,41 @@ class PlotBaseMixin:
             dpi=dpi,
         )
 
+    def set_map_title(
+        self,
+        telecname: str = None,
+        statistic: str = None,
+        model: str = None,
+        exp: str = None,
+        season: str = None,
+        ref_model: str = None,
+        ref_exp: str = None,
+    ):
+        """
+        Build the title for a correlation/regression map.
+
+        Args:
+            telecname (str): Teleconnection prefix (e.g. "NAO", "Niño 3.4").
+            statistic (str): Statistic name (e.g. "correlation", "regression").
+            model (str): Model name.
+            exp (str): Experiment name.
+            season (str): Season label (e.g. "DJF"); rendered in parentheses.
+            ref_model (str): Reference model name.
+            ref_exp (str): Reference experiment name.
+
+        Returns:
+            str: The map title.
+        """
+        return TitleBuilder(
+            diagnostic=f"{telecname} {statistic} map",
+            model=model,
+            exp=exp,
+            comparison="compared to" if ref_model else None,
+            ref_model=ref_model,
+            ref_exp=ref_exp,
+            timeseason=f"({season})" if season else None,
+        ).generate()
+
     def set_map_description(self, maps=None, ref_maps=None, statistic: str = None, telecname: str = None):
         """
         Set the description for the maps.
@@ -403,11 +438,19 @@ class PlotBaseMixin:
         if isinstance(ref_maps, xr.DataArray):
             var = ref_maps.long_name if hasattr(ref_maps, "long_name") else ref_maps.shortName
             description += f" compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
+            description += (
+                f" (from {time_to_string(self.ref_startdate[0], format='%Y-%m')} "
+                f"to {time_to_string(self.ref_enddate[0], format='%Y-%m')})"
+            )
         elif isinstance(ref_maps, list):
             var = ref_maps[0].long_name if hasattr(ref_maps[0], "long_name") else ref_maps[0].shortName
             description += " compared to "
-            for map in ref_maps:
-                description += f"{map.AQUA_model} {map.AQUA_exp}, "
+            for i, map in enumerate(ref_maps):
+                description += (
+                    f"{map.AQUA_model} {map.AQUA_exp} "
+                    f"(from {time_to_string(self.ref_startdate[i], format='%Y-%m')} "
+                    f"to {time_to_string(self.ref_enddate[i], format='%Y-%m')}), "
+                )
             description = description[:-2]
         description += "."
         if ref_maps is not None:
@@ -415,7 +458,7 @@ class PlotBaseMixin:
             description += "while shading is the difference between the model and the reference."
 
         description = collapse_era5_duplicate(description)
-        self.logger.debug(f"Map description: {description}")
+        self.logger.info(f"Map description: {description}")
 
         return description
 

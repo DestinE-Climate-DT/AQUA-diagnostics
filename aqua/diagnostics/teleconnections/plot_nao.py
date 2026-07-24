@@ -45,7 +45,12 @@ class PlotNAO(PlotBaseMixin):
         labels = super().set_labels() if labels is None else labels
 
         title = TitleBuilder(
-            diagnostic="NAO index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
+            diagnostic="NAO index",
+            model=self.models,
+            exp=self.exps,
+            comparison="compared to" if self.ref_models else None,
+            ref_model=self.ref_models,
+            ref_exp=self.ref_exps,
         ).generate()
 
         fig, axs = indexes_plot(
@@ -121,12 +126,13 @@ class PlotNAO(PlotBaseMixin):
         if maps is not None and ref_maps is None:
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"NAO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="NAO",
+                    statistic=statistic,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(maps, "AQUA_season", None),
+                )
 
                 fig, ax = plot_single_map(
                     data=maps,
@@ -148,14 +154,15 @@ class PlotNAO(PlotBaseMixin):
         if ref_maps is not None:
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"NAO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="NAO",
+                    statistic=statistic,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
+                    season=getattr(maps, "AQUA_season", None),
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                )
                 fig, _ = plot_single_map_diff(
                     data=maps,
                     data_ref=ref_maps,
