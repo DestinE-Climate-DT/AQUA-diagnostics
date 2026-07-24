@@ -137,12 +137,8 @@ class PlotHistogram:
             if name is not None:
                 # Remove "Pdf of" or "Histogram of" prefix if present
                 name_clean = name.replace("Pdf of ", "").replace("Histogram of ", "")
-                description += f"{name_clean} "
+                description += f"{name_clean.lower()} "
                 break
-
-        # Units
-        if self.units is not None:
-            description += f"[{self.units}] "
 
         # Short name in parentheses (if different from what was already used)
         if self.short_name is not None and self.long_name is not None:
@@ -173,7 +169,7 @@ class PlotHistogram:
                 description += f"for {self.models[0]}/{self.exps[0]}"
                 if ref_item is not None:
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f" vs {ref_model}"
+                    description += f" compared to {ref_model}"
                 description += f" from {data_pair[0]} to {data_pair[1]}"
             else:
                 # Different periods
@@ -194,7 +190,7 @@ class PlotHistogram:
 
             if self.ref_data is not None:
                 ref_model = getattr(self.ref_data, "AQUA_model", "reference")
-                description += f" vs {ref_model}"
+                description += f" compared to {ref_model}"
 
             # Add common date range if all datasets share it
             if self.data:
@@ -207,6 +203,10 @@ class PlotHistogram:
                     description += f" from {first_dates[0]} to {first_dates[1]}"
 
         description += "."
+
+        # Use the full reference name for MSWEP precipitation observations.
+        if "MSWEP" in description and "MSWEP v2.8" not in description:
+            description = description.replace("MSWEP", "MSWEP v2.8")
 
         self.logger.info("Description: %s", description)
         return description

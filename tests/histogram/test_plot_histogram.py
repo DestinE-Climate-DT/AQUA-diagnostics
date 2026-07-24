@@ -77,6 +77,15 @@ class TestPlotHistogram:
         p = PlotHistogram(data=self.data, density=density, loglevel=loglevel)
         assert p.set_description().startswith(prefix)
 
+    def test_description_variable_lowercase_no_units_compared_to(self):
+        """Variable rendered lower case, units removed, 'compared to' replaces 'vs'."""
+        ref_same = _make_hist_data(model="ERA5", exp="era5")  # same period as self.data
+        desc = PlotHistogram(data=self.data, ref_data=ref_same, loglevel=loglevel).set_description()
+        assert "skin temperature" in desc
+        assert "[K]" not in desc
+        assert " vs " not in desc
+        assert "compared to ERA5" in desc
+
     def test_description_different_periods(self):
         """Both date ranges shown in %Y-%m when data/ref periods differ."""
         desc = PlotHistogram(data=self.data, ref_data=self.ref, loglevel=loglevel).set_description()
@@ -88,7 +97,7 @@ class TestPlotHistogram:
         """Description collapses to a single range when data/ref periods match."""
         ref_same = _make_hist_data(model="ERA5", exp="era5")  # default startdate/enddate match self.data
         desc = PlotHistogram(data=self.data, ref_data=ref_same, loglevel=loglevel).set_description()
-        assert desc.count("2000-01") == 1 and "vs" in desc
+        assert desc.count("2000-01") == 1 and "compared to" in desc
 
     def test_description_multi_and_region(self):
         """Multi-dataset description lists pairs; non-global region surfaces in description."""
