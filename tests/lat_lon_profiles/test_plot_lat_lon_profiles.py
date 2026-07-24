@@ -252,14 +252,14 @@ class TestPlotLatLonProfilesDescription:
                 ("2020-01-01", "2029-12-31"),
                 ("2020-01-01", "2029-12-31"),
                 ("2020-01-01", "2029-12-31"),
-                r"from 2020-01 to 2029-12 compared to .* with ±2σ uncertainty bands \(from 2020-01 to 2029-12\)\.",
+                r"\(from 2020-01 to 2029-12\) compared to .* with ±2σ uncertainty bands \(from 2020-01 to 2029-12\)\.",
             ),
             # Case 2: All different - data, ref, and std dates all shown
             (
                 ("2050-01-01", "2059-12-31"),
                 ("1990-01-01", "1999-12-31"),
                 ("1850-01-01", "2014-12-31"),
-                r"from 2050-01 to 2059-12.*compared to .*\(from 1990-01 to 1999-12\)"
+                r"\(from 2050-01 to 2059-12\).*compared to .*\(from 1990-01 to 1999-12\)"
                 r".*with ±2σ uncertainty bands \(from 1850-01 to 2014-12\)",
             ),
         ],
