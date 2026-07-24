@@ -499,7 +499,8 @@ class PlotGlobalBiases:
             "titles": season_list,
             "titles_size": 14,
             "figsize": (10, 8),
-            "contour": True,
+            # Seasonal maps show the differences only (no model climatology contours).
+            "contour": False,
             "sym": sym,
             "cbar_label": cbar_label,
             "cmap": self.cmap,
