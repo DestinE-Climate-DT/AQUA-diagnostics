@@ -405,7 +405,7 @@ class PlotBaseMixin:
             description += f" compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
         elif isinstance(ref_maps, list):
             var = ref_maps[0].long_name if hasattr(ref_maps[0], "long_name") else ref_maps[0].shortName
-            description += f" compared to {ref_maps[0].AQUA_model} {ref_maps[0].AQUA_exp}"
+            description += " compared to "
             for map in ref_maps:
                 description += f"{map.AQUA_model} {map.AQUA_exp}, "
             description = description[:-2]
