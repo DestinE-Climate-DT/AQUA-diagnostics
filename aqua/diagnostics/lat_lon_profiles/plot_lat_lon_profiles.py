@@ -297,8 +297,16 @@ class PlotLatLonProfiles:
                 variable = name
                 break
 
+        if not self.mean_type:
+            diagnostic = "Profile"
+        elif self.data_type == "seasonal":
+            # e.g. "Seasonal zonal profiles" (lower-case mean type, plural)
+            diagnostic = f"Seasonal {self.mean_type.lower()} profiles"
+        else:
+            diagnostic = f"{self.mean_type.capitalize()} profile"
+
         title = TitleBuilder(
-            diagnostic=f"{self.mean_type.capitalize()} profile" if self.mean_type else "Profile",
+            diagnostic=diagnostic,
             variable=variable,
             regions=self.region,
             model=self.models,

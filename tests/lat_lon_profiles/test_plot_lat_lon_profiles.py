@@ -163,6 +163,14 @@ class TestPlotLatLonProfilesSeasonal:
         with pytest.raises(ValueError, match="must contain at least 4 elements"):
             plotter.plot_seasonal_lines()
 
+    def test_seasonal_title(self, sample_lat_lon_data):
+        """Seasonal title reads 'Seasonal <mean_type> profiles ...' (plural, lower-case mean type)."""
+        seasonal_data = sample_lat_lon_data(seasonal=True)
+        plotter = PlotLatLonProfiles(data=seasonal_data, data_type="seasonal", loglevel=loglevel)
+
+        title = plotter.set_title()
+        assert title.startswith(f"Seasonal {plotter.mean_type.lower()} profiles")
+
 
 @pytest.mark.diagnostics
 class TestPlotLatLonProfilesIntegration:
