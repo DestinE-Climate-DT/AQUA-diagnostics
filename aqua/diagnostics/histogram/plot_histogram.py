@@ -170,15 +170,15 @@ class PlotHistogram:
                 if ref_item is not None:
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
                     description += f" compared to {ref_model}"
-                description += f" from {data_pair[0]} to {data_pair[1]}"
+                description += f" (from {data_pair[0]} to {data_pair[1]})"
             else:
                 # Different periods
                 if data_pair != (None, None):
                     description += f"for {self.models[0]}/{self.exps[0]} "
-                    description += f"from {data_pair[0]} to {data_pair[1]}"
+                    description += f"(from {data_pair[0]} to {data_pair[1]})"
                 if ref_pair != (None, None):
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
+                    description += f", {ref_model} (from {ref_pair[0]} to {ref_pair[1]})"
         else:
             # Multiple datasets
             description += f"comparing {self.len_data} datasets: "
@@ -200,7 +200,7 @@ class PlotHistogram:
                     time_to_string(first_item.AQUA_enddate, format="%Y-%m") if first_item is not None else None,
                 )
                 if first_dates != (None, None):
-                    description += f" from {first_dates[0]} to {first_dates[1]}"
+                    description += f" (from {first_dates[0]} to {first_dates[1]})"
 
         description += "."
 

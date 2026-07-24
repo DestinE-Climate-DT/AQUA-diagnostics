@@ -89,8 +89,8 @@ class TestPlotHistogram:
     def test_description_different_periods(self):
         """Both date ranges shown in %Y-%m when data/ref periods differ."""
         desc = PlotHistogram(data=self.data, ref_data=self.ref, loglevel=loglevel).set_description()
-        assert "2000-01" in desc and "2005-12" in desc
-        assert "1980-01" in desc and "2020-12" in desc
+        assert "(from 2000-01 to 2005-12)" in desc
+        assert "(from 1980-01 to 2020-12)" in desc
         assert "IFS" in desc and "ERA5" in desc
 
     def test_description_same_period_collapses(self):
@@ -98,6 +98,7 @@ class TestPlotHistogram:
         ref_same = _make_hist_data(model="ERA5", exp="era5")  # default startdate/enddate match self.data
         desc = PlotHistogram(data=self.data, ref_data=ref_same, loglevel=loglevel).set_description()
         assert desc.count("2000-01") == 1 and "compared to" in desc
+        assert "(from 2000-01 to 2005-12)" in desc
 
     def test_description_multi_and_region(self):
         """Multi-dataset description lists pairs; non-global region surfaces in description."""
