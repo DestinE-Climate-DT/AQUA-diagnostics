@@ -422,6 +422,7 @@ class PlotBaseMixin:
             regions=self.region,
             model=self.models,
             exp=self.exps,
+            comparison="compared to" if self.ref_models else None,
             ref_model=self.ref_models if self.ref_models else None,
             ref_exp=self.ref_exps if self.ref_exps else None,
         ).generate()
