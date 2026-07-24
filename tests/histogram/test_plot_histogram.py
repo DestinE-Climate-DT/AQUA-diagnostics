@@ -62,7 +62,8 @@ class TestPlotHistogram:
         assert p.set_ref_label() == "ERA5"
         assert "era5" not in p.set_ref_label()
         title = p.set_title()
-        assert "skin Temperature" in title or "skin_temperature" in title
+        # Variable rendered lower case, but title still starts with a capital letter
+        assert "Skin temperature" in title or "skin_temperature" in title
         assert "Skin Temperature" not in title
 
     def test_realization_propagation(self):
