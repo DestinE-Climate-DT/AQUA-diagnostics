@@ -10,9 +10,10 @@ datasets:
   - catalog: null              # mandatory as null
     model: 'IFS-NEMO'          # mandatory
     exp: 'historical-1990'     # mandatory
-    source: 'lra-r100-monthly' # mandatory
-    regrid: null               # if the diagnostic supports it
-    reader_kwargs: null        # it can be a dictionary with reader kwargs
+    source: null               # mandatory
+    regrid: 'r025'             # if the diagnostic supports it
+    reader_kwargs:
+      engine: polytope         # it can be a dictionary with reader kwargs
     startdate: null            # e.g. '1990-01-01'
     enddate: null              # e.g. '2000-12-31'
 
@@ -24,7 +25,7 @@ references:
     model: 'OSI-SAF'           # mandatory
     exp: 'osi-saf-aqua'        # mandatory
     source: 'nh-monthly'       # mandatory
-    regrid: 'r100'
+    regrid: 'r025'
     domain: "nh"
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
@@ -35,7 +36,7 @@ references:
     model: 'OSI-SAF'           # mandatory
     exp: 'osi-saf-aqua'        # mandatory
     source: 'sh-monthly'       # mandatory
-    regrid: 'r100'
+    regrid: 'r025'
     domain: "sh"
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
