@@ -16,6 +16,7 @@ dependencies:
   - cartopy>=0.24.1,<=0.25.0
   - cartopy_offlinedata # this is needed for MN5 HPC
   - netcdf4<=1.7.4
+  # extra diagnostics
   - hdf5<=2.10.0
   - h5py>=3.12.1,<=3.16.0
   # python
