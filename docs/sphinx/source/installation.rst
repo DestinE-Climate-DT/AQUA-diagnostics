@@ -4,7 +4,7 @@ Installation
 ============
 
 In this section we will provide a step-by-step guide to install the Python package ``aqua-diagnostics``.
-AQUA-diagnostics is developed and tested with Python 3.14 and it supports Python 3.10,<3.15.
+AQUA-diagnostics is developed and tested with Python 3.14 and it supports Python 3.11,<3.15.
 
 AQUA-diagnostics extends the AQUA-core package (https://github.com/DestinE-Climate-DT/AQUA), which provides
 the core functionalities required for running diagnostics. When you install AQUA-diagnostics, AQUA-core

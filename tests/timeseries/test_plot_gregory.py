@@ -81,8 +81,8 @@ def test_set_ref_label_and_description_with_and_without_reference():
     )
     ref_label = p_ref.set_ref_label()
     desc = p_ref.set_description()
-    assert ref_label == "ERA5 era5 CERES obs"
-    assert "using as a reference ERA5 era5" in desc
+    assert ref_label == "ERA5 CERES obs"
+    assert "using as a reference ERA5 (2m temperature)" in desc
     assert "CERES obs (net TOA)" in desc
 
 
