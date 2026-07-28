@@ -39,6 +39,9 @@ def mock_config_yaml(tmp_path):
             "dpi": 150,
             "create_catalog_entry": True,
         },
+        "setup": {
+            "loglevel": "DEBUG",
+        },
     }
 
     config_file = os.path.join(str(tmp_path), "test_config.yaml")
@@ -89,17 +92,26 @@ class TestDiagnosticCLI:
         assert cli.logger is not None
         assert cli.loglevel == "INFO"
 
+    def test_setup_logging_uses_config_loglevel(self, mock_args, mock_config_yaml):
+        """Test that setup.loglevel from YAML is used when CLI loglevel is not set."""
+        mock_args.config = str(mock_config_yaml)
+        mock_args.loglevel = None
+
+        cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
+        cli._load_config()
+        cli._setup_logging()
+
+        assert cli.loglevel == "DEBUG"
+
     def test_extract_options_from_config(self, mock_args, mock_config_yaml, tmp_path):
         """Test that _extract_options correctly extracts settings from config."""
         mock_args.config = str(mock_config_yaml)
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
 
-        # Setup logging first (required by _load_config)
-        cli._setup_logging()
-
-        # Load config and extract options
+        # Load config, then setup logging
         cli._load_config()
+        cli._setup_logging()
         cli._extract_options()
 
         # Verify extracted options match the mock config
@@ -118,8 +130,8 @@ class TestDiagnosticCLI:
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
 
-        cli._setup_logging()
         cli._load_config()
+        cli._setup_logging()
         cli._extract_options()
 
         assert cli.realization == "r1i1p1f1"
@@ -215,8 +227,8 @@ class TestDiagnosticCLI:
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
 
-        cli._setup_logging()
         cli._load_config()
+        cli._setup_logging()
         cli._extract_options()
 
         assert cli.regrid == "r250"
@@ -229,8 +241,8 @@ class TestDiagnosticCLI:
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
 
-        cli._setup_logging()
         cli._load_config()
+        cli._setup_logging()
         cli._extract_options()
 
         # The outputdir from args should override the config
@@ -243,8 +255,8 @@ class TestDiagnosticCLI:
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
 
-        cli._setup_logging()
         cli._load_config()
+        cli._setup_logging()
         cli._extract_options()
 
         dataset = {"catalog": "test-catalog", "model": "TestModel", "exp": "test-exp", "source": "test-source"}
@@ -317,8 +329,8 @@ class TestDiagnosticCLI:
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
 
-        cli._setup_logging()
         cli._load_config()
+        cli._setup_logging()
         cli._extract_options()
 
         # Dataset with its own regrid specification
@@ -345,8 +357,8 @@ class TestDiagnosticCLI:
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
 
-        cli._setup_logging()
         cli._load_config()
+        cli._setup_logging()
 
         # Check that first dataset in config was overridden
         first_dataset = cli.config_dict["datasets"][0]
