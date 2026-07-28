@@ -4,7 +4,7 @@ import numpy as np
 from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 from .stat_global_biases import StatGlobalBiases
 from .util import handle_pressure_level
@@ -70,7 +70,7 @@ class PlotGlobalBiases:
             **kwargs,
         )
 
-        metadata = {"Description": description}
+        metadata = {"Description": collapse_era5_duplicate(description)}
         extra_keys = {}
 
         if var is not None:
@@ -499,7 +499,8 @@ class PlotGlobalBiases:
             "titles": season_list,
             "titles_size": 14,
             "figsize": (10, 8),
-            "contour": True,
+            # Seasonal maps show the differences only (no model climatology contours).
+            "contour": False,
             "sym": sym,
             "cbar_label": cbar_label,
             "cmap": self.cmap,
