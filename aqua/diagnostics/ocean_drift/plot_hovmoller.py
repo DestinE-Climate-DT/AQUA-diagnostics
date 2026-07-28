@@ -1,8 +1,10 @@
+"""Module for plotting Hovmoller diagrams and timeseries from ocean drift diagnostics."""
+
 import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, unit_to_latex
+from aqua.core.util import get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -13,8 +15,7 @@ xr.set_options(keep_attrs=True)
 
 
 class PlotHovmoller:
-    """
-    Class for plotting Hovmoller diagrams and timeseries from AQUA ocean drift diagnostics.
+    """Class for plotting Hovmoller diagrams and timeseries from AQUA ocean drift diagnostics.
 
     This class provides methods to generate, customize, and save Hovmoller and timeseries plots
     using xarray datasets and AQUA conventions. It handles metadata extraction, plot styling,
@@ -29,8 +30,7 @@ class PlotHovmoller:
         outputdir: str = ".",
         loglevel: str = "WARNING",
     ):
-        """
-        Initialize the PlotHovmoller class.
+        """Initialize the PlotHovmoller class.
 
         Args:
             data (list[xr.Dataset]): List of xarray datasets containing the data to be plotted
@@ -38,6 +38,7 @@ class PlotHovmoller:
             vert_coord (str): Name of the vertical dimension coordinate, default is "level"
             outputdir (str): Directory where the output will be saved, default is current directory
             loglevel (str): Logging level, default is "WARNING"
+
         """
         self.data = data
 
@@ -52,6 +53,8 @@ class PlotHovmoller:
         # Getting metadata from the first dataset
         self.catalog = self.data[0][self.vars[0]].AQUA_catalog
         self.model = self.data[0][self.vars[0]].AQUA_model
+        self.startdate = self.data[0].time[0].values
+        self.enddate = self.data[0].time[-1].values
         self.exp = self.data[0][self.vars[0]].AQUA_exp
         self.region = self.data[0].AQUA_region
         self.levels = None  # To be set when plotting timeseries
@@ -68,8 +71,7 @@ class PlotHovmoller:
         )
 
     def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
-        """
-        Plot the Hovmoller diagram for the given data.
+        """Plot the Hovmoller diagram for the given data.
 
         This method sets the title, description, vmax, vmin, and texts for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
@@ -82,10 +84,13 @@ class PlotHovmoller:
 
         Returns:
             None
+
         """
         self.set_suptitle(content="Hovmöller")
         self.set_title()
-        self.set_description(content="Hovmöller plot of spatially averaged")
+        self.set_description(
+            content="Hovmöller plot of temperature (left column) and salinity (right column) of spatially averaged"
+        )
         self.set_data_type()
         self.set_texts()
         self.set_vmax_vmin()
@@ -113,8 +118,7 @@ class PlotHovmoller:
         )
 
     def plot_timeseries(self, levels: list = None, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
-        """
-        Plot the timeseries for the given data.
+        """Plot the timeseries for the given data.
 
         This method sets the title, description, vmax, vmin, and texts for the plot.
         It then calls the `plot_multi_timeseries` function to create the plot and
@@ -128,13 +132,17 @@ class PlotHovmoller:
 
         Returns:
             None
+
         """
         self.levels = levels
         self.set_levels()
         self.set_data_for_levels()
-        self.set_suptitle(content="Timeseries")
+        self.set_suptitle(content="Time series")
         self.set_title()
-        self.set_description(content="Timeseries of spatially averaged")
+        self.set_description(
+            content="Time series of temperature (left column) and salinity (right column)"
+            " at multiple depths, spatially averaged"
+        )
         self.set_data_type()
         self.set_texts()
         self.set_vmax_vmin()
@@ -166,20 +174,14 @@ class PlotHovmoller:
         )
 
     def set_levels(self):
-        """
-        Set the levels and corresponding labels for timeseries plots.
-        If no levels are provided, use a default set of standard ocean depths.
-        """
+        """Set the levels and corresponding labels for timeseries plots."""
         level_unit = self.data[0][self.vert_coord].attrs["units"]
         if self.levels is None:
             self.levels = [0, 100, 300, 600, 1000, 2000, 4000]
         self.timeseries_labels = [f"{level} {level_unit}" for level in self.levels]
 
     def set_data_for_levels(self):
-        """
-        Set the data for the specified levels.
-        This method extracts the data at the specified levels from the original data.
-        """
+        """Extract and set the data at the specified depth levels."""
         self.logger.debug("Setting data for levels: %s", self.levels)
         new_data_list = []
         for _, data in enumerate(self.data):
@@ -197,9 +199,7 @@ class PlotHovmoller:
         self.data = new_data_list
 
     def set_line_plot_colours(self):
-        """
-        Set the color list for line plots based on the number of levels.
-        """
+        """Set the color list for line plots based on the number of levels."""
         nlev = len(self.levels)
         cmap = plt.cm.plasma_r
         self.line_plot_colours = [cmap(0.3 + 0.7 * i / (nlev - 1)) for i in range(nlev)]
@@ -207,22 +207,20 @@ class PlotHovmoller:
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
         self.suptitle = TitleBuilder(
-            diagnostic=f"{content} plot", regions=self.region, catalog=self.catalog, model=self.model, exp=self.exp
+            diagnostic=f"{content} plot", regions=self.region, model=self.model, exp=self.exp
         ).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):
-        """
-        Set the title for the Hovmoller plot.
-        This method can be extended to set specific titles based on the data.
-        """
+        """Set the title for each subplot panel."""
         self.title_list = []
         for j in range(len(self.data)):
             for _, var in enumerate(self.vars):
                 if j == 0:
                     units = self.data[j][var].attrs.get("units", "")
                     units_latex = unit_to_latex(units) if units else ""
-                    title = f"{var} ({units_latex})"
+                    long_name = self.data[j][var].attrs.get("long_name", var)
+                    title = f"{long_name} ({units_latex})"
                 else:
                     title = None
                 self.title_list.append(title)
@@ -230,14 +228,18 @@ class PlotHovmoller:
 
     def set_description(self, content: str = None):
         """Set the description for the Hovmoller plot."""
-
-        self.description = f"{content} {self.region} region for experiment {self.catalog} {self.model} {self.exp}"
+        self.description = f"{content} over {self.region} for experiment {self.model} {self.exp}"
+        self.description += (
+            f" (from {time_to_string(self.startdate, format='%Y-%m')} to {time_to_string(self.enddate, format='%Y-%m')})."
+        )
+        self.description += (
+            " The first row of the plot shows the full values,"
+            " the second row shows the anomalies from the initial time,"
+            " the third row shows the standardized anomalies from the initial time."
+        )
 
     def set_vmax_vmin(self):
-        """
-        Set the vmax and vmin for the Hovmoller plot.
-        This method can be extended to set specific vmax and vmin values.
-        """
+        """Set the vmax, vmin, and colormap for each subplot from the data type."""
         self.logger.debug("Setting vmax and vmin")
         hovmoller_plot_dic = {
             "thetao": {
@@ -265,10 +267,7 @@ class PlotHovmoller:
                 self.cmap.append(hovmoller_plot_dic[var][type].get("cbar", "jet"))
 
     def set_data_type(self):
-        """
-        Set the data type list for the Hovmoller plot based on dataset attributes.
-        This method can be extended to set specific data types.
-        """
+        """Set the data type list for each dataset based on its AQUA attributes."""
         self.logger.debug("Setting data types")
         self.data_type = []
         for data in self.data:
@@ -276,10 +275,7 @@ class PlotHovmoller:
             self.data_type.append(type)
 
     def set_texts(self):
-        """
-        Set the texts for the Hovmoller plot.
-        This method can be extended to set specific texts.
-        """
+        """Set the text annotations for each subplot panel based on drift type."""
         type_label_mapping = {
             "full": "Full values",
             "anom_t0": "Anomalies from t0",
@@ -309,8 +305,7 @@ class PlotHovmoller:
         dpi: int = 300,
         format: str = SAVE_FORMAT,
     ):
-        """
-        Save the plot to a file.
+        """Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): The figure to be saved.
@@ -322,6 +317,7 @@ class PlotHovmoller:
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
+
         """
         self.outputsaver.save_figure(
             fig,

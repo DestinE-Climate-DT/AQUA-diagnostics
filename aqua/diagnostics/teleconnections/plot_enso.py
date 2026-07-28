@@ -3,7 +3,7 @@ import xarray as xr
 
 from aqua.core.graphics import indexes_plot, plot_maps, plot_maps_diff, plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import TitleBuilder
+from aqua.diagnostics.base import TitleBuilder, collapse_era5_duplicate
 
 from .base import PlotBaseMixin, _homogeneize_maps
 
@@ -30,19 +30,36 @@ class PlotENSO(PlotBaseMixin):
         )
         self.logger = log_configure(log_name="PlotENSO", log_level=loglevel)
 
-    def plot_index(self, thresh: float = 0.5):
+    def plot_index(self, thresh: float = 0.5, labels: list = None):
+        """
+        Plot the indexes for the ENSO products.
+
+        Args:
+            thresh (float): Threshold for the indexes. Default is 0.5.
+            labels (list): List of labels for the indexes. Default is None, in this case
+                           labels will be set by the set_labels method.
+
+        Returns:
+            fig: Figure object.
+            axs: Axes object.
+        """
 
         # Join the indexes in a single list
         indexes = self.indexes + self.ref_indexes
 
-        labels = super().set_labels()
+        labels = super().set_labels() if labels is None else labels
 
         title = TitleBuilder(
-            diagnostic="ENSO3.4 index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
+            diagnostic="Niño 3.4 index",
+            model=self.models,
+            exp=self.exps,
+            comparison="compared to" if self.ref_models else None,
+            ref_model=self.ref_models,
+            ref_exp=self.ref_exps,
         ).generate()
 
         fig, axs = indexes_plot(
-            indexes=indexes, thresh=thresh, suptitle=title, ylabel="ENSO3.4 index", labels=labels, loglevel=self.loglevel
+            indexes=indexes, thresh=thresh, suptitle=title, ylabel="Niño 3.4 index", labels=labels, loglevel=self.loglevel
         )
 
         if isinstance(axs, plt.Axes):
@@ -64,7 +81,7 @@ class PlotENSO(PlotBaseMixin):
         return fig, axs
 
     def set_index_description(self):
-        return super().set_index_description(index_name="ENSO3.4")
+        return super().set_index_description(index_name="Niño 3.4 index")
 
     def plot_maps(
         self,
@@ -112,12 +129,13 @@ class PlotENSO(PlotBaseMixin):
         if maps is not None and ref_maps is None:
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(maps, "AQUA_season", None),
+                )
 
                 fig, _ = plot_single_map(
                     data=maps, vmin=vmin, vmax=vmax, title=title, return_fig=True, loglevel=self.loglevel, **kwargs
@@ -128,12 +146,13 @@ class PlotENSO(PlotBaseMixin):
             elif isinstance(maps, list):
                 titles = []
                 for map in maps:
-                    title = TitleBuilder(
-                        diagnostic=f"ENSO {statistic} map ({var})",
+                    title = self.set_map_title(
+                        telecname="Niño 3.4",
+                        statistic=statistic,
                         model=map.AQUA_model,
                         exp=map.AQUA_exp,
-                        timeseason=getattr(map, "AQUA_season", None),
-                    ).generate()
+                        season=getattr(map, "AQUA_season", None),
+                    )
                     titles.append(title)
                 fig = plot_maps(
                     maps=maps, vmin=vmin, vmax=vmax, titles=titles, return_fig=True, loglevel=self.loglevel, **kwargs
@@ -144,14 +163,15 @@ class PlotENSO(PlotBaseMixin):
         if ref_maps is not None:
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
+                    season=getattr(maps, "AQUA_season", None),
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                )
                 fig, _ = plot_single_map_diff(
                     data=maps,
                     data_ref=ref_maps,
@@ -172,14 +192,15 @@ class PlotENSO(PlotBaseMixin):
             if isinstance(maps, list) and isinstance(ref_maps, xr.DataArray):
                 titles = []
                 for map in maps:
-                    title = f"{map.AQUA_model} {map.AQUA_exp}"
+                    title = collapse_era5_duplicate(f"{map.AQUA_model} {map.AQUA_exp}")
                     titles.append(title)
-                title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
-                    timeseason=getattr(ref_maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(ref_maps, "AQUA_season", None),
+                )
 
                 # plot_maps_diff wants a list of reference maps of the same length as maps
                 maps_ref = [ref_maps] * len(maps)
@@ -205,14 +226,15 @@ class PlotENSO(PlotBaseMixin):
                 self.logger.critical("maps is a single map, ref_maps is a list.")
                 titles = []
                 for map in ref_maps:
-                    title = f"Compared to {map.AQUA_model} {map.AQUA_exp}"
+                    title = collapse_era5_duplicate(f"Compared to {map.AQUA_model} {map.AQUA_exp}")
                     titles.append(title)
-                title = TitleBuilder(
-                    diagnostic=f"ENSO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(maps, "AQUA_season", None),
+                )
 
                 # plot_maps_diff wants a list of reference maps of the same length as maps
                 maps = [maps] * len(ref_maps)
@@ -251,4 +273,4 @@ class PlotENSO(PlotBaseMixin):
         Returns:
             str: Description of the maps.
         """
-        return super().set_map_description(maps=maps, ref_maps=ref_maps, statistic=statistic, telecname="ENSO3.4")
+        return super().set_map_description(maps=maps, ref_maps=ref_maps, statistic=statistic, telecname="Niño 3.4")

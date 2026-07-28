@@ -3,7 +3,7 @@ import matplotlib as plt
 from aqua.core.graphics import boxplot
 from aqua.core.logger import log_configure
 from aqua.core.util import extract_attrs, get_realizations, time_to_string, to_list, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, collapse_era5_duplicate
 
 
 class PlotBoxplots:
@@ -39,13 +39,13 @@ class PlotBoxplots:
         catalog = extract_attrs(data, "AQUA_catalog")
         model = extract_attrs(data, "AQUA_model")
         exp = extract_attrs(data, "AQUA_exp")
-        startdates = extract_attrs(data, "startdate")
-        enddates = extract_attrs(data, "enddate")
+        startdates = extract_attrs(data, "AQUA_startdate")
+        enddates = extract_attrs(data, "AQUA_enddate")
 
         model_ref = extract_attrs(data_ref, "AQUA_model")
         exp_ref = extract_attrs(data_ref, "AQUA_exp")
-        startdates_ref = extract_attrs(data_ref, "startdate")
-        enddates_ref = extract_attrs(data_ref, "enddate")
+        startdates_ref = extract_attrs(data_ref, "AQUA_startdate")
+        enddates_ref = extract_attrs(data_ref, "AQUA_enddate")
 
         self.logger.info(f"catalogs: {catalog}, models: {model}, experiments: {exp}")
         self.logger.info(f"ref catalogs: {extract_attrs(data_ref, 'catalog')}, models: {model_ref}, experiments: {exp_ref}")
@@ -69,20 +69,19 @@ class PlotBoxplots:
         all_startdates = startdates + (startdates_ref or [])
         all_enddates = enddates + (enddates_ref or [])
         dataset_info = ", ".join(
-            f"{m} (exp: {e}) from {time_to_string(s)} to {time_to_string(en)}"
+            f"{m} {e} (from {time_to_string(s, format='%Y-%m')} to {time_to_string(en, format='%Y-%m')})"
             for m, e, s, en in zip(all_models, all_exps, all_startdates, all_enddates)
         )
         if not description:
-            description = f"Boxplot for: {dataset_info}."
+            description = f"Boxplots of {dataset_info}."
 
         if self.anomalies:
             ref_name = extract_attrs(data_ref[self.ref_number], "AQUA_model")
             description += (
-                f" Anomalies with respect to {ref_name} mean value are shown. "
+                f" Anomalies with respect to {ref_name} mean values are shown. "
                 "The dashed line represents the mean value, the solid line the median value, "
                 "and the number indicates the absolute mean value."
             )
-
         metadata = {"Description": description}
         extra_keys = {"var": "_".join(var) if isinstance(var, list) else var}
 
@@ -141,13 +140,10 @@ class PlotBoxplots:
             fldmeans = [ds - ref.mean("time") for ds in fldmeans]
 
         if not title:
-            title = TitleBuilder(
-                diagnostic="Boxplot",
-                model=model_names,
-                exp=exp_names,
-                ref_model=model_names_ref if model_names_ref else None,
-                ref_exp=exp_names_ref if exp_names_ref else None,
-            ).generate()
+            # List every dataset (model exp) after "for:" on a new line
+            datasets = [f"{m} {e}" for m, e in zip(model_names, exp_names)]
+            datasets += [f"{m} {e}" for m, e in zip(model_names_ref, exp_names_ref)]
+            title = collapse_era5_duplicate("Boxplot\nfor: " + ", ".join(datasets))
 
         # Plot boxplot
         fig, ax = boxplot(

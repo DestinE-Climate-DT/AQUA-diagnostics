@@ -1,3 +1,5 @@
+"""Module for plotting multiple vertical line profiles in a grid layout."""
+
 import matplotlib.pyplot as plt
 import xarray as xr
 
@@ -25,8 +27,7 @@ def plot_multi_vertical_lines(
     loglevel="WARNING",
     **kwargs,
 ):
-    """
-    Plot multiple vertical line profiles in a grid layout.
+    """Plot multiple vertical line profiles in a grid layout.
 
     Args:
         data_list (list): List of xarray datasets containing the data to be plotted.
@@ -49,6 +50,7 @@ def plot_multi_vertical_lines(
 
     Returns:
         matplotlib.figure.Figure or None: The matplotlib Figure object if return_fig is True, otherwise None.
+
     """
     logger = log_configure(loglevel, "plot_multi_hovmoller")
     ConfigStyle(style=style, loglevel=loglevel)
@@ -56,7 +58,7 @@ def plot_multi_vertical_lines(
     if all(isinstance(data_map, xr.Dataset) for data_map in data_list):
         nrows = 1  # len(data_list)
         ncols = len(variables)
-        figsize = figsize if figsize is not None else (ncols * 5, nrows * 3 + 1)
+        figsize = figsize if figsize is not None else (ncols * 3, nrows * 2 + 1)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
@@ -103,7 +105,7 @@ def plot_multi_vertical_lines(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10, fontweight="bold", y=1.05)
+        fig.suptitle(title, fontsize=ncols * 5, fontweight="bold", y=1.05)
 
     if return_fig:
         return fig

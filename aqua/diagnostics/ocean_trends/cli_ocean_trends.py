@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line interface for Ocean trends diagnostic.
+"""Command-line interface for Ocean trends diagnostic.
 
 This CLI allows to run the trends, OceanTrends diagnostics.
 Details of the run are defined in a yaml configuration file for a
@@ -19,25 +18,24 @@ def parse_arguments(args):
 
     Args:
         args (list): list of command-line arguments to parse.
+
     """
     parser = argparse.ArgumentParser(description="OceanTrends CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the OceanTrends diagnostic CLI."""
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(args, "ocean3d", "config-ocean3d-en4-trend-drift.yaml", log_name="OceanTrends CLI").prepare()
     cli.open_dask_cluster()
 
-    logger = cli.logger
     config_dict = cli.config_dict
 
     dataset = config_dict["datasets"][0]
     dataset_args = cli.dataset_args(dataset)
-
-    # logger.info("Catalog: %s, Model: %s, Experiment: %s, Source: %s, Regrid: %s", catalog, model, exp, source, regrid)
 
     # Output options (from cli_base)
     reader_kwargs = cli.reader_kwargs
@@ -53,7 +51,7 @@ if __name__ == "__main__":
             regions = trends_config.get("regions", [None])
             diagnostic_name = trends_config.get("diagnostic_name", "ocean_trends")
             var = trends_config.get("var", None)
-            dim_mean = trends_config.get("dim_mean", None)
+            # dim_mean = trends_config.get("dim_mean", None)
             vert_coord = trends_config.get("vert_coord", None)
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
@@ -101,3 +99,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     cli.logger.info("Ocean Trends diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,3 +1,5 @@
+.. _diagnostic-class_structure:
+
 Core Diagnostic: ``Diagnostic``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -8,7 +10,9 @@ It provides essential functionalities such as:
 - A unified ``__init__`` method for consistent initialization. Extra argument for the ``__init__`` should be added only if strictly necessary.
 - Initialization of the ``Reader`` class for data access as ``self.reader`` attribute.
 - A standardized data retrieval method: ``retrieve()``. This method stores the retrieved data in the ``self.data`` attribute.
-  It also populates the ``self.catalog`` and ``self.realization`` attributes if empty by deducing them.
+  When ``std_startdate`` and ``std_enddate`` are provided, it also populates ``self.std_data`` with the corresponding slice.
+  Both windows are covered by a single ``Reader`` call, and requested dates outside the catalog's effective bounds are
+  automatically clipped (with a warning). It also populates the ``self.catalog`` and ``self.realization`` attributes if empty by deducing them.
 - Built-in saving function ``save_netcdf()`` for NetCDF output. This includes the possibility to generate a catalog entry to be used in further analyses.
 
 Diagnostic Classes
@@ -38,6 +42,8 @@ using ``AQUA_`` as prefix of the metadata. Some metadata are added automatically
 - ``AQUA_exp``
 - ``AQUA_source``
 - ``AQUA_region`` when a region is selected
+- ``AQUA_startdate`` and ``AQUA_enddate``
+- ``AQUA_std_startdate`` and ``AQUA_std_enddate`` when the std window is set
 
 If multiple models (e.g. model and observational dataset) are needed, two different instances of the diagnostic should be created.
 
@@ -105,10 +111,12 @@ Imagine for example to run the timeseries diagnostic in an analysis about precip
 This will allow the files to be named ``precipitation.timeseries.png`` instead of ``timeseries.timeseries.png``,
 which would be less informative.
 
+.. _aqua-console:
+
 Configuration Files and AQUA console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the section :ref:`aqua-install`, the tool to expose configuration files for the diagnostic or
+In the section :ref:`installation`, the tool to expose configuration files for the diagnostic or
 its CLI is described.
 This section provides more details on how to update the code if you want to expose a new configuration file or
 you are developing a new diagnostic.
@@ -144,17 +152,24 @@ The folder structure should follow this pattern:
 .. code-block:: text
 
     $HOME/.aqua/
-        ├── diagnostics/
+        ├── definitions/
+        │   └── regions.yaml
+        ├── tools/
         │   ├── diagnostic_name/
         │   │   ├── definitions/
         │   │   │   └── definitions.yaml
         │   │   └── config_diagnostic_name.yaml
 
-The ``diagnostics/`` folder contains a subfolder for each diagnostic, which in turn may contain a
-``definitions/`` folder with possible files defining options for the diagnostic, such as available
-regions for the diagnostic or default variable names to be used.
-The file used to run the diagnostic are contained in the main diagnostic folder, and should be
-used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
+The ``definitions/`` top-level folder contains shared lookup files used by all diagnostics.
+``regions.yaml`` is the centralized registry of all available geographic regions:
+any diagnostic can refer to a region by name (e.g. ``nh``, ``arctic``, ``io``) and the
+``Diagnostic`` base class resolves it against this single file.
+
+The ``tools/`` folder contains a subfolder for each diagnostic, which in turn may contain a
+``definitions/`` folder with lookup files that are *specific to that diagnostic only* (e.g. custom
+index definitions for teleconnections).
+The configuration files used to run each diagnostic are contained in the main diagnostic folder and
+should be used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
 
 .. note::
     After the implementation of the diagnostic in the aqua console, be sure that the configuration files are

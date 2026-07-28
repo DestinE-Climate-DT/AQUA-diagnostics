@@ -25,8 +25,13 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the Teleconnections diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
         args,
@@ -363,3 +368,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     logger.info("Teleconnections diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

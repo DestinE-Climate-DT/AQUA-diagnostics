@@ -289,16 +289,16 @@ class Plot2DSeaIce:
                         apply_circular_window(ax, extent=ext_coords)
 
         description = (
-            f"Spatial map and total bias of the sea ice {monmod.attrs.get('AQUA_method', '')} climatology "
+            f"Climatology and differences against the reference dataset for sea ice {monmod.attrs.get('AQUA_method', '')} "
             f"in the {monmod.attrs.get('AQUA_region', 'geographic')} region. "
-            f"The model data is {monmod.attrs.get('AQUA_model')} with experiment {monmod.attrs.get('AQUA_exp')} "
-            f"spanning from {time_to_string(monmod.attrs.get('AQUA_startdate', ''))} "
-            f"to {time_to_string(monmod.attrs.get('AQUA_enddate', ''))}. "
-            f"The reference dataset is {monref.attrs.get('AQUA_model')} with experiment {monref.attrs.get('AQUA_exp')} "
-            f"spanning from {time_to_string(monref.attrs.get('AQUA_startdate', ''))} "
-            f"to {time_to_string(monref.attrs.get('AQUA_enddate', ''))}. "
+            f"Model data is {monmod.attrs.get('AQUA_model')}, experiment {monmod.attrs.get('AQUA_exp')} "
+            f"(from {time_to_string(monmod.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(monmod.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
+            f"Reference dataset is {monref.attrs.get('AQUA_model')}, experiment {monref.attrs.get('AQUA_exp')} "
+            f"(from {time_to_string(monref.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(monref.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
             + (
-                "The red contour line represents the regional sea ice fraction equal to 0.2."
+                "The red contour line represents where the sea ice fraction is equal to 0.2."
                 if self.method == "fraction"
                 else ""
             )
@@ -397,11 +397,11 @@ class Plot2DSeaIce:
         description = (
             f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method', '')} climatology "
             f"for the {mondat.attrs.get('AQUA_model', '')} model, experiment {mondat.attrs.get('AQUA_exp', '')} "
-            f"over {mondat.attrs.get('AQUA_region', 'geographic')} region "
-            f"from {time_to_string(mondat.attrs.get('AQUA_startdate', ''))} "
-            f"to {time_to_string(mondat.attrs.get('AQUA_enddate', ''))}. "
+            f"in the {mondat.attrs.get('AQUA_region', 'geographic')} region "
+            f"(from {time_to_string(mondat.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(mondat.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
             + (
-                "The red contour line represent the regional sea ice fraction equal to 0.2."
+                "The red contour line represent where the sea ice fraction is equal to 0.2."
                 if self.method == "fraction" and self.plot_ref_contour
                 else ""
             )
@@ -526,7 +526,7 @@ class Plot2DSeaIce:
             norm = None
             boundaries = None
         else:
-            # Define boundaries for a discrete normalization using the 'turbo' colormap
+            # Define custom boundaries for a discrete normalization
             boundaries = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8.0, 10, 15, 20, 30]
             colormap = plt.get_cmap("turbo")
             norm = mcolors.BoundaryNorm(boundaries, ncolors=colormap.N, clip=True)

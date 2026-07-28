@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 import matplotlib.pyplot as plt
 import pytest
 import xarray as xr
-from conftest import DPI, LOGLEVEL
 
 from aqua.core.util import replace_urlpath_jinja, replace_urlpath_wildcard
 from aqua.diagnostics.base import OutputSaver
+from tests.shared_constants import DPI, LOGLEVEL
 
 
 # Fixture for OutputSaver instance

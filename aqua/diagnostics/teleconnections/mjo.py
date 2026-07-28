@@ -17,6 +17,8 @@ class MJO(BaseMixin):
     MJO (Madden-Julian Oscillation) class.
     """
 
+    MINIMUM_MONTHS_REQUIRED = 24
+
     def __init__(
         self,
         catalog: str = None,
@@ -76,7 +78,7 @@ class MJO(BaseMixin):
                                   Default is an empty dictionary.
         """
         # Assign self.data, self.reader, self.catalog
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         self.data = self.data[self.var]
 
         self.data = self.reader.timmean(self.data, freq="D")

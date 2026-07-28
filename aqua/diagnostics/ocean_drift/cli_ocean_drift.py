@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line interface for Ocean drift diagnostic.
+"""Command-line interface for Ocean drift diagnostic.
 
 This CLI allows to run the hovmoller, OceanDrift diagnostics.
 Details of the run are defined in a yaml configuration file for a
@@ -21,14 +20,16 @@ def parse_arguments(args):
 
     Args:
         args (list): list of command-line arguments to parse.
+
     """
     parser = argparse.ArgumentParser(description="OceanDrift CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the OceanDrift diagnostic CLI."""
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
         args, diagnostic_name="ocean3d", default_config="config-ocean3d-en4-trend-drift.yaml", log_name="OceanDrift CLI"
@@ -95,3 +96,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     logger.info("Ocean Drift diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

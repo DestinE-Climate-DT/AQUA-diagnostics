@@ -1,5 +1,6 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
+from aqua.core.util import time_to_string
 from aqua.core.util.sci_util import lon_to_360
 
 from .base import BaseMixin
@@ -12,6 +13,8 @@ class ENSO(BaseMixin):
     It inherits from the BaseMixin class and implements the necessary methods
     to calculate the ENSO index.
     """
+
+    MINIMUM_MONTHS_REQUIRED = 24
 
     def __init__(
         self,
@@ -67,7 +70,7 @@ class ENSO(BaseMixin):
                                   Default is an empty dictionary.
         """
         # Assign self.data, self.reader, self.catalog
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         self.data = self.reader.timmean(self.data, freq="MS")
 
@@ -88,8 +91,6 @@ class ENSO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError("Data not retrieved")
-        if len(self.data[self.var].time) < 24:
-            raise NotEnoughDataError("Data have less than 24 months")
 
         latN = self.definition.get("latN")  # noqa: N806
         latS = self.definition.get("latS")  # noqa: N806
@@ -111,7 +112,11 @@ class ENSO(BaseMixin):
         data_an = data.groupby("time.month") - data.groupby("time.month").mean(dim="time")
         field_mean_an = data_an.rolling(time=months_window, center=True).mean(skipna=True)
         field_mean_an = field_mean_an.rename("index")
+        field_mean_an.attrs["long_name"] = "Niño 3.4 index"
 
         self.logger.debug("Index evaluated")
+
+        field_mean_an.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        field_mean_an.attrs["AQUA_enddate"] = time_to_string(self.enddate)
 
         self.index = field_mean_an

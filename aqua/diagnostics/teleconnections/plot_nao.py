@@ -27,15 +27,30 @@ class PlotNAO(PlotBaseMixin):
         )
         self.logger = log_configure(log_name="PlotNAO", log_level=loglevel)
 
-    def plot_index(self, thresh: float = 0.0):
+    def plot_index(self, thresh: float = 0.0, labels: list = None):
+        """
+        Plot the NAO index.
 
+        Args:
+            thresh (float): Threshold for the index. Default is 0.0.
+            labels (list): List of labels for the indexes. Default is None, in which case the labels are set automatically.
+
+        Returns:
+            fig: Figure object.
+            axs: Axes object.
+        """
         # Join the indexes in a single list
         indexes = self.indexes + self.ref_indexes
 
-        labels = super().set_labels()
+        labels = super().set_labels() if labels is None else labels
 
         title = TitleBuilder(
-            diagnostic="NAO index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
+            diagnostic="NAO index",
+            model=self.models,
+            exp=self.exps,
+            comparison="compared to" if self.ref_models else None,
+            ref_model=self.ref_models,
+            ref_exp=self.ref_exps,
         ).generate()
 
         fig, axs = indexes_plot(
@@ -45,7 +60,14 @@ class PlotNAO(PlotBaseMixin):
         return fig, axs
 
     def set_index_description(self):
-        return super().set_index_description(index_name="NAO")
+        """
+        Build the description for the NAO index plot.
+        Adds information about the months window used to compute the index.
+        """
+        description = super().set_index_description(index_name="NAO")
+        months_window = self.indexes[0].attrs["months_window"]
+        description += f" The index is computed as a {months_window}-month running mean."
+        return description
 
     def plot_maps(
         self,
@@ -104,12 +126,13 @@ class PlotNAO(PlotBaseMixin):
         if maps is not None and ref_maps is None:
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"NAO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="NAO",
+                    statistic=statistic,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(maps, "AQUA_season", None),
+                )
 
                 fig, ax = plot_single_map(
                     data=maps,
@@ -131,14 +154,15 @@ class PlotNAO(PlotBaseMixin):
         if ref_maps is not None:
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"NAO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="NAO",
+                    statistic=statistic,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
+                    season=getattr(maps, "AQUA_season", None),
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                )
                 fig, _ = plot_single_map_diff(
                     data=maps,
                     data_ref=ref_maps,

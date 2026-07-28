@@ -4,7 +4,7 @@
 import argparse
 import sys
 
-from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, load_var_config, template_parse_arguments
 from aqua.diagnostics.histogram import Histogram, PlotHistogram
 
 
@@ -120,8 +120,13 @@ def create_and_save_plots(cli, histograms, histogram_ref, diag_config):
     plot.run(format=cli.save_format, **plot_params)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the Histogram diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
         args, diagnostic_name="histogram", default_config="config-histogram.yaml", log_name="Histogram CLI"
@@ -144,23 +149,11 @@ if __name__ == "__main__":
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
 
         for var, is_formula in all_vars:
-            # Handle both dict and string formats
-            if isinstance(var, dict):
-                var_name = var.get("name")
-                var_config = var.copy()  # Use the dict directly
-            else:
-                var_name = var
-                var_config = {}
-
-            cli.logger.info("Running Histogram diagnostic for %s: %s", "formula" if is_formula else "variable", var_name)
-
-            # Get params for this variable and merge with var_config
-            param_dict = diag_config.get("params", {}).get(var_name, {})
-            var_config = {**var_config, **param_dict}
+            var_config, regions = load_var_config(cli.config_dict, var, diagnostic="histogram")
+            var_name = var_config.get("name")
             var_config["is_formula"] = is_formula
 
-            # Get regions from merged config
-            regions = var_config.get("regions", [None])
+            cli.logger.info("Running Histogram diagnostic for %s: %s", "formula" if is_formula else "variable", var_name)
 
             for region in regions:
                 cli.logger.info("Region: %s", region if region else "global")
@@ -185,3 +178,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     cli.logger.info("Histogram diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

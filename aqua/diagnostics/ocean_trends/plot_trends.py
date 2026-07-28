@@ -1,3 +1,5 @@
+"""Module for plotting ocean trend diagnostics."""
+
 from typing import Union
 
 import cartopy.crs as ccrs
@@ -15,6 +17,8 @@ xr.set_options(keep_attrs=True)
 
 
 class PlotTrends:
+    """Class for plotting ocean trend diagnostics from xarray Datasets."""
+
     def __init__(
         self,
         data: xr.Dataset,
@@ -33,6 +37,7 @@ class PlotTrends:
             outputdir (str, optional): Directory to save output plots. Defaults to ".".
             rebuild (bool, optional): Whether to rebuild output files. Defaults to True.
             loglevel (str, optional): Logging level. Default is "WARNING".
+
         """
         self.loglevel = loglevel
         self.logger = log_configure(self.loglevel, "PlotTrends")
@@ -59,17 +64,36 @@ class PlotTrends:
             loglevel=self.loglevel,
         )
 
-    def plot_multilevel(self, levels=None, rebuild: bool = True, save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
+    def plot_multilevel(
+        self,
+        levels: list = None,
+        rebuild: bool = True,
+        cbar_limits: dict = None,
+        sym: bool = False,
+        save_format: Union[str, list] = SAVE_FORMAT,
+        dpi: int = 300,
+    ):
         """Plot multi-level maps of trends.
 
         Args:
             levels (list, optional): List of depth levels to plot. Defaults to None.
-            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
+            rebuild (bool, optional): If True, rebuild existing output files. Defaults to True.
+            cbar_limits (dict, optional): Per-variable colorbar limits as {var: {'vmin': v, 'vmax': v}}. Defaults to None.
+            sym (bool, optional): If True, use symmetric colorbar limits. Defaults to False.
+            save_format (str or list, optional): Format(s) to save the figure in. Defaults to SAVE_FORMAT.
+            dpi (int, optional): Resolution of the saved figure. Defaults to 300.
+
         """
         self.diagnostic_product = "multilevel_trend"
-        if levels is None:
+        if levels:
+            self.levels = levels
+        else:
             self.levels = [10, 100, 500, 1000, 3000, 5000]
         self.logger.debug(f"Levels set to: {self.levels}")
+        self.cbar_limits = cbar_limits
+        self.vmin = None
+        self.vmax = None
+        self.sym = sym
         self.set_central_longitude()
         self.set_data_list()
         self.set_suptitle(plot_type="Multi-level Trends")
@@ -78,13 +102,18 @@ class PlotTrends:
         self.set_ytext()
         self.set_cbar_labels()
         self.set_nrowcol()
+        self.set_extent()
         fig = plot_maps(
             maps=self.data_list,
             nrows=self.nrows,
             ncols=self.ncols,
             proj=ccrs.PlateCarree(central_longitude=self.central_longitude),
             title=self.suptitle,
+            col_vmin=self.vmin,
+            col_vmax=self.vmax,
+            sym=self.sym,
             titles=self.title_list,
+            extent=self.extent,
             cbar_labels=self.cbar_labels,
             ytext=self.ytext,
             return_fig=True,
@@ -102,18 +131,19 @@ class PlotTrends:
         )
 
     def plot_zonal(self, rebuild: bool = True, save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
-        """
-        Plot zonal mean vertical profiles of trends.
+        """Plot zonal mean vertical profiles of trends.
 
         Args:
-            save_format (str or list, optional): Format(s) to save the figure in (e.g. 'png', 'pdf', 'svg').
-            dpi (int, optional): Dots per inch for the output figure. Defaults to 300.
+            rebuild (bool, optional): If True, rebuild existing output files. Defaults to True.
+            save_format (str or list, optional): Format(s) to save the figure in. Defaults to SAVE_FORMAT.
+            dpi (int, optional): Resolution of the saved figure. Defaults to 300.
+
         """
         self.diagnostic_product = "zonal_mean"
         self.set_data_list()
-        self.set_suptitle(plot_type="Zonal mean Trends")
+        self.set_suptitle(plot_type="Trends of zonal mean")
         self.set_title()
-        self.set_description(content="Zonal mean Trends")
+        self.set_description(content="Trends of zonal mean of temperature (left) and salinity (right)")
         self.set_ytext()
         self.set_cbar_labels()
         self.set_nrowcol()
@@ -141,12 +171,31 @@ class PlotTrends:
             dpi=dpi,
         )
 
+    def set_vmin_vmax(self):
+        """Set per-variable colorbar min/max from cbar_limits if provided."""
+        self.vmin = []
+        self.vmax = []
+        if self.cbar_limits:
+            self.vmin = [self.cbar_limits[var]["vmin"] for var in self.vars]
+            self.vmax = [self.cbar_limits[var]["vmax"] for var in self.vars]
+
     def set_nrowcol(self):
+        """Set the number of rows and columns for the subplot grid."""
         if hasattr(self, "levels") and self.levels:
             self.nrows = len(self.levels)
         else:
             self.nrows = 1
         self.ncols = len(self.vars)
+
+    def set_extent(self):
+        """Set the extent for the plot."""
+        self.extent = [
+            self.data_list[0].lon.min().values,
+            self.data_list[0].lon.max().values,
+            self.data_list[0].lat.min().values,
+            self.data_list[0].lat.max().values,
+        ]
+        self.logger.debug(f"Extent set to: {self.extent}")
 
     def set_ytext(self):
         """Set the y-axis text for the multi-level plots."""
@@ -160,6 +209,7 @@ class PlotTrends:
                         self.ytext.append(None)
 
     def set_central_longitude(self):
+        """Set the central longitude for the map projection from the data."""
         self.central_longitude = self.data.lon.mean().values
         self.logger.debug(f"Central longitude set to: {self.central_longitude}")
 
@@ -189,16 +239,11 @@ class PlotTrends:
 
     def set_suptitle(self, plot_type=None):
         """Set the title for the plot."""
-        self.suptitle = TitleBuilder(
-            diagnostic=plot_type, regions=self.region, catalog=self.catalog, model=self.model, exp=self.exp
-        ).generate()
+        self.suptitle = TitleBuilder(diagnostic=plot_type, regions=self.region, model=self.model, exp=self.exp).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):
-        """
-        Set the title for the plot.
-        This method can be extended to set specific titles based on the data.
-        """
+        """Set the title for each subplot panel."""
         self.title_list = []
         for j in range(len(self.data_list)):
             for var in self.vars:
@@ -212,10 +257,7 @@ class PlotTrends:
         self.logger.debug("Title list set to: %s", self.title_list)
 
     def set_cbar_labels(self):
-        """
-        Set the colorbar labels for the plot.
-        This method can be extended to set specific colorbar labels based on the data.
-        """
+        """Set the colorbar labels for each subplot from variable units."""
         self.cbar_labels = []
         for _ in range(len(self.data_list)):
             for var in self.vars:
@@ -226,11 +268,8 @@ class PlotTrends:
         self.logger.debug("Colorbar labels set to: %s", self.cbar_labels)
 
     def set_description(self, content=None):
-        """
-        Set the description metadata for the plot.
-        """
-
-        self.description = f"{content} in the {self.region} region of {self.catalog} {self.model} {self.exp}."
+        """Set the description metadata for the plot."""
+        self.description = f"{content} in the {self.region} region of {self.model} {self.exp}."
 
     def save_plot(
         self,
@@ -242,8 +281,7 @@ class PlotTrends:
         format: Union[str, list] = SAVE_FORMAT,
         metadata: dict = None,
     ):
-        """
-        Save the plot to a file.
+        """Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): The figure to be saved.
@@ -255,6 +293,7 @@ class PlotTrends:
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
+
         """
         extra_keys.update({"region": self.region})
 

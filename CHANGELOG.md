@@ -8,7 +8,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.24.0):
 
 - Fixes in CI/CD to ensure compatibility between pypi version and tag of repo (#90)
+Complete list:
+- Dashboard review: title/description aesthetic fixes across diagnostics (#290)
+- Setting up aqua-like fixed environment (#314)
+- Update image to latest core container (#308)
+- Fix loglevel setup from YAML in DiagnosticCLI (#304)
+- GlobalBiases: add target spacing option for stippling (#305)
+- Global Biases: fix titles and descriptions (#284)
+- CI/CD: improve temporary folders handling (#302)
+- LatLonProfiles: seasonal profiles computation fix (#288)
+- Environment LUMI dependencies update (#297)
+- Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)
+- Bug report template update (#283)
+- Upgrade to aqua-core==1.0.0a5, to python <=3.14 and to eccodes<=2.47 (#254)
+- Porting of config.grouping.yaml adjustments (#280)
+- Teleconnections: added the possibility to override default labels in the plot_index method (#273)
+- Regions config file centralization (#267)
+- Jinja templates for configuration files for collections (#230)
+- Fallback test download from wilma (#269)
+- Jinja templates for configuration files for collections (#230, #270, #271, #281)
+- Histogram: diagnostic updates (#255)
+- Seaice: Port changes from Dashboard v0.19-op (#190)
+- ECmean: prevent creation of default empty dirs (#263)
+- Remove `healpy` dependency (#248)
+- Timeseries: backporting of dashboard updates (#250)
+- Timeseries: adapt to startdate and enddate centralisation in Diagnostic, remove extend feauture (#244)
+- Dashboard porting: ECmean (#192)
+- CLI `load_var_config` centralization (#246)
+- LatLonProfiles: major diagnostic refactor (#229)
+- GlobalBiases: improve descriptions (#191)
+- Tropical cyclones: simplification, reader kwargs, orography from catalogue (#184)
+- Teleconnections: backporting of dashboard updates, including startdate and enddate cli features (#231)
+- CI/CD: add framework to test diagnostics CLI and utils (#219)
+- Handling startdate and enddate centralisation in Diagnostic (#225)
+- Expose `__version__` from `aqua.core.version` module (#216)
+- Boxplots: improved descriptions (#193)
 - ECmean: time selection is now allowed (#178)
+- Centralized management of months required thresholds (#162)
 
 ## [v0.23.0]
 
@@ -19,9 +55,9 @@ Main changes:
 4. GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class
 
 Complete list:
+- Implement `Ruff` linter, formatter and `pre-commit` to CI (#197, #198, #215, #220, #226)
 - Apply ruff format (#202, #210, #209)
 - TitleBuilder: add wrapping of long titles (#199)
-- Apply ruff linting and pre-commit hooks (#198)
 - Temporarily exclude MJO test (#201)
 - Centralise saving of figures; add SVG format; set default `SAVE_FORMAT` (#136)
 - GlobalBiases: add statistical test (Welch's t-test) to global bias statistical class (#168)
@@ -51,6 +87,7 @@ Complete list:
 - Ensemble: improve the coverage of the tests (#88)
 - Ensemble: fix tests after datamodel working in issue #156 (#526)
 - Ensemble: implementing `find_vert_coord` in ensemble zonal plotting function (#175)
+- README: added Bash quotation in the main README of AQUA-diagnostics (#208)
 
 ## [v0.22.0]
 

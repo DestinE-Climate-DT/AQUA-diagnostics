@@ -3,7 +3,7 @@ from typing import Union
 import xarray as xr
 
 from aqua.core.graphics import plot_seasonalcycle
-from aqua.core.util import get_realizations, to_list
+from aqua.core.util import get_realizations, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT
 
 from .base import PlotBaseMixin
@@ -83,8 +83,11 @@ class PlotSeasonalCycles(PlotBaseMixin):
         - AQUA_catalog
         - AQUA_model
         - AQUA_exp
-        - std_startdate
-        - std_enddate
+        - AQUA_startdate
+        - AQUA_enddate
+        - AQUA_std_startdate
+        - AQUA_std_enddate
+        - AQUA_region
         - short_name
         - long_name
         - units
@@ -98,10 +101,22 @@ class PlotSeasonalCycles(PlotBaseMixin):
             self.short_name = self.monthly_data[0].short_name if hasattr(self.monthly_data[0], "short_name") else None
             self.long_name = self.monthly_data[0].long_name if hasattr(self.monthly_data[0], "long_name") else None
             self.units = self.monthly_data[0].units if hasattr(self.monthly_data[0], "units") else None
+            self.startdate = [
+                d.AQUA_startdate if hasattr(d, "AQUA_startdate") else time_to_string(d.time.values[0], format="%Y-%m")
+                for d in self.monthly_data
+            ]
+            self.enddate = [
+                d.AQUA_enddate if hasattr(d, "AQUA_enddate") else time_to_string(d.time.values[-1], format="%Y-%m")
+                for d in self.monthly_data
+            ]
             self.realizations = get_realizations(self.monthly_data)
         self.logger.debug(f"Catalogs: {self.catalogs}")
         self.logger.debug(f"Models: {self.models}")
         self.logger.debug(f"Experiments: {self.exps}")
+
+        # HACK: if the region is global, we do not want to include it in the title and description, so we set it to None
+        if self.region == "global":
+            self.region = None
         self.logger.debug(f"Region: {self.region}")
 
         if self.ref_monthly_data is not None:
@@ -109,14 +124,22 @@ class PlotSeasonalCycles(PlotBaseMixin):
             self.ref_catalogs = self.ref_monthly_data.AQUA_catalog
             self.ref_models = self.ref_monthly_data.AQUA_model
             self.ref_exps = self.ref_monthly_data.AQUA_exp
+            self.ref_startdate = (
+                self.ref_monthly_data.AQUA_startdate
+                if hasattr(self.ref_monthly_data, "AQUA_startdate")
+                else time_to_string(self.ref_monthly_data.time.values[0], format="%Y-%m")
+            )
+            self.ref_enddate = (
+                self.ref_monthly_data.AQUA_enddate
+                if hasattr(self.ref_monthly_data, "AQUA_enddate")
+                else time_to_string(self.ref_monthly_data.time.values[-1], format="%Y-%m")
+            )
             self.logger.debug(f"Reference: {self.ref_catalogs} {self.ref_models} {self.ref_exps}")
 
         if self.std_monthly_data is not None:
-            for std in self.std_monthly_data:
-                self.std_startdate = std.std_startdate if std.std_startdate is not None else None
-                self.std_enddate = std.std_enddate if std.std_enddate is not None else None
-                self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
-                break
+            self.std_startdate = getattr(self.std_monthly_data, "AQUA_std_startdate", None)
+            self.std_enddate = getattr(self.std_monthly_data, "AQUA_std_enddate", None)
+            self.logger.debug(f"Standard deviation dates: {self.std_startdate} - {self.std_enddate}")
 
     def set_title(self):
         """

@@ -1,5 +1,5 @@
-"""
-Module to plot multiple Hovmoller data.
+"""Module to plot multiple timeseries data.
+
 This function is custom for the Ocean Drift diagnostics in AQUA.
 """
 
@@ -28,8 +28,7 @@ def plot_multi_timeseries(
     loglevel="WARNING",
     **kwargs,
 ):
-    """
-    Plot multiple time series (e.g., at different levels or for different variables) in a grid layout.
+    """Plot multiple time series (e.g., at different levels or for different variables) in a grid layout.
 
     Args:
         maps (list): List of xarray datasets containing the data to be plotted.
@@ -50,6 +49,7 @@ def plot_multi_timeseries(
 
     Returns:
         matplotlib.figure.Figure or None: The matplotlib Figure object if return_fig is True, otherwise None.
+
     """
     logger = log_configure(loglevel, "plot_multi_hovmoller")
     ConfigStyle(style=style, loglevel=loglevel)

@@ -67,19 +67,14 @@ install_aqua() {
 
   # Fix environment.yml
   SCRIPTDIR="${AQUA}/cli/hpc2020-install"
-  sed 's/- imagemagick/# - imagemagick/' ../../environment-dev.yml >$SCRIPTDIR/environment_hpc2020.yml  # imagemagick has a buggy dependency, it needs to be installed separately
+  cp ../../environment-dev.yml $SCRIPTDIR/environment_hpc2020.yml
   sed -i.bak "s;- -e ../AQUA;- -e $AQUA;" $SCRIPTDIR/environment_hpc2020.yml  # replace relative paths with $AQUA
   sed -i.bak "s;- -e \.;- -e $AQUA_DIAGNOSTICS;" $SCRIPTDIR/environment_hpc2020.yml  # replace relative paths with $AQUA
 
-  # update.sh is needed to fix the imagemagick bug
-  echo "#!/bin/bash" > $SCRIPTDIR/update.sh
-  echo "conda install -y -c conda-forge imagemagick" >> $SCRIPTDIR/update.sh
-
   # install AQUA framework and diagnostics
-  conda-containerize new --post-install $SCRIPTDIR/update.sh --prefix "${INSTALLATION_PATH}" $SCRIPTDIR/environment_hpc2020.yml
-  # conda-containerize new --prefix "${INSTALLATION_PATH}" $SCRIPTDIR/environment_hpc2020.yml
+  conda-containerize new --prefix "${INSTALLATION_PATH}" $SCRIPTDIR/environment_hpc2020.yml
 
-  #rm $SCRIPTDIR/environment_hpc2020.yml $SCRIPTDIR/environment_hpc2020.yml.bak $SCRIPTDIR/update.sh
+  #rm $SCRIPTDIR/environment_hpc2020.yml $SCRIPTDIR/environment_hpc2020.yml.bak
   log_message INFO "AQUA framework and diagnostics have been installed."
 }
 

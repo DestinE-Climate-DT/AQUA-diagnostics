@@ -1,5 +1,5 @@
 """
-Shared fixtures for AQUA test suite.
+Shared fixtures for AQUA-diagnostics test suite.
 These fixtures use scope="session" to retrieve data once and share across all tests.
 Reference: https://docs.pytest.org/en/stable/reference/fixtures.html
 """
@@ -8,16 +8,12 @@ import matplotlib
 import pytest
 
 from aqua import Reader  # type: ignore
+from tests.shared_constants import LOGLEVEL
 
 matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 
 plt.ioff()  # Turn off interactive mode explicitly
-
-# Centralized setting for all tests
-DPI = 50
-APPROX_REL = 1e-4
-LOGLEVEL = "DEBUG"
 
 
 # ======================================================================

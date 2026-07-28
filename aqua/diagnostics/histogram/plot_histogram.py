@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_histogram
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.core.util import DEFAULT_REALIZATION, time_to_string, to_list
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 
 class PlotHistogram:
@@ -103,7 +103,7 @@ class PlotHistogram:
         if self.ref_data is not None:
             model = self.ref_data.attrs.get("AQUA_model", "Unknown")
             exp = self.ref_data.attrs.get("AQUA_exp", "Unknown")
-            ref_label = f"{model} {exp}"
+            ref_label = collapse_era5_duplicate(f"{model} {exp}")
 
         self.logger.debug("Reference label: %s", ref_label)
         return ref_label
@@ -116,7 +116,7 @@ class PlotHistogram:
                 break
 
         title = TitleBuilder(
-            diagnostic=None, variable=variable, regions=self.region, catalog=self.catalogs, model=self.models, exp=self.exps
+            diagnostic=None, variable=variable, regions=self.region, model=self.models, exp=self.exps
         ).generate()
 
         self.logger.debug("Title: %s", title)
@@ -137,12 +137,8 @@ class PlotHistogram:
             if name is not None:
                 # Remove "Pdf of" or "Histogram of" prefix if present
                 name_clean = name.replace("Pdf of ", "").replace("Histogram of ", "")
-                description += f"{name_clean} "
+                description += f"{name_clean.lower()} "
                 break
-
-        # Units
-        if self.units is not None:
-            description += f"[{self.units}] "
 
         # Short name in parentheses (if different from what was already used)
         if self.short_name is not None and self.long_name is not None:
@@ -158,8 +154,14 @@ class PlotHistogram:
             data_item = self.data[0] if self.data else None
             ref_item = self.ref_data
 
-            data_pair = (getattr(data_item, "AQUA_startdate", None), getattr(data_item, "AQUA_enddate", None))
-            ref_pair = (getattr(ref_item, "AQUA_startdate", None), getattr(ref_item, "AQUA_enddate", None))
+            data_pair = (
+                time_to_string(data_item.AQUA_startdate, format="%Y-%m") if data_item is not None else None,
+                time_to_string(data_item.AQUA_enddate, format="%Y-%m") if data_item is not None else None,
+            )
+            ref_pair = (
+                time_to_string(ref_item.AQUA_startdate, format="%Y-%m") if ref_item is not None else None,
+                time_to_string(ref_item.AQUA_enddate, format="%Y-%m") if ref_item is not None else None,
+            )
 
             # Smart date display: show dates only once if they are the same
             if data_pair == ref_pair and data_pair != (None, None):
@@ -167,16 +169,16 @@ class PlotHistogram:
                 description += f"for {self.models[0]}/{self.exps[0]}"
                 if ref_item is not None:
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f" vs {ref_model}"
-                description += f" from {data_pair[0]} to {data_pair[1]}"
+                    description += f" compared to {ref_model}"
+                description += f" (from {data_pair[0]} to {data_pair[1]})"
             else:
                 # Different periods
                 if data_pair != (None, None):
                     description += f"for {self.models[0]}/{self.exps[0]} "
-                    description += f"from {data_pair[0]} to {data_pair[1]}"
+                    description += f"(from {data_pair[0]} to {data_pair[1]})"
                 if ref_pair != (None, None):
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
+                    description += f", {ref_model} (from {ref_pair[0]} to {ref_pair[1]})"
         else:
             # Multiple datasets
             description += f"comparing {self.len_data} datasets: "
@@ -188,17 +190,25 @@ class PlotHistogram:
 
             if self.ref_data is not None:
                 ref_model = getattr(self.ref_data, "AQUA_model", "reference")
-                description += f" vs {ref_model}"
+                description += f" compared to {ref_model}"
 
             # Add common date range if all datasets share it
             if self.data:
-                first_dates = (getattr(self.data[0], "AQUA_startdate", None), getattr(self.data[0], "AQUA_enddate", None))
+                first_item = self.data[0]
+                first_dates = (
+                    time_to_string(first_item.AQUA_startdate, format="%Y-%m") if first_item is not None else None,
+                    time_to_string(first_item.AQUA_enddate, format="%Y-%m") if first_item is not None else None,
+                )
                 if first_dates != (None, None):
-                    description += f" from {first_dates[0]} to {first_dates[1]}"
+                    description += f" (from {first_dates[0]} to {first_dates[1]})"
 
         description += "."
 
-        self.logger.debug("Description: %s", description)
+        # Use the full reference name for MSWEP precipitation observations.
+        if "MSWEP" in description and "MSWEP v2.8" not in description:
+            description = description.replace("MSWEP", "MSWEP v2.8")
+
+        self.logger.info("Description: %s", description)
         return description
 
     def plot(

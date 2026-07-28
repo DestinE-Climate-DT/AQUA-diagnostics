@@ -1,11 +1,12 @@
+"""Functions to compute ocean potential density."""
+
 import xarray as xr
 
 from aqua.core.logger import log_configure
 
 
 def compute_rho(absso, bigthetao, ref_pressure, loglevel="WARNING"):
-    """
-    Compute the potential density in-situ.
+    """Compute the potential density in-situ.
 
     Parameters
     ----------
@@ -15,6 +16,8 @@ def compute_rho(absso, bigthetao, ref_pressure, loglevel="WARNING"):
         Masked array containing the conservative temperature values (degC).
     ref_pressure : float
         Reference pressure (dbar).
+    loglevel : str, optional
+        Logging level (default: "WARNING").
 
     Returns
     -------
@@ -24,6 +27,7 @@ def compute_rho(absso, bigthetao, ref_pressure, loglevel="WARNING"):
     Notes
     -----
     Based on polyTEOS-10. See: https://github.com/fabien-roquet/polyTEOS/blob/36b9aef6cd2755823b5d3a7349cfe64a6823a73e/polyTEOS10.py#L57
+
     """
     logger = log_configure(loglevel, "compute_rho")
     logger.debug("Computing potential density in-situ.")

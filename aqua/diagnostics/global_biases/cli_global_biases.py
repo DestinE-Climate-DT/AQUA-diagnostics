@@ -23,8 +23,13 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the GlobalBiases diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
         args,
@@ -103,6 +108,9 @@ if __name__ == "__main__":
             show_stats = default_params.get("show_stats", False)
             show_significance = plot_params.get("show_significance", False)
             significance_alpha = plot_params.get("significance_alpha", 0.05)
+            stipple_density = plot_params.get("stipple_density", None)
+            stipple_size = plot_params.get("stipple_size", 0.8)
+            target_spacing_deg = plot_params.get("target_spacing_deg", 2)
 
             # Compute climatologies (seasonal if specified) and areas if stats are to be shown
             biases_dataset.compute_climatology(
@@ -162,6 +170,9 @@ if __name__ == "__main__":
                     show_stats=show_stats,
                     show_significance=show_significance,
                     significance_alpha=significance_alpha,
+                    stipple_density=stipple_density,
+                    stipple_size=stipple_size,
+                    target_spacing_deg=target_spacing_deg,
                 )
 
                 if seasons:
@@ -186,3 +197,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     cli.logger.info("Global Biases diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

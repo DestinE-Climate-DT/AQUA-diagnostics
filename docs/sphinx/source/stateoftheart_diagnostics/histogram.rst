@@ -37,7 +37,7 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/histogram/`` directory, which contains both the source code and the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-histogram.yaml``
-* Region definitions are available in ``aqua/diagnostics/config/tools/histogram/definitions/regions.yaml``
+* Region definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/histogram/`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -188,15 +188,15 @@ Other common reference datasets include MSWEP (Multi-Source Weighted-Ensemble Pr
 
 Custom reference datasets can be configured in the configuration file.
 
-Example Plots
--------------
-
-.. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
-   :align: center
-   :width: 100%
-
-   Probability density function (PDF) of precipitation rate (mm/day) for the global region,
-   showing ICON model output compared to ERA5 reference data.
+.. Example Plots
+.. -------------
+..
+.. .. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
+..    :align: center
+..    :width: 100%
+..
+..    Probability density function (PDF) of precipitation rate (mm/day) for the global region,
+..    showing ICON model output compared to ERA5 reference data.
 
 
 Available demo notebooks
