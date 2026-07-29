@@ -152,7 +152,6 @@ class DiagnosticCLI:
             "regrid": dataset.get("regrid") or self.regrid,
             "startdate": dataset.get("startdate") or self.startdate,
             "enddate": dataset.get("enddate") or self.enddate,
-            "reader_kwargs": dataset.get("reader_kwargs", {}),
         }
 
     def reference_args(self, reference):
@@ -170,7 +169,6 @@ class DiagnosticCLI:
             "regrid": reference.get("regrid"),
             "startdate": reference.get("startdate"),
             "enddate": reference.get("enddate"),
-            "reader_kwargs": reference.get("reader_kwargs", {}),
         }
 
     def open_dask_cluster(self):
