@@ -204,9 +204,9 @@ class TestGlobalBiases:
         plotgb = plot_global_biases_instance
         mock_ax = MagicMock()
 
-        for n_lat, n_lon, target, expected_density in [
-            (180, 360, 1000, 8),  # r100-like
-            (1800, 3600, 1000, 80),  # hpz10-like
+        for n_lat, n_lon, target_spacing_deg, expected_density in [
+            (180, 360, 2.0, 2),  # r100-like
+            (1800, 3600, 2.0, 20),  # hpz10-like
         ]:
             lat = xr.DataArray(np.linspace(-90, 90, n_lat), dims=["lat"])
             lon = xr.DataArray(np.linspace(-180, 180, n_lon), dims=["lon"])
@@ -223,10 +223,13 @@ class TestGlobalBiases:
                 lat,
                 lon,
                 stipple_density=None,
-                target_stipple_points=target,
+                target_spacing_deg=target_spacing_deg,
             )
 
-            computed_density = max(1, int(np.sqrt((n_lat * n_lon) / target)))
+            lat_res = abs(float(lat[1] - lat[0]))
+            lon_res = abs(float(lon[1] - lon[0]))
+            grid_res = min(lat_res, lon_res)
+            computed_density = max(1, round(target_spacing_deg / grid_res))
             assert computed_density == expected_density, (
                 f"Expected density {expected_density} for grid {n_lat}x{n_lon}, got {computed_density}"
             )
