@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 from aqua.core.util import strlist_to_phrase, to_list
 
-from .strings import harmonize_lists
+from .strings import collapse_era5_duplicate, harmonize_lists
 
 
 class TitleBuilder:
@@ -189,7 +189,12 @@ class TitleBuilder:
             title += f"{self.diagnostic}"
 
         if self.variable:
-            title += f" of {self.variable}" if self.diagnostic else f" {self.variable}"
+            # Start with upper-case letter in case of title starting with variable
+            variable = self.variable.lower()
+            if self.diagnostic:
+                title += f" of {variable}"
+            else:
+                title += f" {variable[0].upper()}{variable[1:]}"
 
         if self.regions:
             regions_list = to_list(self.regions)
@@ -229,5 +234,6 @@ class TitleBuilder:
         if self.extra_info:
             title += f" {' '.join(to_list(self.extra_info))}"
 
+        title = collapse_era5_duplicate(title)
         title = title.strip()
         return self._wrap_title(title, max_chars=max_chars, split_on=markers) if max_chars else title

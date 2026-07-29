@@ -20,7 +20,9 @@ def test_trends():
     )
     print(trend.trend_coef)
     assert trend is not None, "trend instance should not be None"
-    assert trend.trend_coef["thetao"].isel(level=1).mean("lat").mean("lon").values == pytest.approx(
+    assert trend.trend_coef["thetao"].isel({trend.vert_coord: 1}).mean("lat").mean("lon").values == pytest.approx(
         -0.06603967, rel=approx_rel
     )
-    assert trend.trend_coef["so"].isel(level=1).mean("lat").mean("lon").values == pytest.approx(0.02622599, rel=approx_rel)
+    assert trend.trend_coef["so"].isel({trend.vert_coord: 1}).mean("lat").mean("lon").values == pytest.approx(
+        0.02622599, rel=approx_rel
+    )
