@@ -12,6 +12,7 @@ updates:
       time: "06:00"
     commit-message:
       prefix: "[Dependabot-conda]"
+    versioning-strategy: widen
 
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/" # Location of package manifests
@@ -21,7 +22,8 @@ updates:
       time: "08:00"
     commit-message:
       prefix: "[Dependabot-pip]"
-
+    versioning-strategy: widen
+  
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
