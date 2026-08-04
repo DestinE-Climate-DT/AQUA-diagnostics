@@ -13,9 +13,10 @@ from aqua import Reader
 from aqua.core.configurer import ConfigPath
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
-
+from aqua.diagnostics.base import OutputSaver
 
 def reader_retrieve_and_merge(
+    filenames: list[str] = None,
     variable: str = None,
     ens_dim: str = "ensemble",
     catalog_list: list[str] = None,
@@ -23,7 +24,7 @@ def reader_retrieve_and_merge(
     exp_list: list[str] = None,
     source_list: list[str] = None,
     reader_kwargs: dict[str, list[str]] = None,
-    realization: dict[str, list[str]] = None,
+    realization: list[str] = None,
     region: str = None,
     lon_limits: float = None,
     lat_limits: float = None,
@@ -84,7 +85,7 @@ def reader_retrieve_and_merge(
     logger = log_configure(log_name="reader_retrieve_and_merge", log_level=loglevel)
     logger.info("Loading and merging the ensemble dataset using the Reader class")
 
-    if all(not v for v in [catalog_list, model_list, exp_list, source_list]):
+    if all(not v for v in [filenames, catalog_list, model_list, exp_list, source_list]):
         logger.warning("All of catalog, model, exp, and source are None or empty. Exiting reader_retrieve_and_merge.")
         return None
     # Ensure consistent list types
@@ -96,83 +97,139 @@ def reader_retrieve_and_merge(
         exp_list = [exp_list]
     if isinstance(source_list, str):
         source_list = [source_list]
+    if isinstance(filenames, str):
+        filenames = [filenames]
+    if isinstance(realization, str):
+        realization = [realization]
 
+    if realization is None: realization = ["r1"]
+    
     all_datasets = []
+
     # Loop through each (catalog, model, exp, source) combination
-    for cat_i, model_i, exp_i, src_i in zip(catalog_list, model_list, exp_list, source_list):
-        logger.info(f"Processing: catalog={cat_i}, model={model_i}, exp={exp_i}, source={src_i}")
+    if not filenames:
+        for cat_i, model_i, exp_i, src_i in zip(catalog_list, model_list, exp_list, source_list):
+            logger.info(f"Processing: catalog={cat_i}, model={model_i}, exp={exp_i}, source={src_i}")
+            model_ds_list = []
+            for r in reals:
+                try:
+                    # Retrieve the data using AQUA Reader
+                    reader = Reader(
+                        catalog=cat_i,
+                        model=model_i,
+                        exp=exp_i,
+                        source=src_i,
+                        realization=r,
+                        region=region,
+                        regrid=regrid,
+                        # reader_kwargs=reader_kwargs[model_i],
+                        areas=areas,
+                        startdate=startdate,
+                        enddate=enddate,
+                        fix=fix,
+                    )
 
-        # Get realizations and set default to ['r1'] if not provided
-        if realization is not None:
-            reals = realization.get(model_i)
-            if reals is None:
-                logger.info(f"No realizations defined for {model_i}, using default ['r1']")
-                reals = ["r1"]
-        else:
-            logger.info(f"No realizations defined for {model_i}, using default ['r1']")
-            reals = ["r1"]
+                    ds = reader.retrieve(var=variable)
+                    logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={r}")
+                    # Spatial selection
+                    if lon_limits and lat_limits:
+                        if "lon" in ds.dims and "lat" in ds.dims:
+                            ds = ds.sel(lon=slice(*lon_limits), lat=slice(*lat_limits))
+                        else:
+                            logger.debug(f"Dataset for {model_i}-{r} has no lon/lat dims, skipping spatial subset.")
 
+                    # Temporal selection (only if time dimension exists)
+                    if "time" in ds.dims and (startdate or enddate):
+                        ds = ds.sel(time=slice(startdate, enddate))
+                    elif "time" not in ds.dims and (startdate or enddate):
+                        logger.debug(f"Dataset for {model_i}-{r} has no time dimension.")
+
+                    # Add ensemble label
+                    ens_label = f"{model_i}_{exp_i}_{r}"
+                    ds = ds.expand_dims({ens_dim: [ens_label]})
+
+                    model_ds_list.append(ds)
+
+                except Exception as e:
+                    logger.warning(f"Skipping {model_i}-{exp_i}-{r} due to error: {e}")
+                    continue
+
+            if not model_ds_list:
+                logger.warning(f"No realizations loaded for {model_i} ({exp_i}). Skipping...")
+                continue
+
+            # Concatenate realizations for this model
+            model_ens = xr.concat(model_ds_list, dim=ens_dim, combine_attrs="override")
+            all_datasets.append(model_ens)
+
+            # Free up memory from individual realizations
+            for ds in model_ds_list:
+                ds.close() if hasattr(ds, "close") else None
+            del model_ds_list
+            del model_ens
+            gc.collect()
+
+    elif filenames:
+        # For now Single model only using AQUA Reader backend 
         model_ds_list = []
-
-        for r in reals:
+        for filename, r in zip(filenames, realization):
+            logger.info(f"Processing: file {filename}")
             try:
                 # Retrieve the data using AQUA Reader
                 reader = Reader(
-                    catalog=cat_i,
-                    model=model_i,
-                    exp=exp_i,
-                    source=src_i,
-                    realization=r,
-                    region=region,
-                    regrid=regrid,
+                    path=filename,
+                    startdate=startdate,
+                    enddate=enddate,
                     # reader_kwargs=reader_kwargs[model_i],
                     areas=areas,
                     fix=fix,
                 )
 
                 ds = reader.retrieve(var=variable)
-                logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={r}")
+
+                logger.info(f"Loaded {variable} for {filename}")
                 # Spatial selection
                 if lon_limits and lat_limits:
                     if "lon" in ds.dims and "lat" in ds.dims:
                         ds = ds.sel(lon=slice(*lon_limits), lat=slice(*lat_limits))
                     else:
-                        logger.debug(f"Dataset for {model_i}-{r} has no lon/lat dims, skipping spatial subset.")
+                        logger.debug(f"Dataset for filename {filename} has no lon/lat dims, skipping spatial subset.")
 
                 # Temporal selection (only if time dimension exists)
                 if "time" in ds.dims and (startdate or enddate):
                     ds = ds.sel(time=slice(startdate, enddate))
                 elif "time" not in ds.dims and (startdate or enddate):
-                    logger.debug(f"Dataset for {model_i}-{r} has no time dimension.")
+                    logger.debug(f"Dataset for filename {filename}  has no time dimension.")
 
                 # Add ensemble label
-                ens_label = f"{model_i}_{exp_i}_{r}"
+                ens_label = f"{r}"
                 ds = ds.expand_dims({ens_dim: [ens_label]})
 
                 model_ds_list.append(ds)
 
             except Exception as e:
-                logger.warning(f"Skipping {model_i}-{exp_i}-{r} due to error: {e}")
+                logger.warning(f"Skipping filename {filename} due to error: {e}")
                 continue
 
-        if not model_ds_list:
-            logger.warning(f"No realizations loaded for {model_i} ({exp_i}). Skipping...")
-            continue
+            if not model_ds_list:
+                logger.warning(f"No realizations loaded using Reader-Backend. Skipping...")
+                continue
 
-        # Concatenate realizations for this model
-        model_ens = xr.concat(model_ds_list, dim=ens_dim, combine_attrs="override")
-        all_datasets.append(model_ens)
+            # Concatenate realizations for this model
+            model_ens = xr.concat(model_ds_list, dim=ens_dim, combine_attrs="override")
+            all_datasets.append(model_ens)
 
-        # Free up memory from individual realizations
-        for ds in model_ds_list:
-            ds.close() if hasattr(ds, "close") else None
-        del model_ds_list
-        del model_ens
-        gc.collect()
+            # Free up memory from individual realizations
+            for ds in model_ds_list:
+                ds.close() if hasattr(ds, "close") else None
+            del model_ds_list
+            del model_ens
+            gc.collect()
 
     # Merge across all models
     if not all_datasets:
-        raise RuntimeError("No datasets successfully retrieved from AQUA Reader.")
+        logger.warning("No datasets successfully retrieved from AQUA Reader. Skipping it!")
+        return 
 
     merged_dataset = xr.concat(all_datasets, dim=ens_dim, combine_attrs="override")
     logger.info(f"Merged {len(merged_dataset[ens_dim])} ensemble members total.")
@@ -415,10 +472,8 @@ def center_timestamp(time: pd.Timestamp, freq: str):
 
     return center_time
 
-
 def extract_realizations(catalog, model, exp, source):
-    """
-    Extract the realizations available for a given catalog, model, exp and source.
+    """Extract the realizations available for a given catalog, model, exp and source.
 
     Args:
         catalog (str): Intake catalog name.
@@ -431,23 +486,67 @@ def extract_realizations(catalog, model, exp, source):
     """
     configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
     cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
+
     expcat = cat()[model][exp]
-    entry = expcat[source]
+    esmcat = expcat[source].describe().get("user_parameters", {})
 
-    user_parameters = {}
-    if hasattr(entry, "describe"):
-        user_parameters = entry.describe().get("user_parameters", {})
-    elif hasattr(entry, "_yaml"):
-        user_parameters = entry._yaml().get("sources", {}).get(source, {}).get("parameters", {})
-        # _yaml() returns a dict of parameter_name -> {default, allowed, ...}
-        for name, param in user_parameters.items():
-            if name == "realization":
-                return param.get("allowed")
-        return None
-    elif hasattr(entry, "entry"):
-        user_parameters = getattr(entry.entry, "user_parameters", {})
+    for parameter in esmcat:
+        name = parameter.get("name")
 
-    for parameter in user_parameters:
-        if parameter.get("name") == "realization":
-            return parameter.get("allowed")
+        if name == "realization":
+            realization = parameter.get("allowed")
+            return realization
     return None
+
+def extract_realizations_list(catalog, model, exp, source):
+    """Extract the realizations available for a given catalog, model, exp and source.
+
+    Args:
+        catalog (str): Intake catalog name.
+        model (str): Model name.
+        exp (str): Experiment name.
+        source (str): Source name.
+
+    Returns:
+        list: List of available realizations.
+    """
+    configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
+    cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
+
+    expcat = cat()[model][exp]
+    
+    # Access the uninstantiated catalog entry using `_entries`
+    if source not in expcat._entries:
+        return None
+        
+    entry = expcat._entries[source]
+    
+    # describe() on the entry returns a dictionary containing 'user_parameters'
+    user_parameters = entry.describe().get("user_parameters", [])
+
+    # user_parameters is parsed by Intake into a list of dictionaries
+    for parameter in user_parameters:
+        name = parameter.get("name")
+        if name == "realization":
+            return parameter.get("allowed")
+            
+    return None
+
+def generate_realizations_path(catalog: str, model: str, exp: str, diagnostic_name: str, diagnostic_product: str, variable: str, outputdir: str, realization_list: list[str] = None,  extra_keys=None, file_format: str =".nc", loglevel="WARNING"):
+    
+    filenames = []
+    if realization_list:
+        for r in realization_list:
+            outputsaver = OutputSaver(diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, realization=r, outputdir=outputdir, loglevel=loglevel)
+            _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
+            path = outputdir + "/" + _path + file_format 
+            filenames.append(path)
+    else:
+        outputsaver = OutputSaver(diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=outputdir, loglevel=loglevel)
+        _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
+        path = outputdir + "/" + _path + file_format 
+        filenames.append(path)
+
+    return filenames
+        
+ 

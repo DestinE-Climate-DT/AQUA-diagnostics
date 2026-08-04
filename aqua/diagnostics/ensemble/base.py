@@ -308,10 +308,10 @@ class BaseMixin(Diagnostic):
         self,
         var,
         fig=None,
-        fig_std=None,
         startdate=None,
         enddate=None,
         description=None,
+        data_name=None,
         format: Union[str, list] = SAVE_FORMAT,
         dpi=300,
     ):
@@ -371,63 +371,29 @@ class BaseMixin(Diagnostic):
             enddate = enddate.strftime("%Y-%m-%d")
             metadata.update({"enddate": enddate})
 
-        if self.catalog is not None and self.model is not None and self.exp is not None:
-            if fig is not None:
-                outputsaver = OutputSaver(
-                    diagnostic=self.diagnostic_name,
-                    # diagnostic_product=self.diagnostic_product,
-                    catalog=self.catalog,
-                    model=self.model,
-                    exp=self.exp,
-                    model_ref=self.ref_model,
-                    exp_ref=self.ref_exp,
-                    outputdir=self.outputdir,
-                    loglevel=self.loglevel,
-                )
-                extra_keys = {}
-                data = "mean"
-                if var is not None:
-                    extra_keys.update({"var": var, "data": data})
-                if self.region is not None:
-                    extra_keys.update({"region": self.region})
-                outputsaver.save_figure(
-                    fig,
-                    diagnostic_product=self.diagnostic_product,
-                    extra_keys=extra_keys,
-                    metadata=metadata,
-                    extension=format,
-                    dpi=dpi,
-                )
-
-            if fig_std is not None:
-                metadata = {"Description": description}
-                extra_keys = {}
-
-                if fig_std is not None:
-                    outputsaver = OutputSaver(
-                        diagnostic=self.diagnostic_name,
-                        # diagnostic_product=self.diagnostic_product,
-                        catalog=self.catalog,
-                        model=self.model,
-                        exp=self.exp,
-                        model_ref=self.ref_model,
-                        exp_ref=self.ref_exp,
-                        outputdir=self.outputdir,
-                        loglevel=self.loglevel,
-                    )
-                    extra_keys = {}
-                    data = "std"
-                    if var is not None:
-                        extra_keys.update({"var": var, "data": data})
-                    if self.region is not None:
-                        extra_keys.update({"region": self.region})
-                    outputsaver.save_figure(
-                        fig_std,
-                        diagnostic_product=self.diagnostic_product,
-                        extra_keys=extra_keys,
-                        metadata=metadata,
-                        dpi=dpi,
-                        extension=format,
-                    )
+        extra_keys = {"var": var, "data": data_name}
+        if fig is not None:
+            outputsaver = OutputSaver(
+                diagnostic=self.diagnostic_name,
+                # diagnostic_product=self.diagnostic_product,
+                catalog=self.catalog,
+                model=self.model,
+                exp=self.exp,
+                model_ref=self.ref_model,
+                exp_ref=self.ref_exp,
+                outputdir=self.outputdir,
+                loglevel=self.loglevel,
+            )
+            if self.region is not None:
+                extra_keys.update({"region": self.region})
+            outputsaver.save_figure(
+                fig,
+                diagnostic_product=self.diagnostic_product,
+                extra_keys=extra_keys,
+                metadata=metadata,
+                extension=format,
+                dpi=dpi,
+            )
         else:
-            self.logger.info(f"Output plot is not saved, please check {self.catalog}, {self.model} and {self.exp}")
+            self.logger.warning(f"Unable to save the plot for {variable} for ensemble {data_name} in {self.diagnostic_product}") 
+

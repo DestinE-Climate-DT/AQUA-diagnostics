@@ -1,14 +1,15 @@
 import xarray as xr
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
 
 from aqua.core.exceptions import NoDataError
-from aqua.core.graphics import plot_single_map
+from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.util import get_projection
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
-
 
 class PlotEnsembleLatLon(BaseMixin):
     """Class to plot the ensmeble lat-lon"""
@@ -22,6 +23,9 @@ class PlotEnsembleLatLon(BaseMixin):
         model_list: list[str] = None,
         exp_list: list[str] = None,
         source_list: list[str] = None,
+        ref_catalog: str = None,
+        ref_model: str = None,
+        ref_exp: str = None,
         region: str = None,
         outputdir="./",
         loglevel: str = "WARNING",
@@ -74,12 +78,14 @@ class PlotEnsembleLatLon(BaseMixin):
         self.model_list = model_list
         self.exp_list = exp_list
         self.source_list = source_list
+        self.ref_catalog = ref_catalog
+        self.ref_model = ref_model
+        self.ref_exp = ref_exp
+
         self.region = region
 
         self.outputdir = outputdir
         self.loglevel = loglevel
-
-        self.figure = None
 
         super().__init__(
             loglevel=self.loglevel,
@@ -88,24 +94,23 @@ class PlotEnsembleLatLon(BaseMixin):
             model_list=self.model_list,
             exp_list=self.exp_list,
             source_list=self.source_list,
+            ref_catalog=self.ref_catalog,
+            ref_model=self.ref_model,
+            ref_exp=self.ref_exp,
             outputdir=self.outputdir,
         )
 
     def plot(
         self,
         var: str = None,
-        dataset_mean=None,
-        dataset_std=None,
+        dataset=None,
         long_name=None,
         description=None,
         dpi=300,
-        title_mean=None,
-        title_std=None,
+        title=None,
         save_format=SAVE_FORMAT,
-        vmin_mean=None,
-        vmax_mean=None,
-        vmin_std=None,
-        vmax_std=None,
+        vmin=None,
+        vmax=None,
         proj="robinson",
         proj_params={},
         transform_first=False,
@@ -114,6 +119,8 @@ class PlotEnsembleLatLon(BaseMixin):
         coastlines=True,
         cbar_label=None,
         units=None,
+        cmap=None,
+        data_name=None,
     ):
         """
         Plot ensemble mean and standard deviation on a latitude-longitude map.
@@ -165,34 +172,164 @@ class PlotEnsembleLatLon(BaseMixin):
             - Improve handling of cyclic longitude for global datasets.
         """
         self.logger.info("Plotting the ensemble computation")
-        if (dataset_mean is None) or (dataset_std is None):
-            raise NoDataError("No data given to the plotting function")
+        if (dataset is None):
+            self.logger.warning("No data given to the ensemble the plotting function")
+            return 
+        
+        # Load the data into the memory
+        dataset.load()
+
+        if (isinstance(dataset, xr.Dataset)):
+            dataset = dataset[var]
+        if bool(dataset.isnull().all()) or bool((dataset == 0).all()):
+            self.logger.warning(f"The map is empty (all NaN or all zero. Skipping the ensemble maps for {var} and {data_name}")
+            return
 
         if cbar_label is None:
             cbar_label = var
 
         if long_name is None:
-            long_name = dataset_mean.attrs.get("long_name") or var
+            long_name = dataset.attrs.get("long_name") or var
 
-        if title_mean is None:
-            title_mean = TitleBuilder(diagnostic="Ensemble mean", variable=long_name, model=self.model).generate()
-        if title_std is None:
-            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", variable=long_name, model=self.model).generate()
+        if title is None:
+            title = TitleBuilder(diagnostic="Ensemble diagnostic", variable=long_name, model=self.model).generate()
 
         proj = get_projection(proj, **proj_params)
 
         # mean plot
-        if isinstance(dataset_mean, xr.Dataset):
-            dataset_mean = dataset_mean[var]
+        if dataset is not None:
+            fig, ax = plot_single_map(
+                data=dataset,
+                proj=proj,
+                proj_params=proj_params,
+                contour=contour,
+                cyclic_lon=cyclic_lon,
+                coastlines=coastlines,
+                # transform_first=transform_first,
+                return_fig=True,
+                title=title,
+                vmin=vmin,
+                vmax=vmax,
+                cmap=cmap,
+                loglevel=self.loglevel,
+            )
+            ax.set_xlabel("Longitude")
+            ax.set_ylabel("Latitude")
+            self.logger.debug("Saving 2D ensemble map")
+            self.save_figure(var=var, fig=fig, data_name=data_name, description=description, format=save_format, dpi=dpi)
+            return fig, ax
         else:
-            dataset_mean = dataset_mean
-        if vmin_mean is None:
-            vmin_mean = dataset_mean.values.min()
-        if vmax_mean is None:
-            vmax_mean = dataset_mean.values.max()
+            return
 
-        fig1, ax1 = plot_single_map(
-            dataset_mean,
+    def plot_ensemble_diff_bias(
+        self,
+        var: str = None,
+        dataset=None,
+        ref_dataset=None,
+        long_name=None,
+        description=None,
+        dpi=300,
+        title=None,
+        save_format=SAVE_FORMAT,
+        vmin=None,
+        vmax=None,
+        proj="robinson",
+        proj_params={},
+        transform_first=False,
+        cyclic_lon=True,
+        contour=True,
+        coastlines=True,
+        cbar_label=None,
+        units=None,
+        cmap=None,
+        data_name=None,
+    ):
+        """
+        Plot ensemble mean and standard deviation on a latitude-longitude map.
+
+        Generates 2D maps of ensemble mean and standard deviation for a given
+        variable using the specified projection and visualization options.
+        The resulting figures can be saved as PNG and/or PDF files.
+
+        Args:
+            var (str): Variable name to plot.
+            dataset_mean (xarray.DataArray or Dataset): Ensemble mean dataset.
+            dataset_std (xarray.DataArray or Dataset): Ensemble standard deviation dataset.
+            long_name (str, optional): Long descriptive name for the variable. Defaults to None.
+            description (str, optional): Description string for saving the plot. Defaults to None.
+            dpi (int, optional): Resolution for saved figures. Default is 300.
+            title_mean (str, optional): Title for mean plot. Auto-generated if None.
+            title_std (str, optional): Title for standard deviation plot. Auto-generated if None.
+            save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg').
+                Default is SAVE_FORMAT.
+            vmin_mean, vmax_mean (float, optional): Color scale limits for mean plot. Auto-set if None.
+            vmin_std, vmax_std (float, optional): Color scale limits for std plot. Auto-set if None.
+            proj (str, optional): Map projection. Default is "robinson".
+            proj_params (dict, optional): Extra parameters for the projection. Defaults to {}.
+            transform_first (bool, optional): Whether to transform data before plotting. Default is False.
+            cyclic_lon (bool, optional): Whether longitude is cyclic. Default is False.
+            contour (bool, optional): Overlay contours. Default is True.
+            coastlines (bool, optional): Draw coastlines. Default is True.
+            cbar_label (str, optional): Label for the colorbar. Auto-generated if None.
+            units (str, optional): Units of the variable. Used for titles and labels.
+            data_name (str, optional): in order to safe plots with different names.
+        Returns:
+            dict: Dictionary containing figure and axes for mean and std plots:
+                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}.
+                  If standard deviation is zero everywhere, only 'mean_plot' is returned.
+
+        Raises:
+            NoDataError: If `dataset_mean` or `dataset_std` is None.
+
+        Notes:
+            - Titles and colorbar labels are automatically generated if not provided.
+            - Uses `self.save_figure` to save figures in the formats specified.
+            - Handles both xarray.DataArray and Dataset inputs.
+            - If vmin_std equals vmax_std, std plot is skipped.
+
+        TODO:
+            - Add support for plotting multiple variables in one call.
+            - Overlay observational or reference datasets.
+            - Enable interactive plotting with cartopy or matplotlib widgets.
+            - Improve handling of cyclic longitude for global datasets.
+        """
+        self.logger.info("Plotting the ensemble computation")
+        if (dataset is not None and ref_dataset is not None):
+            self.logger.debug("Data given to the ensemble bias the plotting function")
+        else:
+            self.logger.warning("No data given to the ensemble bias the plotting function. Skipping plotting maps!")
+            return 
+
+        # Load the data into the memory
+        dataset.load()
+        ref_dataset.load()
+
+        if (isinstance(dataset, xr.Dataset)):
+            dataset = dataset[var]
+        if bool(dataset.isnull().all()) or bool((dataset == 0).all()):
+            self.logger.warning(f"The map is empty (all NaN or all zero. Skipping the ensemble maps for {var} and {data_name}")
+            return
+
+        if cbar_label is None:
+            cbar_label = var
+
+        if long_name is None:
+            long_name = dataset.attrs.get("long_name") or var
+
+        if title is None:
+            title = TitleBuilder(diagnostic="Bias ensemble map", variable=long_name, model=self.model).generate()
+
+        proj = get_projection(proj, **proj_params)
+
+        if isinstance(dataset, xr.Dataset):
+            dataset = dataset[var]
+        if isinstance(ref_dataset, xr.Dataset):
+            ref_dataset = ref_dataset[var]
+
+        # bias plot
+        fig, ax = plot_single_map_diff(
+            data=dataset,
+            data_ref=ref_dataset,
             proj=proj,
             proj_params=proj_params,
             contour=contour,
@@ -200,46 +337,15 @@ class PlotEnsembleLatLon(BaseMixin):
             coastlines=coastlines,
             # transform_first=transform_first,
             return_fig=True,
-            title=title_mean,
-            vmin=vmin_mean,
-            vmax=vmax_mean,
+            title=title,
+            vmin=vmin,
+            vmax=vmax,
+            cmap=cmap,
             loglevel=self.loglevel,
         )
-        ax1.set_xlabel("Longitude")
-        ax1.set_ylabel("Latitude")
-        self.logger.debug("Saving 2D map of mean")
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+        self.logger.debug("Saving 2D ensemble bias map")
+        self.save_figure(var=var, fig=fig, data_name=data_name, description=description, format=save_format, dpi=dpi)
+        return fig, ax            
 
-        # STD plot
-        if isinstance(dataset_std, xr.Dataset):
-            dataset_std = dataset_std[var]
-        else:
-            dataset_std = dataset_std
-        if vmin_std is None:
-            vmin_std = dataset_std.values.min()
-        if vmax_std is None:
-            vmax_std = dataset_std.values.max()
-        if vmin_std == vmax_std:
-            self.logger.info("STD is Zero everywhere")
-            self.save_figure(var=var, fig=fig1, description=description, format=save_format, dpi=dpi)
-            return {"mean_plot": [fig1, ax1]}
-
-        fig2, ax2 = plot_single_map(
-            dataset_std,
-            proj=proj,
-            proj_params=proj_params,
-            contour=contour,
-            cyclic_lon=cyclic_lon,
-            coastlines=coastlines,
-            # transform_first=transform_first,
-            return_fig=True,
-            title=title_std,
-            vmin=vmin_std,
-            vmax=vmax_std,
-            loglevel=self.loglevel,
-        )
-        ax2.set_xlabel("Longitude")
-        ax2.set_ylabel("Latitude")
-
-        # Saving plots
-        self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format=save_format, dpi=dpi)
-        return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}

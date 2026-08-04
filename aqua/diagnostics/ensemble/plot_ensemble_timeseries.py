@@ -26,7 +26,6 @@ class PlotEnsembleTimeseries(BaseMixin):
         ref_catalog: str = None,
         ref_model: str = None,
         ref_exp: str = None,
-        region: str = None,
         outputdir="./",
         loglevel: str = "WARNING",
     ):
@@ -65,7 +64,7 @@ class PlotEnsembleTimeseries(BaseMixin):
         self.ref_model = ref_model
         self.ref_exp = ref_exp
         # TODO: Include region information
-        # self.region = region
+        #self.region = region
 
         self.outputdir = outputdir
         self.loglevel = loglevel
@@ -165,23 +164,38 @@ class PlotEnsembleTimeseries(BaseMixin):
         else:
             model_str = str(self.model)
 
-        if title is None:
-            if startdate is not None:
-                startdate = pd.Timestamp(startdate).strftime("%Y-%m-%d")
-            if enddate is not None:
-                enddate = pd.Timestamp(enddate).strftime("%Y-%m-%d")
+        # This dictionary is to check if ensemble mean and std data or reference data mean is provided
+        # in order to aviod error in the plotting function below 
+        plot_data_dict = {"ref_monthly_data":ref_monthly_data, "ref_annual_data": ref_annual_data, "ens_monthly_data":monthly_data_mean, "ens_annual_data":annual_data_mean, "std_ens_monthly_data":monthly_data_std, "std_ens_annual_data":annual_data_std}
+        
+        plot_data_dict = {k: v for k,v in plot_data_dict.items() if v is not None}
+        
+        # Check if the data is provided otherwise return None
+        if not plot_data_dict:
+            return
+ 
+        # In case time bounds are not given 
+        # Derive time bounds; prefer monthly, fall back to annual 
+        _time_src = monthly_data_mean if monthly_data_mean is not None else annual_data_mean
+        if startdate is None:
+            startdate = _time_src.time.isel(time=-1).values
+        if enddate is None:
+            startdate = _time_src.time.isel(time=-1).values
 
+        # Select the time interval 
+        plot_data_dict = {k: v.sel(time=slice(startdate,enddate)) for k,v in plot_data_dict.items()}
+
+        # Converting the dates into string format for plot titles
+        startdate = pd.Timestamp(startdate).strftime("%Y-%m-%d")
+        enddate = pd.Timestamp(enddate).strftime("%Y-%m-%d")
+
+        if title is None:
             title = TitleBuilder(
                 diagnostic="Ensemble analysis", model=self.model, startyear=startdate, endyear=enddate
             ).generate()
 
         fig, ax = plot_timeseries(
-            ref_monthly_data=ref_monthly_data,
-            ref_annual_data=ref_annual_data,
-            ens_monthly_data=monthly_data_mean,
-            ens_annual_data=annual_data_mean,
-            std_ens_monthly_data=monthly_data_std,
-            std_ens_annual_data=annual_data_std,
+            **plot_data_dict,
             ref_label=self.ref_model,
             ens_label=model_str,
             figsize=figure_size,
@@ -189,7 +203,7 @@ class PlotEnsembleTimeseries(BaseMixin):
             loglevel=self.loglevel,
         )
         # Loop over if need to plot the ensemble members
-        if plot_ensemble_members:
+        if plot_ensemble_members and monthly_data is not None:
             for i in range(0, len(monthly_data[var][:, 0])):
                 fig1, ax1 = plot_timeseries(
                     fig=fig,
@@ -202,9 +216,14 @@ class PlotEnsembleTimeseries(BaseMixin):
                     title=title,
                     loglevel=self.loglevel,
                 )
-
-        # Saving plots
-        self.save_figure(
-            var=var, fig=fig, startdate=startdate, enddate=enddate, description=description, format=save_format, dpi=dpi
+            # Saving plots
+            self.save_figure(
+                var=var, fig=fig1, startdate=startdate, enddate=enddate, description=description, format=save_format, dpi=dpi
         )
-        return fig, ax
+            return fig1, ax1
+        else:
+            # Saving plots
+            self.save_figure(
+                var=var, fig=fig, startdate=startdate, enddate=enddate, description=description, format=save_format, dpi=dpi
+        )
+            return fig, ax
