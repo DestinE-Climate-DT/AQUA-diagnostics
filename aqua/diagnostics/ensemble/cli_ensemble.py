@@ -34,8 +34,8 @@ from aqua.diagnostics.base import (
     merge_config_args,
     open_cluster,
     template_parse_arguments,
+    TitleBuilder,
 )
-
 from aqua.diagnostics.ensemble import (
     generate_realizations_path,
     extract_realizations_list,
@@ -65,114 +65,81 @@ def parse_arguments(args):
 
     return parser.parse_args(args)
 
-def _output_options(config_dict):
-    """Extract output options from a configuration dictionary.
+def main(argv=None):
+    """
+    Main function for running multiple Ensemble classes
 
     Args:
-        config_dict (dict): full configuration dictionary.
-    Returns:
-        dict: keys outputdir, rebuild, save_netcdf, save_format, dpi.
+        argv(list, optional): command-line arguments. Defaults to sys.argv[1:].
     """
-    out = config_dict.get("output", {})
-    return {
-        "outputdir": out.get("outputdir", "./"),
-        "rebuild": out.get("rebuild", True),
-        "save_netcdf": out.get("save_netcdf", True),
-        "save_format": out.get("save_format", SAVE_FORMAT),
-        "dpi": out.get("dpi", 300),
-    }
 
-def _retrieve_dataset(
-    filenames, variable, catalog, model, exp, source, realization_dict, region=None, startdate=None, enddate=None, loglevel=None
-):
-    """Retrieve and merge ensemble data for one variable.
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
-    Args:
-        variable (str): variable name.
-        catalog (str): catalog identifier.
-        model (str): model identifier.
-        exp (str): experiment identifier.
-        source (str): source identifier.
-        realization_dict (dict): mapping of model name to realization list.
-        region (str | None): optional region filter.
-        startdate (str | None): optional start date string.
-        enddate (str | None): optional end date string.
-        loglevel: configured log instance. Pass via config_dict loglevel
+    # Initialize and prepare CLI
+    cli = DiagnosticCLI(args, diagnostic_name='atmosphere2d', default_config='config-atmosphere2d-berkeley-ensemble.yaml')
+    
+    # Preparing Dask cluster
+    cli.prepare()
+    cli.open_dask_cluster()
 
-    Returns:
-        xarray.Dataset | None: merged dataset, or None if retrieval failed.
-    """
-    dataset = reader_retrieve_and_merge(
-        filenames=filenames,
-        variable=variable,
-        catalog_list=catalog,
-        model_list=model,
-        exp_list=exp,
-        source_list=source,
-        region=region,
-        startdate=startdate,
-        enddate=enddate,
-        realization=realization_dict,
-        loglevel=loglevel,
-    )
-    if dataset is None and loglevel is not None:
-        loglevel.warning("Ensemble data retrieval returned None for variable '%s'.", variable)
-    return dataset
-
-def run_timeseries(config_dict, args, loglevel):
-    """Execute the EnsembleTimeseries diagnostic and plot loop.
-
-    Reads all parameters directly from *config_dict*, which is the already-
-    loaded and CLI-merged timeseries configuration dictionary.
-
-    Args:
-        config_dict (dict): merged timeseries configuration dictionary.
-        args (argparse.Namespace): parsed CLI arguments (used for output dir
-            override only; dataset fields are already merged into config_dict).
-        loglevel: configured log instance. Pass via config_dict loglevel
-    """
-    diag_config = config_dict["diagnostics"]["timeseries"]
-    output_opts = _output_options(config_dict)
-
-    params = diag_config.get("params", {}).get("default", {})
-
-    monthly = params.get("monthly")
-    annual = params.get("annual")
-
-    startdate_data = params.get("startdate")
-    enddate_data = params.get("enddate")
-
-    variables = diag_config.get("variables") or []
-
-    datasets = config_dict.get("datasets")
+    # Dataset for single model
+    datasets = cli.config_dict.get("datasets")
     first = datasets[0]
     catalog = get_arg(args, "catalog", first["catalog"])
     model = get_arg(args, "model", first["model"])
     exp = get_arg(args, "exp", first["exp"])
     source = get_arg(args, "source", first["source"])
     regrid = get_arg(args, "regrid", first.get("regrid"))
-    if startdate_data is None: startdate_data = get_arg(args, "startdate", first.get("startdate") or None)
-    if enddate_data is None: enddate_data = get_arg(args, "enddate", first.get("enddate") or None) 
 
-    if "references" in config_dict:
-        ref = config_dict.get("references")
+    cli.logger.debug(f"Ensemble catalog: {catalog}")
+    cli.logger.debug(f"Ensemble model: {model}")
+    cli.logger.debug(f"Ensemble exp: {exp}")
+    cli.logger.debug(f"Ensemble source: {source}")
+ 
+    # Single reference 
+    if "references" in cli.config_dict:
+        ref = cli.config_dict.get("references")
         first_ref = ref[0]
         catalog_ref = get_arg(args, "catalog", first_ref["catalog"])
         model_ref = get_arg(args, "model", first_ref["model"])
         exp_ref = get_arg(args, "exp", first_ref["exp"])
         source_ref = get_arg(args, "source", first_ref["source"])
-        startdate_ref = get_arg(args, "startdate", first_ref["startdate"])
-        enddate_ref = get_arg(args, "enddate", first_ref["enddate"])
+        
+        cli.logger.debug(f"Reference catalog: {catalog}")
+        cli.logger.debug(f"Reference model: {model}")
+        cli.logger.debug(f"Reference exp: {exp}")
+        cli.logger.debug(f"Reference source: {source}")
+    
 
-    # This is not defined in the unified config file
-    plot_ensemble_members=True
+    # Output parameters
+    outputdir = cli.config_dict.get("output", {}).get("outputdir", "./")
+    rebuild = cli.config_dict.get("output", {}).get("rebuild", True)
+    save_netcdf = cli.config_dict.get("output", {}).get("save_netcdf", True)
+    save_format = cli.config_dict.get("output", {}).get("save_format", SAVE_FORMAT)
+    dpi = cli.config_dict.get("output", {}).get("dpi", 300)
 
+    # Time series ensemble 
+    ts_diag_config = cli.config_dict["diagnostics"]["timeseries"]
+
+    params = ts_diag_config.get("params", {}).get("default", {})
+    monthly = params.get("monthly")
+    annual = params.get("annual") 
+    plot_ensemble_members= params.get("plot_ensemble_members", True)
+
+    startdate_data = params.get("startdate")
+    enddate_data = params.get("enddate")
+    if startdate_data is None: startdate_data = get_arg(args, "startdate", first.get("startdate") or None)
+    if enddate_data is None: enddate_data = get_arg(args, "enddate", first.get("enddate") or None) 
+
+    variables = ts_diag_config.get("variables") or []
+
+    # Variables in Timeseries config
     for variable in variables:
 
-        var_params = diag_config.get("params", {}).get(variable, {})
+        var_params = ts_diag_config.get("params", {}).get(variable, {})
         regions = var_params.get("regions") or []
         for region in regions:
-            #logger.info("Timeseries — variable: %s, region: %s", variable, region)
+            cli.logger.info("Ensemble Timeseries for variable: %s, region: %s", variable, region)
             
             # Dictionary to contain all the inputs for the Ensemble Timeseries class
             timeseries_dict = {}
@@ -181,77 +148,82 @@ def run_timeseries(config_dict, args, loglevel):
             # needed for the plot class 
             timeseries_ref_plot_dict = {}
  
+            # Monthly dataset
             if monthly:
                 extra_dict = {"variable": variable, "freq": "monthly", "region":region}
                 mon_realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
-                mon_filenames = generate_realizations_path(catalog=catalog, model=model, exp=exp, realization_list=mon_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=output_opts["outputdir"], extra_keys=extra_dict, file_format=".nc", loglevel=loglevel)
-                
-                #loglevel.info(f"######## {mon_filenames} #############")
-                dataset_mon = _retrieve_dataset(
+                mon_filenames = generate_realizations_path(catalog=catalog, model=model, exp=exp, realization_list=mon_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
+            
+                cli.logger.debug(f"Files for monthly ensemble timeseries {mon_filenames}")
+
+                # Loading and merging monthly Timeseries datasets 
+                dataset_mon = reader_retrieve_and_merge(
                     filenames=mon_filenames,
                     variable=variable,
-                    catalog=catalog,
-                    model=model,
-                    exp=exp,
-                    source=source,
-                    realization_dict=mon_realization_list,
+                    #catalog=catalog,
+                    #model=model,
+                    #exp=exp,
+                    #source=source,
+                    realization=mon_realization_list,
                     region=region,
                     startdate=startdate_data,
                     enddate=enddate_data,
-                    loglevel=loglevel,
+                    loglevel=cli.loglevel,
                 )
                 if dataset_mon is None:
-                    #loglevel.warning(
-                    #    "Skipping monthly timeseries for variable '%s', region '%s'.",
-                    #    variable,
-                    #    region,
-                    #)
+                    cli.logger.warning(
+                        "Skipping monthly timeseries for variable '%s', region '%s'.",
+                        variable,
+                        region,
+                    )
                     continue
                 
                 if dataset_mon:
                     timeseries_dict["monthly_data"] = dataset_mon
  
+            # Annual dataset 
             if annual:
                 extra_dict = {"variable": variable, "freq":"annual", "region":region}
                 ann_realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
-                ann_filenames = generate_realizations_path(catalog=catalog, model=model, exp=exp, realization_list=ann_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=output_opts["outputdir"], extra_keys=extra_dict, file_format=".nc", loglevel=loglevel)
+                ann_filenames = generate_realizations_path(catalog=catalog, model=model, exp=exp, realization_list=ann_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
 
+                cli.logger.debug(f"Files for annual ensemble timeseries {ann_filenames}") 
 
-                dataset_ann = _retrieve_dataset(
+                # Loading and merging monthly Timeseries datasets 
+                dataset_ann = reader_retrieve_and_merge(
                     filenames=ann_filenames,
                     variable=variable,
-                    catalog=catalog,
-                    model=model,
-                    exp=exp,
-                    source=source,
-                    realization_dict=ann_realization_list,
+                    #catalog=catalog,
+                    #model=model,
+                    #exp=exp,
+                    #source=source,
+                    realization=ann_realization_list,
                     region=region,
                     startdate=startdate_data,
                     enddate=enddate_data,
-                    loglevel=loglevel,
+                    loglevel=cli.loglevel,
                 )
                 if dataset_ann is None:
-                    #loglevel.warning(
-                    #    "Skipping monthly timeseries for variable '%s', region '%s'.",
-                    #    variable,
-                    #    region,
-                    #)
+                    cli.logger.warning(
+                        "Skipping annual timeseries for variable '%s', region '%s'.",
+                        variable,
+                        region,
+                    )
                     continue
 
                 if dataset_ann:
                     timeseries_dict["annual_data"] = dataset_ann
 
+            # Instantiate the ensemble timeseries class
             ts = EnsembleTimeseries(
                 **timeseries_dict,
                 var=variable,
-                #monthly_data=dataset_mon,
-                #annual_data=dataset_ann,
                 catalog_list=catalog,
                 model_list=model,
                 exp_list=exp,
                 source_list=source,
-                outputdir=output_opts["outputdir"],
-                loglevel=loglevel,
+                outputdir=outputdir,
+                loglevel=cli.loglevel,
             )
             ts.run()
 
@@ -267,72 +239,76 @@ def run_timeseries(config_dict, args, loglevel):
                 )
             )
             if not has_data:
-                loglevel.warning(
+                cli.logger.warning(
                     "No timeseries output for variable '%s'. Skipping plot.",
                     variable,
                 )
                 continue
 
-            # Monthly reference
+            # Monthly reference timeseries
             extra_dict = {"variable": variable, "freq": "monthly", "region":region}
             ref_realization_list = extract_realizations_list(catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref)
-            mon_ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=output_opts["outputdir"], extra_keys=extra_dict, file_format=".nc", loglevel=loglevel)
+            mon_ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
+
+            # Loading reference monthly timeseries 
             if mon_ref_filenames:
-                dataset_mon_ref = _retrieve_dataset(
+                dataset_mon_ref = reader_retrieve_and_merge(
                     filenames=mon_ref_filenames,
                     variable=variable,
-                    catalog=catalog_ref,
-                    model=model_ref,
-                    exp=exp_ref,
-                    source=source_ref,
+                    #catalog=catalog_ref,
+                    #model=model_ref,
+                    #exp=exp_ref,
+                    #source=source_ref,
                     region=region,
-                    realization_dict=ref_realization_list,
-                    startdate=startdate_ref,
-                    enddate=enddate_ref,
-                    loglevel=loglevel,
+                    realization=ref_realization_list,
+                    #startdate=startdate_data,
+                    #enddate=startdate_data,
+                    loglevel=cli.loglevel,
                 )
                 if dataset_mon_ref is None:
-                    #loglevel.warning(
-                    #    "Skipping monthly timeseries for variable '%s', region '%s'.",
-                    #    variable,
-                    #    region,
-                    #)
+                    cli.logger.warning(
+                        "Skipping monthly reference timeseries for variable '%s', region '%s'.",
+                        variable,
+                        region,
+                    )
                     continue
 
                 if dataset_mon_ref:
                     if isinstance(dataset_mon_ref, xr.Dataset):
                         dataset_mon_ref = dataset_mon_ref[variable]
 
-            # Annual reference
+            # Annual reference timeseries
             extra_dict = {"variable": variable, "freq": "annual", "region":region}
-            ann_ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=output_opts["outputdir"], extra_keys=extra_dict, file_format=".nc", loglevel=loglevel)
+            ann_ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, outputdir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
 
+            # Loading reference annual timeseries 
             if ann_ref_filenames:
-                dataset_ann_ref = _retrieve_dataset(
+                dataset_ann_ref = reader_retrieve_and_merge(
                     filenames=ann_ref_filenames,
                     variable=variable,
-                    catalog=catalog_ref,
-                    model=model_ref,
-                    exp=exp_ref,
-                    source=source_ref,
+                    #catalog=catalog_ref,
+                    #model=model_ref,
+                    #exp=exp_ref,
+                    #source=source_ref,
                     region=region,
-                    realization_dict=ref_realization_list,
-                    startdate=startdate_ref,
-                    enddate=enddate_ref,
-                    loglevel=loglevel,
+                    realization=ref_realization_list,
+                    #startdate=startdate_data,
+                    #enddate=startdate_data,
+                    loglevel=cli.loglevel,
                 )
                 if dataset_ann_ref is None:
-                    #loglevel.warning(
-                    #    "Skipping monthly timeseries for variable '%s', region '%s'.",
-                    #    variable,
-                    #    region,
-                    #)
+                    cli.logger.warning(
+                        "Skipping annual reference timeseries for variable '%s', region '%s'.",
+                        variable,
+                        region,
+                    )
                     continue
 
                 if dataset_ann_ref:
                     if isinstance(dataset_ann_ref, xr.Dataset):
                         dataset_ann_ref = dataset_ann_ref[variable]
 
+            # Instiatating ensemble timeseries plotting class
             ts_plot = PlotEnsembleTimeseries(
                 catalog_list=catalog,
                 model_list=model,
@@ -341,8 +317,8 @@ def run_timeseries(config_dict, args, loglevel):
                 ref_catalog=catalog_ref,
                 ref_model=model_ref,
                 ref_exp=exp_ref,
-                outputdir=output_opts["outputdir"],
-                loglevel=loglevel,
+                outputdir=outputdir,
+                loglevel=cli.loglevel,
             )
 
             # Derive time bounds; prefer monthly, fall back to annual
@@ -350,6 +326,7 @@ def run_timeseries(config_dict, args, loglevel):
             startdate_plot = _time_src.time.isel(time=0).values
             enddate_plot = _time_src.time.isel(time=-1).values
 
+            # Ensemble Timeseries plotting function
             ts_plot.plot(
                 var=variable,
                 monthly_data=ts.monthly_data,
@@ -358,260 +335,230 @@ def run_timeseries(config_dict, args, loglevel):
                 annual_data=ts.annual_data,
                 annual_data_mean=ts.annual_data_mean,
                 annual_data_std=ts.annual_data_std,
-                ref_monthly_data=dataset_mon_ref if dataset_mon_ref is not None else None,
-                ref_annual_data=dataset_ann_ref if dataset_ann_ref is not None else None,
-                save_format=output_opts["save_format"],
+                ref_monthly_data=dataset_mon_ref,
+                ref_annual_data=dataset_ann_ref,
+                save_format=save_format,
                 plot_ensemble_members=plot_ensemble_members,
                 startdate=startdate_plot,
                 enddate=enddate_plot,
             )
 
-            #loglevel.info("Timeseries diagnostic finished for variable '%s'.", variable)
+            cli.logger.info("Timeseries diagnostic finished for variable '%s'.", variable)
 
+    cli.logger.info("Ensemble timeseries diagnostic completed!")
 
-def run_latlon(config_dict, args, loglevel):
-    """Execute the EnsembleLatLon diagnostic and plot loop.
+    # Global Bias Ensemble 
+    gb_diag_config = cli.config_dict["diagnostics"]["globalbiases"]
+    if gb_diag_config: cli.logger.info("Ensemble maps diagnostic begins")
 
-    Reads all parameters directly from *config_dict*, which is the already-
-    loaded and CLI-merged latlon configuration dictionary.
-
-    Args:
-        config_dict (dict): merged latlon configuration dictionary.
-        args (argparse.Namespace): parsed CLI arguments (used for output dir
-            override only; dataset fields are already merged into config_dict).
-        loglevel (str): log level string passed to class constructors.
-    """
-
-    diag_config = config_dict["diagnostics"]["globalbiases"]
-    output_opts = _output_options(config_dict)
-
-    params = diag_config.get("params", {}).get("default", {})
-
-    variables = diag_config.get("variables") or []
-
-    all_plot_params = diag_config.get("plot_params", {}) 
-
+    params = gb_diag_config.get("params", {}).get("default", {})
+    variables = gb_diag_config.get("variables") or []
+    all_plot_params = gb_diag_config.get("plot_params", {}) 
     default_plot = all_plot_params.get("default", {})
 
-    #catalog, model, exp, source, _regrid = _resolve_dataset(args, config_dict, loglevel)
-    datasets = config_dict.get("datasets")
-    first = datasets[0]
-    catalog = get_arg(args, "catalog", first["catalog"])
-    model = get_arg(args, "model", first["model"])
-    exp = get_arg(args, "exp", first["exp"])
-    source = get_arg(args, "source", first["source"])
-    regrid = get_arg(args, "regrid", first.get("regrid"))
-
-    if "references" in config_dict:
-        ref = config_dict.get("references")
-        first_ref = ref[0]
-        catalog_ref = get_arg(args, "catalog", first_ref["catalog"])
-        model_ref = get_arg(args, "model", first_ref["model"])
-        exp_ref = get_arg(args, "exp", first_ref["exp"])
-        source_ref = get_arg(args, "source", first_ref["source"])
-
-    # Reference
-    ref_realization_list = extract_realizations_list(catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref)
-    ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="globalbiases", diagnostic_product="annual_climatology", variable=variable, outputdir=output_opts["outputdir"], extra_keys=extra_dict, file_format=".nc", loglevel=loglevel)
-    if ref_filenames:
-        dataset_ref = _retrieve_dataset(
-            filenames=ref_filenames,
-            variable=variable,
-            catalog=catalog_ref,
-            model=model_ref,
-            exp=exp_ref,
-            source=source_ref,
-            region=region,
-            realization_dict=ref_realization_list,
-            startdate=startdate_ref,
-            enddate=enddate_ref,
-            loglevel=loglevel,
-        )
-        #if dataset_ref is None:
-        #    #loglevel.warning(
-        #    #    "Skipping monthly timeseries for variable '%s', region '%s'.",
-        #    #    variable,
-        #    #    region,
-        #    #)
-        #    continue
-
-        if dataset_ref:
-            if isinstance(dataset_ref, xr.Dataset):
-                dataset_ref = dataset_ref[variable]
-            annual_climatology_ref_plot_dict["ref_data"] = dataset_ref
-
-
-
     for variable in variables:
-        #logger.info("LatLon — variable: %s", variable)
+        cli.logger.info("LatLon — variable: %s", variable)
+        var_params = gb_diag_config.get("params", {}).get(variable, {})
 
-        var_params = diag_config.get("params", {}).get(variable, {})
-        regions = var_params.get("regions") or []
+        # Keeping the region variable in case if we have regions for bias
+        #regions = var_params.get("regions") or []
+        region = None
 
-        if regions:
-            for region in regions:
+        #if regions:
+        #    for region in regions:
 
-                realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
-                extra_dict = {"variable": variable, "region":region}
+        realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
+        #        extra_dict = {"variable": variable, "region":region}
+        extra_dict = {"variable": variable}
+        filenames = generate_realizations_path(catalog=catalog, model=model, exp=exp, realization_list=realization_list, diagnostic_name="globalbiases", diagnostic_product="annual_climatology", variable=variable, outputdir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
 
-                filenames = generate_realizations_path(catalog=catalog, model=model, exp=exp, realization_list=realization_list, diagnostic_name="globalbiases", diagnostic_product="annual_climatology", variable=variable, outputdir=output_opts["outputdir"], extra_keys=extra_dict, file_format=".nc", loglevel=loglevel)
+        dataset = reader_retrieve_and_merge(
+            filenames=filenames,
+            variable=variable,
+            #catalog=catalog,
+            #model=model,
+            #exp=exp,
+            #source=source,
+            realization=realization_list,
+            loglevel=cli.loglevel,
+        )
+        if dataset is None:
+            cli.logger.warning("Unable to load and merge the dataset in Ensemble maps for for variable '%s'. Skipping it!", variable)
+            continue
 
-                dataset = _retrieve_dataset(
-                    filenames=filenames,
-                    variable=variable,
-                    catalog=catalog,
-                    model=model,
-                    exp=exp,
-                    source=source,
-                    realization_dict=realization_list,
-                    loglevel=loglevel,
-                )
-                if dataset is None:
-                    loglevel.warning("Skipping latlon for variable '%s'.", variable)
-                    continue
+        ens_latlon = EnsembleLatLon(
+            var=variable,
+            dataset=dataset,
+            catalog_list=catalog,
+            model_list=model,
+            exp_list=exp,
+            source_list=source,
+            outputdir=outputdir,
+            loglevel=cli.loglevel,
+        )
+        ens_latlon.run()
 
-                ens_latlon = EnsembleLatLon(
-                    var=variable,
-                    dataset=dataset,
-                    catalog_list=catalog,
-                    model_list=model,
-                    exp_list=exp,
-                    source_list=source,
-                    outputdir=output_opts["outputdir"],
-                    loglevel=loglevel,
-                )
-                ens_latlon.run()
+        # Reference
+        dataset_ref = None
+        dataset_std_ref = None 
 
-                # Merge default and per-variable plot parameters
-                var_plot = all_plot_params.get(variable, {})
-                plot_params = {**default_plot, **var_plot}
-                param_dict = diag_config.get("params", {}).get(variable, {}) or {}
-
-                ens_latlon_plot = PlotEnsembleLatLon(
-                    catalog_list=catalog,
-                    model_list=model,
-                    exp_list=exp,
-                    source_list=source,
-                    outputdir=output_opts["outputdir"],
-                    loglevel=loglevel,
-                )
-
-                ens_latlon_plot.plot(
-                    var=variable,
-                    dataset_mean=ens_latlon.dataset_mean,
-                    dataset_std=ens_latlon.dataset_std,
-                    save_format=output_opts["save_format"],
-                    dpi=output_opts["dpi"],
-                    proj=plot_params.get("projection", "robinson"),
-                    proj_params=plot_params.get("projection_params", {}),
-                    vmin_mean=plot_params.get("vmin"),
-                    vmax_mean=plot_params.get("vmax"),
-                    vmin_std=plot_params.get("vmin_std"),
-                    vmax_std=plot_params.get("vmax_std"),
-                    units=param_dict.get("units"),
-                    long_name=param_dict.get("long_name"),
-                    transform_first=False,
-                    cyclic_lon=True,
-                    contour=True,
-                    coastlines=True,
-                    cbar_label=None,
-                )
-
-                loglevel.info("LatLon diagnostic finished for variable '%s'.", variable)
-
-        else:
-
-            realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
-            extra_dict = {"variable": variable}
-
-            filenames = generate_realizations_path(catalog=catalog, model=model, exp=exp, realization_list=realization_list, diagnostic_name="globalbiases", diagnostic_product="annual_climatology", variable=variable, outputdir=output_opts["outputdir"], extra_keys=extra_dict, file_format=".nc", loglevel=loglevel)
-
-            dataset = _retrieve_dataset(
-                filenames=filenames,
+        ref_realization = extract_realizations_list(catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref)
+        ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="globalbiases", diagnostic_product="annual_climatology", variable=variable, outputdir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
+        if ref_filenames:
+            dataset_ref = reader_retrieve_and_merge(
+                filenames=ref_filenames,
                 variable=variable,
-                catalog=catalog,
-                model=model,
-                exp=exp,
-                source=source,
-                realization_dict=realization_list,
-                loglevel=loglevel,
+                #catalog=catalog_ref,
+                #model=model_ref,
+                #exp=exp_ref,
+                #source=source_ref,
+                region=region,
+                realization=ref_realization_list,
+                loglevel=cli.loglevel,
             )
-            if dataset is None:
-                loglevel.warning("Skipping latlon for variable '%s'.", variable)
+            
+            if dataset_ref is None:
+                cli.logger.warning(
+                    "Unable to load reference map for variable '%s', region '%s'.",
+                    variable,
+                    region,
+                )
                 continue
 
-            ens_latlon = EnsembleLatLon(
-                var=variable,
-                dataset=dataset,
-                catalog_list=catalog,
-                model_list=model,
-                exp_list=exp,
-                source_list=source,
-                outputdir=output_opts["outputdir"],
-                loglevel=loglevel,
-            )
-            ens_latlon.run()
-
+            if dataset_ref:
+                dataset_ref = dataset_ref.squeeze("ensemble")
+                if isinstance(dataset_ref, xr.Dataset):
+                    dataset_ref = dataset_ref[variable]
+                
             # Merge default and per-variable plot parameters
             var_plot = all_plot_params.get(variable, {})
             plot_params = {**default_plot, **var_plot}
-            param_dict = diag_config.get("params", {}).get(variable, {}) or {}
+            param_dict = gb_diag_config.get("plot_params", {}).get(variable, {}) or {}
 
-            ens_latlon_plot = PlotEnsembleLatLon(
-                catalog_list=catalog,
-                model_list=model,
-                exp_list=exp,
-                source_list=source,
-                outputdir=output_opts["outputdir"],
-                loglevel=loglevel,
-            )
+            # Need to define them in the config files
+            vmin_ensemble = param_dict.get("vmin_ensemble") or None
+            vmax_ensemble = param_dict.get("vmax_ensemble") or None
+            vmin_std_ensemble = param_dict.get("vmin_std_ensemble") or None
+            vmax_std_ensemble = param_dict.get("vmax_std_ensemble") or None
 
-            ens_latlon_plot.plot(
-                var=variable,
-                dataset_mean=ens_latlon.dataset_mean,
-                dataset_std=ens_latlon.dataset_std,
-                save_format=output_opts["save_format"],
-                dpi=output_opts["dpi"],
-                proj=plot_params.get("projection", "robinson"),
-                proj_params=plot_params.get("projection_params", {}),
-                vmin_mean=plot_params.get("vmin"),
-                vmax_mean=plot_params.get("vmax"),
-                vmin_std=plot_params.get("vmin_std"),
-                vmax_std=plot_params.get("vmax_std"),
-                units=param_dict.get("units"),
-                long_name=param_dict.get("long_name"),
-                transform_first=False,
-                cyclic_lon=True,
-                contour=True,
-                coastlines=True,
-                cbar_label=None,
-            )
+            # will be taken from the original analysis config file
+            vmin_bias = param_dict.get("vmin") or None
+            vmax_bias = param_dict.get("vmax") or None
+            vmin_std_bias = param_dict.get("vmin_std") or None
+            vmax_std_bias = param_dict.get("vmax_std") or None
 
-            #loglevel.info("LatLon diagnostic finished for variable '%s'.", variable)
+            cmap = param_dict.get("cmap") or None                    
+            cbar_label = param_dict.get("cbar_label") or None
+            
+        ens_latlon_plot = PlotEnsembleLatLon(
+            catalog_list=catalog,
+            model_list=model,
+            exp_list=exp,
+            source_list=source,
+            ref_catalog=catalog_ref,
+            ref_model=model_ref,
+            ref_exp=exp_ref,
+            region=region,
+            outputdir=outputdir,
+            loglevel=cli.loglevel,
+        )
 
-def main(argv=None):
-    """
-    Main function for running multiple Ensemble classes
+        # Ensemble mean plot
+        title = TitleBuilder(diagnostic="Ensemble mean diagnostic", variable=variable, model=model).generate()
+        ens_latlon_plot.plot(
+            var=variable,
+            dataset=ens_latlon.dataset_mean,
+            save_format=save_format,
+            dpi=dpi,
+            proj=plot_params.get("projection", "robinson"),
+            proj_params=plot_params.get("projection_params", {}),
+            vmin=vmin_ensemble,
+            vmax=vmax_ensemble,
+            units=param_dict.get("units"),
+            long_name=param_dict.get("long_name"),
+            transform_first=False,
+            cyclic_lon=True,
+            contour=True,
+            coastlines=True,
+            cbar_label=cbar_label,
+            data_name="ensemble_mean",
+            cmap=cmap,
+        )
 
-    Args:
-        argv(list, optional): command-line arguments. Defaults to sys.argv[1:].
-    """
+        # Ensemble STD plot
+        title = TitleBuilder(diagnostic="Ensemble STD diagnostic", variable=variable, model=model).generate()
+ 
+        ens_latlon_plot.plot(
+            var=variable,
+            dataset=ens_latlon.dataset_std,
+            save_format=save_format,
+            dpi=dpi,
+            proj=plot_params.get("projection", "robinson"),
+            proj_params=plot_params.get("projection_params", {}),
+            vmin=vmin_std_ensemble,
+            vmax=vmax_std_ensemble,
+            units=param_dict.get("units"),
+            long_name=param_dict.get("long_name"),
+            transform_first=False,
+            cyclic_lon=True,
+            contour=True,
+            coastlines=True,
+            cbar_label=cbar_label,
+            data_name="ensemble_std",
+            cmap=cmap,
+        )
 
-    args = parse_arguments(argv if argv is not None else sys.argv[1:])
+        # Ensemble mean bias plot
+        title = TitleBuilder(diagnostic="Mean ensemble bias diagnostic", variable=variable, model=model).generate()
+ 
+        ens_latlon_plot.plot_ensemble_diff_bias(
+            var=variable,
+            dataset=ens_latlon.dataset_mean,
+            ref_dataset=dataset_ref,
+            save_format=save_format,
+            dpi=dpi,
+            proj=plot_params.get("projection", "robinson"),
+            proj_params=plot_params.get("projection_params", {}),
+            #vmin=vmin_bias,
+            #vmax=vmax_bias,
+            units=param_dict.get("units"),
+            long_name=param_dict.get("long_name"),
+            transform_first=False,
+            cyclic_lon=True,
+            contour=True,
+            coastlines=True,
+            cbar_label=cbar_label,
+            data_name="ensemble_bias_mean",
+            cmap=cmap,
+        )
 
-    # Initialize and prepare CLI
-    cli = DiagnosticCLI(args, diagnostic_name='atmosphere2d', default_config='config-atmosphere2d-berkeley-ensemble.yaml')
+        # Ensemble STD bias plot
+        title = TitleBuilder(diagnostic="STD ensemble bias diagnostic", variable=variable, model=model).generate()
+ 
+        ens_latlon_plot.plot_ensemble_diff_bias(
+            var=variable,
+            dataset=ens_latlon.dataset_std,
+            ref_dataset=dataset_std_ref,
+            save_format=save_format,
+            dpi=dpi,
+            proj=plot_params.get("projection", "robinson"),
+            proj_params=plot_params.get("projection_params", {}),
+            #vmin=vmin_std_bias,
+            #vmax=vmax_std_bias,
+            units=param_dict.get("units"),
+            long_name=param_dict.get("long_name"),
+            transform_first=False,
+            #cyclic_lon=True,
+            #contour=True,
+            coastlines=True,
+            cbar_label=cbar_label,
+            data_name="ensemble_bias_std",
+            cmap=cmap,
+        )
 
-    cli.prepare()
-    cli.open_dask_cluster()
-    
-    # Ensemble Timeseries diagnostic
-    run_timeseries(config_dict=cli.config_dict, args=args, loglevel=cli.loglevel)
+        cli.logger.info("Ensemble maps diagnostic finished for variable '%s'.", variable) 
 
-    # Ensemble 2D maps diagnostic
-    #run_latlon(config_dict=cli.config_dict, args=args, loglevel=cli.loglevel)
-
-    cli.close_dask_cluster()
+    cli.logger.info("Ensemble maps diagnostic completed!")
 
 if __name__ == "__main__":
-    main()
+    main() 
