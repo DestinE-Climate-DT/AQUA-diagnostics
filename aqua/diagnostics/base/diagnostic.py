@@ -1,6 +1,8 @@
 import os
+from operator import attrgetter
 
 import pandas as pd
+import regionmask
 import xarray as xr
 
 from aqua import Reader
@@ -419,10 +421,20 @@ class Diagnostic:
             raise ValueError(f"Region '{region}' not found")
         spec = regions_dict[region]
         long_name = spec.get("longname", region)
-        lon_limits = spec.get("lon_limits", lon_limits)
-        lat_limits = spec.get("lat_limits", lat_limits)
-        self.logger.info("Region %s found, using lon: %s, lat: %s", long_name, lon_limits, lat_limits)
-        return long_name, lon_limits, lat_limits
+        if spec.get("regionmask") is None:
+            lon_limits = spec.get("lon_limits", lon_limits)
+            lat_limits = spec.get("lat_limits", lat_limits)
+            region_object = None
+        else:
+            lat_limits = None
+            lon_limits = None
+            regionmask_string = f"regionmask.defined_regions.{spec['regionmask']}"
+            parts = regionmask_string.split(
+                ".", 1
+            )  # e.g["regionmask", "defined_regions.natural_earth_v5_1_2.ocean_basins_50"]
+            region_object = attrgetter(parts[1])(regionmask)
+
+        return long_name, lon_limits, lat_limits, region_object
 
     def select_region(self, data: xr.Dataset, region: str = None, drop: bool = True, **kwargs):
         """
@@ -445,16 +457,29 @@ class Diagnostic:
         original_name = data.name if isinstance(data, xr.DataArray) else None
 
         if region is not None:
-            region, lon_limits, lat_limits = self._set_region(region=region)
+            longname, lon_limits, lat_limits, region_object = self._set_region(region=region)
             self.logger.info("Applying area selection for region: %s", region)
-            data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
-            data.attrs["AQUA_region"] = region
+            if region_object is not None:
+                self.logger.info("Using regionmask object: %s", region_object)
+                data = self.reader.select_area(data=data, region=region_object, region_sel=longname, drop=drop, **kwargs)
+            elif lon_limits is not None and lat_limits is not None:
+                self.logger.info("Using custom lon/lat limits: %s, %s", lon_limits, lat_limits)
+                data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
+            else:
+                raise ValueError(f"Region '{region}' does not have valid lon/lat limits or a regionmask object.")
+            data.attrs["AQUA_region"] = longname
 
             if original_name is not None:
                 data.name = original_name
         else:
-            region, lon_limits, lat_limits = None, None, None
+            longname, lon_limits, lat_limits, region_object = None, None, None, None
             self.logger.warning("Since region name is not specified, processing whole region in the dataset")
 
-        res_dict = {"data": data, "region": region, "lon_limits": lon_limits, "lat_limits": lat_limits}
+        res_dict = {
+            "data": data,
+            "region": longname,
+            "lon_limits": lon_limits,
+            "lat_limits": lat_limits,
+            "region_object": region_object,
+        }
         return res_dict

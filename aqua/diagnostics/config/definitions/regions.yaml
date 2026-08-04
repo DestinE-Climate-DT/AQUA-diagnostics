@@ -4,6 +4,10 @@
 
 regions:
 
+  arctic_test:
+    regiomask: natural_earth_v5_1_2.ocean_basins_50
+    longname: Arctic Ocean
+
   # Atmospheric / generic geographical bands
   nh:
     longname: North Midlatitudes
