@@ -40,6 +40,7 @@ class Hovmoller(Diagnostic):
         enddate: str = None,
         diagnostic_name: str = "oceandrift",
         vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
+        virtual_zarr: bool = False,
         loglevel: str = "WARNING",
     ):
         """Initialize the Hovmoller class.
@@ -55,7 +56,7 @@ class Hovmoller(Diagnostic):
             diagnostic_name (str, optional): Name of the diagnostic for filenames. Defaults to "oceandrift".
             vert_coord (str, optional): Name of the vertical dimension coordinate. Defaults to DEFAULT_OCEAN_VERT_COORD.
             loglevel (str, optional): Logging level. Defaults to "WARNING".
-
+            virtual_zarr (bool, optional): Whether to use virtual Zarr. Defaults to False.
         """
         super().__init__(
             catalog=catalog,
@@ -74,7 +75,7 @@ class Hovmoller(Diagnostic):
         self.vert_coord = vert_coord
         # Initialize the results list. Elements of the list are dataset with different anomanly ref.
         self.processed_data_list = []
-
+        self.virtual_zarr = virtual_zarr
     def run(
         self,
         outputdir: str = ".",
@@ -103,7 +104,8 @@ class Hovmoller(Diagnostic):
         """
         self.logger.info("Running Hovmoller diagram generation")
         # This will populate self.data
-        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+        rk = {**reader_kwargs, "virtual_zarr": self.virtual_zarr}
+        super().retrieve(var=var, reader_kwargs=rk, months_required=self.MINIMUM_MONTHS_REQUIRED)
         # HACK: some LRA datasets have levels in 'NEMO model layers' (also non NEMO models due to multi-IO)
         if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
             self.data[self.vert_coord].attrs["units"] = "m"
