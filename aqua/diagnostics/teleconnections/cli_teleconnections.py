@@ -11,7 +11,7 @@ import argparse
 import sys
 
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
-from aqua.diagnostics.teleconnections import ENSO, NAO, PlotENSO, PlotNAO
+from aqua.diagnostics.teleconnections import DMI, ENSO, NAO, PlotDMI, PlotENSO, PlotNAO
 
 
 def parse_arguments(args):
@@ -358,6 +358,163 @@ def main(argv=None):
                             dpi=cli.dpi,
                         )
                         plot_enso.save_plot(
+                            fig_cor,
+                            diagnostic_product=cor_product,
+                            format=cli.save_format,
+                            metadata={"description": correlation_description},
+                            dpi=cli.dpi,
+                        )
+
+        # DMI
+        if "DMI" in config_dict["diagnostics"]["teleconnections"]:
+            if config_dict["diagnostics"]["teleconnections"]["DMI"]["run"]:
+                logger.info("Running DMI teleconnections diagnostic")
+
+                dmi = [None] * len(config_dict["datasets"])
+
+                dmi_config = config_dict["diagnostics"]["teleconnections"]["DMI"]
+                seasons = dmi_config.get("seasons", "annual")
+
+                dmi_regressions = {season: [None] * len(config_dict["datasets"]) for season in seasons}
+                dmi_correlations = {season: [None] * len(config_dict["datasets"]) for season in seasons}
+
+                init_args = {"loglevel": cli.loglevel}
+
+                for i, dataset in enumerate(config_dict["datasets"]):
+                    dataset_args = cli.dataset_args(dataset)
+                    logger.info(f"Running dataset: {dataset_args}")
+
+                    dmi[i] = DMI(**dataset_args, **init_args)
+                    dmi[i].retrieve(reader_kwargs=cli.reader_kwargs)
+                    dmi[i].compute_index(rebuild=cli.rebuild)
+
+                    dmi[i].save_netcdf(
+                        dmi[i].index,
+                        diagnostic="dmi",
+                        diagnostic_product="index",
+                        outputdir=cli.outputdir,
+                        rebuild=cli.rebuild,
+                    )
+
+                    for season in seasons:
+                        dmi_regressions[season][i] = dmi[i].compute_regression(season=season)
+                        dmi_correlations[season][i] = dmi[i].compute_correlation(season=season)
+
+                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
+                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+
+                        dmi[i].save_netcdf(
+                            dmi_regressions[season][i],
+                            diagnostic="dmi",
+                            diagnostic_product=diagnostic_product_reg,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                        )
+                        dmi[i].save_netcdf(
+                            dmi_correlations[season][i],
+                            diagnostic="dmi",
+                            diagnostic_product=diagnostic_product_cor,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                        )
+
+                dmi_ref = [None] * len(config_dict["references"])
+
+                dmi_ref_regressions = {season: [None] * len(config_dict["references"]) for season in seasons}
+                dmi_ref_correlations = {season: [None] * len(config_dict["references"]) for season in seasons}
+
+                for i, reference in enumerate(config_dict["references"]):
+                    reference_args = cli.reference_args(reference)
+                    logger.info(f"Running reference: {reference_args}")
+
+                    dmi_ref[i] = DMI(**reference_args, **init_args)
+                    dmi_ref[i].retrieve()
+                    dmi_ref[i].compute_index(rebuild=cli.rebuild)
+
+                    dmi_ref[i].save_netcdf(
+                        dmi_ref[i].index,
+                        diagnostic="dmi",
+                        diagnostic_product="index",
+                        outputdir=cli.outputdir,
+                        rebuild=cli.rebuild,
+                    )
+
+                    for season in seasons:
+                        dmi_ref_regressions[season][i] = dmi_ref[i].compute_regression(season=season)
+                        dmi_ref_correlations[season][i] = dmi_ref[i].compute_correlation(season=season)
+
+                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
+                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+
+                        dmi_ref[i].save_netcdf(
+                            dmi_ref_regressions[season][i],
+                            diagnostic="dmi",
+                            diagnostic_product=diagnostic_product_reg,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                        )
+                        dmi_ref[i].save_netcdf(
+                            dmi_ref_correlations[season][i],
+                            diagnostic="dmi",
+                            diagnostic_product=diagnostic_product_cor,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                        )
+
+                if cli.save_format:
+                    logger.info("Plotting DMI with formats: %s", cli.save_format)
+                    plot_args = {
+                        "indexes": [dmi[i].index for i in range(len(dmi))],
+                        "ref_indexes": [dmi_ref[i].index for i in range(len(dmi_ref))],
+                        "outputdir": cli.outputdir,
+                        "rebuild": cli.rebuild,
+                        "loglevel": cli.loglevel,
+                    }
+
+                    plot_dmi = PlotDMI(**plot_args)
+
+                    fig_index, _ = plot_dmi.plot_index()
+                    index_description = plot_dmi.set_index_description()
+                    plot_dmi.save_plot(
+                        fig_index,
+                        diagnostic_product="index",
+                        format=cli.save_format,
+                        metadata={"description": index_description},
+                        dpi=cli.dpi,
+                    )
+
+                    for season in seasons:
+                        for i in range(len(dmi)):
+                            dmi_regressions[season][i].load(keep_attrs=True)
+                            dmi_ref_regressions[season][i].load(keep_attrs=True)
+                            dmi_correlations[season][i].load(keep_attrs=True)
+                            dmi_ref_correlations[season][i].load(keep_attrs=True)
+
+                        fig_reg = plot_dmi.plot_maps(
+                            maps=dmi_regressions[season], ref_maps=dmi_ref_regressions[season], statistic="regression"
+                        )
+                        fig_cor = plot_dmi.plot_maps(
+                            maps=dmi_correlations[season], ref_maps=dmi_ref_correlations[season], statistic="correlation"
+                        )
+
+                        regression_description = plot_dmi.set_map_description(
+                            maps=dmi_regressions[season], ref_maps=dmi_ref_regressions[season], statistic="regression"
+                        )
+                        correlation_description = plot_dmi.set_map_description(
+                            maps=dmi_correlations[season], ref_maps=dmi_ref_correlations[season], statistic="correlation"
+                        )
+
+                        reg_product = f"regression_{season}" if season != "annual" else "regression"
+                        cor_product = f"correlation_{season}" if season != "annual" else "correlation"
+
+                        plot_dmi.save_plot(
+                            fig_reg,
+                            diagnostic_product=reg_product,
+                            format=cli.save_format,
+                            metadata={"description": regression_description},
+                            dpi=cli.dpi,
+                        )
+                        plot_dmi.save_plot(
                             fig_cor,
                             diagnostic_product=cor_product,
                             format=cli.save_format,

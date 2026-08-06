@@ -32,3 +32,14 @@ MJO: # http://www.bom.gov.au/climate/mjo
   lonW: 0
   lonE: 360
   flip_sign: true # To obtain standard OLR variable
+
+# Dipole Mode index (DMI) coordinates
+DMI: # https://www.climate.gov/news-features/blogs/enso/meet-enso%E2%80%99s-neighbor-indian-ocean-dipole 
+  telec_type: 'region'
+  field: tos
+  weio: # Western Equatorial Indian Ocean
+    lon_limits: [50, 70]
+    lat_limits: [-10, 10]
+  eeio: # Eastern Equatorial Indian Ocean
+    lon_limits: [90, 108]
+    lat_limits: [-10, 0]
