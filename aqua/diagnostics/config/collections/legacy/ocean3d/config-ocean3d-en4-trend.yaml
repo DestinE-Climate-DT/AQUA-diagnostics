@@ -20,25 +20,11 @@ output:
   dpi: 300
 
 diagnostics:
-  ocean_drift:
-    hovmoller:
-      vert_coord: depth
-      diagnostic_name: 'ocean3d'
-      run: true
-      var: ['thetao', 'so']
-      regions: ['go', 'io', 'ao', 'so', 'arc_o', 'po']
-      dim_mean: ['lat', 'lon']
-
   ocean_trends:
     multilevel:
+      vert_coord: depth  # optional, default is 'level'
       diagnostic_name: 'ocean3d'
-      vert_coord: depth
-      run: true
-      var: ['thetao', 'so']
-      regions: ['go']
-    zonal:
-      diagnostic_name: 'ocean3d'
-      vert_coord: depth
       run: true
       var: ['thetao', 'so']
       regions: ['go', 'io', 'ao', 'so', 'arc_o', 'po']
+      # dim_mean: ['lat']
