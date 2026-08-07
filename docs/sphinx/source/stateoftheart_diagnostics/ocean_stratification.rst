@@ -35,7 +35,8 @@ The diagnostic is designed with a class that analyzes ocean data and computes st
 File structure
 --------------
 
-* The diagnostic is located in the ``aqua/diagnostics/ocean_stratification`` directory, which contains both the source code and the command line interface (CLI) script.
+* The diagnostic source code is located in the ``aqua/diagnostics/ocean_stratification`` directory.
+* The shared Ocean 3D CLI is ``aqua/diagnostics/ocean3d/cli_ocean3d.py`` (sections are enabled via the config).
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-stratification.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/ocean_stratification`` directory and contain examples of how to use the diagnostic.
 * Regions definitions are available in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``
@@ -114,8 +115,8 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ocean_stratification
-    python cli_ocean_stratification.py --config <path_to_config_file>
+    cd $AQUA/aqua/diagnostics/ocean3d
+    python cli_ocean3d.py --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
