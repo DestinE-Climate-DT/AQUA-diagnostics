@@ -12,6 +12,94 @@ from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 xr.set_options(keep_attrs=True)
 
 
+def get_anomaly(data: xr.DataArray, anomaly_ref: str = None, dim: str = "time") -> xr.DataArray:
+    """Compute anomaly for the given data along a specified dimension.
+
+    Args:
+        data: The input data array to process.
+        anomaly_ref: Reference for anomaly calculation. Can be "t0", "tmean", or None.
+            If "t0" or "tmean", the anomaly is computed relative to the initial time or the mean.
+            If None, no anomaly is computed.
+        dim: The dimension along which to compute the anomaly. Default is "time".
+
+    Returns:
+        The anomaly data array, or the original data if anomaly_ref is None.
+
+    """
+    if anomaly_ref is None:
+        return data
+    if anomaly_ref == "tmean":
+        return data - data.mean(dim=dim)
+    if anomaly_ref == "t0":
+        return data - data.isel({dim: 0})
+    raise ValueError("Invalid anomaly_ref: use 't0', 'tmean', or None")
+
+
+def standardise(data: xr.DataArray, dim: str = "time") -> xr.DataArray:
+    """Standardise the data along a specified dimension.
+
+    Args:
+        data: The input data array to standardise.
+        dim: The dimension along which to standardise. Default is "time".
+
+    Returns:
+        The standardised data array with updated attributes.
+
+    """
+    data = data / data.std(dim=dim)
+    data.attrs["units"] = "Stand. Units"
+    data.attrs["AQUA_standardise"] = f"Standardised with {dim}"
+    return data
+
+
+def apply_std_anomaly(
+    data: xr.DataArray,
+    anomaly_ref: str = None,
+    do_standardise: bool = False,
+    dim: str = "time",
+    region_name: str = None,
+) -> xr.DataArray:
+    """Compute anomaly and/or standardised anomaly along a dimension.
+
+    Args:
+        data: The input data array to process.
+        anomaly_ref: Reference for anomaly calculation. Can be "t0", "tmean", or None.
+        do_standardise: If True, standardise the (anomaly) data.
+        dim: Dimension for anomaly and/or standardisation. Default is "time".
+        region: Region name stored on ``AQUA_region`` attribute.
+
+    Returns:
+        Processed data with ``AQUA_ocean_drift_type`` (and optional region) attributes set.
+
+    """
+    if anomaly_ref is not None:
+        if anomaly_ref in ["t0", "tmean"]:
+            data = get_anomaly(data, anomaly_ref, dim)
+    if do_standardise:
+        data = standardise(data, dim)
+
+    s_std = "std_" if do_standardise else ""
+    anom = "anom" if anomaly_ref is not None else "full"
+    anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
+
+    data.attrs["AQUA_ocean_drift_type"] = f"{s_std}{anom}{anom_ref}"
+    if region_name is not None:
+        data.attrs["AQUA_region"] = region_name
+    return data
+
+
+def sort_drift_type(data) -> tuple:
+    """Return a sort key for ordering processed data by drift type."""
+    drift_type = data.attrs["AQUA_ocean_drift_type"]
+    if drift_type == "full":
+        return (0, drift_type)
+    if drift_type.startswith("anom"):
+        return (1, drift_type)
+    if drift_type.startswith("std"):
+        return (2, drift_type)
+    return (3, drift_type)
+
+
 class Hovmoller(Diagnostic):
     """A class for generating Hovmoller diagrams from ocean model data.
 
@@ -20,10 +108,8 @@ class Hovmoller(Diagnostic):
 
     Attributes:
         logger (Logger): Logger instance for the class.
-        outputdir (str): Directory to save the output files.
-        region (str): Region for area selection.
-        var (list): List of variables to process.
-        stacked_data (xarray.Dataset): Processed data for Hovmoller diagrams.
+        processed_data (dict): Mapping of region name to list of processed datasets
+            (anomaly/standardise combinations).
 
     """
 
@@ -72,14 +158,13 @@ class Hovmoller(Diagnostic):
         if vert_coord is None:
             vert_coord = DEFAULT_OCEAN_VERT_COORD
         self.vert_coord = vert_coord
-        # Initialize the results list. Elements of the list are dataset with different anomanly ref.
-        self.processed_data_list = []
+        self.processed_data = {}
 
     def run(
         self,
         outputdir: str = ".",
         rebuild: bool = True,
-        region: str = None,
+        regions: str | list = None,
         var: list = ["thetao", "so"],
         dim_mean=["lat", "lon"],
         anomaly_ref: str = None,
@@ -87,14 +172,14 @@ class Hovmoller(Diagnostic):
     ):
         """Run the Hovmoller diagram generation workflow.
 
-        This method retrieves the specified variables, applies region selection if provided,
-        computes Hovmoller diagrams with optional mean and anomaly processing, and saves the
-        results to netCDF files.
+        Retrieves data once, then computes and saves Hovmoller products for each
+        requested region.
 
         Args:
             outputdir (str, optional): Directory to save the output files. Defaults to ".".
             rebuild (bool, optional): Whether to rebuild the netCDF file. Defaults to True.
-            region (str, optional): Region for area selection. Defaults to None (global evaluation).
+            regions (str, list, or None, optional): Region(s) for area selection.
+                None means global evaluation. A list processes each region with a single retrieve.
             var (list, optional): List of variables to process. Defaults to ["thetao", "so"].
             dim_mean (list, optional): List of dimensions over which to compute the mean. Defaults to ["lat", "lon"].
             anomaly_ref (str or None, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None.
@@ -102,159 +187,113 @@ class Hovmoller(Diagnostic):
 
         """
         self.logger.info("Running Hovmoller diagram generation")
-        # This will populate self.data
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+        self._fix_vert_coord_units()
+
+        data_full = self.data
+        self.processed_data = {}
+
+        regions = to_list(regions)
+        if not regions:
+            regions = [None]
+
+        for reg in regions:
+            region_info = self._resolve_region(reg)
+            region_name = region_info["region_name"]
+            self.logger.info("Processing region: %s", region_name)
+            processed = self.compute_hovmoller(
+                data=data_full,
+                dim_mean=dim_mean,
+                anomaly_ref=anomaly_ref,
+                lat_limits=region_info["lat_limits"],
+                lon_limits=region_info["lon_limits"],
+                region_name=region_name,
+            )
+            self.processed_data[reg] = processed
+            self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=reg)
+
+        self.logger.info("Hovmoller diagram saved to netCDF file")
+
+    def _fix_vert_coord_units(self):
+        """Normalize vertical coordinate units and validate they are in metres."""
         # HACK: some LRA datasets have levels in 'NEMO model layers' (also non NEMO models due to multi-IO)
         if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
             self.data[self.vert_coord].attrs["units"] = "m"
         super()._check_data(data=self.data[self.vert_coord], var=self.vert_coord, units="m")
         self.logger.debug("Data retrieved successfully")
-        # If a region is specified, apply area selection to self.data
+
+    def _resolve_region(self, region: str = None) -> dict:
+        """Resolve region name and lat/lon limits for fldmean (no 3D subset).
+
+        Args:
+            region: Region key from the regions file, or None for global.
+
+        Returns:
+            dict with keys ``region``, ``lat_limits``, ``lon_limits``.
+
+        """
         if region:
-            self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
-            res_dict = super().select_region(data=self.data, region=region, drop=True)
-            self.region = res_dict["region"]
-            self.lat_limits = res_dict["lat_limits"]
-            self.lon_limits = res_dict["lon_limits"]
-        else:
-            self.region = "global"
-            self.lat_limits = None
-            self.lon_limits = None
-        self.stacked_data = self.compute_hovmoller(dim_mean=dim_mean, anomaly_ref=anomaly_ref)
+            self.logger.info("Selecting region: %s for diagnostic '%s'.", region, self.diagnostic_name)
+            region_name, lon_limits, lat_limits = self._set_region(region=region)
+            return {"region": region, "region_name": region_name, "lat_limits": lat_limits, "lon_limits": lon_limits}
+        return {"region": "global", "region_name": "global", "lat_limits": None, "lon_limits": None}
 
-        self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=self.region)
-        self.logger.info("Hovmoller diagram saved to netCDF file")
-
-    def _get_anomaly(self, data: xr.DataArray, anomaly_ref: str = None, dim: str = "time"):
-        """Compute anomaly for the given data along a specified dimension.
-
-        Args:
-            data : (xarray.DataArray) The input data array to process.
-            anomaly_ref : (str or None, optional) Reference for anomaly calculation. Can be "t0", "tmean", or None.
-                If "t0" or "tmean", the anomaly is computed relative to the initial time or the mean, respectively.
-                If None, no anomaly is computed.
-            dim : (str, optional) The dimension along which to compute the anomaly. Default is "time".
-
-        Returns:
-            xarray.DataArray
-                The anomaly data array with updated attributes and an added "type" dimension.
-
-        """
-        if anomaly_ref is None:
-            return data
-        if anomaly_ref == "tmean":
-            data = data - data.mean(dim=dim)
-        elif anomaly_ref == "t0":
-            data = data - data.isel({dim: 0})
-        else:
-            raise ValueError("Invalid anomaly_ref: use 't0', 'tmean', or None")
-        return data
-
-    def _get_standardise(self, data, dim="time"):
-        """Standardise the data along a specified dimension.
-
-        Args:
-            data : (xarray.DataArray) The input data array to standardise.
-            dim : (str, optional) The dimension along which to standardise. Default is "time".
-
-        Returns:
-            xarray.DataArray
-                The standardised data array with updated attributes and an added "type" dimension.
-
-        """
-        data = data / data.std(dim=dim)
-        data.attrs["units"] = "Stand. Units"
-        data.attrs["AQUA_standardise"] = f"Standardised with {dim}"
-        # type_str = f"Std_{data.attrs.get('AQUA_type', 'full')}"
-        return data
-
-    def _get_std_anomaly(
+    def compute_hovmoller(
         self,
-        data: xr.DataArray,
-        anomaly_ref: str = None,
-        standardise: bool = False,
-        dim: str = "time",
-    ):
-        """Compute anomaly and/or standardised anomaly for the given data along a specified dimension.
+        data: xr.Dataset = None,
+        dim_mean: list = None,
+        anomaly_ref: str | list = None,
+        lat_limits=None,
+        lon_limits=None,
+        region_name: str = None,
+    ) -> list:
+        """Process data for drift analysis by applying transforms and aggregations.
 
         Args:
-            data (xarray.DataArray): The input data array to process.
-            anomaly_ref (str or None, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None.
-                If "t0" or "tmean", the anomaly is computed relative to the initial time or the mean, respectively.
-                If None, no anomaly is computed.
-            standardise (bool or None, optional): If True, standardise the anomaly.
-                If None or False, no standardisation is applied.
-            dim (str, optional): The dimension along which to compute the anomaly and/or standardisation. Default is "time".
-
-        Returns:
-            xarray.DataArray: The processed data array with updated attributes and an added "type" dimension indicating
-            the type of transformation applied.
-
-        Notes:
-            The function updates the 'AQUA_type' attribute of the returned DataArray to indicate
-            the type of anomaly and/or standardisation performed.
-
-        """
-        if anomaly_ref is not None:
-            if anomaly_ref in ["t0", "tmean"]:
-                data = self._get_anomaly(data, anomaly_ref, dim)
-        if standardise:
-            data = self._get_standardise(data, dim)
-
-        s_std = "std_" if standardise else ""
-        anom = "anom" if anomaly_ref is not None else "full"
-        anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
-
-        type = f"{s_std}{anom}{anom_ref}"
-        data.attrs["AQUA_ocean_drift_type"] = type
-        data.attrs["AQUA_region"] = self.region
-        return data
-
-    def compute_hovmoller(self, dim_mean: str = None, anomaly_ref: str | list = None):
-        """Process input data for drift analysis by applying various transformations and aggregations.
-
-        Args:
-            dim_mean (str or None): The dimension along which to compute the mean.
+            data: Input dataset. Defaults to ``self.data``.
+            dim_mean: Dimensions along which to compute the field mean.
                 If None, no mean is computed.
-            anomaly_ref (str or list, optional): Reference for anomaly calculation.
-                Can be "t0", "tmean", or None. By default, full values are used.
+            anomaly_ref: Reference for anomaly calculation. Can be "t0", "tmean",
+                a list of those, or None. Full (non-anomaly) values are always included.
+            lat_limits: Latitude limits for fldmean. Defaults to None.
+            lon_limits: Longitude limits for fldmean. Defaults to None.
+            region: Region name stored on output attrs. Defaults to None.
 
         Returns:
-            xarray.DataArray: A concatenated DataArray containing processed data
-            for different combinations of anomaly, standardization, and anomaly reference types.
+            Sorted list of processed datasets for each anomaly/standardise combination.
 
         """
-        anomaly_ref = to_list(anomaly_ref)
-        anomaly_ref.append(None)
+        if data is None:
+            data = self.data
+
+        refs = to_list(anomaly_ref)
+        refs.append(None)
 
         if dim_mean is not None:
-            self.logger.debug(f"Computing fldmean over dimension: {dim_mean}")
-            self.data = self.reader.fldmean(
-                self.data,
+            self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
+            data = self.reader.fldmean(
+                data,
                 dims=dim_mean,
-                lat_limits=self.lat_limits,
-                lon_limits=self.lon_limits,
+                lat_limits=lat_limits,
+                lon_limits=lon_limits,
             )
-            self.data.load()  # Ensure data is loaded in memory after fldmean
+            data = data.load()
 
-        for standardise, anomaly_ref in product([False, True], anomaly_ref):
-            if not (standardise is True and anomaly_ref is None):
-                self.logger.info(f"Processing data with standardise={standardise}, anomaly_ref={anomaly_ref}")
-                processed_data = self._get_std_anomaly(self.data, anomaly_ref, standardise, dim="time")
-                self.logger.info("Loading data in memory")
-                self.logger.info("Loaded data in memory")
-                self.processed_data_list.append(processed_data)
-        self.processed_data_list = sorted(self.processed_data_list, key=self.sort_key)
-
-    def sort_key(self, data):
-        """Return a sort key for ordering processed data by drift type."""
-        type = data.attrs["AQUA_ocean_drift_type"]
-        if type == "full":
-            return (0, type)
-        elif type.startswith("anom"):
-            return (1, type)
-        elif type.startswith("std"):
-            return (2, type)
+        processed = []
+        for do_standardise, ref in product([False, True], refs):
+            if do_standardise and ref is None:
+                continue
+            self.logger.info("Processing data with standardise=%s, anomaly_ref=%s", do_standardise, ref)
+            processed.append(
+                apply_std_anomaly(
+                    data,
+                    anomaly_ref=ref,
+                    do_standardise=do_standardise,
+                    dim="time",
+                    region_name=region_name,
+                )
+            )
+        return sorted(processed, key=sort_drift_type)
 
     def save_netcdf(
         self,
@@ -262,22 +301,39 @@ class Hovmoller(Diagnostic):
         region: str = None,
         outputdir: str = ".",
         rebuild: bool = True,
+        save_all: bool = False,
     ):
-        """Save the processed data to a netCDF file.
+        """Save processed data to netCDF files.
 
         Args:
             diagnostic_product (str): Name of the diagnostic product.
-            region (str): Region for area selection. Defaults to None.
+            region: Key in ``self.processed_data`` (same as config region id, or
+                ``None`` for global). Ignored when ``save_all`` is True.
             outputdir (str): Directory to save the output files. Defaults to '.'.
             rebuild (bool, optional): Whether to rebuild the netCDF file. Defaults to True.
+            save_all (bool): If True, save every entry in ``self.processed_data``.
+                Needed because ``region=None`` is a valid dict key for global.
 
         """
-        for processed_data in self.processed_data_list:
-            super().save_netcdf(
-                data=processed_data,
-                diagnostic=self.diagnostic_name,
-                diagnostic_product=f"{diagnostic_product}",
-                outputdir=outputdir,
-                rebuild=rebuild,
-                extra_keys={"region": self.region, "ocean_drift_type": processed_data.attrs["AQUA_ocean_drift_type"]},
-            )
+        if save_all:
+            regions_to_save = self.processed_data
+        else:
+            regions_to_save = {region: self.processed_data[region]}
+
+        for reg, processed_list in regions_to_save.items():
+            for processed_data in processed_list:
+                # Prefer long name on attrs for filenames; fall back to dict key.
+                file_region = processed_data.attrs.get(
+                    "AQUA_region", reg if reg is not None else "global"
+                )
+                super().save_netcdf(
+                    data=processed_data,
+                    diagnostic=self.diagnostic_name,
+                    diagnostic_product=f"{diagnostic_product}",
+                    outputdir=outputdir,
+                    rebuild=rebuild,
+                    extra_keys={
+                        "region": file_region,
+                        "ocean_drift_type": processed_data.attrs["AQUA_ocean_drift_type"],
+                    },
+                )
