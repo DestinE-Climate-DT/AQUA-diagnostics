@@ -27,6 +27,7 @@ def ensemble_config():
         "source_list": ["atmglobalmean2D", "atmglobalmean2D"],
     }
 
+
 @pytest.fixture
 def tmp_path_str(tmp_path):
     """Provide a reliable tmp_path."""
