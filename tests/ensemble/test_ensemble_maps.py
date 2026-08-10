@@ -27,29 +27,12 @@ def ensemble_config():
         "source_list": ["atmglobalmean2D", "atmglobalmean2D"],
     }
 
-
 @pytest.fixture
 def tmp_path_str(tmp_path):
     """Provide a reliable tmp_path."""
     return str(tmp_path)
 
 
-@pytest.fixture(scope="module")
-def dataset_instance(ensemble_config):
-    """Retrieve and merge data once for the module."""
-    dataset = reader_retrieve_and_merge(
-        variable=ensemble_config["var"],
-        catalog_list=ensemble_config["catalog_list"],
-        model_list=ensemble_config["model_list"],
-        exp_list=ensemble_config["exp_list"],
-        source_list=ensemble_config["source_list"],
-        loglevel=loglevel,
-        ens_dim="ensemble",
-    )
-    return dataset
-
-
-@pytest.fixture(scope="module")
 def ensemble_maps_instance(ensemble_config, dataset_instance):
     """Create an EnsembleMaps instance."""
     ens = EnsembleMaps(
@@ -60,8 +43,9 @@ def ensemble_maps_instance(ensemble_config, dataset_instance):
         exp_list=ensemble_config["exp_list"],
         source_list=ensemble_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir="./",
+        outputdir=outputdir,
     )
+    ens.run()
     return ens
 
 
@@ -90,6 +74,7 @@ class TestEnsembleMaps:
         ens = ensemble_maps_instance
         ens.outputdir = tmp_path_str  # Redirect outputs to tmp_path
         conf = ensemble_config
+        outdir = ens.outputdir
 
         # Execution
         ens.run()
@@ -112,7 +97,6 @@ class TestEnsembleMaps:
     def test_statistics(self, ensemble_maps_instance):
         """Test the statistical correctness of the ensemble."""
         ens = ensemble_maps_instance
-
         if not hasattr(ens, "dataset_mean"):
             ens.run()
 
@@ -125,9 +109,7 @@ class TestEnsembleMaps:
         plot_ens = plot_ensemble_instance
         plot_ens.outputdir = tmp_path_str
         conf = ensemble_config
-
-        if not hasattr(ens, "dataset_mean"):
-            ens.run()
+        outdir = ens.outputdir
 
         # Plot Mean
         plot_args_mean = {

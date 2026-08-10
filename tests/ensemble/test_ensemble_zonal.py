@@ -55,8 +55,9 @@ def ensemble_zonal_instance(zonal_config, zonal_dataset):
         exp_list=zonal_config["exp_list"],
         source_list=zonal_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir="./",
+        outputdir=outputdir,
     )
+    ens.run()
     return ens
 
 
@@ -68,7 +69,7 @@ def plot_zonal_instance(zonal_config):
         "exp_list": zonal_config["exp_list"],
         "source_list": zonal_config["source_list"],
     }
-    return PlotEnsembleZonal(**plot_args, outputdir="./")
+    return PlotEnsembleZonal(**plot_args, outputdir=ensemble_zonal_instance.outputdir)
 
 
 class TestEnsembleZonal:
@@ -82,6 +83,7 @@ class TestEnsembleZonal:
         ens = ensemble_zonal_instance
         ens.outputdir = tmp_path_str
         conf = zonal_config
+        outdir = ens.outputdir
 
         ens.run()
 
@@ -108,9 +110,7 @@ class TestEnsembleZonal:
         plot_ens = plot_zonal_instance
         plot_ens.outputdir = tmp_path_str
         conf = zonal_config
-
-        if ens.dataset_mean is None or ens.dataset_std is None:
-            ens.run()
+        outdir = ens.outputdir
 
         plot_arguments = {
             "var": conf["var"],

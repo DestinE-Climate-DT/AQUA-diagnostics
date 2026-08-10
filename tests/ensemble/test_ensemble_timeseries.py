@@ -58,13 +58,14 @@ def ensemble_ts_instance(ts_config, ts_dataset):
         exp_list=ts_config["exp_list"],
         source_list=ts_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir="./",
+        outputdir=outputdir,
     )
+    ts.run()
     return ts
 
 
 @pytest.fixture(scope="module")
-def plot_ts_instance(ts_config):
+def plot_ts_instance(ts_config, ensemble_ts_instance):
     """Create a PlotEnsembleTimeseries instance."""
     plot_args = {
         "catalog_list": ts_config["catalog_list"],
@@ -72,7 +73,7 @@ def plot_ts_instance(ts_config):
         "exp_list": ts_config["exp_list"],
         "source_list": ts_config["source_list"],
     }
-    return PlotEnsembleTimeseries(**plot_args, outputdir="./")
+    return PlotEnsembleTimeseries(**plot_args, outputdir=ensemble_ts_instance.outputdir)
 
 
 class TestEnsembleTimeseries:
@@ -86,6 +87,7 @@ class TestEnsembleTimeseries:
         ts = ensemble_ts_instance
         ts.outputdir = tmp_path_str
         conf = ts_config
+        outdir = ts.outputdir
 
         ts.run()
 
@@ -115,9 +117,7 @@ class TestEnsembleTimeseries:
         plot_ts = plot_ts_instance
         plot_ts.outputdir = tmp_path_str
         conf = ts_config
-
-        if getattr(ts, "monthly_data_mean", None) is None:
-            ts.run()
+        outdir = ts.outputdir
 
         plot_arguments = {
             "var": conf["var"],
