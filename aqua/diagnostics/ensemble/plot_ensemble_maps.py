@@ -11,14 +11,14 @@ from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
 
-class PlotEnsembleLatLon(BaseMixin):
-    """Class to plot the ensmeble lat-lon"""
+class PlotEnsembleMaps(BaseMixin):
+    """Class to plot the ensmeble 2D Maps lat-lon data"""
 
     # TODO: support sub-region selection and reggriding option
 
     def __init__(
         self,
-        diagnostic_product: str = "EnsembleLatLon",
+        diagnostic_product: str = "EnsembleMaps",
         catalog_list: list[str] = None,
         model_list: list[str] = None,
         exp_list: list[str] = None,
@@ -31,46 +31,50 @@ class PlotEnsembleLatLon(BaseMixin):
         loglevel: str = "WARNING",
     ):
         """
-        Class for plotting ensemble latitude-longitude (Lat-Lon) data.
+        Class for plotting ensemble 2D maps latitude-longitude (Lat-Lon) data.
 
         This class inherits from `BaseMixin` and provides functionality to generate
         plots of ensemble datasets on a latitude-longitude grid. It supports
         multiple catalogs, models, experiments, and sources, and allows saving
         plots as PNG or PDF files. The class is intended for ensemble statistics
-        visualization, such as mean and standard deviation maps.
+        visualization, such as single maps and bias maps.
 
         Args:
             diagnostic_product (str, optional): Name of the diagnostic product.
-                Defaults to "EnsembleLatLon".
+                Defaults to "EnsembleMaps".
             catalog_list (list[str], optional): List of catalog names. If None, assigned to 'None_catalog'.
             model_list (list[str], optional): List of model names. If None, assigned to 'None_model'.
             exp_list (list[str], optional): List of experiment names. If None, assigned to 'None_exp'.
             source_list (list[str], optional): List of data source names. If None, assigned to 'None_source'.
+            ref_catalog (str, optional): Reference catalog name for bias calculation. Defaults to None.
+            ref_model (str, optional): Reference model name for bias calculation. Defaults to None.
+            ref_exp (str, optional): Reference experiment name for bias calculation. Defaults to None.
             region (str, optional): Name of the region for plotting. Defaults to None.
             outputdir (str, optional): Directory to save output plots. Defaults to "./".
             loglevel (str, optional): Logging level. Defaults to "WARNING".
 
         Attributes:
-            figure (matplotlib.figure.Figure or None): The figure object for the plot.
             diagnostic_product (str): Name of the diagnostic product being visualized.
             catalog_list (list[str]): List of catalogs being processed.
             model_list (list[str]): List of models being processed.
             exp_list (list[str]): List of experiments being processed.
             source_list (list[str]): List of sources being processed.
+            ref_catalog (str): Reference catalog for bias calculation.
+            ref_model (str): Reference model for bias calculation.
+            ref_exp (str): Reference experiment for bias calculation.
             region (str): Region name for plotting.
             outputdir (str): Directory path for saving plots.
             loglevel (str): Logging level for messages.
 
         Notes:
-            - Designed to visualize ensemble mean and standard deviation on Lat-Lon grids.
+            - Designed to visualize ensemble data on Lat-Lon grids.
             - Integrates with `BaseMixin` for consistent handling of catalogs, models, and experiments.
-            - Uses `self.save_figure` for saving output plots in PNG and PDF formats.
+            - Uses `self.save_figure` for saving output plots in formats like PNG and PDF.
 
         TODO:
             - Support sub-region selection for plotting.
             - Add regridding option for datasets with different grids.
             - Include automatic handling of color scales and legends for multiple ensemble members.
-            - Add methods to overlay observations or reference datasets.
             - Enable interactive plotting for enhanced analysis.
         """
         self.diagnostic_product = diagnostic_product
@@ -123,53 +127,42 @@ class PlotEnsembleLatLon(BaseMixin):
         data_name=None,
     ):
         """
-        Plot ensemble mean and standard deviation on a latitude-longitude map.
+        Plot a single 2D latitude-longitude map for the provided dataset.
 
-        Generates 2D maps of ensemble mean and standard deviation for a given
-        variable using the specified projection and visualization options.
-        The resulting figures can be saved as PNG and/or PDF files.
+        Generates a 2D map for a given variable using the specified projection 
+        and visualization options. The resulting figure can be automatically 
+        saved as PNG, PDF, or SVG files.
 
         Args:
             var (str): Variable name to plot.
-            dataset_mean (xarray.DataArray or Dataset): Ensemble mean dataset.
-            dataset_std (xarray.DataArray or Dataset): Ensemble standard deviation dataset.
+            dataset (xarray.DataArray or Dataset): The 2D dataset to be plotted.
             long_name (str, optional): Long descriptive name for the variable. Defaults to None.
             description (str, optional): Description string for saving the plot. Defaults to None.
             dpi (int, optional): Resolution for saved figures. Default is 300.
-            title_mean (str, optional): Title for mean plot. Auto-generated if None.
-            title_std (str, optional): Title for standard deviation plot. Auto-generated if None.
+            title (str, optional): Title for the plot. Auto-generated if None.
             save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg').
                 Default is SAVE_FORMAT.
-            vmin_mean, vmax_mean (float, optional): Color scale limits for mean plot. Auto-set if None.
-            vmin_std, vmax_std (float, optional): Color scale limits for std plot. Auto-set if None.
-            proj (str, optional): Map projection. Default is "robinson".
+            vmin (float, optional): Minimum color scale limit. Auto-set if None.
+            vmax (float, optional): Maximum color scale limit. Auto-set if None.
+            proj (str, optional): Map projection name. Default is "robinson".
             proj_params (dict, optional): Extra parameters for the projection. Defaults to {}.
             transform_first (bool, optional): Whether to transform data before plotting. Default is False.
-            cyclic_lon (bool, optional): Whether longitude is cyclic. Default is False.
-            contour (bool, optional): Overlay contours. Default is True.
+            cyclic_lon (bool, optional): Whether longitude is cyclic (handles meridian seam). Default is True.
+            contour (bool, optional): Overlay filled contours instead of pcolormesh. Default is True.
             coastlines (bool, optional): Draw coastlines. Default is True.
             cbar_label (str, optional): Label for the colorbar. Auto-generated if None.
             units (str, optional): Units of the variable. Used for titles and labels.
+            cmap (str or colormap, optional): Colormap to use. Defaults to None.
+            data_name (str, optional): File naming label to distinguish saved plots.
 
         Returns:
-            dict: Dictionary containing figure and axes for mean and std plots:
-                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}.
-                  If standard deviation is zero everywhere, only 'mean_plot' is returned.
-
-        Raises:
-            NoDataError: If `dataset_mean` or `dataset_std` is None.
+            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)` 
+            objects if plotting succeeds, or `None` if no data is provided or the dataset is completely empty.
 
         Notes:
             - Titles and colorbar labels are automatically generated if not provided.
             - Uses `self.save_figure` to save figures in the formats specified.
             - Handles both xarray.DataArray and Dataset inputs.
-            - If vmin_std equals vmax_std, std plot is skipped.
-
-        TODO:
-            - Add support for plotting multiple variables in one call.
-            - Overlay observational or reference datasets.
-            - Enable interactive plotting with cartopy or matplotlib widgets.
-            - Improve handling of cyclic longitude for global datasets.
         """
         self.logger.info("Plotting the ensemble computation")
         if (dataset is None):
@@ -245,53 +238,43 @@ class PlotEnsembleLatLon(BaseMixin):
         data_name=None,
     ):
         """
-        Plot ensemble mean and standard deviation on a latitude-longitude map.
+        Plot the difference (bias) between an ensemble dataset and a reference dataset.
 
-        Generates 2D maps of ensemble mean and standard deviation for a given
-        variable using the specified projection and visualization options.
-        The resulting figures can be saved as PNG and/or PDF files.
+        Generates a 2D bias map on a latitude-longitude grid by computing the difference 
+        between the primary dataset and the reference dataset. The resulting figure 
+        can be automatically saved.
 
         Args:
             var (str): Variable name to plot.
-            dataset_mean (xarray.DataArray or Dataset): Ensemble mean dataset.
-            dataset_std (xarray.DataArray or Dataset): Ensemble standard deviation dataset.
+            dataset (xarray.DataArray or Dataset): The primary 2D dataset to be evaluated.
+            ref_dataset (xarray.DataArray or Dataset): The reference 2D dataset to compare against.
             long_name (str, optional): Long descriptive name for the variable. Defaults to None.
             description (str, optional): Description string for saving the plot. Defaults to None.
             dpi (int, optional): Resolution for saved figures. Default is 300.
-            title_mean (str, optional): Title for mean plot. Auto-generated if None.
-            title_std (str, optional): Title for standard deviation plot. Auto-generated if None.
+            title (str, optional): Title for the bias plot. Auto-generated if None.
             save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg').
                 Default is SAVE_FORMAT.
-            vmin_mean, vmax_mean (float, optional): Color scale limits for mean plot. Auto-set if None.
-            vmin_std, vmax_std (float, optional): Color scale limits for std plot. Auto-set if None.
+            vmin (float, optional): Minimum color scale limit for bias plot. Auto-set if None.
+            vmax (float, optional): Maximum color scale limit for bias plot. Auto-set if None.
             proj (str, optional): Map projection. Default is "robinson".
             proj_params (dict, optional): Extra parameters for the projection. Defaults to {}.
             transform_first (bool, optional): Whether to transform data before plotting. Default is False.
-            cyclic_lon (bool, optional): Whether longitude is cyclic. Default is False.
-            contour (bool, optional): Overlay contours. Default is True.
+            cyclic_lon (bool, optional): Whether longitude is cyclic. Default is True.
+            contour (bool, optional): Overlay filled contours instead of pcolormesh. Default is True.
             coastlines (bool, optional): Draw coastlines. Default is True.
             cbar_label (str, optional): Label for the colorbar. Auto-generated if None.
             units (str, optional): Units of the variable. Used for titles and labels.
-            data_name (str, optional): in order to safe plots with different names.
-        Returns:
-            dict: Dictionary containing figure and axes for mean and std plots:
-                  {'mean_plot': [fig1, ax1], 'std_plot': [fig2, ax2]}.
-                  If standard deviation is zero everywhere, only 'mean_plot' is returned.
+            cmap (str or colormap, optional): Colormap to use. Defaults to None.
+            data_name (str, optional): File naming label to distinguish saved plots.
 
-        Raises:
-            NoDataError: If `dataset_mean` or `dataset_std` is None.
+        Returns:
+            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)` 
+            objects if plotting succeeds, or `None` if data is missing or completely empty.
 
         Notes:
+            - Calculates and plots `dataset - ref_dataset`.
             - Titles and colorbar labels are automatically generated if not provided.
             - Uses `self.save_figure` to save figures in the formats specified.
-            - Handles both xarray.DataArray and Dataset inputs.
-            - If vmin_std equals vmax_std, std plot is skipped.
-
-        TODO:
-            - Add support for plotting multiple variables in one call.
-            - Overlay observational or reference datasets.
-            - Enable interactive plotting with cartopy or matplotlib widgets.
-            - Improve handling of cyclic longitude for global datasets.
         """
         self.logger.info("Plotting the ensemble computation")
         if (dataset is not None and ref_dataset is not None):

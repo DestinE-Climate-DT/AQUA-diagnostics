@@ -12,8 +12,14 @@ xr.set_options(keep_attrs=True)
 
 
 class BaseMixin(Diagnostic):
-    """The BaseMixin class is used to save the outputs from the ensemble module."""
+    """
+    BaseMixin class for managing and saving outputs from the ensemble module.
 
+    This class provides functionality to assign catalog, model, exp, and source
+    names, handle None or multi-value cases, and save outputs as figures (PDF, PNG, SVG)
+    or NetCDF files. It configures logging for diagnostics and acts as a base
+    utility for specific ensemble classes.
+    """
     def __init__(
         self,
         diagnostic_name: str = "ensemble",
@@ -30,29 +36,7 @@ class BaseMixin(Diagnostic):
         loglevel: str = "WARNING",
     ):
         """
-        BaseMixin class for managing and saving outputs from the ensemble module.
-
-        This class provides functionality to assign catalog, model, exp, and source
-        names, handle None or multi-value cases, and save outputs as PDF, PNG, or
-        NetCDF files. It also configures logging for diagnostics.
-
-        Attributes:
-            catalog_list (list[str]): List of catalogs; None defaults to 'None_catalog'.
-            model_list (list[str]): List of models; None defaults to 'None_model'.
-            exp_list (list[str]): List of experiments; None defaults to 'None_exp'.
-            source_list (list[str]): List of sources; None defaults to 'None_source'.
-            catalog (str): Assigned catalog name or 'multi-catalog' for multiple catalogs.
-            model (str): Assigned model name or 'multi-model' for multiple models.
-            exp (str): Assigned experiment name or 'multi-exp' for multiple experiments.
-            source (str): Assigned source name or 'multi-source' for multiple sources.
-            ref_catalog (str): Reference catalog (used for timeseries).
-            ref_model (str): Reference model (used for timeseries).
-            ref_exp (str): Reference experiment (used for timeseries).
-            region (str): Region name for the outputs.
-            diagnostic_name (str): Name of the diagnostic (default 'ensemble').
-            diagnostic_product (str): Class of the ensemble module used.
-            outputdir (str): Directory to save outputs (default './').
-            logger (logging.Logger): Configured logger for the class.
+        Initialize the BaseMixin class.
 
         Args:
             diagnostic_name (str, optional): Name of the diagnostic. Default is 'ensemble'.
@@ -68,6 +52,7 @@ class BaseMixin(Diagnostic):
             region (str, optional): Region name. Default is None.
             outputdir (str, optional): Output directory path. Default is './'.
             loglevel (str, optional): Logging level. Default is 'WARNING'.
+
         """
         self.loglevel = loglevel
         self.logger = log_configure(log_name="BaseMixin", log_level=loglevel)
@@ -195,31 +180,31 @@ class BaseMixin(Diagnostic):
         data=None,
         startdate=None,
         enddate=None,
+        rebuild=True,
     ):
         """
-        Commented-out: Save data as a NetCDF file using OutputSaver or directly if catalog/model/exp are None or multi-values.
+        Save data as a NetCDF file using the OutputSaver class.
 
-        Save data as a NetCDF file using OutputSaver.
         This method handles Timeseries, Lat-Lon, and Zonal data. It automatically generates
         metadata including model, experiment, source, region, and optional start/end dates.
         The filename and description are dynamically generated based on the diagnostic,
-        catalog, model, exp, and region.
+        catalog, model, experiment, and region.
 
         Args:
             var (str, optional): Variable name. Defaults to None. If None, uses data.standard_name.
             freq (str, optional): Data frequency (e.g., 'monthly'). Defaults to None.
-                                  For Lat-Lon or Zonal data, this is typically None.
+                For Lat-Lon or Zonal data, this is typically None.
             diagnostic_product (str, optional): Product name for the filename
-                (e.g., 'EnsembleTimeseries', 'EnsembleLatLon', 'EnsembleZonal').
-            description (str, optional): Description to include in metadata. Defaults to auto-generated.
-            data_name (str, optional): Label for output file (e.g., 'mean' or 'std'). Defaults to 'data'.
-            data (xarray.Dataset or xarray.DataArray, optional): Data to save.
-            startdate (str, optional): Start date to include in metadata. Defaults to None.
-            enddate (str, optional): End date to include in metadata. Defaults to None.
+                (e.g., 'EnsembleTimeseries', 'EnsembleLatLon', 'EnsembleZonal'). Defaults to None.
+            description (str, optional): Description to include in metadata. Defaults to an auto-generated string.
+            data_name (str, optional): Label for the output file (e.g., 'mean' or 'std'). Defaults to 'data'.
+            data (xarray.Dataset or xarray.DataArray, optional): The actual data to save. Defaults to None.
+            startdate (str or pd.Timestamp, optional): Start date to include in metadata. Defaults to None.
+            enddate (str or pd.Timestamp, optional): End date to include in metadata. Defaults to None.
 
         Notes:
-            - If catalog/model/exp are None or multi-values, data is saved without OutputSaver.
-            - Metadata includes diagnostic name, catalog, model, experiment, source, region, and description.
+            - If catalog, model, or experiment are not properly set, the output is NOT saved and a log message is generated.
+            - Metadata dynamically includes diagnostic name, catalog, model, experiment, source, region, and description.
             - Filenames are automatically generated based on catalog, model, exp, data_name, and variable.
         """
         # In case of Timeseries data
@@ -299,6 +284,7 @@ class BaseMixin(Diagnostic):
                 diagnostic_product=self.diagnostic_product,
                 metadata=metadata,
                 extra_keys=extra_keys,
+                rebuild=rebuild,
             )
         else:
             self.logger.info(f"Output is not saved, please check {self.catalog}, {self.model} and {self.exp}")
@@ -314,30 +300,30 @@ class BaseMixin(Diagnostic):
         data_name=None,
         format: Union[str, list] = SAVE_FORMAT,
         dpi=300,
+        rebuild=True,
     ):
         """
-        Save figure(s) to file using OutputSaver or directly to disk if catalog/model/exp are None or multi-values.
+        Save figure(s) to disk using the OutputSaver class.
 
         This method supports saving mean and standard deviation figures for a given variable.
         Metadata is automatically generated, including model, experiment, source, region, startdate, enddate,
-        and a description. Figures can be saved in PNG, PDF or SVG formats.
+        and a description. Figures can be saved in various formats like PNG, PDF, or SVG.
 
         Args:
             var (str): Name of the variable in the dataset.
             fig (matplotlib.figure.Figure, optional): Figure object for the main data. Defaults to None.
-            fig_std (matplotlib.figure.Figure, optional): Figure object for standard deviation. Defaults to None.
-            startdate (str, optional): Start date to include in metadata. Defaults to None.
-            enddate (str, optional): End date to include in metadata. Defaults to None.
-            description (str, optional): Description to include in metadata. Defaults to auto-generated.
+            fig_std (matplotlib.figure.Figure, optional): Figure object for standard deviation data. Defaults to None.
+            startdate (str or pd.Timestamp, optional): Start date to include in metadata. Defaults to None.
+            enddate (str or pd.Timestamp, optional): End date to include in metadata. Defaults to None.
+            description (str, optional): Description to include in metadata. Defaults to an auto-generated string.
             format (str or list, optional): Format(s) to save the figure in (e.g. ``'png'``, ``'pdf'``, ``'svg'``).
-                Default is ``'png'``.
-            dpi (int, optional): Resolution for saved figures in PNG format. Default is ``300``.
+                Default is `SAVE_FORMAT`.
+            dpi (int, optional): Resolution for saved figures. Default is 300.
 
         Notes:
-            - If catalog/model/exp are None or multi-values, figures are saved directly without OutputSaver.
+            - If catalog, model, or experiment are not properly set, figures are NOT saved and a log message is generated.
             - Metadata includes diagnostic name, catalog, model, experiment, source, region, and description.
-            - Filenames are automatically generated based on catalog, model, exp, variable, and whether it's mean or STD.
-            - Raises ValueError if an unsupported format is specified.
+            - Filenames are automatically generated based on catalog, model, exp, variable, and whether it represents a mean or STD.
         """
         if description is None:
             description = " ".join(
@@ -393,6 +379,7 @@ class BaseMixin(Diagnostic):
                 metadata=metadata,
                 extension=format,
                 dpi=dpi,
+                rebuild=rebuild,
             )
         else:
             self.logger.warning(f"Unable to save the plot for {variable} for ensemble {data_name} in {self.diagnostic_product}") 

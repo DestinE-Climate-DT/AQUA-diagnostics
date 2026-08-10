@@ -8,31 +8,26 @@ Description
 
 The **Ensemble Time series** diagnostic provides tools to compute and visualize ensemble statistics of 1D time series data:
 
-- Compute ensemble mean and standard deviation for monthly and annual time series
-- Generate plots with ensemble mean and ±2 standard deviation envelope
-- Compare ensemble statistics with reference datasets (e.g., ERA5)
+- Compute ensemble point-wise mean and standard deviation for monthly and annual time series.
+- Generate plots showing the ensemble mean and a shaded ±2 standard deviation envelope.
+- Compare ensemble statistics with reference datasets (e.g., ERA5).
 
 Classes
 -------
 
-There is one class for the analysis and one for the plotting:
+There is one class for the analysis and one for plotting:
 
 * **EnsembleTimeseries**: computes ensemble mean and standard deviation for 1D time series data.
   It handles both monthly and annual data, computing statistics point-wise along the time axis.
   Results are saved as class attributes and as NetCDF files.
 
-.. note::
-
-The standard deviation is computed point-wise along the time axis.
-A reference time series can also be added to the plot.
-
-* **PlotEnsembleTimeseries**: provides methods for plotting time series with ensemble mean and ±2 standard deviation envelope.
-  It supports adding a reference time series for comparison.
+* **PlotEnsembleTimeseries**: provides methods for plotting time series with the ensemble mean and ±2 standard deviation envelope.
+  It supports adding a reference time series for comparison and optionally plotting individual ensemble members.
 
 File structure
 --------------
 
-* The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command line interface (CLI) scripts.
+* The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command-line interface (CLI) scripts.
 * Template configuration files are available in the ``aqua/diagnostics/templates/diagnostics/config-ensemble_timeseries.yaml`` directory.
 * Notebooks are available in the ``notebooks/diagnostics/ensemble`` directory and contain examples of how to use the diagnostic.
 
@@ -42,13 +37,13 @@ Input variables and datasets
 Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via
 ``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. The final merged dataset will contain all the requested ensemble members with appropriate metadata.
 Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``.
-The merged dataset must contain all ensemble members concatenated along a pseudo-dimension named ``ensemble`` (by default, but customizable).
+The merged dataset must contain all ensemble members concatenated along a dimension named ``ensemble``.
 
-A variable that is typically used in this diagnostic is:
+Variables typically used in this diagnostic include:
 
 * ``2t`` (2 metre temperature)
 
-Example: loading and merging a 1D monthly time series ensemble into an ``xarray.Dataset``:
+Example: loading and merging a 1D monthly time series ensemble from files:
 
 .. code-block:: python
 
@@ -64,11 +59,11 @@ Example: loading and merging a 1D monthly time series ensemble into an ``xarray.
        variable='2t',
        model_names=['IFS-FESOM', 'IFS-NEMO'],
        data_path_list=file_list,
-       log_level="WARNING",
+       loglevel="WARNING",
        ens_dim="ensemble",
    )
 
-Example: loading via the AQUA Reader
+Example: loading via the AQUA Reader:
 
 .. code-block:: python
 
@@ -77,10 +72,10 @@ Example: loading via the AQUA Reader
    ens_dataset = reader_retrieve_and_merge(
        variable='2t',
        catalog_list=['nextgems4', 'climatedt-phase1'],
-       models_catalog_list=['IFS-FESOM', 'IFS-NEMO'],
-       exps_catalog_list=['historical-1990', 'historical-1990'],
-       sources_catalog_list=['aqua-atmglobalmean', 'aqua-atmglobalmean'],
-       log_level="WARNING",
+       model_list=['IFS-FESOM', 'IFS-NEMO'],
+       exp_list=['historical-1990', 'historical-1990'],
+       source_list=['aqua-atmglobalmean', 'aqua-atmglobalmean'],
+       loglevel="WARNING",
        ens_dim="ensemble",
    )
 
@@ -88,7 +83,7 @@ Basic usage
 -----------
 
 The basic usage of this diagnostic is explained with a working example in the notebook.
-The ensemble analysis is performed on merged ``1D`` timeseries by ``EnsembleTimeseries`` class.
+The ensemble analysis is performed on merged ``1D`` timeseries by the ``EnsembleTimeseries`` class.
 The basic structure is the following:
 
 .. code-block:: python
@@ -126,103 +121,76 @@ The basic structure is the following:
 
 .. note::
 
-    Start/end dates and reference dataset can be customized.
-    If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
+    Start/end dates and the reference dataset can be customized.
+    If not specified otherwise, plots will be saved in PNG, PDF, and SVG formats in the output directory.
 
 CLI usage
 ---------
 
-The diagnostic can be run from the command line interface (CLI) by running the following command:
+The diagnostic can be run from the command-line interface (CLI) using the following commands:
 
+For unified ensemble diagnostics:
 .. code-block:: bash
 
     cd $AQUA/aqua/diagnostics/ensemble
+    python cli_ensemble.py --config <path_to_config_file>
+
+For exclusively running multi-model time series:
+.. code-block:: bash
+
     python cli_multi_model_timeseries_ensemble.py --config <path_to_config_file>
-
-Other CLI scripts available:
-
-* ``cli_single_model_timeseries_ensemble.py``: for single-model ensemble timeseries analysis
 
 Additionally, the CLI can be run with the following optional arguments:
 
 - ``--config``, ``-c``: Path to the configuration file.
 - ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
-- ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
+- ``--cluster``: Cluster to use for parallel processing.
 - ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
-- ``--catalog``: Catalog to use for the analysis. Can be defined in the config file.
-- ``--model``: Model to analyse. Can be defined in the config file.
-- ``--exp``: Experiment to analyse. Can be defined in the config file.
-- ``--source``: Source to analyse. Can be defined in the config file.
+- ``--catalog``: Catalog to use for the analysis.
+- ``--model``: Model to analyse.
+- ``--exp``: Experiment to analyse.
+- ``--source``: Source to analyse.
 - ``--outputdir``: Output directory for the plots.
 - ``--startdate``: Start date for the analysis.
 - ``--enddate``: End date for the analysis.
 
-
 Configuration file structure
 ----------------------------
 
-The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
-Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
-Here we describe only the specific settings for the Ensemble Time series diagnostic.
+The configuration file is a YAML file that contains details on the dataset to analyse or use as reference, the output directory, and diagnostic settings.
 
-* ``ensemble``: a block (nested in the ``diagnostics`` block) containing options for the Ensemble Time series diagnostic.
+* ``ensemble``: a block (nested in the ``diagnostics`` block) containing options for the Ensemble Timeseries diagnostic.
   Variable-specific parameters override the defaults.
 
     * ``run``: enable/disable the diagnostic.
-    * ``diagnostic_name``: name of the diagnostic. ``Ensemble Time series`` for this diagnostic.
     * ``variable``: list of variables to analyse.
     * ``region``: region to analyse (e.g., ``global``).
-    * ``startdate_data`` / ``enddate_data``: time range for the dataset.
-    * ``startdate_ref`` / ``enddate_ref``: time range for the reference dataset.
-    * ``plot_ensemble_members``: if True, plot individual ensemble members.
-
-.. code-block:: yaml
-
-    ensemble:
-        run: true
-        diagnostic_name: 'EnsembleTimeseries'
-        variable: ['2t']
-        region: ['global']
-        params:
-            default:
-                startdate_data: "1990-01-16"
-                enddate_data: "2014-11-16"
-                startdate_ref: "1990-01-16"
-                enddate_ref: "2014-11-16"
-        plot_params:
-            default:
-                title: null
-                plot_ensemble_members: True
+    * ``startdate`` / ``enddate``: time bounds for plotting/analysis.
+    * ``plot_ensemble_members``: if True, plot individual ensemble members as background lines.
 
 Output
 ------
 
 The diagnostic produces the following outputs:
 
-* Time series plots with ensemble mean and ±2 standard deviation envelope
-* Optional reference dataset comparison
+* Time series plots with ensemble mean and ±2 standard deviation envelope.
+* Optional reference dataset comparison.
 
-Plots are saved in both PDF and PNG format.
 Data outputs are saved as NetCDF files.
 
 Observations
 ------------
 
-The default reference dataset is ERA5 reanalysis, provided by ECMWF.
-
-Custom reference datasets can be configured in the configuration file.
-
+The default reference dataset is ERA5 reanalysis, provided by ECMWF. Custom reference datasets can be configured in the configuration file.
 
 Example Plots
 -------------
-
-All plots can be reproduced using the notebooks in the ``notebooks`` directory on LUMI HPC.
 
 .. figure:: figures/ensemble_time_series_timeseries_2t.png
     :align: center
     :width: 100%
 
-    Ensemble of multi-model global monthly and annual timeseries and compared with ERA5 global monthly and annual average. Models considered as IFS-NEMO and IFS-FESOM.
+    Ensemble of multi-model global monthly and annual timeseries, compared with ERA5. Models considered are IFS-NEMO and IFS-FESOM.
 
 Available demo notebooks
 ------------------------
@@ -236,13 +204,3 @@ Authors and contributors
 
 This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
 Contributions are welcome — please open an issue or a pull request.
-For questions or suggestions, contact the AQUA team or the maintainer.
-
-Detailed API
-------------
-
-This section provides a detailed reference for the Application Programming Interface (API) of the ``Ensemble Time series`` diagnostic,
-produced from the diagnostic function docstrings.
-
-.. note::
-   WORK IN PROGRESS

@@ -1,0 +1,90 @@
+# The first model in this block can be overridden
+# in the command line by using:
+# --model, --exp, --source, --outputdir, --catalog
+datasets:
+  - catalog: 'climatedt-phase1'
+    model: 'IFS-NEMO'
+    exp: 'historical-1990'
+    source: 'aqua-globalbiases-annual_climatology'
+    regrid: null
+    realization: null
+    areas: false
+    fix: true
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+  - catalog: 'nextgems4'
+    model: 'IFS-FESOM'
+    exp: 'historical-1990'
+    source: 'aqua-globalbiases-annual_climatology'
+    regrid: null
+    realization: null
+    areas: false
+    fix: true
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+
+# Reference
+references:
+  - catalog: 'obs'
+    model: 'ERA5'
+    exp: 'era5'
+    source: 'monthly'
+    regrid:
+    fix: true
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "/work/ab0995/a270260/pre_computed_aqua_analysis/"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+  create_catalog_entry: true
+
+diagnostics:
+  ensemble:
+    run: true
+    diagnostic_name: 'EnsembleLatLon'
+    variables: ['2t',]
+    params:
+      default:
+      tprate:
+        standard_name: "tprate"
+        long_name: "Precipitation"
+        units: "mm/day"
+    plot_params:
+      default:
+        projection: 'robinson'
+        projection_params: {}
+      msl:
+        vmin: -1000
+        vmax: 1000
+        vmin_std: # bias std
+        vmax_std: # bias std
+        vmin_ensemble: # ensemble mean
+        vmax_ensemble: # ensemble mean
+        vmin_std_ensemble: # ensemble STD
+        vmax_std_ensemble: # ensemble STD
+        cmap: 'RdBu_r'
+      (10u^2+10v^2)^0.5:
+        vmin: -2.5
+        vmax: 2.5
+        vmin_std: # bias std
+        vmax_std: # bias std
+        vmin_ensemble: # ensemble mean
+        vmax_ensemble: # ensemble mean
+        vmin_std_ensemble: # ensemble STD
+        vmax_std_ensemble: # ensemble STD
+        cmap: 'RdBu_r'
+      2t:
+        vmin: -7 # bias
+        vmax: 7 # bias
+        vmin_std: # bias std
+        vmax_std: # bias std
+        vmin_ensemble: # ensemble mean
+        vmax_ensemble: # ensemble mean
+        vmin_std_ensemble: # ensemble STD
+        vmax_std_ensemble: # ensemble STD
+        cmap: 'RdBu_r'
+
+

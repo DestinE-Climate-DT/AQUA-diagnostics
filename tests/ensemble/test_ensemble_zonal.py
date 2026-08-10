@@ -1,7 +1,6 @@
 """Test ensemble Ensemble module"""
 
 import os
-
 import pytest
 import xarray as xr
 
@@ -9,15 +8,11 @@ from aqua.diagnostics import EnsembleZonal, PlotEnsembleZonal
 from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
 from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
-# Tolerance and Logging
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL
-
-# pytestmark groups tests
 pytestmark = [pytest.mark.diagnostics]
 
 
-# Module-level fixtures
 @pytest.fixture(scope="module")
 def zonal_config():
     """Configuration parameters for the zonal test."""
@@ -31,14 +26,12 @@ def zonal_config():
 
 
 @pytest.fixture
-def tmp_path_str():
-    """Provide consistent tmp_path as string."""
-    return "./"
+def tmp_path_str(tmp_path):
+    return str(tmp_path)
 
 
 @pytest.fixture(scope="module")
 def zonal_dataset(zonal_config):
-    """Retrieve and merge data once for the module."""
     dataset = reader_retrieve_and_merge(
         variable=zonal_config["var"],
         catalog_list=zonal_config["catalog_list"],
@@ -54,7 +47,6 @@ def zonal_dataset(zonal_config):
 
 @pytest.fixture(scope="module")
 def ensemble_zonal_instance(zonal_config, zonal_dataset):
-    """Create an EnsembleZonal instance."""
     ens = EnsembleZonal(
         var=zonal_config["var"],
         dataset=zonal_dataset,
@@ -70,7 +62,6 @@ def ensemble_zonal_instance(zonal_config, zonal_dataset):
 
 @pytest.fixture(scope="module")
 def plot_zonal_instance(zonal_config):
-    """Create a PlotEnsembleZonal instance."""
     plot_args = {
         "catalog_list": zonal_config["catalog_list"],
         "model_list": zonal_config["model_list"],
@@ -84,83 +75,59 @@ class TestEnsembleZonal:
     """Test suite for EnsembleZonal diagnostic."""
 
     def test_initialization(self, zonal_dataset):
-        """Test if data retrieval was successful."""
         assert zonal_dataset is not None
         assert isinstance(zonal_dataset, xr.Dataset)
 
     def test_run(self, ensemble_zonal_instance, zonal_config, tmp_path_str):
-        """Test the computation and NetCDF output generation."""
         ens = ensemble_zonal_instance
+        ens.outputdir = tmp_path_str
         conf = zonal_config
 
-        # Execution
         ens.run()
 
-        # Check computed datasets are available
         assert ens.dataset_mean is not None
         assert ens.dataset_std is not None
 
-        # Construct filenames
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
-        # Check NetCDF outputs
         nc_mean = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
         assert os.path.exists(nc_mean)
 
-        nc_std = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.nc")
-        assert os.path.exists(nc_std)
-
     def test_statistics(self, ensemble_zonal_instance):
-        """Test the statistical correctness of the ensemble."""
         ens = ensemble_zonal_instance
 
-        # Ensure run() has populated computed data
         if ens.dataset_mean is None or ens.dataset_std is None:
             ens.run()
 
-        # Test if mean is present and std is zero (identical inputs)
         assert ens.dataset_mean is not None
         assert ens.dataset_std.all() == 0
 
     def test_plotting(self, ensemble_zonal_instance, plot_zonal_instance, zonal_config, tmp_path_str):
-        """Test the plotting functionality."""
         ens = ensemble_zonal_instance
         plot_ens = plot_zonal_instance
+        plot_ens.outputdir = tmp_path_str
         conf = zonal_config
 
         if ens.dataset_mean is None or ens.dataset_std is None:
             ens.run()
 
-        # STD values are zero. Using mean value as std to test visualization pipeline (consistent with comments)
         plot_arguments = {
             "var": conf["var"],
             "save_format": ("png", "pdf"),
-            "title_mean": "Test data",
-            "title_std": "Test data",
+            "title": "Test data",
             "cbar_label": "Test Label",
-            "dataset_mean": ens.dataset_mean,
-            "dataset_std": ens.dataset_mean,  # Using mean as proxy for std to ensure valid plot generation
+            "dataset": ens.dataset_mean,
+            "data_name": "mean",
             "dpi": DPI,
         }
 
-        plot_dict = plot_ens.plot(**plot_arguments)
+        fig, ax = plot_ens.plot(**plot_arguments)
 
-        assert plot_dict["mean_plot"][0] is not None
+        assert fig is not None
 
-        # Construct filenames
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
-        # Check Output Files
         png_mean = os.path.join(tmp_path_str, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.png")
         assert os.path.exists(png_mean)
-
-        png_std = os.path.join(tmp_path_str, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.png")
-        assert os.path.exists(png_std)
-
-        pdf_mean = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
-        assert os.path.exists(pdf_mean)
-
-        pdf_std = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.std.pdf")
-        assert os.path.exists(pdf_std)

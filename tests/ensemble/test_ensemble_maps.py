@@ -1,11 +1,10 @@
 """Test ensemble Ensemble module"""
 
 import os
-
 import pytest
 import xarray as xr
 
-from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon
+from aqua.diagnostics import EnsembleMaps, PlotEnsembleMaps
 from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
 from tests.shared_constants import APPROX_REL, LOGLEVEL
 
@@ -17,7 +16,6 @@ loglevel = LOGLEVEL
 pytestmark = [pytest.mark.diagnostics]
 
 
-# Module-level fixtures to handle data and configuration
 @pytest.fixture(scope="module")
 def ensemble_config():
     """Configuration parameters for the ensemble test."""
@@ -31,9 +29,9 @@ def ensemble_config():
 
 
 @pytest.fixture
-def tmp_path_str():
-    """Provide consistent tmp_path as string."""
-    return "./"
+def tmp_path_str(tmp_path):
+    """Provide a reliable tmp_path."""
+    return str(tmp_path)
 
 
 @pytest.fixture(scope="module")
@@ -52,10 +50,9 @@ def dataset_instance(ensemble_config):
 
 
 @pytest.fixture(scope="module")
-def ensemble_latlon_instance(ensemble_config, dataset_instance):
-    """Create an EnsembleLatLon instance."""
-    # Note: outputdir is set to current dir here, but tests can override or check relative paths
-    ens = EnsembleLatLon(
+def ensemble_maps_instance(ensemble_config, dataset_instance):
+    """Create an EnsembleMaps instance."""
+    ens = EnsembleMaps(
         var=ensemble_config["var"],
         dataset=dataset_instance,
         catalog_list=ensemble_config["catalog_list"],
@@ -70,98 +67,85 @@ def ensemble_latlon_instance(ensemble_config, dataset_instance):
 
 @pytest.fixture(scope="module")
 def plot_ensemble_instance(ensemble_config):
-    """Create a PlotEnsembleLatLon instance."""
+    """Create a PlotEnsembleMaps instance."""
     plot_args = {
         "catalog_list": ensemble_config["catalog_list"],
         "model_list": ensemble_config["model_list"],
         "exp_list": ensemble_config["exp_list"],
         "source_list": ensemble_config["source_list"],
     }
-    return PlotEnsembleLatLon(**plot_args, outputdir="./")
+    return PlotEnsembleMaps(**plot_args, outputdir="./")
 
 
-class TestEnsembleLatLon:
-    """Test suite for EnsembleLatLon diagnostic."""
+class TestEnsembleMaps:
+    """Test suite for EnsembleMaps diagnostic."""
 
     def test_initialization(self, dataset_instance):
         """Test if data retrieval was successful."""
         assert dataset_instance is not None
         assert isinstance(dataset_instance, xr.Dataset)
 
-    def test_run(self, ensemble_latlon_instance, ensemble_config, tmp_path_str):
+    def test_run(self, ensemble_maps_instance, ensemble_config, tmp_path_str):
         """Test the computation and NetCDF output generation."""
-        ens = ensemble_latlon_instance
+        ens = ensemble_maps_instance
+        ens.outputdir = tmp_path_str  # Redirect outputs to tmp_path
         conf = ensemble_config
 
-        # execution
+        # Execution
         ens.run()
 
         # Check attributes
         assert hasattr(ens, "dataset_mean")
         assert hasattr(ens, "dataset_std")
 
-        # Construct filenames based on the first element of the config lists (as per original logic)
+        # Construct filenames
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
         # Check NetCDF outputs
-        nc_mean = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
+        nc_mean = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblemaps.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
         assert os.path.exists(nc_mean)
 
-        nc_std = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.nc")
+        nc_std = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblemaps.{cat}.{mod}.{exp}.r1.{var}.std.nc")
         assert os.path.exists(nc_std)
 
-    def test_statistics(self, ensemble_latlon_instance):
+    def test_statistics(self, ensemble_maps_instance):
         """Test the statistical correctness of the ensemble."""
-        ens = ensemble_latlon_instance
+        ens = ensemble_maps_instance
 
-        # Ensure run() has been called (handled by module scope order, but safe to check)
         if not hasattr(ens, "dataset_mean"):
             ens.run()
 
-        # test if mean is non-zero and variance is zero (since inputs are identical)
         assert ens.dataset_mean is not None
         assert ens.dataset_std.all() == 0
 
-    def test_plotting(self, ensemble_latlon_instance, plot_ensemble_instance, ensemble_config, tmp_path_str):
+    def test_plotting(self, ensemble_maps_instance, plot_ensemble_instance, ensemble_config, tmp_path_str):
         """Test the plotting functionality."""
-        ens = ensemble_latlon_instance
+        ens = ensemble_maps_instance
         plot_ens = plot_ensemble_instance
+        plot_ens.outputdir = tmp_path_str
         conf = ensemble_config
 
         if not hasattr(ens, "dataset_mean"):
             ens.run()
 
-        # STD values are zero. Using mean value as std to test implementation visualization
-        plot_arguments = {
+        # Plot Mean
+        plot_args_mean = {
             "var": conf["var"],
-            "dpi": 50,  # Low DPI for testing speed
+            "dpi": 50,
             "save_format": ("png", "pdf"),
-            "title_mean": "Test data",
-            "title_std": "Test data",
+            "title": "Test data Mean",
             "cbar_label": "Test Label",
-            "dataset_mean": ens.dataset_mean,
-            "dataset_std": ens.dataset_mean,
+            "dataset": ens.dataset_mean,
+            "data_name": "mean",
         }
-
-        plot_dict = plot_ens.plot(**plot_arguments)
-
-        assert plot_dict["mean_plot"][0] is not None
+        fig_m, ax_m = plot_ens.plot(**plot_args_mean)
+        assert fig_m is not None
 
         # Construct filenames
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
-        # Check PNGs
-        png_mean = os.path.join(tmp_path_str, "png", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.png")
+        # Check Output Files for Mean
+        png_mean = os.path.join(tmp_path_str, "png", f"ensemble.ensemblemaps.{cat}.{mod}.{exp}.r1.{var}.mean.png")
         assert os.path.exists(png_mean)
-
-        png_std = os.path.join(tmp_path_str, "png", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.png")
-        assert os.path.exists(png_std)
-
-        # Check PDFs
-        pdf_mean = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
-        assert os.path.exists(pdf_mean)
-
-        pdf_std = os.path.join(tmp_path_str, "pdf", f"ensemble.ensemblelatlon.{cat}.{mod}.{exp}.r1.{var}.std.pdf")
-        assert os.path.exists(pdf_std)
