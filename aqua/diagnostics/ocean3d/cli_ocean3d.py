@@ -45,34 +45,28 @@ def _run_hovmoller(cli, dataset_args, hovmoller_config):
     dim_mean = hovmoller_config.get("dim_mean", ["lat", "lon"])
     vert_coord = hovmoller_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
 
-    for region in regions:
-        logger.info("Processing region: %s", region)
-        data_hovmoller = None
-        try:
-            data_hovmoller = Hovmoller(
-                **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
-            )
-            data_hovmoller.run(
-                region=region,
-                var=var,
-                dim_mean=dim_mean,
-                anomaly_ref="t0",
-                outputdir=cli.outputdir,
-                reader_kwargs=cli.reader_kwargs,
-                rebuild=cli.rebuild,
-            )
-        except Exception as e:
-            logger.error("Error processing region %s: %s", region, e)
-            continue
+    try:
+        data_hovmoller = Hovmoller(
+            **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
+        )
+        data_hovmoller.run(
+            regions=regions,
+            var=var,
+            dim_mean=dim_mean,
+            anomaly_ref="t0",
+            outputdir=cli.outputdir,
+            reader_kwargs=cli.reader_kwargs,
+            rebuild=cli.rebuild,
+        )
+    except Exception as e:
+        logger.error("Error running Hovmoller: %s", e)
+        return
 
+    for region, processed_list in data_hovmoller.processed_data.items():
         try:
-            if not cli.save_format:
-                logger.debug("No plot output requested, skipping plot generation for region %s", region)
-                continue
-
             hov_plot = PlotHovmoller(
                 diagnostic_name=diagnostic_name,
-                data=data_hovmoller.processed_data_list,
+                data=processed_list,
                 vert_coord=vert_coord,
                 outputdir=cli.outputdir,
                 loglevel=cli.loglevel,
