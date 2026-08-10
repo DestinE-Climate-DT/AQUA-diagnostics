@@ -38,7 +38,8 @@ There are two main classes for analysis and plotting:
 File structure
 --------------
 
-* The diagnostic is located in the ``aqua/diagnostics/ocean_trends`` directory, which contains both the source code and the command line interface (CLI) script.
+* The diagnostic source code is located in the ``aqua/diagnostics/ocean_trends`` directory.
+* The shared Ocean 3D CLI is ``aqua/diagnostics/ocean3d/cli_ocean3d.py`` (sections are enabled via the config).
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-trends.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/trends`` directory and contain examples of how to use the diagnostic.
 
@@ -115,8 +116,8 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ocean_trends
-    python cli_ocean_trends.py --config <path_to_config_file>
+    cd $AQUA/aqua/diagnostics/ocean3d
+    python cli_ocean3d.py --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

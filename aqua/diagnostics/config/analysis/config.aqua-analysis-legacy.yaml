@@ -49,7 +49,7 @@ cluster:  # options for dask cluster (this works well on lumi)
 cli:
   biases: "global_biases/cli_global_biases.py"
   boxplots: "boxplots/cli_boxplots.py"
-  drift: "ocean_drift/cli_ocean_drift.py"
+  drift: "ocean3d/cli_ocean3d.py"
   ecmean: "ecmean/cli_ecmean.py"
   enso: "teleconnections/cli_teleconnections.py"
   gregory: "timeseries/cli_timeseries.py"
@@ -58,9 +58,9 @@ cli:
   nao: "teleconnections/cli_teleconnections.py"
   seaice: "seaice/cli_seaice.py"
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
-  stratification: "ocean_stratification/cli_ocean_stratification.py"
+  stratification: "ocean3d/cli_ocean3d.py"
   timeseries: "timeseries/cli_timeseries.py"
-  trends: "ocean_trends/cli_ocean_trends.py"
+  trends: "ocean3d/cli_ocean3d.py"
 
 run:
     - ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
@@ -112,10 +112,10 @@ diagnostics:
 
   ocean3d-part1:
     trends:
-      config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-trend-drift.yaml"  # these diagnostics need a different chunking
+      config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-trend.yaml"  # these diagnostics need a different chunking
       outname: "ocean3d"
     drift:
-      config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-trend-drift.yaml"  # these diagnostics need a different chunking
+      config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-drift.yaml"  # these diagnostics need a different chunking
       outname: "ocean3d"
 
   ocean3d-part2:
