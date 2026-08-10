@@ -22,6 +22,7 @@ class EnsembleTimeseries(BaseMixin):
     Note:
         The standard deviation (STD) is computed point-wise along the mean.
     """
+
     def __init__(
         self,
         var=None,

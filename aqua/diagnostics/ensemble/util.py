@@ -15,6 +15,7 @@ from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import OutputSaver
 
+
 def reader_retrieve_and_merge(
     filenames: list[str] = None,
     variable: str = None,
@@ -110,8 +111,9 @@ def reader_retrieve_and_merge(
     if isinstance(realization, str):
         realization = [realization]
 
-    if realization is None: realization = ["r1"]
-    
+    if realization is None:
+        realization = ["r1"]
+
     model_data_list = []
     # Need this for return
     merged_dataset = None
@@ -156,14 +158,14 @@ def reader_retrieve_and_merge(
                 # Add ensemble label
                 ens_label = f"{model_i}_{exp_i}"
                 data = data.expand_dims({ens_dim: [ens_label]})
-                
+
                 model_data_list.append(data)
-    
+
         if not model_data_list:
-            logger.warning(f"No realizations loaded using Reader. Skipping...")
+            logger.warning("No realizations loaded using Reader. Skipping...")
 
     elif filenames:
-        # For now Single model only using AQUA Reader backend 
+        # For now Single model only using AQUA Reader backend
         for filename, r in zip(filenames, realization):
             logger.info(f"Processing: file {filename}")
             try:
@@ -204,7 +206,7 @@ def reader_retrieve_and_merge(
                 continue
 
         if not model_data_list:
-            logger.warning(f"No realizations loaded using Reader-Backend. Skipping...")
+            logger.warning("No realizations loaded using Reader-Backend. Skipping...")
 
     # Merge across all models
     if model_data_list:
@@ -217,7 +219,7 @@ def reader_retrieve_and_merge(
         del model_data_list
         gc.collect()
         logger.info("Memory successfully freed.")
-        
+
         # Adding metadata
         merged_dataset.attrs.update(
             {
@@ -229,6 +231,7 @@ def reader_retrieve_and_merge(
 
     return merged_dataset
 
+
 def reader_loop_over_realizations(
     variable: str = None,
     ens_dim: str = "ensemble",
@@ -238,12 +241,12 @@ def reader_loop_over_realizations(
     source: str = None,
     areas: bool = False,
     fix: bool = True,
-    realization_list: list[str] = ['r1'],
+    realization_list: list[str] = ["r1"],
     reader_kwargs: dict = None,
-    startdate = None,
-    enddate = None,
+    startdate=None,
+    enddate=None,
     freq: str = None,
-    loglevel: str = 'WARNING',
+    loglevel: str = "WARNING",
 ):
     """
     Loop over a list of realizations, fetch data using AQUA Reader, and concatenate.
@@ -265,19 +268,20 @@ def reader_loop_over_realizations(
         loglevel (str, optional): Logging level. Defaults to 'WARNING'.
 
     Returns:
-        xarray.Dataset: Dataset containing all requested realizations for a given 
+        xarray.Dataset: Dataset containing all requested realizations for a given
         model concatenated along the `model` dimension, with a new `realization` coordinate.
     """
     logger = log_configure(log_name="loop_over_realizations", log_level=loglevel)
     logger.info("Looping over realizations to be merged")
 
-    #Initialize an empty list
+    # Initialize an empty list
     ds_list = []
 
     if isinstance(realization_list, str):
         realization_list = [realization_list]
-    
-    if realization_list is None: realization_list = ["r1"]
+
+    if realization_list is None:
+        realization_list = ["r1"]
     for r in realization_list:
         reader = Reader(
             catalog=catalog,
@@ -294,13 +298,14 @@ def reader_loop_over_realizations(
             loglevel=loglevel,
         )
         ds = reader.retrieve(var=variable)
-        #ds = ds[variable]
+        # ds = ds[variable]
 
         # Add a coordinate to know which realization is this
         ds = ds.assign_coords(realization=r)
         ds_list.append(ds)
 
     return xr.concat(ds_list, dim=model)
+
 
 def merge_from_data_files(
     variable: str = None,
@@ -317,17 +322,17 @@ def merge_from_data_files(
     """
     Merge ensemble NetCDF files along the ensemble dimension with optional temporal selection.
 
-    This function loads NetCDF files from the given paths via Dask auto-chunking, assigns 
-    an ensemble dimension, optionally subsets the data by start and end dates, and concatenates 
-    the datasets into a single xarray.Dataset along `ens_dim`. An inner join is used to 
-    automatically align the datasets and keep only overlapping time steps. Model names are 
+    This function loads NetCDF files from the given paths via Dask auto-chunking, assigns
+    an ensemble dimension, optionally subsets the data by start and end dates, and concatenates
+    the datasets into a single xarray.Dataset along `ens_dim`. An inner join is used to
+    automatically align the datasets and keep only overlapping time steps. Model names are
     assigned to each ensemble member for metadata tracking.
 
     Args:
         variable (str, optional): Name of the variable to merge. Defaults to None.
         ens_dim (str, optional): Name of the ensemble dimension. Defaults to "ensemble".
-        model_names (list[str], optional): List of model names corresponding to the sequence 
-            of files in `data_path_list`. If multiple realizations exist for a model, repeat 
+        model_names (list[str], optional): List of model names corresponding to the sequence
+            of files in `data_path_list`. If multiple realizations exist for a model, repeat
             model names accordingly.
         data_path_list (list[str], optional): List of file paths to NetCDF datasets. Mandatory.
         startdate (str, optional): Start date for temporal subsetting (YYYY-MM-DD). Defaults to None.
@@ -375,21 +380,22 @@ def merge_from_data_files(
         combine="nested",
         concat_dim=ens_dim,
         preprocess=preprocess_keep_var,
-        
-        # 'join="inner"' automatically aligns the datasets and keeps only the 
-        # overlapping time steps. This completely replaces your manual 
+        # 'join="inner"' automatically aligns the datasets and keeps only the
+        # overlapping time steps. This completely replaces your manual
         # tmp_min_date_list and tmp_max_date_list overlap calculations!
-        join="inner" 
+        join="inner",
     )
 
     # Assign Coordinates (Ensemble Names and Models)
     # Generates ['r1', 'r2', 'r3' ...] based on the number of files
     ensemble_names = [f"r{i}" for i in range(1, len(data_path_list) + 1)]
-    
-    ens_dataset = ens_dataset.assign_coords({
-        ens_dim: ensemble_names,           # Assigns r1, r2, etc. to the ensemble dim
-        "model": (ens_dim, model_names)    # Attaches model names to the ensemble dim
-    })
+
+    ens_dataset = ens_dataset.assign_coords(
+        {
+            ens_dim: ensemble_names,  # Assigns r1, r2, etc. to the ensemble dim
+            "model": (ens_dim, model_names),  # Attaches model names to the ensemble dim
+        }
+    )
 
     # Time Slicing
     if "time" in ens_dataset.dims:
@@ -404,6 +410,7 @@ def merge_from_data_files(
     ens_dataset.attrs["model"] = model_names
 
     return ens_dataset
+
 
 def compute_statistics(variable: str = None, ds: xr.Dataset = None, ens_dim: str = "ensemble", loglevel="WARNING"):
     """
@@ -438,7 +445,7 @@ def compute_statistics(variable: str = None, ds: xr.Dataset = None, ens_dim: str
         - Allow optional masking of NaN values across models before computing statistics.
         - Optimize memory usage for very large ensembles.
         - Include option to return a combined dataset with both mean and std.
-    """ 
+    """
     logger = log_configure(log_name="compute_statistics", log_level=loglevel)
     logger.info("Computing statistics of the ensemble dataset")
 
@@ -496,6 +503,7 @@ def compute_statistics(variable: str = None, ds: xr.Dataset = None, ens_dim: str
         ds_std = ds[variable].std(dim=ens_dim, skipna=False, keep_attrs=True)
         return ds_mean, ds_std
 
+
 def center_timestamp(time: pd.Timestamp, freq: str):
     """
     Center the time value at the center of the month or year
@@ -518,6 +526,7 @@ def center_timestamp(time: pd.Timestamp, freq: str):
         raise ValueError(f"Frequency {freq} not supported")
 
     return center_time
+
 
 def extract_realizations(catalog, model, exp, source):
     """Extract the realizations available for a given catalog, model, exp and source.
@@ -545,6 +554,7 @@ def extract_realizations(catalog, model, exp, source):
             return realization
     return None
 
+
 def extract_realizations_list(catalog, model, exp, source, loglevel="WARNING"):
     """
     Extract the available realizations accessing the uninstantiated catalog directly.
@@ -557,7 +567,7 @@ def extract_realizations_list(catalog, model, exp, source, loglevel="WARNING"):
         loglevel (str, optional): Logging level. Defaults to "WARNING".
 
     Returns:
-        list or None: List of available realizations, or None if the source 
+        list or None: List of available realizations, or None if the source
         does not exist or no realization parameter is found.
     """
     logger = log_configure(log_name="extract_realizations_list", log_level=loglevel)
@@ -567,14 +577,14 @@ def extract_realizations_list(catalog, model, exp, source, loglevel="WARNING"):
     cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
 
     expcat = cat()[model][exp]
-    
+
     # Access the uninstantiated catalog entry using `_entries`
     if source not in expcat._entries:
-        logger.warning(f"No realization(s) found!") 
+        logger.warning("No realization(s) found!")
         return None
-        
+
     entry = expcat._entries[source]
-    
+
     # describe() on the entry returns a dictionary containing 'user_parameters'
     user_parameters = entry.describe().get("user_parameters", [])
 
@@ -583,15 +593,28 @@ def extract_realizations_list(catalog, model, exp, source, loglevel="WARNING"):
         name = parameter.get("name")
         if name == "realization":
             realizations = parameter.get("allowed")
-            logger.info(f"Realizations found in the catalog: {realizations}") 
+            logger.info(f"Realizations found in the catalog: {realizations}")
             return realizations
-    return 
+    return
 
-def generate_realizations_path(catalog: str, model: str, exp: str, diagnostic_name: str, diagnostic_product: str, variable: str, file_dir: str, realization_list: list[str] = None,  extra_keys=None, file_format: str =".nc", loglevel="WARNING"):
+
+def generate_realizations_path(
+    catalog: str,
+    model: str,
+    exp: str,
+    diagnostic_name: str,
+    diagnostic_product: str,
+    variable: str,
+    file_dir: str,
+    realization_list: list[str] = None,
+    extra_keys=None,
+    file_format: str = ".nc",
+    loglevel="WARNING",
+):
     """
     Generate output file paths for specific diagnostic realizations.
 
-    Leverages the `OutputSaver` class to standardly generate filenames 
+    Leverages the `OutputSaver` class to standardly generate filenames
     and concatenates them with the specified output directory and file extension.
 
     Args:
@@ -602,7 +625,7 @@ def generate_realizations_path(catalog: str, model: str, exp: str, diagnostic_na
         diagnostic_product (str): The specific product/output type of the diagnostic.
         variable (str): The variable associated with the diagnostic.
         file_dir (str): Base directory where the files will be saved.
-        realization_list (list[str], optional): List of ensemble realizations. 
+        realization_list (list[str], optional): List of ensemble realizations.
             If None, generates a single path without realization info. Defaults to None.
         extra_keys (dict, optional): Additional keys for the `OutputSaver` filename generation. Defaults to None.
         file_format (str, optional): Extension for the output files. Defaults to ".nc".
@@ -613,21 +636,29 @@ def generate_realizations_path(catalog: str, model: str, exp: str, diagnostic_na
     """
     logger = log_configure(log_name="generate_realizations_path", log_level=loglevel)
     logger.info("Generating realization paths")
-    
+
     filenames = []
     if realization_list:
         for r in realization_list:
-            outputsaver = OutputSaver(diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, realization=r, outputdir=file_dir, loglevel=loglevel)
+            outputsaver = OutputSaver(
+                diagnostic=diagnostic_name,
+                catalog=catalog,
+                model=model,
+                exp=exp,
+                realization=r,
+                outputdir=file_dir,
+                loglevel=loglevel,
+            )
             _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-            path = file_dir + "/" + _path + file_format 
+            path = file_dir + "/" + _path + file_format
             filenames.append(path)
     else:
-        outputsaver = OutputSaver(diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=file_dir, loglevel=loglevel)
+        outputsaver = OutputSaver(
+            diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=file_dir, loglevel=loglevel
+        )
         _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-        path = file_dir + "/" + _path + file_format 
+        path = file_dir + "/" + _path + file_format
         filenames.append(path)
 
     logger.debug(f"generated file names for realizations are {filenames}")
     return filenames
-        
- 

@@ -16,9 +16,10 @@ class EnsembleZonal(BaseMixin):
 
     This class takes an ensemble dataset containing 2D zonal data (level-latitude)
     and computes the mean and standard deviation across the specified ensemble
-    dimension. Ensure that the dataset has the correct spatial dimensions 
+    dimension. Ensure that the dataset has the correct spatial dimensions
     (e.g., lev and lat) before computing statistics.
     """
+
     def __init__(
         self,
         var=None,

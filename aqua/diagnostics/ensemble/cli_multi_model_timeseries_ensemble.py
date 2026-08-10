@@ -8,11 +8,9 @@ defined in a yaml configuration file for multiple models.
 
 import argparse
 import sys
+
 import xarray as xr
 
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.diagnostics import (
     EnsembleTimeseries,
@@ -21,18 +19,16 @@ from aqua.diagnostics import (
 )
 from aqua.diagnostics.base import (
     SAVE_FORMAT,
-    close_cluster,
     DiagnosticCLI,
-    open_cluster,
     template_parse_arguments,
-    TitleBuilder,
 )
 from aqua.diagnostics.ensemble import (
-    generate_realizations_path,
     extract_realizations_list,
-)    
+    generate_realizations_path,
+)
 
-DEFAULT_CONFIG = "config_multi_model_timeseries_ensemble.yaml" 
+DEFAULT_CONFIG = "config_multi_model_timeseries_ensemble.yaml"
+
 
 def parse_arguments(args):
     """Parse command-line arguments for the EnsembleTimeseries for single mulit-model diagnostic CLI.
@@ -44,14 +40,13 @@ def parse_arguments(args):
         argparse.Namespace: parsed arguments.
     """
     parser = argparse.ArgumentParser(
-        description=(
-            "Runs EnsembleTimeseries diagnostic, "
-        ),
+        description=("Runs EnsembleTimeseries diagnostic, "),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser = template_parse_arguments(parser)
 
     return parser.parse_args(args)
+
 
 def main(argv=None):
     """
@@ -64,18 +59,18 @@ def main(argv=None):
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
-    cli = DiagnosticCLI(args, diagnostic_name='EnsembleTimeseries', default_config=DEFAULT_CONFIG)
-    
+    cli = DiagnosticCLI(args, diagnostic_name="EnsembleTimeseries", default_config=DEFAULT_CONFIG)
+
     # Preparing Dask cluster
     cli.prepare()
     cli.open_dask_cluster()
 
     # Output parameters
     outputdir = cli.config_dict.get("output", {}).get("outputdir", "./")
-    rebuild = cli.config_dict.get("output", {}).get("rebuild", True)
-    save_netcdf = cli.config_dict.get("output", {}).get("save_netcdf", True)
+    cli.config_dict.get("output", {}).get("rebuild", True)
+    cli.config_dict.get("output", {}).get("save_netcdf", True)
     save_format = cli.config_dict.get("output", {}).get("save_format", SAVE_FORMAT)
-    dpi = cli.config_dict.get("output", {}).get("dpi", 300)
+    cli.config_dict.get("output", {}).get("dpi", 300)
 
     diag_config = cli.config_dict["diagnostics"]["ensemble"]
 
@@ -83,7 +78,7 @@ def main(argv=None):
 
     # Note in old catalogs freq is 'mon'/'ann'
     monthly = params.get("mon", params.get("monthly"))
-    annual = params.get("annual", params.get("monthly")) 
+    annual = params.get("annual", params.get("monthly"))
     monthly_freq = "mon"
     annual_freq = "ann"
     plot_ensemble_members = params.get("plot_ensemble_members", True)
@@ -92,7 +87,7 @@ def main(argv=None):
     enddate = params.get("enddate")
     variables = diag_config.get("variables") or []
 
-    # Single reference 
+    # Single reference
     if "references" in cli.config_dict:
         ref = cli.config_dict.get("references")
         first_ref = ref[0]
@@ -101,7 +96,7 @@ def main(argv=None):
         exp_ref = get_arg(args, "exp", first_ref["exp"])
         source_ref = get_arg(args, "source", first_ref["source"])
         fixer_ref = get_arg(args, "fix", first_ref.get("fix"))
-        
+
         cli.logger.debug(f"Reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
 
     # EnsembleTimeseries diagnostic
@@ -112,14 +107,12 @@ def main(argv=None):
             regions = var_params.get("regions") or []
             for region in regions:
                 cli.logger.info("Ensemble Timeseries for variable: %s, region: %s", variable, region)
-                
+
                 # Dictionary to contain all the inputs for the Ensemble Timeseries class
-                timeseries_dict = {}
-               
+
                 # Dictionary to contain reference the outputs for the Ensemble Timeseries class
-                # needed for the plot class 
-                timeseries_ref_plot_dict = {}
-                title = var_params.get("title", None)
+                # needed for the plot class
+                var_params.get("title", None)
 
                 # Model data
                 # TODO: hourly and daily data
@@ -136,21 +129,23 @@ def main(argv=None):
                     models[0]["exp"] = get_arg(args, "exp", models[0]["exp"])
                     models[0]["source"] = get_arg(args, "source", models[0]["source"])
                     models[0]["realization"] = get_arg(args, "realization", models[0]["realization"])
-                    #models[0]["fix"] = get_arg(args, "fix", models[0]["fix"])
- 
+                    # models[0]["fix"] = get_arg(args, "fix", models[0]["fix"])
+
                     for model in models:
                         catalog_list.append(model["catalog"])
                         model_list.append(model["model"])
                         exp_list.append(model["exp"])
                         source_list.append(model["source"])
-                        if (model["realization"] is None): 
+                        if model["realization"] is None:
                             realization_list.append(model["realization"])
                         else:
-                            realization = extract_realizations_list(catalog=model["catalog"], model=model["model"], exp=exp["exp"], source=source["source"])
+                            realization = extract_realizations_list(
+                                catalog=model["catalog"], model=model["model"], exp=exp["exp"], source=source["source"]
+                            )
                             realization_list.append(realization)
-                
+
                 # Reterive monthly data
-                if monthly: 
+                if monthly:
                     monthly_dataset = reader_retrieve_and_merge(
                         variable=variable,
                         catalog_list=catalog_list,
@@ -214,21 +209,35 @@ def main(argv=None):
                         variable,
                     )
                     continue
-                
-                # Monthly reference timeseries
-                extra_dict = {"variable": variable, "freq": "monthly", "region":region}
-                ref_realization_list = extract_realizations_list(catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref)
-                mon_ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, file_dir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
 
-                # Loading reference monthly timeseries 
+                # Monthly reference timeseries
+                extra_dict = {"variable": variable, "freq": "monthly", "region": region}
+                ref_realization_list = extract_realizations_list(
+                    catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref
+                )
+                mon_ref_filenames = generate_realizations_path(
+                    catalog=catalog_ref,
+                    model=model_ref,
+                    exp=exp_ref,
+                    realization_list=ref_realization_list,
+                    diagnostic_name="timeseries",
+                    diagnostic_product="timeseries",
+                    variable=variable,
+                    file_dir=outputdir,
+                    extra_keys=extra_dict,
+                    file_format=".nc",
+                    loglevel=cli.loglevel,
+                )
+
+                # Loading reference monthly timeseries
                 if mon_ref_filenames:
                     dataset_mon_ref = reader_retrieve_and_merge(
                         filenames=mon_ref_filenames,
                         variable=variable,
-                        #catalog=catalog_ref,
-                        #model=model_ref,
-                        #exp=exp_ref,
-                        #source=source_ref,
+                        # catalog=catalog_ref,
+                        # model=model_ref,
+                        # exp=exp_ref,
+                        # source=source_ref,
                         region=region,
                         realization=ref_realization_list,
                         startdate=startdate,
@@ -249,18 +258,30 @@ def main(argv=None):
                             dataset_mon_ref = dataset_mon_ref[variable]
 
                 # Annual reference timeseries
-                extra_dict = {"variable": variable, "freq": "annual", "region":region}
-                ann_ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization_list, diagnostic_name="timeseries", diagnostic_product="timeseries", variable=variable, file_dir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
+                extra_dict = {"variable": variable, "freq": "annual", "region": region}
+                ann_ref_filenames = generate_realizations_path(
+                    catalog=catalog_ref,
+                    model=model_ref,
+                    exp=exp_ref,
+                    realization_list=ref_realization_list,
+                    diagnostic_name="timeseries",
+                    diagnostic_product="timeseries",
+                    variable=variable,
+                    file_dir=outputdir,
+                    extra_keys=extra_dict,
+                    file_format=".nc",
+                    loglevel=cli.loglevel,
+                )
 
-                # Loading reference annual timeseries 
+                # Loading reference annual timeseries
                 if ann_ref_filenames:
                     dataset_ann_ref = reader_retrieve_and_merge(
                         filenames=ann_ref_filenames,
                         variable=variable,
-                        #catalog=catalog_ref,
-                        #model=model_ref,
-                        #exp=exp_ref,
-                        #source=source_ref,
+                        # catalog=catalog_ref,
+                        # model=model_ref,
+                        # exp=exp_ref,
+                        # source=source_ref,
                         region=region,
                         realization=ref_realization_list,
                         startdate=startdate,
@@ -295,8 +316,10 @@ def main(argv=None):
 
                 # Derive time bounds; prefer monthly, fall back to annual
                 _time_src = ts.monthly_data if ts.monthly_data is not None else ts.annual_data
-                if startdate is None: startdate = _time_src.time.isel(time=0).values
-                if enddate is None: enddate = _time_src.time.isel(time=-1).values
+                if startdate is None:
+                    startdate = _time_src.time.isel(time=0).values
+                if enddate is None:
+                    enddate = _time_src.time.isel(time=-1).values
 
                 # Ensemble Timeseries plotting function
                 ts_plot.plot(
@@ -317,7 +340,8 @@ def main(argv=None):
 
                 cli.logger.info("Timeseries diagnostic finished for variable '%s'.", variable)
 
-    cli.logger.info(f"Completed Ensemble time series diagnostic!")
+    cli.logger.info("Completed Ensemble time series diagnostic!")
+
 
 if __name__ == "__main__":
     main()

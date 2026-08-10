@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 import xarray as xr
 
-from aqua.core.exceptions import NoDataError
-from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 from aqua.core.data_model import CoordIdentifier
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
 
-VERTICAL_CANDIDATES = ('isobaric', 'depth', 'height')
+VERTICAL_CANDIDATES = ("isobaric", "depth", "height")
+
 
 class PlotEnsembleZonal(BaseMixin):
     def __init__(
@@ -85,7 +85,7 @@ class PlotEnsembleZonal(BaseMixin):
 
     def plot(
         self,
-        var: str = None, 
+        var: str = None,
         dataset=None,
         data_name=None,
         description=None,
@@ -105,26 +105,26 @@ class PlotEnsembleZonal(BaseMixin):
         """
         Plot zonal averages in Level-Latitude coordinates.
 
-        This method generates contour plots for a given variable on a latitude 
-        vs. vertical level (Lev) grid. The resulting plots can be automatically 
+        This method generates contour plots for a given variable on a latitude
+        vs. vertical level (Lev) grid. The resulting plots can be automatically
         saved as PNG and/or PDF files.
 
         Args:
             var (str, optional): Name of the variable to plot. Defaults to None.
-            dataset (xarray.DataArray or xarray.Dataset, optional): The 2D zonal dataset 
+            dataset (xarray.DataArray or xarray.Dataset, optional): The 2D zonal dataset
                 (vertical level vs. latitude) to be plotted. Defaults to None.
-            data_name (str, optional): File naming label to distinguish saved plots 
+            data_name (str, optional): File naming label to distinguish saved plots
                 (e.g., 'mean', 'std'). Defaults to None.
-            description (str, optional): Description used for auto-generating the title 
+            description (str, optional): Description used for auto-generating the title
                 and saving the plots. Defaults to None.
             title (str, optional): Title for the plot. Auto-generated if None. Defaults to None.
             figure_size (list[int], optional): Figure size [width, height]. Defaults to [10, 8].
             cbar_label (str, optional): Label for the colorbar. Defaults to None.
-            save_format (str or list, optional): Format(s) to save plots in (e.g., 'png', 'pdf'). 
+            save_format (str or list, optional): Format(s) to save plots in (e.g., 'png', 'pdf').
                 Defaults to SAVE_FORMAT.
             dpi (int, optional): Resolution for saved figures. Defaults to 300.
             units (str, optional): Units of the variable. Defaults to None.
-            ylim (tuple, optional): Y-axis limits for the plot (vertical levels). 
+            ylim (tuple, optional): Y-axis limits for the plot (vertical levels).
                 Defaults to (5500, 0) for descending depth.
             countour_levels (int, optional): Number of contour levels to plot. Defaults to 20.
             cmap (str, optional): Colormap to use. Defaults to "RdBu_r".
@@ -133,8 +133,8 @@ class PlotEnsembleZonal(BaseMixin):
             rebuild (bool, optional): Whether to rebuild the output file path in `save_figure`. Defaults to True.
 
         Returns:
-            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)` 
-            objects if plotting succeeds, or `None` if no dataset is provided or plotting fails due to 
+            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)`
+            objects if plotting succeeds, or `None` if no dataset is provided or plotting fails due to
             missing vertical coordinates.
 
         Notes:
@@ -147,8 +147,8 @@ class PlotEnsembleZonal(BaseMixin):
 
         if title is None:
             title = TitleBuilder(diagnostic=description, model=self.model).generate()
-        if (dataset is None):
-            self.logger.warning(f"Ensemble Zonal data not provided for plotting. Skipping plotting!")        
+        if dataset is None:
+            self.logger.warning("Ensemble Zonal data not provided for plotting. Skipping plotting!")
             return None
 
         if isinstance(dataset, xr.Dataset):
@@ -167,12 +167,12 @@ class PlotEnsembleZonal(BaseMixin):
         # check if a vertical coordinate is found
         if len(vert_coord) is None:
             self.logger.warning(f"Skipping plotting due to missing vertical coordinate for {var}")
-            return 
+            return
 
         ## do the selection on the first vertical coordinate found
-        #if len(vert_coord) > 1:
+        # if len(vert_coord) > 1:
         #    self.logger.warning("Skipping plotting due to more than one vertical coordinate : %s", vert_coord)
-        #    return 
+        #    return
 
         # squeeze all other dimensions if present
         dataset = dataset.squeeze()
@@ -197,6 +197,8 @@ class PlotEnsembleZonal(BaseMixin):
         self.logger.info("Saving Lev-Lon Zonal-average ensemble-mean as pdf and png")
 
         # Saving plots
-        self.save_figure(var=var, fig=fig, data_name=data_name, description=description, format=save_format, rebuild=rebuild, dpi=dpi)
+        self.save_figure(
+            var=var, fig=fig, data_name=data_name, description=description, format=save_format, rebuild=rebuild, dpi=dpi
+        )
 
         return fig, ax

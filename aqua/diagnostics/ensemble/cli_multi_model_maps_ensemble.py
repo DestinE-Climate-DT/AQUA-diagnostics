@@ -8,11 +8,9 @@ defined in a yaml configuration file for multiple models.
 
 import argparse
 import sys
+
 import xarray as xr
 
-from aqua.core.logger import log_configure
-from aqua.core.util import get_arg
-from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.diagnostics import (
     EnsembleMaps,
@@ -21,21 +19,21 @@ from aqua.diagnostics import (
 )
 from aqua.diagnostics.base import (
     SAVE_FORMAT,
-    close_cluster,
     DiagnosticCLI,
-    open_cluster,
-    template_parse_arguments,
     TitleBuilder,
+    template_parse_arguments,
 )
 from aqua.diagnostics.ensemble import (
-    generate_realizations_path,
     extract_realizations_list,
-)    
+    generate_realizations_path,
+)
 
 DEFAULT_CONFIG = "config_multi_model_maps_ensemble.yaml"
 
+
 def parse_arguments(args):
-    """Parse command-line arguments for the EnsembleMaps for single mulit-model diagnostic CLI.
+    """Parse command-line arguments for the
+    EnsembleMaps for single mulit-model diagnostic CLI.
 
     Args:
         args (list): list of command-line arguments to parse.
@@ -44,14 +42,13 @@ def parse_arguments(args):
         argparse.Namespace: parsed arguments.
     """
     parser = argparse.ArgumentParser(
-        description=(
-            "Runs Multi-model ensembleMaps diagnostic, "
-        ),
+        description=("Runs Multi-model ensembleMaps diagnostic, "),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser = template_parse_arguments(parser)
 
     return parser.parse_args(args)
+
 
 def main(argv=None):
     """
@@ -67,30 +64,30 @@ def main(argv=None):
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
-    cli = DiagnosticCLI(args, diagnostic_name='EnsembleMaps', default_config=DEFAULT_CONFIG)
-    
+    cli = DiagnosticCLI(args, diagnostic_name="EnsembleMaps", default_config=DEFAULT_CONFIG)
+
     # Preparing Dask cluster
     cli.prepare()
     cli.open_dask_cluster()
 
     # Output parameters
     outputdir = cli.config_dict.get("output", {}).get("outputdir", "./")
-    rebuild = cli.config_dict.get("output", {}).get("rebuild", True)
-    save_netcdf = cli.config_dict.get("output", {}).get("save_netcdf", True)
+    cli.config_dict.get("output", {}).get("rebuild", True)
+    cli.config_dict.get("output", {}).get("save_netcdf", True)
     save_format = cli.config_dict.get("output", {}).get("save_format", SAVE_FORMAT)
     dpi = cli.config_dict.get("output", {}).get("dpi", 300)
 
-    # Ensemble map diagnostic 
+    # Ensemble map diagnostic
     diag_config = cli.config_dict["diagnostics"]["ensemble"]
 
-    params = diag_config.get("params", {}).get("default", {})
+    diag_config.get("params", {}).get("default", {})
     variables = diag_config.get("variables") or []
-    all_plot_params = diag_config.get("plot_params", {}) 
+    all_plot_params = diag_config.get("plot_params", {})
     default_plot = all_plot_params.get("default", {})
 
     region = None
 
-    # Single reference 
+    # Single reference
     if "references" in cli.config_dict:
         ref = cli.config_dict.get("references")
         first_ref = ref[0]
@@ -98,18 +95,20 @@ def main(argv=None):
         model_ref = get_arg(args, "model", first_ref["model"])
         exp_ref = get_arg(args, "exp", first_ref["exp"])
         source_ref = get_arg(args, "source", first_ref["source"])
-        fixer_ref = get_arg(args, "fix", first_ref.get("fix"))
-        
-        cli.logger.debug(f"Reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
+        get_arg(args, "fix", first_ref.get("fix"))
+
+        cli.logger.debug(
+            f"Reference catalog: {catalog_ref}, model: {{model_ref}}, exp: {{exp_ref}} and source: {{source_ref}}"
+        )
 
     # EnsembleMaps diagnostic
     if cli.config_dict["diagnostics"]["ensemble"]["run"]:
         # Variables in Timeseries config
         for variable in variables:
-            var_params = diag_config.get("params", {}).get(variable, {})
+            diag_config.get("params", {}).get(variable, {})
 
             cli.logger.info("Ensemble Map diagnostics for variable: %s", variable)
-           
+
             models = cli.config_dict["datasets"]
             catalog_list = []
             model_list = []
@@ -129,12 +128,17 @@ def main(argv=None):
                     model_list.append(model["model"])
                     exp_list.append(model["exp"])
                     source_list.append(model["source"])
-                    if (model["realization"] is None): 
+                    if model["realization"] is None:
                         realization_list.append(model["realization"])
                     else:
-                        realization = extract_realizations_list(catalog=model["catalog"], model=model["model"], exp=exp["exp"], source=source["source"])
+                        realization = extract_realizations_list(
+                            catalog=model["catalog"],
+                            model=model["model"],
+                            exp=exp["exp"],
+                            source=source["source"],
+                        )
                         realization_list.append(realization)
-            
+
                 # Reterive data
                 dataset = reader_retrieve_and_merge(
                     variable=variable,
@@ -143,9 +147,9 @@ def main(argv=None):
                     exp_list=exp_list,
                     source_list=source_list,
                     realization=realization_list,
-                    #fix=fix,
-                    #areas=areas,
-                    #regrid=regrid,
+                    # fix=fix,
+                    # areas=areas,
+                    # regrid=regrid,
                     loglevel=cli.loglevel,
                 )
 
@@ -163,31 +167,44 @@ def main(argv=None):
                     loglevel=cli.loglevel,
                 )
                 ens_latlon.run()
-                
-                
+
                 # Reference
                 dataset_ref = None
                 # TODO:
                 # Reference dataset STD bias is not plotted because we do not have reference STD data
-                dataset_std_ref = None 
+                dataset_std_ref = None
 
                 extra_dict = {"variable": variable, "region": region}
-                ref_realization = extract_realizations_list(catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref)
-                ref_filenames = generate_realizations_path(catalog=catalog_ref, model=model_ref, exp=exp_ref, realization_list=ref_realization, diagnostic_name="globalbiases", diagnostic_product="annual_climatology", variable=variable, file_dir=outputdir, extra_keys=extra_dict, file_format=".nc", loglevel=cli.loglevel)
+                ref_realization = extract_realizations_list(
+                    catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref
+                )
+                ref_filenames = generate_realizations_path(
+                    catalog=catalog_ref,
+                    model=model_ref,
+                    exp=exp_ref,
+                    realization_list=ref_realization,
+                    diagnostic_name="globalbiases",
+                    diagnostic_product="annual_climatology",
+                    variable=variable,
+                    file_dir=outputdir,
+                    extra_keys=extra_dict,
+                    file_format=".nc",
+                    loglevel=cli.loglevel,
+                )
                 if ref_filenames:
                     dataset_ref = reader_retrieve_and_merge(
                         filenames=ref_filenames,
                         variable=variable,
-                        #catalog=catalog_ref,
-                        #model=model_ref,
-                        #exp=exp_ref,
-                        #source=source_ref,
+                        # catalog=catalog_ref,
+                        # model=model_ref,
+                        # exp=exp_ref,
+                        # source=source_ref,
                         region=region,
                         realization=ref_realization,
-                        #fix=fixer_ref,
+                        # fix=fixer_ref,
                         loglevel=cli.loglevel,
                     )
-                    
+
                     if dataset_ref is None:
                         cli.logger.warning(
                             "Unable to load reference map for variable '%s', region '%s'.",
@@ -217,9 +234,9 @@ def main(argv=None):
                     vmin_std_bias = param_dict.get("vmin_std") or None
                     vmax_std_bias = param_dict.get("vmax_std") or None
 
-                    cmap = param_dict.get("cmap") or None                    
+                    cmap = param_dict.get("cmap") or None
                     cbar_label = param_dict.get("cbar_label") or None
-                    
+
                 ens_latlon_plot = PlotEnsembleMaps(
                     catalog_list=catalog_list,
                     model_list=model_list,
@@ -309,7 +326,7 @@ def main(argv=None):
                 # Ensemble STD bias plot
                 if (ens_latlon.dataset_std is not None) and (dataset_std_ref is not None):
                     title = TitleBuilder(diagnostic="STD ensemble bias diagnostic", variable=variable, model=model).generate()
- 
+
                     ens_latlon_plot.plot_ensemble_diff_bias(
                         var=variable,
                         dataset=ens_latlon.dataset_std.squeeze(),
@@ -332,8 +349,9 @@ def main(argv=None):
                         title=title,
                     )
 
-                cli.logger.info("Ensemble maps diagnostic finished for variable '%s'.", variable) 
+                cli.logger.info("Ensemble maps diagnostic finished for variable '%s'.", variable)
     cli.logger.info("Ensemble maps diagnostic completed!")
 
+
 if __name__ == "__main__":
-    main() 
+    main()

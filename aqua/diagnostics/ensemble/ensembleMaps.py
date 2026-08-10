@@ -19,6 +19,7 @@ class EnsembleMaps(BaseMixin):
     dimension. Ensure that the dataset has the correct spatial dimensions before
     computing statistics.
     """
+
     def __init__(
         self,
         var=None,

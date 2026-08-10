@@ -20,6 +20,7 @@ class BaseMixin(Diagnostic):
     or NetCDF files. It configures logging for diagnostics and acts as a base
     utility for specific ensemble classes.
     """
+
     def __init__(
         self,
         diagnostic_name: str = "ensemble",
@@ -323,7 +324,8 @@ class BaseMixin(Diagnostic):
         Notes:
             - If catalog, model, or experiment are not properly set, figures are NOT saved and a log message is generated.
             - Metadata includes diagnostic name, catalog, model, experiment, source, region, and description.
-            - Filenames are automatically generated based on catalog, model, exp, variable, and whether it represents a mean or STD.
+            - Filenames are automatically generated based on catalog, model, exp, variable,
+            and whether it represents a mean or STD.
         """
         if description is None:
             description = " ".join(
@@ -382,5 +384,6 @@ class BaseMixin(Diagnostic):
                 rebuild=rebuild,
             )
         else:
-            self.logger.warning(f"Unable to save the plot for {variable} for ensemble {data_name} in {self.diagnostic_product}") 
-
+            self.logger.warning(
+                f"Unable to save the plot for {variable} for ensemble {data_name} in {self.diagnostic_product}"
+            )

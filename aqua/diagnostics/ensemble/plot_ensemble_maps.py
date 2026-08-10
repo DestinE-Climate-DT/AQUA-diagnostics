@@ -1,8 +1,5 @@
 import xarray as xr
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 
-from aqua.core.exceptions import NoDataError
 from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.util import get_projection
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
@@ -10,6 +7,7 @@ from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
+
 
 class PlotEnsembleMaps(BaseMixin):
     """Class to plot the ensmeble 2D Maps lat-lon data"""
@@ -129,8 +127,8 @@ class PlotEnsembleMaps(BaseMixin):
         """
         Plot a single 2D latitude-longitude map for the provided dataset.
 
-        Generates a 2D map for a given variable using the specified projection 
-        and visualization options. The resulting figure can be automatically 
+        Generates a 2D map for a given variable using the specified projection
+        and visualization options. The resulting figure can be automatically
         saved as PNG, PDF, or SVG files.
 
         Args:
@@ -156,7 +154,7 @@ class PlotEnsembleMaps(BaseMixin):
             data_name (str, optional): File naming label to distinguish saved plots.
 
         Returns:
-            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)` 
+            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)`
             objects if plotting succeeds, or `None` if no data is provided or the dataset is completely empty.
 
         Notes:
@@ -165,14 +163,14 @@ class PlotEnsembleMaps(BaseMixin):
             - Handles both xarray.DataArray and Dataset inputs.
         """
         self.logger.info("Plotting the ensemble computation")
-        if (dataset is None):
+        if dataset is None:
             self.logger.warning("No data given to the ensemble the plotting function")
-            return 
-        
+            return
+
         # Load the data into the memory
         dataset.load()
 
-        if (isinstance(dataset, xr.Dataset)):
+        if isinstance(dataset, xr.Dataset):
             dataset = dataset[var]
         if bool(dataset.isnull().all()) or bool((dataset == 0).all()):
             self.logger.warning(f"The map is empty (all NaN or all zero. Skipping the ensemble maps for {var} and {data_name}")
@@ -240,8 +238,8 @@ class PlotEnsembleMaps(BaseMixin):
         """
         Plot the difference (bias) between an ensemble dataset and a reference dataset.
 
-        Generates a 2D bias map on a latitude-longitude grid by computing the difference 
-        between the primary dataset and the reference dataset. The resulting figure 
+        Generates a 2D bias map on a latitude-longitude grid by computing the difference
+        between the primary dataset and the reference dataset. The resulting figure
         can be automatically saved.
 
         Args:
@@ -268,7 +266,7 @@ class PlotEnsembleMaps(BaseMixin):
             data_name (str, optional): File naming label to distinguish saved plots.
 
         Returns:
-            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)` 
+            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)`
             objects if plotting succeeds, or `None` if data is missing or completely empty.
 
         Notes:
@@ -277,17 +275,17 @@ class PlotEnsembleMaps(BaseMixin):
             - Uses `self.save_figure` to save figures in the formats specified.
         """
         self.logger.info("Plotting the ensemble computation")
-        if (dataset is not None and ref_dataset is not None):
+        if dataset is not None and ref_dataset is not None:
             self.logger.debug("Data given to the ensemble bias the plotting function")
         else:
             self.logger.warning("No data given to the ensemble bias the plotting function. Skipping plotting maps!")
-            return 
+            return
 
         # Load the data into the memory
         dataset.load()
         ref_dataset.load()
 
-        if (isinstance(dataset, xr.Dataset)):
+        if isinstance(dataset, xr.Dataset):
             dataset = dataset[var]
         if bool(dataset.isnull().all()) or bool((dataset == 0).all()):
             self.logger.warning(f"The map is empty (all NaN or all zero. Skipping the ensemble maps for {var} and {data_name}")
@@ -330,5 +328,4 @@ class PlotEnsembleMaps(BaseMixin):
         ax.set_ylabel("Latitude")
         self.logger.debug("Saving 2D ensemble bias map")
         self.save_figure(var=var, fig=fig, data_name=data_name, description=description, format=save_format, dpi=dpi)
-        return fig, ax            
-
+        return fig, ax
