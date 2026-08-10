@@ -78,6 +78,10 @@ def apply_std_anomaly(
     if do_standardise:
         data = standardise(data, dim)
 
+    # Shallow copy so AQUA_* attrs do not mutate the shared fldmean result
+    # (needed when anomaly_ref is None and no new array was created).
+    data = data.copy(deep=False)
+
     s_std = "std_" if do_standardise else ""
     anom = "anom" if anomaly_ref is not None else "full"
     anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
@@ -190,7 +194,6 @@ class Hovmoller(Diagnostic):
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         self._fix_vert_coord_units()
 
-        data_full = self.data
         self.processed_data = {}
 
         regions = to_list(regions)
@@ -201,12 +204,19 @@ class Hovmoller(Diagnostic):
             region_info = self._resolve_region(reg)
             region_name = region_info["region_name"]
             self.logger.info("Processing region: %s", region_name)
+            data = self.data
+            if dim_mean is not None:
+                self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
+                data = self.reader.fldmean(
+                    data=data,
+                    dims=dim_mean,
+                    lat_limits=region_info["lat_limits"],
+                    lon_limits=region_info["lon_limits"],
+                )
+                data = data.load()
             processed = self.compute_hovmoller(
-                data=data_full,
-                dim_mean=dim_mean,
+                data=data,
                 anomaly_ref=anomaly_ref,
-                lat_limits=region_info["lat_limits"],
-                lon_limits=region_info["lon_limits"],
                 region_name=region_name,
             )
             self.processed_data[reg] = processed
@@ -241,10 +251,7 @@ class Hovmoller(Diagnostic):
     def compute_hovmoller(
         self,
         data: xr.Dataset = None,
-        dim_mean: list = None,
         anomaly_ref: str | list = None,
-        lat_limits=None,
-        lon_limits=None,
         region_name: str = None,
     ) -> list:
         """Process data for drift analysis by applying transforms and aggregations.
@@ -268,16 +275,6 @@ class Hovmoller(Diagnostic):
 
         refs = to_list(anomaly_ref)
         refs.append(None)
-
-        if dim_mean is not None:
-            self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
-            data = self.reader.fldmean(
-                data,
-                dims=dim_mean,
-                lat_limits=lat_limits,
-                lon_limits=lon_limits,
-            )
-            data = data.load()
 
         processed = []
         for do_standardise, ref in product([False, True], refs):
