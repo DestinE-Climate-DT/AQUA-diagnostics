@@ -59,7 +59,7 @@ class TestBaseMixin:
             np.random.rand(10, 10),
             dims=["lat", "lon"],
             coords={"lat": np.linspace(-90, 90, 10), "lon": np.linspace(0, 360, 10)},
-            name="dummy_var"
+            name="dummy_var",
         )
 
         base = BaseMixin(
@@ -78,13 +78,13 @@ class TestBaseMixin:
             data=data,
             description="Test save netcdf",
             startdate="2000-01-01",
-            enddate="2000-12-31"
+            enddate="2000-12-31",
         )
 
         # OutputSaver creates a "netcdf" subfolder in the outputdir
         nc_dir = tmp_path / "netcdf"
         assert nc_dir.exists()
-        
+
         # Check if any .nc file was created
         nc_files = list(nc_dir.glob("*.nc"))
         assert len(nc_files) == 1
@@ -107,13 +107,7 @@ class TestBaseMixin:
         )
 
         # Execute save for the main figure
-        base.save_figure(
-            var="dummy_var",
-            fig=fig,
-            description="Test save figure",
-            format="png",
-            dpi=50
-        )
+        base.save_figure(var="dummy_var", fig=fig, description="Test save figure", format="png", dpi=50)
 
         # OutputSaver creates a "png" subfolder in the outputdir
         png_dir = tmp_path / "png"
@@ -122,5 +116,5 @@ class TestBaseMixin:
         # Check if the .png files were created
         png_files = list(png_dir.glob("*.png"))
         assert len(png_files) >= 1
-        
+
         plt.close("all")

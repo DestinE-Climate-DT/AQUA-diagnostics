@@ -105,7 +105,7 @@ The basic structure is the following:
         var='2t',
         dataset=atmglobalmean_ens.dataset_mean,
         data_name='ensemble_mean',
-        save_format=['png', 'pdf'], 
+        save_format=['png', 'pdf'],
         title='Map of 2t for Ensemble Multi-Model Mean',
         cbar_label='2 meter temperature in K',
     )

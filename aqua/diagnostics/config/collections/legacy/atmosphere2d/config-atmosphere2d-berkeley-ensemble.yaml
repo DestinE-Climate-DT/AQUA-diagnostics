@@ -92,11 +92,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        startdate: "2017-01-01"  
+        startdate: "2017-01-01"
         enddate: "2020-12-31"
         plot_ensemble_members: True
       2t:
         regions: ['global']
-
-
-

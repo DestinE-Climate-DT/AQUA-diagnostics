@@ -101,7 +101,7 @@ The basic structure of the analysis is the following:
         var='so',
         dataset=zonal_ens.dataset_mean,
         data_name='ensemble_zonal_mean',
-        save_format=['png', 'pdf'], 
+        save_format=['png', 'pdf'],
         title='Mean of Ensemble of Zonal-average of so',
         cbar_label='Time-mean sea water practical salinity g kg**-1/year',
     )

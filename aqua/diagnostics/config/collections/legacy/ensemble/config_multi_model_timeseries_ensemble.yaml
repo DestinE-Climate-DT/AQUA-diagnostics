@@ -3,7 +3,7 @@
 # --model, --exp, --source, --outputdir, --catalog
 
 # This yaml file will only have either annual or monthly
-# Note: Startdate and enddate can be given in 'params' 
+# Note: Startdate and enddate can be given in 'params'
 datasets:
   - catalog: 'climatedt-phase1'
     model: 'IFS-NEMO'
@@ -55,7 +55,7 @@ diagnostics:
         annual: True
         startdate: '1990-01-01'
         enddate: '2000-12-31'
-        plot_ensemble_members: True 
+        plot_ensemble_members: True
       2t:
         regions: ['global']
-        title:  
+        title:

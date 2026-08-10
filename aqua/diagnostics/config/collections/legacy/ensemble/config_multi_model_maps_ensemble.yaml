@@ -86,5 +86,3 @@ diagnostics:
         vmin_std_ensemble: # ensemble STD
         vmax_std_ensemble: # ensemble STD
         cmap: 'RdBu_r'
-
-

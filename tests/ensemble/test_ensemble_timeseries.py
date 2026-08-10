@@ -95,7 +95,9 @@ class TestEnsembleTimeseries:
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
-        nc_monthly = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc")
+        nc_monthly = os.path.join(
+            tmp_path_str, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc"
+        )
         assert os.path.exists(nc_monthly)
 
     def test_statistics(self, ensemble_ts_instance):
