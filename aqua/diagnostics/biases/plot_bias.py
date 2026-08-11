@@ -6,14 +6,14 @@ from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
-from .stat_global_biases import StatGlobalBiases
+from .stat_bias import StatBias
 from .util import handle_pressure_level
 
 
-class PlotGlobalBiases:
+class PlotBias:
     def __init__(
         self,
-        diagnostic="globalbiases",
+        diagnostic="biases",
         save_format=SAVE_FORMAT,
         dpi=300,
         outputdir="./",
@@ -22,7 +22,7 @@ class PlotGlobalBiases:
         loglevel="WARNING",
     ):
         """
-        Initialize the PlotGlobalBiases class.
+        Initialize the PlotBias class.
 
         Args:
             diagnostic (str): Name of the diagnostic.
@@ -41,7 +41,7 @@ class PlotGlobalBiases:
         self.return_fig = return_fig
         self.loglevel = loglevel
 
-        self.logger = log_configure(log_level=loglevel, log_name="Global Biases")
+        self.logger = log_configure(log_level=loglevel, log_name="Bias")
 
     def _save_figure(self, fig, diagnostic_product, data, description, var, data_ref=None, plev=None, **kwargs):
         """
@@ -97,7 +97,7 @@ class PlotGlobalBiases:
         data_ts = handle_pressure_level(data_ts, var, plev, loglevel=self.loglevel)
         data_ref_ts = handle_pressure_level(data_ref_ts, var, plev, loglevel=self.loglevel)
 
-        stat_test = StatGlobalBiases(loglevel=self.loglevel)
+        stat_test = StatBias(loglevel=self.loglevel)
 
         return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
@@ -298,7 +298,7 @@ class PlotGlobalBiases:
                                                   between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
         """
-        self.logger.info("Plotting global biases.")
+        self.logger.info("Plotting biases")
 
         data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
         data_ref = handle_pressure_level(data_ref, var, plev, loglevel=self.loglevel)

@@ -1,19 +1,19 @@
-"""Command-line interface for GlobalBiases diagnostic."""
+"""Command-line interface for Biases diagnostic."""
 
 import argparse
 import sys
 
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import to_list
-from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
+from aqua.diagnostics import Climatology, PlotBias
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
-TOOLNAME = "GlobalBiases"
+TOOLNAME = "Biases"
 TOOLNAME_KEY = TOOLNAME.lower()
 
 
 def parse_arguments(args):
-    """Parse command-line arguments for GlobalBiases diagnostic.
+    """Parse command-line arguments for Biases diagnostic.
 
     Args:
         args (list): list of command-line arguments to parse.
@@ -24,7 +24,7 @@ def parse_arguments(args):
 
 
 def main(argv=None):
-    """Run the GlobalBiases diagnostic CLI.
+    """Run the Biases diagnostic CLI.
 
     Args:
         argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
@@ -68,10 +68,10 @@ def main(argv=None):
 
         cli.logger.debug("Selected levels for vertical plots: %s", plev)
 
-        biases_dataset = GlobalBiases(
+        biases_dataset =Climatology(
             **dataset_args, diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
         )
-        biases_reference = GlobalBiases(
+        biases_reference = Climatology(
             **reference_args, diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
         )
 
@@ -81,7 +81,7 @@ def main(argv=None):
         default_params = all_plot_params.get("default", {})
 
         for var, is_formula in all_vars:
-            cli.logger.info("Running Global Biases diagnostic for %s: %s", "formula" if is_formula else "variable", var)
+            cli.logger.info("Running Climatology diagnostic for %s: %s", "formula" if is_formula else "variable", var)
             var_params = all_plot_params.get(var, {})
             plot_params = {**default_params, **var_params}
 
@@ -147,7 +147,7 @@ def main(argv=None):
                     cli.logger.info("Calculating and displaying global bias statistics for variable: %s", var)
                     area = biases_dataset.climatology["cell_area"]
 
-                plot_biases = PlotGlobalBiases(
+                plot_biases = PlotBias(
                     diagnostic=diagnostic_name,
                     save_format=cli.save_format,
                     dpi=cli.dpi,
@@ -196,7 +196,7 @@ def main(argv=None):
 
     cli.close_dask_cluster()
 
-    cli.logger.info("Global Biases diagnostic completed.")
+    cli.logger.info("Biases diagnostic completed.")
 
 
 if __name__ == "__main__":
