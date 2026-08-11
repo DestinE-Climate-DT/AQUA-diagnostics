@@ -76,16 +76,19 @@ dev = [
     "aqua-diagnostics[tests]",
     "aqua-diagnostics[style]"
 ]
-all = [
-    "aqua-diagnostics[core]",
+additional = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
     "aqua-diagnostics[tests]",
     "aqua-diagnostics[style]"
 ]
+all = [
+    "aqua-diagnostics[core]",
+    "aqua-diagnostics[additional]",
+]
 all-fdb = [
-    "aqua-diagnostics[all]",
-    "aqua-diagnostics[core-fdb]"
+    "aqua-diagnostics[core-fdb]",
+    "aqua-diagnostics[additional]",
 ]
 
 [project.urls]
