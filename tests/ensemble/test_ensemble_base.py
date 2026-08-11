@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
-from aqua.diagnostics.ensemble.base import BaseMixin
+from aqua.diagnostics.ensemble.base import(
+    BaseMixin)
 
 pytestmark = [pytest.mark.diagnostics, pytest.mark.ensemble]
 
