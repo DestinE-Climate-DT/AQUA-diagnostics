@@ -194,30 +194,39 @@ class Hovmoller(Diagnostic):
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         self._fix_vert_coord_units()
 
+        retrieved_data = self.data
+        regions_list = to_list(regions)
+        if not regions_list:
+            regions_list = [None]
+
         self.processed_data = {}
+        self.logger.debug("Variables retrieved: %s, regions: %s, dim_mean: %s", var, regions_list, dim_mean)
 
-        regions = to_list(regions)
-        if not regions:
-            regions = [None]
-
-        for reg in regions:
-            region_info = self._resolve_region(reg)
-            region_name = region_info["region_name"]
-            self.logger.info("Processing region: %s", region_name)
-            data = self.data
+        for reg in regions_list:
+            self.logger.info(
+                "Processing region: %s for diagnostic '%s'.",
+                reg if reg is not None else "global",
+                self.diagnostic_name,
+            )
+            res_dict = super().select_region(data=retrieved_data, region=reg, drop=True)
+            self.region = res_dict["region"] if res_dict["region"] is not None else "global"
+            self.lat_limits = res_dict["lat_limits"]
+            self.lon_limits = res_dict["lon_limits"]
             if dim_mean is not None:
                 self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
                 data = self.reader.fldmean(
-                    data=data,
+                    data=retrieved_data,
                     dims=dim_mean,
-                    lat_limits=region_info["lat_limits"],
-                    lon_limits=region_info["lon_limits"],
+                    lat_limits=self.lat_limits,
+                    lon_limits=self.lon_limits,
                 )
                 data = data.load()
+            else:
+                data = res_dict["data"]
             processed = self.compute_hovmoller(
                 data=data,
                 anomaly_ref=anomaly_ref,
-                region_name=region_name,
+                region_name=self.region,
             )
             self.processed_data[reg] = processed
             self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=reg)
@@ -231,22 +240,6 @@ class Hovmoller(Diagnostic):
             self.data[self.vert_coord].attrs["units"] = "m"
         super()._check_data(data=self.data[self.vert_coord], var=self.vert_coord, units="m")
         self.logger.debug("Data retrieved successfully")
-
-    def _resolve_region(self, region: str = None) -> dict:
-        """Resolve region name and lat/lon limits for fldmean (no 3D subset).
-
-        Args:
-            region: Region key from the regions file, or None for global.
-
-        Returns:
-            dict with keys ``region``, ``lat_limits``, ``lon_limits``.
-
-        """
-        if region:
-            self.logger.info("Selecting region: %s for diagnostic '%s'.", region, self.diagnostic_name)
-            region_name, lon_limits, lat_limits = self._set_region(region=region)
-            return {"region": region, "region_name": region_name, "lat_limits": lat_limits, "lon_limits": lon_limits}
-        return {"region": "global", "region_name": "global", "lat_limits": None, "lon_limits": None}
 
     def compute_hovmoller(
         self,
