@@ -43,7 +43,10 @@ dependencies = [
 
 [project.optional-dependencies]
 core = [
-    "aqua-core>=1.0.0a6"
+    "aqua-core>=1.0.0"
+]
+core-fdb = [
+    "aqua-core[fdb]>=1.0.0"
 ]
 docs = [
     "sphinx",
@@ -62,7 +65,7 @@ tests = [
 ]
 style = [
     "pre-commit",
-    "ruff==0.15.22"
+    "ruff==0.16.1"
 ]
 minimal = [
     "aqua-diagnostics[core]"
@@ -73,12 +76,19 @@ dev = [
     "aqua-diagnostics[tests]",
     "aqua-diagnostics[style]"
 ]
-all = [
-    "aqua-diagnostics[core]",
+additional = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
     "aqua-diagnostics[tests]",
     "aqua-diagnostics[style]"
+]
+all = [
+    "aqua-diagnostics[core]",
+    "aqua-diagnostics[additional]",
+]
+all-fdb = [
+    "aqua-diagnostics[core-fdb]",
+    "aqua-diagnostics[additional]",
 ]
 
 [project.urls]

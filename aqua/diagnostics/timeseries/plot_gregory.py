@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import ConfigStyle, plot_gregory_annual, plot_gregory_monthly
 from aqua.core.util import get_realizations, time_to_string, to_list
-from aqua.diagnostics.base import TitleBuilder
+from aqua.diagnostics.base import TitleBuilder, collapse_era5_duplicate
 
 from .base import PlotBaseMixin
 
@@ -145,7 +145,7 @@ class PlotGregory(PlotBaseMixin):
             return None
 
         ref_label = f"{t2m_model} {t2m_exp} {toa_model} {toa_exp}"
-        return ref_label
+        return collapse_era5_duplicate(ref_label)
 
     def set_description(self):
         """Set the description for the plot"""
@@ -189,7 +189,7 @@ class PlotGregory(PlotBaseMixin):
                 "Annual model data and the reference ±1σ uncertainty bands around the climatological mean (shading)."
             )
 
-        return description
+        return collapse_era5_duplicate(description)
 
     def plot_monthly(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, ref_label: str = None):
         """
