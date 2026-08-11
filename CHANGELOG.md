@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.25.0):
+- Fix micromamba setup broken by setup-micromamba v3.2.0 (#328)
 
 ## [v0.24.1]
 
