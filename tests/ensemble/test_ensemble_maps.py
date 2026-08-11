@@ -3,8 +3,10 @@ Test ensemble Ensemble module
 """
 
 import os
+
 import pytest
 import xarray as xr
+
 from aqua.diagnostics import (
     EnsembleMaps,
     PlotEnsembleMaps,

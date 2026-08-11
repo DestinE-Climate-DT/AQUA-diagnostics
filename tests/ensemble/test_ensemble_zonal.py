@@ -1,6 +1,7 @@
 """Test ensemble Ensemble module"""
 
 import os
+
 import pytest
 import xarray as xr
 
@@ -55,7 +56,6 @@ def ensemble_zonal_instance(zonal_config, zonal_dataset):
         exp_list=zonal_config["exp_list"],
         source_list=zonal_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir=outputdir,
     )
     ens.run()
     return ens
@@ -69,7 +69,7 @@ def plot_zonal_instance(zonal_config):
         "exp_list": zonal_config["exp_list"],
         "source_list": zonal_config["source_list"],
     }
-    return PlotEnsembleZonal(**plot_args, outputdir=ensemble_zonal_instance.outputdir)
+    return PlotEnsembleZonal(**plot_args)
 
 
 class TestEnsembleZonal:
@@ -81,7 +81,6 @@ class TestEnsembleZonal:
 
     def test_run(self, ensemble_zonal_instance, zonal_config, tmp_path_str):
         ens = ensemble_zonal_instance
-        ens.outputdir = tmp_path_str
         conf = zonal_config
 
         ens.run()
@@ -107,7 +106,6 @@ class TestEnsembleZonal:
     def test_plotting(self, ensemble_zonal_instance, plot_zonal_instance, zonal_config, tmp_path_str):
         ens = ensemble_zonal_instance
         plot_ens = plot_zonal_instance
-        plot_ens.outputdir = tmp_path_str
         conf = zonal_config
 
         plot_arguments = {

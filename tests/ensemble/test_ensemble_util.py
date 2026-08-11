@@ -4,9 +4,9 @@ import pytest
 import xarray as xr
 
 from aqua.diagnostics.ensemble.util import (
-    merge_from_data_files,
-    compute_statistics,
     center_timestamp,
+    compute_statistics,
+    merge_from_data_files,
 )
 
 

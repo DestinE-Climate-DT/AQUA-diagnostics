@@ -1,6 +1,7 @@
 """Test ensemble Ensemble module"""
 
 import os
+
 import pytest
 import xarray as xr
 
