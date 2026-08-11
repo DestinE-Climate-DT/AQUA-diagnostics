@@ -110,15 +110,15 @@ class Stratification(Diagnostic):
         regions: str | list = None,
         var: list = ["thetao", "so"],
         dim_mean=None,
-        climatology: str = "month",
+        climatology: str | list = "month",
         reader_kwargs: dict = {},
         mld: bool = False,
     ):
         """Run the stratification diagnostic workflow.
 
-        Retrieves data once, then computes and saves products for each requested
-        region. Pipeline per region: region selection -> optional dim mean ->
-        potential density -> optional MLD -> climatology -> save.
+        Retrieves data once, then computes and saves products for each
+        region/climatology pair. Pipeline per pair: region selection ->
+        optional dim mean -> potential density -> optional MLD -> climatology -> save.
 
         Parameters
         ----------
@@ -133,8 +133,10 @@ class Stratification(Diagnostic):
             Names of variables to retrieve. Default is ["thetao", "so"].
         dim_mean : list of str or str, optional
             Dimensions over which to average the data. If None, no averaging is applied.
-        climatology : str, optional
-            Type of climatology to compute ("month", "year", "season", "total"). Default is "month".
+        climatology : str or list, optional
+            Climatology period(s) to compute (e.g. "January", "DJF"). Must be a
+            single value with a single region, or a list of the same length as
+            ``regions`` (paired 1:1). Default is "month".
         reader_kwargs : dict, optional
             Additional keyword arguments passed to the data reader.
         mld : bool, optional
@@ -145,7 +147,6 @@ class Stratification(Diagnostic):
         None
 
         """
-        self.climatology = climatology
         self.logger.info("Starting stratification diagnostic run.")
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         if "lev" in self.data.dims:
@@ -161,15 +162,31 @@ class Stratification(Diagnostic):
         regions_list = to_list(regions)
         if not regions_list:
             regions_list = [None]
+        clim_list = to_list(climatology)
+        if not clim_list:
+            clim_list = ["month"]
+        if len(clim_list) != len(regions_list):
+            raise ValueError(
+                f"regions ({len(regions_list)}) and climatology ({len(clim_list)}) must have "
+                "the same length (paired 1:1)"
+            )
 
         self.processed_data = {}
-        self.logger.debug(f"Variables retrieved: {var}, regions: {regions_list}, dim_mean: {dim_mean}")
+        self.logger.debug(
+            "Variables retrieved: %s, regions: %s, climatology: %s, dim_mean: %s",
+            var,
+            regions_list,
+            clim_list,
+            dim_mean,
+        )
 
-        for reg in regions_list:
+        for reg, clim in zip(regions_list, clim_list):
             self.data = retrieved_data
+            self.climatology = clim
             self.logger.info(
-                "Processing region: %s for diagnostic '%s'.",
+                "Processing region: %s, climatology: %s for diagnostic '%s'.",
                 reg if reg is not None else "global",
+                clim,
                 self.diagnostic_name,
             )
             res_dict = super().select_region(data=self.data, region=reg, drop=True)
@@ -197,14 +214,16 @@ class Stratification(Diagnostic):
             self.data.load()
             self.logger.debug("Loaded data in memory.")
             self.processed_data[reg] = self.data
+            product = "mld" if mld else "stratification"
+            data_to_save = self.data["mld"] if mld else self.data
             self.save_netcdf(
-                self.data,
-                diagnostic_product="stratification",
+                data_to_save,
+                diagnostic_product=product,
                 outputdir=outputdir,
                 rebuild=rebuild,
                 region=self.region,
             )
-            self.logger.info("Stratification diagnostic saved to netCDF file.")
+            self.logger.info("%s diagnostic saved to netCDF file.", product)
 
     def compute_stratification(self):
         """Compute the stratification by calculating climatology and density.
