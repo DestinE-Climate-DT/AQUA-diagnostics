@@ -80,7 +80,6 @@ class TestEnsembleMaps:
         ens = ensemble_maps_instance
         ens.outputdir = tmp_path_str  # Redirect outputs to tmp_path
         conf = ensemble_config
-        outdir = ens.outputdir
 
         # Execution
         ens.run()
@@ -115,7 +114,6 @@ class TestEnsembleMaps:
         plot_ens = plot_ensemble_instance
         plot_ens.outputdir = tmp_path_str
         conf = ensemble_config
-        outdir = ens.outputdir
 
         # Plot Mean
         plot_args_mean = {

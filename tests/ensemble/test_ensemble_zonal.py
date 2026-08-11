@@ -83,7 +83,6 @@ class TestEnsembleZonal:
         ens = ensemble_zonal_instance
         ens.outputdir = tmp_path_str
         conf = zonal_config
-        outdir = ens.outputdir
 
         ens.run()
 
@@ -110,7 +109,6 @@ class TestEnsembleZonal:
         plot_ens = plot_zonal_instance
         plot_ens.outputdir = tmp_path_str
         conf = zonal_config
-        outdir = ens.outputdir
 
         plot_arguments = {
             "var": conf["var"],

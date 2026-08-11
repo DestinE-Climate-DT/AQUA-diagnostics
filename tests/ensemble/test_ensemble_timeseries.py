@@ -95,7 +95,6 @@ class TestEnsembleTimeseries:
         ts = ensemble_ts_instance
         ts.outputdir = tmp_path_str
         conf = ts_config
-        outdir = ts.outputdir
 
         ts.run()
 
@@ -125,7 +124,6 @@ class TestEnsembleTimeseries:
         plot_ts = plot_ts_instance
         plot_ts.outputdir = tmp_path_str
         conf = ts_config
-        outdir = ts.outputdir
 
         plot_arguments = {
             "var": conf["var"],
