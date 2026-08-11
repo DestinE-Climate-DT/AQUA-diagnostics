@@ -384,6 +384,4 @@ class BaseMixin(Diagnostic):
                 rebuild=rebuild,
             )
         else:
-            self.logger.warning(
-                f"Unable to save the plot for {variable} for ensemble {data_name} in {self.diagnostic_product}"
-            )
+            self.logger.warning(f"Unable to save the plot for {var} for ensemble {data_name} in {self.diagnostic_product}")

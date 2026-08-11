@@ -140,7 +140,7 @@ def main(argv=None):
                             realization_list.append(model["realization"])
                         else:
                             realization = extract_realizations_list(
-                                catalog=model["catalog"], model=model["model"], exp=exp["exp"], source=source["source"]
+                                catalog=model["catalog"], model=model["model"], exp=model["exp"], source=model["source"]
                             )
                             realization_list.append(realization)
 

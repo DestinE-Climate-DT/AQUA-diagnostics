@@ -1,21 +1,27 @@
-"""Tests for the BaseMixin class in the ensemble module."""
+"""
+Tests for the BaseMixin class
+in the ensemble module.
+"""
 
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
-
 from aqua.diagnostics.ensemble.base import BaseMixin
 
 pytestmark = [pytest.mark.diagnostics, pytest.mark.ensemble]
 
 
 class TestBaseMixin:
-    """Test suite for the BaseMixin class."""
+    """
+    Test suite for the BaseMixin class.
+    """
 
     def test_initialization_single(self):
-        """Test BaseMixin initialization with single-item lists."""
+        """
+        Test BaseMixin initialization
+        with single-item lists.
+        """
         base = BaseMixin(
             diagnostic_name="test_diag",
             diagnostic_product="test_prod",
@@ -32,7 +38,10 @@ class TestBaseMixin:
         assert base.diagnostic_product == "test_prod"
 
     def test_initialization_none(self):
-        """Test BaseMixin initialization when lists are None."""
+        """
+        Test BaseMixin initialization
+        when lists are None.
+        """
         base = BaseMixin()
         assert base.catalog == "ensemble_catalog"
         assert base.model == "ensemble_model"
@@ -40,7 +49,10 @@ class TestBaseMixin:
         assert base.source == "ensemble_source"
 
     def test_initialization_multi(self):
-        """Test BaseMixin initialization with multi-item lists."""
+        """
+        Test BaseMixin initialization
+        with multi-item lists.
+        """
         base = BaseMixin(
             catalog_list=["cat1", "cat2"],
             model_list=["mod1", "mod2"],
@@ -53,7 +65,10 @@ class TestBaseMixin:
         assert base.source == "multi_source"
 
     def test_save_netcdf(self, tmp_path):
-        """Test that BaseMixin successfully hands off to OutputSaver to save a NetCDF."""
+        """
+        Test that BaseMixin successfully
+        hands off to OutputSaver to save a NetCDF.
+        """
         # Create a dummy DataArray
         data = xr.DataArray(
             np.random.rand(10, 10),
@@ -92,7 +107,10 @@ class TestBaseMixin:
         assert "mean" in nc_files[0].name
 
     def test_save_figure(self, tmp_path):
-        """Test that BaseMixin successfully hands off to OutputSaver to save a figure."""
+        """
+        Test that BaseMixin successfully
+        hands off to OutputSaver to save a figure.
+        """
         # Create a dummy figure
         fig, ax = plt.subplots()
         ax.plot([1, 2, 3], [1, 4, 9])

@@ -1,12 +1,18 @@
-"""Test ensemble Ensemble module"""
+"""
+Test ensemble Ensemble module
+"""
 
 import os
 import pytest
 import xarray as xr
-
-from aqua.diagnostics import EnsembleMaps, PlotEnsembleMaps
-from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
-from tests.shared_constants import APPROX_REL, LOGLEVEL
+from aqua.diagnostics import (
+    EnsembleMaps,
+    PlotEnsembleMaps,
+)
+from tests.shared_constants import (
+    APPROX_REL,
+    LOGLEVEL,
+)
 
 # Tolerance and Logging
 approx_rel = APPROX_REL
@@ -44,7 +50,6 @@ def ensemble_maps_instance(ensemble_config, dataset_instance):
         exp_list=ensemble_config["exp_list"],
         source_list=ensemble_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir=outputdir,
     )
     ens.run()
     return ens

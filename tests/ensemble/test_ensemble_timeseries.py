@@ -4,9 +4,18 @@ import os
 import pytest
 import xarray as xr
 
-from aqua.diagnostics import EnsembleTimeseries, PlotEnsembleTimeseries
-from aqua.diagnostics.ensemble.util import reader_retrieve_and_merge
-from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
+from aqua.diagnostics import (
+    EnsembleTimeseries,
+    PlotEnsembleTimeseries,
+)
+from aqua.diagnostics.ensemble.util import (
+    reader_retrieve_and_merge,
+)
+from tests.shared_constants import (
+    APPROX_REL,
+    DPI,
+    LOGLEVEL,
+)
 
 approx_rel = APPROX_REL
 loglevel = LOGLEVEL
@@ -58,7 +67,6 @@ def ensemble_ts_instance(ts_config, ts_dataset):
         exp_list=ts_config["exp_list"],
         source_list=ts_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir=outputdir,
     )
     ts.run()
     return ts

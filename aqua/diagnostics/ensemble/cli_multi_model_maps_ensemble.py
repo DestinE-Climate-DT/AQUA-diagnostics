@@ -134,8 +134,8 @@ def main(argv=None):
                         realization = extract_realizations_list(
                             catalog=model["catalog"],
                             model=model["model"],
-                            exp=exp["exp"],
-                            source=source["source"],
+                            exp=model["exp"],
+                            source=model["source"],
                         )
                         realization_list.append(realization)
 
