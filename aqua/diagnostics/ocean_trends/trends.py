@@ -110,9 +110,7 @@ class Trends(Diagnostic):
 
         results = {}
         for reg in regions_list:
-            self.logger.info("Processing region: %s", reg if reg is not None else "global")
             data, region_name = self.select_region(data=trend_global, region=reg, dim_mean=dim_mean)
-            data.attrs["AQUA_region"] = region_name
             self.region = region_name
             results[reg] = data
 
@@ -131,7 +129,7 @@ class Trends(Diagnostic):
 
         Args:
             data (xr.Dataset): Input dataset.
-            region (str, optional): Geographical region to select.
+            region (str, optional): Geographical region to select. None means global.
             drop (bool, optional): Whether to drop coordinates outside the region. Default is True.
             dim_mean (str or list, optional): Dimension(s) over which to compute the mean.
 
@@ -139,26 +137,27 @@ class Trends(Diagnostic):
             tuple: (data, region) - Processed data and region name.
 
         """
-        # If a region is specified, apply area selection to self.data
-        if region:
-            self.logger.info(f"Selecting region: {region}.")
-            res_dict = super().select_region(data=data, region=region, drop=True)
-            lat_limits = res_dict["lat_limits"]
-            lon_limits = res_dict["lon_limits"]
-            data = res_dict["data"]
-            region = res_dict["region"]
+        self.logger.info(
+            "Processing region: %s for diagnostic '%s'.",
+            region if region is not None else "global",
+            self.diagnostic_name,
+        )
+        res_dict = super().select_region(data=data, region=region, drop=drop)
+        self.region = res_dict["region"] if res_dict["region"] is not None else "global"
+        self.lat_limits = res_dict["lat_limits"]
+        self.lon_limits = res_dict["lon_limits"]
+        if dim_mean is not None:
+            self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
+            data = self.reader.fldmean(
+                data=data,
+                dims=dim_mean,
+                lat_limits=self.lat_limits,
+                lon_limits=self.lon_limits,
+            )
         else:
-            self.logger.debug("No region specified, using global data")
-            region = "global"
-            lat_limits = None
-            lon_limits = None
-
-        # If a dimension mean is specified, compute the mean over that dimension
-        # otherwise use the data as is, with a region selection if applied
-        if dim_mean:
-            self.logger.debug("Averaging data over dimension: %s", dim_mean)
-            data = self.reader.fldmean(data, dim=dim_mean, lat=lat_limits, lon=lon_limits)
-        return data, region
+            data = res_dict["data"]
+        data.attrs["AQUA_region"] = self.region
+        return data, self.region
 
     def adjust_trend_for_time_frequency(self, trend, y_array):
         """Adjust trend values based on the time frequency of the data.
