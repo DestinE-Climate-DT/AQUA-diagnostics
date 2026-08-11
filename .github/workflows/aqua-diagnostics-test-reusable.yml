@@ -159,6 +159,8 @@ jobs:
       - name: Set up Micromamba (local mode)
         if: ${{ inputs.install-mode == 'local' }}
         uses: mamba-org/setup-micromamba@v3
+        env:
+          GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment.yml
@@ -171,6 +173,8 @@ jobs:
       - name: Set up Micromamba (cross-check mode)
         if: ${{ inputs.install-mode == 'cross-check' }}
         uses: mamba-org/setup-micromamba@v3
+        env:
+          GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment-dev.yml
@@ -183,6 +187,8 @@ jobs:
       - name: Set up Micromamba (PyPI mode)
         if: ${{ inputs.install-mode == 'pypi' }}
         uses: mamba-org/setup-micromamba@v3
+        env:
+          GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment-pypi.yml
