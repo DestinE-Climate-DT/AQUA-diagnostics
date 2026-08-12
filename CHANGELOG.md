@@ -14,6 +14,8 @@ Complete list:
 Complete list:
 - Fix micromamba setup broken by setup-micromamba v3.2.0 (#328)
 - Set as default pyfdb/GSV during installation (#326)
+- AQUA analysis Dask issues fix (#332)
+
 
 ## [v0.24.0]
 
