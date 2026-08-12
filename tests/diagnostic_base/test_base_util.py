@@ -1,8 +1,10 @@
 import argparse
 import os
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
+import dask.array  # noqa: F401  -- see restore_tokenize / test_patch_tokenize
 import numpy as np
 import pandas as pd
 import pytest
@@ -83,9 +85,47 @@ def test_load_diagnostic_config_from_args(tmp_path):
     assert result["output"]["outputdir"] == str(tmp_path / "output")
 
 
+@pytest.fixture
+def restore_tokenize():
+    """Undo the process-wide tokenize rebinding that open_cluster() performs.
+
+    Without this the rebinding outlives the test and every later test in the same
+    session computes dask keys through it.
+    """
+    saved = [(m, m.tokenize) for m in list(sys.modules.values()) if m is not None and getattr(m, "tokenize", None) is not None]
+    yield
+    for module, func in saved:
+        module.tokenize = func
+
+
+def test_patch_tokenize_leaves_no_stale_binding(restore_tokenize):
+    """Every route to tokenize must be rebound, not just dask.base.
+
+    Rebinding dask.base alone is worse than not patching at all: ~20 dask modules
+    keep their own reference from ``from dask.base import tokenize``, so their keys
+    stay identical across processes while dask.base-routed keys become unique. Two
+    clients on one scheduler then submit the same key with different dependencies,
+    which corrupts the scheduler and hangs the clients.
+
+    ``dask.array`` must already be imported when the patch runs (it is, at module
+    level): patch first and dask.array would import the patched function instead,
+    the stale bindings would never exist, and this test would pass either way.
+    """
+    from aqua.diagnostics.base.util import _original_tokenize, _patch_tokenize
+
+    _patch_tokenize()
+
+    stale = [
+        name
+        for name, module in sys.modules.items()
+        if module is not None and getattr(module, "tokenize", None) is _original_tokenize
+    ]
+    assert stale == [], f"tokenize left unpatched in: {stale}"
+
+
 @patch("aqua.diagnostics.base.util.Client")
 @patch("aqua.diagnostics.base.util.LocalCluster")
-def test_cluster(mock_cluster, mock_client):
+def test_cluster(mock_cluster, mock_client, restore_tokenize):
     """Test the cluster functions with mocking"""
 
     # Test case 1: No workers specified
