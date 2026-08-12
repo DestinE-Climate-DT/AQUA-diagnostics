@@ -12,9 +12,10 @@ Complete list:
 ## [v0.24.1]
 
 Complete list:
+- Specify min and max allowed versions for all dependencies (#333)
+- AQUA analysis Dask issues fix (#332)
 - Fix micromamba setup broken by setup-micromamba v3.2.0 (#328)
 - Set as default pyfdb/GSV during installation (#326)
-- AQUA analysis Dask issues fix (#332)
 
 
 ## [v0.24.0]
