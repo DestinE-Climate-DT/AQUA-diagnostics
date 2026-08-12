@@ -4,9 +4,10 @@ Utility functions for the CLI
 
 import argparse
 import os
+import sys
 import uuid
 
-import dask
+import dask.tokenize
 from dask.base import tokenize
 from dask.distributed import Client, LocalCluster
 
@@ -23,6 +24,37 @@ _original_tokenize = tokenize
 def _unique_tokenize(*args, **kwargs):
     """Tokenize function that includes job token for uniqueness."""
     return _original_tokenize(_job_token, *args, **kwargs)
+
+
+def _patch_tokenize():
+    """
+    Redirect every route to dask's tokenize, not just ``dask.base``.
+
+    Rebinding only ``dask.base.tokenize`` is not enough, and is worse than doing
+    nothing: ~20 dask modules run ``from dask.base import tokenize`` at import
+    time and keep their own reference to the original. Their keys therefore stay
+    identical across processes while keys built through ``dask.base`` become
+    unique, so two clients on one scheduler submit the same key with different
+    dependencies. The scheduler files that as a collision, leaves the dependencies
+    unlinked, and the resulting TaskState with ``priority=None`` raises
+    ``TypeError: '<' not supported ... NoneType`` in ``_add_to_memory``; the
+    clients waiting on those keys then hang forever.
+
+    Three routes have to be covered:
+      - ``dask.tokenize.tokenize`` is the implementation and the choke point:
+        ``_tokenize_deterministic`` resolves ``tokenize`` as a module global, so
+        patching it here also covers the expression system (``dask/_expr.py:142``
+        builds every expression's ``_determ_token`` that way);
+      - ``dask.base.tokenize`` is the re-export, and what later imports pick up;
+      - the modules that already imported the original need their own rebinding.
+    """
+    dask.tokenize.tokenize = _unique_tokenize
+    dask.base.tokenize = _unique_tokenize
+    for module in list(sys.modules.values()):
+        if module is None:
+            continue
+        if getattr(module, "tokenize", None) is _original_tokenize:
+            module.tokenize = _unique_tokenize
 
 
 def template_parse_arguments(parser: argparse.ArgumentParser):
@@ -77,7 +109,7 @@ def open_cluster(nworkers, cluster, loglevel: str = "WARNING"):
             private_cluster = True
         else:
             logger.info(f"Connecting to cluster {cluster} with client ID {_job_token}.")
-            dask.base.tokenize = _unique_tokenize
+            _patch_tokenize()
 
         client = Client(cluster)
     else:
