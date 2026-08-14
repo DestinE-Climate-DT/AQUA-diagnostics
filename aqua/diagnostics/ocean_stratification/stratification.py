@@ -167,8 +167,7 @@ class Stratification(Diagnostic):
             clim_list = ["month"]
         if len(clim_list) != len(regions_list):
             raise ValueError(
-                f"regions ({len(regions_list)}) and climatology ({len(clim_list)}) must have "
-                "the same length (paired 1:1)"
+                f"regions ({len(regions_list)}) and climatology ({len(clim_list)}) must have the same length (paired 1:1)"
             )
 
         self.processed_data = {}
