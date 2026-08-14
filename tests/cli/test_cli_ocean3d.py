@@ -183,9 +183,7 @@ class TestStratification:
         assert strat_cls.call_count == 4
         assert strat_cls.return_value.run.call_count == 4
         # Stratification NetCDF path passes region and climatology lists together.
-        strat_run_calls = [
-            c for c in strat_cls.return_value.run.call_args_list if c.kwargs.get("mld") is False
-        ]
+        strat_run_calls = [c for c in strat_cls.return_value.run.call_args_list if c.kwargs.get("mld") is False]
         assert strat_run_calls
         assert strat_run_calls[0].kwargs["regions"] == ["global_ocean"]
         assert strat_run_calls[0].kwargs["climatology"] == ["annual"]

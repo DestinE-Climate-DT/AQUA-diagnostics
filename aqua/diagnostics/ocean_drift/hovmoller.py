@@ -313,9 +313,7 @@ class Hovmoller(Diagnostic):
         for reg, processed_list in regions_to_save.items():
             for processed_data in processed_list:
                 # Prefer long name on attrs for filenames; fall back to dict key.
-                file_region = processed_data.attrs.get(
-                    "AQUA_region", reg if reg is not None else "global"
-                )
+                file_region = processed_data.attrs.get("AQUA_region", reg if reg is not None else "global")
                 super().save_netcdf(
                     data=processed_data,
                     diagnostic=self.diagnostic_name,
