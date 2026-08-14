@@ -21,6 +21,8 @@ def test_hovmoller():
         loglevel=loglevel,
     )
 
-    hovmoller.run(region="sss")
+    hovmoller.run(regions="sss")
 
     assert hovmoller is not None, "Hovmoller instance should not be None"
+    assert "sss" in hovmoller.processed_data
+    assert len(hovmoller.processed_data["sss"]) > 0

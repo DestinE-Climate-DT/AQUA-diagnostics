@@ -76,7 +76,7 @@ class TestHovmoller:
         """With run=True, Hovmoller.run and both plotting methods are called."""
         mock_hov_cls, mock_plot_cls = mock_od
         mock_hov_instance = mock_hov_cls.return_value
-        mock_hov_instance.processed_data_list = [object()]
+        mock_hov_instance.processed_data = {"global_ocean": [object()]}
         config_file = build_config({"ocean_drift": BASE_DRIFT})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
@@ -84,7 +84,7 @@ class TestHovmoller:
         mock_hov_cls.assert_called_once()
         mock_hov_instance.run.assert_called_once()
         run_call = mock_hov_instance.run.call_args
-        assert run_call.kwargs["region"] == "global_ocean"
+        assert run_call.kwargs["regions"] == ["global_ocean"]
         assert run_call.kwargs["var"] == ["thetao"]
 
         mock_plot_cls.assert_called_once()
@@ -151,8 +151,10 @@ class TestStratification:
             "PlotStratification": mocker.patch(f"{CLI_MODULE}.PlotStratification"),
             "PlotMLD": mocker.patch(f"{CLI_MODULE}.PlotMLD"),
         }
-        # Allow data[["thetao", "so", "rho"]] and data[["mld"]] in CLI.
-        mocks["Stratification"].return_value.data = mocker.MagicMock()
+        # Allow data[["thetao", "so", "rho"]] / data[["mld"]] and processed_data iteration.
+        mock_data = mocker.MagicMock()
+        mocks["Stratification"].return_value.data = mock_data
+        mocks["Stratification"].return_value.processed_data = {"global_ocean": mock_data}
         return mocks
 
     def test_stratification_disabled_skips_processing(self, build_config, mock_cluster, mock_os):
@@ -180,5 +182,12 @@ class TestStratification:
         strat_cls = mock_os["Stratification"]
         assert strat_cls.call_count == 4
         assert strat_cls.return_value.run.call_count == 4
+        # Stratification NetCDF path passes region and climatology lists together.
+        strat_run_calls = [
+            c for c in strat_cls.return_value.run.call_args_list if c.kwargs.get("mld") is False
+        ]
+        assert strat_run_calls
+        assert strat_run_calls[0].kwargs["regions"] == ["global_ocean"]
+        assert strat_run_calls[0].kwargs["climatology"] == ["annual"]
         mock_os["PlotStratification"].return_value.plot_stratification.assert_called_once()
         mock_os["PlotMLD"].return_value.plot_mld.assert_called_once()
