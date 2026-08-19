@@ -1,11 +1,13 @@
-import healpy as hp
 import numpy as np
 import xarray as xr
 
+# from astropy_healpix import healpy as hp
 from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
 from aqua.core.graphics import plot_single_map
-from aqua.core.util import get_projection, healpix_resample
+from aqua.core.util import get_projection
+
+# from aqua.core.util.graphics import isnpixok
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # import matplotlib.pyplot as plt
@@ -110,8 +112,8 @@ class ssh_variability_plot(PlotBaseMixin):
             diagnostic_product (str, optional): Diagnostic type, e.g., ``'ssh_variability'``. Default is ``'ssh_variability'``.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             description (str, optional): Additional description to include in the plot or metadata.
-            tgt_grid_name='r1440x720',
-            regrid_method='ycon',
+            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
+            regrid_method (str, optional): Regridding method to use. Default is 'ycon'.
 
         Returns:
             matplotlib.figure.Figure: The generated plot figure object.
@@ -144,26 +146,27 @@ class ssh_variability_plot(PlotBaseMixin):
             diagnostic="SSH Variability",
             variable=long_name,
             regions=region,
-            catalog=catalog,
             model=model,
             exp=exp,
             startyear=startdate,
-            endyear=enddate).generate()
+            endyear=enddate,
+        ).generate()
 
         description = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
 
         # Check if the dataset is in HEALPix format
-        npix = dataset_std.size  # Number of cells in the data
-        nside = hp.npix2nside(npix) if hp.isnpixok(npix) else None
+        # npix = dataset_std.size  # Number of cells in the data
+        # nside = hp.npix2nside(npix) if isnpixok(npix) else None
 
-        if nside is not None:
-            self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
-            dataset_std = healpix_resample(dataset_std)
-            self.logger.debug("resampling HEALPix dataset_std")
+        # if nside is not None:
+        #    self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
+        #    dataset_std = healpix_resample(dataset_std)
+        #    self.logger.debug("resampling HEALPix dataset_std")
 
         if tgt_grid_name is not None:
             self.logger.info(
-                f"Regridding model data and reference data using target grid name {tgt_grid_name} and regrid method {regrid_method}"
+                f"Regridding model data and reference data using target grid name {tgt_grid_name} "
+                f"and regrid method {regrid_method}"
             )
             regrid_data = Regridder(data=dataset_std, loglevel=self.loglevel)
             regrid_data.weights(tgt_grid_name=tgt_grid_name, regrid_method=regrid_method)
@@ -203,9 +206,9 @@ class ssh_variability_plot(PlotBaseMixin):
                 return_fig=True,
                 title=title,
                 proj=proj,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
                 **plot_options,
@@ -220,9 +223,9 @@ class ssh_variability_plot(PlotBaseMixin):
                 vmin=vmin,
                 vmax=vmax,
                 proj=proj,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
                 **plot_options,
@@ -331,8 +334,9 @@ class ssh_variability_plot(PlotBaseMixin):
             diagnostic_product (str, optional): Diagnostic product identifier. Default is 'ssh_variability_difference'.
             description (str, optional): Additional description for the plot metadata or title.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
-            tgt_grid_name='r1440x720',
-            regrid_method='ycon',
+            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
+            regrid_method (str, optional): Regridding method to use. Default is 'ycon'.
+
         Returns:
             matplotlib.figure.Figure: The generated figure object.
 
@@ -357,28 +361,28 @@ class ssh_variability_plot(PlotBaseMixin):
         else:
             dataset_std_ref = dataset_std_ref
 
-        # Check if the dataset is in HEALPix format
-        npix = dataset_std.size  # Number of cells in the data
-        nside = hp.npix2nside(npix) if hp.isnpixok(npix) else None
+            # Check if the dataset is in HEALPix format
+            # npix = dataset_std.size  # Number of cells in the data
+            # nside = hp.npix2nside(npix) if isnpixok(npix) else None
 
-        if nside is not None:
-            self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
-            dataset_std = healpix_resample(dataset_std)
-            self.logger.debug("resampling HEALPix dataset_std")
+            # if nside is not None:
+            #     self.logger.info(f"Input data is in HEALPix format with nside={nside}.")
+            #     dataset_std = healpix_resample(dataset_std)
+            # self.logger.debug("resampling HEALPix dataset_std")
 
         # Check if the data is in HEALPix format
-        npix_ref = dataset_std_ref.size  # Number of cells in the data
-        nside_ref = hp.npix2nside(npix_ref) if hp.isnpixok(npix_ref) else None
+        # npix_ref = dataset_std_ref.size  # Number of cells in the data
+        # nside_ref = hp.npix2nside(npix_ref) if isnpixok(npix_ref) else None
 
-        if nside_ref is not None:
-            self.logger.info(f"Reference data is in HEALPix format with nside={nside_ref}.")
-            dataset_std_ref = healpix_resample(dataset_std_ref)
-            self.logger.debug("resampling HEALPix dataset_ref_std")
+        # if nside_ref is not None:
+        #    self.logger.info(f"Reference data is in HEALPix format with nside={nside_ref}.")
+        #    dataset_std_ref = healpix_resample(dataset_std_ref)
+        #    self.logger.debug("resampling HEALPix dataset_ref_std")
 
         if tgt_grid_name is not None:
-
             self.logger.info(
-                f"Regridding model data and reference data using target grid name {tgt_grid_name} and regrid method {regrid_method}"
+                f"Regridding model data and reference data using target grid name {tgt_grid_name} and "
+                f"regrid method {regrid_method}"
             )
             regrid_data = Regridder(data=dataset_std, loglevel=self.loglevel)
             regrid_data.weights(tgt_grid_name=tgt_grid_name, regrid_method=regrid_method)
@@ -400,23 +404,24 @@ class ssh_variability_plot(PlotBaseMixin):
             diagnostic="The difference of the SSH Variability",
             variable=long_name,
             regions=region,
-            catalog=catalog,
             model=model,
             exp=exp,
             startyear=startdate,
             endyear=enddate,
             comparison="relative to",
-            ref_catalog=catalog_ref,
             ref_model=model_ref,
             ref_exp=exp_ref,
             ref_startyear=startdate_ref,
-            ref_endyear=enddate_ref
-            ).generate()
+            ref_endyear=enddate_ref,
+        ).generate()
 
-        description = f"The difference of the SSH Variability of {long_name} for {model} {exp} ({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} ({startdate_ref}-{enddate_ref}) "
+        description = (
+            f"The difference of the SSH Variability of {long_name} for {model} {exp} "
+            f"({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} "
+            f"({startdate_ref}-{enddate_ref}) "
+        )
 
         if region:
-
             if lon_limits is None or lat_limits is None:
                 self.logger.error(f"For the {region}, please specify the lon_limits and lat_limits.")
             description = description + f"for {region} "
@@ -462,9 +467,9 @@ class ssh_variability_plot(PlotBaseMixin):
                 contour=False,
                 return_fig=True,
                 title=title,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
@@ -479,9 +484,9 @@ class ssh_variability_plot(PlotBaseMixin):
                 title=title,
                 vmin=vmin_diff,
                 vmax=vmax_diff,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
                 loglevel=self.loglevel,

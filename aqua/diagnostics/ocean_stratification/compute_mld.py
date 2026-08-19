@@ -1,3 +1,5 @@
+"""Functions to compute the Mixed Layer Depth (MLD) from ocean density profiles."""
+
 import xarray as xr
 
 from aqua.core.logger import log_configure
@@ -5,8 +7,7 @@ from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
 def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING"):
-    """
-    Compute the Mixed Layer Depth (MLD) from a continuous density profile.
+    """Compute the Mixed Layer Depth (MLD) from a continuous density profile.
 
     Uses the threshold method from de Boyer Montegut et al. (2004), identifying
     the depth where density exceeds surface density by 0.03 kg/m³, with linear
@@ -29,6 +30,7 @@ def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING
     -------
     xarray.DataArray
         Estimated MLD with same horizontal dimensions as `rho`.
+
     """
     # HACK: ensure level units are in meters, not model layers
     if rho[vert_coord].attrs["units"] == "NEMO model layers":
@@ -67,12 +69,8 @@ def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING
     # Interpolate to estimate MLD between threshold levels
     ddif = cutoff_lev2 - cutoff_lev1
     logger.debug("Interpolating to estimate MLD between threshold levels.")
-    rdif1 = dens_diff.where(dens_diff[vert_coord] == cutoff_lev1).max(
-        [vert_coord]
-    )  # Density diff at first level
-    rdif2 = dens_diff.where(dens_diff[vert_coord] == cutoff_lev2).max(
-        [vert_coord]
-    )  # Density diff at second level
+    rdif1 = dens_diff.where(dens_diff[vert_coord] == cutoff_lev1).max([vert_coord])  # Density diff at first level
+    rdif2 = dens_diff.where(dens_diff[vert_coord] == cutoff_lev2).max([vert_coord])  # Density diff at second level
     mld = cutoff_lev1 + ((ddif) * (rdif1)) / (rdif1 - rdif2)
 
     # Set MLD as maximum depth if threshold is not exceeded
@@ -81,11 +79,7 @@ def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING
     mld = mld.rename({"rho": "mld"})
     logger.info("MLD computation completed and variable renamed.")
     # adding important attributes
-    aqua_dict = {
-        key: rho.rho.attrs[key]
-        for key in rho.rho.attrs.keys()
-        if key.startswith("AQUA")
-    }
+    aqua_dict = {key: rho.rho.attrs[key] for key in rho.rho.attrs.keys() if key.startswith("AQUA")}
     mld.mld.attrs.update(aqua_dict)
 
     mld.mld.attrs["long_name"] = "Mixed Layer Depth"

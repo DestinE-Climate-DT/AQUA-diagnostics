@@ -1,10 +1,9 @@
-"""
-Module to plot multiple maps
-
-"""
+"""Module to plot multiple maps."""
 
 import cartopy.crs as ccrs
+import matplotlib.path as mpath
 import matplotlib.pyplot as plt
+import numpy as np
 import xarray as xr
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -44,11 +43,11 @@ def plot_maps(
     loglevel="WARNING",
     **kwargs,
 ):
-    """
-    Plot multiple maps.
+    """Plot multiple maps.
+
     This is supposed to be used for maps to be compared together.
     A list of xarray.DataArray objects is expected
-    and a map is plotted for each of them
+    and a map is plotted for each of them.
 
     Args:
         maps (list):          list of xarray.DataArray objects
@@ -58,15 +57,19 @@ def plot_maps(
         extent (list,opt):    extent of the map, default is None
         style (str,opt):      style for the plot, default is the AQUA style
         figsize (tuple,opt):  figure size, default is (6,6) for each map. Here the full figure size is set.
+        nrows (int,opt):      number of rows in the subplot grid, default is None (auto)
+        ncols (int,opt):      number of columns in the subplot grid, default is None (auto)
         vmin (float,opt):     minimum value for the colorbar, default is None
         vmax (float,opt):     maximum value for the colorbar, default is None
         nlevels (int,opt):    number of levels for the colorbar, default is 11
         title (str,opt):      super title for the figure
         titles (list,opt):    list of titles for the maps
         cmap (str,opt):       colormap, default is 'RdBu_r'
+        cbar_number (str,opt): 'single' for one shared colorbar, 'separate' for per-map colorbars
         cbar_label (str,opt): colorbar label
         transform_first (bool, optional): If True, transform the data before plotting. Defaults to False.
         cyclic_lon (bool,opt): add cyclic longitude, default is True
+        ytext (list,opt):     list of y-axis text labels for each subplot, default is None
         return_fig (bool,opt): return the figure, default is False
         loglevel (str,opt):   log level, default is 'WARNING'
         **kwargs:             Keyword arguments for plot_single_map
@@ -74,8 +77,9 @@ def plot_maps(
     Raises:
         ValueError: if nothing to plot, i.e. maps is None or not a list of xarray.DataArray
 
-    Return:
-        fig     if more manipulations on the figure are needed, if return_fig=True
+    Returns:
+        fig: the matplotlib Figure object if return_fig=True, otherwise None.
+
     """
     logger = log_configure(loglevel, "plot_maps")
     ConfigStyle(style=style, loglevel=loglevel)
@@ -108,13 +112,17 @@ def plot_maps(
         cbar = False
 
     # Adjust the location of the subplots on the page to make room for the colorbar
-    fig.subplots_adjust(
-        bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.1, hspace=0.5
-    )
+    fig.subplots_adjust(bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.1, hspace=0.5)
 
     for i in range(len(maps)):
         if cbar_number == "separate":
             vmin, vmax = evaluate_colorbar_limits(maps=maps[i], sym=sym)
+        if not extent:
+            lon_min = float(maps[i].lon.min())
+            lon_max = float(maps[i].lon.max())
+            lat_min = float(maps[i].lat.min())
+            lat_max = float(maps[i].lat.max())
+            extent = [lon_min, lon_max, lat_min, lat_max]
 
         logger.debug("Plotting map %d", i)
         fig, ax = plot_single_map(
@@ -135,11 +143,58 @@ def plot_maps(
             fig=fig,
             loglevel=loglevel,
             ax_pos=(nrows, ncols, i + 1),
-            ticks_rounding=0,
+            gridlines=False,
             **kwargs,
         )
-        ax.set_facecolor("lightgray")
 
+        if proj.__class__ == ccrs.Orthographic:
+            theta = np.linspace(0, 2 * np.pi, 100)
+            verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+            circle = mpath.Path(verts * 0.5 + 0.5)
+            ax.set_boundary(circle, transform=ax.transAxes)
+
+            # gl = ax.gridlines(draw_labels=False, linewidth=0.5, color='gray', alpha=0.3)
+            # gl.xlabel_style = {'color': 'gray'}
+            # gl.ylabel_style = {'color': 'gray'}
+
+            # lon_min, lon_max, lat_min, lat_max = extent
+
+            # lat_ticks = np.arange(np.ceil(lat_min/10)*10, lat_max, 10)
+            # lon_ticks = np.arange(np.ceil(lon_min/30)*30, lon_max, 30)
+
+            # for lat in lat_ticks:
+            #     ax.text(lon_min, lat, f"{lat:.0f}°",
+            #             transform=ccrs.PlateCarree(),
+            #             fontsize=8, color='gray', ha='left', va='bottom', zorder=10)
+
+            # is_antarctic = lat_min <= -80  # or however you detect it
+            # is_arctic = lat_max >= 80
+            # for lon in lon_ticks:
+            #     if is_antarctic:
+            #         label_lat = lat_max + 2
+            #     elif is_arctic:
+            #         label_lat = lat_min - 2  # ← place near the outer ring, not below
+            #     else:
+            #         label_lat = lat_min + 2
+            #     ax.text(lon, label_lat, f"{lon:.0f}°",
+            #             transform=ccrs.PlateCarree(),
+            #             fontsize=8, color='gray', ha='center',# va='bottom',
+            #             zorder=10)
+
+        else:
+            gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.3)
+            gl.xlabel_style = {"color": "gray"}
+            gl.ylabel_style = {"color": "gray"}
+
+            gl.top_labels = False
+            gl.right_labels = False
+            if i != 0:
+                gl.left_labels = False
+            else:
+                gl.left_labels = True
+            gl.bottom_labels = True
+
+        ax.set_facecolor("lightgray")
         if ytext:
             logger.debug("Adding text in the plot: %s", ytext[i])
             ax.text(
@@ -182,21 +237,16 @@ def plot_maps(
             )
             cbar.set_ticks(cbar_ticks)
     if cbar_number == "single":
-
         # Add a colorbar axis at the bottom of the graph
         cbar_ax = fig.add_axes([0.2, 0.15, 0.6, 0.03])
 
-        cbar_label = cbar_get_label(
-            data=maps[0], cbar_label=cbar_label, loglevel=loglevel
-        )
+        cbar_label = cbar_get_label(data=maps[0], cbar_label=cbar_label, loglevel=loglevel)
         logger.debug("Setting colorbar label to %s", cbar_label)
 
         # Add the colorbar
         mappable = ax.collections[0]
         if cbar:
-            cbar = fig.colorbar(
-                mappable, cax=cbar_ax, orientation="horizontal", label=cbar_label
-            )
+            cbar = fig.colorbar(mappable, cax=cbar_ax, orientation="horizontal", label=cbar_label)
             # cbar.set_ticks([vmin, vmax])  # Only show min and max
             cbar_ticks_rounding = kwargs.get("cbar_ticks_rounding", None)
             cbar_ticks = generate_colorbar_ticks(
@@ -205,7 +255,7 @@ def plot_maps(
                 sym=sym,
                 nlevels=nlevels,
                 ticks_rounding=cbar_ticks_rounding,
-                max_ticks=10,
+                max_ticks=5,
                 loglevel=loglevel,
             )
             # cbar.set_ticks([vmin, vmax])
@@ -218,12 +268,11 @@ def plot_maps(
         # else:
         #     cbar.set_ticks(np.linspace(vmin, vmax, nlevels + 1))
 
-        cbar.ax.ticklabel_format(style="sci", axis="x", scilimits=(-3, 3))
+        # cbar.ax.ticklabel_format(style="sci", axis="x", scilimits=(-3, 3))
 
     # Add a super title
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 15, y=1.05)
-
+        fig.suptitle(title, fontsize=ncols * 6, y=1.1)
     if return_fig:
         return fig

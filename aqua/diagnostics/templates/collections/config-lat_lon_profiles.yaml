@@ -45,6 +45,15 @@ diagnostics:
     box_brd: true
     seasonal: true
     longterm: true
+    # 'params' holds defaults merged into every variable (params.default),
+    # with optional per-variable overrides (params.<var_name>).
+    # Any field set inline on a variable under 'variables' wins over params.
+    params:
+      default:
+        # Period used for the standard deviation of the reference (±2σ band).
+        # Leave null to use the same period as the plot/analysis window.
+        std_startdate: null
+        std_enddate: null
     variables:
       - name: '2t'
         regions: [null, 'tropics']  # global and tropics

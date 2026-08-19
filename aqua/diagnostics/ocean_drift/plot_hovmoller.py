@@ -1,8 +1,10 @@
+"""Module for plotting Hovmoller diagrams and timeseries from ocean drift diagnostics."""
+
 import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, unit_to_latex
+from aqua.core.util import get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -13,21 +15,22 @@ xr.set_options(keep_attrs=True)
 
 
 class PlotHovmoller:
-    """
-    Class for plotting Hovmoller diagrams and timeseries from AQUA ocean drift diagnostics.
+    """Class for plotting Hovmoller diagrams and timeseries from AQUA ocean drift diagnostics.
 
     This class provides methods to generate, customize, and save Hovmoller and timeseries plots
     using xarray datasets and AQUA conventions. It handles metadata extraction, plot styling,
     and output file management.
     """
-    def __init__(self,
-                 data: list[xr.Dataset],
-                 diagnostic_name: str = "oceandrift",
-                 vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
-                 outputdir: str = ".",
-                 loglevel: str = "WARNING"):
-        """
-        Initialize the PlotHovmoller class.
+
+    def __init__(
+        self,
+        data: list[xr.Dataset],
+        diagnostic_name: str = "oceandrift",
+        vert_coord: str = DEFAULT_OCEAN_VERT_COORD,
+        outputdir: str = ".",
+        loglevel: str = "WARNING",
+    ):
+        """Initialize the PlotHovmoller class.
 
         Args:
             data (list[xr.Dataset]): List of xarray datasets containing the data to be plotted
@@ -35,6 +38,7 @@ class PlotHovmoller:
             vert_coord (str): Name of the vertical dimension coordinate, default is "level"
             outputdir (str): Directory where the output will be saved, default is current directory
             loglevel (str): Logging level, default is "WARNING"
+
         """
         self.data = data
 
@@ -49,6 +53,8 @@ class PlotHovmoller:
         # Getting metadata from the first dataset
         self.catalog = self.data[0][self.vars[0]].AQUA_catalog
         self.model = self.data[0][self.vars[0]].AQUA_model
+        self.startdate = self.data[0].time[0].values
+        self.enddate = self.data[0].time[-1].values
         self.exp = self.data[0][self.vars[0]].AQUA_exp
         self.region = self.data[0].AQUA_region
         self.levels = None  # To be set when plotting timeseries
@@ -61,11 +67,11 @@ class PlotHovmoller:
             exp=self.exp,
             outputdir=outputdir,
             realization=self.realizations,
-            loglevel=self.loglevel)
+            loglevel=self.loglevel,
+        )
 
     def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
-        """
-        Plot the Hovmoller diagram for the given data.
+        """Plot the Hovmoller diagram for the given data.
 
         This method sets the title, description, vmax, vmin, and texts for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
@@ -78,10 +84,13 @@ class PlotHovmoller:
 
         Returns:
             None
+
         """
         self.set_suptitle(content="Hovmöller")
         self.set_title()
-        self.set_description(content="Hovmöller plot of spatially averaged")
+        self.set_description(
+            content="Hovmöller plot of temperature (left column) and salinity (right column) of spatially averaged"
+        )
         self.set_data_type()
         self.set_texts()
         self.set_vmax_vmin()
@@ -95,18 +104,21 @@ class PlotHovmoller:
             vmax=self.vmax,
             vmin=self.vmin,
             cmap=self.cmap,
-            text=self.texts
+            text=self.texts,
         )
 
-        self.save_plot(fig, diagnostic_product="hovmoller", extra_keys={'region': self.region},
-                       metadata={"description": self.description}, rebuild=rebuild,
-                       dpi=dpi, format=save_format)
+        self.save_plot(
+            fig,
+            diagnostic_product="hovmoller",
+            extra_keys={"region": self.region},
+            metadata={"description": self.description},
+            rebuild=rebuild,
+            dpi=dpi,
+            format=save_format,
+        )
 
-    def plot_timeseries(self,
-                        levels: list = None, rebuild: bool = True,
-                        save_format: list = SAVE_FORMAT, dpi: int = 300):
-        """
-        Plot the timeseries for the given data.
+    def plot_timeseries(self, levels: list = None, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
+        """Plot the timeseries for the given data.
 
         This method sets the title, description, vmax, vmin, and texts for the plot.
         It then calls the `plot_multi_timeseries` function to create the plot and
@@ -120,13 +132,17 @@ class PlotHovmoller:
 
         Returns:
             None
+
         """
         self.levels = levels
         self.set_levels()
         self.set_data_for_levels()
-        self.set_suptitle(content="Timeseries")
+        self.set_suptitle(content="Time series")
         self.set_title()
-        self.set_description(content="Timeseries of spatially averaged")
+        self.set_description(
+            content="Time series of temperature (left column) and salinity (right column)"
+            " at multiple depths, spatially averaged"
+        )
         self.set_data_type()
         self.set_texts()
         self.set_vmax_vmin()
@@ -144,28 +160,28 @@ class PlotHovmoller:
             vmax=self.vmax,
             vmin=self.vmin,
             cmap=self.cmap,
-            text=self.texts
+            text=self.texts,
         )
 
-        self.save_plot(fig, diagnostic_product="timeseries", extra_keys={'region': self.region},
-                       metadata={"description": self.description}, rebuild=rebuild,
-                       dpi=dpi, format=save_format)
+        self.save_plot(
+            fig,
+            diagnostic_product="timeseries",
+            extra_keys={"region": self.region},
+            metadata={"description": self.description},
+            rebuild=rebuild,
+            dpi=dpi,
+            format=save_format,
+        )
 
     def set_levels(self):
-        """
-        Set the levels and corresponding labels for timeseries plots.
-        If no levels are provided, use a default set of standard ocean depths.
-        """
-        level_unit = self.data[0][self.vert_coord].attrs['units']
+        """Set the levels and corresponding labels for timeseries plots."""
+        level_unit = self.data[0][self.vert_coord].attrs["units"]
         if self.levels is None:
             self.levels = [0, 100, 300, 600, 1000, 2000, 4000]
         self.timeseries_labels = [f"{level} {level_unit}" for level in self.levels]
 
     def set_data_for_levels(self):
-        """
-        Set the data for the specified levels.
-        This method extracts the data at the specified levels from the original data.
-        """
+        """Extract and set the data at the specified depth levels."""
         self.logger.debug("Setting data for levels: %s", self.levels)
         new_data_list = []
         for _, data in enumerate(self.data):
@@ -176,42 +192,35 @@ class PlotHovmoller:
                 if level == 0:
                     new_data = data.isel({self.vert_coord: 0})
                 else:
-                    new_data = data.interp({self.vert_coord: level}, method='nearest')
+                    new_data = data.interp({self.vert_coord: level}, method="nearest")
                 new_data_level_list.append(new_data)
-            merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords='different')
+            merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords="different")
             new_data_list.append(merged_data)
         self.data = new_data_list
 
     def set_line_plot_colours(self):
-        """
-        Set the color list for line plots based on the number of levels.
-        """
+        """Set the color list for line plots based on the number of levels."""
         nlev = len(self.levels)
         cmap = plt.cm.plasma_r
-        self.line_plot_colours = [cmap(0.3 + 0.7*i/(nlev-1)) for i in range(nlev)]
+        self.line_plot_colours = [cmap(0.3 + 0.7 * i / (nlev - 1)) for i in range(nlev)]
 
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
         self.suptitle = TitleBuilder(
-            diagnostic=f"{content} plot",
-            regions=self.region,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp).generate()
+            diagnostic=f"{content} plot", regions=self.region, model=self.model, exp=self.exp
+        ).generate()
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):
-        """
-        Set the title for the Hovmoller plot.
-        This method can be extended to set specific titles based on the data.
-        """
+        """Set the title for each subplot panel."""
         self.title_list = []
         for j in range(len(self.data)):
             for _, var in enumerate(self.vars):
                 if j == 0:
-                    units = self.data[j][var].attrs.get('units', '')
-                    units_latex = unit_to_latex(units) if units else ''
-                    title = f"{var} ({units_latex})"
+                    units = self.data[j][var].attrs.get("units", "")
+                    units_latex = unit_to_latex(units) if units else ""
+                    long_name = self.data[j][var].attrs.get("long_name", var)
+                    title = f"{long_name} ({units_latex})"
                 else:
                     title = None
                 self.title_list.append(title)
@@ -219,82 +228,84 @@ class PlotHovmoller:
 
     def set_description(self, content: str = None):
         """Set the description for the Hovmoller plot."""
-
-        self.description = f'{content} {self.region} region for experiment {self.catalog} {self.model} {self.exp}'
+        self.description = f"{content} over {self.region} for experiment {self.model} {self.exp}"
+        self.description += (
+            f" (from {time_to_string(self.startdate, format='%Y-%m')} to {time_to_string(self.enddate, format='%Y-%m')})."
+        )
+        self.description += (
+            " The first row of the plot shows the full values,"
+            " the second row shows the anomalies from the initial time,"
+            " the third row shows the standardized anomalies from the initial time."
+        )
 
     def set_vmax_vmin(self):
-        """
-        Set the vmax and vmin for the Hovmoller plot.
-        This method can be extended to set specific vmax and vmin values.
-        """
+        """Set the vmax, vmin, and colormap for each subplot from the data type."""
         self.logger.debug("Setting vmax and vmin")
         hovmoller_plot_dic = {
-            'thetao' :
-                {
-                    'full': {'vmax': 40, 'vmin': 10 },
-                    'anom_t0': {'vmax': 6, 'vmin': -6, 'cbar': 'coolwarm'},
-                    'std_anom_t0': {'vmax': 5, 'vmin': -5, 'cbar': 'coolwarm'},
-                    'anom_tmean': {'vmax': 6, 'vmin': -6, 'cbar': 'coolwarm'},
-                    'std_anom_tmean': {'vmax': 5, 'vmin': -5, 'cbar': 'coolwarm'},
-                },
-            'so' :
-                {
-                    'full': {'vmax': 38, 'vmin': 33, 'cbar': 'coolwarm'},
-                    'anom_t0': {'vmax': 0.9, 'vmin': -0.3, 'cbar': 'coolwarm'},
-                    'std_anom_t0': {'vmax': 5, 'vmin': -6, 'cbar': 'coolwarm'},
-                    'anom_tmean': {'vmax': 5, 'vmin': -5, 'cbar': 'coolwarm'},
-                    'std_anom_tmean': {'vmax': 1, 'vmin': -1, 'cbar': 'coolwarm'},
-                }
+            "thetao": {
+                "full": {"vmax": 40, "vmin": 10},
+                "anom_t0": {"vmax": 6, "vmin": -6, "cbar": "coolwarm"},
+                "std_anom_t0": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
+                "anom_tmean": {"vmax": 6, "vmin": -6, "cbar": "coolwarm"},
+                "std_anom_tmean": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
+            },
+            "so": {
+                "full": {"vmax": 38, "vmin": 33, "cbar": "coolwarm"},
+                "anom_t0": {"vmax": 0.9, "vmin": -0.3, "cbar": "coolwarm"},
+                "std_anom_t0": {"vmax": 5, "vmin": -6, "cbar": "coolwarm"},
+                "anom_tmean": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
+                "std_anom_tmean": {"vmax": 1, "vmin": -1, "cbar": "coolwarm"},
+            },
         }
         self.vmax = []
         self.vmin = []
         self.cmap = []
         for type in self.data_type:
             for var in self.vars:
-                self.vmax.append(hovmoller_plot_dic[var][type].get('vmax'))
-                self.vmin.append(hovmoller_plot_dic[var][type].get('vmin'))
-                self.cmap.append(hovmoller_plot_dic[var][type].get('cbar', 'jet'))
+                self.vmax.append(hovmoller_plot_dic[var][type].get("vmax"))
+                self.vmin.append(hovmoller_plot_dic[var][type].get("vmin"))
+                self.cmap.append(hovmoller_plot_dic[var][type].get("cbar", "jet"))
 
     def set_data_type(self):
-        """
-        Set the data type list for the Hovmoller plot based on dataset attributes.
-        This method can be extended to set specific data types.
-        """
+        """Set the data type list for each dataset based on its AQUA attributes."""
         self.logger.debug("Setting data types")
         self.data_type = []
         for data in self.data:
-            type = data.attrs.get('AQUA_ocean_drift_type', 'NA')
+            type = data.attrs.get("AQUA_ocean_drift_type", "NA")
             self.data_type.append(type)
 
     def set_texts(self):
-        """
-        Set the texts for the Hovmoller plot.
-        This method can be extended to set specific texts.
-        """
+        """Set the text annotations for each subplot panel based on drift type."""
         type_label_mapping = {
-            'full': 'Full values',
-            'anom_t0': 'Anomalies from t0',
-            'std_anom_t0': 'Standardized anomalies from t0',
-            'anom_tmean': 'Anomalies from time mean',
-            'std_anom_tmean': 'Standardized anomalies from time mean'
+            "full": "Full values",
+            "anom_t0": "Anomalies from t0",
+            "std_anom_t0": "Standardized anomalies from t0",
+            "anom_tmean": "Anomalies from time mean",
+            "std_anom_tmean": "Standardized anomalies from time mean",
         }
 
         self.texts = []
         for _, data in enumerate(self.data):
             for j, _ in enumerate(self.vars):
                 if j == 0:
-                    odrift_type = data.attrs.get('AQUA_ocean_drift_type', 'NA')
+                    odrift_type = data.attrs.get("AQUA_ocean_drift_type", "NA")
                     descr_label = type_label_mapping.get(odrift_type, odrift_type)
                     self.texts.append(descr_label)
                 else:
                     self.texts.append(None)
         self.logger.debug("Texts set to: %s", self.texts)
 
-    def save_plot(self, fig, diagnostic_product: str = None, extra_keys: dict = None,
-                  metadata: dict = None, rebuild: bool = True,
-                  dpi: int = 300, format: str = SAVE_FORMAT):
-        """
-        Save the plot to a file.
+    def save_plot(
+        self,
+        fig,
+        diagnostic_product: str = None,
+        extra_keys: dict = None,
+        metadata: dict = None,
+        rebuild: bool = True,
+        dpi: int = 300,
+        format: str = SAVE_FORMAT,
+    ):
+        """Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): The figure to be saved.
@@ -306,7 +317,14 @@ class PlotHovmoller:
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
+
         """
-        self.outputsaver.save_figure(fig, diagnostic_product=diagnostic_product, extra_keys=extra_keys,
-                                     metadata=metadata, rebuild=rebuild,
-                                     dpi=dpi, extension=format)
+        self.outputsaver.save_figure(
+            fig,
+            diagnostic_product=diagnostic_product,
+            extra_keys=extra_keys,
+            metadata=metadata,
+            rebuild=rebuild,
+            dpi=dpi,
+            extension=format,
+        )

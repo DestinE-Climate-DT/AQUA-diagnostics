@@ -22,10 +22,8 @@ def get_trajectories(filename, n_vars, header_delim_str, is_unstruc):
     """
 
     print("Getting trajectories from TempestExtremes file...")
-    print("Running get_trajectories on '%s' with unstruc set to '%s'" %
-          (filename, is_unstruc))
-    print("n_vars set to %d and header_delim_str set to '%s'" %
-          (n_vars, header_delim_str))
+    print("Running get_trajectories on '%s' with unstruc set to '%s'" % (filename, is_unstruc))
+    print("n_vars set to %d and header_delim_str set to '%s'" % (n_vars, header_delim_str))
 
     # Using the newer with construct to close the file automatically.
     with open(filename) as f:
@@ -56,7 +54,7 @@ def get_trajectories(filename, n_vars, header_delim_str, is_unstruc):
 
     # Create array for data
     if is_unstruc:
-        prodata = np.empty((n_vars+1, numtraj, max_num_pts))
+        prodata = np.empty((n_vars + 1, numtraj, max_num_pts))
     else:
         prodata = np.empty((n_vars, numtraj, max_num_pts))
 
@@ -64,16 +62,16 @@ def get_trajectories(filename, n_vars, header_delim_str, is_unstruc):
 
     for _, line in enumerate(data):
         if header_delim_str in line:  # check if header string is satisfied
-            storm_id += 1      # increment storm
-            line_of_traj = 0    # reset trajectory line to zero
+            storm_id += 1  # increment storm
+            line_of_traj = 0  # reset trajectory line to zero
         else:
             pt_arr = line.split()
             for jj in range(n_vars):
                 if is_unstruc:
-                    prodata[jj+1, storm_id, line_of_traj] = pt_arr[jj]
+                    prodata[jj + 1, storm_id, line_of_traj] = pt_arr[jj]
                 else:
                     prodata[jj, storm_id, line_of_traj] = pt_arr[jj]
-            line_of_traj += 1   # increment line
+            line_of_traj += 1  # increment line
 
     print("... done reading data")
     return numtraj, max_num_pts, prodata
@@ -103,7 +101,7 @@ def get_nodes(filename, n_vars, is_unstruc):
     numnodetimes = 0
     num_pts = []
     for line in data:
-        if re.match(r'\w', line):
+        if re.match(r"\w", line):
             # if header line, store number of points in given traj in num_pts
             head_arr = line.split()
             numnodetimes += 1
@@ -125,17 +123,17 @@ def get_nodes(filename, n_vars, is_unstruc):
 
     # Create array for data
     if is_unstruc:
-        prodata = np.empty((n_vars+5, numnodetimes, max_num_pts))
+        prodata = np.empty((n_vars + 5, numnodetimes, max_num_pts))
     else:
-        prodata = np.empty((n_vars+4, numnodetimes, max_num_pts))
+        prodata = np.empty((n_vars + 4, numnodetimes, max_num_pts))
 
     prodata[:] = np.NAN
 
     # nextHeadLine = 0
     for _, line in enumerate(data):
-        if re.match(r'\w', line):  # check if header string is satisfied
-            storm_id += 1      # increment storm
-            line_of_traj = 0    # reset trajectory line to zero
+        if re.match(r"\w", line):  # check if header string is satisfied
+            storm_id += 1  # increment storm
+            line_of_traj = 0  # reset trajectory line to zero
             head_arr = line.split()
             yyyy = int(head_arr[0])
             mm = int(head_arr[1])
@@ -143,22 +141,22 @@ def get_nodes(filename, n_vars, is_unstruc):
             hh = int(head_arr[4])
         else:
             pt_arr = line.split()
-            for jj in range(n_vars-1):
+            for jj in range(n_vars - 1):
                 if is_unstruc:
-                    prodata[jj+1, storm_id, line_of_traj] = pt_arr[jj]
+                    prodata[jj + 1, storm_id, line_of_traj] = pt_arr[jj]
                 else:
                     prodata[jj, storm_id, line_of_traj] = pt_arr[jj]
             if is_unstruc:
-                prodata[n_vars+1, storm_id, line_of_traj] = yyyy
-                prodata[n_vars+2, storm_id, line_of_traj] = mm
-                prodata[n_vars+3, storm_id, line_of_traj] = dd
-                prodata[n_vars+4, storm_id, line_of_traj] = hh
+                prodata[n_vars + 1, storm_id, line_of_traj] = yyyy
+                prodata[n_vars + 2, storm_id, line_of_traj] = mm
+                prodata[n_vars + 3, storm_id, line_of_traj] = dd
+                prodata[n_vars + 4, storm_id, line_of_traj] = hh
             else:
                 prodata[n_vars, storm_id, line_of_traj] = yyyy
-                prodata[n_vars+1, storm_id, line_of_traj] = mm
-                prodata[n_vars+2, storm_id, line_of_traj] = dd
-                prodata[n_vars+3, storm_id, line_of_traj] = hh
-            line_of_traj += 1   # increment line
+                prodata[n_vars + 1, storm_id, line_of_traj] = mm
+                prodata[n_vars + 2, storm_id, line_of_traj] = dd
+                prodata[n_vars + 3, storm_id, line_of_traj] = hh
+            line_of_traj += 1  # increment line
 
     print("... done reading data")
     return numnodetimes, max_num_pts, prodata

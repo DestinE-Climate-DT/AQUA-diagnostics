@@ -5,6 +5,7 @@ Command-line interface for ensemble 2D Lat-Lon diagnostic.
 This CLI allows to plot a map of aqua analysis atmglobalmean
 defined in a yaml configuration file for multiple models.
 """
+
 import argparse
 import sys
 
@@ -33,7 +34,6 @@ def parse_arguments(args):
 
 
 if __name__ == "__main__":
-
     args = parse_arguments(sys.argv[1:])
 
     loglevel = get_arg(args, "loglevel", "WARNING")
@@ -91,16 +91,16 @@ if __name__ == "__main__":
                     models[0]["source"] = get_arg(args, "source", models[0]["source"])
                     models[0]["regrid"] = get_arg(args, "regrid", models[0]["regrid"])
                     models[0]["realization"] = get_arg(args, "realization", models[0]["realization"])
-                    #models[0]["fix"] = get_arg(args, "fix", models[0]["fix"])
-                    #models[0]["areas"] = get_arg(args, "areas", models[0]["areas"])
-                    #model[0]["reader_kwargs"] = get_arg(args, "reader_kwargs", models[0]["reader_kwargs"])
+                    # models[0]["fix"] = get_arg(args, "fix", models[0]["fix"])
+                    # models[0]["areas"] = get_arg(args, "areas", models[0]["areas"])
+                    # model[0]["reader_kwargs"] = get_arg(args, "reader_kwargs", models[0]["reader_kwargs"])
                     for model in models:
                         catalog_list.append(model["catalog"])
                         model_list.append(model["model"])
                         exp_list.append(model["exp"])
                         source_list.append(model["source"])
                         realization_dict.update({model["model"]: model["realization"]})
-                        #reader_kwargs_dict.update({model["model"]: {"fix":model["fix"], "areas":model["areas"]}})
+                        # reader_kwargs_dict.update({model["model"]: {"fix":model["fix"], "areas":model["areas"]}})
 
                 # Loading and merging data
                 ens_dataset = reader_retrieve_and_merge(

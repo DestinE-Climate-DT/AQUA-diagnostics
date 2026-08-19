@@ -125,7 +125,7 @@ def reader_retrieve_and_merge(
                     realization=r,
                     region=region,
                     regrid=regrid,
-                    #reader_kwargs=reader_kwargs[model_i],
+                    # reader_kwargs=reader_kwargs[model_i],
                     areas=areas,
                     fix=fix,
                 )
@@ -299,6 +299,7 @@ def merge_from_data_files(
         ens_dataset.attrs["model"] = model_names
         return ens_dataset
 
+
 def compute_statistics(variable: str = None, ds: xr.Dataset = None, ens_dim: str = "ensemble", loglevel="WARNING"):
     """
     Compute mean and standard deviation (POINT-WISE for timeseries) for single- and multi-model ensembles.
@@ -414,6 +415,7 @@ def center_timestamp(time: pd.Timestamp, freq: str):
 
     return center_time
 
+
 def extract_realizations(catalog, model, exp, source):
     """Extract the realizations available for a given catalog, model, exp and source.
 
@@ -426,17 +428,16 @@ def extract_realizations(catalog, model, exp, source):
     Returns:
         list: List of available realizations.
     """
-    configurer = ConfigPath(catalog=catalog, loglevel='WARNING')
-    cat, catalog_file, machine_file = configurer.deliver_intake_catalog(
-        catalog=catalog, model=model, exp=exp, source=source)
+    configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
+    cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
 
     expcat = cat()[model][exp]
-    esmcat = expcat[source].describe().get('user_parameters', {})
+    esmcat = expcat[source].describe().get("user_parameters", {})
 
     for parameter in esmcat:
-        name = parameter.get('name')
+        name = parameter.get("name")
 
-        if name == 'realization':
-            realization = parameter.get('allowed')
+        if name == "realization":
+            realization = parameter.get("allowed")
             return realization
     return None
