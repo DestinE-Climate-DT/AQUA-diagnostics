@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.25.0):
 - Specify min and max allowed versions for all dependencies (#333)
 
 Complete list:
+- Change dask load order in LonLatProfiles (#338)
 
 ## [v0.24.1]
 
