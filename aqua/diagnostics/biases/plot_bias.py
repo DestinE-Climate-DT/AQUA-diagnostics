@@ -1,7 +1,7 @@
 import cartopy.crs as ccrs
 import numpy as np
 
-from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff, plot_vertical_profile_diff
+from aqua.core.graphics import plot_maps, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
@@ -199,7 +199,7 @@ class PlotBias:
         stipple_size=0.8,
         target_spacing_deg=2,
         invert_stippling=False,
-        show=False
+        show=False,
     ):
         """
         Plots the bias map between two datasets.
@@ -265,7 +265,7 @@ class PlotBias:
             cbar_label=cbar_label,
             cmap=self.cmap,
             loglevel=self.loglevel,
-            show=show
+            show=show,
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
@@ -378,7 +378,17 @@ class PlotBias:
         return None
 
     def plot_seasonal_bias(
-        self, data, data_ref, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None, show=False
+        self,
+        data,
+        data_ref,
+        var,
+        plev=None,
+        proj="robinson",
+        proj_params={},
+        vmin=None,
+        vmax=None,
+        cbar_label=None,
+        show=False,
     ):
         """
         Plots seasonal biases for each season (DJF, MAM, JJA, SON).
@@ -436,7 +446,7 @@ class PlotBias:
             "cbar_label": cbar_label,
             "cmap": self.cmap,
             "loglevel": self.loglevel,
-            "show": show
+            "show": show,
         }
 
         if vmin is not None:

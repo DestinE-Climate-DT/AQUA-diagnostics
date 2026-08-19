@@ -68,7 +68,7 @@ def main(argv=None):
 
         cli.logger.debug("Selected levels for vertical plots: %s", plev)
 
-        biases_dataset =Climatology(
+        biases_dataset = Climatology(
             **dataset_args, diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
         )
         biases_reference = Climatology(
