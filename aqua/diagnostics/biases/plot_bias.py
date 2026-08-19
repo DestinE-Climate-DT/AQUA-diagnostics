@@ -178,79 +178,6 @@ class PlotBias:
             linewidths=0,
         )
 
-    def plot_climatology(self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None):
-        """
-        Plots the climatology map for a given variable and time range.
-
-        Args:
-            data (xarray.Dataset): Climatology dataset to plot.
-            var (str): Variable name.
-            plev (float, optional): Pressure level to plot (if applicable).
-            proj (string, optional): Desired projection for the map.
-            proj_params (dict, optional): Additional arguments for the projection (e.g., {'central_longitude': 0}).
-            vmin (float, optional): Minimum color scale value.
-            vmax (float, optional): Maximum color scale value.
-            cbar_label (str, optional): Label for the colorbar.
-
-        Returns:
-            tuple: Matplotlib figure and axis objects.
-        """
-        self.logger.info("Plotting climatology.")
-
-        data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
-        if data is None:
-            return None
-
-        realization = get_realizations(data)
-        proj = get_projection(proj, **proj_params)
-
-        extra_info = f"at {int(plev / 100)} hPa" if plev else None
-        title = TitleBuilder(
-            diagnostic="Climatology",
-            variable=data[var].attrs.get("long_name", var),
-            model=data.AQUA_model,
-            exp=data.AQUA_exp,
-            extra_info=extra_info,
-        ).generate()
-
-        fig, ax = plot_single_map(
-            data[var],
-            return_fig=True,
-            title=title,
-            title_size=16,
-            vmin=vmin,
-            vmax=vmax,
-            proj=proj,
-            loglevel=self.loglevel,
-            cbar_label=cbar_label,
-            cmap=self.cmap,
-        )
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-
-        description = (
-            f"Spatial map of the climatology for {data[var].attrs.get('long_name', var).lower()}"
-            f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')} "
-            f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
-        )
-
-        if self.format_to_save:
-            self._save_figure(
-                fig=fig,
-                diagnostic_product="annual_climatology",
-                data=data,
-                description=description,
-                var=var,
-                plev=plev,
-                realization=realization,
-            )
-
-        if self.return_fig:
-            return fig, ax
-        return None
-
     def plot_bias(
         self,
         data,
@@ -272,6 +199,7 @@ class PlotBias:
         stipple_size=0.8,
         target_spacing_deg=2,
         invert_stippling=False,
+        show=False
     ):
         """
         Plots the bias map between two datasets.
@@ -297,6 +225,7 @@ class PlotBias:
             target_spacing_deg (float, optional): Desired approximate spacing in degrees
                                                   between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
+            show (bool, optional): Whether to display the plot. Default is False.
         """
         self.logger.info("Plotting biases")
 
@@ -311,7 +240,7 @@ class PlotBias:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Global difference",
+            diagnostic="Difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -336,6 +265,7 @@ class PlotBias:
             cbar_label=cbar_label,
             cmap=self.cmap,
             loglevel=self.loglevel,
+            show=show
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
@@ -401,7 +331,7 @@ class PlotBias:
             self.logger.debug("Computing bias statistics.")
             if area is None:
                 self.logger.warning("Grid areas not provided, unweighted statistics will be computed.")
-            bs = StatGlobalBiases(loglevel=self.loglevel)
+            bs = StatBias(loglevel=self.loglevel)
             stats = bs.compute_bias_statistics(data=data, data_ref=data_ref, var=var, area=area)
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
@@ -448,7 +378,7 @@ class PlotBias:
         return None
 
     def plot_seasonal_bias(
-        self, data, data_ref, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None
+        self, data, data_ref, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None, show=False
     ):
         """
         Plots seasonal biases for each season (DJF, MAM, JJA, SON).
@@ -463,6 +393,7 @@ class PlotBias:
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
             cbar_label (str, optional): Label for the colorbar.
+            show (bool, optional): Whether to display the plot. Default is False.
 
         Returns:
             matplotlib.figure.Figure: The resulting figure.
@@ -505,6 +436,7 @@ class PlotBias:
             "cbar_label": cbar_label,
             "cmap": self.cmap,
             "loglevel": self.loglevel,
+            "show": show
         }
 
         if vmin is not None:
