@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.25.0):
 
+- Removing dask tokenization for non-local clusters (#337)
+- Specify min and max allowed versions for all dependencies (#333)
+
 Complete list:
 
 ## [v0.24.1]
