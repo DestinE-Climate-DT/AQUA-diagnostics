@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.25.0):
 
 Complete list:
+- Change dask load order in LonLatProfiles (#338)
 
 ## [v0.24.1]
 
