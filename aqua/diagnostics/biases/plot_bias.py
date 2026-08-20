@@ -1,6 +1,9 @@
+import cartopy.crs as ccrs
+import numpy as np
+
 from aqua.core.graphics import plot_maps, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
-from aqua.core.util import get_projection, get_realizations, time_to_string
+from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 from .stat_bias import StatBias
