@@ -34,7 +34,7 @@ diagnostics:
     run: true
     diagnostic_name: 'atmosphere2d'
     variables: ['2t'] # ['msl']
-    formulae: ['(10u^2+10v^2)^0.5']
+    #formulae: ['(10u^2+10v^2)^0.5'] #TODO: Formula implementation
     params:
       default:
         seasons: true
@@ -48,8 +48,8 @@ diagnostics:
         projection: 'robinson'
         projection_params: {}
         show_stats: true
-        #show_significance: true    # Enable significance stippling # TODO
-        #significance_alpha: 0.05  # 95% confidence level # TODO
+        #show_significance: true    #TODO: Enable significance stippling
+        #significance_alpha: 0.05  #TODO: 95% confidence level
       msl:
         vmin: -1000
         vmax: 1000
@@ -60,16 +60,16 @@ diagnostics:
         vmin_std_ensemble: # ensemble STD
         vmax_std_ensemble: # ensemble STD
         cmap: 'RdBu_r'
-      (10u^2+10v^2)^0.5:
-        vmin: -2.5
-        vmax: 2.5
-        vmin_std: # bias std
-        vmax_std: # bias std
-        vmin_ensemble: # ensemble mean
-        vmax_ensemble: # ensemble mean
-        vmin_std_ensemble: # ensemble STD
-        vmax_std_ensemble: # ensemble STD
-        cmap: 'RdBu_r'
+      #(10u^2+10v^2)^0.5:
+      #  vmin: -2.5
+      #  vmax: 2.5
+      #  vmin_std: # bias std
+      #  vmax_std: # bias std
+      #  vmin_ensemble: # ensemble mean
+      #  vmax_ensemble: # ensemble mean
+      #  vmin_std_ensemble: # ensemble STD
+      #  vmax_std_ensemble: # ensemble STD
+      #  cmap: 'RdBu_r'
       2t:
         vmin: -7 # bias
         vmax: 7 # bias
