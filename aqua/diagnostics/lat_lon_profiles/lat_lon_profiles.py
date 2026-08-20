@@ -220,17 +220,12 @@ class LatLonProfiles(Diagnostic):
 
             self.std_seasonal = seasonal_std_list
 
-            for season_data in self.std_seasonal:
-                season_data.load()
-
         elif freq == "longterm":
             annual_data = monthly_data.groupby("time.year").mean("time")
             annual_std = annual_data.std("year")
             annual_std.attrs["AQUA_std_startdate"] = time_to_string(self.std_startdate)
             annual_std.attrs["AQUA_std_enddate"] = time_to_string(self.std_enddate)
             self.std_annual = annual_std
-
-            self.std_annual.load()
 
     def save_netcdf(self, freq: str, outputdir: str = "./", rebuild: bool = True):
         """
@@ -352,6 +347,9 @@ class LatLonProfiles(Diagnostic):
                 data, freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time
             )
             seasonal_dataset = monthly_data.groupby("time.season").mean("time")
+            self.logger.debug("Loading data in memory")
+            seasonal_dataset.load()
+            self.logger.debug("Loaded data in memory")
             seasonal_data = []
             for season in SEASONS:
                 season_data = seasonal_dataset.sel(season=season)
@@ -360,9 +358,6 @@ class LatLonProfiles(Diagnostic):
                 season_data.attrs["AQUA_mean_type"] = self.mean_type
                 season_data.attrs["AQUA_startdate"] = time_to_string(self.startdate)
                 season_data.attrs["AQUA_enddate"] = time_to_string(self.enddate)
-                self.logger.debug("Loading data in memory")
-                season_data.load()
-                self.logger.debug("Loaded data in memory")
                 seasonal_data.append(season_data)
 
             self.seasonal = seasonal_data
