@@ -5,21 +5,18 @@ import xarray as xr
 
 from .base import BaseMixin
 
-# import pandas as pd
-# from aqua.fldstat import AreaSelection
-# from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
-
 xr.set_options(keep_attrs=True)
 
-
-class ssh_variability_compute(BaseMixin):
+class VariabilityMap(BaseMixin):
     """
-    SSH Computation
+    Variability Map Computation
+
+    Note: Variability means STD in this diagnostic
     """
 
     def __init__(
         self,
-        diagnostic_name: str = "ssh_variability",
+        diagnostic_name: str = "VariabilityMap",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -31,7 +28,7 @@ class ssh_variability_compute(BaseMixin):
         regrid: str = None,
         lon_limits: list[float] = None,
         lat_limits: list[float] = None,
-        var: str = "zos",
+        var: str = None,
         long_name: str = None,
         short_name: str = None,
         units: str = None,
@@ -42,12 +39,12 @@ class ssh_variability_compute(BaseMixin):
         loglevel: str = "WARNING",
     ):
         """
-        Initialize the 'ssh_variability_compute' class.
+        Initialize the 'VariabilityMap' class.
 
         This class is designed to load an xarray.Dataset and computes STD.
 
         Args:
-            diagnostic_name (str): Default is 'ssh_variability'.
+            diagnostic_name (str): Default is 'VariabilityMap'.
             catalog (str): catalog. It is Mandatory, if 'save_netcdf=True'.
             model (str): Name of the data
             exp (str): Name of the experiment
@@ -63,7 +60,7 @@ class ssh_variability_compute(BaseMixin):
             If 'lon_limits' and 'lat_limits' are None, they are taken from region file in AQUA.
             lon_limits (list[float]): list of lon limits. Default is 'None'.
             lat_limits (list[float]): list of lat limits. Default is 'None'.
-            var (str): Variable name for ssh data. Default is 'zos'.
+            var (str): Variable name from data. Default is 'None'.
             long_name (str): If not given extracted from the data.
             short_name (str): If not given extracted from the data.
             units (str): If not given extracted from the data.
@@ -79,12 +76,6 @@ class ssh_variability_compute(BaseMixin):
             **kwargs: Additional arbitrary keyword arguments to be passed as additional parameters to the intake catalog entry
 
         """
-        # TODO:
-        #   If the catalog entry of the output exists retrieve that data and check the regridding
-        #   option for the data, i.e., Retrieve the data if the STD file already exits.
-        #   Implement the technique: "Variance of Variances fomula" for computing STD.
-        #   Include information about freq of the data.
-        #   The STD is computed using xarray.std(dim="time"). Test if this works for the native grids.
 
         super().__init__(
             catalog=catalog,
@@ -126,26 +117,23 @@ class ssh_variability_compute(BaseMixin):
         """
 
         super().retrieve()
-        if self.data is None:
-            raise ValueError(f"Variable {self.var} not found in the data. Check the variable name and the data source.")
-        try:
-            # b)
+        if self.data is None and self.var is None:
+            self.logger.warning(f"Variable {self.var} not found in the data. Check the variable name and the data source.")
+        else:
             # Compute STD
             self.data_std = self.data.std(dim="time", skipna=True).compute()
+            self.logger.info("Variability Map computation complete")
             # Removing the reference and releasing the memory from the Object reference, which is no longer needed
             del self.data
             gc.collect()
 
             # Remove the non-serializable attribute
+            # in case of downloading data from Polytope this attribute was found
             if '_earthkit' in self.data_std.attrs:
                 del self.data_std.attrs['_earthkit']
-            # c)
             # Save STD as netcdf
             if self.save_netcdf:
                 self.logger.info(f"Output std netcdf file is saved at {self.outputdir}.")
                 self.netcdf_save(data=self.data_std, create_catalog_entry=True)
             else:
                 self.logger.info("Output in netcdf is not saved.")
-        except Exception as e:
-            raise RuntimeError(f"No model data found: {e}")
-            sys.exit("SSH diagnostic terminated.")

@@ -1,113 +1,122 @@
-#!/usr/bin/env python3
-# ruff: noqa: N999
 """
-Command-line interface for ensemble atmglobalmean diagnostic.
+Command-line interface for VariabilityMap diagnostic.
 
-This CLI allows to plot a map of aqua analysis atmglobalmean
-defined in a yaml configuration file for multiple models.
+This CLI allows to plot maps of VariabilityMaps (STD in time dimension)
+defined in a yaml configuration file for single model and reference dataset.
 """
 
-import argparse
 import sys
-from aqua.diagnostics import ssh_variability_compute, ssh_variability_plot
-
-from aqua.core.logger import log_configure
+import argparse
 from aqua.core.util import get_arg
+
+from aqua.diagnostics import (
+    VariabilityMap, 
+    PlotVariabilityMap,
+)
 from aqua.diagnostics.base import (
     SAVE_FORMAT,
-    close_cluster,
-    load_diagnostic_config,
-    merge_config_args,
-    open_cluster,
+    DiagnosticCLI,
+    TitleBuilder,
     template_parse_arguments,
 )
 
+# Default config filenames (resolved by load_diagnostic_config from the
+# package's config/collections/legacy/ocean2d/ directory)
+DEFAULT_CONFIG = "config-ocean2d-aviso.yaml"
+DEFAULT_DIAGNOSTIC_NAME = "ocean2d"
+
 def parse_arguments(args):
-    """Parse command-line arguments for ssh_variability diagnostic.
+    """Parse command-line arguments for VariabilityMap diagnostic.
 
     Args:
         args (list): list of command-line arguments to parse.
     """
-    parser = argparse.ArgumentParser(description="ssh_variability CLI")
+    parser = argparse.ArgumentParser(description="VariabilityMap CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
+def main(argv=None):
+    """Run the VariabilityMap diagnostic CLI.
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
-    loglevel = get_arg(args, "loglevel", "WARNING")
-    logger = log_configure(loglevel, "CLI for ssh_variability")
-    logger.info("Starting SSH Variability diagnostic")
-    cluster = get_arg(args, "cluster", None)
-    nworkers = get_arg(args, "nworkers", None)
-    (
-        client,
-        cluster,
-        private_cluster,
-    ) = open_cluster(nworkers=nworkers, cluster=cluster, loglevel=loglevel)
-
-    # Load the configuration file and then merge it with the command-line arguments
-    # If for development: config_ssh_dev.yaml
-    config_dict = load_diagnostic_config(
-        diagnostic="ssh_variability",
-        config=args.config,
-        default_config="config_ssh.yaml",
-        loglevel=loglevel,
+    cli = DiagnosticCLI(
+        args,
+        diagnostic_name=DEFAULT_DIAGNOSTIC_NAME,
+        default_config=DEFAULT_CONFIG,
     )
-    config_dict = merge_config_args(config=config_dict, args=args, loglevel=loglevel)
+    cli.prepare()
+    cli.open_dask_cluster()
 
+    # Dataset for single model
+    datasets = cli.config_dict.get("datasets")
+    first = datasets[0]
+    catalog = get_arg(args, "catalog", first["catalog"])
+    model = get_arg(args, "model", first["model"])
+    exp = get_arg(args, "exp", first["exp"])
+    source = get_arg(args, "source", first["source"])
+    get_arg(args, "regrid", first.get("regrid"))
+    fixer = get_arg(args, "fix", first.get("fix"))
     realization = get_arg(args, "realization", None)
+    reader_kwargs = get_arg(args, "reader_kwargs", {})
+
     if realization:
-        logger.info(f"Realization option is set to {realization}")
+        cli.logger.info(f"Realization option is set to {realization}")
         reader_kwargs = {"realization": realization}
-    else:
-        reader_kwargs = {}
 
-    # Output options
-    outputdir = config_dict["output"].get("outputdir", "./")
-    rebuild = config_dict["output"].get("rebuild", True)
-    save_netcdf = config_dict["output"].get("save_netcdf", True)
-    save_format = config_dict["output"].get("save_format", SAVE_FORMAT)
-    dpi = config_dict["output"].get("dpi", 600)
+    if dataset["zoom"]: reader_kwargs.update({"zoom": dataset["zoom"]})
 
-    if "ssh_variability" in config_dict["diagnostics"]:
-        if config_dict["diagnostics"]["ssh_variability"]["run"]:
-            logger.info("ssh_variability module is used.")
+    cli.logger.debug(f"VariabilityMap diagnostic catalog: {catalog}, model: {model}, exp: {exp}, and source {source}")
 
-            # Model data
-            dataset = config_dict["datasets"][0]
-            if dataset is not None:
-                dataset_dict = {
-                    "catalog": dataset["catalog"],
-                    "model": dataset["model"],
-                    "exp": dataset["exp"],
-                    "source": dataset["source"],
-                    "regrid": dataset["regrid"],
-                }
-            if dataset["zoom"]:
-                reader_kwargs.update({"zoom": dataset["zoom"]})
+    # Single reference
+    if "references" in cli.config_dict:
+        ref = cli.config_dict.get("references")
+        first_ref = ref[0]
+        catalog_ref = get_arg(args, "catalog", first_ref["catalog"])
+        model_ref = get_arg(args, "model", first_ref["model"])
+        exp_ref = get_arg(args, "exp", first_ref["exp"])
+        source_ref = get_arg(args, "source", first_ref["source"])
+        fixer_ref = get_arg(args, "fix", first_ref.get("fix"))
 
-            # Reference data
-            dataset_ref = config_dict["references"][0]
-            if dataset_ref is not None:
-                dataset_dict_ref = {
-                    "catalog": dataset_ref["catalog"],
-                    "model": dataset_ref["model"],
-                    "exp": dataset_ref["exp"],
-                    "source": dataset_ref["source"],
-                    "regrid": dataset_ref["regrid"],
-                }
+        cli.logger.debug(f"VariabilityMap diagnostic reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
 
-            variable = config_dict["diagnostics"]["ssh_variability"].get("variables", None)
-            logger.info(f"Variable under consideration: {variable}")
-            startdate_data = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("startdate_data", None)
-            enddate_data = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("enddate_data", None)
-            startdate_ref = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("startdate_ref", None)
-            enddate_ref = config_dict["diagnostics"]["ssh_variability"]["params"]["default"].get("enddate_ref", None)
+    # Output parameters
+    outputdir = cli.config_dict.get("output", {}).get("outputdir", "./")
+    cli.config_dict.get("output", {}).get("rebuild", True)
+    cli.config_dict.get("output", {}).get("save_netcdf", True)
+    save_format = cli.config_dict.get("output", {}).get("save_format", SAVE_FORMAT)
+    dpi = cli.config_dict.get("output", {}).get("dpi", 300)
 
-            proj = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection", "robinson")
-            proj_params = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection_params", {})
+    # Variability Map 
+    diag_config = cli.config_dict["diagnostics"]["VariabilityMap"]
+    if "VariabilityMap" in config_dict["diagnostics"]:
+        if config_dict["diagnostics"]["VariabilityMap"]["run"]:
+            cli.logger.info("Running VariabilityMap diagnostic.")
+
+            params = diag_config.get("params", {}).get("default", {})
+            all_plot_params = diag_config.get("plot_params", {})
+            default_plot = all_plot_params.get("default", {})
+            #proj = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection", "robinson")
+            #proj_params = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection_params", {})
+
+            startdate = params.get("startdate")
+            enddate = params.get("enddate")
+            if startdate is None:
+                startdate = get_arg(args, "startdate", first.get("startdate") or None)
+            if enddate is None:
+                enddate = get_arg(args, "enddate", first.get("enddate") or None)
+            
+            # Variables in the config file
+            variables = diag_config.get("variables") or []
+            for variable in variables:
+                var_params = diag_config.get("params", {}).get(variable, {})
+
+
+
+
             logger.debug(f"Using projection: {proj} for variable: {variable}")
             vmin = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("vmin", None)
             vmax = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("vmax", None)
@@ -140,9 +149,6 @@ if __name__ == "__main__":
                 "southern_boundary_latitude", None
             )
 
-            if dataset["zoom"]:
-                logger.info(f"zoom option is set to {dataset['zoom']}")
-                reader_kwargs.update({"zoom": dataset["zoom"]})
 
             # Initialize SSH Variability for model dataset
             if (

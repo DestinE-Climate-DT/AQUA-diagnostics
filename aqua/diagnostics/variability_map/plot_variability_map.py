@@ -11,28 +11,28 @@ from aqua.core.util import get_projection
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # import matplotlib.pyplot as plt
-# from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
 from .base import PlotBaseMixin
 
 xr.set_options(keep_attrs=True)
 
-
-class ssh_variability_plot(PlotBaseMixin):
+class PlotVariabilityMap(PlotBaseMixin):
     """
-    Plot ssh variability and the difference of ssh variability
+    Plot variability (STD) maps and the difference of variability maps between data and reference
+    
+    Note: Variability means STD in this diagnostic
     """
 
     def __init__(
         self,
-        diagnostic_name="ssh_variability",
+        diagnostic_name="VariabilityMap",
         outputdir="./",
         loglevel="WARNING",
     ):
         """
-        Initialize the ssh_variability.
+        Initialize the PlotVariabilityMap.
 
         Args:
-            diagnostic_name (str): ssh_variability
+            diagnostic_name (str): VariabilityMap
             outputdir (str): output directory
             loglevel (str): Default WARNING
         """
@@ -70,24 +70,24 @@ class ssh_variability_plot(PlotBaseMixin):
         mask_southern_boundary=True,
         northern_boundary_latitude=70,
         southern_boundary_latitude=-62,
-        diagnostic_product="ssh_variability",
+        diagnostic_product="VariabilityMap",
         rebuild: bool = True,
         description=None,
         tgt_grid_name="r1440x721",
         regrid_method="ycon",
     ):
         """
-        Visualize the SSH variability.
+        Visualize the Variability map.
 
-        Plot the variability of sea surface height (SSH) from an input dataset.
+        Plot the variability map from an input dataset.
 
-        This function visualizes SSH variability using configurable spatial, temporal,
+        This function visualizes variability map using configurable spatial, temporal,
         and plotting options. It supports contou, regional selection, custom projections,
         masking, and output saving in multiple formats.
 
         Args:
-            var (str, optional): Variable name for SSH, e.g., ``'zos'``.
-            dataset_std (xarray.Dataset, optional): Dataset containing the SSH field to be plotted.
+            var (str, optional): Variable to be plotted. Default is 'None'.
+            dataset_std (xarray.Dataset, optional): Dataset containing the 2D fields to be plotted.
             catalog (str, optional): Catalog name. Used in plot titles. (Mandatory for labeling)
             model (str, optional): Model or dataset name. Used in plot titles. (Mandatory for labeling)
             exp (str, optional): Experiment identifier. Used in plot titles. (Mandatory for labeling)
@@ -109,7 +109,7 @@ class ssh_variability_plot(PlotBaseMixin):
             mask_southern_boundary (bool, optional): If ``True``, mask latitudes south of ``southern_boundary_latitude``.
             northern_boundary_latitude (float, optional): Latitude above which data will be masked. Default is ``70``.
             southern_boundary_latitude (float, optional): Latitude below which data will be masked. Default is ``-62``.
-            diagnostic_product (str, optional): Diagnostic type, e.g., ``'ssh_variability'``. Default is ``'ssh_variability'``.
+            diagnostic_product (str, optional): Diagnostic type, e.g., ``'VariabilityMap'``.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             description (str, optional): Additional description to include in the plot or metadata.
             tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
@@ -138,12 +138,12 @@ class ssh_variability_plot(PlotBaseMixin):
         if startdate is None or enddate is None:
             self.logger.error("Please specify the time period of the data")
 
-        self.logger.info(f"Plotting SSH Variability for {model} and {exp}, from {startdate} to {enddate}.")
+        self.logger.info(f"Plotting variability (STD) map for {model} and {exp}, from {startdate} to {enddate}.")
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
 
         title = TitleBuilder(
-            diagnostic="SSH Variability",
+            diagnostic="Variability Map",
             variable=long_name,
             regions=region,
             model=model,
@@ -152,7 +152,7 @@ class ssh_variability_plot(PlotBaseMixin):
             endyear=enddate,
         ).generate()
 
-        description = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
+        description = f"Variability map of {long_name} for {model} {exp} ({startdate} to {enddate}) "
 
         # Check if the dataset is in HEALPix format
         # npix = dataset_std.size  # Number of cells in the data
@@ -288,16 +288,16 @@ class ssh_variability_plot(PlotBaseMixin):
         mask_southern_boundary=True,
         northern_boundary_latitude=70,
         southern_boundary_latitude=-62,
-        diagnostic_product="ssh_variability_difference",
+        diagnostic_product="variability_map_difference",
         description=None,
         rebuild: bool = True,
         tgt_grid_name="r1440x721",
         regrid_method="ycon",
     ):
         """
-        Visualize the difference in sea surface height (SSH) variability between a model and a reference dataset.
+        Visualize the difference in variability between a model and a reference dataset.
 
-        This function generates a map of SSH variability differences using Cartopy projections,
+        This function generates a map of variability (STD) differences using Cartopy projections,
         supporting custom contour, masking, regional selection, and configurable plotting options.
         The plot can be saved as PNG or PDF.
 
@@ -331,7 +331,7 @@ class ssh_variability_plot(PlotBaseMixin):
             mask_southern_boundary (bool, optional): Mask latitudes below southern_boundary_latitude. Default is True.
             northern_boundary_latitude (float, optional): Latitude above which data is masked. Default is 70.
             southern_boundary_latitude (float, optional): Latitude below which data is masked. Default is -62.
-            diagnostic_product (str, optional): Diagnostic product identifier. Default is 'ssh_variability_difference'.
+            diagnostic_product (str, optional): Diagnostic product identifier. Default is 'variability_map_difference'.
             description (str, optional): Additional description for the plot metadata or title.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
@@ -345,7 +345,7 @@ class ssh_variability_plot(PlotBaseMixin):
             TypeError: If input datasets are not xarray.Datasets.
         """
         # TODO:
-        # Test if the ssh_variability is computed in healpix/native grid then compte the difference will be an issue.
+        # Test if the VariabilityMap is computed in healpix/native grid then compte the difference will be an issue.
         # Therefore perform regridding via Regridding class.
 
         if dataset_std is None and dataset_std_ref is None:
@@ -401,7 +401,7 @@ class ssh_variability_plot(PlotBaseMixin):
         units = dataset_std.attrs.get("units", var)
 
         title = TitleBuilder(
-            diagnostic="The difference of the SSH Variability",
+            diagnostic="Difference between the variability",
             variable=long_name,
             regions=region,
             model=model,
@@ -416,7 +416,7 @@ class ssh_variability_plot(PlotBaseMixin):
         ).generate()
 
         description = (
-            f"The difference of the SSH Variability of {long_name} for {model} {exp} "
+            f"Difference between Variability of {long_name} for {model} {exp} "
             f"({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} "
             f"({startdate_ref}-{enddate_ref}) "
         )
