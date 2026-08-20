@@ -5,7 +5,7 @@ import pytest
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError
-from aqua.diagnostics.global_biases.util import handle_pressure_level
+from aqua.diagnostics.biases.util import handle_pressure_level
 
 pytestmark = [pytest.mark.diagnostics]
 

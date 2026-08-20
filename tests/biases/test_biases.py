@@ -6,7 +6,7 @@ import pytest
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError
-from aqua.diagnostics import GlobalBiases, PlotGlobalBiases, StatGlobalBiases
+from aqua.diagnostics import Climatology, PlotClimatology, PlotBias, StatBias
 from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance for numerical comparisons
@@ -20,10 +20,10 @@ pytestmark = [pytest.mark.diagnostics]
 
 # Module-level fixtures
 @pytest.fixture(scope="module")
-def global_biases_instance(tmp_path_factory):
-    """Create a GlobalBiases instance with pre-fetched data."""
+def climatology_instance(tmp_path_factory):
+    """Create a Climatology instance with pre-fetched data."""
     outputdir = str(tmp_path_factory.mktemp("output"))
-    gb = GlobalBiases(
+    gb = Climatology(
         catalog="ci",
         model="ERA5",
         exp="era5-hpz3",
@@ -36,9 +36,15 @@ def global_biases_instance(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def plot_global_biases_instance(global_biases_instance):
-    """Create a PlotGlobalBiases instance."""
-    return PlotGlobalBiases(dpi=DPI, outputdir=global_biases_instance.outputdir)
+def plot_climatology_instance(climatology_instance):
+    """Create a PlotClimatology instance."""
+    return PlotClimatology(dpi=DPI, outputdir=climatology_instance.outputdir)
+
+
+@pytest.fixture(scope="module")
+def plot_biases_instance(climatology_instance):
+    """Create a PlotBias instance."""
+    return PlotBias(dpi=DPI, outputdir=climatology_instance.outputdir)
 
 
 @pytest.fixture
@@ -47,13 +53,13 @@ def test_var():
     return "q"
 
 
-class TestGlobalBiases:
-    """Test suite for GlobalBiases diagnostic."""
+class TestBiases:
+    """Test suite for Biases diagnostic."""
 
-    def test_climatology(self, global_biases_instance, plot_global_biases_instance, test_var):
+    def test_climatology(self, climatology_instance, plot_climatology_instance, test_var):
 
-        gb = global_biases_instance
-        plotgb = plot_global_biases_instance
+        gb = climatology_instance
+        plotgb = plot_climatology_instance
         var = test_var
         outdir = gb.outputdir
 
@@ -67,23 +73,24 @@ class TestGlobalBiases:
         assert "season" in gb.seasonal_climatology[var].dims
         assert set(gb.seasonal_climatology["season"].values) == {"DJF", "MAM", "JJA", "SON"}
 
-        nc = os.path.join(outdir, "netcdf", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
+        nc = os.path.join(outdir, "netcdf", f"climatology.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
         assert os.path.exists(nc)
 
-        nc_seasonal = os.path.join(outdir, "netcdf", f"globalbiases.seasonal_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
+        nc_seasonal = os.path.join(outdir, "netcdf", f"climatology.seasonal_climatology.ci.ERA5.era5-hpz3.r1.{var}.nc")
         assert os.path.exists(nc_seasonal)
 
         plotgb.plot_climatology(data=gb.climatology, var=var, plev=85000)
 
-        pdf = os.path.join(outdir, "pdf", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.pdf")
+        pdf = os.path.join(outdir, "pdf", f"climatology.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.pdf")
         assert os.path.exists(pdf)
 
-        png = os.path.join(outdir, "png", f"globalbiases.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.png")
+        png = os.path.join(outdir, "png", f"climatology.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_bias(self, global_biases_instance, plot_global_biases_instance, test_var):
-        gb = global_biases_instance
-        plotgb = plot_global_biases_instance
+
+    def test_bias(self, climatology_instance, plot_biases_instance, test_var):
+        gb = climatology_instance
+        plotgb = plot_biases_instance
         var = test_var
         outdir = gb.outputdir
 
@@ -91,16 +98,16 @@ class TestGlobalBiases:
         assert "cell_area" in gb.climatology
 
         plotgb.plot_bias(data=gb.climatology, data_ref=gb.climatology, var=var, plev=85000, show_stats=True)
-        pdf = os.path.join(outdir, "pdf", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
+        pdf = os.path.join(outdir, "pdf", f"biases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(outdir, "png", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
+        png = os.path.join(outdir, "png", f"biases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_stat_global_biases(self, global_biases_instance, test_var):
-        gb = global_biases_instance
+    def test_stat_biases(self, climatology_instance, test_var):
+        gb = climatology_instance
         var = test_var
         gb.compute_climatology(var=var, areas=True, plev=85000)
-        stat_gb = StatGlobalBiases()
+        stat_gb = StatBias()
         result = stat_gb.compute_bias_statistics(data=gb.climatology, data_ref=gb.climatology, var=var)
         assert float(result["mean_bias"].values) == pytest.approx(0.0, abs=1e-12)
         assert float(result["rmse"].values) == pytest.approx(0.0, abs=1e-12)
@@ -113,9 +120,10 @@ class TestGlobalBiases:
         assert result.dtype == bool
         assert bool(result.all())
 
-    def test_bias_with_stat(self, global_biases_instance, plot_global_biases_instance, test_var):
-        gb = global_biases_instance
-        plotgb = plot_global_biases_instance
+
+    def test_bias_with_stat(self, climatology_instance, plot_biases_instance, test_var):
+        gb = climatology_instance
+        plotgb = plot_biases_instance
         var = test_var
         outdir = gb.outputdir
 
@@ -130,14 +138,14 @@ class TestGlobalBiases:
             show_significance=True,
         )
 
-        pdf = os.path.join(outdir, "pdf", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
+        pdf = os.path.join(outdir, "pdf", f"biases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(outdir, "png", f"globalbiases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
+        png = os.path.join(outdir, "png", f"biases.bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_seasonal_bias(self, global_biases_instance, plot_global_biases_instance, test_var):
-        gb = global_biases_instance
-        plotgb = plot_global_biases_instance
+    def test_seasonal_bias(self, climatology_instance, plot_biases_instance, test_var):
+        gb = climatology_instance
+        plotgb = plot_biases_instance
         var = test_var
         outdir = gb.outputdir
 
@@ -146,14 +154,14 @@ class TestGlobalBiases:
             gb.compute_climatology(var=var, seasonal=True)
 
         plotgb.plot_seasonal_bias(data=gb.seasonal_climatology, data_ref=gb.seasonal_climatology, var=var, plev=85000)
-        pdf = os.path.join(outdir, "pdf", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
+        pdf = os.path.join(outdir, "pdf", f"biases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(outdir, "png", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
+        png = os.path.join(outdir, "png", f"biases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_vertical_bias(self, global_biases_instance, plot_global_biases_instance, test_var):
-        gb = global_biases_instance
-        plotgb = plot_global_biases_instance
+    def test_vertical_bias(self, climatology_instance, plot_biases_instance, test_var):
+        gb = climatology_instance
+        plotgb = plot_biases_instance
         var = test_var
         outdir = gb.outputdir
 
@@ -162,13 +170,13 @@ class TestGlobalBiases:
         gb.compute_climatology(var=var, seasonal=True)
 
         plotgb.plot_vertical_bias(data=gb.climatology, data_ref=gb.climatology, var=var, vmin=-0.002, vmax=0.002)
-        pdf = os.path.join(outdir, "pdf", f"globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.pdf")
+        pdf = os.path.join(outdir, "pdf", f"biases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(outdir, "png", f"globalbiases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.png")
+        png = os.path.join(outdir, "png", f"biases.vertical_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.png")
         assert os.path.exists(png)
 
     def test_plev_selection(self, test_var):
-        gb = GlobalBiases(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", regrid="r100")
+        gb = Climatology(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", regrid="r100")
 
         gb.retrieve(var=test_var, plev=85000)
         gb.compute_climatology(var=test_var, plev=85000)
@@ -176,9 +184,9 @@ class TestGlobalBiases:
 
         with pytest.raises(ValueError):
             gb.retrieve("tprate", plev=85000)
-
+  
     def test_variables(self):
-        gb_local = GlobalBiases(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly")
+        gb_local = Climatology(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly")
         with pytest.raises(Exception) as exc:
             gb_local.retrieve(var="pippo")
         assert isinstance(exc.value, (ValueError, NoDataError))
@@ -191,17 +199,18 @@ class TestGlobalBiases:
         var = "tnlwrf+tnswrf"
         long_name = "Top net radiation"
         short_name = "tnr"
-        gb = GlobalBiases(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly")
+        gb = Climatology(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly")
         gb.retrieve(formula=True, var=var, long_name=long_name, short_name=short_name)
         gb.compute_climatology()
         assert short_name in gb.climatology.data_vars
         assert gb.data[short_name].attrs.get("long_name") == long_name
         assert gb.data[short_name].attrs.get("short_name") == short_name
 
-    def test_adaptive_stipple_density(self, plot_global_biases_instance):
+
+    def test_adaptive_stipple_density(self, plot_biases_instance):
         """Test that adaptive stipple_density is computed correctly for different grid resolutions."""
 
-        plotgb = plot_global_biases_instance
+        plotgb = plot_biases_instance
         mock_ax = MagicMock()
 
         for n_lat, n_lon, target_spacing_deg, expected_density in [
