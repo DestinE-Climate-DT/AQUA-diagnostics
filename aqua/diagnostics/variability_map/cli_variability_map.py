@@ -99,8 +99,8 @@ def main(argv=None):
             params = diag_config.get("params", {}).get("default", {})
             all_plot_params = diag_config.get("plot_params", {})
             default_plot = all_plot_params.get("default", {})
-            #proj = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection", "robinson")
-            #proj_params = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("projection_params", {})
+            proj = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("projection", "robinson")
+            proj_params = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("projection_params", {})
 
             startdate = params.get("startdate")
             enddate = params.get("enddate")
@@ -114,183 +114,177 @@ def main(argv=None):
             for variable in variables:
                 var_params = diag_config.get("params", {}).get(variable, {})
 
+                cli.logger.debug(f"Using projection: {proj} for variable: {variable}")
+                vmin = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("vmin", None)
+                vmax = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("vmax", None)
+                # Regridder options for plots
+                tgt_grid_name = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("tgt_grid_name", None)
+                regrid_method = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("regrid_method", None)
 
-
-
-            logger.debug(f"Using projection: {proj} for variable: {variable}")
-            vmin = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("vmin", None)
-            vmax = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("vmax", None)
-            # Regridder options for plots
-            tgt_grid_name = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("tgt_grid_name", None)
-            regrid_method = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["default"].get("regrid_method", None)
-
-            # Sub region selection
-            region_name = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get("name", None)
-            region_proj = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get(
-                "projection", "plate_carree"
-            )
-            region_proj_params = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get(
-                "projection_params", {}
-            )
-
-            lon_limits = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get("lon_limits", None)
-            lat_limits = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["sub_region"].get("lat_limits", None)
-
-            mask_northern_boundary = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
-                "mask_northern_boundary", None
-            )
-            mask_southern_boundary = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
-                "mask_southern_boundary", None
-            )
-            northern_boundary_latitude = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
-                "northern_boundary_latitude", None
-            )
-            southern_boundary_latitude = config_dict["diagnostics"]["ssh_variability"]["plot_params"]["mask_options"].get(
-                "southern_boundary_latitude", None
-            )
-
-
-            # Initialize SSH Variability for model dataset
-            if (
-                (dataset_dict["catalog"] is not None)
-                or (dataset_dict["model"] is not None)
-                or (dataset_dict["exp"] is not None)
-                or (dataset_dict["source"] is not None)
-            ):
-                ssh_dataset = ssh_variability_compute(
-                    **dataset_dict,
-                    var=variable,
-                    startdate=startdate_data,
-                    enddate=enddate_data,
-                    reader_kwargs=reader_kwargs,
+                # Sub region selection
+                region_name = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get("name", None)
+                region_proj = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get(
+                    "projection", "plate_carree"
                 )
-                # Perform computation here for model dataset
-                ssh_dataset.run()
-
-            # Initialize SSH Variability for reference dataset
-            if (
-                (dataset_dict_ref["catalog"] is not None)
-                or (dataset_dict_ref["model"] is not None)
-                or (dataset_dict_ref["exp"] is not None)
-                or (dataset_dict_ref["source"] is not None)
-            ):
-                ssh_ref = ssh_variability_compute(
-                    **dataset_dict_ref,
-                    var=variable,
-                    startdate=startdate_ref,
-                    enddate=enddate_ref,
-                    # reader_kwargs=reader_kwargs,
+                region_proj_params = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get(
+                    "projection_params", {}
                 )
-                # Perform computation here for reference dataset
-                ssh_ref.run()
 
-            # Initialize plotting class
-            plot_class = ssh_variability_plot(outputdir=outputdir, loglevel=loglevel)
+                lon_limits = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get("lon_limits", None)
+                lat_limits = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get("lat_limits", None)
 
-            # Dictionary for dataset plot
-            if ssh_dataset.data_std is not None:
-                plot_arguments_dataset = {
-                    "var": variable,
-                    "catalog": dataset["catalog"],
-                    "model": dataset["model"],
-                    "exp": dataset["exp"],
-                    "save_format": save_format,
-                    "startdate": startdate_data,
-                    "enddate": enddate_data,
-                    "proj": proj,
-                    "proj_params": proj_params,
-                    "vmin": vmin,
-                    "vmax": vmax,
-                    "tgt_grid_name": tgt_grid_name,
-                    "regrid_method": regrid_method,
-                }
-                plot_class.plot(dataset_std=ssh_dataset.data_std, **plot_arguments_dataset)
+                mask_northern_boundary = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
+                    "mask_northern_boundary", None
+                )
+                mask_southern_boundary = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
+                    "mask_southern_boundary", None
+                )
+                northern_boundary_latitude = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
+                    "northern_boundary_latitude", None
+                )
+                southern_boundary_latitude = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
+                    "southern_boundary_latitude", None
+                )
 
-            # Dictionary for sub-region dataset plot
-            if ssh_dataset.data_std is not None and region_name is not None:
-                plot_arguments_dataset = {
-                    "var": variable,
-                    "catalog": dataset["catalog"],
-                    "model": dataset["model"],
-                    "exp": dataset["exp"],
-                    "startdate": startdate_data,
-                    "enddate": enddate_data,
-                    "proj": region_proj,
-                    "proj_params": region_proj_params,
-                    "vmin": vmin,
-                    "vmax": vmax,
-                    "region": region_name,
-                    "lon_limits": lon_limits,
-                    "lat_limits": lat_limits,
-                    "mask_northern_boundary": mask_northern_boundary,
-                    "mask_southern_boundary": mask_southern_boundary,
-                    "northern_boundary_latitude": northern_boundary_latitude,
-                    "southern_boundary_latitude": southern_boundary_latitude,
-                    "tgt_grid_name": tgt_grid_name,
-                    "regrid_method": regrid_method,
-                }
-                plot_class.plot(dataset_std=ssh_dataset.data_std, **plot_arguments_dataset)
 
-            # Dictionary for reference plot
-            if ssh_ref.data_std is not None:
-                plot_arguments_ref = {
-                    "var": variable,
-                    "catalog": dataset_ref["catalog"],
-                    "model": dataset_ref["model"],
-                    "exp": dataset_ref["exp"],
-                    "startdate": startdate_ref,
-                    "enddate": enddate_ref,
-                    "proj": proj,
-                    "proj_params": proj_params,
-                    "vmin": vmin,
-                    "vmax": vmax,
-                    "tgt_grid_name": tgt_grid_name,
-                    "regrid_method": regrid_method,
-                }
-                plot_class.plot(dataset_std=ssh_ref.data_std, **plot_arguments_ref)
+                # Initialize VariabilityMap for model dataset
+                if (model is not None) and (exp is not None) and (source is not None):
+                    std_dataset = VariabilityMap(
+                        catalog=catalog,
+                        model=model,
+                        exp=exp,
+                        source=source,
+                        var=variable,
+                        startdate=startdate,
+                        enddate=enddate,
+                        reader_kwargs=reader_kwargs,
+                    )
+                    # Perform computation here for model dataset
+                    std_dataset.run()
 
-            # Dictionary for sub-region reference plot
-            if ssh_ref.data_std is not None:
-                plot_arguments_ref = {
-                    "var": variable,
-                    "catalog": dataset_ref["catalog"],
-                    "model": dataset_ref["model"],
-                    "exp": dataset_ref["exp"],
-                    "startdate": startdate_ref,
-                    "enddate": enddate_ref,
-                    "region": region_name,
-                    "lon_limits": lon_limits,
-                    "lat_limits": lat_limits,
-                    "proj": region_proj,
-                    "proj_params": region_proj_params,
-                    "vmin": vmin,
-                    "vmax": vmax,
-                    "tgt_grid_name": tgt_grid_name,
-                    "regrid_method": regrid_method,
-                }
-                plot_class.plot(dataset_std=ssh_ref.data_std, **plot_arguments_ref)
+                # Initialize VariabilityMap for reference dataset
+                if (model_ref is not None) and (exp_ref is not None) and (source_ref is not None):
+                    std_dataset_ref = VariabilityMap(
+                        catalog=catalog_ref,
+                        model=model_ref,
+                        exp=exp,
+                        source=source_ref,
+                        var=variable_ref,
+                        startdate=startdate,
+                        enddate=enddate,
+                        #reader_kwargs=reader_kwargs, #TODO: define a separate dict here
+                    )
+                    # Perform computation here for reference dataset
+                    std_dataset_ref.run()
 
-            # Dictionary for difference of ssh_variability plot
-            if ssh_dataset.data_std is not None and ssh_ref.data_std is not None:
-                plot_arguments_diff = {
-                    "var": variable,
-                    "catalog": dataset["catalog"],
-                    "model": dataset["model"],
-                    "exp": dataset["exp"],
-                    "catalog_ref": dataset_ref["catalog"],
-                    "model_ref": dataset_ref["model"],
-                    "exp_ref": dataset_ref["exp"],
-                    "save_format": save_format,
-                    "startdate": startdate_data,
-                    "enddate": enddate_data,
-                    "startdate_ref": startdate_ref,
-                    "enddate_ref": enddate_ref,
-                    "tgt_grid_name": tgt_grid_name,
-                    "regrid_method": regrid_method,
-                }
-                plot_class.plot_diff(dataset_std=ssh_dataset.data_std, dataset_std_ref=ssh_ref.data_std, **plot_arguments_diff)
 
-            logger.info(f"Finished SSH Variability diagnostic for {variable}.")
+                # Initialize plotting class
+                plot_class = PlotVariabilityMap(outputdir=outputdir, loglevel=cli.loglevel)
+
+                # Dictionary for dataset plot
+                if std_dataset.data_std is not None:
+                    plot_arguments_dataset = {
+                        "var": variable,
+                        "catalog": catalog,
+                        "model": model,
+                        "exp": exp,
+                        "save_format": save_format,
+                        "startdate": startdate,
+                        "enddate": enddate,
+                        "proj": proj,
+                        "proj_params": proj_params,
+                        "vmin": vmin,
+                        "vmax": vmax,
+                        "tgt_grid_name": tgt_grid_name,
+                        "regrid_method": regrid_method,
+                    }
+                    plot_class.plot(dataset_std=std_dataset.data_std, **plot_arguments_dataset)
+
+                # Dictionary for sub-region dataset plot
+                if std_dataset.data_std is not None and region_name is not None:
+                    plot_arguments_dataset = {
+                        "var": variable,
+                        "catalog": catalog,
+                        "model": model,
+                        "exp": exp,
+                        "startdate": startdate,
+                        "enddate": enddate,
+                        "proj": region_proj,
+                        "proj_params": region_proj_params,
+                        "vmin": vmin,
+                        "vmax": vmax,
+                        "region": region_name,
+                        "lon_limits": lon_limits,
+                        "lat_limits": lat_limits,
+                        "mask_northern_boundary": mask_northern_boundary,
+                        "mask_southern_boundary": mask_southern_boundary,
+                        "northern_boundary_latitude": northern_boundary_latitude,
+                        "southern_boundary_latitude": southern_boundary_latitude,
+                        "tgt_grid_name": tgt_grid_name,
+                        "regrid_method": regrid_method,
+                    }
+                    plot_class.plot(dataset_std=std_dataset.data_std, **plot_arguments_dataset)
+
+                # Dictionary for reference plot
+                if std_dataset_ref.data_std is not None:
+                    plot_arguments_ref = {
+                        "var": variable,
+                        "catalog": catalog_ref,
+                        "model": model_ref,
+                        "exp": exp_ref,
+                        "startdate": startdate_ref,
+                        "enddate": enddate_ref,
+                        "proj": proj,
+                        "proj_params": proj_params,
+                        "vmin": vmin,
+                        "vmax": vmax,
+                        "tgt_grid_name": tgt_grid_name,
+                        "regrid_method": regrid_method,
+                    }
+                    plot_class.plot(dataset_std=std_dataset_ref.data_std, **plot_arguments_ref)
+
+                # Dictionary for sub-region reference plot
+                if ssh_ref.data_std is not None:
+                    plot_arguments_ref = {
+                        "var": variable,
+                        "catalog": dataset_ref["catalog"],
+                        "model": dataset_ref["model"],
+                        "exp": dataset_ref["exp"],
+                        "startdate": startdate_ref,
+                        "enddate": enddate_ref,
+                        "region": region_name,
+                        "lon_limits": lon_limits,
+                        "lat_limits": lat_limits,
+                        "proj": region_proj,
+                        "proj_params": region_proj_params,
+                        "vmin": vmin,
+                        "vmax": vmax,
+                        "tgt_grid_name": tgt_grid_name,
+                        "regrid_method": regrid_method,
+                    }
+                    plot_class.plot(dataset_std=ssh_ref.data_std, **plot_arguments_ref)
+
+                # Dictionary for difference of ssh_variability plot
+                if ssh_dataset.data_std is not None and ssh_ref.data_std is not None:
+                    plot_arguments_diff = {
+                        "var": variable,
+                        "catalog": dataset["catalog"],
+                        "model": dataset["model"],
+                        "exp": dataset["exp"],
+                        "catalog_ref": dataset_ref["catalog"],
+                        "model_ref": dataset_ref["model"],
+                        "exp_ref": dataset_ref["exp"],
+                        "save_format": save_format,
+                        "startdate": startdate_data,
+                        "enddate": enddate_data,
+                        "startdate_ref": startdate_ref,
+                        "enddate_ref": enddate_ref,
+                        "tgt_grid_name": tgt_grid_name,
+                        "regrid_method": regrid_method,
+                    }
+                    plot_class.plot_diff(dataset_std=ssh_dataset.data_std, dataset_std_ref=ssh_ref.data_std, **plot_arguments_diff)
+
+                logger.info(f"Finished SSH Variability diagnostic for {variable}.")
 
     # Close the Dask client and cluster
     close_cluster(client=client, cluster=cluster, private_cluster=private_cluster, loglevel=loglevel)
