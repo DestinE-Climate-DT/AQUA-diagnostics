@@ -1,0 +1,102 @@
+# Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
+datasets:
+  - catalog: "climatedt-gen2"
+    model: "IFS-FESOM-10km"
+    exp: "story-nudging-hist"
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: "2017-01-01"
+    enddate: "2020-12-31"
+    fix: true
+
+
+references:
+  - catalog: 'obs'
+    model: 'ERA5'
+    exp: 'era5'
+    source: 'monthly'
+    regrid:
+    startdate: "2017-01-01"
+    enddate: "2020-12-31"
+    fix: true
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "/work/ab0995/a270260/pre_computed_aqua_analysis/"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+  create_catalog_entry: true
+
+diagnostics:
+  globalbiases:
+    run: true
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t'] # ['msl']
+    #formulae: ['(10u^2+10v^2)^0.5'] #TODO: Formula implementation
+    params:
+      default:
+        #seasons: true #TODO: seasonal ensemble diagnostic 
+        #seasons_stat: 'mean' # May become a list
+        #vertical: false     # Vertical profile if variable 3d # this won't be used in the ensemble diagnostic 
+      #(10u^2+10v^2)^0.5:
+      #  short_name: "10si"
+      #  long_name: "Wind speed at 10m"
+    plot_params:
+      default:
+        projection: 'robinson'
+        projection_params: {}
+        show_stats: true
+        #show_significance: true    #TODO: Enable significance stippling
+        #significance_alpha: 0.05  #TODO: 95% confidence level-
+      msl:
+        vmin: -1000
+        vmax: 1000
+        vmin_std: # bias std
+        vmax_std: # bias std
+        vmin_ensemble: # ensemble mean
+        vmax_ensemble: # ensemble mean
+        vmin_std_ensemble: # ensemble STD
+        vmax_std_ensemble: # ensemble STD
+        cmap: 'RdBu_r'
+      #(10u^2+10v^2)^0.5:
+      #  vmin: -2.5
+      #  vmax: 2.5
+      #  vmin_std: # bias std
+      #  vmax_std: # bias std
+      #  vmin_ensemble: # ensemble mean
+      #  vmax_ensemble: # ensemble mean
+      #  vmin_std_ensemble: # ensemble STD
+      #  vmax_std_ensemble: # ensemble STD
+      #  cmap: 'RdBu_r'
+      2t:
+        vmin: -7 # bias
+        vmax: 7 # bias
+        vmin_std: # bias std
+        vmax_std: # bias std
+        vmin_ensemble: # ensemble mean
+        vmax_ensemble: # ensemble mean
+        vmin_std_ensemble: # ensemble STD
+        vmax_std_ensemble: # ensemble STD
+        cmap: 'RdBu_r'
+
+  timeseries:
+    run: true
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t'] # ['ie', 'msl', 'tcc']
+    center_time: true # TODO: test center_time in ensemble timeseries diagnostic
+    params:
+      default:
+        hourly: False
+        daily: False
+        monthly: True
+        annual: True
+        startdate: "2017-01-01"
+        enddate: "2020-12-31"
+        plot_ensemble_members: True
+      2t:
+        regions: ['global']

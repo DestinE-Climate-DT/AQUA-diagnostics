@@ -57,6 +57,7 @@ Complete list:
 - Boxplots: improved descriptions (#193)
 - ECmean: time selection is now allowed (#178)
 - Centralized management of months required thresholds (#162)
+- Unified CLI for ensemble timeseries and global biases with `aqua-backend` (#327)
 
 ## [v0.23.0]
 
