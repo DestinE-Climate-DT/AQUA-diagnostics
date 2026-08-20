@@ -1,9 +1,6 @@
-import cartopy.crs as ccrs
-import numpy as np
-
 from aqua.core.graphics import plot_maps, plot_single_map, plot_vertical_profile
 from aqua.core.logger import log_configure
-from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
+from aqua.core.util import get_projection, get_realizations, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .util import handle_pressure_level
@@ -81,7 +78,9 @@ class PlotClimatology:
             fig, diagnostic_product, extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save, dpi=self.dpi
         )
 
-    def plot_climatology(self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None, show=False):
+    def plot_climatology(
+        self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None, show=False
+    ):
         """
         Plots the climatology map for a given variable and time range.
 
@@ -128,7 +127,7 @@ class PlotClimatology:
             loglevel=self.loglevel,
             cbar_label=cbar_label,
             cmap=self.cmap,
-            show=show
+            show=show,
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
@@ -207,7 +206,7 @@ class PlotClimatology:
             "cbar_label": cbar_label,
             "cmap": self.cmap,
             "loglevel": self.loglevel,
-            "show": show
+            "show": show,
         }
 
         if vmin is not None:
@@ -251,7 +250,7 @@ class PlotClimatology:
         vmin_contour=None,
         vmax_contour=None,
         nlevels=18,
-        show=False
+        show=False,
     ):
         """
         Calculates and plots the vertical profile of climatology.
@@ -299,7 +298,7 @@ class PlotClimatology:
             title_size=16,
             return_fig=True,
             loglevel=self.loglevel,
-            show=show
+            show=show,
         )
 
         if self.format_to_save:
