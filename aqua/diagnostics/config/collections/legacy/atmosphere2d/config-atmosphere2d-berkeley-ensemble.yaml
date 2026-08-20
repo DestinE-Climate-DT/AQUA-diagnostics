@@ -37,9 +37,9 @@ diagnostics:
     #formulae: ['(10u^2+10v^2)^0.5'] #TODO: Formula implementation
     params:
       default:
-        seasons: true
-        seasons_stat: 'mean' # May become a list
-        vertical: false     # Vertical profile if variable 3d
+        #seasons: true #TODO: seasonal ensemble diagnostic 
+        #seasons_stat: 'mean' # May become a list
+        #vertical: false     # Vertical profile if variable 3d # this won't be used in the ensemble diagnostic
       (10u^2+10v^2)^0.5:
         short_name: "10si"
         long_name: "Wind speed at 10m"
@@ -85,7 +85,7 @@ diagnostics:
     run: true
     diagnostic_name: 'atmosphere2d'
     variables: ['2t'] # ['ie', 'msl', 'tcc']
-    center_time: true # TODO: test center_time
+    center_time: true # TODO: test center_time in ensemble timeseries diagnostic
     params:
       default:
         hourly: False
