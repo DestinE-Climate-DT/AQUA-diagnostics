@@ -197,6 +197,7 @@ def main(argv=None):
 
             cli.logger.info(f"Finished Ensemble_Zonal diagnostic for {variable}.")
 
+    cli.close_dask_cluster()
 
 if __name__ == "__main__":
     main()

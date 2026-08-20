@@ -342,6 +342,7 @@ def main(argv=None):
 
     cli.logger.info("Completed Ensemble time series diagnostic!")
 
+    cli.close_dask_cluster()
 
 if __name__ == "__main__":
     main()

@@ -644,6 +644,7 @@ def main(argv=None):
 
         cli.logger.info("Ensemble maps diagnostic completed!")
 
+    cli.close_dask_cluster()
 
 if __name__ == "__main__":
     main()
