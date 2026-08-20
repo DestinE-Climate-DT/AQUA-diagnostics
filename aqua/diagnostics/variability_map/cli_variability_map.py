@@ -3,6 +3,9 @@ Command-line interface for VariabilityMap diagnostic.
 
 This CLI allows to plot maps of VariabilityMaps (STD in time dimension)
 defined in a yaml configuration file for single model and reference dataset.
+
+TODO: 
+- implement freq variable
 """
 
 import sys
@@ -20,8 +23,7 @@ from aqua.diagnostics.base import (
     template_parse_arguments,
 )
 
-# Default config filenames (resolved by load_diagnostic_config from the
-# package's config/collections/legacy/ocean2d/ directory)
+# Default config filename in directory aqua/diagnostics/config/collections/legacy/ocean2d/config-ocean2d-aviso.yaml)
 DEFAULT_CONFIG = "config-ocean2d-aviso.yaml"
 DEFAULT_DIAGNOSTIC_NAME = "ocean2d"
 
@@ -54,18 +56,20 @@ def main(argv=None):
     # Dataset for single model
     datasets = cli.config_dict.get("datasets")
     first = datasets[0]
-    catalog = get_arg(args, "catalog", first["catalog"])
-    model = get_arg(args, "model", first["model"])
-    exp = get_arg(args, "exp", first["exp"])
-    source = get_arg(args, "source", first["source"])
-    get_arg(args, "regrid", first.get("regrid"))
-    fixer = get_arg(args, "fix", first.get("fix"))
-    realization = get_arg(args, "realization", None)
-    reader_kwargs = get_arg(args, "reader_kwargs", {})
+    catalog = get_arg(args, "catalog", first["catalog"] or None)
+    model = get_arg(args, "model", first["model"] or None)
+    exp = get_arg(args, "exp", first["exp"] or None)
+    source = get_arg(args, "source", first["source"] or None)
+    get_arg(args, "regrid", first.get("regrid") or False)
+    fixer = get_arg(args, "fix", first.get("fix") or True)
+    realization = get_arg(args, "realization", first.get("realization") or None)
+    reader_kwargs = get_arg(args, "reader_kwargs",first.get("reader_kwargs") or {})
+    startdate_data = get_arg(args, "startdate", first.get("startdate") or None)
+    enddate_data = get_arg(args, "enddate", first.get("enddate") or None)
 
     if realization:
         cli.logger.info(f"Realization option is set to {realization}")
-        reader_kwargs = {"realization": realization}
+        reader_kwargs.update({"realization": realization})
 
     if dataset["zoom"]: reader_kwargs.update({"zoom": dataset["zoom"]})
 
@@ -80,6 +84,9 @@ def main(argv=None):
         exp_ref = get_arg(args, "exp", first_ref["exp"])
         source_ref = get_arg(args, "source", first_ref["source"])
         fixer_ref = get_arg(args, "fix", first_ref.get("fix"))
+        startdate_ref = get_arg(args, "startdate", first.get("startdate") or None)
+        enddate_ref = get_arg(args, "enddate", first.get("enddate") or None)
+
 
         cli.logger.debug(f"VariabilityMap diagnostic reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
 
@@ -102,13 +109,6 @@ def main(argv=None):
             proj = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("projection", "robinson")
             proj_params = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("projection_params", {})
 
-            startdate = params.get("startdate")
-            enddate = params.get("enddate")
-            if startdate is None:
-                startdate = get_arg(args, "startdate", first.get("startdate") or None)
-            if enddate is None:
-                enddate = get_arg(args, "enddate", first.get("enddate") or None)
-            
             # Variables in the config file
             variables = diag_config.get("variables") or []
             for variable in variables:
@@ -155,8 +155,8 @@ def main(argv=None):
                         exp=exp,
                         source=source,
                         var=variable,
-                        startdate=startdate,
-                        enddate=enddate,
+                        startdate=startdate_data,
+                        enddate=enddate_data,
                         reader_kwargs=reader_kwargs,
                     )
                     # Perform computation here for model dataset
@@ -170,8 +170,8 @@ def main(argv=None):
                         exp=exp,
                         source=source_ref,
                         var=variable_ref,
-                        startdate=startdate,
-                        enddate=enddate,
+                        startdate=startdate_ref,
+                        enddate=enddate_ref,
                         #reader_kwargs=reader_kwargs, #TODO: define a separate dict here
                     )
                     # Perform computation here for reference dataset
@@ -189,8 +189,8 @@ def main(argv=None):
                         "model": model,
                         "exp": exp,
                         "save_format": save_format,
-                        "startdate": startdate,
-                        "enddate": enddate,
+                        "startdate": startdate_data,
+                        "enddate": enddate_data,
                         "proj": proj,
                         "proj_params": proj_params,
                         "vmin": vmin,
@@ -207,8 +207,8 @@ def main(argv=None):
                         "catalog": catalog,
                         "model": model,
                         "exp": exp,
-                        "startdate": startdate,
-                        "enddate": enddate,
+                        "startdate": startdate_data,
+                        "enddate": enddate_data,
                         "proj": region_proj,
                         "proj_params": region_proj_params,
                         "vmin": vmin,
@@ -244,12 +244,12 @@ def main(argv=None):
                     plot_class.plot(dataset_std=std_dataset_ref.data_std, **plot_arguments_ref)
 
                 # Dictionary for sub-region reference plot
-                if ssh_ref.data_std is not None:
+                if std_dataset_ref.data_std is not None:
                     plot_arguments_ref = {
                         "var": variable,
-                        "catalog": dataset_ref["catalog"],
-                        "model": dataset_ref["model"],
-                        "exp": dataset_ref["exp"],
+                        "catalog": catalog_ref,
+                        "model": model_ref,
+                        "exp": exp_ref,
                         "startdate": startdate_ref,
                         "enddate": enddate_ref,
                         "region": region_name,
@@ -262,18 +262,18 @@ def main(argv=None):
                         "tgt_grid_name": tgt_grid_name,
                         "regrid_method": regrid_method,
                     }
-                    plot_class.plot(dataset_std=ssh_ref.data_std, **plot_arguments_ref)
+                    plot_class.plot(dataset_std=std_dataset_ref.data_std, **plot_arguments_ref)
 
-                # Dictionary for difference of ssh_variability plot
-                if ssh_dataset.data_std is not None and ssh_ref.data_std is not None:
+                # Dictionary for difference of Variability maps plot
+                if std_dataset.data_std is not None and std_dataset_ref.data_std is not None:
                     plot_arguments_diff = {
                         "var": variable,
-                        "catalog": dataset["catalog"],
-                        "model": dataset["model"],
-                        "exp": dataset["exp"],
-                        "catalog_ref": dataset_ref["catalog"],
-                        "model_ref": dataset_ref["model"],
-                        "exp_ref": dataset_ref["exp"],
+                        "catalog": catalog,
+                        "model": model,
+                        "exp": exp,
+                        "catalog_ref": catalog_ref,
+                        "model_ref": model_ref,
+                        "exp_ref": exp_ref,
                         "save_format": save_format,
                         "startdate": startdate_data,
                         "enddate": enddate_data,
@@ -282,9 +282,8 @@ def main(argv=None):
                         "tgt_grid_name": tgt_grid_name,
                         "regrid_method": regrid_method,
                     }
-                    plot_class.plot_diff(dataset_std=ssh_dataset.data_std, dataset_std_ref=ssh_ref.data_std, **plot_arguments_diff)
+                    plot_class.plot_diff(dataset_std=std_dataset.data_std, dataset_std_ref=std_dataset_ref.data_std, **plot_arguments_diff)
 
-                logger.info(f"Finished SSH Variability diagnostic for {variable}.")
+                cli.logger.info(f"VariabilityMap diagnostic for {variable} completed.")
+    cli.close_dask_cluster()
 
-    # Close the Dask client and cluster
-    close_cluster(client=client, cluster=cluster, private_cluster=private_cluster, loglevel=loglevel)

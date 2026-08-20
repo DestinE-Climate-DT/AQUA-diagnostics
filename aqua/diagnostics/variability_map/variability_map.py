@@ -52,8 +52,7 @@ class VariabilityMap(BaseMixin):
                 Otherwise the whole dataset is retrieved.
             startdate (str): Start date.
             enddate  (str): End date.
-            freq (str): Frequency of the data. In the TODO list. This becomes important when
-                implementing the 'variance of the variances formula'.
+            freq (str): Frequency of the data. TODO.
             region (str): For subregion selection. Default is 'None'.
                 In case of sub-region STD computation, this variable is mandatory.
             regrid (str): Regrid option for the data. NOTE: the regridding will be applied before computing the STD.

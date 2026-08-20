@@ -4,7 +4,7 @@ datasets:
     model: 'IFS-NEMO'
     exp: 'historical-1990'
     source: 'ssh-IFS-NEMO-test'
-    regrid: 'r025'
+    regrid: null
     zoom: null
     realization: null
     # TODO:
@@ -16,7 +16,7 @@ references:
     model: 'AVISO'
     exp: 'ssh-L4'
     source: 'ssh-AVISO-test'
-    regrid: 'r025'
+    regrid: null
 
 setup:
   loglevel: 'WARNING'
@@ -55,17 +55,4 @@ diagnostics:
         lat_limits: [-10, -50]
         projection: 'plate_carree'
         projection_params: {}
-      # ONLY FOR ICON: Flags for northern and southern boundaries to mask out specific latitudes.
-      # As AVISO does not have data under the sea ice, which ICON does,
-      # to make the datasets comparable - SSH under sea ice for ICON can be masked out.
-      mask_options:
-        mask_northern_boundary: true
-        mask_southern_boundary: true
-        northern_boundary_latitude: 70
-        southern_boundary_latitude: -62
 
-# This is the current dask configuration which works for the inputs above. It could be adjusted based on the system this application is run.
-cluster:
-  nworkers: 8
-  #threads_per_worker: 1
-  #memory_limit: 30e9
