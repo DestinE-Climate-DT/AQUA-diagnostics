@@ -6,7 +6,7 @@ import pytest
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError
-from aqua.diagnostics import Climatology, PlotClimatology, PlotBias, StatBias
+from aqua.diagnostics import Climatology, PlotBias, PlotClimatology, StatBias
 from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 # Tolerance for numerical comparisons
@@ -87,7 +87,6 @@ class TestBiases:
         png = os.path.join(outdir, "png", f"climatology.annual_climatology.ci.ERA5.era5-hpz3.r1.{var}.85000.png")
         assert os.path.exists(png)
 
-
     def test_bias(self, climatology_instance, plot_biases_instance, test_var):
         gb = climatology_instance
         plotgb = plot_biases_instance
@@ -119,7 +118,6 @@ class TestBiases:
         assert isinstance(result, xr.DataArray)
         assert result.dtype == bool
         assert bool(result.all())
-
 
     def test_bias_with_stat(self, climatology_instance, plot_biases_instance, test_var):
         gb = climatology_instance
@@ -184,7 +182,7 @@ class TestBiases:
 
         with pytest.raises(ValueError):
             gb.retrieve("tprate", plev=85000)
-  
+
     def test_variables(self):
         gb_local = Climatology(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly")
         with pytest.raises(Exception) as exc:
@@ -205,7 +203,6 @@ class TestBiases:
         assert short_name in gb.climatology.data_vars
         assert gb.data[short_name].attrs.get("long_name") == long_name
         assert gb.data[short_name].attrs.get("short_name") == short_name
-
 
     def test_adaptive_stipple_density(self, plot_biases_instance):
         """Test that adaptive stipple_density is computed correctly for different grid resolutions."""
