@@ -36,6 +36,7 @@ class VariabilityMap(BaseMixin):
         rebuild: bool = True,
         outputdir: str = "./",
         reader_kwargs: dict = {},
+        fix: bool = True,
         loglevel: str = "WARNING",
     ):
         """
@@ -94,6 +95,7 @@ class VariabilityMap(BaseMixin):
             units=units,
             outputdir=outputdir,
             rebuild=rebuild,
+            fix=fix,
             loglevel=loglevel,
         )
 

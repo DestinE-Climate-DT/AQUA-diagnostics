@@ -1,32 +1,25 @@
-# Sea Surface Height (SSH) Variability Diagnostics Application
+# Temporal Variability Map Diagnostics Application
 
 Author:
 - Maqsood Mubarak Rajput (AWI, maqsoodmubarak.rajput@awi.de) (Author and maintainer v0.19.1)
-- Tanvi Sharma (AWI, tanvi.sharma@awi.de) (Author older version)
-- Jaleena Sunny (AWI, jaleena.sunny@awi.de) (Contributor older version)
 
 ## Description
 
-This application calculates the sea surface height standard deviation for models namely, FESOM, ICON and NEMO. It compares them against the AVISO model. It also provides visualization of the SSH variability for the models.
+This application calculates the standard deviation along time dimension for models namely, FESOM, ICON and NEMO. It compares them against a given reference model. The results are saved in NetCDF file format. It also provides visualization of the variability for the models.
 
 ## Installation Instructions
 
 To install this diagnostic you can use conda.
 
-No more environments than the regular AQUA ones (located in `./environment.yaml`) are needed.
-Refer to the AQUA documentation for more information.
+No more environments than the regular AQUA-diagnostics ones (located in `./environment.yaml`) are needed.
+Refer to the AQUA-diagnostics documentation for more information.
 
 ## Configuration
-The application requires a YAML configuration file which are available `AQUA/config/diagnostics/ssh_variability` to specify the settings.
+The CLI application requires a YAML configuration file. An example of which is available `AQUA-diagnostics/aqua/diagnostics/config/collections/legacy/ocean2d/config-ocean2d-aviso.yaml` to specify the settings.
 
 ## Usage
-1. Configure the `config_ssh.yaml` file with the desired settings.
+1. A default configuration file `config-ocean2d-aviso.yaml` is available with the desired settings.
 2. Run the application via CLI or the notebook available in `notebooks/diagnostics`.
-The application will calculate the SSH standard deviation for AVISO and the other specified models, save the results as NetCDF files, generate plots for visualization, and save the subplots as a PNG or PDF image.
 
-## Output
-The code produce both NetCDF files for storing output and figures.
-- NetCDF files: The computed SSH standard deviation for each model is saved as separate NetCDF files.
-Output are stored on the model's input grid.
-- Figures: the plots and subplots showing the SSH variability for each model are as PNG or PDF.
-- Additionally, difference plots can be created.
+## Note
+In order to comapre the plots between the model and the reference, both are regridded to a common grid. This setting can be changed via the configuration file from above. 

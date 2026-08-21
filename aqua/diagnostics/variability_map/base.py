@@ -32,6 +32,7 @@ class BaseMixin(Diagnostic):
         short_name: str = None,
         units: str = None,
         rebuild: bool = True,
+        fix: bool = True,
         loglevel: str = "WARNING",
     ):
         """
@@ -103,6 +104,7 @@ class BaseMixin(Diagnostic):
         self.short_name = short_name
         self.rebuild = rebuild
         self.reader_kwargs = reader_kwargs
+        self.fix = fix
         self.region = region
 
     def _check_data(self, var: str, units: str):
@@ -113,7 +115,7 @@ class BaseMixin(Diagnostic):
             var (str): The variable to be checked.
             units (str): The units to be checked.
         """
-        self.data[self.var] = super()._check_data(data=self.data[self.var], var=var, units=units)
+        self.data[self.var] = super()._check_data(data=self.data[self.var], var=var, fix=self.fix, units=units)
 
     def retrieve(self):
         """

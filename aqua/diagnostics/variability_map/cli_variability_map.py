@@ -1,7 +1,7 @@
 """
 Command-line interface for VariabilityMap diagnostic.
 
-This CLI allows to plot maps of VariabilityMaps (STD in time dimension)
+This CLI allows to plot maps of VariabilityMap (STD in time dimension)
 defined in a yaml configuration file for single model and reference dataset.
 
 TODO: 
@@ -61,17 +61,18 @@ def main(argv=None):
     exp = get_arg(args, "exp", first["exp"] or None)
     source = get_arg(args, "source", first["source"] or None)
     get_arg(args, "regrid", first.get("regrid") or False)
-    fixer = get_arg(args, "fix", first.get("fix") or True)
+    fix = get_arg(args, "fix", first.get("fix") or True)
     realization = get_arg(args, "realization", first.get("realization") or None)
+    zoom = get_arg(args, "zoom", first.get("zoom") or None)
     reader_kwargs = get_arg(args, "reader_kwargs",first.get("reader_kwargs") or {})
-    startdate_data = get_arg(args, "startdate", first.get("startdate") or None)
-    enddate_data = get_arg(args, "enddate", first.get("enddate") or None)
+    #startdate_data = get_arg(args, "startdate", first.get("startdate") or None)
+    #enddate_data = get_arg(args, "enddate", first.get("enddate") or None)
 
     if realization:
         cli.logger.info(f"Realization option is set to {realization}")
         reader_kwargs.update({"realization": realization})
 
-    if dataset["zoom"]: reader_kwargs.update({"zoom": dataset["zoom"]})
+    if zoom: reader_kwargs.update({"zoom": zoom})
 
     cli.logger.debug(f"VariabilityMap diagnostic catalog: {catalog}, model: {model}, exp: {exp}, and source {source}")
 
@@ -83,9 +84,9 @@ def main(argv=None):
         model_ref = get_arg(args, "model", first_ref["model"])
         exp_ref = get_arg(args, "exp", first_ref["exp"])
         source_ref = get_arg(args, "source", first_ref["source"])
-        fixer_ref = get_arg(args, "fix", first_ref.get("fix"))
-        startdate_ref = get_arg(args, "startdate", first.get("startdate") or None)
-        enddate_ref = get_arg(args, "enddate", first.get("enddate") or None)
+        fix_ref = get_arg(args, "fix", first_ref.get("fix") or True)
+        #startdate_ref = get_arg(args, "startdate", first.get("startdate") or None)
+        #enddate_ref = get_arg(args, "enddate", first.get("enddate") or None)
 
 
         cli.logger.debug(f"VariabilityMap diagnostic reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
@@ -98,54 +99,61 @@ def main(argv=None):
     dpi = cli.config_dict.get("output", {}).get("dpi", 300)
 
     # Variability Map 
-    diag_config = cli.config_dict["diagnostics"]["VariabilityMap"]
-    if "VariabilityMap" in config_dict["diagnostics"]:
-        if config_dict["diagnostics"]["VariabilityMap"]["run"]:
+    config_dict = cli.config_dict["diagnostics"]["variabilitymap"]
+    if "variabilitymap" in cli.config_dict["diagnostics"]:
+        if cli.config_dict["diagnostics"]["variabilitymap"]["run"]:
             cli.logger.info("Running VariabilityMap diagnostic.")
 
-            params = diag_config.get("params", {}).get("default", {})
-            all_plot_params = diag_config.get("plot_params", {})
+            params = config_dict.get("params", {}).get("default", {})
+            startdate_data = params.get("startdate_data")
+            enddate_data = params.get("enddate_data")
+            startdate_ref = params.get("startdate_ref")
+            enddate_ref = params.get("enddate_ref")
+
+            all_plot_params = cli.config_dict.get("plot_params", {})
             default_plot = all_plot_params.get("default", {})
-            proj = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("projection", "robinson")
-            proj_params = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("projection_params", {})
+            proj = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("projection", "robinson")
+            proj_params = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("projection_params", {})
+
 
             # Variables in the config file
-            variables = diag_config.get("variables") or []
+            variables = cli.config_dict["diagnostics"]["variabilitymap"]["variables"] or []
+            cli.logger.debug(f"VariableMap diagnostic for {variables}")
             for variable in variables:
-                var_params = diag_config.get("params", {}).get(variable, {})
+                cli.logger.debug(f"VariabilityMap diagnostic for {variable}")
+                var_params = cli.config_dict.get("params", {}).get(variable, {})
 
                 cli.logger.debug(f"Using projection: {proj} for variable: {variable}")
-                vmin = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("vmin", None)
-                vmax = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("vmax", None)
+                vmin = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("vmin", None)
+                vmax = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("vmax", None)
                 # Regridder options for plots
-                tgt_grid_name = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("tgt_grid_name", None)
-                regrid_method = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["default"].get("regrid_method", None)
+                tgt_grid_name = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("tgt_grid_name", None)
+                regrid_method = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("regrid_method", None)
 
                 # Sub region selection
-                region_name = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get("name", None)
-                region_proj = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get(
+                region_name = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get("name", None)
+                region_proj = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get(
                     "projection", "plate_carree"
                 )
-                region_proj_params = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get(
+                region_proj_params = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get(
                     "projection_params", {}
                 )
 
-                lon_limits = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get("lon_limits", None)
-                lat_limits = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["sub_region"].get("lat_limits", None)
+                lon_limits = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get("lon_limits", None)
+                lat_limits = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get("lat_limits", None)
 
-                mask_northern_boundary = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
-                    "mask_northern_boundary", None
-                )
-                mask_southern_boundary = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
-                    "mask_southern_boundary", None
-                )
-                northern_boundary_latitude = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
-                    "northern_boundary_latitude", None
-                )
-                southern_boundary_latitude = config_dict["diagnostics"]["VariabilityMap"]["plot_params"]["mask_options"].get(
-                    "southern_boundary_latitude", None
-                )
-
+                #mask_northern_boundary = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["mask_options"].get(
+                #    "mask_northern_boundary", None
+                #)
+                #mask_southern_boundary = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["mask_options"].get(
+                #    "mask_southern_boundary", None
+                #)
+                #northern_boundary_latitude = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["mask_options"].get(
+                #    "northern_boundary_latitude", None
+                #)
+                #southern_boundary_latitude = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["mask_options"].get(
+                #    "southern_boundary_latitude", None
+                #) 
 
                 # Initialize VariabilityMap for model dataset
                 if (model is not None) and (exp is not None) and (source is not None):
@@ -158,6 +166,7 @@ def main(argv=None):
                         startdate=startdate_data,
                         enddate=enddate_data,
                         reader_kwargs=reader_kwargs,
+                        fix=fix,
                     )
                     # Perform computation here for model dataset
                     std_dataset.run()
@@ -167,11 +176,12 @@ def main(argv=None):
                     std_dataset_ref = VariabilityMap(
                         catalog=catalog_ref,
                         model=model_ref,
-                        exp=exp,
+                        exp=exp_ref,
                         source=source_ref,
-                        var=variable_ref,
+                        var=variable,
                         startdate=startdate_ref,
                         enddate=enddate_ref,
+                        fix=fix_ref,
                         #reader_kwargs=reader_kwargs, #TODO: define a separate dict here
                     )
                     # Perform computation here for reference dataset
@@ -286,4 +296,7 @@ def main(argv=None):
 
                 cli.logger.info(f"VariabilityMap diagnostic for {variable} completed.")
     cli.close_dask_cluster()
+
+if __name__ == "__main__":
+    main()
 
