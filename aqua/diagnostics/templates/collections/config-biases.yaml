@@ -1,4 +1,3 @@
-# Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
 datasets:
   - catalog: null
     model: null
@@ -15,8 +14,8 @@ references:
     exp: 'era5'
     source: 'monthly'
     regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: null
+    enddate: null
 
 setup:
   loglevel: 'WARNING'
@@ -32,41 +31,43 @@ output:
 diagnostics:
   biases:
     run: true
-    diagnostic_name: 'atmosphere3d'
-    variables: ['t', 'u', 'v', 'q']
+    diagnostic_name: 'biases'
+    variables: ['tprate', 'u']
+    formulae: ['(10u^2+10v^2)^0.5']
     params:
       default:
-        plev: [85000, 25000] # Level plot for 2D bias map if variable 3d
+        plev: [85000, 20000] # Level plot for 2D bias map if variable 3d
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: true     # Vertical profile if variable 3d
+        #TODO: to remove
+        startdate_data: null
+        enddate_data: null
+        startdate_ref: "1990-01-01"
+        enddate_ref: "2020-12-31"
+      tprate:
+        standard_name: "tprate"
+        long_name: "Precipitation"
+        units: "mm/day"
+      (10u^2+10v^2)^0.5:
+        short_name: "10si"
+        long_name: "Wind speed at 10m"
     plot_params:
       default:
         projection: 'robinson'
         projection_params: {}
-        cmap: 'PuOr_r'
         show_stats: true
         show_significance: true    # Enable significance stippling
         significance_alpha: 0.05  # 95% confidence level
-      t:
+      tprate:
         vmin: -8
         vmax: 8
-        vmin_v: -12
-        vmax_v: 12
-        cmap: 'RdBu_r'
       u:
         vmin: -10
         vmax: 10
-        vmin_v: -12
-        vmax_v: 12
-      v:
-        vmin: -3
-        vmax: 3
-        vmin_v: -1
-        vmax_v: 1
-      #q:
-      #  vmin: -0.002
-      #  vmax: 0.002
-      #  vmin_v: -0.002
-      #  vmax_v: 0.002
-      #  cmap: 'BrBG'
+        vmin_v: -25
+        vmax_v: 25
+      (10u^2+10v^2)^0.5:
+        vmin: -2.5
+        vmax: 2.5
+        cmap: 'RdBu_r'
