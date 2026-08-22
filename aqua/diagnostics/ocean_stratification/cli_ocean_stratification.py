@@ -81,7 +81,7 @@ def main(argv=None):
                     mld=False,
                     climatology=climatology,
                     outputdir=cli.outputdir,
-                    reader_kwargs=cli.reader_kwargs,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
                     rebuild=cli.rebuild,
                 )
                 # Reference data
@@ -100,6 +100,7 @@ def main(argv=None):
                         mld=False,
                         climatology=climatology,
                         outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
                         rebuild=cli.rebuild,
                     )
                 else:
@@ -141,7 +142,7 @@ def main(argv=None):
                     mld=True,
                     climatology=climatology,
                     outputdir=cli.outputdir,
-                    reader_kwargs=cli.reader_kwargs,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
                     rebuild=cli.rebuild,
                 )
                 # Reference data
@@ -160,6 +161,7 @@ def main(argv=None):
                         mld=True,
                         climatology=climatology,
                         outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
                         rebuild=cli.rebuild,
                     )
                 else:

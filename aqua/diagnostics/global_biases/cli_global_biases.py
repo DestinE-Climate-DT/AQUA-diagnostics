@@ -98,9 +98,16 @@ def main(argv=None):
                     formula=is_formula,
                     long_name=long_name,
                     short_name=short_name,
-                    reader_kwargs=cli.reader_kwargs,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
                 )
-                biases_reference.retrieve(var=var, units=units, formula=is_formula, long_name=long_name, short_name=short_name)
+                biases_reference.retrieve(
+                    var=var,
+                    units=units,
+                    formula=is_formula,
+                    long_name=long_name,
+                    short_name=short_name,
+                    reader_kwargs=reference.get("reader_kwargs") or {},
+                )
             except (NoDataError, KeyError, ValueError) as e:
                 cli.logger.warning("Variable '%s' not found in dataset. Skipping. (%s)", var, e)
                 continue
