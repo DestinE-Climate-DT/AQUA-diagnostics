@@ -1,4 +1,4 @@
-"""Unit tests for aqua.diagnostics.global_biases.util.handle_pressure_level."""
+"""Unit tests for aqua.diagnostics.biases.util.handle_pressure_level."""
 
 import numpy as np
 import pytest

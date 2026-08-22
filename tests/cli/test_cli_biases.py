@@ -6,7 +6,7 @@ import pytest
 
 from aqua.diagnostics.biases.cli_biases import main, parse_arguments
 
-CLI_MODULE = "aqua.diagnostics.biases.cli_global_biases"
+CLI_MODULE = "aqua.diagnostics.biases.cli_biases"
 
 # Base configuration dictionary for GlobalBiases diagnostic
 BASE_SET = {
