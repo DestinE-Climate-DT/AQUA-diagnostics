@@ -1,12 +1,12 @@
-"""Tests for the GlobalBiases CLI (parse_arguments + main orchestration)."""
+"""Tests for the Biases CLI (parse_arguments + main orchestration)."""
 
 from unittest.mock import MagicMock
 
 import pytest
 
-from aqua.diagnostics.global_biases.cli_global_biases import main, parse_arguments
+from aqua.diagnostics.biases.cli_biases import main, parse_arguments
 
-CLI_MODULE = "aqua.diagnostics.global_biases.cli_global_biases"
+CLI_MODULE = "aqua.diagnostics.biases.cli_global_biases"
 
 # Base configuration dictionary for GlobalBiases diagnostic
 BASE_SET = {
@@ -19,7 +19,7 @@ BASE_SET = {
 
 
 def _mock_data(*var_names):
-    """Create a dict mimicking GlobalBiases.data with no plev dimension."""
+    """Create a dict mimicking Biases.data with no plev dimension."""
     return {v: MagicMock(dims=()) for v in var_names}
 
 
@@ -47,25 +47,25 @@ def test_parse_arguments_cli_options():
 # CLI execution flow (main)
 # ======================================================================
 class TestMainExecutionFlow:
-    """Test main() execution flow with mocked GlobalBiases and PlotGlobalBiases."""
+    """Test main() execution flow with mocked Climatology and PlotBias."""
 
     @pytest.fixture
     def mock_gb(self, mocker):
         """
-        Patch GlobalBiases and PlotGlobalBiases with sensible defaults.
-        Returns (mock_gb_cls, mock_plot_cls). The GlobalBiases instance
+        Patch Climatology and PlotBias with sensible defaults.
+        Returns (mock_gb_cls, mock_plot_cls). The Climatology instance
         is pre-configured with .data for "2t" and an empty .climatology.
         """
-        mock_gb_cls = mocker.patch(f"{CLI_MODULE}.GlobalBiases")
-        mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotGlobalBiases")
+        mock_gb_cls = mocker.patch(f"{CLI_MODULE}.Climatology")
+        mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotBias")
         mock_gb_cls.return_value.data = _mock_data("2t")
         mock_gb_cls.return_value.climatology = {}
         return mock_gb_cls, mock_plot_cls
 
     def test_diagnostic_disabled_skips_processing(self, build_config, mock_cluster, mock_gb):
-        """When run=False, no GlobalBiases instance should be created."""
+        """When run=False, no Climatology instance should be created."""
         mock_gb_cls, _ = mock_gb
-        config_file = build_config({"globalbiases": {"run": False}})
+        config_file = build_config({"biases": {"run": False}})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -74,12 +74,12 @@ class TestMainExecutionFlow:
     def test_single_variable_full_pipeline(self, build_config, mock_cluster, mock_gb):
         """
         With one variable and run=True, verify the full execution flow:
-        GlobalBiases created for dataset+reference, retrieve and
-        compute_climatology called, PlotGlobalBiases.plot_bias called.
+        Climatology created for dataset+reference, retrieve and
+        compute_climatology called, PlotBias.plot_bias called.
         """
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_instance = mock_gb_cls.return_value
-        config_file = build_config({"globalbiases": BASE_SET})
+        config_file = build_config({"biases": BASE_SET})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -107,7 +107,7 @@ class TestMainExecutionFlow:
 
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_cls.return_value.retrieve.side_effect = NoDataError("no data")
-        config_file = build_config({"globalbiases": BASE_SET})
+        config_file = build_config({"biases": BASE_SET})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 
@@ -120,7 +120,7 @@ class TestMainExecutionFlow:
         mock_gb_cls.return_value.seasonal_climatology = {}
         config_file = build_config(
             {
-                "globalbiases": {
+                "biases": {
                     **BASE_SET,
                     "params": {"default": {"seasons": True, "seasons_stat": "mean"}},
                 },
@@ -138,7 +138,7 @@ class TestMainExecutionFlow:
         mock_gb_instance.data = _mock_data("2t", "tprate", "net_toa")
         config_file = build_config(
             {
-                "globalbiases": {
+                "biases": {
                     **BASE_SET,
                     "variables": ["2t", "tprate"],
                     "formulae": ["net_toa"],
@@ -159,12 +159,12 @@ class TestMainExecutionFlow:
         assert fifth_call.kwargs["var"] == "net_toa"
         assert fifth_call.kwargs["formula"] is True
 
-    def test_custom_diagnostic_name_passed_to_globalbiases(self, build_config, mock_cluster, mock_gb):
-        """A custom diagnostic_name in config should be forwarded to GlobalBiases."""
+    def test_custom_diagnostic_name_passed_to_climatology(self, build_config, mock_cluster, mock_gb):
+        """A custom diagnostic_name in config should be forwarded to Climatology."""
         mock_gb_cls, _ = mock_gb
         config_file = build_config(
             {
-                "globalbiases": {
+                "biases": {
                     **BASE_SET,
                     "diagnostic_name": "my_custom_gb",
                 },

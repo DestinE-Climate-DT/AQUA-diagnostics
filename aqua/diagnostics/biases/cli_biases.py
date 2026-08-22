@@ -34,14 +34,14 @@ def main(argv=None):
     cli = DiagnosticCLI(
         args,
         diagnostic_name=TOOLNAME_KEY,
-        default_config="config_global_biases.yaml",
+        default_config="config_biases.yaml",
     )
     cli.prepare()
     cli.open_dask_cluster()
 
     # Retrieve tool-specific configuration
     tool_dict = cli.config_dict["diagnostics"].get(TOOLNAME_KEY, {})
-    # Global Biases diagnostic
+    # Biases diagnostic
     if tool_dict and tool_dict.get("run", False):
         cli.logger.info(f"{TOOLNAME} diagnostic is enabled.")
 
