@@ -10,6 +10,7 @@ import xarray as xr
 
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.util import dump_yaml
+from aqua.diagnostics import get_install_dirs
 from aqua.diagnostics.base import (
     Diagnostic,
     close_cluster,
@@ -318,3 +319,12 @@ def test_minimum_months_required_class_attribute():
     assert hasattr(LatLonProfiles, "MINIMUM_MONTHS_REQUIRED")
     assert isinstance(LatLonProfiles.MINIMUM_MONTHS_REQUIRED, int)
     assert LatLonProfiles.MINIMUM_MONTHS_REQUIRED > 0
+
+
+def test_get_install_dirs():
+    """Test that get_install_dirs returns a list of directories."""
+    dirs = get_install_dirs()
+    assert isinstance(dirs, dict)
+    # Check it is not empty and contains expected keys
+    assert "config" in dirs
+    assert "templates" in dirs
