@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.25.0):
 
 Complete list:
+- LatLonProfiles: std dates selection fix (#345)
 - Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
 - Removing dask tokenization for non-local clusters (#337)
 - Specify min and max allowed versions for all dependencies (#333)
