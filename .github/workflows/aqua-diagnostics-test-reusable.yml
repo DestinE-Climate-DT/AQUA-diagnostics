@@ -132,8 +132,8 @@ jobs:
 
           if mismatches:
               print(f"Found {len(mismatches)} misaligned Conda dependencies.")
-                for name in mismatches:
-                    print(f"- {name}: diagnostics '{diagnostics[name]}' != core '{core[name]}'")
+              for name in mismatches:
+                  print(f"- {name}: diagnostics '{diagnostics[name]}' != core '{core[name]}'")
               raise SystemExit(1)
 
           print("All shared Conda dependencies are aligned.")
