@@ -79,7 +79,15 @@ class PlotClimatology:
         )
 
     def plot_climatology(
-        self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None, show=False
+        self,
+        data,
+        var,
+        plev=None,
+        proj="robinson",
+        proj_params={},
+        vmin=None,
+        vmax=None,
+        cbar_label=None,
     ):
         """
         Plots the climatology map for a given variable and time range.
@@ -93,7 +101,6 @@ class PlotClimatology:
             vmin (float, optional): Minimum color scale value.
             vmax (float, optional): Maximum color scale value.
             cbar_label (str, optional): Label for the colorbar.
-            show (bool, optional): Whether to display the plot.
 
         Returns:
             tuple: Matplotlib figure and axis objects.
@@ -127,7 +134,6 @@ class PlotClimatology:
             loglevel=self.loglevel,
             cbar_label=cbar_label,
             cmap=self.cmap,
-            show=show,
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
@@ -156,7 +162,7 @@ class PlotClimatology:
         return None
 
     def plot_seasonal_climatology(
-        self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None, show=False
+        self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None
     ):
         """
         Plots seasonal climatology for each season (DJF, MAM, JJA, SON).
@@ -170,7 +176,6 @@ class PlotClimatology:
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
             cbar_label (str, optional): Label for the colorbar.
-            show (bool, optional): Whether to display the plot.
 
         Returns:
             matplotlib.figure.Figure: The resulting figure.
@@ -206,7 +211,6 @@ class PlotClimatology:
             "cbar_label": cbar_label,
             "cmap": self.cmap,
             "loglevel": self.loglevel,
-            "show": show,
         }
 
         if vmin is not None:
@@ -264,7 +268,6 @@ class PlotClimatology:
             vmin_contour (float, optional): Minimum contour value.
             vmax_contour (float, optional): Maximum contour value.
             nlevels (int, optional): Number of contour levels for the plot.
-            show (bool, optional): Whether to display the plot.
         """
         self.logger.info("Plotting vertical climatology for variable: %s", var)
 

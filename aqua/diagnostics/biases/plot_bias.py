@@ -199,7 +199,6 @@ class PlotBias:
         stipple_size=0.8,
         target_spacing_deg=2,
         invert_stippling=False,
-        show=False,
     ):
         """
         Plots the bias map between two datasets.
@@ -225,7 +224,6 @@ class PlotBias:
             target_spacing_deg (float, optional): Desired approximate spacing in degrees
                                                   between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
-            show (bool, optional): Whether to display the plot. Default is False.
         """
         self.logger.info("Plotting biases")
 
@@ -265,7 +263,6 @@ class PlotBias:
             cbar_label=cbar_label,
             cmap=self.cmap,
             loglevel=self.loglevel,
-            show=show,
         )
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
@@ -388,7 +385,6 @@ class PlotBias:
         vmin=None,
         vmax=None,
         cbar_label=None,
-        show=False,
     ):
         """
         Plots seasonal biases for each season (DJF, MAM, JJA, SON).
@@ -403,7 +399,6 @@ class PlotBias:
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
             cbar_label (str, optional): Label for the colorbar.
-            show (bool, optional): Whether to display the plot. Default is False.
 
         Returns:
             matplotlib.figure.Figure: The resulting figure.
@@ -446,7 +441,6 @@ class PlotBias:
             "cbar_label": cbar_label,
             "cmap": self.cmap,
             "loglevel": self.loglevel,
-            "show": show,
         }
 
         if vmin is not None:
