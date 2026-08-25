@@ -250,7 +250,6 @@ class PlotClimatology:
         vmin_contour=None,
         vmax_contour=None,
         nlevels=18,
-        show=False,
     ):
         """
         Calculates and plots the vertical profile of climatology.
@@ -298,7 +297,6 @@ class PlotClimatology:
             title_size=16,
             return_fig=True,
             loglevel=self.loglevel,
-            show=show,
         )
 
         if self.format_to_save:
