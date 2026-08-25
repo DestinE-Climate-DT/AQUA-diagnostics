@@ -39,3 +39,6 @@ __all__ = ["__version__", "NAO", "ENSO", "MJO",
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
            "Trends", "PlotTrends",
            "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
+
+def get_install_dirs():
+    return {"config": DIAGNOSTIC_CONFIG_DIRECTORIES, "templates": DIAGNOSTIC_TEMPLATE_DIRECTORIES}
