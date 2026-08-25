@@ -1,26 +1,20 @@
-# Models for which sea surface height (SSH) variability is to be evaluated.
+# Models for which sea surface temperature (TOS) variability is to be evaluated.
 datasets:
-  - catalog: 'climatedt-gen2'
-    model: 'IFS-NEMO-5km'
-    exp: 'baseline-hist'
-    source: 'daily-hpz7-o2d-zos'
-    regrid: 'r025' 
-    zoom: 
-    realization: 
+  - catalog: 'climatedt-o25.1' 
+    model: 'IFS-FESOM'
+    exp: 'historical-1990'
+    source: 'lra-r100-monthly' 
+    regrid: null
     fix: True
-    reader_kwargs:
-
 
 # This is the reference model against which other models are compared.
 references:
-  - catalog: 'obs'
-    model: 'AVISO'
-    exp: 'vDT2024'
-    source: 'daily-zarr'
-    regrid:
+  - catalog: 'obs'  
+    model: 'ESA-CCI-L4'
+    exp: 'v3.0.1'
+    source: 'r100-monthly'
+    regrid: null
     fix: True
-    # TODO:
-  #  #reader_kwargs: null #  it can be a dictionary with reader kwargs
 
 setup:
   loglevel: 'WARNING'
@@ -36,7 +30,7 @@ diagnostics:
   variabilitymap:
     run: true
     diagnostic_name: 'ocean2d'
-    variables: ['zos']
+    variables: ['tos']
     params:
       default:
         startdate_data: '1994-01-01'
