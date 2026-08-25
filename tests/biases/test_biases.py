@@ -171,7 +171,7 @@ class TestBiases:
         png = os.path.join(outdir, "png", f"biases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
         assert os.path.exists(png)
 
-    def test_plot_vertical_climatology(self, climatology_instance, plot_climatology_instance, test_var):
+    def test_vertical_climatology(self, climatology_instance, plot_climatology_instance, test_var):
         gb = climatology_instance
         var = test_var
         outdir = gb.outputdir
@@ -179,9 +179,9 @@ class TestBiases:
         gb.compute_climatology(var=var, seasonal=True)
         plot_climatology_instance.plot_vertical_climatology(data=gb.climatology, var=var)
 
-        pdf = os.path.join(outdir, "pdf", f"biases.vertical_climatology.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.pdf")
+        pdf = os.path.join(outdir, "pdf", f"climatology.vertical_climatology.ci.ERA5.era5-hpz3.r1.{var}.pdf")
         assert os.path.exists(pdf)
-        png = os.path.join(outdir, "png", f"biases.vertical_climatology.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.png")
+        png = os.path.join(outdir, "png", f"climatology.vertical_climatology.ci.ERA5.era5-hpz3.r1.{var}.png")
         assert os.path.exists(png)
 
     def test_vertical_bias(self, climatology_instance, plot_biases_instance, test_var):
