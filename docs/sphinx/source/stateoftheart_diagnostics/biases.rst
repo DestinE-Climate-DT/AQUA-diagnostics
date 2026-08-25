@@ -22,12 +22,15 @@ Classes
 
 There are three classes in the diagnostic:
 
-* **Biases**: retrieves the data and prepares it for plotting (e.g., regridding, pressure level selection, unit conversion).
+* **Climatology**: retrieves the data and prepares it for plotting (e.g., regridding, pressure level selection, unit conversion).
   It handles the computation of mean climatologies, including seasonal climatologies if requested.
   Climatologies are saved as class attributes and as NetCDF files.
 
-* **PlotBiases**: provides methods for plotting the global biases, seasonal biases, and vertical profiles.
-  It generates the plots based on the data prepared by the Biases class.
+* **PlotClimatology**: provides methods for plotting climatology maps, seasonal climatology maps, and vertical profiles.
+  It generates the plots based on the data prepared by the Climatology class.
+
+* **PlotBiases**: provides methods for plotting biases, seasonal biases, and vertical profiles.
+  It generates the plots based on the data prepared by the Climatology class.
 
 * **StatBiases**: statistical class including methods to compute global bias statistics and to assess the statistical significance of the bias.
   It computes global bias statistics such as mean bias and root mean square error (RMSE) between the model and reference datasets (area-weighted if grid cell areas are provided).
