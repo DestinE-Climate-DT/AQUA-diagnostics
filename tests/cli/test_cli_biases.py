@@ -8,7 +8,7 @@ from aqua.diagnostics.biases.cli_biases import main, parse_arguments
 
 CLI_MODULE = "aqua.diagnostics.biases.cli_biases"
 
-# Base configuration dictionary for GlobalBiases diagnostic
+# Base configuration dictionary for Biases diagnostic
 BASE_SET = {
     "run": True,
     "variables": ["2t"],
