@@ -41,7 +41,7 @@ job:
     experiment_kind: "${AQUA_CONFIG}/analysis/climatedt-experiment-kind.yaml"  # experiment kind file configuraton
 
 cluster:  # options for dask cluster (this works well on lumi)
-    workers: 2
+    workers: 32
     threads: 1  # per worker
     memory_limit: 7GiB  # per worker
     connect_timeout: 120  # seconds to wait for client to connect to the cluster
@@ -154,11 +154,11 @@ diagnostics:
       config: "${AQUA_CONFIG}/collections/jinja/teleconnections/config-teleconnections-enso.j2"
 
   water_cycle:
+    lat_lon_profiles:
+      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
     timeseries:
       config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
     biases:
       config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
     histogram:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
-    lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
 from aqua.core.util import DEFAULT_REALIZATION, strlist_to_phrase, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 
 class PlotLatLonProfiles:
@@ -101,7 +101,7 @@ class PlotLatLonProfiles:
             if ref_item is not None and hasattr(ref_item, "AQUA_model"):
                 model = ref_item.attrs.get("AQUA_model", "Unknown")
                 exp = ref_item.attrs.get("AQUA_exp", "Unknown")
-                ref_label = f"{model} {exp}"
+                ref_label = collapse_era5_duplicate(f"{model} {exp}")
 
         self.logger.debug("Reference label: %s", ref_label)
         return ref_label
@@ -297,11 +297,18 @@ class PlotLatLonProfiles:
                 variable = name
                 break
 
+        if not self.mean_type:
+            diagnostic = "Profile"
+        elif self.data_type == "seasonal":
+            # e.g. "Seasonal zonal profiles" (lower-case mean type, plural)
+            diagnostic = f"Seasonal {self.mean_type.lower()} profiles"
+        else:
+            diagnostic = f"{self.mean_type.capitalize()} profile"
+
         title = TitleBuilder(
-            diagnostic=f"{self.mean_type.capitalize()} profile" if self.mean_type else "Profile",
+            diagnostic=diagnostic,
             variable=variable,
             regions=self.region,
-            catalog=self.catalogs,
             model=self.models,
             exp=self.exps,
         ).generate()
@@ -380,7 +387,7 @@ class PlotLatLonProfiles:
 
         # Data dates
         if data_pair != (None, None):
-            description += f" from {data_pair[0]} to {data_pair[1]}"
+            description += f" (from {data_pair[0]} to {data_pair[1]})"
 
         # Reference data description
         if self.len_ref > 0 and ref_item is not None:
@@ -403,6 +410,7 @@ class PlotLatLonProfiles:
                 description += f" (from {std_pair[0]} to {std_pair[1]})"
 
         description += "."
+        description = collapse_era5_duplicate(description)
         self.logger.info("Description: %s", description)
         return description
 

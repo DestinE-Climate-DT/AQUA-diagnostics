@@ -24,6 +24,7 @@ pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
         ),
         ({}, ""),  # Empty result
         ({"variable": "Temperature"}, "Temperature"),
+        ({"variable": "Sea Surface Temperature"}, "Sea surface temperature"),
         ({"diagnostic": "Test", "startyear": 2020}, "Test 2020"),
         ({"diagnostic": "Test", "endyear": 2021}, "Test 2021"),
         ({"diagnostic": "Bias", "realizations": ["r1", "r2"]}, "Bias Multi-realization"),
@@ -54,9 +55,10 @@ def test_title_references():
         conjunction="in",
     ).generate()
     assert "  " not in result
-    assert "Bias of Temperature" in result
+    assert "Bias of temperature" in result
     assert "in IFS" in result
-    assert "vs ERA5 era5" in result
+    assert "vs ERA5" in result
+    assert "era5" not in result
     assert "1980-1990" in result
 
 

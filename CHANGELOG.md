@@ -5,9 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Unreleased in the current development version (target v0.24.0):
+Unreleased in the current development version (target v0.25.0):
 
 Complete list:
+- GlobalBiases: seasonal biases test fix (#346)
+- Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
+- Removing dask tokenization for non-local clusters (#337)
+- Specify min and max allowed versions for all dependencies (#333)
+- Change dask load order in LonLatProfiles (#338)
+
+## [v0.24.1]
+
+Complete list:
+- Fix micromamba setup broken by setup-micromamba v3.2.0 (#328)
+- Set as default pyfdb/GSV during installation (#326)
+
+## [v0.24.0]
+
+Complete list:
+- Dashboard review: title/description aesthetic fixes across diagnostics (#290)
 - Setting up aqua-like fixed environment (#314)
 - Update image to latest core container (#308)
 - Fix loglevel setup from YAML in DiagnosticCLI (#304)
@@ -22,7 +38,6 @@ Complete list:
 - Porting of config.grouping.yaml adjustments (#280)
 - Teleconnections: added the possibility to override default labels in the plot_index method (#273)
 - Regions config file centralization (#267)
-- Jinja templates for configuration files for collections (#230)
 - Fallback test download from wilma (#269)
 - Jinja templates for configuration files for collections (#230, #270, #271, #281)
 - Histogram: diagnostic updates (#255)
@@ -138,6 +153,8 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...HEAD
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...HEAD
+[v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
+[v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...v0.24.0
 [v0.23.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...v0.23.0
 [v0.22.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...v0.22.0
