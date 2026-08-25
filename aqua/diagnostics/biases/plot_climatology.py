@@ -13,7 +13,7 @@ class PlotClimatology:
         save_format=SAVE_FORMAT,
         dpi=300,
         outputdir="./",
-        cmap="RdBu_r",
+        cmap="viridis",
         return_fig: bool = False,
         loglevel="WARNING",
     ):
