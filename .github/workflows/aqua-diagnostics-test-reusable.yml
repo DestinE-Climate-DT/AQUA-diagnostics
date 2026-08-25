@@ -39,7 +39,7 @@ on:
         type: string
         default: ''
       aqua-core-ref:
-        description: 'aqua-core branch/tag/commit-SHA for cross-check mode (default: main)'
+        description: 'aqua-core branch/tag/commit-SHA for dependency alignment and cross-check mode (default: main)'
         required: false
         type: string
         default: 'main'
@@ -80,7 +80,67 @@ defaults:
     shell: bash -l -eo pipefail {0}
 
 jobs:
+  dependency_alignment:
+    name: Check AQUA dependency alignment
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout AQUA-diagnostics
+        uses: actions/checkout@v7
+        with:
+          path: AQUA-diagnostics
+
+      - name: Checkout aqua-core
+        uses: actions/checkout@v7
+        with:
+          repository: DestinE-Climate-DT/AQUA
+          ref: ${{ inputs.aqua-core-ref }}
+          path: AQUA
+          token: ${{ secrets.AQUA_GITHUB_PAT }}
+
+      - name: Compare shared Conda dependencies
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          def load_dependencies(path):
+              dependencies = {}
+              in_dependencies = False
+
+              for line in Path(path).read_text(encoding="utf-8").splitlines():
+                  if line == "dependencies:":
+                      in_dependencies = True
+                      continue
+                  if not in_dependencies or not line.startswith("  - "):
+                      continue
+                  dependency = "".join(line[4:].split("#", maxsplit=1)[0].split())
+                  if dependency == "pip:":
+                      break
+                  name = re.split(r"[<>=!~]", dependency, maxsplit=1)[0].lower()
+                  dependencies[name] = dependency[len(name):]
+
+              return dependencies
+
+
+          diagnostics = load_dependencies("AQUA-diagnostics/environment.yml")
+          core = load_dependencies("AQUA/environment.yml")
+          shared = sorted(diagnostics.keys() & core.keys())
+          mismatches = [name for name in shared if diagnostics[name] != core[name]]
+
+          if mismatches:
+              print(f"Found {len(mismatches)} misaligned Conda dependencies.")
+                for name in mismatches:
+                    print(f"- {name}: diagnostics '{diagnostics[name]}' != core '{core[name]}'")
+              raise SystemExit(1)
+
+          print("All shared Conda dependencies are aligned.")
+          PY
+
   aqua_test:
+    needs: dependency_alignment
     runs-on: ubuntu-latest
     continue-on-error: false
 
