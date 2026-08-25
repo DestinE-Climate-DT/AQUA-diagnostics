@@ -305,9 +305,12 @@ class PlotBaseMixin:
 
         if short_name is not None:
             extra_keys.update({"var": short_name})
+
         if region is not None:
             region = region.replace(" ", "").lower()
             extra_keys.update({"region": region})
+        else:
+            extra_keys.update({"region": "global"})
 
         outputsaver.save_figure(
             fig,

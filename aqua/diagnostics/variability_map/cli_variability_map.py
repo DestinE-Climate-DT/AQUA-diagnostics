@@ -88,7 +88,6 @@ def main(argv=None):
         #startdate_ref = get_arg(args, "startdate", first.get("startdate") or None)
         #enddate_ref = get_arg(args, "enddate", first.get("enddate") or None)
 
-
         cli.logger.debug(f"VariabilityMap diagnostic reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
 
     # Output parameters
@@ -114,6 +113,8 @@ def main(argv=None):
             default_plot = all_plot_params.get("default", {})
             proj = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("projection", "robinson")
             proj_params = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("projection_params", {})
+            contour = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["default"].get("contour", False)
+
 
 
             # Variables in the config file
@@ -141,6 +142,7 @@ def main(argv=None):
 
                 lon_limits = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get("lon_limits", None)
                 lat_limits = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get("lat_limits", None)
+                region_contour = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["sub_region"].get("contour", False)
 
                 #mask_northern_boundary = cli.config_dict["diagnostics"]["variabilitymap"]["plot_params"]["mask_options"].get(
                 #    "mask_northern_boundary", None
@@ -156,6 +158,7 @@ def main(argv=None):
                 #) 
 
                 # Initialize VariabilityMap for model dataset
+                std_dataset = None
                 if (model is not None) and (exp is not None) and (source is not None):
                     std_dataset = VariabilityMap(
                         catalog=catalog,
@@ -172,6 +175,7 @@ def main(argv=None):
                     std_dataset.run()
 
                 # Initialize VariabilityMap for reference dataset
+                std_dataset_ref = None
                 if (model_ref is not None) and (exp_ref is not None) and (source_ref is not None):
                     std_dataset_ref = VariabilityMap(
                         catalog=catalog_ref,
@@ -187,112 +191,127 @@ def main(argv=None):
                     # Perform computation here for reference dataset
                     std_dataset_ref.run()
 
-
                 # Initialize plotting class
                 plot_class = PlotVariabilityMap(outputdir=outputdir, loglevel=cli.loglevel)
 
                 # Dictionary for dataset plot
-                if std_dataset.data_std is not None:
-                    plot_arguments_dataset = {
-                        "var": variable,
-                        "catalog": catalog,
-                        "model": model,
-                        "exp": exp,
-                        "save_format": save_format,
-                        "startdate": startdate_data,
-                        "enddate": enddate_data,
-                        "proj": proj,
-                        "proj_params": proj_params,
-                        "vmin": vmin,
-                        "vmax": vmax,
-                        "tgt_grid_name": tgt_grid_name,
-                        "regrid_method": regrid_method,
-                    }
-                    plot_class.plot(dataset_std=std_dataset.data_std, **plot_arguments_dataset)
+                if std_dataset is not None:
+                    if std_dataset.data_std is not None:
+                        plot_arguments_dataset = {
+                            "var": variable,
+                            "catalog": catalog,
+                            "model": model,
+                            "exp": exp,
+                            "save_format": save_format,
+                            "startdate": startdate_data,
+                            "enddate": enddate_data,
+                            "proj": proj,
+                            "proj_params": proj_params,
+                            "vmin": vmin,
+                            "vmax": vmax,
+                            "tgt_grid_name": tgt_grid_name,
+                            "regrid_method": regrid_method,
+                            "region": None,
+                            "contour": contour,
+                            "dpi": dpi,
+                        }
+                        plot_class.plot(dataset_std=std_dataset.data_std, **plot_arguments_dataset)
 
-                # Dictionary for sub-region dataset plot
-                if std_dataset.data_std is not None and region_name is not None:
-                    plot_arguments_dataset = {
-                        "var": variable,
-                        "catalog": catalog,
-                        "model": model,
-                        "exp": exp,
-                        "startdate": startdate_data,
-                        "enddate": enddate_data,
-                        "proj": region_proj,
-                        "proj_params": region_proj_params,
-                        "vmin": vmin,
-                        "vmax": vmax,
-                        "region": region_name,
-                        "lon_limits": lon_limits,
-                        "lat_limits": lat_limits,
-                        "mask_northern_boundary": mask_northern_boundary,
-                        "mask_southern_boundary": mask_southern_boundary,
-                        "northern_boundary_latitude": northern_boundary_latitude,
-                        "southern_boundary_latitude": southern_boundary_latitude,
-                        "tgt_grid_name": tgt_grid_name,
-                        "regrid_method": regrid_method,
-                    }
-                    plot_class.plot(dataset_std=std_dataset.data_std, **plot_arguments_dataset)
+                    # Dictionary for sub-region dataset plot
+                    if std_dataset.data_std is not None and region_name is not None:
+                        plot_arguments_dataset = {
+                            "var": variable,
+                            "catalog": catalog,
+                            "model": model,
+                            "exp": exp,
+                            "startdate": startdate_data,
+                            "enddate": enddate_data,
+                            "proj": region_proj,
+                            "proj_params": region_proj_params,
+                            "vmin": vmin,
+                            "vmax": vmax,
+                            "region": region_name,
+                            "lon_limits": lon_limits,
+                            "lat_limits": lat_limits,
+                            #"mask_northern_boundary": mask_northern_boundary,
+                            #"mask_southern_boundary": mask_southern_boundary,
+                            #"northern_boundary_latitude": northern_boundary_latitude,
+                            #"southern_boundary_latitude": southern_boundary_latitude,
+                            "tgt_grid_name": tgt_grid_name,
+                            "regrid_method": regrid_method,
+                            "contour": region_contour,
+                            "dpi": dpi,
+                        }
+                        plot_class.plot(dataset_std=std_dataset.data_std, **plot_arguments_dataset)
 
                 # Dictionary for reference plot
-                if std_dataset_ref.data_std is not None:
-                    plot_arguments_ref = {
-                        "var": variable,
-                        "catalog": catalog_ref,
-                        "model": model_ref,
-                        "exp": exp_ref,
-                        "startdate": startdate_ref,
-                        "enddate": enddate_ref,
-                        "proj": proj,
-                        "proj_params": proj_params,
-                        "vmin": vmin,
-                        "vmax": vmax,
-                        "tgt_grid_name": tgt_grid_name,
-                        "regrid_method": regrid_method,
-                    }
-                    plot_class.plot(dataset_std=std_dataset_ref.data_std, **plot_arguments_ref)
+                if std_dataset_ref is not None:
+                    if std_dataset_ref.data_std is not None:
+                        plot_arguments_ref = {
+                            "var": variable,
+                            "catalog": catalog_ref,
+                            "model": model_ref,
+                            "exp": exp_ref,
+                            "startdate": startdate_ref,
+                            "enddate": enddate_ref,
+                            "proj": proj,
+                            "proj_params": proj_params,
+                            "vmin": vmin,
+                            "vmax": vmax,
+                            "tgt_grid_name": tgt_grid_name,
+                            "regrid_method": regrid_method,
+                            "region": None,
+                            "contour": contour,
+                            "dpi": dpi,
+                        }
+                        plot_class.plot(dataset_std=std_dataset_ref.data_std, **plot_arguments_ref)
 
-                # Dictionary for sub-region reference plot
-                if std_dataset_ref.data_std is not None:
-                    plot_arguments_ref = {
-                        "var": variable,
-                        "catalog": catalog_ref,
-                        "model": model_ref,
-                        "exp": exp_ref,
-                        "startdate": startdate_ref,
-                        "enddate": enddate_ref,
-                        "region": region_name,
-                        "lon_limits": lon_limits,
-                        "lat_limits": lat_limits,
-                        "proj": region_proj,
-                        "proj_params": region_proj_params,
-                        "vmin": vmin,
-                        "vmax": vmax,
-                        "tgt_grid_name": tgt_grid_name,
-                        "regrid_method": regrid_method,
-                    }
-                    plot_class.plot(dataset_std=std_dataset_ref.data_std, **plot_arguments_ref)
+                    # Dictionary for sub-region reference plot
+                    if std_dataset_ref.data_std is not None and region_name is not None:
+                        plot_arguments_ref = {
+                            "var": variable,
+                            "catalog": catalog_ref,
+                            "model": model_ref,
+                            "exp": exp_ref,
+                            "startdate": startdate_ref,
+                            "enddate": enddate_ref,
+                            "region": region_name,
+                            "lon_limits": lon_limits,
+                            "lat_limits": lat_limits,
+                            "proj": region_proj,
+                            "proj_params": region_proj_params,
+                            "vmin": vmin,
+                            "vmax": vmax,
+                            "tgt_grid_name": tgt_grid_name,
+                            "regrid_method": regrid_method,
+                            "contour": region_contour,
+                            "dpi": dpi,
+                        }
+                        plot_class.plot(dataset_std=std_dataset_ref.data_std, **plot_arguments_ref)
 
                 # Dictionary for difference of Variability maps plot
-                if std_dataset.data_std is not None and std_dataset_ref.data_std is not None:
-                    plot_arguments_diff = {
-                        "var": variable,
-                        "catalog": catalog,
-                        "model": model,
-                        "exp": exp,
-                        "catalog_ref": catalog_ref,
-                        "model_ref": model_ref,
-                        "exp_ref": exp_ref,
-                        "save_format": save_format,
-                        "startdate": startdate_data,
-                        "enddate": enddate_data,
-                        "startdate_ref": startdate_ref,
-                        "enddate_ref": enddate_ref,
-                        "tgt_grid_name": tgt_grid_name,
-                        "regrid_method": regrid_method,
-                    }
-                    plot_class.plot_diff(dataset_std=std_dataset.data_std, dataset_std_ref=std_dataset_ref.data_std, **plot_arguments_diff)
+                if std_dataset is not None and std_dataset_ref is not None: 
+                    if std_dataset.data_std is not None and std_dataset_ref.data_std is not None:
+                        plot_arguments_diff = {
+                            "var": variable,
+                            "catalog": catalog,
+                            "model": model,
+                            "exp": exp,
+                            "catalog_ref": catalog_ref,
+                            "model_ref": model_ref,
+                            "exp_ref": exp_ref,
+                            "save_format": save_format,
+                            "startdate": startdate_data,
+                            "enddate": enddate_data,
+                            "startdate_ref": startdate_ref,
+                            "enddate_ref": enddate_ref,
+                            "tgt_grid_name": tgt_grid_name,
+                            "regrid_method": regrid_method,
+                            "region": None,
+                            "contour": True,
+                            "dpi": dpi,
+                        }
+                        plot_class.plot_diff(dataset_std=std_dataset.data_std, dataset_std_ref=std_dataset_ref.data_std, **plot_arguments_diff)
 
                 cli.logger.info(f"VariabilityMap diagnostic for {variable} completed.")
     cli.close_dask_cluster()

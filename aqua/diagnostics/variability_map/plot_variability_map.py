@@ -4,13 +4,13 @@ import xarray as xr
 # from astropy_healpix import healpy as hp
 from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
-from aqua.core.graphics import plot_single_map
+from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.util import get_projection
 
 # from aqua.core.util.graphics import isnpixok
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from .base import PlotBaseMixin
 
 xr.set_options(keep_attrs=True)
@@ -56,7 +56,8 @@ class PlotVariabilityMap(PlotBaseMixin):
         ax_pos: tuple = (1, 1, 1),
         vmin=None,
         vmax=None,
-        gridlines=True,
+        gridlines=False,
+        contour=False,
         proj="robinson",
         proj_params={},
         save_format=SAVE_FORMAT,
@@ -82,7 +83,7 @@ class PlotVariabilityMap(PlotBaseMixin):
         Plot the variability map from an input dataset.
 
         This function visualizes variability map using configurable spatial, temporal,
-        and plotting options. It supports contou, regional selection, custom projections,
+        and plotting options. It supports contour, regional selection, custom projections,
         masking, and output saving in multiple formats.
 
         Args:
@@ -132,8 +133,7 @@ class PlotVariabilityMap(PlotBaseMixin):
 
         if isinstance(dataset_std, xr.Dataset):
             dataset_std = dataset_std[var]
-        else:
-            dataset_std = dataset_std
+
         # This is important to provide the start and end dates. These dates will be used in the title of the plot
         if startdate is None or enddate is None:
             self.logger.error("Please specify the time period of the data")
@@ -195,39 +195,39 @@ class PlotVariabilityMap(PlotBaseMixin):
             vmax = float(dataset_std.max(skipna=True))
 
         proj = get_projection(proj, **proj_params)
-        # fig = plt.figure(figsize=figsize)
-        # ax = fig.add_subplot(ax_pos[0], ax_pos[1], ax_pos[2], projection=proj)
         if vmin == vmax:
             self.logger.info("STD is Zero everywhere")
             fig, ax = plot_single_map(
-                # ax,
-                dataset_std,
-                contour=False,
+                data=dataset_std,
+                contour=contour,
                 return_fig=True,
                 title=title,
                 proj=proj,
-                cyclic_lon=False,
+                #cyclic_lon=False,
                 add_land=True,
-                transform_first=True,
+                #transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 **plot_options,
             )
         else:
             fig, ax = plot_single_map(
-                # ax,
-                dataset_std,
-                contour=False,
+                data=dataset_std,
+                contour=contour,
                 return_fig=True,
                 title=title,
                 vmin=vmin,
                 vmax=vmax,
                 proj=proj,
-                cyclic_lon=False,
+                #cyclic_lon=False,
                 add_land=True,
-                transform_first=True,
+                #transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 **plot_options,
             )
         ax.set_xlabel("Longitude")
@@ -274,7 +274,8 @@ class PlotVariabilityMap(PlotBaseMixin):
         plot_options={},
         vmin_diff=None,
         vmax_diff=None,
-        gridlines=True,
+        gridlines=False,
+        contour=False,
         proj="robinson",
         proj_params={},
         save_format=SAVE_FORMAT,
@@ -401,14 +402,14 @@ class PlotVariabilityMap(PlotBaseMixin):
         units = dataset_std.attrs.get("units", var)
 
         title = TitleBuilder(
-            diagnostic="Difference between the variability",
+            diagnostic="Variability",
             variable=long_name,
             regions=region,
             model=model,
             exp=exp,
             startyear=startdate,
             endyear=enddate,
-            comparison="relative to",
+            comparison="minus",
             ref_model=model_ref,
             ref_exp=exp_ref,
             ref_startyear=startdate_ref,
@@ -445,13 +446,11 @@ class PlotVariabilityMap(PlotBaseMixin):
             raise ValueError("Both data and data_ref must be an xarray.DataArray")
 
         diff_map = (dataset_std - dataset_std_ref).persist()
-
+        
         if np.array_equal(np.nan_to_num(dataset_std.values), np.nan_to_num(dataset_std_ref.values)):
             self.logger.warning("The values are exactly the same (ignoring NaNs), no difference to plot")
 
         proj = get_projection(proj, **proj_params)
-        # fig = plt.figure(figsize=figsize)
-        # ax = fig.add_subplot(ax_pos[0], ax_pos[1], ax_pos[2], projection=proj)
 
         if vmin_diff is None or (isinstance(vmin_diff, (float, int)) and np.isnan(vmin_diff)):
             vmin_diff = float(diff_map.min(skipna=True))
@@ -461,36 +460,38 @@ class PlotVariabilityMap(PlotBaseMixin):
         if vmin_diff == vmax_diff:
             # TODO: discuss what should do here in this case.
             self.logger.info("STD is Zero everywhere")
-            fig, ax = plot_single_map(
-                # ax,
-                diff_map,
-                contour=False,
+            fig, ax = plot_single_map_diff(
+                data=dataset_std,
+                data_ref=dataset_std_ref,
+                contour=contour,
                 return_fig=True,
                 title=title,
-                # cyclic_lon=False,
+                #cyclic_lon=False,
                 add_land=True,
-                # transform_first=True,
+                transform_first=True,
                 proj=proj,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
-                # cbar_label=cbar_label
             )
         else:
-            fig, ax = plot_single_map(
-                # ax,
-                diff_map,
-                contour=False,
+            fig, ax = plot_single_map_diff(
+                data=dataset_std,
+                data_ref=dataset_std_ref,
+                contour=contour,
                 return_fig=True,
                 title=title,
-                vmin=vmin_diff,
-                vmax=vmax_diff,
-                # cyclic_lon=False,
+                vmin_fill=vmin_diff,
+                vmax_fill=vmax_diff,
+                #cyclic_lon=False,
                 add_land=True,
-                # transform_first=True,
+                #transform_first=True,
                 proj=proj,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
-                # cbar_label=cbar_label
             )
 
         ax.set_xlabel("Longitude")
