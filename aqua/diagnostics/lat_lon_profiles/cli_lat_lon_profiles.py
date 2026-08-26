@@ -142,9 +142,9 @@ def process_variable(
                 cli.logger.info(f"Processing dataset: {dataset['model']}/{dataset['exp']}")
 
                 dataset_args = cli.dataset_args(dataset)
-                # Std dates: dataset-specific override > variable/default config
-                std_startdate = dataset.get("std_startdate") or var_std_startdate
-                std_enddate = dataset.get("std_enddate") or var_std_enddate
+                # Std dates: explicit dataset-specific override
+                std_startdate = dataset.get("std_startdate")
+                std_enddate = dataset.get("std_enddate")
 
                 profile = LatLonProfiles(
                     **dataset_args,
