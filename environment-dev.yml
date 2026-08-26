@@ -47,7 +47,7 @@ dependencies:
   - zarr>=3.0,<=3.3.0
   # extra diagnostics
   - tempest-extremes>=2.3.1,<=2.4.2 # for TCs
-  - xesmf>=0.9.2,<=0.9.2 # for ECmean # for ECmean
+  - xesmf>=0.9.2,<=0.9.2 # for ECmean
   - ecmean>=0.2.0,<=0.2.1
   # various
   - pip
