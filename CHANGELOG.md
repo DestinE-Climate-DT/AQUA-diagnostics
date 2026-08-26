@@ -7,10 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.25.0):
 
+Complete list:
+- Dependabot and sync bot adjustments (#347)
+- Implement new DVC remote from ECMWF (#1392)
+- LatLonProfiles: std dates selection fix (#345)
+- Update outputsaver notebook (#351)
+- GlobalBiases: seasonal biases test fix (#346)
+- Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
 - Removing dask tokenization for non-local clusters (#337)
 - Specify min and max allowed versions for all dependencies (#333)
-
-Complete list:
 - Change dask load order in LonLatProfiles (#338)
 
 ## [v0.24.1]

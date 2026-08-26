@@ -15,7 +15,7 @@ loglevel = LOGLEVEL
 
 # pytestmark groups tests that run sequentially on the same worker to avoid conflicts
 # These tests use setup_class with shared resources (data fetching, tmp files)
-pytestmark = [pytest.mark.diagnostics]
+pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="diagnostic_setup_class")]
 
 
 # Module-level fixtures
@@ -58,8 +58,6 @@ class TestGlobalBiases:
         outdir = gb.outputdir
 
         gb.compute_climatology(var=var, seasonal=True)
-        assert hasattr(gb, "climatology")
-        assert hasattr(gb, "seasonal_climatology")
         assert isinstance(gb.climatology, xr.Dataset)
         assert isinstance(gb.seasonal_climatology, xr.Dataset)
         assert var in gb.climatology
@@ -141,9 +139,9 @@ class TestGlobalBiases:
         var = test_var
         outdir = gb.outputdir
 
-        # Ensure seasonal climatology is computed
-        if not hasattr(gb, "seasonal_climatology"):
-            gb.compute_climatology(var=var, seasonal=True)
+        # Seasonal climatology required (due to parallelisation,
+        # earlier tests may not have run on this worker)
+        gb.compute_climatology(var=var, seasonal=True)
 
         plotgb.plot_seasonal_bias(data=gb.seasonal_climatology, data_ref=gb.seasonal_climatology, var=var, plev=85000)
         pdf = os.path.join(outdir, "pdf", f"globalbiases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
