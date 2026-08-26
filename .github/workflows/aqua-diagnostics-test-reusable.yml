@@ -257,8 +257,8 @@ jobs:
           cd aqua-dvc
           git checkout main
           dvc pull -R data-tests/*
-          mkdir -p ../AQUA/AQUA_tests
-          mv data-tests/* ../AQUA/AQUA_tests
+          mkdir -p ../AQUA-diagnostics/AQUA_tests
+          mv data-tests/* ../AQUA-diagnostics/AQUA_tests
 
       - name: Download test data via HTTP (fallback or direct)
         if: ${{ inputs.test-data-source == 'http' || (inputs.test-data-source == 'auto' && steps.dvc-pull.outcome == 'failure') }}
