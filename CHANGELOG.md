@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.25.0):
 
 Complete list:
 - CI/CD: add a check of the dependencies against the main of aqua-core (#350)
+- Update outputsaver notebook (#351)
 - GlobalBiases: seasonal biases test fix (#346)
 - Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
 - Removing dask tokenization for non-local clusters (#337)
