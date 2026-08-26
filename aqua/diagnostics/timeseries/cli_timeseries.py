@@ -122,6 +122,8 @@ def main(argv=None):
                                     create_catalog_entry=False,
                                     reader_kwargs=reference.get("reader_kwargs") or {},
                                 )
+                        else:
+                            ts_ref = None
 
                         # Plot the timeseries
                         if cli.save_format:
@@ -143,24 +145,10 @@ def main(argv=None):
                                 std_monthly_data = None
                                 std_annual_data = None
                             else:
-                                ref_monthly_data = (
-                                    [ts_ref[i].monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
-                                    else None
-                                )
-                                ref_annual_data = (
-                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
-                                )
-                                std_monthly_data = (
-                                    [ts_ref[i].std_monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
-                                    else None
-                                )
-                                std_annual_data = (
-                                    [ts_ref[i].std_annual for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
-                                    else None
-                                )
+                                ref_monthly_data = [ts_ref[i].monthly for i in range(len(ts_ref))] if ts_ref else None
+                                ref_annual_data = [ts_ref[i].annual for i in range(len(ts_ref))] if ts_ref else None
+                                std_monthly_data = [ts_ref[i].std_monthly for i in range(len(ts_ref))] if ts_ref else None
+                                std_annual_data = [ts_ref[i].std_annual for i in range(len(ts_ref))] if ts_ref else None
 
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
@@ -262,6 +250,8 @@ def main(argv=None):
                                     create_catalog_entry=False,
                                     reader_kwargs=reference.get("reader_kwargs") or {},
                                 )
+                        else:
+                            ts_ref = None
 
                         # Plot the timeseries
                         if cli.save_format:
@@ -283,24 +273,10 @@ def main(argv=None):
                                 std_monthly_data = None
                                 std_annual_data = None
                             else:
-                                ref_monthly_data = (
-                                    [ts_ref[i].monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
-                                    else None
-                                )
-                                ref_annual_data = (
-                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
-                                )
-                                std_monthly_data = (
-                                    [ts_ref[i].std_monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
-                                    else None
-                                )
-                                std_annual_data = (
-                                    [ts_ref[i].std_annual for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
-                                    else None
-                                )
+                                ref_monthly_data = [ts_ref[i].monthly for i in range(len(ts_ref))] if ts_ref else None
+                                ref_annual_data = [ts_ref[i].annual for i in range(len(ts_ref))] if ts_ref else None
+                                std_monthly_data = [ts_ref[i].std_monthly for i in range(len(ts_ref))] if ts_ref else None
+                                std_annual_data = [ts_ref[i].std_annual for i in range(len(ts_ref))] if ts_ref else None
 
                             plot_args = {
                                 "monthly_data": [t.monthly for t in ts],
@@ -406,6 +382,8 @@ def main(argv=None):
                                     create_catalog_entry=False,
                                     reader_kwargs=reference.get("reader_kwargs") or {},
                                 )
+                        else:
+                            sc_ref = None
 
                         # Plot the seasonal cycles
                         if cli.save_format:
@@ -417,12 +395,8 @@ def main(argv=None):
                             )
                             plot_args = {
                                 "monthly_data": [sc[i].monthly for i in range(len(sc))],
-                                "ref_monthly_data": [sc_ref[i].monthly for i in range(len(sc_ref))]
-                                if "references" in cli.config_dict
-                                else None,
-                                "std_monthly_data": [sc_ref[i].std_monthly for i in range(len(sc_ref))]
-                                if "references" in cli.config_dict
-                                else None,
+                                "ref_monthly_data": [sc_ref[i].monthly for i in range(len(sc_ref))] if sc_ref else None,
+                                "std_monthly_data": [sc_ref[i].std_monthly for i in range(len(sc_ref))] if sc_ref else None,
                                 "loglevel": cli.loglevel,
                                 "diagnostic_name": diagnostic_name,
                             }
