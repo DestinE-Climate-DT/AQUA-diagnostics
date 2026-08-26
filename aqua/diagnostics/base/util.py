@@ -233,6 +233,7 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     # CLI dataset overrides apply only to the first configured dataset.
     realization = get_arg(args, "realization", None)
     if realization:
+        logger.info("Realization option is set to: %s", realization)
         reader_kwargs = dict(datasets[0].get("reader_kwargs") or {})
         reader_kwargs["realization"] = realization
         datasets[0]["reader_kwargs"] = reader_kwargs
