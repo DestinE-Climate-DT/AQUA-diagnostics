@@ -21,7 +21,7 @@ description = "AQUA-diagnostics: the diagnostics set of the AQUA framework for h
 readme = "README.md"
 keywords = ["climate", "modeling", "diagnostics", "high-resolution"]
 license = {file = "LICENSE"}
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.15"
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
@@ -29,7 +29,6 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -39,12 +38,15 @@ classifiers = [
 ]
 dependencies = [
     "ecmean",
-    "cartopy<=0.24.1"
+    "cartopy==0.24.1"
 ]
 
 [project.optional-dependencies]
 core = [
-    "aqua-core>=1.0.0a5"
+    "aqua-core>=1.0.0"
+]
+core-fdb = [
+    "aqua-core[fdb]>=1.0.0"
 ]
 docs = [
     "sphinx",
@@ -63,7 +65,7 @@ tests = [
 ]
 style = [
     "pre-commit",
-    "ruff==0.15.20"
+    "ruff==0.16.4"
 ]
 minimal = [
     "aqua-diagnostics[core]"
@@ -74,12 +76,19 @@ dev = [
     "aqua-diagnostics[tests]",
     "aqua-diagnostics[style]"
 ]
-all = [
-    "aqua-diagnostics[core]",
+additional = [
     "aqua-diagnostics[docs]",
     "aqua-diagnostics[notebooks]",
     "aqua-diagnostics[tests]",
     "aqua-diagnostics[style]"
+]
+all = [
+    "aqua-diagnostics[core]",
+    "aqua-diagnostics[additional]",
+]
+all-fdb = [
+    "aqua-diagnostics[core-fdb]",
+    "aqua-diagnostics[additional]",
 ]
 
 [project.urls]
@@ -87,6 +96,9 @@ homepage = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 documentation = "https://aqua-diagnostics.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 issues = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/issues/"
+
+[project.entry-points."aqua.plugins"]
+diagnostics = "aqua.diagnostics:get_install_dirs"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -138,7 +150,7 @@ omit = [
 
 [tool.ruff]
 line-length = 127
-target-version = "py310"
+target-version = "py311"
 exclude = ["**/__init__.py"]
 
 [tool.ruff.lint]

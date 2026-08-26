@@ -98,8 +98,8 @@ The basic structure of the analysis is the following:
                 show_significance=True,           # Enable significance stippling
                 significance_alpha=0.05,          # 95% confidence level
                 stipple_density=None,             # If None, computed adaptively based on grid resolution
-                target_stipple_points=1000,       # Target number of stipple points (used when stipple_density is None)
-                stipple_size=0.5,                 # Size of stipple dots
+                target_spacing_deg=2              # Target spacing in degrees for stippling
+                stipple_size=0.8,                 # Size of stipple dots
                 invert_stippling=False,           # False = stipple where differences ARE significant
     )
 
@@ -180,7 +180,7 @@ Here we describe only the specific settings for the global biases diagnostic.
 * ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant,
   based on a two-sample Welch t-test (``significance_alpha`` defines the confidence level, e.g., 0.05 for 95% confidence).
   The stippling density can be set explicitly via ``stipple_density``, or left unset to trigger an adaptive mode
-  that automatically computes the subsampling factor based on the grid size and ``target_stipple_points`` (default: 1000).
+  that automatically computes the stipple density based on the grid resolution and the target spacing in degrees (``target_spacing_deg``).
   This ensures readable stippling across different resolutions, from coarse grids such as r100 to high-resolution ones such as hpz10.
 
 The default parameters are used if not specified for a specific variable.
@@ -196,7 +196,7 @@ plot_params:
             show_significance: true       # Enable significance stippling
             significance_alpha: 0.05      # 95% confidence level
             stipple_density: null         # If null, computed adaptively
-            target_stipple_points: 1000   # Target stipple points for adaptive density
+            target_spacing_deg: 2          # Target spacing in degrees for stippling
         2t:
             cmap: 'RdBu_r'
             vmin: -15

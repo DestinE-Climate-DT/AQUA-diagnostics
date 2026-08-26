@@ -109,8 +109,8 @@ def main(argv=None):
             show_significance = plot_params.get("show_significance", False)
             significance_alpha = plot_params.get("significance_alpha", 0.05)
             stipple_density = plot_params.get("stipple_density", None)
-            stipple_size = plot_params.get("stipple_size", 0.5)
-            target_stipple_points = plot_params.get("target_stipple_points", 1000)
+            stipple_size = plot_params.get("stipple_size", 0.8)
+            target_spacing_deg = plot_params.get("target_spacing_deg", 2)
 
             # Compute climatologies (seasonal if specified) and areas if stats are to be shown
             biases_dataset.compute_climatology(
@@ -172,7 +172,7 @@ def main(argv=None):
                     significance_alpha=significance_alpha,
                     stipple_density=stipple_density,
                     stipple_size=stipple_size,
-                    target_stipple_points=target_stipple_points,
+                    target_spacing_deg=target_spacing_deg,
                 )
 
                 if seasons:
