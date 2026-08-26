@@ -61,6 +61,8 @@ on:
         required: true
       CODECOV_TOKEN:
         required: false
+      AQUA_DVC_PEM:
+        required: true
 
 permissions:
   contents: read
@@ -287,12 +289,21 @@ jobs:
         if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
         run: python -m pip install "dvc[s3]"
 
-      - name: Configure AWS credentials for DVC
+      - name: Create DVC pem file and configure it for the ecmwf_climatedt remote
         if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
         run: |
           mkdir -p $HOME/.aws
+          echo "${{ secrets.AQUA_DVC_PEM }}" > $HOME/.aws/harica-root.pem
+          chmod 600 $HOME/.aws/harica-root.pem
+          cd aqua-dvc
+          dvc remote modify --local ecmwf_climatedt ssl_verify "$HOME/.aws/harica-root.pem"
+          dvc config --local cache.dir "$HOME/.dvc/cache"
+
+      - name: Configure AWS credentials for DVC
+        if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
+        run: |
           cat >$HOME/.aws/credentials << EOF
-          [default]
+          [ecmwf_climatedt]
           aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           EOF
@@ -301,7 +312,7 @@ jobs:
         if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
         id: dvc-pull
         continue-on-error: ${{ inputs.test-data-source == 'auto' }}
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           cd aqua-dvc
           git checkout main
