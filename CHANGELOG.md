@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.25.0):
 
 Complete list:
 - `reader_kwargs` centralization management of cli arguments, which will modify only the first source dataset (#264)
+- Add bokeh as dependency (#365)
 - Dependabot and sync bot adjustments (#347)
 - Implement new DVC remote from ECMWF (#1392)
 - LatLonProfiles: std dates selection fix (#345)
