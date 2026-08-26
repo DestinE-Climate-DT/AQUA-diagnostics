@@ -22,6 +22,8 @@ slurm:
   account: project_465000454
   time: 10:00:00
   mem: 256GB
+  # Required with --singularity unless AQUA points to the AQUA-core checkout.
+  # aquadir: /path/to/AQUA
 
 data:
   ICON:

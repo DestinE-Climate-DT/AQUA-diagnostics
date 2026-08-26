@@ -17,7 +17,7 @@
 {% if machine == 'lumi' %}
 unset SINGULARITY_BIND  # Lumi specific fix for singularity
 {% endif %}
-bash {{ aqua }}/cli/aqua-container/load-aqua-container.sh {{ machine }} <<EOF
+bash "{{ aqua }}/cli/aqua-container/load-aqua-container.sh" {{ machine }} <<EOF
 #!/bin/bash
 aqua drop -l info -c {{ config }} -m {{ model }} -e {{ exp }} -s {{ source }} -v {{ varname }} --realization {{ realization }} -w {{ ntasks_per_node }} {{ '-d' if definitive }} {{ '-o' if overwrite }}
 EOF

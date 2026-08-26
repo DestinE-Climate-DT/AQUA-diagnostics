@@ -27,16 +27,19 @@ def is_job_running(job_name, username):
     return job_name in output
 
 
-def load_jinja_template(template_file="aqua_drop.j2"):
+def load_jinja_template(template_file=None):
     """
     Load a Jinja2 template.
 
     Args:
-        template_file (str): Template file name.
+        template_file (str, optional): Template file name.
 
     Returns:
         jinja2.Template: Loaded Jinja2 template.
     """
+
+    if template_file is None:
+        template_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "aqua_drop.j2")
 
     templateloader = jinja2.FileSystemLoader(searchpath=os.path.dirname(template_file))
     templateenv = jinja2.Environment(loader=templateloader, trim_blocks=True, lstrip_blocks=True)
@@ -86,8 +89,9 @@ def submit_sbatch(
     full_job_name = "drop_" + job_name
     log_dir = "log"
 
-    # bit complicated way to get the AQUA main path
-    aquapath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    aquapath = slurm_dict.get("aquadir") or os.environ.get("AQUA")
+    if singularity and not aquapath:
+        raise ValueError("Set 'slurm.aquadir' or AQUA when using --singularity")
 
     jinjadict = {
         "job_name": full_job_name,
