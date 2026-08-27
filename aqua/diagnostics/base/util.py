@@ -121,6 +121,7 @@ def load_diagnostic_config(
 
     Args:
         diagnostic (str): diagnostic name
+        default_config (str): default config file name. If not provided, it defaults to "config-{diagnostic}.yaml".
         config (str): config argument can modify the default configuration file.
         folder (str): folder name. Default is "collections". Can be "tools" or "templates" as well.
         loglevel (str): logging level. Default is 'WARNING'.
@@ -229,6 +230,13 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     datasets[0]["model"] = get_arg(args, "model", datasets[0]["model"])
     datasets[0]["exp"] = get_arg(args, "exp", datasets[0]["exp"])
     datasets[0]["source"] = get_arg(args, "source", datasets[0]["source"])
+    # CLI dataset overrides apply only to the first configured dataset.
+    realization = get_arg(args, "realization", None)
+    if realization:
+        logger.info("Realization option is set to: %s", realization)
+        reader_kwargs = dict(datasets[0].get("reader_kwargs") or {})
+        reader_kwargs["realization"] = realization
+        datasets[0]["reader_kwargs"] = reader_kwargs
 
     config["output"]["outputdir"] = get_arg(args, "outputdir", config["output"]["outputdir"])
 

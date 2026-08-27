@@ -38,7 +38,8 @@ classifiers = [
 ]
 dependencies = [
     "ecmean",
-    "cartopy==0.24.1"
+    "cartopy==0.24.1",
+    "matplotlib<=3.10.8"
 ]
 
 [project.optional-dependencies]
@@ -65,7 +66,7 @@ tests = [
 ]
 style = [
     "pre-commit",
-    "ruff==0.16.1"
+    "ruff==0.16.4"
 ]
 minimal = [
     "aqua-diagnostics[core]"
@@ -96,6 +97,9 @@ homepage = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 documentation = "https://aqua-diagnostics.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 issues = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/issues/"
+
+[project.entry-points."aqua.plugins"]
+diagnostics = "aqua.diagnostics:get_install_dirs"
 
 [tool.setuptools.packages.find]
 where = ["."]

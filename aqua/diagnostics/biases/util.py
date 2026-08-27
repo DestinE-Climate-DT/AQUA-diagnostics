@@ -1,4 +1,4 @@
-"""Utility for the GlobalBiases module"""
+"""Utility for the Biases module"""
 
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
