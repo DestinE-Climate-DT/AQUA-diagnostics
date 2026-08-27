@@ -54,7 +54,7 @@ diagnostics:
         standard_name: "top_net_radiation"
         long_name: "Top net radiation"
 
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'radiation_toa'
     variables: ['tnlwrf', 'tnswrf']

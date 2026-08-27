@@ -1,19 +1,19 @@
 import cartopy.crs as ccrs
 import numpy as np
 
-from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff, plot_vertical_profile_diff
+from aqua.core.graphics import plot_maps, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
-from .stat_global_biases import StatGlobalBiases
+from .stat_bias import StatBias
 from .util import handle_pressure_level
 
 
-class PlotGlobalBiases:
+class PlotBias:
     def __init__(
         self,
-        diagnostic="globalbiases",
+        diagnostic="biases",
         save_format=SAVE_FORMAT,
         dpi=300,
         outputdir="./",
@@ -22,7 +22,7 @@ class PlotGlobalBiases:
         loglevel="WARNING",
     ):
         """
-        Initialize the PlotGlobalBiases class.
+        Initialize the PlotBias class.
 
         Args:
             diagnostic (str): Name of the diagnostic.
@@ -41,7 +41,7 @@ class PlotGlobalBiases:
         self.return_fig = return_fig
         self.loglevel = loglevel
 
-        self.logger = log_configure(log_level=loglevel, log_name="Global Biases")
+        self.logger = log_configure(log_level=loglevel, log_name="Bias")
 
     def _save_figure(self, fig, diagnostic_product, data, description, var, data_ref=None, plev=None, **kwargs):
         """
@@ -97,7 +97,7 @@ class PlotGlobalBiases:
         data_ts = handle_pressure_level(data_ts, var, plev, loglevel=self.loglevel)
         data_ref_ts = handle_pressure_level(data_ref_ts, var, plev, loglevel=self.loglevel)
 
-        stat_test = StatGlobalBiases(loglevel=self.loglevel)
+        stat_test = StatBias(loglevel=self.loglevel)
 
         return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
@@ -178,79 +178,6 @@ class PlotGlobalBiases:
             linewidths=0,
         )
 
-    def plot_climatology(self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None):
-        """
-        Plots the climatology map for a given variable and time range.
-
-        Args:
-            data (xarray.Dataset): Climatology dataset to plot.
-            var (str): Variable name.
-            plev (float, optional): Pressure level to plot (if applicable).
-            proj (string, optional): Desired projection for the map.
-            proj_params (dict, optional): Additional arguments for the projection (e.g., {'central_longitude': 0}).
-            vmin (float, optional): Minimum color scale value.
-            vmax (float, optional): Maximum color scale value.
-            cbar_label (str, optional): Label for the colorbar.
-
-        Returns:
-            tuple: Matplotlib figure and axis objects.
-        """
-        self.logger.info("Plotting climatology.")
-
-        data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
-        if data is None:
-            return None
-
-        realization = get_realizations(data)
-        proj = get_projection(proj, **proj_params)
-
-        extra_info = f"at {int(plev / 100)} hPa" if plev else None
-        title = TitleBuilder(
-            diagnostic="Climatology",
-            variable=data[var].attrs.get("long_name", var),
-            model=data.AQUA_model,
-            exp=data.AQUA_exp,
-            extra_info=extra_info,
-        ).generate()
-
-        fig, ax = plot_single_map(
-            data[var],
-            return_fig=True,
-            title=title,
-            title_size=16,
-            vmin=vmin,
-            vmax=vmax,
-            proj=proj,
-            loglevel=self.loglevel,
-            cbar_label=cbar_label,
-            cmap=self.cmap,
-        )
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-
-        description = (
-            f"Spatial map of the climatology for {data[var].attrs.get('long_name', var).lower()}"
-            f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')} "
-            f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
-        )
-
-        if self.format_to_save:
-            self._save_figure(
-                fig=fig,
-                diagnostic_product="annual_climatology",
-                data=data,
-                description=description,
-                var=var,
-                plev=plev,
-                realization=realization,
-            )
-
-        if self.return_fig:
-            return fig, ax
-        return None
-
     def plot_bias(
         self,
         data,
@@ -298,7 +225,7 @@ class PlotGlobalBiases:
                                                   between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
         """
-        self.logger.info("Plotting global biases.")
+        self.logger.info("Plotting biases")
 
         data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
         data_ref = handle_pressure_level(data_ref, var, plev, loglevel=self.loglevel)
@@ -311,7 +238,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Global difference",
+            diagnostic="Difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -401,7 +328,7 @@ class PlotGlobalBiases:
             self.logger.debug("Computing bias statistics.")
             if area is None:
                 self.logger.warning("Grid areas not provided, unweighted statistics will be computed.")
-            bs = StatGlobalBiases(loglevel=self.loglevel)
+            bs = StatBias(loglevel=self.loglevel)
             stats = bs.compute_bias_statistics(data=data, data_ref=data_ref, var=var, area=area)
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
@@ -448,7 +375,16 @@ class PlotGlobalBiases:
         return None
 
     def plot_seasonal_bias(
-        self, data, data_ref, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None
+        self,
+        data,
+        data_ref,
+        var,
+        plev=None,
+        proj="robinson",
+        proj_params={},
+        vmin=None,
+        vmax=None,
+        cbar_label=None,
     ):
         """
         Plots seasonal biases for each season (DJF, MAM, JJA, SON).
