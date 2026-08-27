@@ -226,6 +226,15 @@ class Trends(Diagnostic):
         trend_data = trend_data.sel(degree=1)
         trend_data.attrs = data.attrs
 
+        # HACK: polyfit drops non-time-indexed coordinates (e.g. lat/lon on ncells), restore them.
+        # This is needed for Healpix and other non-standard grids where lat/lon coordinates depending on other dimensions.
+        dropped_coords = {
+            name: coord for name, coord in data.coords.items() if name not in trend_data.coords and "time" not in coord.dims
+        }
+        if dropped_coords:
+            self.logger.debug("Restoring coordinates dropped by polyfit: %s", list(dropped_coords))
+            trend_data = trend_data.assign_coords(dropped_coords)
+
         trend_dict = {}
         for var in data.data_vars:
             self.logger.debug("Adjusting trend for variable: %s", var)
