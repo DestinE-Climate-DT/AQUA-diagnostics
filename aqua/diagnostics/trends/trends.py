@@ -131,23 +131,28 @@ class Trends(Diagnostic):
 
         if kind == "trend_loop":
             # 1-2. select the region and optionally compute the mean over the specified dimensions
-            region, lon_limits, lat_limits = self._set_region(
-                region=region,
-                regions_file_path=regions_file_path,
-                lon_limits=lon_limits,
-                lat_limits=lat_limits,
-            )
-            self.data = self._apply_region(
-                self.data, region=region, lon_limits=lon_limits, lat_limits=lat_limits, dim_mean=dim_mean
-            )
+            if region is None and (lat_limits is None and lon_limits is None):
+                self.logger.info("No region or custom limits provided, using global data")
+                region = "global"
+            else:
+                region = region if region is not None else "custom limits"
 
-            self.logger.info("Computing trend coefficients")
-            trend_coef = self.compute_trend(data=self.data, region=region)
-            region_key = region if region is not None else "global"
-            self.trend_coef[region_key] = trend_coef
-            self.logger.info("Saving results to NetCDF")
-            self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
-            self.logger.info("Trend analysis completed")
+            for reg in to_list(region):
+                self.logger.info("Processing region: %s", reg)
+                region, lon_limits, lat_limits = self._set_region(
+                    region=reg if reg != "global" else None,
+                    regions_file_path=regions_file_path,
+                    lon_limits=lon_limits if reg != "global" else None,
+                    lat_limits=lat_limits if reg != "global" else None,
+                )
+                data = self._apply_region(
+                    self.data, region=region, lon_limits=lon_limits, lat_limits=lat_limits, dim_mean=dim_mean
+                )
+
+                self.logger.info("Computing trend coefficients")
+                trend_coef = self.compute_trend(data=data, region=region)
+                region_key = region if region is not None else "global"
+                self.trend_coef[region_key] = trend_coef
 
         elif kind == "region_loop":
             self.logger.info("Computing trend coefficients for global data")
@@ -169,10 +174,10 @@ class Trends(Diagnostic):
                 )
                 self.trend_coef[region] = trend_data
 
-            # We save all the regions at once.
-            self.logger.info("Saving results to NetCDF for region: %s", region)
-            self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
-            self.logger.info("Trend analysis completed for all regions")
+        # We save all the regions at once.
+        self.logger.info("Saving results to NetCDF for region: %s", region)
+        self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
+        self.logger.info("Trend analysis completed for all regions")
 
     def _apply_region(self, data, region: str = None, lon_limits: list = None, lat_limits: list = None, dim_mean=None):
         """
@@ -192,18 +197,17 @@ class Trends(Diagnostic):
         if region is not None or has_limits:
             label = region if region is not None else "custom limits"
             self.logger.info("Applying region selection: %s", label)
-            data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=True)
-            if region is not None:
-                data.attrs["AQUA_region"] = region
+            if dim_mean is None:
+                self.logger.debug("No dimension mean specified, selecting area only")
+                data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=True)
+            data.attrs["AQUA_region"] = label
 
+        # If dim_mean is specified we always need the fldmean to be applied, even if a region is selected.
+        # The mean will be computed over the specified dimensions together with the lat/lon limits if provided.
+        # The region name will be stored in the attributes.
         if dim_mean is not None:
-            self.logger.info("Averaging data over dimension(s): %s", dim_mean)
-            data = self.reader.fldmean(
-                data,
-                dims=to_list(dim_mean),
-                lat_limits=lat_limits,
-                lon_limits=lon_limits,
-            )
+            self.logger.debug("Averaging data over dimension(s): %s", dim_mean)
+            data = self.reader.fldmean(data, dims=to_list(dim_mean), lat=lat_limits, lon=lon_limits)
             data.attrs["AQUA_dim_mean"] = dim_mean
 
         return data
