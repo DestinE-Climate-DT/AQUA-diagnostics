@@ -50,7 +50,7 @@ diagnostics:
         std_startdate: '20000101'
         std_enddate: '20241231'
 
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'radiation_surface'
     variables: ['snlwrf', 'snswrf']
