@@ -38,7 +38,7 @@ def main(argv=None):
     dataset_args = cli.dataset_args(dataset)
 
     # Output options (from cli_base)
-    reader_kwargs = cli.reader_kwargs
+    reader_kwargs = dataset.get("reader_kwargs") or {}
     outputdir = cli.outputdir
     rebuild = cli.rebuild
     save_format = cli.save_format

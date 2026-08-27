@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.25.0):
 
 Complete list:
 - CI/CD: add a check of the dependencies against the main of aqua-core (#350)
+- `reader_kwargs` centralization management of cli arguments (#264)
 - Biases & Climatology refactor (#331)
 - Add bokeh as dependency (#365)
 - Dependabot and sync bot adjustments (#347)

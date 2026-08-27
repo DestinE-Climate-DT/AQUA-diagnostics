@@ -65,7 +65,7 @@ def main(argv=None):
                     logger.info(f"Running dataset: {dataset_args}")
 
                     nao[i] = NAO(**dataset_args, **init_args)
-                    nao[i].retrieve(reader_kwargs=cli.reader_kwargs)
+                    nao[i].retrieve(reader_kwargs=dataset.get("reader_kwargs") or {})
                     nao[i].compute_index(months_window=nao_config.get("months_window", 3), rebuild=cli.rebuild)
 
                     nao[i].save_netcdf(
@@ -107,7 +107,7 @@ def main(argv=None):
                     reference_args = cli.reference_args(reference)
                     logger.info(f"Running reference: {reference_args}")
                     nao_ref[i] = NAO(**reference_args, **init_args)
-                    nao_ref[i].retrieve()
+                    nao_ref[i].retrieve(reader_kwargs=reference.get("reader_kwargs") or {})
                     nao_ref[i].compute_index(months_window=nao_config.get("months_window", 3), rebuild=cli.rebuild)
 
                     nao_ref[i].save_netcdf(
@@ -226,7 +226,7 @@ def main(argv=None):
                     logger.info(f"Running dataset: {dataset_args}")
 
                     enso[i] = ENSO(**dataset_args, **init_args)
-                    enso[i].retrieve(reader_kwargs=cli.reader_kwargs)
+                    enso[i].retrieve(reader_kwargs=dataset.get("reader_kwargs") or {})
                     enso[i].compute_index(months_window=enso_config.get("months_window", 3), rebuild=cli.rebuild)
                     enso[i].save_netcdf(
                         enso[i].index,
@@ -268,7 +268,7 @@ def main(argv=None):
                     logger.info(f"Running reference: {reference_args}")
 
                     enso_ref[i] = ENSO(**reference_args, **init_args)
-                    enso_ref[i].retrieve()
+                    enso_ref[i].retrieve(reader_kwargs=reference.get("reader_kwargs") or {})
                     enso_ref[i].compute_index(months_window=enso_config.get("months_window", 3), rebuild=cli.rebuild)
 
                     enso_ref[i].save_netcdf(

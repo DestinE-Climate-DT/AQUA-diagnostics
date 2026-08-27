@@ -171,7 +171,7 @@ def process_variable(
                         box_brd=box_brd,
                         outputdir=cli.outputdir,
                         rebuild=cli.rebuild,
-                        reader_kwargs=cli.reader_kwargs,
+                        reader_kwargs=dataset.get("reader_kwargs") or {},
                     )
                 except NotEnoughDataError:
                     cli.logger.warning(
@@ -203,7 +203,7 @@ def process_variable(
                 ref = references[0]  # Take first reference
                 cli.logger.info(f"Processing reference: {ref['model']}/{ref['exp']}")
 
-                ref_args = cli.dataset_args(ref)
+                ref_args = cli.reference_args(ref)
                 # Std dates for the reference: reference-specific override > variable/default config
                 ref_std_startdate = ref.get("std_startdate") or var_std_startdate
                 ref_std_enddate = ref.get("std_enddate") or var_std_enddate
@@ -233,7 +233,7 @@ def process_variable(
                         box_brd=box_brd,
                         outputdir=cli.outputdir,
                         rebuild=cli.rebuild,
-                        reader_kwargs={},  # No custom reader_kwargs for reference
+                        reader_kwargs=ref.get("reader_kwargs") or {},
                     )
                 except NotEnoughDataError:
                     cli.logger.warning(
