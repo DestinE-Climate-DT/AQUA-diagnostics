@@ -20,7 +20,7 @@ Currently implemented diagnostics are:
    :maxdepth: 1
 
    boxplots
-   global_biases
+   biases
    ecmean
    timeseries
    ocean_stratification
