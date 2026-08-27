@@ -164,7 +164,6 @@ class Trends(Diagnostic):
                     lon_limits=lon_limits,
                     lat_limits=lat_limits,
                 )
-                self.logger.warning("Data are so far: %s", trend_coef)
                 trend_data = self._apply_region(
                     trend_coef, region=region, lon_limits=lon_limits, lat_limits=lat_limits, dim_mean=None
                 )
