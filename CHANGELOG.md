@@ -9,6 +9,10 @@ Unreleased in the current development version (target v0.25.0):
 
 Complete list:
 - Biases & Climatology refactor (#331)
+- Add bokeh as dependency (#365)
+- Dependabot and sync bot adjustments (#347)
+- Implement new DVC remote from ECMWF (#1392)
+- LatLonProfiles: std dates selection fix (#345)
 - Update outputsaver notebook (#351)
 - GlobalBiases: seasonal biases test fix (#346)
 - Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
