@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Unreleased in the current development version (target v0.25.0):
 
 Complete list:
+- `reader_kwargs` centralization management of cli arguments (#264)
 - Biases & Climatology refactor (#331)
 - Add bokeh as dependency (#365)
 - Dependabot and sync bot adjustments (#347)

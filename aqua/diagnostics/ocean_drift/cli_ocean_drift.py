@@ -68,7 +68,7 @@ def main(argv=None):
                         dim_mean=dim_mean,
                         anomaly_ref="t0",
                         outputdir=cli.outputdir,
-                        reader_kwargs=cli.reader_kwargs,
+                        reader_kwargs=dataset.get("reader_kwargs") or {},
                         rebuild=cli.rebuild,
                     )
                 except Exception as e:
