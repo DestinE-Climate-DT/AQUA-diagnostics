@@ -36,7 +36,7 @@ output:
   create_catalog_entry: true
 
 diagnostics:
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'ocean2d'
     variables: ['tos']
@@ -94,6 +94,10 @@ diagnostics:
     box_brd: true
     seasonal: true
     longterm: true
+    params:
+      default:
+        std_startdate: '19900101'
+        std_enddate: '20201231'
     variables:
       - name: 'tos'
         regions: [null]  # global

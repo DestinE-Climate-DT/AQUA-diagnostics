@@ -36,8 +36,8 @@ references:
     source: 'monthly'
     regrid: 'r100'
     domain: "sh"
-    startdate: '1990-01-01'
-    enddate: '2020-12-31'
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:
@@ -68,14 +68,20 @@ diagnostics:
       volume: 'sithick'
 
     # ====  Update Datasets and reference entries  ====
+    # timeseries uses the timeseries-specific window (climatedt-experiment-kind.yaml),
+    # overriding the anchor's default window
     references:
     # -- PSC for "volume" in NH --
     - <<: *ref_psc_nh
       use_for_method: "volume"
+      startdate: '{{ timeseries.startdate }}'
+      enddate: '{{ timeseries.enddate }}'
 
     # -- PSC for "volume" in SH --
     - <<: *ref_psc_sh
       use_for_method: "volume"
+      startdate: '{{ timeseries.startdate }}'
+      enddate: '{{ timeseries.enddate }}'
 
   # =======  Config for seasonal cycle Sea Ice  =======
   # ===================================================

@@ -6,6 +6,7 @@ from .util import load_var_config
 from .output_saver import OutputSaver
 from .cli_base import DiagnosticCLI
 from .title import TitleBuilder
+from .strings import collapse_era5_duplicate
 from .defaults import SAVE_FORMAT
 
 __all__ = ['Diagnostic',
@@ -16,4 +17,5 @@ __all__ = ['Diagnostic',
            'OutputSaver',
            'DiagnosticCLI',
            'TitleBuilder',
+           'collapse_era5_duplicate',
            'SAVE_FORMAT']

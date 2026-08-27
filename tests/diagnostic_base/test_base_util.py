@@ -10,6 +10,7 @@ import xarray as xr
 
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.util import dump_yaml
+from aqua.diagnostics import get_install_dirs
 from aqua.diagnostics.base import (
     Diagnostic,
     close_cluster,
@@ -195,6 +196,40 @@ def test_merge_config_args():
     assert merged_config["output"]["outputdir"] == "test_outputdir"
 
 
+@pytest.mark.parametrize("configured_kwargs", [None, {"chunks": {"time": 12}}])
+def test_merge_config_args_normalizes_and_preserves_reader_kwargs(configured_kwargs):
+    """CLI realization is merged into the first dataset without leaking to others."""
+    parser = argparse.ArgumentParser()
+    args = template_parse_arguments(parser).parse_args(["--realization", "r2"])
+    config = {
+        "datasets": [
+            {
+                "catalog": "test",
+                "model": "Model1",
+                "exp": "exp1",
+                "source": "source1",
+                "reader_kwargs": configured_kwargs,
+            },
+            {
+                "catalog": "test",
+                "model": "Model2",
+                "exp": "exp2",
+                "source": "source2",
+                "reader_kwargs": {"realization": "r3"},
+            },
+        ],
+        "output": {"outputdir": "./"},
+    }
+
+    merged_config = merge_config_args(config=config, args=args, loglevel=loglevel)
+
+    expected = {"realization": "r2"}
+    if configured_kwargs:
+        expected["chunks"] = {"time": 12}
+    assert merged_config["datasets"][0]["reader_kwargs"] == expected
+    assert merged_config["datasets"][1]["reader_kwargs"] == {"realization": "r3"}
+
+
 def test_close_private_cluster_when_flag_true():
     """close_cluster always closes client, and closes cluster only if private_cluster=True."""
 
@@ -318,3 +353,12 @@ def test_minimum_months_required_class_attribute():
     assert hasattr(LatLonProfiles, "MINIMUM_MONTHS_REQUIRED")
     assert isinstance(LatLonProfiles.MINIMUM_MONTHS_REQUIRED, int)
     assert LatLonProfiles.MINIMUM_MONTHS_REQUIRED > 0
+
+
+def test_get_install_dirs():
+    """Test that get_install_dirs returns a list of directories."""
+    dirs = get_install_dirs()
+    assert isinstance(dirs, dict)
+    # Check it is not empty and contains expected keys
+    assert "config" in dirs
+    assert "templates" in dirs

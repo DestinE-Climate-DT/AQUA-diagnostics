@@ -7,7 +7,7 @@ on:
         description: 'JSON array of Python versions to test'
         required: true
         type: string
-        default: '["3.12"]'
+        default: '["3.14"]'
       pytest-markers:
         description: 'Pytest markers to run (e.g., "aqua or slow")'
         required: true
@@ -53,8 +53,6 @@ on:
         required: true
       AQUA_DVC_PAT:
         required: true
-      BSC_GITLAB:
-        required: true
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
@@ -63,6 +61,8 @@ on:
         required: true
       CODECOV_TOKEN:
         required: false
+      AQUA_DVC_PEM:
+        required: true
 
 permissions:
   contents: read
@@ -92,7 +92,7 @@ jobs:
 
     container:
       # To run FDB tests we need to use a Docker image with FDB installed.
-      image: ghcr.io/destine-climate-dt/ubuntu24.04-fdb5.17.3-eccodes2.41.0-aqua:aqua-base-container
+      image: ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container
       options: --user root
 
     permissions:
@@ -116,13 +116,13 @@ jobs:
       # 1. CHECKOUT REPOSITORIES
       # ========================================
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: AQUA-diagnostics
 
       - name: Checkout aqua-core (cross-check mode)
         if: ${{ inputs.install-mode == 'cross-check' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/AQUA
           ref: ${{ inputs.aqua-core-ref }} # checkout aqua-core at specified ref
@@ -130,14 +130,14 @@ jobs:
           token: ${{ secrets.AQUA_GITHUB_PAT }}
 
       - name: Checkout Climate-DT-catalog repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/Climate-DT-catalog
           path: Climate-DT-catalog
           token: ${{ secrets.AQUA_GITHUB_PAT }}
 
       - name: Checkout DVC repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/aqua-dvc
           path: aqua-dvc
@@ -155,18 +155,14 @@ jobs:
               git \
               gpg
 
-      - name: Clone GitLab data-portfolio repository
-        run: |
-          git clone https://oauth2:${{ secrets.BSC_GITLAB }}@gitlab.earth.bsc.es/digital-twins/de_340-3/data-portfolio data-portfolio
-          cd data-portfolio
-          git checkout tags/v2.1.0
-
       # ========================================
       # 3. SETUP PYTHON ENVIRONMENT
       # ========================================
       - name: Set up Micromamba (local mode)
         if: ${{ inputs.install-mode == 'local' }}
         uses: mamba-org/setup-micromamba@v3
+        env:
+          GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment.yml
@@ -179,6 +175,8 @@ jobs:
       - name: Set up Micromamba (cross-check mode)
         if: ${{ inputs.install-mode == 'cross-check' }}
         uses: mamba-org/setup-micromamba@v3
+        env:
+          GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment-dev.yml
@@ -191,6 +189,8 @@ jobs:
       - name: Set up Micromamba (PyPI mode)
         if: ${{ inputs.install-mode == 'pypi' }}
         uses: mamba-org/setup-micromamba@v3
+        env:
+          GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment-pypi.yml
@@ -200,8 +200,9 @@ jobs:
           create-args: >-
             python=${{ matrix.python-version }}
 
+
       # ========================================
-      # 5. INSTALL AQUA (PyPI mode)
+      # 4. INSTALL AQUA (PyPI mode)
       # ========================================
       - name: Upgrade pip/setuptools/wheel
         if: ${{ inputs.install-mode == 'pypi' }}
@@ -211,7 +212,7 @@ jobs:
         if: ${{ inputs.install-mode == 'pypi' }}
         run: |
           python -m pip install aqua-diagnostics[core,tests]
-      
+
       - name: Checkout the tag for PyPI mode
         if: ${{ inputs.install-mode == 'pypi' }}
         run: |
@@ -222,18 +223,27 @@ jobs:
           git checkout "v${PYPI_VERSION}"
 
       # ========================================
-      # 6. SETUP DVC AND TEST DATA
+      # 5. SETUP DVC AND TEST DATA
       # ========================================
       - name: Install DVC s3
         if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
         run: python -m pip install "dvc[s3]"
 
-      - name: Configure AWS credentials for DVC
+      - name: Create DVC pem file and configure it for the ecmwf_climatedt remote
         if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
         run: |
           mkdir -p $HOME/.aws
+          echo "${{ secrets.AQUA_DVC_PEM }}" > $HOME/.aws/harica-root.pem
+          chmod 600 $HOME/.aws/harica-root.pem
+          cd aqua-dvc
+          dvc remote modify --local ecmwf_climatedt ssl_verify "$HOME/.aws/harica-root.pem"
+          dvc config --local cache.dir "$HOME/.dvc/cache"
+
+      - name: Configure AWS credentials for DVC
+        if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
+        run: |
           cat >$HOME/.aws/credentials << EOF
-          [default]
+          [ecmwf_climatedt]
           aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           EOF
@@ -242,6 +252,7 @@ jobs:
         if: ${{ inputs.test-data-source == 'dvc' || inputs.test-data-source == 'auto' }}
         id: dvc-pull
         continue-on-error: ${{ inputs.test-data-source == 'auto' }}
+        timeout-minutes: 10
         run: |
           cd aqua-dvc
           git checkout main
@@ -261,7 +272,7 @@ jobs:
           echo "Test data downloaded"
 
       # ========================================
-      # 7. SETUP FDB
+      # 6. SETUP FDB
       # ========================================
       - name: Set up FDB
         run: |
@@ -282,7 +293,7 @@ jobs:
           grib_dump test.grib
 
       # ========================================
-      # 8. SETUP AQUA-DIAGNOSTICS
+      # 7. SETUP AQUA-DIAGNOSTICS
       # ========================================
       - name: Set up AQUA-diagnostics configuration
         run: |
@@ -309,7 +320,7 @@ jobs:
           EOF
 
       # ========================================
-      # 9. VERIFY INSTALLATIONS (cross-check mode)
+      # 8. VERIFY INSTALLATIONS (cross-check mode)
       # ========================================
       - name: Verify aqua-core and aqua-diagnostics versions
         if: ${{ inputs.install-mode == 'cross-check' }}
@@ -327,7 +338,7 @@ jobs:
           echo ""
 
       # ========================================
-      # 10. SAVE ENVIRONMENT INFO
+      # 9. SAVE ENVIRONMENT INFO
       # ========================================
       - name: Save environment information
         run: |
@@ -336,7 +347,7 @@ jobs:
           pip freeze > pip_freeze.txt
 
       # ========================================
-      # 11. RUN TESTS
+      # 10. RUN TESTS
       # ========================================
       - name: Run tests (parallel with coverage)
         if: ${{ inputs.enable-parallel && inputs.enable-coverage }}
@@ -348,6 +359,7 @@ jobs:
           echo "=========================================="
 
           pytest -n 4 \
+            --dist loadgroup \
             --max-worker-restart=3 \
             --cov \
             --junitxml=junit.xml \
@@ -372,6 +384,7 @@ jobs:
           echo "=========================================="
 
           pytest -n 4 \
+            --dist loadgroup \
             --max-worker-restart=3 \
             --junitxml=junit.xml \
             -o junit_family=legacy \
@@ -415,11 +428,11 @@ jobs:
             -m "${{ inputs.pytest-markers }}"
 
       # ========================================
-      # 12. UPLOAD COVERAGE (if enabled)
+      # 11. UPLOAD COVERAGE (if enabled)
       # ========================================
       - name: Upload coverage reports to Codecov
         if: ${{ inputs.enable-coverage && github.actor != 'dependabot[bot]' && !cancelled() }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           files: AQUA-diagnostics/coverage.xml
           flags: unittests
@@ -428,14 +441,14 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ inputs.enable-coverage && github.actor != 'dependabot[bot]' && !cancelled() }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           report_type: test_results
           files: AQUA-diagnostics/junit.xml
 
       # ========================================
-      # 13. UPLOAD ARTIFACTS
+      # 12. UPLOAD ARTIFACTS
       # ========================================
       - name: Upload test artifacts
         if: ${{ !cancelled() }}

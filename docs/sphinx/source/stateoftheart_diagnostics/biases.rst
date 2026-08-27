@@ -1,16 +1,16 @@
-.. _global_biases:
+.. _biases:
 
-Global Biases Diagnostic
+Biases Diagnostic
 ========================
 
 Description
 -----------
 
-The **GlobalBiases** diagnostic is a set of tools for the analysis and visualization of 2D spatial biases in climate model outputs.
+The **Biases** diagnostic is a set of tools for the analysis and visualization of 2D spatial biases in climate model outputs.
 It supports comparative analysis between a target dataset (typically a climate model) and a reference dataset, commonly an observational or reanalysis product such as ERA5.
 Alternatively, it can be used to compare outputs from two different model simulations, for example to assess differences between historical and scenario experiments.
 
-GlobalBiases provides tools to plot:
+Biases provides tools to plot:
 
 - Climatology maps
 - Bias maps
@@ -22,30 +22,33 @@ Classes
 
 There are three classes in the diagnostic:
 
-* **GlobalBiases**: retrieves the data and prepares it for plotting (e.g., regridding, pressure level selection, unit conversion).
+* **Climatology**: retrieves the data and prepares it for plotting (e.g., regridding, pressure level selection, unit conversion).
   It handles the computation of mean climatologies, including seasonal climatologies if requested.
   Climatologies are saved as class attributes and as NetCDF files.
 
-* **PlotGlobalBiases**: provides methods for plotting the global biases, seasonal biases, and vertical profiles.
-  It generates the plots based on the data prepared by the GlobalBiases class.
+* **PlotClimatology**: provides methods for plotting climatology maps, seasonal climatology maps, and vertical profiles.
+  It generates the plots based on the data prepared by the Climatology class.
 
-* **StatGlobalBiases**: statistical class including methods to compute global bias statistics and to assess the statistical significance of the bias.
+* **PlotBiases**: provides methods for plotting biases, seasonal biases, and vertical profiles.
+  It generates the plots based on the data prepared by the Climatology class.
+
+* **StatBiases**: statistical class including methods to compute global bias statistics and to assess the statistical significance of the bias.
   It computes global bias statistics such as mean bias and root mean square error (RMSE) between the model and reference datasets (area-weighted if grid cell areas are provided).
   It also performs a two-sample t-test at each grid point to determine if the difference between model and reference data is statistically significant.
 
 File structure
 --------------
 
-* The diagnostic is located in the ``aqua/diagnostics/global_biases`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-global_biases.yaml``
-* Notebooks are available in the ``notebooks/diagnostics/global_biases`` directory and contain examples of how to use the diagnostic.
+* The diagnostic is located in the ``aqua/diagnostics/biases`` directory, which contains both the source code and the command line interface (CLI) script.
+* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-biases.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/biases`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
 ----------------------------
 
 By default, the diagnostic compares against the ERA5 dataset, but it can be configured to use any other dataset as a reference.
 A list of the variables that are compared automatically when running the full diagnostic is provided in the configuration files
-available in the ``aqua/diagnostics/config/diagnostics/global_biases`` directory.
+available in the ``aqua/diagnostics/config/diagnostics/biases`` directory.
 
 Some of the variables that are typically used in this diagnostic are:
 
@@ -68,16 +71,16 @@ The basic structure of the analysis is the following:
 
 .. code-block:: python
 
-    from aqua.diagnostics import GlobalBiases, PlotGlobalBiases
+    from aqua.diagnostics import Climatology, PlotBias
 
-    biases_ifs_nemo = GlobalBiases(
+    biases_ifs_nemo = Climatology(
         model='IFS-NEMO',
         exp='historical-1990',
         source='lra-r100-monthly',
         loglevel="DEBUG"
     )
 
-    biases_era5 = GlobalBiases(
+    biases_era5 = Climatology(
         model='ERA5',
         exp='era5',
         source='monthly',
@@ -90,16 +93,17 @@ The basic structure of the analysis is the following:
     biases_era5.retrieve(var='q')
     biases_era5.compute_climatology(seasonal=True, areas=True)
 
-    pg = PlotGlobalBiases(loglevel='DEBUG')
+    pg = PlotBias(loglevel='DEBUG')
     pg.plot_bias(data=biases_ifs_nemo.climatology, data_ref=biases_era5.climatology, var='q', plev=18000,
                  area=biases_ifs_nemo.climatology['cell_area'], show_stats=True,
 
-                # Statistical test options
-                show_significance = True,             # Enable significance stippling
-                significance_alpha = 0.05,            # 95% confidence level
-                stipple_density = 3,                  # Stippling density (higher = more sparse)
-                stipple_size = 0.5,                   # Size of stipple dots
-                invert_stippling = False,             # False = stipple where differences ARE significant
+                # Statistical significance options
+                show_significance=True,           # Enable significance stippling
+                significance_alpha=0.05,          # 95% confidence level
+                stipple_density=None,             # If None, computed adaptively based on grid resolution
+                target_spacing_deg=2              # Target spacing in degrees for stippling
+                stipple_size=0.8,                 # Size of stipple dots
+                invert_stippling=False,           # False = stipple where differences ARE significant
     )
 
 .. note::
@@ -114,8 +118,8 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/global_biases
-    python cli_global_biases.py --config <path_to_config_file>
+    cd $AQUA/aqua/diagnostics/biases
+    python cli_biases.py --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
@@ -137,13 +141,13 @@ Configuration file structure
 
 The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
-Here we describe only the specific settings for the global biases diagnostic.
+Here we describe only the specific settings for the biases diagnostic.
 
-* ``globalbiases``: a block (nested in the ``diagnostics`` block) containing options for the Global Biases diagnostic.
+* ``biases``: a block (nested in the ``diagnostics`` block) containing options for the Biases diagnostic.
   Variable-specific parameters override the defaults.
 
     * ``run``: enable/disable the diagnostic.
-    * ``diagnostic_name``: name of the diagnostic. ``globalbiases`` by default, but can be changed when the globalbiases CLI is invoked within another ``recipe`` diagnostic, as is currently done for ``Radiation``.
+    * ``diagnostic_name``: name of the diagnostic. ``biases`` by default, but can be changed when the biases CLI is invoked within another ``recipe`` diagnostic, as is currently done for ``Radiation``.
     * ``variables``: list of variables to analyse.
     * ``formulae``: list of formulae to compute new variables from existing ones (e.g., ``tnlwrf+tnswrf``).
     * ``plev``: pressure levels to analyse for 3D variables.
@@ -155,9 +159,9 @@ Here we describe only the specific settings for the global biases diagnostic.
 
 .. code-block:: yaml
 
-    globalbiases:
+    biases:
         run: true
-        diagnostic_name: 'globalbiases'
+        diagnostic_name: 'biases'
         variables: ['tprate', '2t', 'msl', 'tnlwrf', 't', 'u', 'v', 'q', 'tos']
         formulae: ['tnlwrf+tnswrf']
         params:
@@ -176,20 +180,26 @@ Here we describe only the specific settings for the global biases diagnostic.
 
 * ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.
 * ``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
-* ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant, based on a two-sample t-test (``significance_alpha`` defines the confidence level for the test, e.g., 0.05 for 95% confidence).
+* ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant,
+  based on a two-sample Welch t-test (``significance_alpha`` defines the confidence level, e.g., 0.05 for 95% confidence).
+  The stippling density can be set explicitly via ``stipple_density``, or left unset to trigger an adaptive mode
+  that automatically computes the stipple density based on the grid resolution and the target spacing in degrees (``target_spacing_deg``).
+  This ensures readable stippling across different resolutions, from coarse grids such as r100 to high-resolution ones such as hpz10.
 
 The default parameters are used if not specified for a specific variable.
 Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate-DT/AQUA/blob/main/aqua/core/util/projections.py>`_ for available projections.
 
 .. code-block:: yaml
 
-    plot_params:
+plot_params:
         default:
             projection: 'robinson'
             projection_params: {}
             show_stats: true
-            show_significance: true    # Enable significance stippling
-            significance_alpha: 0.05  # 95% confidence level
+            show_significance: true       # Enable significance stippling
+            significance_alpha: 0.05      # 95% confidence level
+            stipple_density: null         # If null, computed adaptively
+            target_spacing_deg: 2          # Target spacing in degrees for stippling
         2t:
             cmap: 'RdBu_r'
             vmin: -15
@@ -208,8 +218,8 @@ The diagnostic produces four types of plots:
 
 * Global climatology maps
 * Global bias maps (model vs reference)
-* Seasonal bias maps
-* Vertical bias profiles (for 3D variables)
+* Seasonal climatology and bias maps
+* Vertical climatology and bias profiles (for 3D variables)
 
 Plots are saved in both PDF and PNG format.
 Data outputs are saved as NetCDF files.
@@ -234,7 +244,7 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 
     Climatology of q from IFS-NEMO historical-1990.
 
-.. figure:: figures/global_bias.png
+.. figure:: figures/bias.png
     :align: center
     :width: 100%
 
@@ -255,9 +265,9 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 Available demo notebooks
 ------------------------
 
-Notebooks are stored in ``notebooks/diagnostics/global_biases``:
+Notebooks are stored in ``notebooks/diagnostics/biases``:
 
-- `global_biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/global_biases/global_biases.ipynb>`_
+- `biases.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/biases/biases.ipynb>`_
 
 Authors and contributors
 ------------------------
@@ -269,10 +279,10 @@ For questions or suggestions, contact the AQUA team or the maintainer.
 Detailed API
 ------------
 
-This section provides a detailed reference for the Application Programming Interface (API) of the ``global_biases`` diagnostic,
+This section provides a detailed reference for the Application Programming Interface (API) of the ``biases`` diagnostic,
 produced from the diagnostic function docstrings.
 
-.. automodule:: aqua.diagnostics.global_biases
+.. automodule:: aqua.diagnostics.biases
     :members:
     :undoc-members:
     :show-inheritance:

@@ -12,7 +12,7 @@ from .util import handle_pressure_level
 xr.set_options(keep_attrs=True)
 
 
-class GlobalBiases(Diagnostic):
+class Climatology(Diagnostic):
     """
     Diagnostic class for computing global and seasonal climatologies of a given variable.
 
@@ -52,7 +52,7 @@ class GlobalBiases(Diagnostic):
         var=None,
         plev=None,
         areas=True,
-        diagnostic="globalbiases",
+        diagnostic="climatology",
         save_netcdf=True,
         outputdir="./",
         loglevel="WARNING",
@@ -69,7 +69,7 @@ class GlobalBiases(Diagnostic):
             loglevel=loglevel,
         )
 
-        self.logger = log_configure(log_level=loglevel, log_name="Global Biases")
+        self.logger = log_configure(log_level=loglevel, log_name="Climatology")
         self.var = var
         self.plev = plev
         self.areas = areas
@@ -78,6 +78,8 @@ class GlobalBiases(Diagnostic):
         self.startdate = startdate
         self.enddate = enddate
         self.diagnostic = diagnostic
+        self.climatology = None
+        self.seasonal_climatology = None
 
     def _check_data(self, var: str, units: str):
         """
@@ -189,6 +191,7 @@ class GlobalBiases(Diagnostic):
             data=data,
             diagnostic=self.diagnostic,
             diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
             outputdir=self.outputdir,
             create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,

@@ -92,7 +92,7 @@ def main(argv=None):
                             ts[i].run(
                                 **run_args,
                                 create_catalog_entry=cli.create_catalog_entry,
-                                reader_kwargs=dataset.get("reader_kwargs") or cli.reader_kwargs,
+                                reader_kwargs=dataset.get("reader_kwargs") or {},
                             )
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
@@ -234,7 +234,7 @@ def main(argv=None):
                             ts[i].run(
                                 **run_args,
                                 create_catalog_entry=cli.create_catalog_entry,
-                                reader_kwargs=dataset.get("reader_kwargs") or cli.reader_kwargs,
+                                reader_kwargs=dataset.get("reader_kwargs") or {},
                             )
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
@@ -378,7 +378,7 @@ def main(argv=None):
                             sc[i].run(
                                 **run_args,
                                 create_catalog_entry=cli.create_catalog_entry,
-                                reader_kwargs=dataset.get("reader_kwargs") or cli.reader_kwargs,
+                                reader_kwargs=dataset.get("reader_kwargs") or {},
                             )
 
                         # Reference datasets are evaluated on the maximum time range of the datasets
@@ -478,7 +478,7 @@ def main(argv=None):
                     cli.logger.debug(f"Dataset args: {dataset_args}")
 
                     greg[i] = Gregory(**init_args, **dataset_args)
-                    greg[i].run(**run_args, **model_args, reader_kwargs=dataset.get("reader_kwargs") or cli.reader_kwargs)
+                    greg[i].run(**run_args, **model_args, reader_kwargs=dataset.get("reader_kwargs") or {})
 
                 if cli.config_dict["diagnostics"]["gregory"]["std"]:
                     # t2m:

@@ -1,7 +1,7 @@
 # Default date for jinja templates for reference datasets:
 
 # default: default date range for all analyses
-# radiation: date range for radiation analyses
+# radiation_ceres: date range for ceres radiation analyses
 # timeseries: date range for timeseries analyses
 
 # startdate, enddate: values for the date range for references to be used in the analysis
@@ -13,27 +13,31 @@ default:
     enddate: "2014-12-31"
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
-  radiation:
+  radiation_ceres:
     startdate: "2001-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "1990-01-01"
-    std_enddate: "2014-12-31"
+    enddate: "2024-12-31"
+    std_startdate: "2001-01-01"
+    std_enddate: "2024-12-31"
   timeseries:
-    std_startdate: "1990-01-01"
-    std_enddate: "2014-12-31"
-scenario:
-  default:
     startdate: "1990-01-01"
     enddate: "2014-12-31"
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
-  radiation:
-    startdate: "2001-01-01"
+scenario:
+  default: # default compare to historical period
+    startdate: "1990-01-01"
     enddate: "2014-12-31"
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
-  timeseries:
-    std_startdate: "2020-01-01"
+  radiation_ceres: #same as default due to data availability
+    startdate: "2001-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2001-01-01"
+    std_enddate: "2024-12-31"
+  timeseries: # timeseries exploit all data available (25 years up to last obs avail year)
+    startdate: "2000-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2000-01-01"
     std_enddate: "2024-12-31"
 storyline:
   default:
@@ -41,11 +45,13 @@ storyline:
     enddate: "2024-12-31"
     std_startdate: "2000-01-01"
     std_enddate: "2024-12-31"
-  radiation:
-    startdate: "2001-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "2000-01-01"
+  radiation_ceres:
+    startdate: "2017-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2001-01-01"
     std_enddate: "2024-12-31"
   timeseries:
-    std_startdate: "2020-01-01"
+    startdate: "2017-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2000-01-01"
     std_enddate: "2024-12-31"

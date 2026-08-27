@@ -26,6 +26,8 @@ references:
     source: 'nh-monthly'       # mandatory
     regrid: 'r100'
     domain: "nh"
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
   # ---- Extent in SH ----
   - &ref_osi_sh
@@ -35,6 +37,8 @@ references:
     source: 'sh-monthly'       # mandatory
     regrid: 'r100'
     domain: "sh"
+    startdate: '{{ default.startdate }}'
+    enddate: '{{ default.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:
@@ -65,14 +69,20 @@ diagnostics:
       extent: 'siconc'
 
     # ====  Update Datasets and reference entries  ====
+    # timeseries uses the timeseries-specific window (climatedt-experiment-kind.yaml),
+    # overriding the anchor's default window
     references:
     # -- OSI-SAF for "extent" in NH --
     - <<: *ref_osi_nh
       use_for_method: "extent"
+      startdate: '{{ timeseries.startdate }}'
+      enddate: '{{ timeseries.enddate }}'
 
     # -- OSI-SAF for "extent" in SH --
     - <<: *ref_osi_sh
       use_for_method: "extent"
+      startdate: '{{ timeseries.startdate }}'
+      enddate: '{{ timeseries.enddate }}'
 
   # =======  Config for seasonal cycle Sea Ice  =======
   # ===================================================
