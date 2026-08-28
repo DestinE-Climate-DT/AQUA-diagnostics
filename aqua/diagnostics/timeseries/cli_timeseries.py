@@ -433,14 +433,33 @@ def main(argv=None):
                                 region if region else "global",
                                 cli.save_format,
                             )
+
+                            # We populate the ref data with None if any of the reference
+                            # were not successfully run to avoid errors in the plotting function.
+                            if sc_ref and any(t is None for t in sc_ref) or "references" not in cli.config_dict:
+                                # We want to raise a warning only if reference were originally requested.
+                                if sc_ref and any(t is None for t in sc_ref):
+                                    cli.logger.warning(
+                                        f"No reference datasetes were successfully run for variable {var} in region {region if region else 'global'}."  # noqa: E501
+                                    )
+                                ref_monthly_data = None
+                                std_monthly_data = None
+                            else:
+                                ref_monthly_data = (
+                                    [sc_ref[i].monthly for i in range(len(sc_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                std_monthly_data = (
+                                    [sc_ref[i].std_monthly for i in range(len(sc_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+
                             plot_args = {
                                 "monthly_data": [sc[i].monthly for i in range(len(sc))],
-                                "ref_monthly_data": [sc_ref[i].monthly for i in range(len(sc_ref))]
-                                if "references" in cli.config_dict
-                                else None,
-                                "std_monthly_data": [sc_ref[i].std_monthly for i in range(len(sc_ref))]
-                                if "references" in cli.config_dict
-                                else None,
+                                "ref_monthly_data": ref_monthly_data,
+                                "std_monthly_data": std_monthly_data,
                                 "loglevel": cli.loglevel,
                                 "diagnostic_name": diagnostic_name,
                             }
