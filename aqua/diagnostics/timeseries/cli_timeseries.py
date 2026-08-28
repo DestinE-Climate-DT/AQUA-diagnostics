@@ -115,13 +115,19 @@ def main(argv=None):
                                     }
                                 )
                                 cli.logger.info(f"Reference args: {reference_args}")
-                                ts_ref[i] = Timeseries(**init_args, **reference_args)
-                                ts_ref[i].run(
-                                    **run_args,
-                                    std=True,
-                                    create_catalog_entry=False,
-                                    reader_kwargs=reference.get("reader_kwargs") or {},
-                                )
+                                try:
+                                    ts_ref[i] = Timeseries(**init_args, **reference_args)
+                                    ts_ref[i].run(
+                                        **run_args,
+                                        std=True,
+                                        create_catalog_entry=False,
+                                        reader_kwargs=reference.get("reader_kwargs") or {},
+                                    )
+                                except ValueError as e:
+                                    # Model and reference periods do not overlap at all (or another data
+                                    # availability issue): skip this reference instead of crashing the CLI.
+                                    cli.logger.warning(f"Skipping reference {reference} for variable {var}: {e}")
+                                    ts_ref[i] = None
 
                         # Plot the timeseries
                         if cli.save_format:
@@ -255,13 +261,19 @@ def main(argv=None):
                                         "std_enddate": var_config.get("std_enddate"),
                                     }
                                 )
-                                ts_ref[i] = Timeseries(**init_args, **reference_args)
-                                ts_ref[i].run(
-                                    **run_args,
-                                    std=True,
-                                    create_catalog_entry=False,
-                                    reader_kwargs=reference.get("reader_kwargs") or {},
-                                )
+                                try:
+                                    ts_ref[i] = Timeseries(**init_args, **reference_args)
+                                    ts_ref[i].run(
+                                        **run_args,
+                                        std=True,
+                                        create_catalog_entry=False,
+                                        reader_kwargs=reference.get("reader_kwargs") or {},
+                                    )
+                                except ValueError as e:
+                                    # Model and reference periods do not overlap at all (or another data
+                                    # availability issue): skip this reference instead of crashing the CLI.
+                                    cli.logger.warning(f"Skipping reference {reference} for variable {var}: {e}")
+                                    ts_ref[i] = None
 
                         # Plot the timeseries
                         if cli.save_format:
