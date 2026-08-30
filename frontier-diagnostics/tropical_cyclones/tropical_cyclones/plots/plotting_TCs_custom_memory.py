@@ -71,7 +71,7 @@
 # 
 # All plotting functions accept an optional cat_method argument:
 #
-#   cat_method='slp'   (default) — Saffir-Simpson category derived from
+#   cat_method='slp'   (default) — TC intensity category [SLP-based] derived from
 #                                   minimum SLP using category_from_slp_pa().
 #                                   Works with any input file (ERA5, IBTrACS, models).
 #
@@ -102,7 +102,7 @@ import xarray as xr
 # ===============================================================================
  
 def category_from_slp_pa(slp_pa):
-    """Saffir-Simpson category from SLP in Pascals (0=TD/TS, 1-5=Cat1-5)."""
+    """TC intensity category [SLP-based] in Pascals (0=TD/TS, 1-5=Cat1-5)."""
     slp_hpa = slp_pa / 100.0
     if slp_hpa >= 1005:
         return 0
@@ -114,8 +114,11 @@ def category_from_slp_pa(slp_pa):
         return 3
     elif slp_hpa >= 945:
         return 4
+    elif slp_hpa >= 925:
+        return 5       
     else:
-        return 5
+        return 5 
+
  
  
 def _get_cat_array(storm_data, method='slp'):
@@ -177,7 +180,7 @@ def _method_suffix(method):
 # ===============================================================================
  
 def get_basin_ibtracs(lon, lat):
-    lon_360 = lon if lon >= 0 else lon + 360
+    lon_360 = lon if lon >= 0 else lon + 360 #NH
     if (260 <= lon_360 <= 360 or 0 <= lon_360 <= 20) and 0 <= lat <= 70:
         return 'North Atlantic'
     if 180 <= lon_360 < 260 and 0 <= lat <= 60:
@@ -188,11 +191,11 @@ def get_basin_ibtracs(lon, lat):
         return 'North Indian'
     if 20 <= lon_360 < 135 and -40 <= lat < 0:
         return 'South Indian'
-    if (135 <= lon_360 <= 360 or 0 <= lon_360 < 240) and -40 <= lat < 0:
+    if 135 <= lon_360 < 290 and -40 <= lat < 0:
         return 'South Pacific'
-    if (290 <= lon_360 <= 360 or 0 <= lon_360 <= 20) and -40 <= lat < 0:
+    if (290 <= lon_360 <= 360 or 0 <= lon_360 < 20) and -40 <= lat < 0:
         return 'South Atlantic'
-    return 'Other'
+    return 'Other'       
  
  
 def getTrajectories_direct(filename):
@@ -383,7 +386,7 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category',
                                category=None, max_timesteps=None,
                                cat_method='slp'):
     """
-    Plot TC trajectories colored by Saffir-Simpson category.
+    Plot TC trajectories colored by TC intensity category [SLP-based] .
     Discrete colour scale (BoundaryNorm, 6 bands).
     Storms sorted weak → strong so Cat5 always on top.
 
@@ -517,7 +520,7 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category',
     sm.set_array([])
     cbar = plt.colorbar(sm, ax=ax, shrink=0.7, pad=0.02)
     method_label = 'wind-based (IBTrACS)' if cat_method == 'sshs' else 'SLP-based'
-    cbar.set_label(f'Saffir-Simpson Category [{method_label}]', fontsize=12)
+    cbar.set_label(f'TC intensity Category [{method_label}]', fontsize=12)
     cbar.set_ticks([0, 1, 2, 3, 4, 5])
     cbar.set_ticklabels(['TD/TS', 'Cat 1', 'Cat 2', 'Cat 3', 'Cat 4', 'Cat 5'])
 
@@ -568,7 +571,7 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category',
             }
         )
         ds['category'].attrs = {
-            'long_name':     f'Saffir-Simpson category ({cat_method})',
+            'long_name':     f'TC intensity category ({cat_method})',
             'flag_values':   '0 1 2 3 4 5',
             'flag_meanings': 'TD_TS Cat1 Cat2 Cat3 Cat4 Cat5'
         }
@@ -654,23 +657,47 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=1,
                              cat_method='slp'):
     """
     Gridded TC track density (transits per month).
- 
+
     Args:
-        category   : int 0-5 → include only storms whose peak ≥ category; None = all
+        category   : filter on peak storm category. Accepts:
+                       - int (e.g. 2)   → storms with peak category >= 2 (unchanged default)
+                       - "2+"           → same as above, explicit
+                       - "2-"           → storms with peak category <= 2 (NEW)
+                       - None           → no filter, all storms
         cat_method : 'slp' or 'sshs'
     """
     trajectories, _ = _get_data_from_input(data_or_file)
     names  = _cat_names(cat_method)
     suffix = _method_suffix(cat_method)
- 
+
+    # ── parse category filter (int, "N+", or "N-") ────────────────────────────
+    cat_direction = 'plus'  # default, backward-compatible with plain int
+    if isinstance(category, str):
+        cat_str = category.strip()
+        if cat_str.endswith('-'):
+            cat_direction = 'minus'
+            category = int(cat_str[:-1])
+        elif cat_str.endswith('+'):
+            cat_direction = 'plus'
+            category = int(cat_str[:-1])
+        else:
+            category = int(cat_str)  # plain numeric string, treat as "+"
+
     # ── category filter ───────────────────────────────────────────────────────
     if category is not None:
-        trajectories = [s for s in trajectories
-                        if _peak_category(s, cat_method) >= category]
+        if cat_direction == 'minus':
+            trajectories = [s for s in trajectories
+                            if _peak_category(s, cat_method) <= category]
+            label_sfx = f'{category}-'
+        else:
+            trajectories = [s for s in trajectories
+                            if _peak_category(s, cat_method) >= category]
+            label_sfx = f'{category}+'
+
         n_kept = len(trajectories)
         if n_kept == 0:
-            print(f"⚠ No storms for {names[category]}+"); return
-        print(f"✓ {n_kept} storms with peak ≥ {names[category]} ({cat_method})")
+            print(f"⚠ No storms for category {label_sfx}"); return
+        print(f"✓ {n_kept} storms with peak category {label_sfx} ({cat_method})")
  
     lon_all, lat_all = [], []
     for sd in trajectories:
@@ -755,9 +782,9 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=1,
             tick_labels.append(f'{lo:.2g}–{hi:.2g}')
     cbar.set_ticklabels(tick_labels)
     cbar.ax.tick_params(labelsize=8, rotation=45)
- 
+
     method_label  = 'wind-based (IBTrACS)' if cat_method == 'sshs' else 'SLP-based'
-    category_str  = f' – {names[category]}+  [{method_label}]' if category is not None else ''
+    category_str  = f' – {names[category]}{"-" if cat_direction == "minus" else "+"}  [{method_label}]' if category is not None else ''
     m = tdict['dataset']['model']; ex = tdict['dataset']['exp']
     plt.title(f'TC Track Density (transits/month){category_str}\n'
               f'{startdate}–{enddate} | {m} {ex} | Grid: {grid_size}°',
@@ -767,7 +794,7 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=1,
     os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
     sd_c = startdate.replace('-', ''); ed_c = enddate.replace('-', '')
     m_c  = m.replace(' ', '_');        ex_c = ex.replace(' ', '_')
-    cat_sfx = f'_cat{category}plus' if category is not None else ''
+    cat_sfx = f'_cat{category}{"minus" if cat_direction == "minus" else "plus"}' if category is not None else ''    
     base = f'track_density_grid{suffix}{cat_sfx}_{m_c}_{ex_c}_{sd_c}_{ed_c}'
  
     pdf_path = os.path.join(tdict['paths']['plotdir'], f'{base}.pdf')
@@ -805,7 +832,7 @@ def plot_density_scatter_by_category(data_or_file, tdict,
                                       max_timesteps=None, sample_size=10000,
                                       cat_method='slp'):
     """
-    6-panel KDE density scatter, one panel per Saffir-Simpson category.
+    6-panel KDE density scatter, one panel per TC intensity category.
  
     Args:
         cat_method : 'slp' or 'sshs'
@@ -950,7 +977,7 @@ def plot_tc_duration_distribution(data_or_file, tdict):
  
 def plot_tc_duration_by_category(data_or_file, tdict, cat_method='slp'):
     """
-    Normalized duration histograms per Saffir-Simpson category.
+    Normalized duration histograms per TC intensity category.
  
     Args:
         cat_method : 'slp' or 'sshs'
@@ -1009,25 +1036,61 @@ def plot_tc_duration_by_category(data_or_file, tdict, cat_method='slp'):
 # ===============================================================================
  
 def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0,
-                            cat_method='slp'):
+                            cat_method='slp', category=None):
     """
     Doughnut chart of annual TC frequency by basin + comparison bar chart.
- 
+
     Args:
         reference_freq : reference NH frequency for scaling (default 90)
         cat_method     : 'slp' or 'sshs' — affects title/filename only here,
                          since basin assignment uses genesis position regardless
+        category       : filter on peak storm category. Accepts:
+                           - None    → all storms (default, unchanged behaviour)
+                           - int (e.g. 3)  → storms with peak category >= 3
+                           - "3+"    → same as above, explicit
+                           - "2-"    → storms with peak category <= 2
     """
     trajectories, _ = _get_data_from_input(data_or_file)
     suffix       = _method_suffix(cat_method)
     method_label = 'wind-based (IBTrACS)' if cat_method == 'sshs' else 'SLP-based'
- 
+    names        = _cat_names(cat_method)
+
+    # ── parse category filter (int, "N+", or "N-") ────────────────────────────
+    cat_direction = 'plus'
+    if isinstance(category, str):
+        cat_str = category.strip()
+        if cat_str.endswith('-'):
+            cat_direction = 'minus'
+            category = int(cat_str[:-1])
+        elif cat_str.endswith('+'):
+            cat_direction = 'plus'
+            category = int(cat_str[:-1])
+        else:
+            category = int(cat_str)
+
+    if category is not None:
+        if cat_direction == 'minus':
+            trajectories = [s for s in trajectories
+                            if _peak_category(s, cat_method) <= category]
+            cat_label = f'{names[category]}-'
+        else:
+            trajectories = [s for s in trajectories
+                            if _peak_category(s, cat_method) >= category]
+            cat_label = f'{names[category]}+'
+
+        n_kept = len(trajectories)
+        if n_kept == 0:
+            print(f"⚠ No storms for category {cat_label}"); return
+        print(f"✓ {n_kept} storms with peak category {cat_label} ({cat_method})")
+    else:
+        cat_label = None
+
     nh_season = [5, 6, 7, 8, 9, 10, 11]
     sh_season = [10, 11, 12, 1, 2, 3, 4, 5]
     nh_basins = ['North Atlantic', 'East Pacific', 'West Pacific', 'North Indian']
-    sh_basins = ['South Indian', 'South Pacific']
+    sh_basins = ['South Indian', 'South Pacific', 'South Atlantic']
  
-    basin_counts = {b: set() for b in nh_basins + sh_basins}
+    basin_counts = {b: set() for b in nh_basins + sh_basins + ['Other']}
     years_seen   = set()
  
     for sd in trajectories:
@@ -1057,10 +1120,11 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0,
         print(f"  {b}: {basin_freq[b]:.1f}")
  
     basins_ord = ['North Atlantic', 'East Pacific', 'West Pacific',
-                  'North Indian',   'South Indian', 'South Pacific']
+                  'North Indian',   'South Indian', 'South Pacific', 'South Atlantic', 'Other']
     colors     = {'North Atlantic': '#3498db', 'East Pacific': '#2ecc71',
                   'West Pacific':   '#e74c3c', 'North Indian': '#f39c12',
-                  'South Indian':   '#9b59b6', 'South Pacific': '#34495e'}
+                  'South Indian':   '#9b59b6', 'South Pacific': '#34495e', 
+                  'South Atlantic': "#e77b98", 'Other':  "#676666"}
  
     sizes      = [basin_freq[b] for b in basins_ord]
     col_list   = [colors[b]     for b in basins_ord]
@@ -1097,10 +1161,12 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0,
             fontsize=20, fontweight='bold', color='gray',   zorder=11)
  
     sd = tdict['time']['startdate']; ed = tdict['time']['enddate']
-    ax.set_title(f'TC Frequency by Basin  [{method_label}]\n'
+    cat_title_str = f'\nCategory filter: {cat_label}' if cat_label else ''
+    ax.set_title(f'TC Frequency by Basin  [{method_label}]{cat_title_str}\n'
                  f'(storms/yr, {min(years_seen)}–{max(years_seen)})\n'
                  f'NH: May–Nov | SH: Oct–May',
                  fontsize=13, fontweight='bold', pad=15)
+    
     ax.legend(wedges, [f"{b}: {basin_freq[b]:.1f}/yr" for b in basins_ord],
               loc='center left', bbox_to_anchor=(1, 0, 0.5, 1),
               fontsize=10, frameon=True, fancybox=True, shadow=True)
@@ -1111,7 +1177,8 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0,
     m_c  = tdict['dataset']['model'].replace(' ', '_')
     ex_c = tdict['dataset']['exp'].replace(' ', '_')
     sd_c = sd.replace('-', ''); ed_c = ed.replace('-', '')
-    base_d   = f'tc_doughnut{suffix}_{m_c}_{ex_c}_{sd_c}_{ed_c}'
+    cat_sfx = f'_cat{category}{"minus" if cat_direction == "minus" else "plus"}' if category is not None else ''
+    base_d   = f'tc_doughnut{suffix}{cat_sfx}_{m_c}_{ex_c}_{sd_c}_{ed_c}'    
     pdf_d    = os.path.join(tdict['paths']['plotdir'], f'{base_d}.pdf')
     plt.savefig(pdf_d, dpi=300, bbox_inches='tight')
     print(f"✓ Doughnut → {pdf_d}")
@@ -1142,7 +1209,7 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0,
     ax.legend(fontsize=11); ax.grid(alpha=0.3, axis='y')
     plt.tight_layout()
  
-    base_c   = f'tc_freq_comparison{suffix}_{m_c}_{ex_c}_{sd_c}_{ed_c}'
+    base_c   = f'tc_freq_comparison{suffix}{cat_sfx}_{m_c}_{ex_c}_{sd_c}_{ed_c}'    
     pdf_c    = os.path.join(tdict['paths']['plotdir'], f'{base_c}.pdf')
     plt.savefig(pdf_c, dpi=300, bbox_inches='tight')
     print(f"✓ Comparison → {pdf_c}")
