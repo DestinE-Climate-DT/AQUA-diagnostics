@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.26.0):
 
+Complete list:
+- Timeseries: support no overlap between observations and model data (#370)
+
 ## [v0.25.0]
 
 Main changes:
