@@ -115,13 +115,19 @@ def main(argv=None):
                                     }
                                 )
                                 cli.logger.info(f"Reference args: {reference_args}")
-                                ts_ref[i] = Timeseries(**init_args, **reference_args)
-                                ts_ref[i].run(
-                                    **run_args,
-                                    std=True,
-                                    create_catalog_entry=False,
-                                    reader_kwargs=reference.get("reader_kwargs") or {},
-                                )
+                                try:
+                                    ts_ref[i] = Timeseries(**init_args, **reference_args)
+                                    ts_ref[i].run(
+                                        **run_args,
+                                        std=True,
+                                        create_catalog_entry=False,
+                                        reader_kwargs=reference.get("reader_kwargs") or {},
+                                    )
+                                except ValueError as e:
+                                    # Model and reference periods do not overlap at all (or another data
+                                    # availability issue): skip this reference instead of crashing the CLI.
+                                    cli.logger.warning(f"Skipping reference {reference} for variable {var}: {e}")
+                                    ts_ref[i] = None
 
                         # Plot the timeseries
                         if cli.save_format:
@@ -255,13 +261,19 @@ def main(argv=None):
                                         "std_enddate": var_config.get("std_enddate"),
                                     }
                                 )
-                                ts_ref[i] = Timeseries(**init_args, **reference_args)
-                                ts_ref[i].run(
-                                    **run_args,
-                                    std=True,
-                                    create_catalog_entry=False,
-                                    reader_kwargs=reference.get("reader_kwargs") or {},
-                                )
+                                try:
+                                    ts_ref[i] = Timeseries(**init_args, **reference_args)
+                                    ts_ref[i].run(
+                                        **run_args,
+                                        std=True,
+                                        create_catalog_entry=False,
+                                        reader_kwargs=reference.get("reader_kwargs") or {},
+                                    )
+                                except ValueError as e:
+                                    # Model and reference periods do not overlap at all (or another data
+                                    # availability issue): skip this reference instead of crashing the CLI.
+                                    cli.logger.warning(f"Skipping reference {reference} for variable {var}: {e}")
+                                    ts_ref[i] = None
 
                         # Plot the timeseries
                         if cli.save_format:
@@ -399,13 +411,19 @@ def main(argv=None):
                                         "std_enddate": var_config.get("std_enddate"),
                                     }
                                 )
-                                sc_ref[i] = SeasonalCycles(**init_args, **reference_args)
-                                sc_ref[i].run(
-                                    **run_args,
-                                    std=True,
-                                    create_catalog_entry=False,
-                                    reader_kwargs=reference.get("reader_kwargs") or {},
-                                )
+                                try:
+                                    sc_ref[i] = SeasonalCycles(**init_args, **reference_args)
+                                    sc_ref[i].run(
+                                        **run_args,
+                                        std=True,
+                                        create_catalog_entry=False,
+                                        reader_kwargs=reference.get("reader_kwargs") or {},
+                                    )
+                                except ValueError as e:
+                                    # Model and reference periods do not overlap at all (or another data
+                                    # availability issue): skip this reference instead of crashing the CLI.
+                                    cli.logger.warning(f"Skipping reference {reference} for variable {var}: {e}")
+                                    sc_ref[i] = None
 
                         # Plot the seasonal cycles
                         if cli.save_format:
@@ -415,14 +433,33 @@ def main(argv=None):
                                 region if region else "global",
                                 cli.save_format,
                             )
+
+                            # We populate the ref data with None if any of the reference
+                            # were not successfully run to avoid errors in the plotting function.
+                            if sc_ref and any(t is None for t in sc_ref) or "references" not in cli.config_dict:
+                                # We want to raise a warning only if reference were originally requested.
+                                if sc_ref and any(t is None for t in sc_ref):
+                                    cli.logger.warning(
+                                        f"No reference datasetes were successfully run for variable {var} in region {region if region else 'global'}."  # noqa: E501
+                                    )
+                                ref_monthly_data = None
+                                std_monthly_data = None
+                            else:
+                                ref_monthly_data = (
+                                    [sc_ref[i].monthly for i in range(len(sc_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+                                std_monthly_data = (
+                                    [sc_ref[i].std_monthly for i in range(len(sc_ref))]
+                                    if "references" in cli.config_dict
+                                    else None
+                                )
+
                             plot_args = {
                                 "monthly_data": [sc[i].monthly for i in range(len(sc))],
-                                "ref_monthly_data": [sc_ref[i].monthly for i in range(len(sc_ref))]
-                                if "references" in cli.config_dict
-                                else None,
-                                "std_monthly_data": [sc_ref[i].std_monthly for i in range(len(sc_ref))]
-                                if "references" in cli.config_dict
-                                else None,
+                                "ref_monthly_data": ref_monthly_data,
+                                "std_monthly_data": std_monthly_data,
                                 "loglevel": cli.loglevel,
                                 "diagnostic_name": diagnostic_name,
                             }
