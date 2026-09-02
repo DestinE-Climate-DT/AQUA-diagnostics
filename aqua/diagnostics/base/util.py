@@ -4,25 +4,12 @@ Utility functions for the CLI
 
 import argparse
 import os
-import uuid
 
-import dask
-from dask.base import tokenize
 from dask.distributed import Client, LocalCluster
 
 from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg, load_yaml
-
-# This creates a unique job token for this instance of the module
-# so that all dask keys generated during this run are unique
-_job_token = uuid.uuid4().hex
-_original_tokenize = tokenize
-
-
-def _unique_tokenize(*args, **kwargs):
-    """Tokenize function that includes job token for uniqueness."""
-    return _original_tokenize(_job_token, *args, **kwargs)
 
 
 def template_parse_arguments(parser: argparse.ArgumentParser):
@@ -76,8 +63,7 @@ def open_cluster(nworkers, cluster, loglevel: str = "WARNING"):
             logger.info(f"Initializing private cluster {cluster.scheduler_address} with {nworkers} workers.")
             private_cluster = True
         else:
-            logger.info(f"Connecting to cluster {cluster} with client ID {_job_token}.")
-            dask.base.tokenize = _unique_tokenize
+            logger.info(f"Connecting to cluster {cluster}.")
 
         client = Client(cluster)
     else:
@@ -135,6 +121,7 @@ def load_diagnostic_config(
 
     Args:
         diagnostic (str): diagnostic name
+        default_config (str): default config file name. If not provided, it defaults to "config-{diagnostic}.yaml".
         config (str): config argument can modify the default configuration file.
         folder (str): folder name. Default is "collections". Can be "tools" or "templates" as well.
         loglevel (str): logging level. Default is 'WARNING'.
@@ -243,6 +230,13 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     datasets[0]["model"] = get_arg(args, "model", datasets[0]["model"])
     datasets[0]["exp"] = get_arg(args, "exp", datasets[0]["exp"])
     datasets[0]["source"] = get_arg(args, "source", datasets[0]["source"])
+    # CLI dataset overrides apply only to the first configured dataset.
+    realization = get_arg(args, "realization", None)
+    if realization:
+        logger.info("Realization option is set to: %s", realization)
+        reader_kwargs = dict(datasets[0].get("reader_kwargs") or {})
+        reader_kwargs["realization"] = realization
+        datasets[0]["reader_kwargs"] = reader_kwargs
 
     config["output"]["outputdir"] = get_arg(args, "outputdir", config["output"]["outputdir"])
 

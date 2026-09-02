@@ -30,12 +30,6 @@ def ts_config():
     }
 
 
-@pytest.fixture
-def tmp_path_str():
-    """Provide consistent tmp_path as string."""
-    return "./"
-
-
 @pytest.fixture(scope="module")
 def ts_dataset(ts_config):
     """Retrieve and merge data once for the module."""
@@ -52,9 +46,9 @@ def ts_dataset(ts_config):
 
 
 @pytest.fixture(scope="module")
-def ensemble_ts_instance(ts_config, ts_dataset):
-    """Create an EnsembleTimeseries instance."""
-    # Using the same dataset for both monthly and annual as per original test logic
+def ensemble_ts_instance(ts_config, ts_dataset, tmp_path_factory):
+    """Create an EnsembleTimeseries instance with statistics already computed."""
+    outputdir = str(tmp_path_factory.mktemp("output"))
     ts = EnsembleTimeseries(
         var=ts_config["var"],
         monthly_data=ts_dataset,
@@ -64,13 +58,14 @@ def ensemble_ts_instance(ts_config, ts_dataset):
         exp_list=ts_config["exp_list"],
         source_list=ts_config["source_list"],
         ensemble_dimension_name="ensemble",
-        outputdir="./",
+        outputdir=outputdir,
     )
+    ts.run()
     return ts
 
 
 @pytest.fixture(scope="module")
-def plot_ts_instance(ts_config):
+def plot_ts_instance(ts_config, ensemble_ts_instance):
     """Create a PlotEnsembleTimeseries instance."""
     plot_args = {
         "catalog_list": ts_config["catalog_list"],
@@ -78,7 +73,7 @@ def plot_ts_instance(ts_config):
         "exp_list": ts_config["exp_list"],
         "source_list": ts_config["source_list"],
     }
-    return PlotEnsembleTimeseries(**plot_args, outputdir="./")
+    return PlotEnsembleTimeseries(**plot_args, outputdir=ensemble_ts_instance.outputdir)
 
 
 class TestEnsembleTimeseries:
@@ -89,42 +84,30 @@ class TestEnsembleTimeseries:
         assert ts_dataset is not None
         assert isinstance(ts_dataset, xr.Dataset)
 
-    def test_run(self, ensemble_ts_instance, ts_config, tmp_path_str):
+    def test_run(self, ensemble_ts_instance, ts_config):
         """Test the computation and NetCDF output generation."""
         ts = ensemble_ts_instance
         conf = ts_config
+        outdir = ts.outputdir
 
-        # Execution
-        ts.run()
-
-        # Check attributes exist
-        assert hasattr(ts, "monthly_data_mean")
-        assert hasattr(ts, "annual_data_mean")
+        assert ts.monthly_data_mean is not None
+        assert ts.annual_data_mean is not None
 
         # Construct filenames
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
         # Check NetCDF outputs (Monthly and Annual)
-        nc_monthly = os.path.join(
-            tmp_path_str, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc"
-        )
+        nc_monthly = os.path.join(outdir, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc")
         assert os.path.exists(nc_monthly)
 
-        nc_annual = os.path.join(
-            tmp_path_str, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc"
-        )
+        nc_annual = os.path.join(outdir, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.annual.nc")
         assert os.path.exists(nc_annual)
 
     def test_statistics(self, ensemble_ts_instance):
         """Test the statistical correctness of the ensemble."""
         ts = ensemble_ts_instance
 
-        # Ensure run() has been called
-        if getattr(ts, "monthly_data_mean", None) is None:
-            ts.run()
-
-        # Test if mean is present
         assert ts.monthly_data_mean is not None
         assert ts.annual_data_mean is not None
 
@@ -132,14 +115,12 @@ class TestEnsembleTimeseries:
         assert ts.monthly_data_std.values.all() == 0
         assert ts.annual_data_std.values.all() == 0
 
-    def test_plotting(self, ensemble_ts_instance, plot_ts_instance, ts_config, tmp_path_str):
+    def test_plotting(self, ensemble_ts_instance, plot_ts_instance, ts_config):
         """Test the plotting functionality."""
         ts = ensemble_ts_instance
         plot_ts = plot_ts_instance
         conf = ts_config
-
-        if getattr(ts, "monthly_data_mean", None) is None:
-            ts.run()
+        outdir = ts.outputdir
 
         # STD values are zero. Using mean value as std to test visualization pipeline
         plot_arguments = {
@@ -169,8 +150,8 @@ class TestEnsembleTimeseries:
         var = conf["var"]
 
         # Check Output Files
-        png_file = os.path.join(tmp_path_str, "png", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.png")
+        png_file = os.path.join(outdir, "png", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.png")
         assert os.path.exists(png_file)
 
-        pdf_file = os.path.join(tmp_path_str, "pdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
+        pdf_file = os.path.join(outdir, "pdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.pdf")
         assert os.path.exists(pdf_file)

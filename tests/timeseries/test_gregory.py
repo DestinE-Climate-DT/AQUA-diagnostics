@@ -139,7 +139,7 @@ class TestGregoryUnit:
         assert gp.net_toa_annual is not None
         assert gp.net_toa_std is not None
 
-    def test_save_netcdf_dispatches_expected_products(self, mocker):
+    def test_save_netcdf_dispatches_expected_products(self, mocker, tmp_path):
         gp = Gregory(diagnostic_name="gregory", model="M", exp="E", source="S")
         gp.t2m_monthly = self._da([1.0, 2.0])
         gp.t2m_annual = self._da([1.0, 2.0], start="2000-01-01", freq="YS")
@@ -149,7 +149,7 @@ class TestGregoryUnit:
         gp.net_toa_std = xr.DataArray(np.array(2.0))
 
         save_mock = mocker.patch("aqua.diagnostics.timeseries.gregory.Diagnostic.save_netcdf")
-        gp.save_netcdf(freq=["monthly", "annual"], std=True, t2m=True, net_toa=True, outputdir=".", rebuild=True)
+        gp.save_netcdf(freq=["monthly", "annual"], std=True, t2m=True, net_toa=True, outputdir=str(tmp_path), rebuild=True)
 
         # t2m std/monthly/annual + net_toa std/monthly/annual
         assert save_mock.call_count == 6

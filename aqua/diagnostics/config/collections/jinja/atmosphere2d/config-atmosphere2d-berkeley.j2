@@ -36,7 +36,7 @@ output:
   create_catalog_entry: true
 
 diagnostics:
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'atmosphere2d'
     variables: ['2t']
@@ -97,8 +97,6 @@ diagnostics:
     longterm: true
     params:
       default:
-        startdate: '{{ default.startdate }}'
-        enddate: '{{ default.enddate }}'
         std_startdate: '{{ default.std_startdate }}'
         std_enddate: '{{ default.std_enddate }}'
     variables:

@@ -30,7 +30,7 @@ output:
   create_catalog_entry: true
 
 diagnostics:
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'atmosphere3d'
     variables: ['t', 'u', 'v', 'q']

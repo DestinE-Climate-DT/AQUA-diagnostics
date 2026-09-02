@@ -1,19 +1,19 @@
 import cartopy.crs as ccrs
 import numpy as np
 
-from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff, plot_vertical_profile_diff
+from aqua.core.graphics import plot_maps, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
-from .stat_global_biases import StatGlobalBiases
+from .stat_bias import StatBias
 from .util import handle_pressure_level
 
 
-class PlotGlobalBiases:
+class PlotBias:
     def __init__(
         self,
-        diagnostic="globalbiases",
+        diagnostic="biases",
         save_format=SAVE_FORMAT,
         dpi=300,
         outputdir="./",
@@ -22,7 +22,7 @@ class PlotGlobalBiases:
         loglevel="WARNING",
     ):
         """
-        Initialize the PlotGlobalBiases class.
+        Initialize the PlotBias class.
 
         Args:
             diagnostic (str): Name of the diagnostic.
@@ -41,7 +41,7 @@ class PlotGlobalBiases:
         self.return_fig = return_fig
         self.loglevel = loglevel
 
-        self.logger = log_configure(log_level=loglevel, log_name="Global Biases")
+        self.logger = log_configure(log_level=loglevel, log_name="Bias")
 
     def _save_figure(self, fig, diagnostic_product, data, description, var, data_ref=None, plev=None, **kwargs):
         """
@@ -70,7 +70,7 @@ class PlotGlobalBiases:
             **kwargs,
         )
 
-        metadata = {"Description": description}
+        metadata = {"Description": collapse_era5_duplicate(description)}
         extra_keys = {}
 
         if var is not None:
@@ -97,12 +97,21 @@ class PlotGlobalBiases:
         data_ts = handle_pressure_level(data_ts, var, plev, loglevel=self.loglevel)
         data_ref_ts = handle_pressure_level(data_ref_ts, var, plev, loglevel=self.loglevel)
 
-        stat_test = StatGlobalBiases(loglevel=self.loglevel)
+        stat_test = StatBias(loglevel=self.loglevel)
 
         return stat_test.compute_significance_ttest(data_ts, data_ref_ts, var, alpha=alpha)
 
     def _add_significance_stippling(
-        self, ax, significance_mask, lat, lon, stipple_density=3, stipple_size=0.5, stipple_color="black", invert_mask=False
+        self,
+        ax,
+        significance_mask,
+        lat,
+        lon,
+        stipple_density=None,
+        target_spacing_deg=2.0,
+        stipple_size=0.8,
+        stipple_color="black",
+        invert_mask=False,
     ):
         """
         Add stippling to indicate statistical significance on a map.
@@ -110,16 +119,28 @@ class PlotGlobalBiases:
         The function subsamples the significance mask to avoid overcrowding
         and plots small dots (stipples) at grid points where the mask is True.
         Args:
-        ax (matplotlib.axes.Axes): The axes to plot on.
-        significance_mask (xarray.DataArray): Boolean mask indicating significant points.
-        lat (xarray.DataArray): Latitude coordinates.
-        lon (xarray.DataArray): Longitude coordinates.
-        stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point). Default is 3.
-        stipple_size (float, optional): Size of the stipple dots. Default is 0.5.
-        stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
-        invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
-            Default is False (stippling where significant).
+            ax (matplotlib.axes.Axes): The axes to plot on.
+            significance_mask (xarray.DataArray): Boolean mask indicating significant points.
+            lat (xarray.DataArray): Latitude coordinates.
+            lon (xarray.DataArray): Longitude coordinates.
+            stipple_density (int, optional): Subsampling factor for the mask (e.g., 3 means every 3rd point).
+                If None, an adaptive value is computed based on target_spacing_deg and grid resolution.
+            target_spacing_deg (float, optional): Desired approximate spacing in degrees between plotted
+                stipples when stipple_density is None. Default is 2.0.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.8.
+            stipple_color (str, optional): Color of the stipple dots. Default is 'black'.
+            invert_mask (bool, optional): If True, stipple where the mask is False (i.e., non-significant points).
+                Default is False (stippling where significant).
         """
+        if stipple_density is None:
+            lat_res = abs(float(lat[1] - lat[0]))
+            lon_res = abs(float(lon[1] - lon[0]))
+            grid_res = min(lat_res, lon_res)
+            stipple_density = max(1, round(target_spacing_deg / grid_res))
+            self.logger.debug(
+                f"Adaptive stipple_density={stipple_density} computed for grid resolution "
+                f"{lat_res:.3f}x{lon_res:.3f} deg (target_spacing_deg={target_spacing_deg})."
+            )
 
         # Subsample the significance mask along latitude and longitude
         # (e.g. every Nth grid point) to control stippling density
@@ -138,6 +159,13 @@ class PlotGlobalBiases:
         # - True: stipple where differences are NOT significant
         mask_to_plot = ~mask_sub if invert_mask else mask_sub
 
+        # Number of stipples that will actually be plotted
+        n_stipples = np.count_nonzero(mask_to_plot.values)
+
+        self.logger.debug(f"Stippling: density={stipple_density}, plotted points={n_stipples}")
+
+        self.logger.debug(f"Subsampled grid: {mask_sub.shape}, cells={mask_sub.size}, significant={mask_to_plot.sum().item()}")
+
         # Plot stippling using a scatter plot:
         # dots are placed only at grid points where mask_to_plot is True
         ax.scatter(
@@ -149,79 +177,6 @@ class PlotGlobalBiases:
             alpha=0.6,
             linewidths=0,
         )
-
-    def plot_climatology(self, data, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None):
-        """
-        Plots the climatology map for a given variable and time range.
-
-        Args:
-            data (xarray.Dataset): Climatology dataset to plot.
-            var (str): Variable name.
-            plev (float, optional): Pressure level to plot (if applicable).
-            proj (string, optional): Desired projection for the map.
-            proj_params (dict, optional): Additional arguments for the projection (e.g., {'central_longitude': 0}).
-            vmin (float, optional): Minimum color scale value.
-            vmax (float, optional): Maximum color scale value.
-            cbar_label (str, optional): Label for the colorbar.
-
-        Returns:
-            tuple: Matplotlib figure and axis objects.
-        """
-        self.logger.info("Plotting climatology.")
-
-        data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
-        if data is None:
-            return None
-
-        realization = get_realizations(data)
-        proj = get_projection(proj, **proj_params)
-
-        extra_info = f"at {int(plev / 100)} hPa" if plev else None
-        title = TitleBuilder(
-            diagnostic="Climatology",
-            variable=data[var].attrs.get("long_name", var),
-            model=data.AQUA_model,
-            exp=data.AQUA_exp,
-            extra_info=extra_info,
-        ).generate()
-
-        fig, ax = plot_single_map(
-            data[var],
-            return_fig=True,
-            title=title,
-            title_size=16,
-            vmin=vmin,
-            vmax=vmax,
-            proj=proj,
-            loglevel=self.loglevel,
-            cbar_label=cbar_label,
-            cmap=self.cmap,
-        )
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-
-        description = (
-            f"Spatial map of the climatology for {data[var].attrs.get('long_name', var).lower()}"
-            f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')} "
-            f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
-        )
-
-        if self.format_to_save:
-            self._save_figure(
-                fig=fig,
-                diagnostic_product="annual_climatology",
-                data=data,
-                description=description,
-                var=var,
-                plev=plev,
-                realization=realization,
-            )
-
-        if self.return_fig:
-            return fig, ax
-        return None
 
     def plot_bias(
         self,
@@ -240,8 +195,9 @@ class PlotGlobalBiases:
         data_ref_timeseries=None,
         show_significance=False,
         significance_alpha=0.05,
-        stipple_density=3,
-        stipple_size=0.5,
+        stipple_density=None,
+        stipple_size=0.8,
+        target_spacing_deg=2,
         invert_stippling=False,
     ):
         """
@@ -259,8 +215,17 @@ class PlotGlobalBiases:
             cbar_label (str, optional): Label for the colorbar.
             area (xr.DataArray, optional): Grid cell areas for computing weighted statistics.
             show_stats (bool, optional): Whether to show statistical information on the plot.
+            data_timeseries (xr.Dataset, optional): Model dataset with time dimension, used for significance testing.
+            data_ref_timeseries (xr.Dataset, optional): Reference dataset with time dimension, used for significance testing.
+            show_significance (bool, optional): Whether to overlay significance stippling on the plot. Default is False.
+            significance_alpha (float, optional): Significance level for the t-test. Default is 0.05.
+            stipple_density (int, optional): Subsampling factor for stippling. If None, computed adaptively.
+            stipple_size (float, optional): Size of the stipple dots. Default is 0.8.
+            target_spacing_deg (float, optional): Desired approximate spacing in degrees
+                                                  between plotted stipples when stipple_density is None. Default is 2.0.
+            invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
         """
-        self.logger.info("Plotting global biases.")
+        self.logger.info("Plotting biases")
 
         data = handle_pressure_level(data, var, plev, loglevel=self.loglevel)
         data_ref = handle_pressure_level(data_ref, var, plev, loglevel=self.loglevel)
@@ -273,7 +238,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Global bias",
+            diagnostic="Difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -329,6 +294,7 @@ class PlotGlobalBiases:
                 lat,
                 lon,
                 stipple_density=stipple_density,
+                target_spacing_deg=target_spacing_deg,
                 stipple_size=stipple_size,
                 invert_mask=invert_stippling,
             )
@@ -362,7 +328,7 @@ class PlotGlobalBiases:
             self.logger.debug("Computing bias statistics.")
             if area is None:
                 self.logger.warning("Grid areas not provided, unweighted statistics will be computed.")
-            bs = StatGlobalBiases(loglevel=self.loglevel)
+            bs = StatBias(loglevel=self.loglevel)
             stats = bs.compute_bias_statistics(data=data, data_ref=data_ref, var=var, area=area)
             mean_bias = float(stats.mean_bias.values)
             rmse = float(stats.rmse.values)
@@ -409,7 +375,16 @@ class PlotGlobalBiases:
         return None
 
     def plot_seasonal_bias(
-        self, data, data_ref, var, plev=None, proj="robinson", proj_params={}, vmin=None, vmax=None, cbar_label=None
+        self,
+        data,
+        data_ref,
+        var,
+        plev=None,
+        proj="robinson",
+        proj_params={},
+        vmin=None,
+        vmax=None,
+        cbar_label=None,
     ):
         """
         Plots seasonal biases for each season (DJF, MAM, JJA, SON).
@@ -440,7 +415,7 @@ class PlotGlobalBiases:
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
-            diagnostic="Seasonal bias",
+            diagnostic="Seasonal difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
@@ -460,7 +435,8 @@ class PlotGlobalBiases:
             "titles": season_list,
             "titles_size": 14,
             "figsize": (10, 8),
-            "contour": True,
+            # Seasonal maps show the differences only (no model climatology contours).
+            "contour": False,
             "sym": sym,
             "cbar_label": cbar_label,
             "cmap": self.cmap,
@@ -475,12 +451,11 @@ class PlotGlobalBiases:
         fig = plot_maps(**plot_kwargs)
 
         description = (
-            f"Seasonal climatology of {data[var].attrs.get('long_name', var).lower()}"
+            f"Seasonal differences of {data[var].attrs.get('long_name', var).lower()}"
             f"{' at ' + str(int(plev / 100)) + ' hPa' if plev else ''} "
-            f"for {data.AQUA_model} {data.AQUA_exp} (from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')}, contours) "
-            f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.AQUA_startdate, format='%Y-%m')} "
-            f"to {time_to_string(data_ref.AQUA_enddate, format='%Y-%m')}, shading)."
+            f"(from {time_to_string(data.AQUA_startdate, format='%Y-%m')} "
+            f"to {time_to_string(data.AQUA_enddate, format='%Y-%m')}) "
+            f"for the {data.AQUA_model} model, experiment {data.AQUA_exp}."
         )
 
         if self.format_to_save:
@@ -532,7 +507,7 @@ class PlotGlobalBiases:
         realization = get_realizations(data)
 
         title = TitleBuilder(
-            diagnostic="Vertical bias",
+            diagnostic="Vertical difference",
             variable=data[var].attrs.get("long_name", var),
             model=data.AQUA_model,
             exp=data.AQUA_exp,

@@ -29,9 +29,9 @@ output:
   create_catalog_entry: true
 
 diagnostics:
-  globalbiases:
+  biases:
     run: true
-    diagnostic_name: 'globalbiases'
+    diagnostic_name: 'biases'
     variables: ['tprate', 'u']
     formulae: ['(10u^2+10v^2)^0.5']
     params:
