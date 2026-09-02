@@ -5,8 +5,21 @@
 regions:
 
   arctic_test:
-    regiomask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
     longname: Arctic Ocean
+
+  europe_ar6:
+    # A true regionmask-based "Europe", built as the union of 4 IPCC AR6
+    # reference land regions covering the continent:
+    # Northern Europe, West & Central Europe, Eastern Europe and the
+    # Mediterranean. 
+    regionmask: ar6.land
+    regionmask_names:
+      - N.Europe
+      - West&Central-Europe
+      - E.Europe
+      - Mediterranean
+    longname: Europe
 
   # Atmospheric / generic geographical bands
   nh:

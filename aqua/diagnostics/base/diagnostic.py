@@ -405,8 +405,8 @@ class Diagnostic:
 
         Returns:
             region (str): The region long name to be used (or None if no region was provided).
-            lon_limits (list): The longitude limits to be used.
-            lat_limits (list): The latitude limits to be used.
+            lon_limits (list): The longitude limits to be used (None for a regionmask-based region).
+            lat_limits (list): The latitude limits to be used (None for a regionmask-based region).
         """
         if region is None:
             self.logger.info(
@@ -424,25 +424,58 @@ class Diagnostic:
         if spec.get("regionmask") is None:
             lon_limits = spec.get("lon_limits", lon_limits)
             lat_limits = spec.get("lat_limits", lat_limits)
-            region_object = None
         else:
-            lat_limits = None
             lon_limits = None
-            regionmask_string = f"regionmask.defined_regions.{spec['regionmask']}"
-            parts = regionmask_string.split(
-                ".", 1
-            )  # e.g["regionmask", "defined_regions.natural_earth_v5_1_2.ocean_basins_50"]
-            region_object = attrgetter(parts[1])(regionmask)
+            lat_limits = None
 
-        return long_name, lon_limits, lat_limits, region_object
+        return long_name, lon_limits, lat_limits
 
-    def select_region(self, data: xr.Dataset, region: str = None, drop: bool = True, **kwargs):
+    def _resolve_regionmask_object(self, region: str, regions_file_path: str = None):
+        """
+        Resolve the regionmask objects needed to select a regionmask-based region, if any.
+
+        By default the region long name doubles as the regionmask sub-region selector.
+        If the region is a regionmask-based region, the ``regionmask_names`` key in the regions file can be used instead to
+        select (and combine into a single mask) one or more sub-regions with different
+        names, e.g. several regionmask sub-regions covering "Europe".
+
+        Args:
+            region (str): The region key in the regions file.
+            regions_file_path (str): The path to the regions file. If None, the centralized
+                regions file will be used.
+
+        Returns:
+            region_object (regionmask.Regions): The regionmask regions collection to select
+                from, or None if the region is not regionmask-based.
+            region_sel (str | list): The name(s) to pass as ``region_sel`` to
+                ``Reader.select_area``, or None if the region is not regionmask-based.
+        """
+        regions_dict = self._load_regions_from_file(regions_file_path=regions_file_path)
+        spec = regions_dict.get(region, {})
+        if spec.get("regionmask") is None:
+            return None, None
+
+        regionmask_string = f"regionmask.defined_regions.{spec['regionmask']}"
+        parts = regionmask_string.split(
+            ".", 1
+        )  # e.g["regionmask", "defined_regions.natural_earth_v5_1_2.ocean_basins_50"]
+        region_object = attrgetter(parts[1])(regionmask)
+        long_name = spec.get("longname", region)
+        region_sel = spec.get("regionmask_names", long_name)
+
+        return region_object, region_sel
+
+    def select_region(
+        self, data: xr.Dataset, region: str = None, regions_file_path: str = None, drop: bool = True, **kwargs
+    ):
         """
         Select a geographic region from the dataset. Used when selection is not on the self.data attribute.
 
         Args:
             data (xarray Dataset or DataArray): The dataset to select the region from.
             region (str): The region to select from the centralized regions file.
+            regions_file_path (str): The path to the regions file. If None, the centralized
+                regions file will be used.
             drop (bool): Whether to drop coordinates outside the selected region.
             **kwargs: Additional keyword arguments passed to the select_area reader method.
 
@@ -453,15 +486,19 @@ class Diagnostic:
                 - 'region': The name of the selected region.
                 - 'lon_limits': The longitude limits of the selected region.
                 - 'lat_limits': The latitude limits of the selected region.
+                - 'region_object': The regionmask regions collection used, if any.
         """
         original_name = data.name if isinstance(data, xr.DataArray) else None
 
         if region is not None:
-            longname, lon_limits, lat_limits, region_object = self._set_region(region=region)
+            longname, lon_limits, lat_limits = self._set_region(region=region, regions_file_path=regions_file_path)
+            region_object, region_sel = self._resolve_regionmask_object(
+                region=region, regions_file_path=regions_file_path
+            )
             self.logger.info("Applying area selection for region: %s", region)
             if region_object is not None:
-                self.logger.info("Using regionmask object: %s", region_object)
-                data = self.reader.select_area(data=data, region=region_object, region_sel=longname, drop=drop, **kwargs)
+                self.logger.info("Using regionmask object: %s (region_sel=%s)", region_object, region_sel)
+                data = self.reader.select_area(data=data, region=region_object, region_sel=region_sel, drop=drop, **kwargs)
             elif lon_limits is not None and lat_limits is not None:
                 self.logger.info("Using custom lon/lat limits: %s, %s", lon_limits, lat_limits)
                 data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
