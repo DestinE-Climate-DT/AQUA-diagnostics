@@ -5,9 +5,11 @@ Utility functions for the CLI
 import argparse
 import os
 
+import xarray as xr
 from dask.distributed import Client, LocalCluster
 
 from aqua.core.configurer import ConfigPath
+from aqua.core.data_model.coordidentifier import CoordIdentifier
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg, load_yaml
 
@@ -250,3 +252,13 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
             logger.debug(f"  - {ref['catalog']} {ref['model']} {ref['exp']} {ref['source']}")
 
     return config
+
+
+def find_vert_coord(ds: xr.Dataset | xr.DataArray) -> list[str]:
+    """
+    Identify the vertical coordinate name(s) based on coordinate units. Returns always a list.
+    The list will be empty if none found.
+    """
+    coords = CoordIdentifier(ds.coords).identify_coords()
+    full_vert_coord = [y["name"] for x, y in coords.items() if y is not None and x in ["isobaric", "depth", "height"]]
+    return full_vert_coord
