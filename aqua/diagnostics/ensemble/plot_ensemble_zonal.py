@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError
-from aqua.core.util import find_vert_coord
-from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder, find_vert_coord
 
 from .base import BaseMixin
 
