@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.26.0):
 
+Main changes:
+
+Complete list:
+
+## [v0.25.1]
+
 Complete list:
 - Timeseries: support no overlap between observations and model data (#370)
 
@@ -173,7 +179,8 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.0...HEAD
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.1...HEAD
+[v0.25.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.0...v0.25.1
 [v0.25.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...v0.25.0
 [v0.24.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
 [v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...v0.24.0
