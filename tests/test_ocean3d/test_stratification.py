@@ -1,6 +1,6 @@
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 from aqua.diagnostics.ocean_stratification import PlotMLD, PlotStratification
 from aqua.diagnostics.ocean_stratification.stratification import Stratification

@@ -1,6 +1,6 @@
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 from aqua.diagnostics.ocean_trends import PlotTrends, Trends
 from tests.shared_constants import APPROX_REL, LOGLEVEL

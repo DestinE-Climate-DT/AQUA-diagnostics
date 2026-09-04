@@ -1,6 +1,6 @@
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 from aqua.diagnostics.ocean_drift import Hovmoller, PlotHovmoller
 from tests.shared_constants import LOGLEVEL
