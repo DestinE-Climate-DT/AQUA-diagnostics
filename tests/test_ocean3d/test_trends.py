@@ -33,9 +33,7 @@ def trends_plots(trends_result):
 
     PlotTrends(data=trend.trend_coef, outputdir=tmp_path, loglevel=loglevel).plot_multilevel(save_format=["png", "pdf"])
 
-    PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(
-        save_format=["png", "pdf"]
-    )
+    PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(save_format=["png", "pdf"])
 
     return tmp_path
 
