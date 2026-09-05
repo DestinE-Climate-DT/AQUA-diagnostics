@@ -1,0 +1,64 @@
+# Models for which sea surface height (SSH) variability is to be evaluated.
+datasets:
+  - catalog: 'climatedt-gen2'
+    model: 'IFS-NEMO-5km'
+    exp: 'baseline-hist'
+    source: 'daily-hpz7-o2d-zos'
+    regrid: 'r025' 
+    zoom: 
+    realization: 
+    fix: True
+    reader_kwargs:
+
+
+# This is the reference model against which other models are compared.
+references:
+  - catalog: 'obs'
+    model: 'AVISO'
+    exp: 'vDT2024'
+    source: 'daily-zarr'
+    regrid:
+    fix: True
+    # TODO:
+  #  #reader_kwargs: null #  it can be a dictionary with reader kwargs
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  variabilitymap:
+    run: true
+    diagnostic_name: 'ocean2d'
+    variables: ['zos']
+    params:
+      default:
+        startdate_data: '1994-01-01'
+        enddate_data: '1994-03-31'
+        startdate_ref: '1994-01-01'
+        enddate_ref: '1994-03-31'
+    plot_params:
+      default:
+        contour: true
+        projection: 'robinson' # for 'robinson' must be 'true' and for 'plate_carree' it must be 'false' 
+        projection_params: {}
+        vmin:
+        vmax:
+        cmap: 'RdBu_r'
+        tgt_grid_name: "r1440x721"
+        regrid_method: 'ycon'
+      # sub region selection
+      sub_region :
+        name: Agulhas
+        lon_limits: [5, 50]
+        lat_limits: [-10, -50]
+        projection: 'plate_carree'
+        contour: false
+        projection_params: {}
+

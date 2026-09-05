@@ -4,35 +4,35 @@ import xarray as xr
 # from astropy_healpix import healpy as hp
 from aqua import Regridder
 from aqua.core.fldstat import AreaSelection
-from aqua.core.graphics import plot_single_map
+from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.util import get_projection
 
 # from aqua.core.util.graphics import isnpixok
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
-# import matplotlib.pyplot as plt
-# from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
+import matplotlib.pyplot as plt
 from .base import PlotBaseMixin
 
 xr.set_options(keep_attrs=True)
 
-
-class SshVariabilityPlot(PlotBaseMixin):
+class PlotVariabilityMap(PlotBaseMixin):
     """
-    Plot sshVariability and the difference of sshVariability
+    Plot variability (STD) maps and the difference of variability maps between data and reference
+    
+    Note: Variability means STD in this diagnostic
     """
 
     def __init__(
         self,
-        diagnostic_name="sshVariability",
+        diagnostic_name="VariabilityMap",
         outputdir="./",
         loglevel="WARNING",
     ):
         """
-        Initialize the sshVariability.
+        Initialize the PlotVariabilityMap.
 
         Args:
-            diagnostic_name (str): sshVariability
+            diagnostic_name (str): VariabilityMap
             outputdir (str): output directory
             loglevel (str): Default WARNING
         """
@@ -56,7 +56,8 @@ class SshVariabilityPlot(PlotBaseMixin):
         ax_pos: tuple = (1, 1, 1),
         vmin=None,
         vmax=None,
-        gridlines=True,
+        gridlines=False,
+        contour=False,
         proj="robinson",
         proj_params={},
         save_format=SAVE_FORMAT,
@@ -70,24 +71,24 @@ class SshVariabilityPlot(PlotBaseMixin):
         mask_southern_boundary=True,
         northern_boundary_latitude=70,
         southern_boundary_latitude=-62,
-        diagnostic_product="sshVariability",
+        diagnostic_product="VariabilityMap",
         rebuild: bool = True,
         description=None,
         tgt_grid_name="r1440x721",
         regrid_method="ycon",
     ):
         """
-        Visualize the SSH variability.
+        Visualize the Variability map.
 
-        Plot the variability of sea surface height (SSH) from an input dataset.
+        Plot the variability map from an input dataset.
 
-        This function visualizes SSH variability using configurable spatial, temporal,
-        and plotting options. It supports contou, regional selection, custom projections,
+        This function visualizes variability map using configurable spatial, temporal,
+        and plotting options. It supports contour, regional selection, custom projections,
         masking, and output saving in multiple formats.
 
         Args:
-            var (str, optional): Variable name for SSH, e.g., ``'zos'``.
-            dataset_std (xarray.Dataset, optional): Dataset containing the SSH field to be plotted.
+            var (str, optional): Variable to be plotted. Default is 'None'.
+            dataset_std (xarray.Dataset, optional): Dataset containing the 2D fields to be plotted.
             catalog (str, optional): Catalog name. Used in plot titles. (Mandatory for labeling)
             model (str, optional): Model or dataset name. Used in plot titles. (Mandatory for labeling)
             exp (str, optional): Experiment identifier. Used in plot titles. (Mandatory for labeling)
@@ -109,7 +110,7 @@ class SshVariabilityPlot(PlotBaseMixin):
             mask_southern_boundary (bool, optional): If ``True``, mask latitudes south of ``southern_boundary_latitude``.
             northern_boundary_latitude (float, optional): Latitude above which data will be masked. Default is ``70``.
             southern_boundary_latitude (float, optional): Latitude below which data will be masked. Default is ``-62``.
-            diagnostic_product (str, optional): Diagnostic type, e.g., ``'sshVariability'``. Default is ``'sshVariability'``.
+            diagnostic_product (str, optional): Diagnostic type, e.g., ``'VariabilityMap'``.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             description (str, optional): Additional description to include in the plot or metadata.
             tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
@@ -132,18 +133,17 @@ class SshVariabilityPlot(PlotBaseMixin):
 
         if isinstance(dataset_std, xr.Dataset):
             dataset_std = dataset_std[var]
-        else:
-            dataset_std = dataset_std
+
         # This is important to provide the start and end dates. These dates will be used in the title of the plot
         if startdate is None or enddate is None:
             self.logger.error("Please specify the time period of the data")
 
-        self.logger.info(f"Plotting SSH Variability for {model} and {exp}, from {startdate} to {enddate}.")
+        self.logger.info(f"Plotting variability (STD) map for {model} and {exp}, from {startdate} to {enddate}.")
         long_name = dataset_std.attrs.get("long_name", var)
         units = dataset_std.attrs.get("units", var)
 
         title = TitleBuilder(
-            diagnostic="SSH Variability",
+            diagnostic="Variability Map",
             variable=long_name,
             regions=region,
             model=model,
@@ -152,7 +152,7 @@ class SshVariabilityPlot(PlotBaseMixin):
             endyear=enddate,
         ).generate()
 
-        description = f"SSH Variability of {long_name} for {model} {exp} ({startdate} to {enddate}) "
+        description = f"Variability map of {long_name} for {model} {exp} ({startdate} to {enddate}) "
 
         # Check if the dataset is in HEALPix format
         # npix = dataset_std.size  # Number of cells in the data
@@ -195,39 +195,39 @@ class SshVariabilityPlot(PlotBaseMixin):
             vmax = float(dataset_std.max(skipna=True))
 
         proj = get_projection(proj, **proj_params)
-        # fig = plt.figure(figsize=figsize)
-        # ax = fig.add_subplot(ax_pos[0], ax_pos[1], ax_pos[2], projection=proj)
         if vmin == vmax:
             self.logger.info("STD is Zero everywhere")
             fig, ax = plot_single_map(
-                # ax,
-                dataset_std,
-                contour=False,
+                data=dataset_std,
+                contour=contour,
                 return_fig=True,
                 title=title,
                 proj=proj,
-                # cyclic_lon=False,
+                #cyclic_lon=False,
                 add_land=True,
-                # transform_first=True,
+                #transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 **plot_options,
             )
         else:
             fig, ax = plot_single_map(
-                # ax,
-                dataset_std,
-                contour=False,
+                data=dataset_std,
+                contour=contour,
                 return_fig=True,
                 title=title,
                 vmin=vmin,
                 vmax=vmax,
                 proj=proj,
-                # cyclic_lon=False,
+                #cyclic_lon=False,
                 add_land=True,
-                # transform_first=True,
+                #transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 **plot_options,
             )
         ax.set_xlabel("Longitude")
@@ -274,7 +274,8 @@ class SshVariabilityPlot(PlotBaseMixin):
         plot_options={},
         vmin_diff=None,
         vmax_diff=None,
-        gridlines=True,
+        gridlines=False,
+        contour=False,
         proj="robinson",
         proj_params={},
         save_format=SAVE_FORMAT,
@@ -288,16 +289,16 @@ class SshVariabilityPlot(PlotBaseMixin):
         mask_southern_boundary=True,
         northern_boundary_latitude=70,
         southern_boundary_latitude=-62,
-        diagnostic_product="sshVariability_Difference",
+        diagnostic_product="variability_map_difference",
         description=None,
         rebuild: bool = True,
         tgt_grid_name="r1440x721",
         regrid_method="ycon",
     ):
         """
-        Visualize the difference in sea surface height (SSH) variability between a model and a reference dataset.
+        Visualize the difference in variability between a model and a reference dataset.
 
-        This function generates a map of SSH variability differences using Cartopy projections,
+        This function generates a map of variability (STD) differences using Cartopy projections,
         supporting custom contour, masking, regional selection, and configurable plotting options.
         The plot can be saved as PNG or PDF.
 
@@ -331,7 +332,7 @@ class SshVariabilityPlot(PlotBaseMixin):
             mask_southern_boundary (bool, optional): Mask latitudes below southern_boundary_latitude. Default is True.
             northern_boundary_latitude (float, optional): Latitude above which data is masked. Default is 70.
             southern_boundary_latitude (float, optional): Latitude below which data is masked. Default is -62.
-            diagnostic_product (str, optional): Diagnostic product identifier. Default is 'sshVariability_Difference'.
+            diagnostic_product (str, optional): Diagnostic product identifier. Default is 'variability_map_difference'.
             description (str, optional): Additional description for the plot metadata or title.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
@@ -345,7 +346,7 @@ class SshVariabilityPlot(PlotBaseMixin):
             TypeError: If input datasets are not xarray.Datasets.
         """
         # TODO:
-        # Test if the sshVariability is computed in healpix/native grid then compte the difference will be an issue.
+        # Test if the VariabilityMap is computed in healpix/native grid then compte the difference will be an issue.
         # Therefore perform regridding via Regridding class.
 
         if dataset_std is None and dataset_std_ref is None:
@@ -401,14 +402,14 @@ class SshVariabilityPlot(PlotBaseMixin):
         units = dataset_std.attrs.get("units", var)
 
         title = TitleBuilder(
-            diagnostic="The difference of the SSH Variability",
+            diagnostic="Variability",
             variable=long_name,
             regions=region,
             model=model,
             exp=exp,
             startyear=startdate,
             endyear=enddate,
-            comparison="relative to",
+            comparison="minus",
             ref_model=model_ref,
             ref_exp=exp_ref,
             ref_startyear=startdate_ref,
@@ -416,7 +417,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         ).generate()
 
         description = (
-            f"The difference of the SSH Variability of {long_name} for {model} {exp} "
+            f"Difference between Variability of {long_name} for {model} {exp} "
             f"({startdate}-{enddate}) and, reference {catalog_ref} {model_ref} and {exp_ref} "
             f"({startdate_ref}-{enddate_ref}) "
         )
@@ -445,13 +446,11 @@ class SshVariabilityPlot(PlotBaseMixin):
             raise ValueError("Both data and data_ref must be an xarray.DataArray")
 
         diff_map = (dataset_std - dataset_std_ref).persist()
-
+        
         if np.array_equal(np.nan_to_num(dataset_std.values), np.nan_to_num(dataset_std_ref.values)):
             self.logger.warning("The values are exactly the same (ignoring NaNs), no difference to plot")
 
         proj = get_projection(proj, **proj_params)
-        # fig = plt.figure(figsize=figsize)
-        # ax = fig.add_subplot(ax_pos[0], ax_pos[1], ax_pos[2], projection=proj)
 
         if vmin_diff is None or (isinstance(vmin_diff, (float, int)) and np.isnan(vmin_diff)):
             vmin_diff = float(diff_map.min(skipna=True))
@@ -461,36 +460,38 @@ class SshVariabilityPlot(PlotBaseMixin):
         if vmin_diff == vmax_diff:
             # TODO: discuss what should do here in this case.
             self.logger.info("STD is Zero everywhere")
-            fig, ax = plot_single_map(
-                # ax,
-                diff_map,
-                contour=False,
+            fig, ax = plot_single_map_diff(
+                data=dataset_std,
+                data_ref=dataset_std_ref,
+                contour=contour,
                 return_fig=True,
                 title=title,
-                # cyclic_lon=False,
+                #cyclic_lon=False,
                 add_land=True,
-                # transform_first=True,
+                transform_first=True,
                 proj=proj,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
-                # cbar_label=cbar_label
             )
         else:
-            fig, ax = plot_single_map(
-                # ax,
-                diff_map,
-                contour=False,
+            fig, ax = plot_single_map_diff(
+                data=dataset_std,
+                data_ref=dataset_std_ref,
+                contour=contour,
                 return_fig=True,
                 title=title,
-                vmin=vmin_diff,
-                vmax=vmax_diff,
-                # cyclic_lon=False,
+                vmin_fill=vmin_diff,
+                vmax_fill=vmax_diff,
+                #cyclic_lon=False,
                 add_land=True,
-                # transform_first=True,
+                #transform_first=True,
                 proj=proj,
+                figsize=figsize,
+                ax_pos=ax_pos,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
-                # cbar_label=cbar_label
             )
 
         ax.set_xlabel("Longitude")
@@ -539,6 +540,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         """
         self.logger.info(f"Selecting the sub-region plots: {region_name}.")
         # Apply masking if necessary
+        # TODO: Test the ICON part
         if "ICON" in model and mask_northern_boundary and northern_boundary_latitude:
             data = data.where(data.lat < northern_boundary_latitude)
         if "ICON" in model and mask_southern_boundary and southern_boundary_latitude:

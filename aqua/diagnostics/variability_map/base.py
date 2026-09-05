@@ -10,11 +10,11 @@ xr.set_options(keep_attrs=True)
 
 
 class BaseMixin(Diagnostic):
-    """The BaseMixin class is used to save the outputs from the ssh module."""
+    """The BaseMixin class is used to save the outputs from the VariabilityMap module."""
 
     def __init__(
         self,
-        diagnostic_name: str = "sshVariability",
+        diagnostic_name: str = "VariabilityMap",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -32,6 +32,7 @@ class BaseMixin(Diagnostic):
         short_name: str = None,
         units: str = None,
         rebuild: bool = True,
+        fix: bool = True,
         loglevel: str = "WARNING",
     ):
         """
@@ -41,7 +42,7 @@ class BaseMixin(Diagnostic):
         model, experiment, region, regridding options, output directory, and logging.
 
         Args:
-            diagnostic_name (str): Name of the diagnostic (default: 'sshVariability').
+            diagnostic_name (str): Name of the diagnostic (default: 'VariabilityMap').
                 Used for configuring the logger and output files.
             catalog (str, optional): Catalog to use. If None, determined by the Reader.
             model (str, optional): Model to be used.
@@ -103,6 +104,7 @@ class BaseMixin(Diagnostic):
         self.short_name = short_name
         self.rebuild = rebuild
         self.reader_kwargs = reader_kwargs
+        self.fix = fix
         self.region = region
 
     def _check_data(self, var: str, units: str):
@@ -113,7 +115,7 @@ class BaseMixin(Diagnostic):
             var (str): The variable to be checked.
             units (str): The units to be checked.
         """
-        self.data[self.var] = super()._check_data(data=self.data[self.var], var=var, units=units)
+        self.data[self.var] = super()._check_data(data=self.data[self.var], var=var, fix=self.fix, units=units)
 
     def retrieve(self):
         """
@@ -152,7 +154,7 @@ class BaseMixin(Diagnostic):
     def netcdf_save(
         self,
         data,
-        diagnostic_product: str = "sshVariability",
+        diagnostic_product: str = "VariabilityMap",
         freq: str = None,
         create_catalog_entry: bool = False,
         dict_catalog_entry: dict = {"jinjalist": ["freq", "realization", "region"], "wildcardlist": ["var"]},
@@ -162,7 +164,7 @@ class BaseMixin(Diagnostic):
 
         Args:
             data (xarray.DataArray): Input data array
-            diagnostic_product (str): The product name to be used in the filename 'sshVariability'.
+            diagnostic_product (str): The product name to be used in the filename 'VariabilityMap'.
             freq (str): The frequency of the data. It is set to 'None' for this release of code.
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
@@ -218,18 +220,18 @@ class BaseMixin(Diagnostic):
 
 
 class PlotBaseMixin:
-    """PlotBaseMixin class is used for the PlotSSHVariability."""
+    """PlotBaseMixin class is used for the PlotVariabilityMap."""
 
     def __init__(
         self,
-        diagnostic_name: str = "sshVariability",
+        diagnostic_name: str = "VariabilityMap",
         loglevel: str = "WARNING",
     ):
         """
         Initialize the PlotBaseMixin class.
 
         Args:
-            diagnostic_name (str): The name of the diagnostic 'ssh'.
+            diagnostic_name (str): Set to "VariabilityMap".
                                    This will be used to configure the logger and the output files.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
@@ -248,7 +250,7 @@ class PlotBaseMixin:
         outputdir: str = "./",
         dpi: int = 600,
         format: Union[str, list] = SAVE_FORMAT,
-        diagnostic_product: str = "sshVariability",
+        diagnostic_product: str = "VariabilityMap",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -274,7 +276,7 @@ class PlotBaseMixin:
             outputdir (str, optional): Directory where the figure will be saved. Default is current directory ``'./'``.
             dpi (int, optional): Resolution of the saved figure in dots per inch. Default is ``600``.
             format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
-            diagnostic_product (str, optional): Diagnostic product name. Default is ``'sshVariability'``.
+            diagnostic_product (str, optional): Diagnostic product name. Default is ``'VariabilityMap'``.
             catalog (str, optional): Catalog identifier for the dataset. (Mandatory for proper labeling)
             model (str, optional): Model name associated with the dataset. (Mandatory for proper labeling)
             exp (str, optional): Experiment name. (Mandatory for proper labeling)
@@ -296,16 +298,19 @@ class PlotBaseMixin:
             diagnostic=self.diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=outputdir, loglevel=self.loglevel
         )
         if description is None:
-            description = "sshVariability diagnostic"
+            description = "VariabilityMap diagnostic"
         description = description + f" ({startdate}-{enddate}) "
         metadata = {"Description": description, "dpi": dpi}
         extra_keys = {"diagnostic_product": diagnostic_product}
 
         if short_name is not None:
             extra_keys.update({"var": short_name})
+
         if region is not None:
             region = region.replace(" ", "").lower()
             extra_keys.update({"region": region})
+        else:
+            extra_keys.update({"region": "global"})
 
         outputsaver.save_figure(
             fig,
@@ -325,8 +330,8 @@ class PlotBaseMixin:
         rebuild: bool = True,
         outputdir: str = "./",
         dpi: int = 600,
+        diagnostic_product: str = "variability_map_difference",
         format: str = SAVE_FORMAT,
-        diagnostic_product: str = "sshVariability_Difference",
         catalog: str = None,
         model: str = None,
         exp: str = None,
@@ -343,9 +348,9 @@ class PlotBaseMixin:
         units: str = None,
     ):
         """
-        Save the plot of SSH variability differences between a reference dataset and a model.
+        Save the plot of variability (STD) differences between a reference dataset and a model.
 
-        This function saves a figure illustrating the difference in sea surface height (SSH)
+        This function saves a figure illustrating the difference in 
         variability between a reference dataset and a model, including metadata for reproducibility
         and traceability.
 
@@ -356,8 +361,8 @@ class PlotBaseMixin:
             rebuild (bool, optional): If ``True``, overwrite the plot file even if it already exists. Default is ``True``.
             outputdir (str, optional): Directory where the plot file will be saved. Default is current directory ``'./'``.
             dpi (int, optional): Resolution of the saved figure in dots per inch. Default is ``600``.
+            diagnostic_product (str, optional): Diagnostic product identifier. Default is ``'variability_map_difference'``.
             format (str, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
-            diagnostic_product (str, optional): Diagnostic product identifier. Default is ``'sshVariability_Difference'``.
             catalog (str, optional): Catalog name for the model dataset. (Mandatory for labeling)
             model (str, optional): Model name for the dataset. (Mandatory for labeling)
             exp (str, optional): Experiment identifier for the dataset. (Mandatory for labeling)
@@ -376,9 +381,6 @@ class PlotBaseMixin:
             ValueError: If required arguments (``catalog``, ``model``, ``exp``) are missing.
             OSError: If the output directory does not exist and cannot be created.
         """
-        # TODO:
-        # Test if the sshVariability is computed in healpix/native grid then compte the difference will be an issue.
-        # Therefore perform regridding via Regridding class.
         outputsaver = OutputSaver(
             diagnostic=self.diagnostic_name,
             catalog=catalog,
@@ -391,7 +393,7 @@ class PlotBaseMixin:
             loglevel=self.loglevel,
         )
         if description is None:
-            description = "sshVariability difference"
+            description = "Variability map difference"
         description = description + f" model time: ({startdate}-{enddate}) and reference time: ({startdate_ref}-{enddate_ref})"
         metadata = {"Description": description, "dpi": dpi}
         extra_keys = {"diagnostic_product": diagnostic_product}
