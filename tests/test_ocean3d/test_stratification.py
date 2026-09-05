@@ -19,7 +19,7 @@ def test_stratification():
         dim_mean=["lat", "lon"],
         var=["thetao", "so"],
         climatology="January",
-        region="ls",
+        regions="ls",
         mld=True,
     )
     assert strat is not None, "strat instance should not be None"
