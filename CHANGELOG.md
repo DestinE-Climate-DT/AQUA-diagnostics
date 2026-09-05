@@ -48,6 +48,7 @@ Complete list:
 
 ## [v0.24.0]
 
+- Fixes in CI/CD to ensure compatibility between pypi version and tag of repo (#90)
 Complete list:
 - Dashboard review: title/description aesthetic fixes across diagnostics (#290)
 - Setting up aqua-like fixed environment (#314)
