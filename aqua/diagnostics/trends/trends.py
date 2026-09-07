@@ -207,7 +207,7 @@ class Trends(Diagnostic):
         # The region name will be stored in the attributes.
         if dim_mean is not None:
             self.logger.debug("Averaging data over dimension(s): %s", dim_mean)
-            data = self.reader.fldmean(data, dims=to_list(dim_mean), lat=lat_limits, lon=lon_limits)
+            data = self.reader.fldmean(data, dims=to_list(dim_mean), lat_limits=lat_limits, lon_limits=lon_limits)
             data.attrs["AQUA_dim_mean"] = dim_mean
 
         return data
@@ -317,11 +317,11 @@ class Trends(Diagnostic):
             return
 
         self.logger.info("Saving trend coefficients to NetCDF file")
-        extra_keys = {}
 
         regions = list(self.trend_coef.keys())
         for region in regions:
-            if self.trend_coef[region].get("AQUA_dim_mean") is not None:
+            extra_keys = {}
+            if self.trend_coef[region].attrs.get("AQUA_dim_mean") is not None:
                 extra_keys["dim_mean"] = self.trend_coef[region].attrs["AQUA_dim_mean"]
             if region != "global":
                 extra_keys["region"] = region
