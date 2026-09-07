@@ -16,7 +16,8 @@ from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
 from .sshVariability import SshVariabilityCompute, SshVariabilityPlot
 from .ocean_drift import Hovmoller, PlotHovmoller
 from .ocean_stratification import Stratification, PlotStratification, PlotMLD
-from .ocean_trends import Trends, PlotTrends
+from .ocean_trends import PlotTrends as PlotOceanTrends
+from .trends import Trends, PlotTrends
 
 
 DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections", "definitions"]
@@ -37,7 +38,7 @@ __all__ = ["__version__", "NAO", "ENSO", "MJO",
            "SshVariabilityCompute", "SshVariabilityPlot",
            "Boxplots", "PlotBoxplots", "extract_realizations",
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
-           "Trends", "PlotTrends",
+           "Trends", "PlotTrends", "PlotOceanTrends",
            "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
 
 def get_install_dirs():
