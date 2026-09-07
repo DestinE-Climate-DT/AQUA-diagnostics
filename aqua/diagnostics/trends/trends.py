@@ -18,8 +18,19 @@ NANOSECONDS_PER_YEAR = 365.25 * 24 * 3600 * 1e9
 class Trends(Diagnostic):
     """
     Class to compute linear trends along the time dimension for one or more variables.
-    The trend is computed via polynomial fit and rescaled to per-year units based on the inferred time frequency of the data.
-    Supported 2D and 3d fields.
+
+    The trend is computed through a polynomial fit and rescaled to per-year units.
+    Both 2D and 3D fields are supported, the trend of a 3D field being computed for
+    each vertical level.
+
+    An instance holds a single retrieval and produces a single trend, leaving to the
+    caller the choice of how to handle multiple regions:
+
+    - without ``dim_mean`` the trend is pointwise in space and therefore commutes with
+      the area selection: compute it once and slice it as many times as needed with
+      :meth:`aqua.diagnostics.base.Diagnostic.select_region`.
+    - with ``dim_mean`` the field mean depends on the domain, so :meth:`compute_trend`
+      has to be called once per region.
     """
 
     MINIMUM_MONTHS_REQUIRED = 12
@@ -38,12 +49,6 @@ class Trends(Diagnostic):
     ):
         """
         Initialize the Trends class.
-        There is no region selection in the initialization. At run time, if a list of regions is provided,
-        the trend will be computed first globally and then a loop will select and store the trend for each region.
-        If no region or only one region is provided, the trend will be computed only once and stored in a single file.
-
-        If a 3D data is provided, the trend will be computed for each vertical level.
-        If a 2D data is provided, the trend will be computed for the single level.
 
         Args:
             model (str): Model name.
@@ -53,9 +58,8 @@ class Trends(Diagnostic):
             regrid (str, optional): Target grid for regridding. No regridding if None.
             startdate (str, optional): Analysis start date.
             enddate (str, optional): Analysis end date.
-            diagnostic_name (str, optional): Diagnostic name used in output filenames.
-                Defaults to ``'trends'``.
-            loglevel (str, optional): Logging level. Defaults to ``'WARNING'``.
+            diagnostic_name (str, optional): Diagnostic name used in output filenames. Defaults to 'trends'.
+            loglevel (str, optional): Logging level. Defaults to 'WARNING'.
         """
         super().__init__(
             catalog=catalog,
@@ -70,11 +74,8 @@ class Trends(Diagnostic):
         self.logger = log_configure(log_level=loglevel, log_name="Trends")
         self.diagnostic_name = diagnostic_name
 
-        # Store the computed trend
-        # The structure of the trend data will be a dictionary with region names as keys and the corresponding
-        # trend datasets as values. If no region is specified, the key will be 'global'.
-        # If multiple variables are provided, they will be stored in the same dataset.
-        self.trend_coef = {}
+        # Trend coefficients produced by the last run(), as an xr.Dataset with one variable each.
+        self.trend_coef = None
 
     def retrieve(self, var, reader_kwargs: dict = {}):
         """
@@ -84,218 +85,164 @@ class Trends(Diagnostic):
             var (str or list): Variable name(s) to retrieve.
             reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
         """
-        var = to_list(var)
         self.logger.info("Retrieving variable(s): %s", var)
-        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+        super().retrieve(var=to_list(var), reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
-    def run(
+    def compute_trend(
         self,
-        var,
-        dim_mean=None,
-        region: str | list = None,
+        region: str = None,
         lon_limits: list = None,
         lat_limits: list = None,
         regions_file_path: str = None,
-        outputdir: str = "./",
-        rebuild: bool = True,
-        reader_kwargs: dict = {},
-    ):
+        dim_mean=None,
+    ) -> xr.Dataset:
         """
-        Run the full trend analysis workflow.
-        We try to minimize the number of times the trend is computed.
-        However, if a dim_mean is provided, the mean has to happen before the trend is computed,
-        so the trend will be computed for each region separately.
+        Compute the linear trend along ``time``, rescaled to per-year units.
 
-        Steps:
-            With only one region, no region or dim_mean: (trend_loop)
-            retrieve → region selection → optional dimensional mean → trend → save.
-            With a list of regions and no dim_mean: (region_loop)
-            retrieve → trend → loop over regions: region selection → save.
+        The data are optionally restricted to a region and optionally averaged over one
+        or more dimensions before the fit. Can be called repeatedly on the same instance,
+        the retrieved data being left untouched.
 
         Args:
-            var (str or list): Variable(s) to analyse.
-            dim_mean (str or list, optional): Dimension(s) over which to take an areal mean
-                before the trend is computed (e.g. ``['lat', 'lon']`` for a regional time series).
             region (str, optional): Region name in the centralized regions file.
-            lon_limits (list, optional): Custom longitude limits ``[lon_min, lon_max]``.
-            lat_limits (list, optional): Custom latitude limits ``[lat_min, lat_max]``.
-            regions_file_path (str, optional): Custom regions YAML. Defaults to the
-                centralized AQUA regions file.
-            outputdir (str, optional): Output directory. Defaults to ``'./'``.
-            rebuild (bool, optional): Whether to overwrite existing output files. Defaults to True.
-            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
-        """
-        self.logger.info("Starting trend analysis")
-        self.retrieve(var=var, reader_kwargs=reader_kwargs)
-
-        # We have two different workflows depending on whether we have a list of regions and
-        # no dim_mean or not. They are defined by the kind variable.
-        kind = "region_loop" if isinstance(region, list) and dim_mean is None else "trend_loop"
-        self.logger.debug("Trend analysis workflow kind: %s", kind)
-
-        if kind == "trend_loop":
-            # 1-2. select the region and optionally compute the mean over the specified dimensions
-            if region is None and (lat_limits is None and lon_limits is None):
-                self.logger.info("No region or custom limits provided, using global data")
-                region = "global"
-            else:
-                region = region if region is not None else "custom limits"
-
-            for reg in to_list(region):
-                self.logger.info("Processing region: %s", reg)
-                region, lon_limits, lat_limits = self._set_region(
-                    region=reg if reg != "global" else None,
-                    regions_file_path=regions_file_path,
-                    lon_limits=lon_limits if reg != "global" else None,
-                    lat_limits=lat_limits if reg != "global" else None,
-                )
-                data = self._apply_region(
-                    self.data, region=region, lon_limits=lon_limits, lat_limits=lat_limits, dim_mean=dim_mean
-                )
-
-                self.logger.info("Computing trend coefficients")
-                trend_coef = self.compute_trend(data=data, region=region)
-                region_key = region if region is not None else "global"
-                self.trend_coef[region_key] = trend_coef
-
-        elif kind == "region_loop":
-            self.logger.info("Computing trend coefficients for global data")
-            # This first evaluation is already loading in memory the trend data for all
-            # variables and all regions.
-            trend_coef = self.compute_trend(data=self.data)
-            self.trend_coef["global"] = trend_coef
-
-            for reg in region:
-                self.logger.info("Processing region: %s", reg)
-                region, lon_limits, lat_limits = self._set_region(
-                    region=reg,
-                    regions_file_path=regions_file_path,
-                    lon_limits=lon_limits,
-                    lat_limits=lat_limits,
-                )
-                trend_data = self._apply_region(
-                    trend_coef, region=region, lon_limits=lon_limits, lat_limits=lat_limits, dim_mean=None
-                )
-                self.trend_coef[region] = trend_data
-
-        # We save all the regions at once.
-        self.logger.info("Saving results to NetCDF for region: %s", region)
-        self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
-        self.logger.info("Trend analysis completed for all regions")
-
-    def _apply_region(self, data, region: str = None, lon_limits: list = None, lat_limits: list = None, dim_mean=None):
-        """
-        Apply region selection and optional field mean to a dataset.
-
-        Args:
-            data (xr.Dataset): Input data.
-            region (str, optional): Region name.
-            lon_limits (list, optional): Custom longitude limits ``[lon_min, lon_max]``.
-            lat_limits (list, optional): Custom latitude limits ``[lat_min, lat_max]``.
-            dim_mean (str or list, optional): Dimension(s) over which to compute the mean.
+            lon_limits (list, optional): Custom longitude limits ``[lon_min, lon_max]``. Overridden by region.
+            lat_limits (list, optional): Custom latitude limits ``[lat_min, lat_max]``. Overridden by region.
+            regions_file_path (str, optional): Custom regions YAML. Defaults to the centralized AQUA regions file.
+            dim_mean (str or list, optional): Dimension(s) over which to take an area-weighted mean
+                before the trend is computed (e.g. ``'lon'`` for a zonal trend).
 
         Returns:
-            xr.Dataset: The (possibly subset and averaged) data.
+            xr.Dataset: Trend coefficients, one variable each, with per-year units.
         """
-        has_limits = lon_limits is not None or lat_limits is not None
-        if region is not None or has_limits:
-            label = region if region is not None else "custom limits"
-            self.logger.info("Applying region selection: %s", label)
-            if dim_mean is None:
-                self.logger.debug("No dimension mean specified, selecting area only")
-                data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=True)
-            data.attrs["AQUA_region"] = label
+        if self.data is None:
+            raise ValueError("No data available, run retrieve() first.")
 
-        # If dim_mean is specified we always need the fldmean to be applied, even if a region is selected.
-        # The mean will be computed over the specified dimensions together with the lat/lon limits if provided.
-        # The region name will be stored in the attributes.
+        region, lon_limits, lat_limits = self._set_region(
+            region=region,
+            regions_file_path=regions_file_path,
+            lon_limits=lon_limits,
+            lat_limits=lat_limits,
+        )
+
+        data = self.data
+
         if dim_mean is not None:
-            self.logger.debug("Averaging data over dimension(s): %s", dim_mean)
-            data = self.reader.fldmean(data, dims=to_list(dim_mean), lat_limits=lat_limits, lon_limits=lon_limits)
-            data.attrs["AQUA_dim_mean"] = dim_mean
+            # The mean has to be applied before the fit, and it takes care of the area
+            # selection itself, so that it is weighted over the region only.
+            self.logger.info("Averaging data over dimension(s): %s", dim_mean)
+            data = self.reader.fldmean(data, dims=to_list(dim_mean), lon_limits=lon_limits, lat_limits=lat_limits)
+        elif region is not None or lon_limits is not None or lat_limits is not None:
+            self.logger.info("Applying area selection: %s", region if region is not None else "custom limits")
+            data = self.reader.select_area(data=data, lon=lon_limits, lat=lat_limits, drop=True)
 
-        return data
-
-    def compute_trend(self, data: xr.Dataset, region: str = None) -> xr.Dataset:
-        """
-        Compute the linear trend coefficients along ``time`` and rescale them to per-year.
-
-        Args:
-            data (xr.Dataset): Input dataset with a ``time`` dimension.
-            region (str, optional): Region name to include in the output attributes.
-
-        Returns:
-            xr.Dataset: Trend coefficients (one per variable) with adjusted units.
-        """
         self.logger.info("Calculating linear trend")
-        trender = Trender(loglevel=self.loglevel)
-        trend_data = trender.coeffs(data, dim="time", skipna=True, normalize=False)
-        trend_data = trend_data.sel(degree=1) * NANOSECONDS_PER_YEAR
-        trend_data.attrs = data.attrs
+        coeffs = Trender(loglevel=self.loglevel).coeffs(data, dim="time", skipna=True, normalize=False)
+        trend = coeffs.sel(degree=1, drop=True) * NANOSECONDS_PER_YEAR
 
-        # HACK: polyfit drops non-time-indexed coordinates (e.g. lat/lon on ncells), restore them.
-        # This is needed for Healpix and other non-standard grids where lat/lon coordinates depending on other dimensions.
+        # polyfit drops the coordinates which are not indexed on the fitted dimension, e.g. the
+        # lat/lon defined over ncells on HealPix and other non-standard grids. Restore them.
+        # TODO: this would be better placed in Trender.coeffs(), see aqua-core.
         dropped_coords = {
-            name: coord for name, coord in data.coords.items() if name not in trend_data.coords and "time" not in coord.dims
+            name: coord for name, coord in data.coords.items() if name not in trend.coords and "time" not in coord.dims
         }
         if dropped_coords:
             self.logger.debug("Restoring coordinates dropped by polyfit: %s", list(dropped_coords))
-            trend_data = trend_data.assign_coords(dropped_coords)
+            trend = trend.assign_coords(dropped_coords)
 
-        trend_dict = {}
-        for var in data.data_vars:
-            self.logger.debug("Adjusting trend for variable: %s", var)
-            trend_data[var].attrs = data[var].attrs
-            units = trend_data[var].attrs.get("units", "")
-            trend_data[var].attrs["units"] = f"{units}/year" if units else "per year"
-            trend_dict[var] = trend_data[var]
-        trend_data = xr.Dataset(trend_dict)
-        trend_data.attrs.update(data.attrs)
+        trend.attrs.update(data.attrs)
+        for name in trend.data_vars:
+            trend[name].attrs = dict(data[name].attrs)
+            units = trend[name].attrs.get("units", "")
+            trend[name].attrs["units"] = f"{units}/year" if units else "per year"
         if region is not None:
-            trend_data.attrs["AQUA_region"] = region
+            trend.attrs["AQUA_region"] = region
+        if dim_mean is not None:
+            trend.attrs["AQUA_dim_mean"] = "_".join(to_list(dim_mean))
 
         self.logger.debug("Loading trend data in memory")
-        trend_data.load()
-        return trend_data
+        return trend.load()
 
     def save_netcdf(
         self,
+        data: xr.Dataset = None,
         diagnostic_product: str = "trend",
         outputdir: str = ".",
         rebuild: bool = True,
     ):
         """
         Save the trend coefficients to a NetCDF file.
-        Loop over regions if multiple regions are present in the trend data.
-        The extra_keys for the region is used only if the region is not "global".
+
+        Region and dimensional mean are read from the data attributes, so that a trend
+        sliced afterwards with ``select_region`` is saved under its own region name.
 
         Args:
-            diagnostic_product (str, optional): Diagnostic product tag for the filename.
-                Defaults to ``'trend'``.
+            data (xr.Dataset, optional): Trend coefficients to save. Defaults to ``self.trend_coef``.
+            diagnostic_product (str, optional): Diagnostic product tag for the filename. Defaults to 'trend'.
             outputdir (str, optional): Output directory.
             rebuild (bool, optional): Overwrite existing files.
         """
-        if self.trend_coef == {}:
-            self.logger.error("No trend data to save. Run compute_trend first.")
+        data = self.trend_coef if data is None else data
+        if data is None:
+            self.logger.error("No trend data to save, run compute_trend() first.")
             return
 
+        extra_keys = {}
+        region = data.attrs.get("AQUA_region")
+        if region is not None:
+            extra_keys["region"] = region
+        dim_mean = data.attrs.get("AQUA_dim_mean")
+        if dim_mean is not None:
+            extra_keys["dim_mean"] = dim_mean
+
         self.logger.info("Saving trend coefficients to NetCDF file")
+        super().save_netcdf(
+            data=data,
+            diagnostic=self.diagnostic_name,
+            diagnostic_product=diagnostic_product,
+            outputdir=outputdir,
+            rebuild=rebuild,
+            extra_keys=extra_keys,
+        )
 
-        regions = list(self.trend_coef.keys())
-        for region in regions:
-            extra_keys = {}
-            if self.trend_coef[region].attrs.get("AQUA_dim_mean") is not None:
-                extra_keys["dim_mean"] = self.trend_coef[region].attrs["AQUA_dim_mean"]
-            if region != "global":
-                extra_keys["region"] = region
-            super().save_netcdf(
-                diagnostic=self.diagnostic_name,
-                diagnostic_product=diagnostic_product,
-                outputdir=outputdir,
-                rebuild=rebuild,
-                data=self.trend_coef[region],
-                extra_keys=extra_keys,
-            )
-            self.logger.debug("Trend coefficients for region '%s' saved to NetCDF", region)
+    def run(
+        self,
+        var,
+        region: str = None,
+        lon_limits: list = None,
+        lat_limits: list = None,
+        regions_file_path: str = None,
+        dim_mean=None,
+        outputdir: str = "./",
+        rebuild: bool = True,
+        reader_kwargs: dict = {},
+    ) -> xr.Dataset:
+        """
+        Run the full trend analysis workflow: retrieve, compute the trend and save it.
 
-        self.logger.info("Trend coefficients saved to NetCDF file")
+        Args:
+            var (str or list): Variable(s) to analyse.
+            region (str, optional): Region name in the centralized regions file.
+            lon_limits (list, optional): Custom longitude limits ``[lon_min, lon_max]``. Overridden by region.
+            lat_limits (list, optional): Custom latitude limits ``[lat_min, lat_max]``. Overridden by region.
+            regions_file_path (str, optional): Custom regions YAML. Defaults to the centralized AQUA regions file.
+            dim_mean (str or list, optional): Dimension(s) over which to take an area-weighted mean
+                before the trend is computed (e.g. ``'lon'`` for a zonal trend).
+            outputdir (str, optional): Output directory. Defaults to './'.
+            rebuild (bool, optional): Whether to overwrite existing output files. Defaults to True.
+            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
+
+        Returns:
+            xr.Dataset: The trend coefficients, also stored in ``self.trend_coef``.
+        """
+        self.logger.info("Starting trend analysis")
+        self.retrieve(var=var, reader_kwargs=reader_kwargs)
+        self.trend_coef = self.compute_trend(
+            region=region,
+            lon_limits=lon_limits,
+            lat_limits=lat_limits,
+            regions_file_path=regions_file_path,
+            dim_mean=dim_mean,
+        )
+        self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
+        self.logger.info("Trend analysis completed")
+        return self.trend_coef
