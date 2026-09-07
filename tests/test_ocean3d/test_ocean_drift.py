@@ -15,13 +15,8 @@ PLOT_STEM = "oceandrift.{product}.ci.FESOM.hpz3.r1.sargasso_sea"
 
 pytestmark = [pytest.mark.diagnostics]
 
-
-# --- Fixtures ---
-
-
-@pytest.fixture(scope="session")
-def hovmoller_config():
-    return {
+HOVMOLLER_CONFIG = {
+    "init": {
         "catalog": "ci",
         "model": "FESOM",
         "exp": "hpz3",
@@ -30,25 +25,42 @@ def hovmoller_config():
         "enddate": "1990-03-31",
         "regrid": "r200",
         "loglevel": loglevel,
-    }
+    },
+    "run": {
+        "anomaly_ref": "t0",
+        "region": "sss",
+    },
+    "plot": {
+        "save_format": ["png", "pdf", "svg"],
+        "products": ["hovmoller", "timeseries"],
+    },
+}
+
+# --- Fixtures ---
+
+
+@pytest.fixture(scope="session")
+def hovmoller_config():
+    return HOVMOLLER_CONFIG
 
 
 @pytest.fixture(scope="module")
 def hovmoller_result(tmp_path_factory, hovmoller_config):
-    """Run the Hovmoller pipeline once for the entire test session."""
+    """Run the Hovmoller pipeline once for this module."""
     tmp_path = tmp_path_factory.mktemp("hovmoller")
-    hov = Hovmoller(**hovmoller_config)
-    hov.run(anomaly_ref="t0", outputdir=tmp_path, region="sss")
+    hov = Hovmoller(**hovmoller_config["init"])
+    hov.run(**hovmoller_config["run"], outputdir=tmp_path)
     return hov, tmp_path
 
 
 @pytest.fixture(scope="module")
-def hovmoller_plot(hovmoller_result):
-    """Run both plot types once, saving PNG and PDF. Hovmoller must run before timeseries."""
+def hovmoller_plot(hovmoller_result, hovmoller_config):
+    """Run both plot types once. Hovmoller must run before timeseries."""
     hov, tmp_path = hovmoller_result
+    save_format = hovmoller_config["plot"]["save_format"]
     hov_plot = PlotHovmoller(data=hov.processed_data_list, loglevel=loglevel, outputdir=tmp_path)
-    hov_plot.plot_hovmoller(save_format=["png", "pdf", "svg"])
-    hov_plot.plot_timeseries(save_format=["png", "pdf", "svg"])
+    hov_plot.plot_hovmoller(save_format=save_format)
+    hov_plot.plot_timeseries(save_format=save_format)
     return tmp_path
 
 
@@ -87,17 +99,8 @@ def test_netcdf_output(hovmoller_result, drift_type):
     _assert_nonempty(nc)
 
 
-@pytest.mark.parametrize(
-    "product, ext",
-    [
-        ("hovmoller", "png"),
-        ("hovmoller", "pdf"),
-        ("hovmoller", "svg"),
-        ("timeseries", "png"),
-        ("timeseries", "pdf"),
-        ("timeseries", "svg"),
-    ],
-)
+@pytest.mark.parametrize("product", HOVMOLLER_CONFIG["plot"]["products"])
+@pytest.mark.parametrize("ext", HOVMOLLER_CONFIG["plot"]["save_format"])
 def test_plot_output(hovmoller_plot, product, ext):
     path = Path(hovmoller_plot) / ext / f"{PLOT_STEM.format(product=product)}.{ext}"
     _assert_nonempty(path)
