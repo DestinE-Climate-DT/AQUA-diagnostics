@@ -1,6 +1,5 @@
 """Module for computing trends of one or more variables along the time dimension."""
 
-import pandas as pd
 import xarray as xr
 
 from aqua.core.logger import log_configure
@@ -9,6 +8,11 @@ from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
 
 xr.set_options(keep_attrs=True)
+
+# Nanoseconds in a Julian year. The polynomial fit returns the slope per nanosecond of the
+# time axis, so a single multiplication rescales the trend to per-year units whatever the
+# frequency of the input data is.
+NANOSECONDS_PER_YEAR = 365.25 * 24 * 3600 * 1e9
 
 
 class Trends(Diagnostic):
@@ -225,8 +229,8 @@ class Trends(Diagnostic):
         """
         self.logger.info("Calculating linear trend")
         trender = Trender(loglevel=self.loglevel)
-        trend_data = trender.coeffs(data, dim="time", skipna=True, normalize=True)
-        trend_data = trend_data.sel(degree=1)
+        trend_data = trender.coeffs(data, dim="time", skipna=True, normalize=False)
+        trend_data = trend_data.sel(degree=1) * NANOSECONDS_PER_YEAR
         trend_data.attrs = data.attrs
 
         # HACK: polyfit drops non-time-indexed coordinates (e.g. lat/lon on ncells), restore them.
@@ -242,7 +246,9 @@ class Trends(Diagnostic):
         for var in data.data_vars:
             self.logger.debug("Adjusting trend for variable: %s", var)
             trend_data[var].attrs = data[var].attrs
-            trend_dict[var] = self.adjust_trend_for_time_frequency(trend_data[var], data)
+            units = trend_data[var].attrs.get("units", "")
+            trend_data[var].attrs["units"] = f"{units}/year" if units else "per year"
+            trend_dict[var] = trend_data[var]
         trend_data = xr.Dataset(trend_dict)
         trend_data.attrs.update(data.attrs)
         if region is not None:
@@ -251,49 +257,6 @@ class Trends(Diagnostic):
         self.logger.debug("Loading trend data in memory")
         trend_data.load()
         return trend_data
-
-    def adjust_trend_for_time_frequency(self, trend: xr.DataArray, y_array: xr.Dataset):
-        """
-        Scale the trend coefficient to per-year units based on the inferred input frequency.
-
-        Args:
-            trend (xr.DataArray): Trend coefficient (slope of the linear fit).
-            y_array (xr.Dataset or xr.DataArray): Original data carrying the time coordinate.
-
-        Returns:
-            xr.DataArray: Trend scaled to per-year and with updated ``units`` attribute.
-        """
-        self.logger.debug("Adjusting trend for time frequency")
-        time_frequency = y_array["time"].to_index().inferred_freq
-
-        if time_frequency is None:
-            self.logger.debug("Time frequency not inferred, checking for monthly data")
-            time_index = pd.to_datetime(y_array["time"].values)
-            time_diffs = time_index[1:] - time_index[:-1]
-            is_monthly = all(time_diff.days >= 28 for time_diff in time_diffs)
-            if is_monthly:
-                time_frequency = "MS"
-                self.logger.debug("Data inferred as monthly")
-            else:
-                self.logger.error("Unable to determine time frequency")
-                raise ValueError("The frequency of the data must be in Daily/Monthly/Yearly")
-
-        if time_frequency == "MS":
-            self.logger.debug("Monthly data detected, scaling trend by 12")
-            trend = trend * 12
-        elif time_frequency == "H":
-            self.logger.debug("Hourly data detected, scaling trend by 24*30*12")
-            trend = trend * 24 * 30 * 12
-        elif time_frequency in ("Y", "YE-DEC"):
-            self.logger.debug("Yearly data detected, no scaling applied")
-        else:
-            self.logger.error("Unsupported time frequency: %s", time_frequency)
-            raise ValueError(f"The frequency: {time_frequency} of the data must be in Daily/Monthly/Yearly")
-
-        units = trend.attrs.get("units", "")
-        trend.attrs["units"] = f"{units}/year" if units else "per year"
-        self.logger.debug("Trend units updated to: %s", trend.attrs["units"])
-        return trend
 
     def save_netcdf(
         self,
