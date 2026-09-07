@@ -47,13 +47,16 @@ def hovmoller_plot(hovmoller_result):
     """Run both plot types once, saving PNG and PDF. Hovmoller must run before timeseries."""
     hov, tmp_path = hovmoller_result
     hov_plot = PlotHovmoller(data=hov.processed_data_list, loglevel=loglevel, outputdir=tmp_path)
-    hov_plot.plot_hovmoller(save_format=["png", "pdf", 'svg'])
-    hov_plot.plot_timeseries(save_format=["png", "pdf", 'svg'])
+    hov_plot.plot_hovmoller(save_format=["png", "pdf", "svg"])
+    hov_plot.plot_timeseries(save_format=["png", "pdf", "svg"])
     return tmp_path
+
 
 def _assert_nonempty(path):
     assert path.is_file(), f"File not found: {path}"
     assert path.stat().st_size > 0
+
+
 # --- Tests ---
 
 
@@ -76,20 +79,25 @@ def test_so_values(hovmoller_result, dataset_idx, expected):
     actual = hov.processed_data_list[dataset_idx].so.isel({hov.vert_coord: 1, "time": 1}).values
     assert actual == pytest.approx(expected, abs=1e-4), f"so mismatch at dataset {dataset_idx}"
 
+
 @pytest.mark.parametrize("drift_type", EXPECTED_DRIFT_TYPES)
 def test_netcdf_output(hovmoller_result, drift_type):
     _, tmp_path = hovmoller_result
     nc = Path(tmp_path) / "netcdf" / f"{PLOT_STEM.format(product='hovmoller')}.{drift_type}.nc"
     _assert_nonempty(nc)
 
-@pytest.mark.parametrize("product, ext", [
-    ("hovmoller", "png"),
-    ("hovmoller", "pdf"),
-    ("hovmoller", "svg"),
-    ("timeseries", "png"),
-    ("timeseries", "pdf"),
-    ("timeseries", "svg"),
-])
+
+@pytest.mark.parametrize(
+    "product, ext",
+    [
+        ("hovmoller", "png"),
+        ("hovmoller", "pdf"),
+        ("hovmoller", "svg"),
+        ("timeseries", "png"),
+        ("timeseries", "pdf"),
+        ("timeseries", "svg"),
+    ],
+)
 def test_plot_output(hovmoller_plot, product, ext):
     path = Path(hovmoller_plot) / ext / f"{PLOT_STEM.format(product=product)}.{ext}"
     _assert_nonempty(path)
