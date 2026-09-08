@@ -1,12 +1,12 @@
-import os
 from typing import Union
 
 import xarray as xr
 
-from aqua.core.configurer import ConfigPath
 from aqua.core.logger import log_configure
-from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
+from aqua.core.util import convert_data_units, get_realizations, select_season, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, collapse_era5_duplicate
+
+from .definitions import ENSO_DEFINITIONS, MJO_DEFINITIONS, NAO_DEFINITIONS  # noqa: F401, needed for load_definition to work
 
 xr.set_options(keep_attrs=True)
 
@@ -56,7 +56,7 @@ class BaseMixin(Diagnostic):
             loglevel=loglevel,
         )
 
-        self.definition = self.load_definition(configdir=configdir, definition=definition, telecname=telecname)
+        self.definition = self.load_definition(telecname=telecname)
         self.telecname = telecname
 
         # Initialize the possible results
@@ -135,33 +135,19 @@ class BaseMixin(Diagnostic):
 
         return data, index
 
-    def load_definition(self, configdir: str = None, definition: str = "teleconnections-destine", telecname: str = None):
+    def load_definition(self, telecname: str):
         """
         Load the definition for the teleconnections.
 
         Args:
-            configdir (str): The directory where the definition file is located.
-                              If None, the default directory will be used.
-            definition (str): The filename of the definition file.
-                             Default is 'teleconnections-destine'.
             telecname (str): The name of the teleconnection. It selects the subset of the definition.
 
         Returns:
-            dict: The definition file as a dictionary.
+            dict: The definition dictionary.
         """
-        # Add yaml to definition if not present
-        if not definition.endswith(".yaml"):
-            definition = f"{definition}.yaml"
-        if not configdir:
-            configdir = ConfigPath().get_config_dir()
-            configdir = os.path.join(configdir, "tools", "teleconnections", "definitions")
-
-        definition_file = os.path.join(configdir, definition)
-        self.logger.debug(f"Loading definition file: {definition_file}")
-
-        definition_dict = load_yaml(definition_file)
-
-        return definition_dict[telecname] if telecname else definition_dict
+        definition_name = telecname.upper() + "_DEFINITIONS"
+        definitions = definition_name in globals() and globals()[definition_name] or None
+        return definitions
 
 
 class PlotBaseMixin:
