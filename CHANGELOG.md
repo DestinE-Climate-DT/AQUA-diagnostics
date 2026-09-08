@@ -14,6 +14,7 @@ Complete list:
 ## [v0.25.1]
 
 Complete list:
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
 - Timeseries: support no overlap between observations and model data (#370)
 
 ## [v0.25.0]
