@@ -59,6 +59,8 @@ class TestMainExecutionFlow:
             "PlotNAO": mocker.patch(f"{CLI_MODULE}.PlotNAO"),
             "PlotENSO": mocker.patch(f"{CLI_MODULE}.PlotENSO"),
         }
+        mocks["NAO"].return_value.var = "msl"
+        mocks["ENSO"].return_value.var = "tos"
         mocks["PlotNAO"].return_value.plot_index.return_value = (mocker.MagicMock(), mocker.MagicMock())
         mocks["PlotENSO"].return_value.plot_index.return_value = (mocker.MagicMock(), mocker.MagicMock())
         return mocks

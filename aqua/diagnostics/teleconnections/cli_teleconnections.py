@@ -12,6 +12,7 @@ import sys
 
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.teleconnections import ENSO, NAO, PlotENSO, PlotNAO
+from aqua.diagnostics.teleconnections.definitions import ENSO_DEFINITIONS, NAO_DEFINITIONS  # noqa: F401
 
 
 def parse_arguments(args):
@@ -23,6 +24,28 @@ def parse_arguments(args):
     parser = argparse.ArgumentParser(description="Teleconnections CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
+
+
+def produce_corr_reg_products(statistic: str, season: str = None, var: str = None):
+    """Produce the diagnostic product name for correlation or regression.
+
+    Args:
+        statistic (str): 'correlation' or 'regression'.
+        season (str, optional): season name. Defaults to None.
+        var (str, optional): variable name. Defaults to None.
+
+    Returns:
+        str: diagnostic product name.
+    """
+    if var is not None and var != "default":
+        product_name = f"{statistic}_{var}"
+    else:
+        product_name = statistic
+
+    if season is not None and season != "annual":
+        product_name = f"{product_name}_{season}"
+
+    return product_name
 
 
 def main(argv=None):
@@ -53,10 +76,22 @@ def main(argv=None):
                 nao = [None] * len(config_dict["datasets"])
 
                 nao_config = config_dict["diagnostics"]["teleconnections"]["NAO"]
-                seasons = nao_config.get("seasons", "annual")
 
-                nao_regressions = {season: [None] * len(config_dict["datasets"]) for season in seasons}
-                nao_correlations = {season: [None] * len(config_dict["datasets"]) for season in seasons}
+                # We create lists for the seasons and statistics_var to handle multiple seasons and variables.
+                seasons = nao_config.get("seasons", ["annual"])
+                statistics_var = nao_config.get("statistics_var", ["default"])
+                statistics_var = [var if var != "default" else NAO_DEFINITIONS["field"] for var in statistics_var]
+
+                # We prepare dictionaries to store the regression and correlation results.
+                # For each dataset we can have multiple seasons and multiple variables (statistics_var).
+                # The nested dictionaries will have the structure:
+                # {statistics_var: {season: [None] * len(config_dict["datasets"])}}.
+                nao_regressions = {
+                    var: {season: [None] * len(config_dict["datasets"]) for season in seasons} for var in statistics_var
+                }
+                nao_correlations = {
+                    var: {season: [None] * len(config_dict["datasets"]) for season in seasons} for var in statistics_var
+                }
 
                 init_args = {"loglevel": cli.loglevel}
 
@@ -76,32 +111,42 @@ def main(argv=None):
                         rebuild=cli.rebuild,
                     )
 
-                    for season in seasons:
-                        nao_regressions[season][i] = nao[i].compute_regression(season=season)
-                        nao_correlations[season][i] = nao[i].compute_correlation(season=season)
+                    # Loop over each variable in statistics_var and each season to compute regressions and correlations.
+                    for var in statistics_var:
+                        if var == "default":
+                            var = nao[
+                                i
+                            ].var  # The default variable is the one used defined in the configuration of the NAO diagnostic.
+                        for season in seasons:
+                            nao_regressions[var][season][i] = nao[i].compute_regression(var=var, season=season)
+                            nao_correlations[var][season][i] = nao[i].compute_correlation(var=var, season=season)
 
-                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
-                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
+                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
 
-                        nao[i].save_netcdf(
-                            nao_regressions[season][i],
-                            diagnostic="nao",
-                            diagnostic_product=diagnostic_product_reg,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
-                        nao[i].save_netcdf(
-                            nao_correlations[season][i],
-                            diagnostic="nao",
-                            diagnostic_product=diagnostic_product_cor,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
+                            nao[i].save_netcdf(
+                                nao_regressions[var][season][i],
+                                diagnostic="nao",
+                                diagnostic_product=diagnostic_product_reg,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
+                            nao[i].save_netcdf(
+                                nao_correlations[var][season][i],
+                                diagnostic="nao",
+                                diagnostic_product=diagnostic_product_cor,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
 
                 nao_ref = [None] * len(config_dict["references"])
 
-                nao_ref_regressions = {season: [None] * len(config_dict["references"]) for season in seasons}
-                nao_ref_correlations = {season: [None] * len(config_dict["references"]) for season in seasons}
+                nao_ref_regressions = {
+                    var: {season: [None] * len(config_dict["references"]) for season in seasons} for var in statistics_var
+                }
+                nao_ref_correlations = {
+                    var: {season: [None] * len(config_dict["references"]) for season in seasons} for var in statistics_var
+                }
 
                 for i, reference in enumerate(config_dict["references"]):
                     reference_args = cli.reference_args(reference)
@@ -118,27 +163,32 @@ def main(argv=None):
                         rebuild=cli.rebuild,
                     )
 
-                    for season in seasons:
-                        nao_ref_regressions[season][i] = nao_ref[i].compute_regression(season=season)
-                        nao_ref_correlations[season][i] = nao_ref[i].compute_correlation(season=season)
+                    for var in statistics_var:
+                        if var == "default":
+                            var = nao_ref[
+                                i
+                            ].var  # The default variable is the one used defined in the configuration of the NAO diagnostic.
+                        for season in seasons:
+                            nao_ref_regressions[var][season][i] = nao_ref[i].compute_regression(var=var, season=season)
+                            nao_ref_correlations[var][season][i] = nao_ref[i].compute_correlation(var=var, season=season)
 
-                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
-                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
+                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
 
-                        nao_ref[i].save_netcdf(
-                            nao_ref_regressions[season][i],
-                            diagnostic="nao",
-                            diagnostic_product=diagnostic_product_reg,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
-                        nao_ref[i].save_netcdf(
-                            nao_ref_correlations[season][i],
-                            diagnostic="nao",
-                            diagnostic_product=diagnostic_product_cor,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
+                            nao_ref[i].save_netcdf(
+                                nao_ref_regressions[var][season][i],
+                                diagnostic="nao",
+                                diagnostic_product=diagnostic_product_reg,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
+                            nao_ref[i].save_netcdf(
+                                nao_ref_correlations[var][season][i],
+                                diagnostic="nao",
+                                diagnostic_product=diagnostic_product_cor,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
 
                 # Plot NAO regressions
                 if cli.save_format:
@@ -165,46 +215,57 @@ def main(argv=None):
                     )
 
                     # Plot regressions and correlations
-                    for season in seasons:
-                        for i in range(len(nao)):
-                            nao_regressions[season][i].load(keep_attrs=True)
-                            nao_ref_regressions[season][i].load(keep_attrs=True)
-                            nao_correlations[season][i].load(keep_attrs=True)
-                            nao_ref_correlations[season][i].load(keep_attrs=True)
+                    for var in statistics_var:
+                        if var == "default":
+                            var = nao[
+                                i
+                            ].var  # The default variable is the one used defined in the configuration of the NAO diagnostic.
+                        for season in seasons:
+                            for i in range(len(nao)):
+                                nao_regressions[var][season][i].load(keep_attrs=True)
+                                nao_ref_regressions[var][season][i].load(keep_attrs=True)
+                                nao_correlations[var][season][i].load(keep_attrs=True)
+                                nao_ref_correlations[var][season][i].load(keep_attrs=True)
 
-                        fig_reg = plot_nao.plot_maps(
-                            maps=nao_regressions[season], ref_maps=nao_ref_regressions[season], statistic="regression"
-                        )
-                        fig_cor = plot_nao.plot_maps(
-                            maps=nao_correlations[season], ref_maps=nao_ref_correlations[season], statistic="correlation"
-                        )
+                            fig_reg = plot_nao.plot_maps(
+                                maps=nao_regressions[var][season],
+                                ref_maps=nao_ref_regressions[var][season],
+                                statistic="regression",
+                            )
+                            fig_cor = plot_nao.plot_maps(
+                                maps=nao_correlations[var][season],
+                                ref_maps=nao_ref_correlations[var][season],
+                                statistic="correlation",
+                            )
 
-                        regression_description = plot_nao.set_map_description(
-                            maps=nao_regressions[season], ref_maps=nao_ref_regressions[season], statistic="regression"
-                        )
-                        correlation_description = plot_nao.set_map_description(
-                            maps=nao_correlations[season],
-                            ref_maps=nao_ref_correlations[season],
-                            statistic="correlation",
-                        )
+                            regression_description = plot_nao.set_map_description(
+                                maps=nao_regressions[var][season],
+                                ref_maps=nao_ref_regressions[var][season],
+                                statistic="regression",
+                            )
+                            correlation_description = plot_nao.set_map_description(
+                                maps=nao_correlations[var][season],
+                                ref_maps=nao_ref_correlations[var][season],
+                                statistic="correlation",
+                            )
 
-                        reg_product = f"regression_{season}" if season != "annual" else "regression"
-                        cor_product = f"correlation_{season}" if season != "annual" else "correlation"
+                            reg_product = f"regression_{season}" if season != "annual" else "regression"
+                            cor_product = f"correlation_{season}" if season != "annual" else "correlation"
 
-                        plot_nao.save_plot(
-                            fig_reg,
-                            diagnostic_product=reg_product,
-                            format=cli.save_format,
-                            metadata={"description": regression_description},
-                            dpi=cli.dpi,
-                        )
-                        plot_nao.save_plot(
-                            fig_cor,
-                            diagnostic_product=cor_product,
-                            format=cli.save_format,
-                            metadata={"description": correlation_description},
-                            dpi=cli.dpi,
-                        )
+                            plot_nao.save_plot(
+                                fig_reg,
+                                diagnostic_product=reg_product,
+                                format=cli.save_format,
+                                metadata={"description": regression_description},
+                                dpi=cli.dpi,
+                            )
+                            plot_nao.save_plot(
+                                fig_cor,
+                                diagnostic_product=cor_product,
+                                format=cli.save_format,
+                                metadata={"description": correlation_description},
+                                dpi=cli.dpi,
+                            )
 
         # ENSO
         if "ENSO" in config_dict["diagnostics"]["teleconnections"]:
