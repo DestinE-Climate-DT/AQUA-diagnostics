@@ -204,6 +204,12 @@ class Diagnostic:
         if isinstance(data, xr.Dataset) is False and isinstance(data, xr.DataArray) is False:
             self.logger.error("Data to save as netcdf must be an xarray Dataset or DataArray")
 
+        # Operations combining differently named arrays, fldmean above all, drop the name of a
+        # DataArray, and netcdf has no room for an anonymous variable: restore it from the metadata
+        # so that the file stays readable outside AQUA too.
+        if isinstance(data, xr.DataArray) and data.name is None:
+            data.name = data.attrs.get("short_name") or data.attrs.get("standard_name")
+
         outputsaver = self._outputsaver(diagnostic=diagnostic, outputdir=outputdir)
 
         outputsaver.save_netcdf(

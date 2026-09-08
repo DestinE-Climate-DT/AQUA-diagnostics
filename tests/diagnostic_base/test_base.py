@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+import xarray as xr
 
 from aqua.diagnostics.base import Diagnostic
 from tests.shared_constants import LOGLEVEL
@@ -144,3 +145,18 @@ def test_resolve_catalog():
     unknown = Diagnostic(model="ERA5", exp="not-an-experiment", source="monthly", loglevel=loglevel)
     with pytest.raises(KeyError, match="Cannot find"):
         unknown._resolve_catalog()
+
+
+@pytest.mark.aqua
+def test_save_netcdf_names_anonymous_dataarray(tmp_path):
+    """fldmean and friends drop the name of a DataArray: it is restored before writing the file."""
+    diag = Diagnostic(model="ERA5", exp="era5-hpz3", source="monthly", catalog="ci", loglevel=loglevel)
+    data = xr.DataArray([1.0, 2.0], dims=["lat"], attrs={"short_name": "tcc"})
+    assert data.name is None
+
+    diag.save_netcdf(data=data, diagnostic="test", diagnostic_product="save", outputdir=tmp_path)
+
+    # The name is fixed on the object as well, not only on its copy on disk
+    assert data.name == "tcc"
+    loaded = diag.load_netcdf(diagnostic="test", diagnostic_product="save", outputdir=tmp_path)
+    assert "tcc" in loaded.data_vars
