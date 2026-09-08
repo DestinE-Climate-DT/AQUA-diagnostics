@@ -22,8 +22,7 @@ class BaseMixin(Diagnostic):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
-        configdir: str = None,
-        definition: str = "teleconnections-destine",
+        var: str = None,
         loglevel: str = "WARNING",
     ):
         """
@@ -39,10 +38,7 @@ class BaseMixin(Diagnostic):
                              If None, all available data will be retrieved.
             enddate (str): The end date of the data to be retrieved.
                            If None, all available data will be retrieved.
-            configdir (str): The directory where the definition file is located.
-                             If None, the default directory will be used.
-            definition (str): The filename of the definition file.
-                             Default is 'teleconnections-destine'.
+            var (str): The variable to be used. If None, the variable will be determined by the definition.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
         super().__init__(
@@ -57,6 +53,7 @@ class BaseMixin(Diagnostic):
         )
 
         self.definition = self.load_definition(telecname=telecname)
+        self.var = var or self.definition.get("field")
         self.telecname = telecname
 
         # Initialize the possible results

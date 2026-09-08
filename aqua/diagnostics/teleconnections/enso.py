@@ -25,8 +25,7 @@ class ENSO(BaseMixin):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
-        configdir: str = None,
-        definition: str = "teleconnections-destine",
+        var: str = None,
         loglevel: str = "WARNING",
     ):
         """
@@ -40,9 +39,7 @@ class ENSO(BaseMixin):
             regrid (str): Regrid target. Default is None.
             startdate (str): Start date for data retrieval. Default is None.
             enddate (str): End date for data retrieval. Default is None.
-            configdir (str): Configuration directory. Default is None.
-            definition (str): definition filename. Default is 'teleconnections-destine'.
-                             This is used to deduce the variable name and the lat/lon for the index.
+            var (str): Variable to be used. If None, the variable will be determined by the definition.
             loglevel (str): Logging level. Default is 'WARNING'.
         """
         super().__init__(
@@ -54,13 +51,10 @@ class ENSO(BaseMixin):
             regrid=regrid,
             startdate=startdate,
             enddate=enddate,
-            configdir=configdir,
-            definition=definition,
+            var=var,
             loglevel=loglevel,
         )
         self.logger = log_configure(log_name="ENSO", log_level=loglevel)
-
-        self.var = self.definition.get("field")
 
     def retrieve(self, reader_kwargs: dict = {}) -> None:
         """Retrieve the data for the ENSO index.
