@@ -275,10 +275,21 @@ def main(argv=None):
                 enso = [None] * len(config_dict["datasets"])
 
                 enso_config = config_dict["diagnostics"]["teleconnections"]["ENSO"]
-                seasons = enso_config.get("seasons", "annual")
+                # We create lists for the seasons and statistics_var to handle multiple seasons and variables.
+                seasons = enso_config.get("seasons", ["annual"])
+                statistics_var = enso_config.get("statistics_var", ["default"])
+                statistics_var = [var if var != "default" else ENSO_DEFINITIONS["field"] for var in statistics_var]
 
-                enso_regressions = {season: [None] * len(config_dict["datasets"]) for season in seasons}
-                enso_correlations = {season: [None] * len(config_dict["datasets"]) for season in seasons}
+                # We prepare dictionaries to store the regression and correlation results.
+                # For each dataset we can have multiple seasons and multiple variables (statistics_var).
+                # The nested dictionaries will have the structure:
+                # {statistics_var: {season: [None] * len(config_dict["datasets"])}}.
+                enso_regressions = {
+                    var: {season: [None] * len(config_dict["datasets"]) for season in seasons} for var in statistics_var
+                }
+                enso_correlations = {
+                    var: {season: [None] * len(config_dict["datasets"]) for season in seasons} for var in statistics_var
+                }
 
                 init_args = {"loglevel": cli.loglevel}
 
@@ -297,32 +308,42 @@ def main(argv=None):
                         rebuild=cli.rebuild,
                     )
 
-                    for season in seasons:
-                        enso_regressions[season][i] = enso[i].compute_regression(season=season)
-                        enso_correlations[season][i] = enso[i].compute_correlation(season=season)
+                    # Loop over each variable in statistics_var and each season to compute regressions and correlations.
+                    for var in statistics_var:
+                        if var == "default":
+                            var = enso[
+                                i
+                            ].var  # The default variable is the one used defined in the configuration of the ENSO diagnostic.
+                        for season in seasons:
+                            enso_regressions[var][season][i] = enso[i].compute_regression(var=var, season=season)
+                            enso_correlations[var][season][i] = enso[i].compute_correlation(var=var, season=season)
 
-                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
-                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
+                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
 
-                        enso[i].save_netcdf(
-                            enso_regressions[season][i],
-                            diagnostic="enso",
-                            diagnostic_product=diagnostic_product_reg,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
-                        enso[i].save_netcdf(
-                            enso_correlations[season][i],
-                            diagnostic="enso",
-                            diagnostic_product=diagnostic_product_cor,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
+                            enso[i].save_netcdf(
+                                enso_regressions[var][season][i],
+                                diagnostic="enso",
+                                diagnostic_product=diagnostic_product_reg,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
+                            enso[i].save_netcdf(
+                                enso_correlations[var][season][i],
+                                diagnostic="enso",
+                                diagnostic_product=diagnostic_product_cor,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
 
                 enso_ref = [None] * len(config_dict["references"])
 
-                enso_ref_regressions = {season: [None] * len(config_dict["references"]) for season in seasons}
-                enso_ref_correlations = {season: [None] * len(config_dict["references"]) for season in seasons}
+                enso_ref_regressions = {
+                    var: {season: [None] * len(config_dict["references"]) for season in seasons} for var in statistics_var
+                }
+                enso_ref_correlations = {
+                    var: {season: [None] * len(config_dict["references"]) for season in seasons} for var in statistics_var
+                }
 
                 for i, reference in enumerate(config_dict["references"]):
                     reference_args = cli.reference_args(reference)
@@ -340,27 +361,32 @@ def main(argv=None):
                         rebuild=cli.rebuild,
                     )
 
-                    for season in seasons:
-                        enso_ref_regressions[season][i] = enso_ref[i].compute_regression(season=season)
-                        enso_ref_correlations[season][i] = enso_ref[i].compute_correlation(season=season)
+                    for var in statistics_var:
+                        if var == "default":
+                            var = enso_ref[
+                                i
+                            ].var  # The default variable is the one used defined in the configuration of the ENSO diagnostic.
+                        for season in seasons:
+                            enso_ref_regressions[var][season][i] = enso_ref[i].compute_regression(var=var, season=season)
+                            enso_ref_correlations[var][season][i] = enso_ref[i].compute_correlation(var=var, season=season)
 
-                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
-                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
+                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
 
-                        enso_ref[i].save_netcdf(
-                            enso_ref_regressions[season][i],
-                            diagnostic="enso",
-                            diagnostic_product=diagnostic_product_reg,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
-                        enso_ref[i].save_netcdf(
-                            enso_ref_correlations[season][i],
-                            diagnostic="enso",
-                            diagnostic_product=diagnostic_product_cor,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
+                            enso_ref[i].save_netcdf(
+                                enso_ref_regressions[var][season][i],
+                                diagnostic="enso",
+                                diagnostic_product=diagnostic_product_reg,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
+                            enso_ref[i].save_netcdf(
+                                enso_ref_correlations[var][season][i],
+                                diagnostic="enso",
+                                diagnostic_product=diagnostic_product_cor,
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                            )
 
                 # Plot ENSO regressions
                 if cli.save_format:
@@ -387,44 +413,57 @@ def main(argv=None):
                     )
 
                     # Plot regressions and correlations
-                    for season in seasons:
-                        for i in range(len(enso)):
-                            enso_regressions[season][i].load(keep_attrs=True)
-                            enso_ref_regressions[season][i].load(keep_attrs=True)
-                            enso_correlations[season][i].load(keep_attrs=True)
-                            enso_ref_correlations[season][i].load(keep_attrs=True)
+                    for var in statistics_var:
+                        if var == "default":
+                            var = enso[
+                                i
+                            ].var  # The default variable is the one used defined in the configuration of the ENSO diagnostic.
+                        for season in seasons:
+                            for i in range(len(enso)):
+                                enso_regressions[var][season][i].load(keep_attrs=True)
+                                enso_ref_regressions[var][season][i].load(keep_attrs=True)
+                                enso_correlations[var][season][i].load(keep_attrs=True)
+                                enso_ref_correlations[var][season][i].load(keep_attrs=True)
 
-                        fig_reg = plot_enso.plot_maps(
-                            maps=enso_regressions[season], ref_maps=enso_ref_regressions[season], statistic="regression"
-                        )
-                        fig_cor = plot_enso.plot_maps(
-                            maps=enso_correlations[season], ref_maps=enso_ref_correlations[season], statistic="correlation"
-                        )
+                            fig_reg = plot_enso.plot_maps(
+                                maps=enso_regressions[var][season],
+                                ref_maps=enso_ref_regressions[var][season],
+                                statistic="regression",
+                            )
+                            fig_cor = plot_enso.plot_maps(
+                                maps=enso_correlations[var][season],
+                                ref_maps=enso_ref_correlations[var][season],
+                                statistic="correlation",
+                            )
 
-                        regression_description = plot_enso.set_map_description(
-                            maps=enso_regressions[season], ref_maps=enso_ref_regressions[season], statistic="regression"
-                        )
-                        correlation_description = plot_enso.set_map_description(
-                            maps=enso_correlations[season], ref_maps=enso_ref_correlations[season], statistic="correlation"
-                        )
+                            regression_description = plot_enso.set_map_description(
+                                maps=enso_regressions[var][season],
+                                ref_maps=enso_ref_regressions[var][season],
+                                statistic="regression",
+                            )
+                            correlation_description = plot_enso.set_map_description(
+                                maps=enso_correlations[var][season],
+                                ref_maps=enso_ref_correlations[var][season],
+                                statistic="correlation",
+                            )
 
-                        reg_product = f"regression_{season}" if season != "annual" else "regression"
-                        cor_product = f"correlation_{season}" if season != "annual" else "correlation"
+                            reg_product = f"regression_{season}" if season != "annual" else "regression"
+                            cor_product = f"correlation_{season}" if season != "annual" else "correlation"
 
-                        plot_enso.save_plot(
-                            fig_reg,
-                            diagnostic_product=reg_product,
-                            format=cli.save_format,
-                            metadata={"description": regression_description},
-                            dpi=cli.dpi,
-                        )
-                        plot_enso.save_plot(
-                            fig_cor,
-                            diagnostic_product=cor_product,
-                            format=cli.save_format,
-                            metadata={"description": correlation_description},
-                            dpi=cli.dpi,
-                        )
+                            plot_enso.save_plot(
+                                fig_reg,
+                                diagnostic_product=reg_product,
+                                format=cli.save_format,
+                                metadata={"description": regression_description},
+                                dpi=cli.dpi,
+                            )
+                            plot_enso.save_plot(
+                                fig_cor,
+                                diagnostic_product=cor_product,
+                                format=cli.save_format,
+                                metadata={"description": correlation_description},
+                                dpi=cli.dpi,
+                            )
 
     cli.close_dask_cluster()
 
