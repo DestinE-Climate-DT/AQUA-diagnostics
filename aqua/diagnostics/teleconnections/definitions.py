@@ -4,7 +4,14 @@
 #             function to use to compute the teleconnection
 # field: field used to compute the teleconnection
 
-NAO_DEFINITIONS = {"telec_type": "station", "field": "msl", "lat1": 37.7, "lon1": -25.7, "lat2": 64.1, "lon2": -22}
+NAO_DEFINITIONS = {
+    "telec_type": "station",
+    "field": "msl",
+    "lat1": 37.7,
+    "lon1": -25.7,
+    "lat2": 64.1,
+    "lon2": -22,
+}
 
 ENSO_DEFINITIONS = {
     "telec_type": "region",
