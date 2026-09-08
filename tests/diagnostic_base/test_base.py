@@ -101,3 +101,46 @@ def test_retrieve_without_std():
     assert diag.std_data is None
     assert "AQUA_std_startdate" not in diag.data.attrs
     assert "AQUA_std_enddate" not in diag.data.attrs
+
+
+@pytest.mark.aqua
+def test_load_netcdf_without_retrieve(tmp_path):
+    """A fresh Diagnostic reads back what a previous run wrote, without retrieving any data.
+
+    This is the plot only path: no Reader is instantiated, so the catalog is resolved from the
+    triplet and the realization falls back to the default, as they were when the file was written.
+    """
+    producer = Diagnostic(
+        model="ERA5",
+        exp="era5-hpz3",
+        source="monthly",
+        regrid="r100",
+        startdate="19900101",
+        enddate="19910101",
+        loglevel=loglevel,
+    )
+    producer.retrieve(var="tcc")
+    producer.save_netcdf(data=producer.data.isel(time=0), diagnostic="test", diagnostic_product="save", outputdir=tmp_path)
+
+    consumer = Diagnostic(model="ERA5", exp="era5-hpz3", source="monthly", loglevel=loglevel)
+    assert consumer.catalog is None
+
+    loaded = consumer.load_netcdf(diagnostic="test", diagnostic_product="save", outputdir=tmp_path, as_dataarray=True)
+
+    assert consumer.catalog == "ci"
+    # The attributes the plot classes rely on survive the round trip
+    assert loaded.attrs["AQUA_model"] == "ERA5"
+    assert loaded.attrs["AQUA_exp"] == "era5-hpz3"
+    assert consumer.load_netcdf(diagnostic="test", diagnostic_product="never-computed", outputdir=tmp_path) is None
+
+
+@pytest.mark.aqua
+def test_resolve_catalog():
+    """The catalog taking part in the filenames is found from the triplet, with no data access."""
+    diag = Diagnostic(model="ERA5", exp="era5-hpz3", source="monthly", loglevel=loglevel)
+    diag._resolve_catalog()
+    assert diag.catalog == "ci"
+
+    unknown = Diagnostic(model="ERA5", exp="not-an-experiment", source="monthly", loglevel=loglevel)
+    with pytest.raises(KeyError, match="Cannot find"):
+        unknown._resolve_catalog()
