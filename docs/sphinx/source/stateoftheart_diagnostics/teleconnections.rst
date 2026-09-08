@@ -36,9 +36,9 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-teleconnections.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-teleconnections.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
-* Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
+* Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/teleconnections/definitions.py`` file.
 
 .. note::
     A command line to evaluate, using the bootstrap method, the concordance maps of regression and correlation is available in the ``cli_bootstrap.py`` file.
@@ -141,7 +141,8 @@ Most of the settings are common to all the diagnostics (see :ref:`diagnostics-co
 Here we describe only the specific settings for the teleconnections diagnostic.
 
 * ``teleconnections``: a block (nested in the ``diagnostics`` block), containing options for the teleconnections.
-    It allows to specify which teleconnections to run, the months window for the rolling mean, the seasons to consider, and the color bar range for the plots.
+    It allows to specify which teleconnections to run, the months window for the rolling mean, the seasons to consider,
+    the variable over which to compute the regression and correlation, and the color bar range for the plots.
     It contains the following blocks:
 
     ``NAO``: a block, nested in the ``teleconnections`` block, that contains the details required for the NAO teleconnection.
@@ -164,6 +165,7 @@ Here we describe only the specific settings for the teleconnections diagnostic.
                 months_window: 3
                 seasons: ['annual']
                 cbar_range: [-2, 2]
+                statistics_var: ['default', 'tprate']
 
 Output
 ------
