@@ -157,7 +157,6 @@ class Stratification(Diagnostic):
 
         self.data.attrs["startdate"] = f"{self.data.time[0].values.astype('datetime64[D]')}"
         self.data.attrs["enddate"] = f"{self.data.time[-1].values.astype('datetime64[D]')}"
-        retrieved_data = self.data
 
         regions_list = to_list(regions)
         if not regions_list:
@@ -179,8 +178,14 @@ class Stratification(Diagnostic):
             dim_mean,
         )
 
+        self.compute_stratification()
+        if mld:
+            self.logger.info("Computing mixed layer depth (MLD).")
+            self.compute_mld()
+
+        data_whole_region = self.data
         for reg, clim in zip(regions_list, clim_list):
-            self.data = retrieved_data
+            self.data = data_whole_region
             self.climatology = clim
             self.logger.info(
                 "Processing region: %s, climatology: %s for diagnostic '%s'.",
@@ -188,6 +193,7 @@ class Stratification(Diagnostic):
                 clim,
                 self.diagnostic_name,
             )
+            self.compute_climatology(climatology=self.climatology)
             res_dict = super().select_region(data=self.data, region=reg, drop=True)
             self.region = res_dict["region"] if res_dict["region"] is not None else "global"
             self.lat_limits = res_dict["lat_limits"]
@@ -195,7 +201,7 @@ class Stratification(Diagnostic):
             if dim_mean:
                 self.logger.debug(f"Computing fldmean over dimension: {dim_mean}")
                 self.data = self.reader.fldmean(
-                    retrieved_data,
+                    self.data,
                     dims=dim_mean,
                     lat_limits=self.lat_limits,
                     lon_limits=self.lon_limits,
@@ -204,11 +210,6 @@ class Stratification(Diagnostic):
                 self.data = res_dict["data"]
             self.data.attrs["AQUA_region"] = self.region
             self.logger.info("Computing stratification.")
-            self.compute_stratification()
-            if mld:
-                self.logger.info("Computing mixed layer depth (MLD).")
-                self.compute_mld()
-            self.compute_climatology(climatology=self.climatology)
             self.logger.debug("Loading data in memory.")
             self.data.load()
             self.logger.debug("Loaded data in memory.")
