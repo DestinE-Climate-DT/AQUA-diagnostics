@@ -84,6 +84,9 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     * ``outputdir``: the output directory for the plots.
     * ``rebuild``: a boolean that enables the rebuilding of the plots.
     * ``save_format``: a list (or single string) that selects the image formats to save plots. Default is SAVE_FORMAT.
+    * ``save_netcdf``: a boolean that enables the evaluation of the diagnostic and the writing of its NetCDF files.
+      Where a diagnostic supports it, setting it to ``false`` skips the evaluation entirely and the plots are produced
+      from the NetCDF files already present in ``outputdir``.
     * ``dpi``: the resolution of the plots.
     * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
@@ -93,6 +96,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
       outputdir: "/path/to/output"
       rebuild: true
       save_format: ['png', 'svg'] # default is SAVE_FORMAT (['png', 'pdf', 'svg'])
+      save_netcdf: true
       dpi: 300
       create_catalog_entry: true
 
