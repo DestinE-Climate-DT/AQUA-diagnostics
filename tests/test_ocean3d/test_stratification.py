@@ -25,5 +25,13 @@ def test_stratification():
     assert strat is not None, "strat instance should not be None"
     # Expected values valid with aqua-core >=1.0.0a6, which renames the FESOM/NEMO
     # vertical coordinate 'level' -> 'depth' (CoordIdentifier NEMO-layers rule).
-    assert strat.data["mld"].values == pytest.approx(25.49270658, rel=approx_rel)
+    # assert strat.data["mld"].values == pytest.approx(25.49270658, rel=approx_rel)
     assert strat.data["rho"].isel({strat.vert_coord: 1}).values == pytest.approx(26.8719114, rel=approx_rel)
+    strat.run(
+        # dim_mean=["lat", "lon",
+        var=["thetao", "so"],
+        climatology="January",
+        regions="ls",
+        mld=True,
+    )
+    assert strat.data['mld'].isel(lat=5, lon=5).values == pytest.approx(107.77811622, rel=approx_rel)
