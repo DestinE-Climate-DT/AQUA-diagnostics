@@ -34,4 +34,4 @@ def test_stratification():
         regions="ls",
         mld=True,
     )
-    assert strat.data['mld'].isel(lat=5, lon=5).values == pytest.approx(107.77811622, rel=approx_rel)
+    assert strat.data["mld"].isel(lat=5, lon=5).values == pytest.approx(107.77811622, rel=approx_rel)
