@@ -107,6 +107,87 @@ def test_save_netcdf(base_saver, tmp_path):
 
 
 @pytest.mark.aqua
+def test_load_netcdf_roundtrip(base_saver, tmp_path):
+    """A Dataset written by save_netcdf is found again by load_netcdf with the same keys."""
+    data = xr.Dataset({"data": (("x", "y"), [[1, 2], [3, 4]])})
+    extra_keys = {"var": "tprate"}
+
+    base_saver.save_netcdf(dataset=data, diagnostic_product="mean", extra_keys=extra_keys)
+    loaded = base_saver.load_netcdf(diagnostic_product="mean", extra_keys=extra_keys)
+
+    assert isinstance(loaded, xr.Dataset)
+    xr.testing.assert_allclose(loaded["data"], data["data"])
+    # Metadata written at save time is available again without re-running the diagnostic
+    assert loaded.attrs["model"] == "IFS-NEMO"
+    assert loaded.attrs["var"] == "tprate"
+
+
+@pytest.mark.aqua
+def test_load_netcdf_missing_file(base_saver, tmp_path):
+    """A missing file is not an error: None is returned and no output folder is created."""
+    assert base_saver.load_netcdf(diagnostic_product="mean") is None
+    assert not os.path.exists(os.path.join(tmp_path, "netcdf"))
+
+    # Keys that do not match the ones used at save time address a different, non existing file
+    base_saver.save_netcdf(
+        dataset=xr.Dataset({"data": ("x", [1, 2])}), diagnostic_product="mean", extra_keys={"var": "tprate"}
+    )
+    assert base_saver.load_netcdf(diagnostic_product="mean", extra_keys={"var": "2t"}) is None
+
+
+@pytest.mark.aqua
+def test_load_netcdf_as_dataarray(base_saver):
+    """A DataArray survives the round trip with its attributes, as needed by the plot classes."""
+    data = xr.DataArray([1.0, 2.0], dims=["lat"], name="tprate")
+    data.attrs.update({"units": "mm/day", "AQUA_model": "IFS-NEMO", "AQUA_region": "tropics"})
+
+    base_saver.save_netcdf(dataset=data, diagnostic_product="mean")
+    loaded = base_saver.load_netcdf(diagnostic_product="mean", as_dataarray=True)
+
+    assert isinstance(loaded, xr.DataArray)
+    assert loaded.name == "tprate"
+    assert loaded.attrs["units"] == "mm/day"
+    assert loaded.attrs["AQUA_model"] == "IFS-NEMO"
+    assert loaded.attrs["AQUA_region"] == "tropics"
+
+
+@pytest.mark.aqua
+def test_load_netcdf_as_dataarray_merges_dataset_attrs(base_saver):
+    """Dataset level metadata is merged down into the DataArray, variable attributes win."""
+    data = xr.Dataset({"tprate": ("lat", [1.0, 2.0])})
+    data["tprate"].attrs.update({"units": "mm/day", "model": "variable-wins"})
+
+    base_saver.save_netcdf(dataset=data, diagnostic_product="mean")
+    loaded = base_saver.load_netcdf(diagnostic_product="mean", as_dataarray=True)
+
+    # 'diagnostic' only exists at dataset level, 'model' exists on both
+    assert loaded.attrs["diagnostic"] == "dummy"
+    assert loaded.attrs["model"] == "variable-wins"
+    assert loaded.attrs["units"] == "mm/day"
+
+
+@pytest.mark.aqua
+def test_load_netcdf_as_dataarray_multiple_variables(base_saver):
+    """Asking for a DataArray from a multi variable file is a caller error, not a silent miss."""
+    data = xr.Dataset({"tprate": ("lat", [1.0, 2.0]), "2t": ("lat", [3.0, 4.0])})
+    base_saver.save_netcdf(dataset=data, diagnostic_product="mean")
+
+    with pytest.raises(ValueError, match="expected a single data variable"):
+        base_saver.load_netcdf(diagnostic_product="mean", as_dataarray=True)
+
+
+@pytest.mark.aqua
+def test_load_netcdf_unnamed_dataarray(base_saver):
+    """An unnamed DataArray comes back unnamed, not with the placeholder xarray uses on disk."""
+    data = xr.DataArray([1.0, 2.0], dims=["lat"])
+    base_saver.save_netcdf(dataset=data, diagnostic_product="mean")
+
+    loaded = base_saver.load_netcdf(diagnostic_product="mean", as_dataarray=True)
+
+    assert loaded.name is None
+
+
+@pytest.mark.aqua
 def test_save_figure_single_and_multiple_formats(base_saver, tmp_path):
     """Test saving figures using save_figure with single and multiple formats."""
 

@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Centralised netCDF loading (#392)
 
 ## [v0.25.1]
 

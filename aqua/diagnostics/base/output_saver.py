@@ -29,6 +29,9 @@ from aqua.diagnostics.base.metadata import add_figure_metadata
 
 from .defaults import SAVE_FORMAT
 
+# Name xarray gives to an unnamed DataArray when writing it to NetCDF.
+DATAARRAY_VARIABLE = "__xarray_dataarray_variable__"
+
 
 class OutputSaver:
     """
@@ -203,9 +206,17 @@ class OutputSaver:
         self.logger.debug("Generated filename: %s", filename)
         return filename
 
-    def _core_save(self, diagnostic_product: str, file_format: str, extra_keys: Optional[dict] = None):
+    def _build_filepath(self, diagnostic_product: str, file_format: str, extra_keys: Optional[dict] = None):
         """
-        Core method to handle the common logic for saving files, including checking if the file exists.
+        Build the path of an output file without touching the filesystem.
+
+        Args:
+            diagnostic_product (str): Product of the diagnostic analysis.
+            file_format (str): 'pdf', 'svg', 'png' or 'nc'.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
+
+        Returns:
+            str: The full path of the file.
         """
 
         if file_format not in ["pdf", "svg", "png", "nc"]:
@@ -213,9 +224,16 @@ class OutputSaver:
 
         filename = self.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys) + f".{file_format}"
         dir_format = "netcdf" if file_format == "nc" else file_format
-        folder = os.path.join(self.outputdir, dir_format)
-        create_folder(folder=str(folder), loglevel=self.loglevel)
-        return os.path.join(folder, filename)
+        return os.path.join(self.outputdir, dir_format, filename)
+
+    def _core_save(self, diagnostic_product: str, file_format: str, extra_keys: Optional[dict] = None):
+        """
+        Core method to handle the common logic for saving files, including checking if the file exists.
+        """
+
+        filepath = self._build_filepath(diagnostic_product=diagnostic_product, file_format=file_format, extra_keys=extra_keys)
+        create_folder(folder=str(os.path.dirname(filepath)), loglevel=self.loglevel)
+        return filepath
 
     def save_netcdf(
         self,
@@ -278,6 +296,63 @@ class OutputSaver:
 
         self.logger.info("Saved NetCDF: %s", filepath)
         return filepath
+
+    def load_netcdf(
+        self,
+        diagnostic_product: str,
+        extra_keys: Optional[dict] = None,
+        as_dataarray: bool = False,
+    ):
+        """
+        Load a NetCDF file previously written by save_netcdf.
+
+        The filename is built exactly as save_netcdf builds it. A missing file is not an error:
+        None is returned. The file is read eagerly and closed, so that it can then be overwritten.
+
+        Args:
+            diagnostic_product (str): Product of the diagnostic analysis.
+            extra_keys (dict, optional): Dictionary of additional keys included in the filename.
+                Must match the ones used when saving, otherwise the file will not be found.
+            as_dataarray (bool, optional): If True, return the single data variable of the file as a
+                DataArray, merging the dataset attributes into it. Use it when the data was saved as
+                a DataArray. Defaults to False, which returns the Dataset as it is on disk.
+
+        Returns:
+            xr.Dataset, xr.DataArray or None: The data read from disk, None if the file does not exist.
+
+        Raises:
+            ValueError: If as_dataarray is True but the file does not hold exactly one data variable.
+        """
+        filepath = self._build_filepath(diagnostic_product=diagnostic_product, file_format="nc", extra_keys=extra_keys)
+
+        if not os.path.exists(filepath):
+            self.logger.info("No NetCDF file to load at: %s", filepath)
+            return None
+
+        # Read eagerly and close: the caller is allowed to overwrite this same file afterwards.
+        with xr.open_dataset(filepath) as dataset:
+            data = dataset.load()
+
+        self.logger.info("Loaded NetCDF: %s", filepath)
+
+        if not as_dataarray:
+            return data
+
+        if len(data.data_vars) != 1:
+            raise ValueError(
+                f"Cannot load {filepath} as a DataArray: expected a single data variable, found {list(data.data_vars)}"
+            )
+
+        name = list(data.data_vars)[0]
+        dataarray = data[name]
+        # A DataArray written to disk keeps everything as variable attributes and leaves the dataset
+        # ones empty, while a Dataset written by save_netcdf carries its metadata at dataset level.
+        # Merging the two makes the two cases indistinguishable on the way back, with the variable
+        # attributes winning since they are the more specific ones.
+        dataarray.attrs = {**data.attrs, **dataarray.attrs}
+        if dataarray.name == DATAARRAY_VARIABLE:
+            dataarray.name = None
+        return dataarray
 
     def generate_folder(self, extension: str = "pdf"):
         """

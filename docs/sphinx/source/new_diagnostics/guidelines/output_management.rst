@@ -107,6 +107,25 @@ Here is an example of saving a NetCDF file with metadata. The metadata includes 
     If the ``history`` metadata field is provided, the ``OutputSaver`` class will append
     the current message to the existing history.
 
+Loading a NetCDF File
+^^^^^^^^^^^^^^^^^^^^^
+
+``load_netcdf()`` is the complementary method of ``save_netcdf()``: it builds the same filename from the same
+parameters and opens the file if it exists. A missing file is not an error, ``None`` is returned, so that a
+diagnostic can populate its results from disk when they are there and recompute them when they are not.
+
+.. code-block:: python
+
+    dataset = outputsaver.load_netcdf('test', extra_keys=extra_keys)
+
+The ``extra_keys`` must be the same used when saving, otherwise the generated filename points to a different file.
+The file is read eagerly and closed before returning, so the caller can safely overwrite it afterwards.
+
+.. note::
+    Writing a DataArray to NetCDF stores all its attributes at variable level, while writing a Dataset keeps the
+    ``OutputSaver`` metadata at dataset level. Pass ``as_dataarray=True`` when the data was saved as a DataArray:
+    the single variable of the file is returned as a DataArray, with the dataset attributes merged into it.
+
 Saving a Plot with Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
