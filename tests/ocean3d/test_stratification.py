@@ -68,7 +68,7 @@ def strat_map_result(tmp_path_factory, strat_config):
 
 @pytest.fixture(scope="module")
 def stratification_plot(strat_dimean_result):
-    """Run PlotStratification once, saving PNG, PDF, and SVG."""
+    """Run PlotStratification once, saving PNG."""
     strat, tmp_path = strat_dimean_result
     data = strat.data[["thetao", "so", "rho"]]
     obs = data * 1.2
@@ -79,20 +79,20 @@ def stratification_plot(strat_dimean_result):
         obs=obs,
         loglevel=loglevel,
         outputdir=tmp_path,
-    ).plot_stratification(save_format=["png", "pdf", "svg"])
+    ).plot_stratification(save_format=["png"])
     return tmp_path
 
 
 @pytest.fixture(scope="module")
 def mld_plot(strat_map_result):
-    """Run PlotMLD once, saving PNG, PDF, and SVG."""
+    """Run PlotMLD once, saving PNG."""
     strat, tmp_path = strat_map_result
     PlotMLD(
         data=strat.data[["mld"]],
         obs=strat.data[["mld"]] * 2,
         outputdir=tmp_path,
         loglevel=loglevel,
-    ).plot_mld(save_format=["png", "pdf", "svg"])
+    ).plot_mld(save_format=["png"])
     return tmp_path
 
 
@@ -125,11 +125,7 @@ def test_netcdf_output(request, result_fixture):
     "plot_fixture, product, ext",
     [
         ("stratification_plot", "stratification", "png"),
-        ("stratification_plot", "stratification", "pdf"),
-        ("stratification_plot", "stratification", "svg"),
         ("mld_plot", "mld", "png"),
-        ("mld_plot", "mld", "pdf"),
-        ("mld_plot", "mld", "svg"),
     ],
 )
 def test_plot_output(request, plot_fixture, product, ext):

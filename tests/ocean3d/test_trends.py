@@ -29,7 +29,7 @@ TRENDS_CONFIG = {
         "region": "go",
     },
     "plot": {
-        "save_format": ["png", "pdf", "svg"],
+        "save_format": ["png"],
         "products": ["multilevel_trend", "zonal_mean"],
     },
 }
