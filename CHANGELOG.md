@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Move and update the cli_checker using diagnosticCLI (#401).
 
 ## [v0.25.1]
 
