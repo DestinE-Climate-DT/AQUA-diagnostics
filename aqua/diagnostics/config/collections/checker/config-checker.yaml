@@ -1,0 +1,14 @@
+setup:
+  loglevel: WARNING
+
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    reader_kwargs: null
+
+output:
+  outputdir: "./"
+  rebuild: true
