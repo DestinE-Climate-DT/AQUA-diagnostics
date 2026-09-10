@@ -117,6 +117,24 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
 Examples of diagnostic-collections configuration files are provided in `aqua/diagnostics/config/collections`.
 The aqua-analysis functionality is fully documented at ref:`aqua_analysis`.
 
+Community resources
+-------------------
+
+Additional examples and shared resources from the ClimateDT community are collected in the
+`climatedt-community-resources <https://github.com/DestinE-Climate-DT/climatedt-community-resources>`_
+repository.
+
+In particular, the
+`example_aqua <https://github.com/DestinE-Climate-DT/climatedt-community-resources/tree/main/example_aqua>`_
+folder provides a notebook demonstrating how to open and access ClimateDT data using AQUA.
+This is a useful starting point for new users who want to familiarise themselves with the
+AQUA ``Reader`` interface and the ClimateDT data catalog.
+
+.. seealso::
+
+   `ClimateDT external user guide <https://github.com/DestinE-Climate-DT/climatedt-external-user-guide>`_
+   for additional documentation on accessing ClimateDT data.
+
 
 Contributing
 ------------
