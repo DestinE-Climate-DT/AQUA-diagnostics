@@ -1,15 +1,16 @@
 from pathlib import Path
 
 import pytest
+import xarray as xr
 
 from aqua.diagnostics.ocean_drift import Hovmoller, PlotHovmoller
-from tests.shared_constants import LOGLEVEL
+from tests.shared_constants import APPROX_REL, LOGLEVEL
 
 loglevel = LOGLEVEL
+approx_rel = APPROX_REL * 10
 
 # --- Constants ---
-EXPECTED_THETAO = [22.2086629652034, -0.6924832430820729, -2.07305172]
-EXPECTED_SO = [36.57638045014168, 0.02545398252818387, 2.35781597]
+EXPECTED_FULL = {"thetao": 22.2086629652034, "so": 36.57638045014168}
 EXPECTED_DRIFT_TYPES = ["full", "anom_t0", "std_anom_t0"]
 PLOT_STEM = "oceandrift.{product}.ci.FESOM.hpz3.r1.sargasso_sea"
 
@@ -72,24 +73,43 @@ def _assert_nonempty(path):
 # --- Tests ---
 
 
+def _by_drift_type(hov):
+    """Index the processed datasets by drift type, so tests do not rely on list order."""
+    return {ds.attrs["AQUA_ocean_drift_type"]: ds for ds in hov.processed_data_list}
+
+
 def test_processed_data_types(hovmoller_result):
     hov, _ = hovmoller_result
     types = [ds.attrs["AQUA_ocean_drift_type"] for ds in hov.processed_data_list]
     assert types == EXPECTED_DRIFT_TYPES
 
 
-@pytest.mark.parametrize("dataset_idx, expected", enumerate(EXPECTED_THETAO))
-def test_thetao_values(hovmoller_result, dataset_idx, expected):
+@pytest.mark.parametrize("var, expected", sorted(EXPECTED_FULL.items()))
+def test_full_values(hovmoller_result, var, expected):
+    """Anchor the untransformed field, the one value the derived checks build on."""
     hov, _ = hovmoller_result
-    actual = hov.processed_data_list[dataset_idx].thetao.isel({hov.vert_coord: 1, "time": 1}).values
-    assert actual == pytest.approx(expected, abs=1e-4), f"thetao mismatch at dataset {dataset_idx}"
+    full = _by_drift_type(hov)["full"]
+    actual = full[var].isel({hov.vert_coord: 1, "time": 1}).values
+    assert actual == pytest.approx(expected, rel=approx_rel)
 
 
-@pytest.mark.parametrize("dataset_idx, expected", enumerate(EXPECTED_SO))
-def test_so_values(hovmoller_result, dataset_idx, expected):
+def test_anomaly_is_referenced_to_first_timestep(hovmoller_result):
+    """anom_t0 is the field minus its own first timestep, hence exactly zero there."""
     hov, _ = hovmoller_result
-    actual = hov.processed_data_list[dataset_idx].so.isel({hov.vert_coord: 1, "time": 1}).values
-    assert actual == pytest.approx(expected, abs=1e-4), f"so mismatch at dataset {dataset_idx}"
+    data = _by_drift_type(hov)
+    full, anom = data["full"], data["anom_t0"]
+
+    xr.testing.assert_allclose(anom, full - full.isel(time=0))
+    assert float(abs(anom.isel(time=0).to_dataarray()).max()) == 0.0
+
+
+def test_standardised_anomaly_is_scaled_by_its_own_std(hovmoller_result):
+    """std_anom_t0 is anom_t0 divided by its temporal standard deviation."""
+    hov, _ = hovmoller_result
+    data = _by_drift_type(hov)
+    anom, std_anom = data["anom_t0"], data["std_anom_t0"]
+
+    xr.testing.assert_allclose(std_anom, anom / anom.std("time"))
 
 
 @pytest.mark.parametrize("drift_type", EXPECTED_DRIFT_TYPES)
