@@ -8,6 +8,7 @@ optionally write its catalog metadata to ``experiment.yaml``.
 import argparse
 import os
 import sys
+from tempfile import TemporaryDirectory
 
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml
@@ -30,6 +31,7 @@ def parse_arguments(arguments):
         "--no-rebuild",
         action="store_false",
         dest="rebuild",
+        default=None,
         help="reuse existing areas and regridding weights",
     )
     return parser.parse_args(arguments)
@@ -49,6 +51,30 @@ def _write_experiment_yaml(diagnostic, outputdir):
     dump_yaml(outfile=os.path.join(outputdir, "experiment.yaml"), cfg=metadata)
 
 
+def _checker_build_config(args):
+    """Build a diagnostic configuration from the effective CLI arguments."""
+    reader_kwargs = {"realization": args.realization} if args.realization else None
+    return {
+        "setup": {"loglevel": args.loglevel or "WARNING"},
+        "datasets": [
+            {
+                "catalog": args.catalog,
+                "model": args.model,
+                "exp": args.exp,
+                "source": args.source,
+                "regrid": args.regrid or "r100",
+                "startdate": args.startdate,
+                "enddate": args.enddate,
+                "reader_kwargs": reader_kwargs,
+            }
+        ],
+        "output": {
+            "outputdir": args.outputdir or "./",
+            "rebuild": True if args.rebuild is None else args.rebuild,
+        },
+    }
+
+
 def main(argv=None):
     """Run the AQUA diagnostics setup checker.
 
@@ -60,12 +86,15 @@ def main(argv=None):
         NoDataError: If the configured dataset cannot be retrieved.
     """
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
-    cli = DiagnosticCLI(
-        args=args,
-        diagnostic_name="checker",
-        default_config="config-checker.yaml",
-        log_name="Setup Checker CLI",
-    ).prepare(regrid=args.regrid or "r100", rebuild=args.rebuild)
+    with TemporaryDirectory(prefix="aqua-checker-") as config_dir:
+        args.config = os.path.join(config_dir, "config-checker.yaml")
+        dump_yaml(outfile=args.config, cfg=_checker_build_config(args))
+        cli = DiagnosticCLI(
+            args=args,
+            diagnostic_name="checker",
+            default_config=None,
+            log_name="Setup Checker CLI",
+        ).prepare()
 
     dataset = cli.config_dict["datasets"][0]
     if any(dataset.get(key) is None for key in ("model", "exp", "source")):
