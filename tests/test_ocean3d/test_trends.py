@@ -16,7 +16,7 @@ def test_trends():
     trend.run(
         # dim_mean="lat",
         var=["thetao", "so"],
-        region="go",
+        regions="go",
     )
     print(trend.trend_coef)
     assert trend is not None, "trend instance should not be None"
