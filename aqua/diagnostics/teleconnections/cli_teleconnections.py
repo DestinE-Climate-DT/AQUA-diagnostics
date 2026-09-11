@@ -10,9 +10,9 @@ single or multiple experiments.
 import argparse
 import sys
 
+from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.teleconnections import ENSO, NAO, PlotENSO, PlotNAO
-from aqua.diagnostics.teleconnections.definitions import ENSO_DEFINITIONS, NAO_DEFINITIONS  # noqa: F401
 
 
 def parse_arguments(args):
@@ -24,28 +24,6 @@ def parse_arguments(args):
     parser = argparse.ArgumentParser(description="Teleconnections CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
-
-
-def produce_corr_reg_products(statistic: str, season: str = None, var: str = None):
-    """Produce the diagnostic product name for correlation or regression.
-
-    Args:
-        statistic (str): 'correlation' or 'regression'.
-        season (str, optional): season name. Defaults to None.
-        var (str, optional): variable name. Defaults to None.
-
-    Returns:
-        str: diagnostic product name.
-    """
-    if var is not None and var != "default":
-        product_name = f"{statistic}_{var}"
-    else:
-        product_name = statistic
-
-    if season is not None and season != "annual":
-        product_name = f"{product_name}_{season}"
-
-    return product_name
 
 
 def main(argv=None):
@@ -79,8 +57,7 @@ def main(argv=None):
 
                 # We create lists for the seasons and statistics_var to handle multiple seasons and variables.
                 seasons = nao_config.get("seasons", ["annual"])
-                statistics_var = nao_config.get("statistics_var", ["default"])
-                statistics_var = [var if var != "default" else NAO_DEFINITIONS["field"] for var in statistics_var]
+                statistics_var = to_list(nao_config.get("statistics_var", "msl"))
 
                 # We prepare dictionaries to store the regression and correlation results.
                 # For each dataset we can have multiple seasons and multiple variables (statistics_var).
@@ -113,30 +90,27 @@ def main(argv=None):
 
                     # Loop over each variable in statistics_var and each season to compute regressions and correlations.
                     for var in statistics_var:
-                        if var == "default":
-                            var = nao[
-                                i
-                            ].var  # The default variable is the one used defined in the configuration of the NAO diagnostic.
                         for season in seasons:
                             nao_regressions[var][season][i] = nao[i].compute_regression(var=var, season=season)
                             nao_correlations[var][season][i] = nao[i].compute_correlation(var=var, season=season)
 
-                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
-                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
 
                             nao[i].save_netcdf(
                                 nao_regressions[var][season][i],
                                 diagnostic="nao",
-                                diagnostic_product=diagnostic_product_reg,
+                                diagnostic_product="regression",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
                             nao[i].save_netcdf(
                                 nao_correlations[var][season][i],
                                 diagnostic="nao",
-                                diagnostic_product=diagnostic_product_cor,
+                                diagnostic_product="correlation",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
 
                 nao_ref = [None] * len(config_dict["references"])
@@ -164,30 +138,27 @@ def main(argv=None):
                     )
 
                     for var in statistics_var:
-                        if var == "default":
-                            var = nao_ref[
-                                i
-                            ].var  # The default variable is the one used defined in the configuration of the NAO diagnostic.
                         for season in seasons:
                             nao_ref_regressions[var][season][i] = nao_ref[i].compute_regression(var=var, season=season)
                             nao_ref_correlations[var][season][i] = nao_ref[i].compute_correlation(var=var, season=season)
 
-                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
-                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
 
                             nao_ref[i].save_netcdf(
                                 nao_ref_regressions[var][season][i],
                                 diagnostic="nao",
-                                diagnostic_product=diagnostic_product_reg,
+                                diagnostic_product="regression",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
                             nao_ref[i].save_netcdf(
                                 nao_ref_correlations[var][season][i],
                                 diagnostic="nao",
-                                diagnostic_product=diagnostic_product_cor,
+                                diagnostic_product="correlation",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
 
                 # Plot NAO regressions
@@ -277,8 +248,7 @@ def main(argv=None):
                 enso_config = config_dict["diagnostics"]["teleconnections"]["ENSO"]
                 # We create lists for the seasons and statistics_var to handle multiple seasons and variables.
                 seasons = enso_config.get("seasons", ["annual"])
-                statistics_var = enso_config.get("statistics_var", ["default"])
-                statistics_var = [var if var != "default" else ENSO_DEFINITIONS["field"] for var in statistics_var]
+                statistics_var = to_list(enso_config.get("statistics_var", "tos"))
 
                 # We prepare dictionaries to store the regression and correlation results.
                 # For each dataset we can have multiple seasons and multiple variables (statistics_var).
@@ -310,30 +280,27 @@ def main(argv=None):
 
                     # Loop over each variable in statistics_var and each season to compute regressions and correlations.
                     for var in statistics_var:
-                        if var == "default":
-                            var = enso[
-                                i
-                            ].var  # The default variable is the one used defined in the configuration of the ENSO diagnostic.
                         for season in seasons:
                             enso_regressions[var][season][i] = enso[i].compute_regression(var=var, season=season)
                             enso_correlations[var][season][i] = enso[i].compute_correlation(var=var, season=season)
 
-                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
-                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
 
                             enso[i].save_netcdf(
                                 enso_regressions[var][season][i],
                                 diagnostic="enso",
-                                diagnostic_product=diagnostic_product_reg,
+                                diagnostic_product="regression",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
                             enso[i].save_netcdf(
                                 enso_correlations[var][season][i],
                                 diagnostic="enso",
-                                diagnostic_product=diagnostic_product_cor,
+                                diagnostic_product="correlation",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
 
                 enso_ref = [None] * len(config_dict["references"])
@@ -362,30 +329,27 @@ def main(argv=None):
                     )
 
                     for var in statistics_var:
-                        if var == "default":
-                            var = enso_ref[
-                                i
-                            ].var  # The default variable is the one used defined in the configuration of the ENSO diagnostic.
                         for season in seasons:
                             enso_ref_regressions[var][season][i] = enso_ref[i].compute_regression(var=var, season=season)
                             enso_ref_correlations[var][season][i] = enso_ref[i].compute_correlation(var=var, season=season)
 
-                            diagnostic_product_reg = produce_corr_reg_products("regression", season, var)
-                            diagnostic_product_cor = produce_corr_reg_products("correlation", season, var)
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
 
                             enso_ref[i].save_netcdf(
                                 enso_ref_regressions[var][season][i],
                                 diagnostic="enso",
-                                diagnostic_product=diagnostic_product_reg,
+                                diagnostic_product="regression",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
                             enso_ref[i].save_netcdf(
                                 enso_ref_correlations[var][season][i],
                                 diagnostic="enso",
-                                diagnostic_product=diagnostic_product_cor,
+                                diagnostic_product="correlation",
                                 outputdir=cli.outputdir,
                                 rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
                             )
 
                 # Plot ENSO regressions
