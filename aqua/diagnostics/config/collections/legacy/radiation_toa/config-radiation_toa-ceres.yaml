@@ -13,7 +13,7 @@ datasets:
     enddate: null
   # Possible second/third/fourth datasets here, no present by default
   # - catalog: 'obs'
-  #   model: 'ERA5'
+  #   model: 'ECMWF'
   #   exp: 'era5'
   #   source: 'monthly'
   #   regrid: r100
@@ -54,7 +54,7 @@ diagnostics:
         standard_name: "top_net_radiation"
         long_name: "Top net radiation"
 
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'radiation_toa'
     variables: ['tnlwrf', 'tnswrf']

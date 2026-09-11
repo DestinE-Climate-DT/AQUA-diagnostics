@@ -97,3 +97,34 @@ class TestMainExecutionFlow:
 
         # With no valid datasets (fldmeans empty), plot_boxplots must NOT be called.
         mock_plot_cls.return_value.plot_boxplots.assert_not_called()
+
+    def test_reader_kwargs_are_forwarded_per_entry(self, build_config, mock_cluster, mock_bp):
+        """Dataset and reference Reader kwargs reach run(), not the constructor."""
+        mock_bp_cls, _ = mock_bp
+        datasets = [
+            {
+                "catalog": "test-catalog",
+                "model": "TestModel",
+                "exp": "test-exp",
+                "source": "test-source",
+                "reader_kwargs": {"chunks": {"time": 12}, "realization": "r2"},
+            }
+        ]
+        references = [
+            {
+                "catalog": "ref-catalog",
+                "model": "RefModel",
+                "exp": "ref-exp",
+                "source": "ref-source",
+                "reader_kwargs": {"zoom": 4},
+            }
+        ]
+        config_file = build_config({"boxplots": BASE_BP}, datasets=datasets, references=references)
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        constructor_calls = mock_bp_cls.call_args_list
+        assert all("reader_kwargs" not in call.kwargs for call in constructor_calls)
+        run_calls = mock_bp_cls.return_value.run.call_args_list
+        assert run_calls[0].kwargs["reader_kwargs"] == {"chunks": {"time": 12}, "realization": "r2"}
+        assert run_calls[1].kwargs["reader_kwargs"] == {"zoom": 4}

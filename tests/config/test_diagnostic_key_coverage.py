@@ -16,7 +16,7 @@ KNOWN_DIAGNOSTIC_KEYS = {
     "boxplots",
     "ecmean",
     "ensemble",
-    "globalbiases",
+    "biases",
     "gregory",
     "histogram",
     "lat_lon_profiles",

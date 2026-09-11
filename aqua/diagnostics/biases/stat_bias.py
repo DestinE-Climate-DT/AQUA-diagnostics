@@ -9,7 +9,7 @@ from aqua.core.timstat import TimStat
 xr.set_options(keep_attrs=True)
 
 
-class StatGlobalBiases:
+class StatBias:
     """
     Class for computing bias statistics between model and reference data.
     It works directly with xarray datasets and includes statistical significance testing.

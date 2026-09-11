@@ -98,7 +98,14 @@ def plot_multi_hovmoller(
             )
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
-
+            if titles and titles[k]:
+                ax.title.set_fontsize(13)
+            if text and text[k]:
+                for t in ax.texts:
+                    if t.get_text() == text[k]:
+                        logger.debug("Setting text position for %s", text[k])
+                        t.set_position((-0.3, 0.5))  # x left margin, y middle
+                        t.set_verticalalignment("center")
             # Retrieve last plotted object for colorbar (QuadMesh or ContourSet)
             if ax.collections:
                 mappable = ax.collections[-1]
@@ -124,7 +131,7 @@ def plot_multi_hovmoller(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10, fontweight="bold")
+        fig.suptitle(title, fontsize=ncols * 10)
 
     if return_fig:
         return fig

@@ -6,6 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "conda"
+    open-pull-requests-limit: 10
     directory: "/"
     schedule:
       interval: "daily"
@@ -21,7 +22,7 @@ updates:
       time: "08:00"
     commit-message:
       prefix: "[Dependabot-pip]"
-  
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
