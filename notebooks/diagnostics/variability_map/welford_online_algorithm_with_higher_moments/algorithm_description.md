@@ -111,14 +111,3 @@ We subtract 3 to calculate the excess kurtosis. A standard normal distribution h
 ##### nan_template
 If the conditions are not met (for example, you only have 2 data points, or all your data points are zeros), the xr.where function returns nan_template.
 This is simply an array of the same shape filled with NaN (Not a Number). It safely tells you "there is no valid result for this coordinate" without crashing the entire script.
-
-
-
-
-
-
-
-
-
-
-

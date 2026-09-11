@@ -1,11 +1,11 @@
 import gc
-import sys
 
 import xarray as xr
 
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
+
 
 class VariabilityMap(BaseMixin):
     """
@@ -130,8 +130,8 @@ class VariabilityMap(BaseMixin):
 
             # Remove the non-serializable attribute
             # in case of downloading data from Polytope this attribute was found
-            if '_earthkit' in self.data_std.attrs:
-                del self.data_std.attrs['_earthkit']
+            if "_earthkit" in self.data_std.attrs:
+                del self.data_std.attrs["_earthkit"]
             # Save STD as netcdf
             if self.save_netcdf:
                 self.logger.info(f"Output std netcdf file is saved at {self.outputdir}.")

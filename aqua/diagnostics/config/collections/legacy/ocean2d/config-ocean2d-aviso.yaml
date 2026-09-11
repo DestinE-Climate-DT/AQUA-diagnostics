@@ -4,9 +4,9 @@ datasets:
     model: 'IFS-NEMO-5km'
     exp: 'baseline-hist'
     source: 'daily-hpz7-o2d-zos'
-    regrid: 'r025' 
-    zoom: 
-    realization: 
+    regrid: 'r025'
+    zoom:
+    realization:
     fix: True
     reader_kwargs:
 
@@ -46,7 +46,7 @@ diagnostics:
     plot_params:
       default:
         contour: true
-        projection: 'robinson' # for 'robinson' must be 'true' and for 'plate_carree' it must be 'false' 
+        projection: 'robinson' # for 'robinson' must be 'true' and for 'plate_carree' it must be 'false'
         projection_params: {}
         vmin:
         vmax:
@@ -61,4 +61,3 @@ diagnostics:
         projection: 'plate_carree'
         contour: false
         projection_params: {}
-

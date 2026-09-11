@@ -1,15 +1,15 @@
 # Models for which sea surface temperature (TOS) variability is to be evaluated.
 datasets:
-  - catalog: 'climatedt-o25.1' 
+  - catalog: 'climatedt-o25.1'
     model: 'IFS-FESOM'
     exp: 'historical-1990'
-    source: 'lra-r100-monthly' 
+    source: 'lra-r100-monthly'
     regrid: null
     fix: True
 
 # This is the reference model against which other models are compared.
 references:
-  - catalog: 'obs'  
+  - catalog: 'obs'
     model: 'ESA-CCI-L4'
     exp: 'v3.0.1'
     source: 'r100-monthly'
@@ -40,7 +40,7 @@ diagnostics:
     plot_params:
       default:
         contour: true
-        projection: 'robinson' # for 'robinson' must be 'true' and for 'plate_carree' it must be 'false' 
+        projection: 'robinson' # for 'robinson' must be 'true' and for 'plate_carree' it must be 'false'
         projection_params: {}
         vmin:
         vmax:
@@ -55,4 +55,3 @@ diagnostics:
         projection: 'plate_carree'
         contour: false
         projection_params: {}
-

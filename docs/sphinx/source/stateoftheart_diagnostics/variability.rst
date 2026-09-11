@@ -3,7 +3,7 @@ Variability Map
 Description
 -----------
 
-The **VariabilityMap** diagnostic is a part of AQUA-diagnostics framework's state of the art diagnostic. It calculates point-wise temporal standard deviation for models (e.g. FESOM, ICON, NEMO) and compares them against a reference model. This diagnotic can work on ``Healpix`` and standard ``Lat-Lon`` grid data. It also provides visualization of the variability maps for the models. 
+The **VariabilityMap** diagnostic is a part of AQUA-diagnostics framework's state of the art diagnostic. It calculates point-wise temporal standard deviation for models (e.g. FESOM, ICON, NEMO) and compares them against a reference model. This diagnotic can work on ``Healpix`` and standard ``Lat-Lon`` grid data. It also provides visualization of the variability maps for the models.
 
 VariabilityMap diagnostic provides insights into the complex dynamics of the ocean. An example is the variability in the sea surface height (SSH). It represents the changes in sea surface height over time, which can be influenced by various factors such as ocean currents, wind patterns, tides, and interactions with the atmosphere.
 
@@ -23,7 +23,7 @@ There are two main classes in this diagnotic namely, **VariabilityMap** and **Pl
   If on time interval is provided, standard deviation will be perfromed over the whole domain.
   Then the data is stored in a netcdf file using the ``AQUA`` ``OutputSaver`` class.
 
-* **PlotVariabilityMap**: class to plot the variability map. 
+* **PlotVariabilityMap**: class to plot the variability map.
   Once the standard deviation is performed, it can be passed to this class for plotting.
   This class plots the standard deviation for the given model and the reference data.
   It can also plot the difference between reference and the model standard deviation.
@@ -42,7 +42,7 @@ File Structure
 * The diagnostic is located in ``src/aqua_diagnostics/variability_map`` directory, which contains both the source code and the command line interface (CLI) script.
 * An example configuration file for the CLI is located in ``/AQUA-diagnostics/aqua/diagnostics/config/collections/legacy/ocean2d/config-ocean2d-aviso.yaml`` directory with default options.
 * A notebook is avaliable in the ``notebooks/diagnostics/variability_map/ssh_variability.ipynb`` directory with an example for using this diagnostic.
-* ``README.md`` : a readme file which contains technical information on how to install the diagnostic and its environment and, the version of the diagnostic. 
+* ``README.md`` : a readme file which contains technical information on how to install the diagnostic and its environment and, the version of the diagnostic.
 
 An example input variables and dataset
 --------------------------------------
@@ -200,7 +200,7 @@ The configuration file is a YAML file that contains the details on the dataset t
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
 Here we describe only the specific settings for the **VariabilityMap** diagnostic.
 
-* ``VariabilityMap``: a block (nested in the ``diagnostics`` block) containing options for the SSH Variability maps.  
+* ``VariabilityMap``: a block (nested in the ``diagnostics`` block) containing options for the SSH Variability maps.
   Variable-specific parameters override the defaults.
 
     * ``run``: enable/disable the diagnostic.

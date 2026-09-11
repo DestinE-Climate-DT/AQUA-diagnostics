@@ -10,15 +10,15 @@ from aqua.core.util import get_projection
 # from aqua.core.util.graphics import isnpixok
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
-import matplotlib.pyplot as plt
 from .base import PlotBaseMixin
 
 xr.set_options(keep_attrs=True)
 
+
 class PlotVariabilityMap(PlotBaseMixin):
     """
     Plot variability (STD) maps and the difference of variability maps between data and reference
-    
+
     Note: Variability means STD in this diagnostic
     """
 
@@ -203,9 +203,9 @@ class PlotVariabilityMap(PlotBaseMixin):
                 return_fig=True,
                 title=title,
                 proj=proj,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
                 figsize=figsize,
@@ -221,9 +221,9 @@ class PlotVariabilityMap(PlotBaseMixin):
                 vmin=vmin,
                 vmax=vmax,
                 proj=proj,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 gridlines=gridlines,
                 loglevel=self.loglevel,
                 figsize=figsize,
@@ -446,7 +446,7 @@ class PlotVariabilityMap(PlotBaseMixin):
             raise ValueError("Both data and data_ref must be an xarray.DataArray")
 
         diff_map = (dataset_std - dataset_std_ref).persist()
-        
+
         if np.array_equal(np.nan_to_num(dataset_std.values), np.nan_to_num(dataset_std_ref.values)):
             self.logger.warning("The values are exactly the same (ignoring NaNs), no difference to plot")
 
@@ -466,7 +466,7 @@ class PlotVariabilityMap(PlotBaseMixin):
                 contour=contour,
                 return_fig=True,
                 title=title,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
                 transform_first=True,
                 proj=proj,
@@ -484,9 +484,9 @@ class PlotVariabilityMap(PlotBaseMixin):
                 title=title,
                 vmin_fill=vmin_diff,
                 vmax_fill=vmax_diff,
-                #cyclic_lon=False,
+                # cyclic_lon=False,
                 add_land=True,
-                #transform_first=True,
+                # transform_first=True,
                 proj=proj,
                 figsize=figsize,
                 ax_pos=ax_pos,

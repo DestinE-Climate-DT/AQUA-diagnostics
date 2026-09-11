@@ -350,7 +350,7 @@ class PlotBaseMixin:
         """
         Save the plot of variability (STD) differences between a reference dataset and a model.
 
-        This function saves a figure illustrating the difference in 
+        This function saves a figure illustrating the difference in
         variability between a reference dataset and a model, including metadata for reproducibility
         and traceability.
 
