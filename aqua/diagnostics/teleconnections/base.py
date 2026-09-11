@@ -3,7 +3,7 @@ from typing import Union
 
 import xarray as xr
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigLocator
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, collapse_era5_duplicate
@@ -22,6 +22,7 @@ class BaseMixin(Diagnostic):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
+        var: str = None,
         configdir: str = None,
         definition: str = "teleconnections-destine",
         loglevel: str = "WARNING",
@@ -39,10 +40,10 @@ class BaseMixin(Diagnostic):
                              If None, all available data will be retrieved.
             enddate (str): The end date of the data to be retrieved.
                            If None, all available data will be retrieved.
+            var (str): The variable to be used. If None, the variable will be determined by the definition.
             configdir (str): The directory where the definition file is located.
                              If None, the default directory will be used.
-            definition (str): The filename of the definition file.
-                             Default is 'teleconnections-destine'.
+            definition (str): The filename of the definition file. Default is 'teleconnections-destine'.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
         super().__init__(
@@ -57,6 +58,7 @@ class BaseMixin(Diagnostic):
         )
 
         self.definition = self.load_definition(configdir=configdir, definition=definition, telecname=telecname)
+        self.var = var or self.definition.get("field")
         self.telecname = telecname
 
         # Initialize the possible results
@@ -106,7 +108,16 @@ class BaseMixin(Diagnostic):
         return corr
 
     def _prepare_statistic(self, var: str = None, season: str = None):
-        """Hidden method to prepare the data and index for the statistic."""
+        """
+        Hidden method to prepare the data and index for the statistic.
+
+        Args:
+            var (str): The variable to be used. If None, the variable is the same of the index.
+            season (str): The season to be used. If None, no season will be selected
+
+        Returns:
+            tuple: A tuple containing the prepared data and index.
+        """
         # Preparing data and index. Both have to be xr.DataArray
         if self.index is None:
             raise ValueError("Index is not set. Please compute the index first.")
@@ -152,8 +163,9 @@ class BaseMixin(Diagnostic):
         # Add yaml to definition if not present
         if not definition.endswith(".yaml"):
             definition = f"{definition}.yaml"
+        # If configdir is not provided, use the default configdir from Locator
         if not configdir:
-            configdir = ConfigPath().get_config_dir()
+            configdir = ConfigLocator().configdir
             configdir = os.path.join(configdir, "tools", "teleconnections", "definitions")
 
         definition_file = os.path.join(configdir, definition)
@@ -369,6 +381,7 @@ class PlotBaseMixin:
         self,
         telecname: str = None,
         statistic: str = None,
+        var: str = None,
         model: str = None,
         exp: str = None,
         season: str = None,
@@ -381,6 +394,7 @@ class PlotBaseMixin:
         Args:
             telecname (str): Teleconnection prefix (e.g. "NAO", "Niño 3.4").
             statistic (str): Statistic name (e.g. "correlation", "regression").
+            var (str): Variable name (e.g. "msl", "tprate").
             model (str): Model name.
             exp (str): Experiment name.
             season (str): Season label (e.g. "DJF"); rendered in parentheses.
@@ -391,7 +405,7 @@ class PlotBaseMixin:
             str: The map title.
         """
         return TitleBuilder(
-            diagnostic=f"{telecname} {statistic} map",
+            diagnostic=f"{telecname} {statistic} map for {var}" if var else f"{telecname} {statistic} map",
             model=model,
             exp=exp,
             comparison="compared to" if ref_model else None,

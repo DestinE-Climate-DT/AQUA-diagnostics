@@ -36,10 +36,28 @@ diagnostics:
       diagnostic_name: 'nao'
       months_window: 3
       seasons: ['DJF']
-      cbar_range: [-5, 5]
+      statistics_var: ['msl']
+      plot_params:
+        default:
+          vmin: -5
+          vmax: 5
+          vmin_diff: -2
+          vmax_diff: 2
+          cmap: 'RdBu_r'
     ENSO:
-      run: false
+      run: true
       diagnostic_name: 'enso'
       months_window: 3
       seasons: ['annual']
-      cbar_range: [-2, 2]
+      statistics_var: ['tos', 'tprate']
+      plot_params:
+        default:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1
+          vmax_diff: 1
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2
+          vmax: 2
+          cmap: 'BrBG'
