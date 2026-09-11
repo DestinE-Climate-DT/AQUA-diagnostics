@@ -78,6 +78,7 @@ class PlotNAO(PlotBaseMixin):
         vmax: float = None,
         vmin_diff: float = None,
         vmax_diff: float = None,
+        cmap: str = "RdBu_r",
         **kwargs,
     ):
         """
@@ -91,6 +92,7 @@ class PlotNAO(PlotBaseMixin):
             vmax (float): Maximum value for the color value. Default is None.
             vmin_diff (float): Minimum value for the color value for the difference. Default is None.
             vmax_diff (float): Maximum value for the color value for the difference. Default is None.
+            cmap (str): Colormap to use for the plots. Default is 'RdBu_r'.
             **kwargs: Additional arguments for the plotting function.
 
         Returns:
@@ -140,6 +142,7 @@ class PlotNAO(PlotBaseMixin):
                     ax=ax,
                     vmin=vmin,
                     vmax=vmax,
+                    cmap=cmap,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -174,6 +177,7 @@ class PlotNAO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,

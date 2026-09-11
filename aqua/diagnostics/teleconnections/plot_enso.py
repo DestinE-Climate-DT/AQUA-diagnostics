@@ -92,6 +92,7 @@ class PlotENSO(PlotBaseMixin):
         vmax: float = None,
         vmin_diff: float = None,
         vmax_diff: float = None,
+        cmap: str = "RdBu_r",
         **kwargs,
     ):
         """
@@ -105,6 +106,7 @@ class PlotENSO(PlotBaseMixin):
             vmax (float): Maximum value for the color value. Default is None.
             vmin_diff (float): Minimum value for the color value for the difference. Default is None.
             vmax_diff (float): Maximum value for the color value for the difference. Default is None.
+            cmap (str): Colormap to use for the plots. Default is 'RdBu_r'.
             **kwargs: Additional arguments for the plotting function.
 
         Returns:
@@ -138,7 +140,7 @@ class PlotENSO(PlotBaseMixin):
                 )
 
                 fig, _ = plot_single_map(
-                    data=maps, vmin=vmin, vmax=vmax, title=title, return_fig=True, loglevel=self.loglevel, **kwargs
+                    data=maps, vmin=vmin, vmax=vmax, cmap=cmap, title=title, return_fig=True, loglevel=self.loglevel, **kwargs
                 )
                 return fig
 
@@ -155,7 +157,14 @@ class PlotENSO(PlotBaseMixin):
                     )
                     titles.append(title)
                 fig = plot_maps(
-                    maps=maps, vmin=vmin, vmax=vmax, titles=titles, return_fig=True, loglevel=self.loglevel, **kwargs
+                    maps=maps,
+                    vmin=vmin,
+                    vmax=vmax,
+                    titles=titles,
+                    cmap=cmap,
+                    return_fig=True,
+                    loglevel=self.loglevel,
+                    **kwargs,
                 )
                 return fig
 
@@ -181,6 +190,7 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -213,6 +223,7 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
                     titles=titles,
                     title=title,
                     return_fig=True,
@@ -247,6 +258,7 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
                     titles=titles,
                     title=title,
                     return_fig=True,
