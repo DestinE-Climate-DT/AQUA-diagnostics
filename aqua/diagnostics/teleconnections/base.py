@@ -108,13 +108,23 @@ class BaseMixin(Diagnostic):
         return corr
 
     def _prepare_statistic(self, var: str = None, season: str = None):
-        """Hidden method to prepare the data and index for the statistic."""
+        """
+        Hidden method to prepare the data and index for the statistic.
+
+        Args:
+            var (str): The variable to be used. If None or 'default', the variable is the same
+            of the index.
+            season (str): The season to be used. If None, no season will be selected
+
+        Returns:
+            tuple: A tuple containing the prepared data and index.
+        """
         # Preparing data and index. Both have to be xr.DataArray
         if self.index is None:
             raise ValueError("Index is not set. Please compute the index first.")
         else:
             index = self.index
-        if not var:
+        if not var or var == "default":
             if isinstance(self.data, xr.Dataset):
                 data = self.data[self.var]
         else:
