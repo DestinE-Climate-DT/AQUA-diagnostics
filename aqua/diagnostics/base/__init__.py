@@ -2,7 +2,7 @@ from .diagnostic import Diagnostic
 from .time_util import start_end_dates, round_startdate, round_enddate
 from .util import template_parse_arguments, open_cluster, close_cluster
 from .util import load_diagnostic_config, merge_config_args, get_diagnostic_configpath
-from .util import load_var_config
+from .util import load_var_config, find_vert_coord
 from .output_saver import OutputSaver
 from .cli_base import DiagnosticCLI
 from .title import TitleBuilder
@@ -18,4 +18,5 @@ __all__ = ['Diagnostic',
            'DiagnosticCLI',
            'TitleBuilder',
            'collapse_era5_duplicate',
+           'find_vert_coord',
            'SAVE_FORMAT']

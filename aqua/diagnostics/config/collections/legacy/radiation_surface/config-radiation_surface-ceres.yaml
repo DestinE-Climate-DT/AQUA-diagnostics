@@ -13,7 +13,7 @@ datasets:
     enddate: null
   # Possible second/third/fourth datasets here, no present by default
   # - catalog: 'obs'
-  #   model: 'ERA5'
+  #   model: 'ECMWF'
   #   exp: 'era5'
   #   source: 'monthly'
   #   regrid: r100
@@ -50,7 +50,7 @@ diagnostics:
         std_startdate: '20000101'
         std_enddate: '20241231'
 
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'radiation_surface'
     variables: ['snlwrf', 'snswrf']

@@ -5,12 +5,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Unreleased in the current development version (target v0.25.0):
+Unreleased in the current development version (target v0.26.0):
 
-- Removing dask tokenization for non-local clusters (#337)
-- Specify min and max allowed versions for all dependencies (#333)
+Main changes:
 
 Complete list:
+- Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+
+## [v0.25.1]
+
+Complete list:
+- Timeseries: support no overlap between observations and model data (#370)
+
+## [v0.25.0]
+
+Main changes:
+1. Biases & Climatology refactor
+2. Centralize CLI arguments management via `reader_kwargs`
+3. Implement new DVC remote from ECMWF
+4. Specify min and max allowed versions for all dependencies
+
+Complete list:
+- Ocean3D: corrected the drift plots along with adjustments in trends and stratification plots (#298)
+- Dependencies update (#368)
+- `reader_kwargs` centralization management of cli arguments (#264)
+- Biases & Climatology refactor (#331)
+- Add bokeh as dependency (#365)
+- Dependabot and sync bot adjustments (#347)
+- Implement new DVC remote from ECMWF (#1392)
+- LatLonProfiles: std dates selection fix (#345)
+- Update outputsaver notebook (#351)
+- GlobalBiases: seasonal biases test fix (#346)
+- Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
+- Removing dask tokenization for non-local clusters (#337)
+- Specify min and max allowed versions for all dependencies (#333)
 - Change dask load order in LonLatProfiles (#338)
 
 ## [v0.24.1]
@@ -153,8 +181,10 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...HEAD
-[v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.1...HEAD
+[v0.25.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.0...v0.25.1
+[v0.25.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...v0.25.0
+[v0.24.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
 [v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...v0.24.0
 [v0.23.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...v0.23.0
 [v0.22.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...v0.22.0

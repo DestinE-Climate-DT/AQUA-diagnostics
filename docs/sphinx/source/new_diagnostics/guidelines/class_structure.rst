@@ -129,11 +129,11 @@ Example ``diagnostic_config.py`` structure:
 .. code-block:: python
 
     diagnostic_config = {
-        'global_biases': [
+        'biases': [
         {
-            'config_file': 'config_global_biases.yaml',
-            'source_path': 'config/diagnostics/global_biases',
-            'target_path': 'diagnostics/global_biases/cli'
+            'config_file': 'config_biases.yaml',
+            'source_path': 'config/diagnostics/biases',
+            'target_path': 'diagnostics/biases/cli'
         },
         ]
     }

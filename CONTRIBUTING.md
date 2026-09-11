@@ -89,7 +89,7 @@ pytest tests/
 
 Two kinds of tests cover a diagnostic:
 
-1. **Diagnostic-logic tests** (`tests/<diagnostic>/test_<diagnostic>.py`) — exercise the diagnostic classes (`GlobalBiases`, `SeaIce`, …) against the real `ci` catalog. These validate the *scientific* behaviour and data handling.
+1. **Diagnostic-logic tests** (`tests/<diagnostic>/test_<diagnostic>.py`) — exercise the diagnostic classes (`Biases`, `SeaIce`, …) against the real `ci` catalog. These validate the *scientific* behaviour and data handling.
 2. **CLI tests** (`tests/cli/test_cli_<diagnostic>.py`) — validate the CLI script itself: argument parsing, configuration loading, and that the right diagnostic/plot classes are invoked for each branch of the config. These are fast (seconds) because every external dependency is mocked.
 
 Keep the two layers separate: CLI tests should **not** re-test diagnostic logic, and diagnostic-logic tests should **not** go through the CLI.
@@ -114,7 +114,7 @@ The CLI test framework relies on one small refactor and a shared set of fixtures
    This is a mechanical, behaviour-preserving change that makes the CLI importable and testable.
 
 2. **Reuse the shared fixtures** in `tests/cli/conftest.py`:
-   - `build_config(diagnostics, **kwargs)` — writes a minimal valid YAML config to a temp dir and returns its path. Pass a mapping of diagnostic blocks, e.g. `{"globalbiases": {"run": True, ...}}` or `{"seaice_timeseries": {...}, "seaice_2d_bias": {...}}`.
+   - `build_config(diagnostics, **kwargs)` — writes a minimal valid YAML config to a temp dir and returns its path. Pass a mapping of diagnostic blocks, e.g. `{"biases": {"run": True, ...}}` or `{"seaice_timeseries": {...}, "seaice_2d_bias": {...}}`.
    - `mock_cluster` — no-ops `open_cluster`/`close_cluster` so tests don't spawn a Dask cluster.
 
 3. **Patch diagnostic classes at the CLI module path**, not where they are defined. In a per-file fixture, e.g.:
@@ -122,8 +122,8 @@ The CLI test framework relies on one small refactor and a shared set of fixtures
    ```python
    @pytest.fixture
    def mock_gb(self, mocker):
-       mock_gb_cls   = mocker.patch(f"{CLI_MODULE}.GlobalBiases")
-       mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotGlobalBiases")
+       mock_gb_cls   = mocker.patch(f"{CLI_MODULE}.Climatology")
+       mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotBias")
        return mock_gb_cls, mock_plot_cls
    ```
 
@@ -134,7 +134,7 @@ The CLI test framework relies on one small refactor and a shared set of fixtures
 
 Do not test things already covered by `tests/diagnostic_base/` (argument merging, dataset overrides). The shared `DiagnosticCLI` is tested there.
 
-Look at examples such as: `tests/cli/test_cli_global_biases.py` and `tests/cli/test_cli_seaice.py` as reference implementations.
+Look at examples such as: `tests/cli/test_cli_biases.py` and `tests/cli/test_cli_seaice.py` as reference implementations.
 
 ### Coding style checks with ruff and pre-commit in a Pull Request
 

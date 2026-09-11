@@ -6,6 +6,9 @@ on:
     branches:
       - main
   pull_request:
+    # 'labeled' is not a default activity type: without it, adding the
+    # "run tests" label to an open PR does not trigger this workflow.
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * 1" # run every Monday night at 3AM UTC
@@ -27,7 +30,7 @@ jobs:
         run: |
           # Run tests if:
           # 1) PR has label "run tests" or "ready to merge"
-          # 2) Triggered by Dependabot
+          # 2) Opened by Dependabot
           # 3) Triggered manually (workflow_dispatch)
           # 4) Triggered by schedule
           # 5) Pushed to main branch
@@ -35,7 +38,7 @@ jobs:
 
           if [[ "${{ contains(github.event.pull_request.labels.*.name, 'run tests') }}" == "true" ]] || \
              [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready to merge') }}" == "true" ]] || \
-             [[ "${{ github.actor }}" == "dependabot[bot]" ]] || \
+             [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]] || \
              [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
              [[ "${{ github.event_name }}" == "schedule" ]] || \
              [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
@@ -55,6 +58,9 @@ jobs:
       enable-parallel: true
       enable-coverage: true
       fail-fast: false
+      # Enables the concurrency group in the reusable workflow, so a new run
+      # on the same PR cancels the previous one still in progress.
+      pr-number: ${{ github.event.pull_request.number || '' }}
       test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
@@ -63,3 +69,4 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      AQUA_DVC_PEM: ${{ secrets.AQUA_DVC_PEM }}

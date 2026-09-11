@@ -47,7 +47,7 @@ cluster:  # options for dask cluster (this works well on lumi)
 
 # List of available CLI tools (diagnostics)
 cli:
-  biases: "global_biases/cli_global_biases.py"
+  biases: "biases/cli_biases.py"
   boxplots: "boxplots/cli_boxplots.py"
   drift: "ocean_drift/cli_ocean_drift.py"
   ecmean: "ecmean/cli_ecmean.py"
