@@ -172,6 +172,11 @@ def main(argv=None):
                         "loglevel": cli.loglevel,
                     }
 
+                    # We load the default plot parameters, which will then be merged and
+                    # field by field overridden by the specific plot parameters for each variable.
+                    all_plot_params = nao_config.get("plot_params", {})
+                    default_params = all_plot_params.get("default", {})
+
                     plot_nao = PlotNAO(**plot_args)
 
                     # Plot the NAO index
@@ -187,10 +192,8 @@ def main(argv=None):
 
                     # Plot regressions and correlations
                     for var in statistics_var:
-                        if var == "default":
-                            var = nao[
-                                i
-                            ].var  # The default variable is the one used defined in the configuration of the NAO diagnostic.
+                        var_plot_params = all_plot_params.get(var, {})
+                        var_plot_params = {**default_params, **var_plot_params}
                         for season in seasons:
                             for i in range(len(nao)):
                                 nao_regressions[var][season][i].load(keep_attrs=True)
@@ -201,11 +204,21 @@ def main(argv=None):
                             fig_reg = plot_nao.plot_maps(
                                 maps=nao_regressions[var][season],
                                 ref_maps=nao_ref_regressions[var][season],
+                                vmin=var_plot_params.get("vmin"),
+                                vmax=var_plot_params.get("vmax"),
+                                vmin_diff=var_plot_params.get("vmin_diff"),
+                                vmax_diff=var_plot_params.get("vmax_diff"),
+                                cmap=var_plot_params.get("cmap", "RdBu_r"),
                                 statistic="regression",
                             )
                             fig_cor = plot_nao.plot_maps(
                                 maps=nao_correlations[var][season],
                                 ref_maps=nao_ref_correlations[var][season],
+                                vmin=var_plot_params.get("vmin"),
+                                vmax=var_plot_params.get("vmax"),
+                                vmin_diff=var_plot_params.get("vmin_diff"),
+                                vmax_diff=var_plot_params.get("vmax_diff"),
+                                cmap=var_plot_params.get("cmap", "RdBu_r"),
                                 statistic="correlation",
                             )
 
@@ -220,21 +233,22 @@ def main(argv=None):
                                 statistic="correlation",
                             )
 
-                            reg_product = f"regression_{season}" if season != "annual" else "regression"
-                            cor_product = f"correlation_{season}" if season != "annual" else "correlation"
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
 
                             plot_nao.save_plot(
                                 fig_reg,
-                                diagnostic_product=reg_product,
+                                diagnostic_product="regression",
                                 format=cli.save_format,
                                 metadata={"description": regression_description},
+                                extra_keys=extra_keys,
                                 dpi=cli.dpi,
                             )
                             plot_nao.save_plot(
                                 fig_cor,
-                                diagnostic_product=cor_product,
+                                diagnostic_product="correlation",
                                 format=cli.save_format,
                                 metadata={"description": correlation_description},
+                                extra_keys=extra_keys,
                                 dpi=cli.dpi,
                             )
 
@@ -363,6 +377,11 @@ def main(argv=None):
                         "loglevel": cli.loglevel,
                     }
 
+                    # We load the default plot parameters, which will then be merged and
+                    # field by field overridden by the specific plot parameters for each variable.
+                    all_plot_params = enso_config.get("plot_params", {})
+                    default_params = all_plot_params.get("default", {})
+
                     plot_enso = PlotENSO(**plot_args)
 
                     # Plot the ENSO index
@@ -378,10 +397,8 @@ def main(argv=None):
 
                     # Plot regressions and correlations
                     for var in statistics_var:
-                        if var == "default":
-                            var = enso[
-                                i
-                            ].var  # The default variable is the one used defined in the configuration of the ENSO diagnostic.
+                        var_plot_params = all_plot_params.get(var, {})
+                        var_plot_params = {**default_params, **var_plot_params}
                         for season in seasons:
                             for i in range(len(enso)):
                                 enso_regressions[var][season][i].load(keep_attrs=True)
@@ -392,11 +409,21 @@ def main(argv=None):
                             fig_reg = plot_enso.plot_maps(
                                 maps=enso_regressions[var][season],
                                 ref_maps=enso_ref_regressions[var][season],
+                                vmin=var_plot_params.get("vmin"),
+                                vmax=var_plot_params.get("vmax"),
+                                vmin_diff=var_plot_params.get("vmin_diff"),
+                                vmax_diff=var_plot_params.get("vmax_diff"),
+                                cmap=var_plot_params.get("cmap", "RdBu_r"),
                                 statistic="regression",
                             )
                             fig_cor = plot_enso.plot_maps(
                                 maps=enso_correlations[var][season],
                                 ref_maps=enso_ref_correlations[var][season],
+                                vmin=var_plot_params.get("vmin"),
+                                vmax=var_plot_params.get("vmax"),
+                                vmin_diff=var_plot_params.get("vmin_diff"),
+                                vmax_diff=var_plot_params.get("vmax_diff"),
+                                cmap=var_plot_params.get("cmap", "RdBu_r"),
                                 statistic="correlation",
                             )
 
@@ -411,21 +438,22 @@ def main(argv=None):
                                 statistic="correlation",
                             )
 
-                            reg_product = f"regression_{season}" if season != "annual" else "regression"
-                            cor_product = f"correlation_{season}" if season != "annual" else "correlation"
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
 
                             plot_enso.save_plot(
                                 fig_reg,
-                                diagnostic_product=reg_product,
+                                diagnostic_product="regression",
                                 format=cli.save_format,
                                 metadata={"description": regression_description},
+                                extra_keys=extra_keys,
                                 dpi=cli.dpi,
                             )
                             plot_enso.save_plot(
                                 fig_cor,
-                                diagnostic_product=cor_product,
+                                diagnostic_product="correlation",
                                 format=cli.save_format,
                                 metadata={"description": correlation_description},
+                                extra_keys=extra_keys,
                                 dpi=cli.dpi,
                             )
 
