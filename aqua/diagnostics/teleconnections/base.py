@@ -3,7 +3,7 @@ from typing import Union
 
 import xarray as xr
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigLocator
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, collapse_era5_duplicate
@@ -112,8 +112,7 @@ class BaseMixin(Diagnostic):
         Hidden method to prepare the data and index for the statistic.
 
         Args:
-            var (str): The variable to be used. If None or 'default', the variable is the same
-            of the index.
+            var (str): The variable to be used. If None, the variable is the same of the index.
             season (str): The season to be used. If None, no season will be selected
 
         Returns:
@@ -124,7 +123,7 @@ class BaseMixin(Diagnostic):
             raise ValueError("Index is not set. Please compute the index first.")
         else:
             index = self.index
-        if not var or var == "default":
+        if not var:
             if isinstance(self.data, xr.Dataset):
                 data = self.data[self.var]
         else:
@@ -164,8 +163,9 @@ class BaseMixin(Diagnostic):
         # Add yaml to definition if not present
         if not definition.endswith(".yaml"):
             definition = f"{definition}.yaml"
+        # If configdir is not provided, use the default configdir from Locator
         if not configdir:
-            configdir = ConfigPath().get_config_dir()
+            configdir = ConfigLocator().configdir
             configdir = os.path.join(configdir, "tools", "teleconnections", "definitions")
 
         definition_file = os.path.join(configdir, definition)
