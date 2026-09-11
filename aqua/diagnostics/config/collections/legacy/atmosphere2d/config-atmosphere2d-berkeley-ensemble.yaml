@@ -37,7 +37,7 @@ diagnostics:
     #formulae: ['(10u^2+10v^2)^0.5'] #TODO: Formula implementation
     params:
       default:
-        #seasons: true #TODO: seasonal ensemble diagnostic 
+        #seasons: true #TODO: seasonal ensemble diagnostic
         #seasons_stat: 'mean' # May become a list
         #vertical: false     # Vertical profile if variable 3d # this won't be used in the ensemble diagnostic
       (10u^2+10v^2)^0.5:
