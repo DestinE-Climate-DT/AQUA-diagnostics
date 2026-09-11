@@ -381,6 +381,7 @@ class PlotBaseMixin:
         self,
         telecname: str = None,
         statistic: str = None,
+        var: str = None,
         model: str = None,
         exp: str = None,
         season: str = None,
@@ -393,6 +394,7 @@ class PlotBaseMixin:
         Args:
             telecname (str): Teleconnection prefix (e.g. "NAO", "Niño 3.4").
             statistic (str): Statistic name (e.g. "correlation", "regression").
+            var (str): Variable name (e.g. "msl", "tprate").
             model (str): Model name.
             exp (str): Experiment name.
             season (str): Season label (e.g. "DJF"); rendered in parentheses.
@@ -403,7 +405,7 @@ class PlotBaseMixin:
             str: The map title.
         """
         return TitleBuilder(
-            diagnostic=f"{telecname} {statistic} map",
+            diagnostic=f"{telecname} {statistic} map for {var}" if var else f"{telecname} {statistic} map",
             model=model,
             exp=exp,
             comparison="compared to" if ref_model else None,
