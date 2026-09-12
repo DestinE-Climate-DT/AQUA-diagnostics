@@ -141,7 +141,7 @@ def reader_retrieve_and_merge(
 
                 # Temporal selection (only if time dimension exists)
                 if "time" in ds.dims and (startdate or enddate):
-                    ds = ds.aqua.seldate(time=slice(startdate, enddate))
+                    ds = ds.aqua.seldate(startdate=startdate, enddate=enddate)
                 elif "time" not in ds.dims and (startdate or enddate):
                     logger.debug(f"Dataset for {model_i}-{r} has no time dimension.")
 
