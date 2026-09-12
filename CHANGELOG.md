@@ -16,6 +16,7 @@ Complete list:
 
 Complete list:
 - Timeseries: support no overlap between observations and model data (#370)
+- VariabilityMap: SshVariability -> VariabilityMap and created the config files in Ocean2d (#207)
 
 ## [v0.25.0]
 
