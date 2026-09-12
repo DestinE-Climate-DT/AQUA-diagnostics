@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH --job-name={{ job_name }}
+#SBATCH --partition={{ partition }}
+#SBATCH --account={{ account }}
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time={{ time }}
+#SBATCH --error={{ logdir_error }}/{{ error }}
+#SBATCH --output={{ logdir_output }}/{{ output }}
+
+model={{ model }}
+exp={{ exp }}
+source={{ source }}
+catalog={{ catalog }}
+
+export OUTDIR={{ outdir }}{{ fresh }}
+export AQUA={{ aquadir }}
+
+mkdir -p $OUTDIR
+cd $OUTDIR
+
+unset SINGULARITY_BIND  # Lumi specific fix for singularity
+
+if [[ "{{ nativeaqua }}" == "true" ]]; then
+    if [[ "{{ ensemble }}" == "true" ]]; then
+        bash "{{ aqua_web_script }}" "$OUTDIR" "{{ explist }}"
+    else
+        bash "{{ aqua_web_script }}" --no-ensemble "$OUTDIR" "{{ explist }}"
+    fi
+else
+    bash "$AQUA/cli/aqua-container/load-aqua-container.sh" {{ machine }} <<EOF
+#!/bin/bash
+    if [[ "{{ ensemble }}" == "true" ]]; then
+        bash "{{ aqua_web_script }}" "$OUTDIR" "{{ explist }}"
+    else
+        bash "{{ aqua_web_script }}" --no-ensemble "$OUTDIR" "{{ explist }}"
+    fi
+EOF
+fi
