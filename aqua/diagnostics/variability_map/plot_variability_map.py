@@ -32,9 +32,9 @@ class PlotVariabilityMap(PlotBaseMixin):
         Initialize the PlotVariabilityMap.
 
         Args:
-            diagnostic_name (str): VariabilityMap
-            outputdir (str): output directory
-            loglevel (str): Default WARNING
+            diagnostic_name (str, optional): Name of the diagnostic. Default is 'VariabilityMap'.
+            outputdir (str, optional): Output directory for saved plots. Default is './'.
+            loglevel (str, optional): Logging level. Default is 'WARNING'.
         """
 
         self.loglevel = loglevel
@@ -94,14 +94,17 @@ class PlotVariabilityMap(PlotBaseMixin):
             exp (str, optional): Experiment identifier. Used in plot titles. (Mandatory for labeling)
             startdate (str, optional): Start date label to include in the plot title.
             enddate (str, optional): End date label to include in the plot title.
-            regrid (str or dict, optional): Regridding option or parameters for spatial interpolation.
             plot_options (dict, optional): Additional keyword arguments for customizing the plot (e.g., colormap, linewidth).
+            figsize (tuple, optional): Size of the figure. Default is (11, 8.5).
+            ax_pos (tuple, optional): Position of the axes. Default is (1, 1, 1).
             vmin (float, optional): Minimum value for color scaling. If ``None``, determined automatically.
             vmax (float, optional): Maximum value for color scaling. If ``None``, determined automatically.
+            gridlines (bool, optional): Whether to draw gridlines. Default is False.
+            contour (bool, optional): Whether to plot using filled contours. Default is False.
             proj (str, optional): Map projection type. Default is ``'robinson'``.
             proj_params (dict, optional): Additional keyword arguments passed to the projection.
             save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
-            dpi (int, optional): Resolution (dots per inch) for saved figures. Default is ``300``.
+            dpi (int, optional): Resolution (dots per inch) for saved figures. Default is ``600``.
             region (str, optional): Region identifier. If provided, overrides lat/lon limits.
             lon_limits (list[float], optional): Longitude limits [min, max] for the plot.
             lat_limits (list[float], optional): Latitude limits [min, max] for the plot.
@@ -113,11 +116,12 @@ class PlotVariabilityMap(PlotBaseMixin):
             diagnostic_product (str, optional): Diagnostic type, e.g., ``'VariabilityMap'``.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
             description (str, optional): Additional description to include in the plot or metadata.
-            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
+            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x721'.
             regrid_method (str, optional): Regridding method to use. Default is 'ycon'.
 
         Returns:
             matplotlib.figure.Figure: The generated plot figure object.
+            matplotlib.axes.Axes: The axes object containing the plot.
 
         Raises:
             ValueError: If required arguments (e.g., ``catalog``, ``model``, ``exp``) are missing.
@@ -316,14 +320,17 @@ class PlotVariabilityMap(PlotBaseMixin):
             exp_ref (str, optional): Experiment name of the reference dataset.
             startdate_ref (str, optional): Start date of the reference dataset.
             enddate_ref (str, optional): End date of the reference dataset.
-            regrid (str or dict, optional): Regridding method or parameters.
+            figsize (tuple, optional): Size of the figure. Default is (11, 8.5).
+            ax_pos (tuple, optional): Position of the axes. Default is (1, 1, 1).
             plot_options (dict, optional): Additional keyword arguments for plotting (e.g., colormap, alpha).
             vmin_diff (float, optional): Minimum value for color scaling. If None, determined automatically.
             vmax_diff (float, optional): Maximum value for color scaling. If None, determined automatically.
+            gridlines (bool, optional): Whether to draw gridlines. Default is False.
+            contour (bool, optional): Whether to plot using filled contours. Default is False.
             proj (str, optional): Map projection. Default is 'robinson'.
             proj_params (dict, optional): Additional keyword arguments for the projection.
             save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
-            dpi (int, optional): Resolution of the saved figure. Default is 300.
+            dpi (int, optional): Resolution of the saved figure. Default is 600.
             region (str, optional): Region identifier for the plot.
             lon_limits (list[float], optional): Longitude limits [min, max] for the plot.
             lat_limits (list[float], optional): Latitude limits [min, max] for the plot.
@@ -335,11 +342,12 @@ class PlotVariabilityMap(PlotBaseMixin):
             diagnostic_product (str, optional): Diagnostic product identifier. Default is 'variability_map_difference'.
             description (str, optional): Additional description for the plot metadata or title.
             rebuild (bool, optional): If ``True``, rebuild the data from the original files. Default is ``True``.
-            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x720'.
+            tgt_grid_name (str, optional): Target grid name for regridding. Default is 'r1440x721'.
             regrid_method (str, optional): Regridding method to use. Default is 'ycon'.
 
         Returns:
             matplotlib.figure.Figure: The generated figure object.
+            matplotlib.axes.Axes: The axes object containing the plot.
 
         Raises:
             ValueError: If required dataset or catalog/model/exp information is missing.
@@ -536,7 +544,22 @@ class PlotVariabilityMap(PlotBaseMixin):
         region_name=None,
     ):
         """
-        Selecting sub-region based on lon-lat
+        Selecting sub-region based on lon-lat bounds and applying boundary masks.
+
+        Args:
+            data (xarray.DataArray, optional): The data to be subsetted.
+            model (str, optional): The model string identifier. Masks are applied if 'ICON' is in the model name.
+            exp (str, optional): Experiment name.
+            mask_northern_boundary (bool, optional): Whether to apply masking at the northern boundary.
+            northern_boundary_latitude (float, optional): The latitude defining the northern cutoff.
+            mask_southern_boundary (bool, optional): Whether to apply masking at the southern boundary.
+            southern_boundary_latitude (float, optional): The latitude defining the southern cutoff.
+            lon_lim (list[float], optional): Longitude limits [min, max] for the subregion.
+            lat_lim (list[float], optional): Latitude limits [min, max] for the subregion.
+            region_name (str, optional): String identifier for the region. Used for logging.
+
+        Returns:
+            xarray.DataArray: The subregion-selected and potentially masked data.
         """
         self.logger.info(f"Selecting the sub-region plots: {region_name}.")
         # Apply masking if necessary

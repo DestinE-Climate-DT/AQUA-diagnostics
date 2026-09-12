@@ -52,8 +52,8 @@ class BaseMixin(Diagnostic):
             enddate (str, optional): End date of the data to retrieve. If None, all available data is retrieved.
             region (str, optional): Named region for selecting data. Overrides lon_limits and lat_limits.
             regrid (str, optional): Target grid for regridding. If None, no regridding is applied.
-            lon_limits (list of float, optional): Longitude limits. Overridden by region.
-            lat_limits (list of float, optional): Latitude limits. Overridden by region.
+            lon_limits (list[float], optional): Longitude limits. Overridden by region.
+            lat_limits (list[float], optional): Latitude limits. Overridden by region.
             outputdir (str, optional): Directory to save output files (default: './').
             reader_kwargs (dict, optional): Additional keyword arguments for the Reader (default: {}).
             var (str, optional): Variable name to process.
@@ -61,12 +61,8 @@ class BaseMixin(Diagnostic):
             short_name (str, optional): Short name of the variable.
             units (str, optional): Units of the variable.
             rebuild (bool, optional): If True, rebuild data from original files (default: True).
+            fix (bool, optional): If True, apply data fixes when checking data (default: True).
             loglevel (str, optional): Logging level (default: 'WARNING').
-
-        Keyword Args:
-            zoom (int, optional): HEALPix grid zoom level (e.g., zoom=10 corresponds to h1024).
-            realization (int, optional): Ensemble realization number, included in the output filename.
-            **kwargs: Additional arbitrary keyword arguments to pass to the intake catalog entry.
         """
 
         super().__init__(
@@ -166,8 +162,6 @@ class BaseMixin(Diagnostic):
             data (xarray.DataArray): Input data array
             diagnostic_product (str): The product name to be used in the filename 'VariabilityMap'.
             freq (str): The frequency of the data. It is set to 'None' for this release of code.
-            outputdir (str): The directory to save the data.
-            rebuild (bool): If True, rebuild the data from the original files.
             create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
             dict_catalog_entry (dict): A dictionary with catalog entry information.
                 Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
@@ -374,6 +368,10 @@ class PlotBaseMixin:
             startdate_ref (str, optional): Start date for the reference dataset.
             enddate_ref (str, optional): End date for the reference dataset.
             region (str, optional): Geographic region identifier for the plot.
+            long_name (str, optional): Long descriptive name of the variable (for labeling/metadata).
+            short_name (str, optional): Short variable name (for labeling/metadata).
+            units (str, optional): Units of the variable (e.g., ``'m'`` for meters).
+
         Returns:
             str: The full path to the saved plot file.
 

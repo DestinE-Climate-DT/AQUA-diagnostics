@@ -29,10 +29,14 @@ DEFAULT_DIAGNOSTIC_NAME = "ocean2d"
 
 
 def parse_arguments(args):
-    """Parse command-line arguments for VariabilityMap diagnostic.
+    """
+    Parse command-line arguments for VariabilityMap diagnostic.
 
     Args:
-        args (list): list of command-line arguments to parse.
+        args (list[str]): list of command-line arguments to parse.
+
+    Returns:
+        argparse.Namespace: Parsed command-line arguments.
     """
     parser = argparse.ArgumentParser(description="VariabilityMap CLI")
     parser = template_parse_arguments(parser)
@@ -40,10 +44,11 @@ def parse_arguments(args):
 
 
 def main(argv=None):
-    """Run the VariabilityMap diagnostic CLI.
+    """
+    Run the VariabilityMap diagnostic CLI.
 
     Args:
-        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+        argv (list[str], optional): command-line arguments. Defaults to sys.argv[1:].
     """
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 

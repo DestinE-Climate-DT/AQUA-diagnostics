@@ -57,24 +57,19 @@ class VariabilityMap(BaseMixin):
             region (str): For subregion selection. Default is 'None'.
                 In case of sub-region STD computation, this variable is mandatory.
             regrid (str): Regrid option for the data. NOTE: the regridding will be applied before computing the STD.
-            If 'lon_limits' and 'lat_limits' are None, they are taken from region file in AQUA.
             lon_limits (list[float]): list of lon limits. Default is 'None'.
+                If 'lon_limits' and 'lat_limits' are None, they are taken from region file in AQUA.
             lat_limits (list[float]): list of lat limits. Default is 'None'.
             var (str): Variable name from data. Default is 'None'.
             long_name (str): If not given extracted from the data.
             short_name (str): If not given extracted from the data.
             units (str): If not given extracted from the data.
-
             save_netcdf (bool): Default is 'True'.
             rebuild (bool): Recomputes and saves the netcdf. Default is "True".
             outputdir (str): output directory. Default is './'
+            reader_kwargs (dict, optional): Additional keyword arguments for the Reader. Default is {}.
+            fix (bool, optional): If True, apply data fixes. Default is True.
             loglevel (str): Default WARNING.
-
-        Keyword Args:
-            zoom (int, optional): HEALPix grid zoom level (e.g. zoom=10 is h1024). Allows for multiple gridname definitions.
-            realization (int, optional): The ensemble realization number, included in the output filename.
-            **kwargs: Additional arbitrary keyword arguments to be passed as additional parameters to the intake catalog entry
-
         """
 
         super().__init__(
@@ -108,9 +103,6 @@ class VariabilityMap(BaseMixin):
 
     def run(self):
         """
-        Args:
-            create_catalog_entry (bool): Option for creating catalog entry. Default is 'False'.
-
         This function performs following three functions:
         a) Retrieve data and regrid if given then
         b) Compute STD
