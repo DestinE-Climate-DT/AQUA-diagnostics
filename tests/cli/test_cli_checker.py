@@ -9,7 +9,7 @@ import pytest
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml as write_yaml
 from aqua.core.util import load_yaml
-from aqua.diagnostics.dummy.cli_checker import _checker_config, main, parse_arguments
+from aqua.diagnostics.dummy.cli_checker import _checker_build_config, main, parse_arguments
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
@@ -67,7 +67,7 @@ def test_checker_config_uses_effective_operational_arguments():
         ]
     )
 
-    config = _checker_config(args)
+    config = _checker_build_config(args)
 
     assert config["datasets"] == [
         {
