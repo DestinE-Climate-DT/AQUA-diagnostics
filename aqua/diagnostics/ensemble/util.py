@@ -130,7 +130,7 @@ def reader_retrieve_and_merge(
                     fix=fix,
                 )
 
-                ds = reader.retrieve(var=variable, startdate=startdate, enddate=enddate)
+                ds = reader.retrieve(var=variable)
                 logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={r}")
                 # Spatial selection
                 if lon_limits and lat_limits:
