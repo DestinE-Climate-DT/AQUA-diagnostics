@@ -11,6 +11,7 @@ pytestmark = [
     pytest.mark.xdist_group(name="diagnostic_setup_class"),
 ]
 
+
 @pytest.fixture
 def variability_map_instance(tmp_path):
     """Create a fresh VariabilityMap instance for each test."""
@@ -27,6 +28,7 @@ def variability_map_instance(tmp_path):
         var="2t",
     )
 
+
 @pytest.fixture
 def plot_variability_map_instance(variability_map_instance):
     """Create a PlotVariabilityMap instance."""
@@ -39,13 +41,13 @@ def plot_variability_map_instance(variability_map_instance):
     plotvm.exp = variability_map_instance.exp
     return plotvm
 
+
 @pytest.fixture
 def test_var():
     return "2t"
 
 
 class TestVariabilityMap:
-
     def test_variability_map(self, variability_map_instance):
         """Test the variability map calculation."""
         vm = variability_map_instance
@@ -125,7 +127,6 @@ class TestVariabilityMap:
 
 
 class TestPlotVariabilityMap:
-
     def test_plot(
         self,
         variability_map_instance,
