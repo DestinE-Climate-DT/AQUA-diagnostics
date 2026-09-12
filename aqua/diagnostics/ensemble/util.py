@@ -130,7 +130,7 @@ def reader_retrieve_and_merge(
                     fix=fix,
                 )
 
-                ds = reader.retrieve(var=variable)
+                ds = reader.retrieve(var=variable, startdate=startdate, enddate=enddate)
                 logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={r}")
                 # Spatial selection
                 if lon_limits and lat_limits:
@@ -141,7 +141,7 @@ def reader_retrieve_and_merge(
 
                 # Temporal selection (only if time dimension exists)
                 if "time" in ds.dims and (startdate or enddate):
-                    ds = ds.sel(time=slice(startdate, enddate))
+                    ds = ds.aqua.seldate(time=slice(startdate, enddate))
                 elif "time" not in ds.dims and (startdate or enddate):
                     logger.debug(f"Dataset for {model_i}-{r} has no time dimension.")
 
