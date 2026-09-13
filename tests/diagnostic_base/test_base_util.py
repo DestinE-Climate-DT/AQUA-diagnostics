@@ -347,6 +347,17 @@ def test_minimum_months_enough(mock_reader_class):
     assert len(result.time) == 12
 
 
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_enough_1month(mock_reader_class):
+    """No error when available months >= months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(1)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=1)
+    assert len(result.time) == 1
+
+
 def test_minimum_months_required_class_attribute():
     """Concrete diagnostics expose MINIMUM_MONTHS_REQUIRED as a positive int class attribute."""
     # LatLonProfiles is selected since is one of the easiest diagnostics on this perspective
