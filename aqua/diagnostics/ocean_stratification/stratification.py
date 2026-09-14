@@ -102,6 +102,7 @@ class Stratification(Diagnostic):
             vert_coord = DEFAULT_OCEAN_VERT_COORD
         self.vert_coord = vert_coord
         self.processed_data = {}
+        self.exported_files = {}
 
     def run(
         self,
@@ -216,13 +217,14 @@ class Stratification(Diagnostic):
             self.processed_data[reg] = self.data
             product = "mld" if mld else "stratification"
             data_to_save = self.data["mld"] if mld else self.data
-            self.save_netcdf(
+            filepath = self.save_netcdf(
                 data_to_save,
                 diagnostic_product=product,
                 outputdir=outputdir,
                 rebuild=rebuild,
-                region=self.region,
+                region=reg,
             )
+            self.exported_files[reg] = filepath
             self.logger.info("%s diagnostic saved to netCDF file.", product)
 
     def compute_stratification(self):
@@ -367,7 +369,7 @@ class Stratification(Diagnostic):
             f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, "
             f"outputdir={outputdir}, region={region}"
         )
-        super().save_netcdf(
+        filepath = super().save_netcdf(
             data=data,
             diagnostic=self.diagnostic_name,
             diagnostic_product=diagnostic_product,
@@ -376,3 +378,4 @@ class Stratification(Diagnostic):
             extra_keys={"region": region},
         )
         self.logger.info("NetCDF file saved successfully.")
+        return filepath
