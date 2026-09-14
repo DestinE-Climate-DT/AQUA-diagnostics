@@ -4,10 +4,11 @@ import pytest
 import xarray as xr
 
 from aqua.diagnostics.ocean_drift import Hovmoller, PlotHovmoller
-from tests.shared_constants import APPROX_REL, LOGLEVEL
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL * 10
+dpi = DPI
 
 # --- Constants ---
 EXPECTED_FULL = {"thetao": 22.2086629652034, "so": 36.57638045014168}
@@ -60,8 +61,8 @@ def hovmoller_plot(hovmoller_result, hovmoller_config):
     hov, tmp_path = hovmoller_result
     save_format = hovmoller_config["plot"]["save_format"]
     hov_plot = PlotHovmoller(data=hov.processed_data_list, loglevel=loglevel, outputdir=tmp_path)
-    hov_plot.plot_hovmoller(save_format=save_format)
-    hov_plot.plot_timeseries(save_format=save_format)
+    hov_plot.plot_hovmoller(save_format=save_format, dpi=dpi)
+    hov_plot.plot_timeseries(save_format=save_format, dpi=dpi)
     return tmp_path
 
 

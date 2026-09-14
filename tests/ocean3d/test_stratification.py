@@ -7,10 +7,11 @@ import xarray as xr
 
 from aqua.diagnostics.ocean_stratification import PlotMLD, PlotStratification
 from aqua.diagnostics.ocean_stratification.stratification import Stratification
-from tests.shared_constants import APPROX_REL, LOGLEVEL
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL * 10
+dpi = DPI
 
 # --- Constants ---
 # Expected values valid with aqua-core >=1.0.0a6, which renames the FESOM/NEMO
@@ -24,7 +25,7 @@ EXPECTED_RHO = 26.82583261
 PLOT_STEM = "ocean_stratification.{product}.ci.FESOM.hpz3.r1.{region}"
 NC_STEM = "stratification.{product}.ci.FESOM.hpz3.r1.{region}"
 
-pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="dask_operations")]
+pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="ocean_stratification")]
 
 
 # --- Fixtures ---
@@ -93,14 +94,12 @@ def stratification_plot(strat_dimean_result):
     strat, tmp_path = strat_dimean_result
     data = strat.data[["thetao", "so", "rho"]]
     obs = data * 1.2
-    obs.attrs["model"] = strat.model
-    obs.attrs["exp"] = strat.exp
     PlotStratification(
         data=data,
         obs=obs,
         loglevel=loglevel,
         outputdir=tmp_path,
-    ).plot_stratification(save_format=["png"])
+    ).plot_stratification(save_format=["png"], dpi=dpi)
     return tmp_path
 
 

@@ -3,10 +3,11 @@ from pathlib import Path
 import pytest
 
 from aqua.diagnostics.ocean_trends import PlotTrends, Trends
-from tests.shared_constants import APPROX_REL, LOGLEVEL
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL * 10
+dpi = DPI
 
 # --- Constants ---
 EXPECTED_THETAO_TREND = -0.06603967
@@ -31,6 +32,7 @@ TRENDS_CONFIG = {
     "plot": {
         "save_format": ["png"],
         "products": ["multilevel_trend", "zonal_mean"],
+        "levels": [10, 100, 500, 1000],
     },
 }
 
@@ -57,8 +59,8 @@ def trends_plots(trends_result, trends_config):
     """Run both plot types once. Multilevel must use full maps; zonal uses lon-mean."""
     trend, tmp_path = trends_result
     save_format = trends_config["plot"]["save_format"]
-    PlotTrends(data=trend.trend_coef, outputdir=tmp_path, loglevel=loglevel).plot_multilevel(save_format=save_format)
-    PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(save_format=save_format)
+    PlotTrends(data=trend.trend_coef, outputdir=tmp_path, loglevel=loglevel).plot_multilevel(save_format=save_format, dpi=dpi)
+    PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(save_format=save_format, dpi=dpi)
     return tmp_path
 
 
