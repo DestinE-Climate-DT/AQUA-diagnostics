@@ -11,6 +11,7 @@ Main changes:
 
 Complete list:
 - Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+- Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
 
 ## [v0.25.1]
 
