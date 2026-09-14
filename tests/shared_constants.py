@@ -7,4 +7,4 @@ LOGLEVEL = "DEBUG"
 
 def assert_nonempty(path):
     assert path.is_file(), f"File not found: {path}"
-    assert path.stat().st_size > 0
+    assert path.stat().st_size > 0, f"Empty file: {path}"

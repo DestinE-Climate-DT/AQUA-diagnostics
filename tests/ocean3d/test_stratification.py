@@ -117,7 +117,7 @@ def mld_plot(strat_map_result, strat_config):
         obs=strat.data[["mld"]] * 2,
         outputdir=tmp_path,
         loglevel=loglevel,
-    ).plot_mld(region=strat_config["map_region"], proj_name="Orthographic", save_format=["png"])
+    ).plot_mld(region=strat_config["map_region"], proj_name="Orthographic", save_format=["png"], dpi=dpi)
     return tmp_path
 
 
