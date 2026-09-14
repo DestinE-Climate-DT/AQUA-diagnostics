@@ -1214,3 +1214,1292 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0,
     plt.savefig(pdf_c, dpi=300, bbox_inches='tight')
     print(f"✓ Comparison → {pdf_c}")
     plt.show(); plt.close()
+
+
+
+
+def plot_track_density_4deg_cap(
+    data_or_file,
+    tdict,
+    grid_size=1,
+    cap_radius=4.0,
+    max_timesteps=None,
+    category=None,
+    cat_method='slp',
+    season='all',
+    reference_data_or_file=None,
+    reference_tdict=None,
+    difference=False,
+    fixed_boundaries=None,
+):
+    """
+    Tropical cyclone track density as storm transits per month per
+    spherical cap.
+
+    Based on the track-density definition used by Roberts et al. (2020):
+    mean number of storm transits per month through a 4-degree spherical
+    cap centered at each point of a common grid.
+
+    Parameters
+    ----------
+    data_or_file : str or data
+        Main TC track dataset.
+
+    tdict : dict
+        Configuration dictionary containing:
+            tdict['time']['startdate']
+            tdict['time']['enddate']
+            tdict['dataset']['model']
+            tdict['dataset']['exp']
+            tdict['paths']['plotdir']
+
+    grid_size : float, default=1
+        Spacing of the grid points where the spherical caps are centered.
+        Example:
+            grid_size=1 -> 1° grid
+            grid_size=2 -> 2° grid
+
+        NOTE:
+        This is NOT the size of the cap.
+        The cap radius is controlled by cap_radius.
+
+    cap_radius : float, default=4
+        Radius of the spherical cap in degrees.
+        Roberts et al. (2020) use 4 degrees.
+
+    max_timesteps : int or None
+        Optional maximum number of timesteps allowed for a storm.
+
+    category : int, str or None
+        Peak-category filter.
+
+        Examples:
+            category=3
+                -> Cat 3+
+
+            category='3+'
+                -> Cat 3+
+
+            category='2-'
+                -> Cat 2 and below
+
+            category=None
+                -> all categories
+
+    cat_method : {'slp', 'sshs'}
+        Method used for TC category.
+
+    season : {'all', 'roberts'}
+        'all':
+            Use all months in the requested period.
+
+        'roberts':
+            NH: May-November
+            SH: November-May
+
+            This follows the seasonal definition used by
+            Roberts et al. (2020).
+
+    reference_data_or_file : str, data or None
+        Optional reference dataset.
+
+        If supplied together with difference=True, the function computes:
+
+            main dataset - reference dataset
+
+        Example:
+            ICON - ERA5
+
+    reference_tdict : dict or None
+        tdict corresponding to the reference dataset.
+        If None, tdict is used.
+
+    difference : bool, default=False
+        If True, calculate and plot the difference between the main
+        dataset and reference_data_or_file.
+
+    fixed_boundaries : array-like or None, default=None
+        Optional pre-computed discrete colour-level boundaries.
+
+        - If difference=False: interpreted as the same kind of array
+          produced internally via np.logspace for the density scale
+          (0 up to some positive max). Reuse the same array across
+          several datasets/models to get an identical colour scale
+          (same colours <-> same values) across all of them.
+
+        - If difference=True: interpreted as a full symmetric array
+          around zero (e.g. np.linspace(-vmax, vmax, N+1)), letting
+          several difference maps share an identical discrete
+          diverging colour scale.
+
+        If omitted, boundaries are computed automatically from this
+        call's own data in either case.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset containing the track-density field.
+    """
+
+    # =====================================================================
+    # IMPORTS
+    # =====================================================================
+
+    import os
+    import numpy as np
+    import xarray as xr
+    import matplotlib.pyplot as plt
+
+    from datetime import datetime
+    from scipy.spatial import cKDTree
+
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+
+    from matplotlib.colors import (
+        LinearSegmentedColormap,
+        ListedColormap,
+        BoundaryNorm
+    )
+
+    # =====================================================================
+    # VALIDATION
+    # =====================================================================
+
+    if cat_method not in ['slp', 'sshs']:
+        raise ValueError(
+            "cat_method must be 'slp' or 'sshs'"
+        )
+
+    if season not in ['all', 'roberts']:
+        raise ValueError(
+            "season must be 'all' or 'roberts'"
+        )
+
+    if difference and reference_data_or_file is None:
+        raise ValueError(
+            "difference=True requires "
+            "reference_data_or_file"
+        )
+
+    # =====================================================================
+    # CATEGORY PARSING
+    # =====================================================================
+
+    names = _cat_names(cat_method)
+    suffix = _method_suffix(cat_method)
+
+    cat_direction = 'plus'
+
+    if isinstance(category, str):
+
+        cat_str = category.strip()
+
+        if cat_str.endswith('-'):
+
+            cat_direction = 'minus'
+            category = int(cat_str[:-1])
+
+        elif cat_str.endswith('+'):
+
+            cat_direction = 'plus'
+            category = int(cat_str[:-1])
+
+        else:
+
+            category = int(cat_str)
+
+    # =====================================================================
+    # HELPER: FILTER TRAJECTORIES
+    # =====================================================================
+
+    def _prepare_trajectories(data):
+
+        trajectories, _ = _get_data_from_input(data)
+
+        if max_timesteps is not None:
+
+            trajectories = [
+                s for s in trajectories
+                if len(s['lon']) <= max_timesteps
+            ]
+
+        if category is not None:
+
+            if cat_direction == 'minus':
+
+                trajectories = [
+                    s for s in trajectories
+                    if _peak_category(
+                        s,
+                        cat_method
+                    ) <= category
+                ]
+
+            else:
+
+                trajectories = [
+                    s for s in trajectories
+                    if _peak_category(
+                        s,
+                        cat_method
+                    ) >= category
+                ]
+
+        return trajectories
+
+    # =====================================================================
+    # PREPARE MAIN DATASET
+    # =====================================================================
+
+    trajectories = _prepare_trajectories(
+        data_or_file
+    )
+
+    if len(trajectories) == 0:
+
+        raise ValueError(
+            "No storms remain after category filtering."
+        )
+
+    print(
+        f"✓ Main dataset: "
+        f"{len(trajectories):,} storms"
+    )
+
+    if category is not None:
+
+        label = (
+            f"{category}-"
+            if cat_direction == 'minus'
+            else f"{category}+"
+        )
+
+        print(
+            f"✓ Category filter: {label} "
+            f"({cat_method})"
+        )
+
+    else:
+
+        print(
+            "✓ Category filter: all"
+        )
+
+    # =====================================================================
+    # TIME PERIOD
+    # =====================================================================
+
+    startdate = tdict['time']['startdate']
+    enddate = tdict['time']['enddate']
+
+    fmt = (
+        '%Y-%m-%d'
+        if '-' in startdate
+        else '%Y%m%d'
+    )
+
+    start = datetime.strptime(
+        startdate,
+        fmt
+    )
+
+    end = datetime.strptime(
+        enddate,
+        fmt
+    )
+
+    # Number of months in full requested period
+    n_months_all = (
+        (end.year - start.year) * 12
+        + (end.month - start.month)
+        + 1
+    )
+
+    # Denominator used for monthly-mean density (computed once here so it
+    # remains accessible later, e.g. when writing NetCDF attributes).
+    if season == 'all':
+        denominator_months = n_months_all
+    else:
+        years = end.year - start.year + 1
+        denominator_months = years * 7  # Roberts seasonal windows: 7 months/hemisphere
+
+    # =====================================================================
+    # GRID
+    # =====================================================================
+
+    # Grid centres.
+    #
+    # We use -180 ... 180 and -50 ... 50, consistent with your
+    # previous track-density plots.
+
+    lon_centers = np.arange(
+        -180,
+        180 + grid_size,
+        grid_size
+    )
+
+    lat_centers = np.arange(
+        -50,
+        50 + grid_size,
+        grid_size
+    )
+
+    # Avoid duplicate 180-degree longitude point
+    lon_centers = lon_centers[
+        lon_centers < 180
+    ]
+
+    lon2d, lat2d = np.meshgrid(
+        lon_centers,
+        lat_centers
+    )
+
+    grid_lon = lon2d.ravel()
+    grid_lat = lat2d.ravel()
+
+    n_grid = len(grid_lon)
+
+    # =====================================================================
+    # CONVERT GRID TO 3D UNIT SPHERE
+    # =====================================================================
+
+    def _lonlat_to_xyz(lon, lat):
+
+        lon_rad = np.deg2rad(lon)
+        lat_rad = np.deg2rad(lat)
+
+        x = (
+            np.cos(lat_rad)
+            * np.cos(lon_rad)
+        )
+
+        y = (
+            np.cos(lat_rad)
+            * np.sin(lon_rad)
+        )
+
+        z = np.sin(lat_rad)
+
+        return np.column_stack(
+            [x, y, z]
+        )
+
+    grid_xyz = _lonlat_to_xyz(
+        grid_lon,
+        grid_lat
+    )
+
+    grid_tree = cKDTree(
+        grid_xyz
+    )
+
+    # =====================================================================
+    # CAP RADIUS
+    # =====================================================================
+
+    # Great-circle angular radius:
+    #
+    # chord = 2 sin(theta / 2)
+    #
+    # where theta is in radians.
+
+    radius_rad = np.deg2rad(
+        cap_radius
+    )
+
+    chord_radius = (
+        2.0
+        * np.sin(
+            radius_rad / 2.0
+        )
+    )
+
+    # =====================================================================
+    # SEASONAL FILTER
+    # =====================================================================
+
+    def _get_months_for_hemisphere(
+        hemisphere
+    ):
+
+        if season == 'all':
+
+            return set(
+                range(1, 13)
+            )
+
+        if hemisphere == 'NH':
+
+            # May-November
+            return {
+                5, 6, 7,
+                8, 9, 10, 11
+            }
+
+        else:
+
+            # November-May
+            return {
+                11, 12,
+                1, 2, 3,
+                4, 5
+            }
+
+    nh_months = _get_months_for_hemisphere(
+        'NH'
+    )
+
+    sh_months = _get_months_for_hemisphere(
+        'SH'
+    )
+
+    # =====================================================================
+    # HELPER: SELECT VALID TRACK POINTS
+    # =====================================================================
+
+    def _track_points_for_density(sd):
+
+        lon = np.asarray(
+            sd['lon'],
+            dtype=float
+        )
+
+        lat = np.asarray(
+            sd['lat'],
+            dtype=float
+        )
+
+        # Convert 0-360 to -180-180
+        lon = np.where(
+            lon > 180,
+            lon - 360,
+            lon
+        )
+
+        # ---------------------------------------------------------------
+        # Optional seasonal filtering
+        # ---------------------------------------------------------------
+
+        if season == 'roberts':
+
+            # Try to find time information.
+            #
+            # Different versions of your track dictionaries may contain
+            # different time keys, so we support the common possibilities.
+
+            months = None
+
+            if 'month' in sd:
+
+                months = np.asarray(
+                    sd['month']
+                )
+
+            elif 'time' in sd:
+
+                try:
+
+                    times = np.asarray(
+                        sd['time']
+                    )
+
+                    months = np.array(
+                        [
+                            pd.Timestamp(t).month
+                            for t in times
+                        ]
+                    )
+
+                except Exception:
+
+                    months = None
+
+            elif 'date' in sd:
+
+                try:
+
+                    dates = np.asarray(
+                        sd['date']
+                    )
+
+                    months = np.array(
+                        [
+                            pd.Timestamp(d).month
+                            for d in dates
+                        ]
+                    )
+
+                except Exception:
+
+                    months = None
+
+            # If no explicit time information is available, keep the
+            # points rather than silently deleting the storm.
+
+            if months is not None:
+
+                # NH/SH selection is based on latitude.
+                keep = np.zeros(
+                    len(lat),
+                    dtype=bool
+                )
+
+                nh = lat >= 0
+                sh = lat < 0
+
+                keep[nh] = np.isin(
+                    months[nh],
+                    list(nh_months)
+                )
+
+                keep[sh] = np.isin(
+                    months[sh],
+                    list(sh_months)
+                )
+
+                lon = lon[keep]
+                lat = lat[keep]
+
+        valid = (
+            np.isfinite(lon)
+            & np.isfinite(lat)
+            & (lat >= -50)
+            & (lat <= 50)
+        )
+
+        return (
+            lon[valid],
+            lat[valid]
+        )
+
+    # =====================================================================
+    # CALCULATE STORM TRANSITS
+    # =====================================================================
+
+    def _calculate_density(
+        trajectory_list
+    ):
+
+        counts = np.zeros(
+            n_grid,
+            dtype=float
+        )
+
+        total_storms = 0
+        total_transits = 0
+
+        for sd in trajectory_list:
+
+            lon, lat = _track_points_for_density(
+                sd
+            )
+
+            if len(lon) == 0:
+                continue
+
+            total_storms += 1
+
+            track_xyz = _lonlat_to_xyz(
+                lon,
+                lat
+            )
+
+            # ------------------------------------------------------------
+            # Find every grid point/cap touched by every track point.
+            #
+            # query_ball_point returns grid indices within the 4° cap.
+            # ------------------------------------------------------------
+
+            neighbours = grid_tree.query_ball_point(
+                track_xyz,
+                r=chord_radius
+            )
+
+            # ------------------------------------------------------------
+            # Important:
+            #
+            # A storm counts ONLY ONCE at a given grid point, even if
+            # multiple track points from the same storm fall inside
+            # the same 4° cap.
+            # ------------------------------------------------------------
+
+            storm_grid_indices = set()
+
+            for idx_list in neighbours:
+
+                storm_grid_indices.update(
+                    idx_list
+                )
+
+            for idx in storm_grid_indices:
+
+                counts[idx] += 1
+
+            total_transits += len(
+                storm_grid_indices
+            )
+
+        # ---------------------------------------------------------------
+        # Convert to monthly mean, using the shared denominator_months
+        # computed once in the outer function scope (not recomputed here).
+        # ---------------------------------------------------------------
+
+        density = (
+            counts
+            / denominator_months
+        )
+
+        print(
+            f"✓ Storms contributing: "
+            f"{total_storms:,}"
+        )
+
+        print(
+            f"✓ Total storm-cap transits: "
+            f"{total_transits:,}"
+        )
+
+        print(
+            f"✓ Density denominator: "
+            f"{denominator_months} months"
+        )
+
+        return density
+
+    # =====================================================================
+    # MAIN DENSITY
+    # =====================================================================
+
+    density_main = _calculate_density(
+        trajectories
+    )
+
+    # =====================================================================
+    # REFERENCE / DIFFERENCE
+    # =====================================================================
+
+    density_reference = None
+
+    if reference_data_or_file is not None:
+
+        reference_trajectories = _prepare_trajectories(
+            reference_data_or_file
+        )
+
+        if len(reference_trajectories) == 0:
+
+            raise ValueError(
+                "No storms remain in the reference dataset "
+                "after category filtering."
+            )
+
+        print(
+            f"✓ Reference dataset: "
+            f"{len(reference_trajectories):,} storms"
+        )
+
+        density_reference = _calculate_density(
+            reference_trajectories
+        )
+
+    if difference:
+
+        density = (
+            density_main
+            - density_reference
+        )
+
+        density_label = (
+            'Storm transit density difference '
+            '(transits month$^{-1}$ per 4° cap)'
+        )
+
+        density_title = (
+            'TC Track Density Difference'
+        )
+
+    else:
+
+        density = density_main
+
+        density_label = (
+            'Storm transits per month per 4° cap'
+        )
+
+        density_title = (
+            'TC Track Density'
+        )
+
+    # =====================================================================
+    # RESHAPE TO LAT/LON
+    # =====================================================================
+
+    density_2d = density.reshape(
+        len(lat_centers),
+        len(lon_centers)
+    )
+
+    # =====================================================================
+    # COLOUR LIMITS
+    # =====================================================================
+
+    finite = density_2d[
+        np.isfinite(density_2d)
+    ]
+
+    if len(finite) == 0:
+
+        raise ValueError(
+            "No finite density values."
+        )
+
+    if difference:
+
+        # ---------------------------------------------------------------
+        # Symmetric discrete colour range around zero.
+        #
+        # If fixed_boundaries is provided, it is interpreted here as a
+        # full symmetric array (e.g. from -vmax to +vmax) so several
+        # difference maps can share an identical discrete colour scale.
+        # Otherwise the range is derived from this call's own data.
+        # ---------------------------------------------------------------
+
+        if fixed_boundaries is not None:
+
+            boundaries = np.asarray(fixed_boundaries, dtype=float)
+
+        else:
+
+            vmax = np.nanmax(
+                np.abs(finite)
+            )
+
+            if vmax == 0:
+                vmax = 1.0
+
+            n_diff_levels = 10  # even, so zero falls exactly on a boundary
+
+            boundaries = np.linspace(
+                -vmax,
+                vmax,
+                n_diff_levels + 1
+            )
+
+        n_levels = len(boundaries) - 1
+
+        # Discrete diverging colormap (still white at/near zero by
+        # construction of RdBu_r), sampled into n_levels distinct bins.
+        cmap = plt.get_cmap(
+            'RdBu_r',
+            n_levels
+        )
+
+        norm = BoundaryNorm(
+            boundaries,
+            cmap.N
+        )
+
+    else:
+
+        positive = finite[
+            finite > 0
+        ]
+
+        if len(positive) == 0:
+
+            raise ValueError(
+                "No positive density values."
+            )
+
+        vmin = positive.min()
+        vmax = positive.max()
+
+        # ---------------------------------------------------------------
+        # Logarithmic levels + HighResMIP-PRIMAVERA / Roberts-style
+        # palette: pure white exactly at zero, then a pale-to-saturated
+        # sequential scale for values above zero (same palette already
+        # used in plot_track_density_grid, kept consistent here).
+        #
+        # If fixed_boundaries is provided, reuse it as-is (e.g. computed
+        # once from a reference dataset) so that multiple datasets share
+        # an identical colour scale -> identical colour means identical
+        # value across all plots.
+        # ---------------------------------------------------------------
+
+        if fixed_boundaries is not None:
+
+            boundaries = np.asarray(fixed_boundaries, dtype=float)
+            n_levels = len(boundaries) - 1
+
+        else:
+
+            if vmax < 0.5:
+
+                vmax_plot = (
+                    np.ceil(vmax * 20)
+                    / 20
+                )
+
+            elif vmax < 1.0:
+
+                vmax_plot = (
+                    np.ceil(vmax * 10)
+                    / 10
+                )
+
+            elif vmax < 3.0:
+
+                vmax_plot = (
+                    np.ceil(vmax * 2)
+                    / 2
+                )
+
+            else:
+
+                vmax_plot = np.ceil(
+                    vmax
+                )
+
+            vmin_plot = max(
+                0.01,
+                vmin
+            )
+
+            if vmax_plot <= vmin_plot:
+
+                vmax_plot = (
+                    vmin_plot * 2
+                )
+
+            n_levels = 12
+
+            boundaries = np.logspace(
+                np.log10(vmin_plot),
+                np.log10(vmax_plot),
+                n_levels + 1
+            )
+
+            # Exact zero is its own bottom boundary -> gets pure white
+            boundaries[0] = 0.0
+
+        # Palette: white at zero, then an explicit pale tan step right
+        # above zero (so the lowest non-zero bin reads as "faint", not a
+        # sudden jump to saturated brown), then progressing through the
+        # HighResMIP-PRIMAVERA / Roberts-style warm-to-cool sequence.
+        base_colors = [
+            '#FFFFFF', '#F5DEB3', '#8B4513', '#D2691E', '#FFD700',
+            '#ADFF2F', '#00FF00', '#00CED1', '#0000FF'
+        ]
+
+        cmap_continuous = LinearSegmentedColormap.from_list(
+            'roberts_density', base_colors, N=256
+        )
+
+        cmap = ListedColormap(
+            [cmap_continuous(i / n_levels) for i in range(n_levels)]
+        )
+
+        norm = BoundaryNorm(
+            boundaries,
+            cmap.N
+        )
+
+    # =====================================================================
+    # FIGURE
+    # =====================================================================
+
+    fig = plt.figure(
+        figsize=(14, 8)
+    )
+
+    ax = plt.axes(
+        projection=ccrs.PlateCarree()
+    )
+
+    ax.set_extent(
+        [-180, 180, -50, 50],
+        crs=ccrs.PlateCarree()
+    )
+
+    mesh = ax.pcolormesh(
+        lon_centers,
+        lat_centers,
+        density_2d,
+        cmap=cmap,
+        norm=norm,
+        transform=ccrs.PlateCarree(),
+        shading='auto'
+    )
+
+    ax.add_feature(
+        cfeature.LAND,
+        color='lightgray',
+        zorder=2,
+        alpha=0.3
+    )
+
+    ax.add_feature(
+        cfeature.COASTLINE,
+        linewidth=0.5,
+        zorder=3
+    )
+
+    gl = ax.gridlines(
+        draw_labels=True,
+        linewidth=0.5,
+        color='gray',
+        alpha=0.5,
+        linestyle='--',
+        zorder=4
+    )
+
+    gl.top_labels = False
+    gl.right_labels = False
+
+    # =====================================================================
+    # COLORBAR
+    # =====================================================================
+
+    cbar = plt.colorbar(
+        mesh,
+        ax=ax,
+        orientation='horizontal',
+        shrink=0.6,
+        aspect=30,
+        pad=0.08,
+        extend='both' if difference else 'max'
+    )
+
+    cbar.set_label(
+        density_label,
+        fontsize=11,
+        fontweight='bold'
+    )
+
+    # =====================================================================
+    # LABELS
+    # =====================================================================
+
+    method_label = (
+        'wind-based (SSHS)'
+        if cat_method == 'sshs'
+        else 'SLP-based'
+    )
+
+    if category is None:
+
+        category_label = 'All categories'
+
+    elif cat_direction == 'minus':
+
+        category_label = (
+            f'{names[category]}-'
+        )
+
+    else:
+
+        category_label = (
+            f'{names[category]}+'
+        )
+
+    # Main model name
+    model_main = tdict[
+        'dataset'
+    ]['model']
+
+    exp_main = tdict[
+        'dataset'
+    ]['exp']
+
+    if difference:
+
+        if reference_tdict is None:
+            reference_tdict = tdict
+
+        model_ref = reference_tdict[
+            'dataset'
+        ]['model']
+
+        exp_ref = reference_tdict[
+            'dataset'
+        ]['exp']
+
+        comparison_label = (
+            f'{model_main} − {model_ref}'
+        )
+
+    else:
+
+        comparison_label = (
+            f'{model_main} {exp_main}'
+        )
+
+    # =====================================================================
+    # TITLE
+    # =====================================================================
+
+    season_label = (
+        'All months'
+        if season == 'all'
+        else 'Roberts seasonal definition'
+    )
+
+    plt.title(
+        f'{density_title}: '
+        f'{comparison_label}\n'
+        f'{category_label} | '
+        f'{method_label} | '
+        f'{startdate}–{enddate}\n'
+        f'{season_label} | '
+        f'{cap_radius}° cap | '
+        f'grid spacing: {grid_size}°',
+        fontsize=13,
+        fontweight='bold',
+        pad=15
+    )
+
+    # =====================================================================
+    # FILE NAMES
+    # =====================================================================
+
+    os.makedirs(
+        tdict['paths']['plotdir'],
+        exist_ok=True
+    )
+
+    sd_c = startdate.replace(
+        '-',
+        ''
+    )
+
+    ed_c = enddate.replace(
+        '-',
+        ''
+    )
+
+    m_c = model_main.replace(
+        ' ',
+        '_'
+    )
+
+    ex_c = exp_main.replace(
+        ' ',
+        '_'
+    )
+
+    if category is None:
+
+        cat_sfx = '_catAll'
+
+    elif cat_direction == 'minus':
+
+        cat_sfx = (
+            f'_cat{category}minus'
+        )
+
+    else:
+
+        cat_sfx = (
+            f'_cat{category}plus'
+        )
+
+    season_sfx = (
+        '_allmonths'
+        if season == 'all'
+        else '_robertsseason'
+    )
+
+    cap_sfx = (
+        f'_4degcap'
+        if cap_radius == 4
+        else f'_{cap_radius:g}degcap'
+    )
+
+    # =====================================================================
+    # Difference filename
+    # =====================================================================
+
+    if difference:
+
+        ref_m = reference_tdict[
+            'dataset'
+        ]['model'].replace(
+            ' ',
+            '_'
+        )
+
+        base = (
+            f'track_density_'
+            f'{cap_radius:g}degcap'
+            f'{suffix}'
+            f'{cat_sfx}'
+            f'_{m_c}_minus_{ref_m}'
+            f'_{sd_c}_{ed_c}'
+            f'{season_sfx}'
+        )
+
+    else:
+
+        base = (
+            f'track_density_'
+            f'{cap_radius:g}degcap'
+            f'{suffix}'
+            f'{cat_sfx}'
+            f'_{m_c}_{ex_c}'
+            f'_{sd_c}_{ed_c}'
+            f'{season_sfx}'
+        )
+
+    # =====================================================================
+    # SAVE PDF
+    # =====================================================================
+
+    pdf_path = os.path.join(
+        tdict['paths']['plotdir'],
+        f'{base}.pdf'
+    )
+
+    plt.savefig(
+        pdf_path,
+        dpi=300,
+        bbox_inches='tight'
+    )
+
+    print(
+        f'✓ PDF  → {pdf_path}'
+    )
+
+    plt.show()
+    plt.close()
+
+    # =====================================================================
+    # SAVE NETCDF
+    # =====================================================================
+
+    try:
+
+        ds = xr.Dataset(
+
+            {
+                'storm_transits_per_month_4deg_cap':
+                    (
+                        ['latitude', 'longitude'],
+                        density_2d
+                    )
+            },
+
+            coords={
+                'longitude':
+                    lon_centers,
+
+                'latitude':
+                    lat_centers
+            },
+
+            attrs={
+                'model':
+                    model_main,
+
+                'experiment':
+                    exp_main,
+
+                'cat_method':
+                    cat_method,
+
+                'category_filter':
+                    (
+                        'all'
+                        if category is None
+                        else names[category]
+                    ),
+
+                'category_direction':
+                    (
+                        'none'
+                        if category is None
+                        else cat_direction
+                    ),
+
+                'density_definition':
+                    'storm transits per month per spherical cap',
+
+                'cap_radius_degrees':
+                    cap_radius,
+
+                'grid_spacing_degrees':
+                    grid_size,
+
+                'season':
+                    season,
+
+                'startdate':
+                    startdate,
+
+                'enddate':
+                    enddate,
+
+                'n_months':
+                    (
+                        n_months_all
+                        if season == 'all'
+                        else denominator_months
+                    ),
+
+                'difference':
+                    str(difference),  # NetCDF attrs don't support bool
+
+                'colour_boundaries':
+                    boundaries.tolist(),
+
+                'reference_model':
+                    (
+                        reference_tdict[
+                            'dataset'
+                        ]['model']
+                        if (
+                            difference
+                            and reference_tdict is not None
+                        )
+                        else ''
+                    ),
+
+                'creation_date':
+                    datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S'
+                    )
+            }
+        )
+
+        # Also save the raw count field if useful
+        ds['storm_transits_count'] = (
+            (
+                ['latitude', 'longitude'],
+                density_2d * (
+                    n_months_all
+                    if season == 'all'
+                    else denominator_months
+                )
+            )
+        )
+
+        nc_path = os.path.join(
+            tdict['paths']['plotdir'],
+            f'{base}.nc'
+        )
+
+        ds.to_netcdf(
+            nc_path
+        )
+
+        print(
+            f'✓ NetCDF → {nc_path}'
+        )
+
+    except Exception as e:
+
+        print(
+            f'⚠ NetCDF save failed: {e}'
+        )
+
+    return ds
