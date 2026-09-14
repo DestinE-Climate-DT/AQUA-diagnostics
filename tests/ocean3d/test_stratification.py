@@ -7,7 +7,7 @@ import xarray as xr
 
 from aqua.diagnostics.ocean_stratification import PlotMLD, PlotStratification
 from aqua.diagnostics.ocean_stratification.stratification import Stratification
-from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL, assert_nonempty
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL * 10
@@ -121,11 +121,6 @@ def mld_plot(strat_map_result, strat_config):
     return tmp_path
 
 
-def _assert_nonempty(path):
-    assert path.is_file(), f"File not found: {path}"
-    assert path.stat().st_size > 0
-
-
 # --- Tests ---
 
 
@@ -153,7 +148,7 @@ def test_netcdf_output(request, result_fixture, product, region):
     """The mld flag selects the product name, so both branches need their own file."""
     _, tmp_path = request.getfixturevalue(result_fixture)
     nc = Path(tmp_path) / "netcdf" / f"{NC_STEM.format(product=product, region=region)}.nc"
-    _assert_nonempty(nc)
+    assert_nonempty(nc)
 
 
 @pytest.mark.parametrize(
@@ -166,7 +161,7 @@ def test_netcdf_output(request, result_fixture, product, region):
 def test_plot_output(request, plot_fixture, product, region, ext):
     tmp_path = request.getfixturevalue(plot_fixture)
     path = Path(tmp_path) / ext / f"{PLOT_STEM.format(product=product, region=region)}.{ext}"
-    _assert_nonempty(path)
+    assert_nonempty(path)
 
 
 def _bare_stratification(data, climatology):

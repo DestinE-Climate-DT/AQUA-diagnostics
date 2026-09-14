@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 
 from aqua.diagnostics.ocean_drift import Hovmoller, PlotHovmoller
-from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL, assert_nonempty
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL * 10
@@ -66,11 +66,6 @@ def hovmoller_plot(hovmoller_result, hovmoller_config):
     return tmp_path
 
 
-def _assert_nonempty(path):
-    assert path.is_file(), f"File not found: {path}"
-    assert path.stat().st_size > 0
-
-
 # --- Tests ---
 
 
@@ -117,11 +112,11 @@ def test_standardised_anomaly_is_scaled_by_its_own_std(hovmoller_result):
 def test_netcdf_output(hovmoller_result, drift_type):
     _, tmp_path = hovmoller_result
     nc = Path(tmp_path) / "netcdf" / f"{PLOT_STEM.format(product='hovmoller')}.{drift_type}.nc"
-    _assert_nonempty(nc)
+    assert_nonempty(nc)
 
 
 @pytest.mark.parametrize("product", HOVMOLLER_CONFIG["plot"]["products"])
 @pytest.mark.parametrize("ext", HOVMOLLER_CONFIG["plot"]["save_format"])
 def test_plot_output(hovmoller_plot, product, ext):
     path = Path(hovmoller_plot) / ext / f"{PLOT_STEM.format(product=product)}.{ext}"
-    _assert_nonempty(path)
+    assert_nonempty(path)

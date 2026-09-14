@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from aqua.diagnostics.ocean_trends import PlotTrends, Trends
-from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
+from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL, assert_nonempty
 
 loglevel = LOGLEVEL
 approx_rel = APPROX_REL * 10
@@ -66,11 +66,6 @@ def trends_plots(trends_result, trends_config):
     return tmp_path
 
 
-def _assert_nonempty(path):
-    assert path.is_file(), f"File not found: {path}"
-    assert path.stat().st_size > 0
-
-
 # --- Tests ---
 
 
@@ -90,11 +85,11 @@ def test_trend_coef(trends_result, var, expected):
 def test_netcdf_output(trends_result):
     _, tmp_path = trends_result
     nc = Path(tmp_path) / "netcdf" / f"{PLOT_STEM.format(product='trend')}.nc"
-    _assert_nonempty(nc)
+    assert_nonempty(nc)
 
 
 @pytest.mark.parametrize("product", TRENDS_CONFIG["plot"]["products"])
 @pytest.mark.parametrize("ext", TRENDS_CONFIG["plot"]["save_format"])
 def test_plot_output(trends_plots, product, ext):
     path = Path(trends_plots) / ext / f"{PLOT_STEM.format(product=product)}.{ext}"
-    _assert_nonempty(path)
+    assert_nonempty(path)
