@@ -29,6 +29,7 @@ KNOWN_DIAGNOSTIC_KEYS = {
     "seasonalcycles",
     "teleconnections",
     "timeseries",
+    "variabilitymap",
 }
 
 
