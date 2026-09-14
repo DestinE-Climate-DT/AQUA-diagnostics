@@ -22,7 +22,7 @@ datasets:
 
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'r100-monthly'
     regrid: 'r100'

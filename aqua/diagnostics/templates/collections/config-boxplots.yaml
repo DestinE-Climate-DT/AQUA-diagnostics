@@ -9,7 +9,7 @@ datasets:
     enddate: null
   # Possible second/third/fourth datasets here, no present by default
   # - catalog: 'obs'
-  #   model: 'ERA5'
+  #   model: 'ECMWF'
   #   exp: 'era5'
   #   source: 'monthly'
   #   regrid: r100
@@ -24,7 +24,7 @@ references:
     startdate: '2000-01-01'
     enddate: '2020-12-31'
   - catalog: obs
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
     startdate: '1990-01-01'
