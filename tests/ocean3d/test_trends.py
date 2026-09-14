@@ -60,7 +60,9 @@ def trends_plots(trends_result, trends_config):
     trend, tmp_path = trends_result
     save_format = trends_config["plot"]["save_format"]
     PlotTrends(data=trend.trend_coef, outputdir=tmp_path, loglevel=loglevel).plot_multilevel(save_format=save_format, dpi=dpi)
-    PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(save_format=save_format, dpi=dpi)
+    PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(
+        save_format=save_format, dpi=dpi
+    )
     return tmp_path
 
 
