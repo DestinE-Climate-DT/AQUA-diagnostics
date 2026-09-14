@@ -8,7 +8,9 @@ single or multiple experiments.
 
 import argparse
 import sys
+
 import xarray as xr
+
 from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
