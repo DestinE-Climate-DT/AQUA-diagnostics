@@ -240,6 +240,7 @@ class PlotBias:
         title = TitleBuilder(
             diagnostic="Difference",
             variable=data[var].attrs.get("long_name", var),
+            regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
@@ -417,6 +418,7 @@ class PlotBias:
         title = TitleBuilder(
             diagnostic="Seasonal difference",
             variable=data[var].attrs.get("long_name", var),
+            regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
@@ -509,6 +511,7 @@ class PlotBias:
         title = TitleBuilder(
             diagnostic="Vertical difference",
             variable=data[var].attrs.get("long_name", var),
+            regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
