@@ -223,12 +223,11 @@ class Hovmoller(Diagnostic):
                 data = data.load()
             else:
                 data = res_dict["data"]
-            processed = self.compute_hovmoller(
+            self.processed_data[reg] = self.compute_hovmoller(
                 data=data,
                 anomaly_ref=anomaly_ref,
                 region_name=self.region,
             )
-            self.processed_data[reg] = processed
             self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=reg)
 
         self.logger.info("Hovmoller diagram saved to netCDF file")
