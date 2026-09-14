@@ -1,5 +1,5 @@
 from .diagnostic import Diagnostic
-from .time_util import start_end_dates, round_startdate, round_enddate
+from .time_util import available_time_bounds, start_end_dates, round_startdate, round_enddate
 from .util import template_parse_arguments, open_cluster, close_cluster
 from .util import load_diagnostic_config, merge_config_args, get_diagnostic_configpath
 from .util import load_var_config, find_vert_coord
@@ -9,7 +9,7 @@ from .title import TitleBuilder
 from .strings import collapse_era5_duplicate
 from .defaults import SAVE_FORMAT
 
-__all__ = ['Diagnostic',
+__all__ = ['Diagnostic', 'available_time_bounds'
            'start_end_dates', 'round_startdate', 'round_enddate',
            'template_parse_arguments', 'open_cluster', 'close_cluster',
            'load_diagnostic_config', 'merge_config_args', 'get_diagnostic_configpath',

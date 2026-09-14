@@ -17,7 +17,7 @@ from aqua.core.util import (
 )
 
 from .output_saver import OutputSaver
-from .time_util import round_enddate, round_startdate, start_end_dates
+from .time_util import available_time_bounds, start_end_dates
 
 
 class Diagnostic:
@@ -113,63 +113,25 @@ class Diagnostic:
         if self.regrid is not None:
             self.logger.info(f"Regridded data to {self.regrid} grid")
 
-        # Effective data bounds (what the catalog actually delivered)
-        eff_start = data.time.values[0]
-        eff_end = data.time.values[-1]
+        start_bound, end_bound = available_time_bounds(data)
+        self.data, self.startdate, self.enddate = self._select_time_window(
+            data=data,
+            startdate=self.startdate,
+            enddate=self.enddate,
+            start_bound=start_bound,
+            end_bound=end_bound,
+            label="Analysis",
+        )
 
-        # Avoid clipping when the user specifies e.g. an end-of-month date.
-        freq = pandas_freq_to_string(xarray_to_pandas_freq(data))
-        if freq in ("monthly", "annual"):
-            start_bound = round_startdate(pd.Timestamp(eff_start), freq=freq)
-            end_bound = round_enddate(pd.Timestamp(eff_end), freq=freq)
-        else:
-            start_bound = pd.Timestamp(eff_start)
-            end_bound = pd.Timestamp(eff_end)
-
-        # Resolve user-requested dates against effective bounds
-        if self.startdate is None:
-            self.startdate = eff_start
-        elif pd.Timestamp(self.startdate) < start_bound:
-            self.logger.warning(
-                "Requested startdate %s not available; using %s instead.",
-                time_to_string(self.startdate),
-                time_to_string(eff_start),
+        if self.std_startdate is not None:
+            self.std_data, self.std_startdate, self.std_enddate = self._select_time_window(
+                data=data,
+                startdate=self.std_startdate,
+                enddate=self.std_enddate,
+                start_bound=start_bound,
+                end_bound=end_bound,
+                label="Standard-deviation",
             )
-            self.startdate = eff_start
-        self.logger.info(("Start date: %s "), time_to_string(self.startdate))
-
-        if self.enddate is None:
-            self.enddate = eff_end
-        elif pd.Timestamp(self.enddate) > end_bound:
-            self.logger.warning(
-                "Requested enddate %s not available; using %s instead.",
-                time_to_string(self.enddate),
-                time_to_string(eff_end),
-            )
-            self.enddate = eff_end
-        self.logger.info(("End date: %s "), time_to_string(self.enddate))
-
-        if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < start_bound:
-            self.logger.warning(
-                "Requested std_startdate %s not available; using %s instead.",
-                time_to_string(self.std_startdate),
-                time_to_string(eff_start),
-            )
-            self.std_startdate = eff_start
-            self.logger.info(("Std start date: %s "), time_to_string(self.std_startdate))
-
-        if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > end_bound:
-            self.logger.warning(
-                "Requested std_enddate %s not available; using %s instead.",
-                time_to_string(self.std_enddate),
-                time_to_string(eff_end),
-            )
-            self.std_enddate = eff_end
-            self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
-
-        self.data = data.aqua.seldate(self.startdate, self.enddate)
-        if self.std_startdate is not None and self.std_enddate is not None:
-            self.std_data = data.aqua.seldate(self.std_startdate, self.std_enddate)
 
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs()
@@ -299,6 +261,46 @@ class Diagnostic:
             data = reader.regrid(data)
 
         return data, reader, catalog
+
+    def _select_time_window(self, data, startdate, enddate, start_bound, end_bound, label):
+        """Select one time window and resolve its effective metadata bounds."""
+        selected = self.reader.seldate(data, startdate=startdate, enddate=enddate)
+        if selected.time.size == 0:
+            raise ValueError(f"{label} period {startdate} to {enddate} does not overlap the available data.")
+        selected.aqua.set_default(self.reader)
+
+        selected_start = selected.time.values[0]
+        selected_end = selected.time.values[-1]
+
+        if startdate is None:
+            startdate = selected_start
+        elif pd.Timestamp(startdate) < start_bound:
+            self.logger.warning(
+                "%s start date %s is unavailable; using %s.",
+                label,
+                time_to_string(startdate),
+                time_to_string(selected_start),
+            )
+            startdate = selected_start
+
+        if enddate is None:
+            enddate = selected_end
+        elif pd.Timestamp(enddate) > end_bound:
+            self.logger.warning(
+                "%s end date %s is unavailable; using %s.",
+                label,
+                time_to_string(enddate),
+                time_to_string(selected_end),
+            )
+            enddate = selected_end
+
+        self.logger.info(
+            "%s period: %s to %s",
+            label,
+            time_to_string(startdate),
+            time_to_string(enddate),
+        )
+        return selected, startdate, enddate
 
     def _set_date_attrs(self):
         """
