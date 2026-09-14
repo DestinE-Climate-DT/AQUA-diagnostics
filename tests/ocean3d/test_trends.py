@@ -14,7 +14,7 @@ EXPECTED_THETAO_TREND = -0.06603967
 EXPECTED_SO_TREND = 0.02622599
 PLOT_STEM = "trends.{product}.ci.FESOM.hpz3.r1.global_ocean"
 
-pytestmark = [pytest.mark.diagnostics]
+pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="ocean_trends")]
 
 TRENDS_CONFIG = {
     "init": {
@@ -59,7 +59,10 @@ def trends_plots(trends_result, trends_config):
     """Run both plot types once. Multilevel must use full maps; zonal uses lon-mean."""
     trend, tmp_path = trends_result
     save_format = trends_config["plot"]["save_format"]
-    PlotTrends(data=trend.trend_coef, outputdir=tmp_path, loglevel=loglevel).plot_multilevel(save_format=save_format, dpi=dpi)
+    # Copy the levels: PlotTrends.set_data_list pops all-NaN levels from the list it receives.
+    PlotTrends(data=trend.trend_coef, outputdir=tmp_path, loglevel=loglevel).plot_multilevel(
+        levels=list(trends_config["plot"]["levels"]), save_format=save_format, dpi=dpi
+    )
     PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(
         save_format=save_format, dpi=dpi
     )

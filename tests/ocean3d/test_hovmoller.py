@@ -15,7 +15,7 @@ EXPECTED_FULL = {"thetao": 22.2086629652034, "so": 36.57638045014168}
 EXPECTED_DRIFT_TYPES = ["full", "anom_t0", "std_anom_t0"]
 PLOT_STEM = "oceandrift.{product}.ci.FESOM.hpz3.r1.sargasso_sea"
 
-pytestmark = [pytest.mark.diagnostics]
+pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="ocean_drift")]
 
 HOVMOLLER_CONFIG = {
     "init": {
