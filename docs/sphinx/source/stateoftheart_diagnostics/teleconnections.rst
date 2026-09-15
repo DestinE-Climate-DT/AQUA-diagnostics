@@ -149,6 +149,15 @@ Here we describe only the specific settings for the teleconnections diagnostic.
 
     ``ENSO``: a block, nested in the ``teleconnections`` block, that contains the details required for the ENSO teleconnection.
 
+    Both blocks contain the following options:
+
+        * ``run``: Whether to run the diagnostic.
+        * ``diagnostic_name``: Name of the diagnostic.
+        * ``months_window``: Number of months to use for the rolling mean.
+        * ``seasons``: List of seasons to consider for the analysis.
+        * ``statistics_var``: List of variables over which to compute the regression and correlation.
+        * ``plot_params``: A dictionary containing the parameters for the plots, such as the color bar range and the colormap.
+
 .. code-block:: yaml
 
     diagnostics:
@@ -158,14 +167,34 @@ Here we describe only the specific settings for the teleconnections diagnostic.
                 diagnostic_name: 'nao'
                 months_window: 3
                 seasons: ['DJF']
-                cbar_range: [-5, 5]
+                statistics_var: ['msl']
+                plot_params:
+                    default:
+                        vmin: -5
+                        vmax: 5
+                        vmin_diff: -2
+                        vmax_diff: 2
+                        cmap: 'RdBu_r'
             ENSO:
                 run: true
                 diagnostic_name: 'enso'
                 months_window: 3
                 seasons: ['annual']
-                cbar_range: [-2, 2]
-                statistics_var: ['default', 'tprate']
+                statistics_var: ['tos', 'tprate']
+                plot_params:
+                    default:
+                        vmin: -2
+                        vmax: 2
+                        vmin_diff: -1
+                        vmax_diff: 1
+                        cmap: 'RdBu_r'
+                    tprate:
+                        vmin: -2.5
+                        vmax: 2.5
+                        vmin_diff: -4
+                        vmax_diff: 4
+                        cmap: 'BrBG'
+                        units: 'mm/day'
 
 Output
 ------
