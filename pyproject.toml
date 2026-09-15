@@ -38,8 +38,8 @@ classifiers = [
 ]
 dependencies = [
     "ecmean",
-    #"cartopy==0.24.1",
-    #"matplotlib<=3.10.8"
+    "cartopy==0.24.1",
+    "matplotlib<=3.10.8"
 ]
 
 [project.optional-dependencies]
@@ -47,7 +47,7 @@ core = [
     "aqua-core>=1.1.0"
 ]
 core-fdb = [
-    "aqua-core[fdb]>=1.1.0"
+     "aqua-core[fdb]>=1.1.0"
 ]
 docs = [
     "sphinx",
@@ -173,3 +173,11 @@ known-first-party = ["aqua"]
 quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
+
+[tool.conda-lock]
+default-non-conda-source = "pip"
+platforms = [
+    "linux-64",
+#    "osx-64",
+#    "osx-arm64",
+]
