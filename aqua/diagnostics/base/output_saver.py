@@ -32,6 +32,11 @@ from .defaults import SAVE_FORMAT
 # Name xarray gives to an unnamed DataArray when writing it to NetCDF.
 DATAARRAY_VARIABLE = "__xarray_dataarray_variable__"
 
+# Formats the OutputSaver can write. These are the allowed ones, while SAVE_FORMAT is the default selection.
+VECTORIAL_FORMAT = ["pdf", "svg"]
+FIGURE_FORMAT = VECTORIAL_FORMAT + ["png"]
+FILE_FORMAT = FIGURE_FORMAT + ["nc"]
+
 
 class OutputSaver:
     """
@@ -219,8 +224,8 @@ class OutputSaver:
             str: The full path of the file.
         """
 
-        if file_format not in ["pdf", "svg", "png", "nc"]:
-            raise ValueError("file_format must be either 'pdf', 'svg', 'png' or 'nc'")
+        if file_format not in FILE_FORMAT:
+            raise ValueError(f"file_format must be one of {FILE_FORMAT}, got '{file_format}'")
 
         filename = self.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys) + f".{file_format}"
         dir_format = "netcdf" if file_format == "nc" else file_format
@@ -446,14 +451,12 @@ class OutputSaver:
         """
         extensions = to_list(extension)
 
-        if not set(extensions).issubset(["pdf", "svg", "png"]):
-            raise ValueError(f"format must be 'png', 'pdf', or 'svg', got '{extensions}'")
-
-        vectorial_formats = ["pdf", "svg"]
+        if not set(extensions).issubset(FIGURE_FORMAT):
+            raise ValueError(f"format must be one of {FIGURE_FORMAT}, got '{extensions}'")
 
         for ext in extensions:
             ext = ext.lower().lstrip(".")
-            if ext in vectorial_formats:
+            if ext in VECTORIAL_FORMAT:
                 self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata)
             else:
                 self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, dpi)
