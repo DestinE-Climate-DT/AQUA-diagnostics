@@ -70,29 +70,29 @@ style = [
     "pre-commit",
     "ruff==0.16.7"
 ]
-minimal = [
-    "aqua-diagnostics[core]"
-]
-dev = [
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]",
-    "aqua-diagnostics[style]"
-]
-additional = [
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]",
-    "aqua-diagnostics[style]"
-]
-all = [
-    "aqua-diagnostics[core]",
-    "aqua-diagnostics[additional]",
-]
-all-fdb = [
-    "aqua-diagnostics[core-fdb]",
-    "aqua-diagnostics[additional]",
-]
+# minimal = [
+#     "aqua-diagnostics[core]"
+# ]
+# dev = [
+#     "aqua-diagnostics[docs]",
+#     "aqua-diagnostics[notebooks]",
+#     "aqua-diagnostics[tests]",
+#     "aqua-diagnostics[style]"
+# ]
+# additional = [
+#     "aqua-diagnostics[docs]",
+#     "aqua-diagnostics[notebooks]",
+#     "aqua-diagnostics[tests]",
+#     "aqua-diagnostics[style]"
+# ]
+# all = [
+#     "aqua-diagnostics[core]",
+#     "aqua-diagnostics[additional]",
+# ]
+# all-fdb = [
+#     "aqua-diagnostics[core-fdb]",
+#     "aqua-diagnostics[additional]",
+# ]
 
 [project.urls]
 homepage = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
