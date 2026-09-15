@@ -113,7 +113,7 @@ class PlotNAO(PlotBaseMixin):
             vmin_diff = -5.0
             vmax_diff = 5.0
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, cbar_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Plot details
         proj = NorthPolarStereo(central_longitude=-20.0)
@@ -144,6 +144,7 @@ class PlotNAO(PlotBaseMixin):
                     vmin=vmin,
                     vmax=vmax,
                     cmap=cmap,
+                    cbar_label=cbar_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -180,6 +181,7 @@ class PlotNAO(PlotBaseMixin):
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
                     cmap=cmap,
+                    cbar_label=cbar_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,

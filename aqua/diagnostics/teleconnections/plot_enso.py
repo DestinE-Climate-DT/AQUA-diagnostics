@@ -125,7 +125,7 @@ class PlotENSO(PlotBaseMixin):
             vmin_diff = -1.0
             vmax_diff = 1.0
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, cbar_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Case 1: no reference maps
         if maps is not None and ref_maps is None:
@@ -141,7 +141,15 @@ class PlotENSO(PlotBaseMixin):
                 )
 
                 fig, _ = plot_single_map(
-                    data=maps, vmin=vmin, vmax=vmax, cmap=cmap, title=title, return_fig=True, loglevel=self.loglevel, **kwargs
+                    data=maps,
+                    vmin=vmin,
+                    vmax=vmax,
+                    cmap=cmap,
+                    cbar_label=cbar_label,
+                    title=title,
+                    return_fig=True,
+                    loglevel=self.loglevel,
+                    **kwargs
                 )
                 return fig
 
@@ -164,6 +172,7 @@ class PlotENSO(PlotBaseMixin):
                     vmax=vmax,
                     titles=titles,
                     cmap=cmap,
+                    cbar_label=cbar_label,
                     return_fig=True,
                     loglevel=self.loglevel,
                     **kwargs,
@@ -194,6 +203,7 @@ class PlotENSO(PlotBaseMixin):
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
                     cmap=cmap,
+                    cbar_label=cbar_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -228,6 +238,7 @@ class PlotENSO(PlotBaseMixin):
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
                     cmap=cmap,
+                    cbar_label=cbar_label,
                     titles=titles,
                     title=title,
                     return_fig=True,
@@ -264,6 +275,7 @@ class PlotENSO(PlotBaseMixin):
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
                     cmap=cmap,
+                    cbar_label=cbar_label,
                     titles=titles,
                     title=title,
                     return_fig=True,
