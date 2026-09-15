@@ -12,98 +12,6 @@ from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 xr.set_options(keep_attrs=True)
 
 
-def get_anomaly(data: xr.DataArray, anomaly_ref: str = None, dim: str = "time") -> xr.DataArray:
-    """Compute anomaly for the given data along a specified dimension.
-
-    Args:
-        data: The input data array to process.
-        anomaly_ref: Reference for anomaly calculation. Can be "t0", "tmean", or None.
-            If "t0" or "tmean", the anomaly is computed relative to the initial time or the mean.
-            If None, no anomaly is computed.
-        dim: The dimension along which to compute the anomaly. Default is "time".
-
-    Returns:
-        The anomaly data array, or the original data if anomaly_ref is None.
-
-    """
-    if anomaly_ref is None:
-        return data
-    if anomaly_ref == "tmean":
-        return data - data.mean(dim=dim)
-    if anomaly_ref == "t0":
-        return data - data.isel({dim: 0})
-    raise ValueError("Invalid anomaly_ref: use 't0', 'tmean', or None")
-
-
-def standardise(data: xr.DataArray, dim: str = "time") -> xr.DataArray:
-    """Standardise the data along a specified dimension.
-
-    Args:
-        data: The input data array to standardise.
-        dim: The dimension along which to standardise. Default is "time".
-
-    Returns:
-        The standardised data array with updated attributes.
-
-    """
-    data = data / data.std(dim=dim)
-    data.attrs["units"] = "Stand. Units"
-    data.attrs["AQUA_standardise"] = f"Standardised with {dim}"
-    return data
-
-
-def apply_std_anomaly(
-    data: xr.DataArray,
-    anomaly_ref: str = None,
-    do_standardise: bool = False,
-    dim: str = "time",
-    region_name: str = None,
-) -> xr.DataArray:
-    """Compute anomaly and/or standardised anomaly along a dimension.
-
-    Args:
-        data: The input data array to process.
-        anomaly_ref: Reference for anomaly calculation. Can be "t0", "tmean", or None.
-        do_standardise: If True, standardise the (anomaly) data.
-        dim: Dimension for anomaly and/or standardisation. Default is "time".
-        region: Region name stored on ``AQUA_region`` attribute.
-
-    Returns:
-        Processed data with ``AQUA_ocean_drift_type`` (and optional region) attributes set.
-
-    """
-    if anomaly_ref is not None:
-        if anomaly_ref in ["t0", "tmean"]:
-            data = get_anomaly(data, anomaly_ref, dim)
-    if do_standardise:
-        data = standardise(data, dim)
-
-    # Shallow copy so AQUA_* attrs do not mutate the shared fldmean result
-    # (needed when anomaly_ref is None and no new array was created).
-    data = data.copy(deep=False)
-
-    s_std = "std_" if do_standardise else ""
-    anom = "anom" if anomaly_ref is not None else "full"
-    anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
-
-    data.attrs["AQUA_ocean_drift_type"] = f"{s_std}{anom}{anom_ref}"
-    if region_name is not None:
-        data.attrs["AQUA_region"] = region_name
-    return data
-
-
-def sort_drift_type(data) -> tuple:
-    """Return a sort key for ordering processed data by drift type."""
-    drift_type = data.attrs["AQUA_ocean_drift_type"]
-    if drift_type == "full":
-        return (0, drift_type)
-    if drift_type.startswith("anom"):
-        return (1, drift_type)
-    if drift_type.startswith("std"):
-        return (2, drift_type)
-    return (3, drift_type)
-
-
 class Hovmoller(Diagnostic):
     """A class for generating Hovmoller diagrams from ocean model data.
 
@@ -232,13 +140,83 @@ class Hovmoller(Diagnostic):
 
         self.logger.info("Hovmoller diagram saved to netCDF file")
 
-    def _fix_vert_coord_units(self):
-        """Normalize vertical coordinate units and validate they are in metres."""
-        # HACK: some LRA datasets have levels in 'NEMO model layers' (also non NEMO models due to multi-IO)
-        if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
-            self.data[self.vert_coord].attrs["units"] = "m"
-        super()._check_data(data=self.data[self.vert_coord], var=self.vert_coord, units="m")
-        self.logger.debug("Data retrieved successfully")
+    def get_anomaly(self, data: xr.DataArray, anomaly_ref: str = None, dim: str = "time") -> xr.DataArray:
+        """Compute anomaly for the given data along a specified dimension.
+
+        Args:
+            data: The input data array to process.
+            anomaly_ref: Reference for anomaly calculation. Can be "t0", "tmean", or None.
+                If "t0" or "tmean", the anomaly is computed relative to the initial time or the mean.
+                If None, no anomaly is computed.
+            dim: The dimension along which to compute the anomaly. Default is "time".
+
+        Returns:
+            The anomaly data array, or the original data if anomaly_ref is None.
+
+        """
+        if anomaly_ref is None:
+            return data
+        if anomaly_ref == "tmean":
+            return data - data.mean(dim=dim)
+        if anomaly_ref == "t0":
+            return data - data.isel({dim: 0})
+        raise ValueError("Invalid anomaly_ref: use 't0', 'tmean', or None")
+
+    def standardise(self, data: xr.DataArray, dim: str = "time") -> xr.DataArray:
+        """Standardise the data along a specified dimension.
+
+        Args:
+            data: The input data array to standardise.
+            dim: The dimension along which to standardise. Default is "time".
+
+        Returns:
+            The standardised data array with updated attributes.
+
+        """
+        data = data / data.std(dim=dim)
+        data.attrs["units"] = "Stand. Units"
+        data.attrs["AQUA_standardise"] = f"Standardised with {dim}"
+        return data
+
+    def apply_std_anomaly(
+        self,
+        data: xr.DataArray,
+        anomaly_ref: str = None,
+        do_standardise: bool = False,
+        dim: str = "time",
+        region_name: str = None,
+    ) -> xr.DataArray:
+        """Compute anomaly and/or standardised anomaly along a dimension.
+
+        Args:
+            data: The input data array to process.
+            anomaly_ref: Reference for anomaly calculation. Can be "t0", "tmean", or None.
+            do_standardise: If True, standardise the (anomaly) data.
+            dim: Dimension for anomaly and/or standardisation. Default is "time".
+            region: Region name stored on ``AQUA_region`` attribute.
+
+        Returns:
+            Processed data with ``AQUA_ocean_drift_type`` (and optional region) attributes set.
+
+        """
+        if anomaly_ref is not None:
+            if anomaly_ref in ["t0", "tmean"]:
+                data = self.get_anomaly(data, anomaly_ref, dim)
+        if do_standardise:
+            data = self.standardise(data, dim)
+
+        # Shallow copy so AQUA_* attrs do not mutate the shared fldmean result
+        # (needed when anomaly_ref is None and no new array was created).
+        data = data.copy(deep=False)
+
+        s_std = "std_" if do_standardise else ""
+        anom = "anom" if anomaly_ref is not None else "full"
+        anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
+
+        data.attrs["AQUA_ocean_drift_type"] = f"{s_std}{anom}{anom_ref}"
+        if region_name is not None:
+            data.attrs["AQUA_region"] = region_name
+        return data
 
     def compute_hovmoller(
         self,
@@ -274,7 +252,7 @@ class Hovmoller(Diagnostic):
                 continue
             self.logger.info("Processing data with standardise=%s, anomaly_ref=%s", do_standardise, ref)
             processed.append(
-                apply_std_anomaly(
+                self.apply_std_anomaly(
                     data,
                     anomaly_ref=ref,
                     do_standardise=do_standardise,
@@ -282,7 +260,18 @@ class Hovmoller(Diagnostic):
                     region_name=region_name,
                 )
             )
-        return sorted(processed, key=sort_drift_type)
+        return sorted(processed, key=self.sort_drift_type)
+
+    def sort_drift_type(self, data) -> tuple:
+        """Return a sort key for ordering processed data by drift type."""
+        drift_type = data.attrs["AQUA_ocean_drift_type"]
+        if drift_type == "full":
+            return (0, drift_type)
+        if drift_type.startswith("anom"):
+            return (1, drift_type)
+        if drift_type.startswith("std"):
+            return (2, drift_type)
+        return (3, drift_type)
 
     def save_netcdf(
         self,
@@ -324,3 +313,11 @@ class Hovmoller(Diagnostic):
                         "ocean_drift_type": processed_data.attrs["AQUA_ocean_drift_type"],
                     },
                 )
+
+    def _fix_vert_coord_units(self):
+        """Normalize vertical coordinate units and validate they are in metres."""
+        # HACK: some LRA datasets have levels in 'NEMO model layers' (also non NEMO models due to multi-IO)
+        if self.data[self.vert_coord].attrs["units"] == "NEMO model layers":
+            self.data[self.vert_coord].attrs["units"] = "m"
+        super()._check_data(data=self.data[self.vert_coord], var=self.vert_coord, units="m")
+        self.logger.debug("Data retrieved successfully")
