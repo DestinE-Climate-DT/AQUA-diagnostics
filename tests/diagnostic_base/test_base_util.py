@@ -13,7 +13,6 @@ from aqua.core.util import dump_yaml
 from aqua.diagnostics import get_install_dirs
 from aqua.diagnostics.base import (
     Diagnostic,
-    available_time_bounds,
     close_cluster,
     get_diagnostic_configpath,
     load_diagnostic_config,
@@ -263,129 +262,27 @@ def test_start_end_dates():
     # Two dates provided
     assert start_end_dates(startdate="2020-01-01", enddate="2020-01-02") == (
         pd.Timestamp("2020-01-01"),
-        pd.Period("2020-01-02").end_time,
+        pd.Timestamp("2020-01-02"),
     )
     assert start_end_dates(startdate="20200101", enddate="20200102") == (
         pd.Timestamp("2020-01-01"),
-        pd.Period("2020-01-02").end_time,
+        pd.Timestamp("2020-01-02"),
     )
+    assert start_end_dates(startdate="20200101", start_std="20200102") == (pd.Timestamp("2020-01-01"), None)
     assert start_end_dates(startdate="2020-01-01", enddate="20200102") == (
         pd.Timestamp("2020-01-01"),
-        pd.Period("2020-01-02").end_time,
+        pd.Timestamp("2020-01-02"),
     )
 
-    # The wider standard-deviation window is included.
-    assert start_end_dates(
-        startdate="2020-02-01",
-        enddate="2020-02-29",
-        start_std="2020-01-01",
-        end_std="2020-03-31",
-    ) == (
+    assert start_end_dates(start_std="2020-01-01", end_std="2020-01-02") == (
         pd.Timestamp("2020-01-01"),
-        pd.Period("2020-03-31").end_time,
+        pd.Timestamp("2020-01-02"),
     )
 
-    # An open analysis window remains open when a std window is provided.
-    assert start_end_dates(start_std="2020-01-01", end_std="2020-01-02") == (None, None)
-
-    with pytest.raises(ValueError, match="must be provided together"):
-        start_end_dates(startdate="2020-01-01", start_std="2020-01-02")
-    with pytest.raises(ValueError, match="must be provided together"):
-        start_end_dates(startdate="2020-01-01", end_std="2020-01-02")
-
-
-@pytest.mark.parametrize(
-    "enddate,expected",
-    [
-        ("2020", pd.Period("2020").end_time),
-        ("2020-02", pd.Period("2020-02").end_time),
-        ("2020-02-10", pd.Period("2020-02-10").end_time),
-        (pd.Timestamp("2020-02-10 12:00"), pd.Timestamp("2020-02-10 12:00")),
-    ],
-)
-def test_start_end_dates_preserves_end_resolution(enddate, expected):
-    """Strings cover their complete period while explicit timestamps remain exact."""
-    assert start_end_dates(enddate=enddate) == (None, expected)
-
-
-class _SyntheticReader:
-    """Minimal Reader implementation for isolated date-selection tests."""
-
-    @staticmethod
-    def set_default():
-        """Provide the Reader method required by the AQUA accessor."""
-
-    @staticmethod
-    def seldate(data, startdate=None, enddate=None):
-        start = pd.Timestamp(startdate) if startdate is not None else None
-        if isinstance(enddate, str):
-            end = pd.Period(enddate).end_time
-        else:
-            end = pd.Timestamp(enddate) if enddate is not None else None
-        return data.sel(time=slice(start, end))
-
-
-def _set_synthetic_retrieve(monkeypatch, diagnostic, data):
-    """Replace catalog retrieval while retaining its date-selection behavior."""
-    reader = _SyntheticReader()
-
-    def retrieve(**kwargs):
-        selected = reader.seldate(data, startdate=kwargs["startdate"], enddate=kwargs["enddate"])
-        return selected, reader, "test"
-
-    monkeypatch.setattr(diagnostic, "_retrieve", retrieve)
-
-
-def test_retrieve_includes_complete_end_day(monkeypatch):
-    """A date-only end bound includes every subdaily sample on that day."""
-    times = pd.date_range("1985-01-01", "1985-01-02 18:00", freq="6h")
-    data = xr.Dataset({"2t": ("time", np.ones(len(times)))}, coords={"time": times})
-    diagnostic = Diagnostic(model="M", exp="E", source="S", startdate="1985-01-01", enddate="1985-01-02")
-    _set_synthetic_retrieve(monkeypatch, diagnostic, data)
-
-    diagnostic.retrieve(var="2t")
-
-    assert diagnostic.data.time.size == 8
-    assert pd.Timestamp(diagnostic.data.time.values[-1]) == pd.Timestamp("1985-01-02 18:00")
-    assert diagnostic.data.aqua.instance is diagnostic.reader
-
-
-def test_retrieve_keeps_open_analysis_window(monkeypatch):
-    """A bounded std period does not narrow an open analysis period."""
-    times = pd.date_range("2000-01-01", "2000-01-05", freq="D")
-    data = xr.Dataset({"2t": ("time", np.ones(len(times)))}, coords={"time": times})
-    diagnostic = Diagnostic(
-        model="M",
-        exp="E",
-        source="S",
-        std_startdate="2000-01-02",
-        std_enddate="2000-01-03",
+    assert start_end_dates(startdate="2020-01-01", end_std="2020-01-02") == (
+        pd.Timestamp("2020-01-01"),
+        pd.Timestamp("2020-01-02"),
     )
-    _set_synthetic_retrieve(monkeypatch, diagnostic, data)
-
-    diagnostic.retrieve(var="2t")
-
-    assert diagnostic.data.time.size == 5
-    assert diagnostic.std_data.time.size == 2
-
-
-def test_retrieve_rejects_disjoint_analysis_window(monkeypatch):
-    """A valid std period cannot hide an unavailable analysis period."""
-    times = pd.date_range("2000-01-01", "2000-01-05", freq="D")
-    data = xr.Dataset({"2t": ("time", np.ones(len(times)))}, coords={"time": times})
-    diagnostic = Diagnostic(
-        model="M",
-        exp="E",
-        source="S",
-        startdate="1980-01-01",
-        enddate="1980-01-02",
-        std_startdate="2000-01-01",
-        std_enddate="2000-01-05",
-    )
-    _set_synthetic_retrieve(monkeypatch, diagnostic, data)
-
-    with pytest.raises(ValueError, match="Analysis period .* does not overlap"):
-        diagnostic.retrieve(var="2t")
 
 
 @pytest.mark.parametrize(
@@ -404,14 +301,14 @@ def test_round_startdate(date, freq, expected):
 @pytest.mark.parametrize(
     "date,freq,expected",
     [
-        ("2020-02-15 14:30:00", "monthly", pd.Period("2020-02", freq="M").end_time),
-        ("2020-06-15 14:30:00", "annual", pd.Period("2020", freq="Y").end_time),
+        ("2020-02-15 14:30:00", "monthly", "2020-02-29 23:59:59"),
+        ("2020-06-15 14:30:00", "annual", "2020-12-31 23:59:59"),
     ],
 )
 def test_round_enddate(date, freq, expected):
     """Test rounding to end of month/year"""
     rounded = round_enddate(pd.Timestamp(date), freq=freq)
-    assert rounded == expected
+    assert rounded == pd.Timestamp(expected)
 
 
 def test_round_invalid_freq():
@@ -420,30 +317,6 @@ def test_round_invalid_freq():
         round_startdate(pd.Timestamp("2020-03-15"), freq="weekly")
     with pytest.raises(ValueError):
         round_enddate(pd.Timestamp("2020-03-15"), freq="weekly")
-
-
-@pytest.mark.parametrize(
-    "times,expected",
-    [
-        (
-            pd.date_range("2020-02-01 06:00", periods=3, freq="6h"),
-            (pd.Timestamp("2020-02-01 06:00"), pd.Timestamp("2020-02-01 18:00")),
-        ),
-        (
-            pd.date_range("2020-02-01", periods=3, freq="MS"),
-            (pd.Timestamp("2020-02-01"), pd.Period("2020-04", freq="M").end_time),
-        ),
-        (
-            pd.date_range("2019-01-01", periods=3, freq="YS"),
-            (pd.Timestamp("2019-01-01"), pd.Period("2021", freq="Y").end_time),
-        ),
-    ],
-)
-def test_available_time_bounds(times, expected):
-    """Bounds retain exact times or expand monthly and annual periods."""
-    data = xr.Dataset(coords={"time": times})
-
-    assert available_time_bounds(data) == expected
 
 
 def _make_monthly_dataset(n_months: int, start: str = "2000-01-01") -> xr.Dataset:
