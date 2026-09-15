@@ -149,7 +149,7 @@ class PlotENSO(PlotBaseMixin):
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
-                    **kwargs
+                    **kwargs,
                 )
                 return fig
 
