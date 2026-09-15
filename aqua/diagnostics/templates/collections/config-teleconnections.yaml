@@ -58,6 +58,9 @@ diagnostics:
           vmax_diff: 1
           cmap: 'RdBu_r'
         tprate:
-          vmin: -2
-          vmax: 2
+          vmin: -2.5
+          vmax: 2.5
+          vmin_diff: -4
+          vmax_diff: 4
           cmap: 'BrBG'
+          units: 'mm/day'
