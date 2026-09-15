@@ -319,8 +319,8 @@ class PlotEnsembleMaps(BaseMixin):
             # transform_first=transform_first,
             return_fig=True,
             title=title,
-            vmin=vmin,
-            vmax=vmax,
+            vmin_fill=vmin,
+            vmax_fill=vmax,
             cmap=cmap,
             loglevel=self.loglevel,
         )
