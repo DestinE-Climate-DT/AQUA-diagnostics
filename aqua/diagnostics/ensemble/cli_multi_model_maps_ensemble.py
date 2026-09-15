@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Command-line interface for ensemble 2D Maps Lat-Lon diagnostic.
+Command-line interface for ensemble 2D Maps diagnostic.
 
 This CLI allows to plot a map of aqua analysis atmglobalmean
 defined in a yaml configuration file for multiple models.

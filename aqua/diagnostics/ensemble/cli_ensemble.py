@@ -114,7 +114,6 @@ def main(argv=None):
 
     if "timeseries" in cli.config_dict["diagnostics"]:
         if cli.config_dict["diagnostics"]["timeseries"]["run"]:
-
             cli.logger.info("Running CLI for EnsembleTimeseries diagnostic for a single model")
 
             params = ts_diag_config.get("params", {}).get("default", {})
@@ -405,7 +404,6 @@ def main(argv=None):
 
     if "globalbiases" in cli.config_dict["diagnostics"]:
         if cli.config_dict["diagnostics"]["globalbiases"]["run"]:
-
             cli.logger.info("Running CLI for EnsembleMap diagnostic for a single model")
 
             params = gb_diag_config.get("params", {}).get("default", {})
@@ -595,7 +593,7 @@ def main(argv=None):
                 # Ensemble mean bias plot
                 if (ens_latlon.dataset_mean is not None) and (dataset_ref is not None):
                     title = TitleBuilder(diagnostic="Mean ensemble bias diagnostic", variable=variable, model=model).generate()
-                    
+
                     ens_latlon_plot.plot_ensemble_diff_bias(
                         var=variable,
                         dataset=ens_latlon.dataset_mean.squeeze(),

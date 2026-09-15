@@ -44,7 +44,7 @@ output:
 diagnostics:
   ensemble:
     run: true
-    diagnostic_name: 'EnsembleLatLon'
+    diagnostic_name: 'EnsembleMaps'
     variables: ['2t',]
     params:
       default:
