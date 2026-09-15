@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.diagnostics]
 def zonal_config():
     """Configuration parameters for the zonal test."""
     return {
-        "var": "avg_so",
+        "var": "so",
         "catalog_list": ["ci", "ci"],
         "model_list": ["NEMO", "NEMO"],
         "exp_list": ["results", "results"],

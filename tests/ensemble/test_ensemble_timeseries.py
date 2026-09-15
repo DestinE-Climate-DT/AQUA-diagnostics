@@ -120,7 +120,14 @@ class TestEnsembleTimeseries:
         assert ts.annual_data_mean is not None
         assert ts.monthly_data_std.values.all() == 0
 
-    def test_plotting(self, ensemble_ts_instance, plot_ts_instance, ts_config, tmp_path_str):
+    def test_plotting(
+        self,
+        ensemble_ts_instance,
+        plot_ts_instance,
+        ts_config,
+        tmp_path_str,
+    ):
+        """Test the plotting functionality."""
         ts = ensemble_ts_instance
         plot_ts = plot_ts_instance
         plot_ts.outputdir = tmp_path_str
@@ -132,11 +139,11 @@ class TestEnsembleTimeseries:
             "plot_ensemble_members": True,
             "title": "test timeseries data",
             "monthly_data": ts.monthly_data,
-            "monthly_data_mean": ts.monthly_data_mean,
-            "monthly_data_std": ts.monthly_data_mean,
+            "monthly_data_mean": ts.monthly_data_mean.squeeze(),
+            "monthly_data_std": ts.monthly_data_std.squeeze(),
             "annual_data": ts.annual_data,
-            "annual_data_mean": ts.annual_data_mean,
-            "annual_data_std": ts.annual_data_mean,
+            "annual_data_mean": ts.annual_data_mean.squeeze(),
+            "annual_data_std": ts.annual_data_std.squeeze(),
             "dpi": DPI,
         }
 
@@ -145,8 +152,15 @@ class TestEnsembleTimeseries:
         assert fig is not None
         assert ax is not None
 
-        cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
+        cat = conf["catalog_list"][0]
+        mod = conf["model_list"][0]
+        exp = conf["exp_list"][0]
         var = conf["var"]
 
-        png_file = os.path.join(tmp_path_str, "png", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.png")
+        png_file = os.path.join(
+            tmp_path_str,
+            "png",
+            f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.png",
+        )
         assert os.path.exists(png_file)
+
