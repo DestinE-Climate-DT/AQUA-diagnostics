@@ -201,6 +201,15 @@ jobs:
           create-args: >-
             python=${{ matrix.python-version }}
 
+      # ========================================
+      # 4. INSTALL AQUA (local mode)
+      # ========================================
+      - name: Install AQUA-diagnostics (local mode)
+        if: ${{ inputs.install-mode == 'local' }}
+        run: |
+          cd AQUA
+          sed -n 's/^# pip //p' conda-linux-64.lock |python -m pip install -r /dev/stdin
+          python -m pip install --no-deps -e .[all-fdb]
 
       # ========================================
       # 4. INSTALL AQUA (PyPI mode)

@@ -29,14 +29,14 @@ jobs:
         #run: |
         #  conda-lock --file environment.yml --file pyproject.toml -p linux-64 -e tests --lockfile conda.lock
         run: |
-          conda-lock lock --file environment.yml --file pyproject.toml -p linux-64 -k explicit -e tests --filename-template conda-{platform}.lock
+          conda-lock lock --file environment.yml --file pyproject.toml -p linux-64 -k explicit -e tests -e all-fdb --filename-template conda-{platform}.lock
 
-      - name: Relock with cross check
-        shell: bash -l {0}
-        #run: |
-        #  conda-lock --file environment.yml --file pyproject.toml -p linux-64 -e tests --lockfile conda-crosscheck.lock
-        run: |
-          conda-lock lock --file environment-dev.yml --file pyproject.toml -p linux-64 -k explicit -e tests --filename-template conda-crosscheck-{platform}.lock
+      # - name: Relock with cross check
+      #   shell: bash -l {0}
+      #   #run: |
+      #   #  conda-lock --file environment-dev.yml --file pyproject.toml -p linux-64 -e tests --lockfile conda-crosscheck.lock
+      #   run: |
+      #     conda-lock lock --file environment-dev.yml --file pyproject.toml -p linux-64 -k explicit -e tests --filename-template conda-crosscheck-{platform}.lock
 
       - name: Open PR
         uses: peter-evans/create-pull-request@v8
