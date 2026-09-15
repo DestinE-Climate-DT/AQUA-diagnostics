@@ -269,6 +269,13 @@ class OutputSaver:
             self.logger.info("File already exists and rebuild=False, skipping: %s", filepath)
             return filepath
 
+        if isinstance(dataset, xr.DataArray) and dataset.name is None:
+            self.logger.warning(
+                "Saving an unnamed DataArray to %s, stored as %s: the diagnostic should name its data before saving",
+                filepath,
+                DATAARRAY_VARIABLE,
+            )
+
         metadata = self.create_metadata(diagnostic_product=diagnostic_product, extra_keys=extra_keys, metadata=metadata)
 
         # If metadata contains a history attribute, log the history
@@ -356,6 +363,9 @@ class OutputSaver:
         # attributes winning since they are the more specific ones.
         dataarray.attrs = {**data.attrs, **dataarray.attrs}
         if dataarray.name == DATAARRAY_VARIABLE:
+            self.logger.warning(
+                "Loaded an unnamed DataArray from %s: the diagnostic should name its data before saving", filepath
+            )
             dataarray.name = None
         return dataarray
 
