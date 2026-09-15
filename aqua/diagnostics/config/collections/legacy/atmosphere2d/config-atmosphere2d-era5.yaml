@@ -11,7 +11,7 @@ datasets:
 
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
     regrid: 'r100'

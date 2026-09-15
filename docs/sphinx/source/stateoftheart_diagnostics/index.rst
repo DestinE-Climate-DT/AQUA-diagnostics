@@ -73,7 +73,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
 
     references:
       - catalog: obs
-        model: ERA5
+        model: ECMWF
         exp: era5
         source: monthly
         regrid: null
