@@ -3,7 +3,11 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from aqua.diagnostics.ensemble.util import merge_from_data_files
+from aqua.diagnostics.ensemble.util import (
+    center_timestamp,
+    compute_statistics,
+    merge_from_data_files,
+)
 
 
 @pytest.mark.ensemble
@@ -114,3 +118,39 @@ def test_merge_from_data_files_no_model_names(tmp_path):
     )
 
     assert merged.coords["model"].values.tolist() == ["model_name"]
+
+
+@pytest.mark.ensemble
+def test_compute_statistics():
+    """Test point-wise statistics calculation for single and multi-model."""
+    var = "tas"
+    ds = xr.Dataset(
+        {var: (("ensemble", "time"), np.ones((4, 10)))},
+        coords={"ensemble": ["r1", "r2", "r3", "r4"], "time": range(10)},
+    )
+
+    # 1. Test single-model (no model coord)
+    mean, std = compute_statistics(variable=var, ds=ds)
+    np.testing.assert_allclose(mean.values, 1.0)
+    np.testing.assert_allclose(std.values, 0.0, atol=1e-7)
+
+    # 2. Test multi-model (weighted)
+    ds = ds.assign_coords(model=("ensemble", ["ModelA", "ModelA", "ModelA", "ModelB"]))
+    w_mean, w_std = compute_statistics(variable=var, ds=ds)
+    np.testing.assert_allclose(w_mean.values, 1.0)
+    np.testing.assert_allclose(w_std.values, 0.0, atol=1e-7)
+
+
+@pytest.mark.ensemble
+def test_center_timestamp():
+    """Test timestamp centering utility."""
+    time = pd.Timestamp("2000-01-01")
+
+    centered_monthly = center_timestamp(time, "monthly")
+    assert centered_monthly == pd.Timestamp("2000-01-16")
+
+    centered_annual = center_timestamp(time, "annual")
+    assert centered_annual == pd.Timestamp("2000-07-01")
+
+    with pytest.raises(ValueError):
+        center_timestamp(time, "daily")
