@@ -207,9 +207,9 @@ jobs:
       - name: Install AQUA-diagnostics (local mode)
         if: ${{ inputs.install-mode == 'local' }}
         run: |
-          cd AQUA
+          cd AQUA-diagnostics
           sed -n 's/^# pip //p' conda-linux-64.lock |python -m pip install -r /dev/stdin
-          python -m pip install --no-deps -e .[all-fdb]
+          python -m pip install --no-deps -e .
 
       # ========================================
       # 4. INSTALL AQUA (PyPI mode)
