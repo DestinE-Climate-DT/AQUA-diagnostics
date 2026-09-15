@@ -4,7 +4,7 @@ import pandas as pd
 import xarray as xr
 
 from aqua import Reader
-from aqua.core.configurer import ConfigCatalog, ConfigPath
+from aqua.core.configurer import ConfigCatalog, ConfigLocator
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import (
@@ -438,7 +438,7 @@ class Diagnostic:
         Returns:
             str: The path to the regions file under ``<config>/definitions/regions.yaml``.
         """
-        regions_file = os.path.join(ConfigPath().get_config_dir(), "definitions", "regions.yaml")
+        regions_file = os.path.join(ConfigLocator().configdir, "definitions", "regions.yaml")
         if os.path.exists(regions_file):
             return regions_file
         raise FileNotFoundError(f"Regions file path not found at: {regions_file}")
