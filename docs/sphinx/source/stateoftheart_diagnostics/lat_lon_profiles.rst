@@ -99,6 +99,30 @@ The basic structure of the analysis is the following:
     Start/end dates and reference dataset can be customized.
     If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
 
+The results can also be read back from the NetCDF files written by a previous run, with no data retrieval at all.
+``load()`` mirrors ``run()`` and populates the same attributes, so that the plot classes are used exactly as above:
+
+.. code-block:: python
+
+    lonlat_dataset = LatLonProfiles(
+        catalog='climatedt-phase1',
+        model='ICON',
+        exp='historical-1990',
+        source='lra-r100-monthly',
+        region='tropics',
+        mean_type='zonal'
+    )
+    lonlat_dataset.load(var='tprate', outputdir='/path/to/previous/output')
+
+    plot = PlotLatLonProfiles(data=[lonlat_dataset.longterm], data_type='longterm')
+    plot.run(show=True)
+
+.. note::
+
+    ``load()`` must be given the same ``var``, ``standard_name`` and ``reader_kwargs`` used to produce the files,
+    because they take part in the generated filenames. Results with no file on disk are left untouched, so ``load()``
+    can be called both before and after ``run()``. The seasonal profiles are loaded only if all four seasons are found.
+
 CLI usage
 ---------
 
@@ -122,6 +146,10 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--outputdir``: Output directory for the plots.
 - ``--startdate``: Start date for the analysis.
 - ``--enddate``: End date for the analysis.
+
+Setting ``save_netcdf: false`` in the ``output`` block of the configuration file turns the run into a plot only run:
+nothing is retrieved or computed, and the plots are produced from the NetCDF files already present in ``outputdir``.
+If those files are not there, no plot is produced and the reason is reported in the log.
 
 
 Configuration file structure

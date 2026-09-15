@@ -4,7 +4,7 @@ import pandas as pd
 import xarray as xr
 
 from aqua import Reader
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigCatalog, ConfigLocator
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import (
@@ -204,15 +204,20 @@ class Diagnostic:
         if isinstance(data, xr.Dataset) is False and isinstance(data, xr.DataArray) is False:
             self.logger.error("Data to save as netcdf must be an xarray Dataset or DataArray")
 
-        outputsaver = OutputSaver(
-            diagnostic=diagnostic,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            realization=self.realization,
-            outputdir=outputdir,
-            loglevel=self.loglevel,
-        )
+        # Fallback for a DataArray that lost its name, which netcdf cannot store: restore it from the
+        # metadata. If there is none to restore, the OutputSaver warns instead.
+        if isinstance(data, xr.DataArray) and data.name is None:
+            name = data.attrs.get("short_name") or data.attrs.get("standard_name")
+            if name is not None:
+                self.logger.warning(
+                    "Unnamed DataArray saved by %s, name restored as '%s' from its attributes: "
+                    "the diagnostic should name its data before saving",
+                    diagnostic,
+                    name,
+                )
+                data.name = name
+
+        outputsaver = self._outputsaver(diagnostic=diagnostic, outputdir=outputdir)
 
         outputsaver.save_netcdf(
             dataset=data,
@@ -222,6 +227,96 @@ class Diagnostic:
             dict_catalog_entry=dict_catalog_entry,
             **kwargs,
         )
+
+    def load_netcdf(
+        self,
+        diagnostic: str,
+        diagnostic_product: str = None,
+        outputdir: str = ".",
+        as_dataarray: bool = False,
+        **kwargs,
+    ):
+        """
+        Load from a netcdf file previously written by save_netcdf.
+
+        Rebuilds the same filename from the identity of the dataset and opens the file if it is
+        there. It does not require a retrieve, which is what allows plot only runs.
+
+        Args:
+            diagnostic (str): The diagnostic name.
+            diagnostic_product (str): The diagnostic product.
+            outputdir (str): The path where the data was saved. Default is '.'.
+            as_dataarray (bool): If True, return a DataArray instead of a Dataset. Use it when the
+                                 data was saved as a DataArray. Default is False.
+
+        Keyword Args:
+            **kwargs: Additional keyword arguments to be passed to the OutputSaver.load_netcdf method.
+
+        Returns:
+            xarray Dataset, DataArray or None: The data read from disk, None if there is no file.
+        """
+        # The catalog takes part in the filename but is normally resolved by the Reader during
+        # retrieve, which a load only run never calls.
+        if self.catalog is None:
+            self._resolve_catalog()
+
+        outputsaver = self._outputsaver(diagnostic=diagnostic, outputdir=outputdir)
+
+        return outputsaver.load_netcdf(
+            diagnostic_product=diagnostic_product,
+            as_dataarray=as_dataarray,
+            **kwargs,
+        )
+
+    def _outputsaver(self, diagnostic: str, outputdir: str = "."):
+        """
+        Build the OutputSaver describing this dataset.
+
+        Used by both save_netcdf and load_netcdf, so that the two always generate the same filenames.
+
+        Args:
+            diagnostic (str): The diagnostic name.
+            outputdir (str): The path where the data is saved. Default is '.'.
+
+        Returns:
+            OutputSaver: The output saver for this dataset.
+        """
+        return OutputSaver(
+            diagnostic=diagnostic,
+            catalog=self.catalog,
+            model=self.model,
+            exp=self.exp,
+            realization=self.realization,
+            outputdir=outputdir,
+            loglevel=self.loglevel,
+        )
+
+    def _resolve_catalog(self):
+        """
+        Find the catalog holding the model/exp/source triplet, without retrieving any data.
+
+        The catalog takes part in the output filename but is normally filled in by the Reader during
+        retrieve. Browsing the installed catalogs is how a plot only run can rebuild the filenames.
+
+        Raises:
+            KeyError: If the triplet is not found in any installed catalog.
+        """
+        matched, failed = ConfigCatalog(loglevel=self.loglevel).browse_catalogs(
+            model=self.model, exp=self.exp, source=self.source
+        )
+
+        if not matched:
+            for reason in failed.values():
+                self.logger.debug(reason)
+            raise KeyError(
+                f"Cannot find {self.model} {self.exp} {self.source} in any installed catalog. "
+                "Provide the catalog explicitly to build the output filenames."
+            )
+
+        if len(matched) > 1:
+            self.logger.warning("Triplet found in %s, using %s", matched, matched[0])
+        self.catalog = matched[0]
+        self.logger.debug("Resolved catalog: %s", self.catalog)
 
     def _retrieve(
         self,
@@ -350,7 +445,7 @@ class Diagnostic:
         Returns:
             str: The path to the regions file under ``<config>/definitions/regions.yaml``.
         """
-        regions_file = os.path.join(ConfigPath().get_config_dir(), "definitions", "regions.yaml")
+        regions_file = os.path.join(ConfigLocator().configdir, "definitions", "regions.yaml")
         if os.path.exists(regions_file):
             return regions_file
         raise FileNotFoundError(f"Regions file path not found at: {regions_file}")
