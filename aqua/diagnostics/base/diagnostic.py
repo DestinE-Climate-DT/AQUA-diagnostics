@@ -167,9 +167,9 @@ class Diagnostic:
             self.std_enddate = eff_end
             self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
 
-        self.data = data.sel(time=slice(self.startdate, self.enddate))
+        self.data = data.aqua.seldate(self.startdate, self.enddate)
         if self.std_startdate is not None and self.std_enddate is not None:
-            self.std_data = data.sel(time=slice(self.std_startdate, self.std_enddate))
+            self.std_data = data.aqua.seldate(self.std_startdate, self.std_enddate)
 
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs()
@@ -266,17 +266,12 @@ class Diagnostic:
             catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel, **reader_kwargs
         )
 
-        data = reader.retrieve(var=var)
+        data = reader.retrieve(var=var, startdate=startdate, enddate=enddate)
 
         # If the data is empty, raise an error
         if not data:
             raise ValueError(f"No data found for {model} {exp} {source} with variable {var}")
 
-        # FIX: issues with some time selection for pandas using Timestamp.
-        # see https://github.com/pydata/xarray/issues/10975
-        start = pd.Timestamp(startdate) if startdate is not None else None
-        end = pd.Timestamp(enddate) if enddate is not None else None
-        data = data.sel(time=slice(start, end))
         if data.time.size == 0:
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
