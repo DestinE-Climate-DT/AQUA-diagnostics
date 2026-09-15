@@ -163,4 +163,3 @@ class TestEnsembleTimeseries:
             f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.png",
         )
         assert os.path.exists(png_file)
-

@@ -50,7 +50,6 @@ def plot_ensemble_instance():
 
 
 class TestEnsembleMaps:
-
     def test_initialization(self, dataset_instance):
         assert dataset_instance is not None
         assert isinstance(dataset_instance, xr.Dataset)
@@ -67,12 +66,8 @@ class TestEnsembleMaps:
         assert ens.dataset_mean is not None
         assert ens.dataset_std is not None
 
-        expected_mean = (
-            f"{tmp_path_str}/ensemble_mean_{conf['var']}.nc"
-        )
-        expected_std = (
-            f"{tmp_path_str}/ensemble_std_{conf['var']}.nc"
-        )
+        expected_mean = f"{tmp_path_str}/ensemble_mean_{conf['var']}.nc"
+        expected_std = f"{tmp_path_str}/ensemble_std_{conf['var']}.nc"
 
         assert expected_mean
         assert expected_std
