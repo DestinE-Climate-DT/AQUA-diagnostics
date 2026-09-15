@@ -78,6 +78,7 @@ class PlotNAO(PlotBaseMixin):
         vmax: float = None,
         vmin_diff: float = None,
         vmax_diff: float = None,
+        cmap: str = "RdBu_r",
         **kwargs,
     ):
         """
@@ -91,6 +92,7 @@ class PlotNAO(PlotBaseMixin):
             vmax (float): Maximum value for the color value. Default is None.
             vmin_diff (float): Minimum value for the color value for the difference. Default is None.
             vmax_diff (float): Maximum value for the color value for the difference. Default is None.
+            cmap (str): Colormap to use for the plots. Default is 'RdBu_r'.
             **kwargs: Additional arguments for the plotting function.
 
         Returns:
@@ -100,7 +102,7 @@ class PlotNAO(PlotBaseMixin):
         var = map_to_check.shortName if hasattr(map_to_check, "shortName") else map_to_check.long_name
         self.logger.debug(f"Plotting {var} maps")
 
-        if statistic == "correlation" and vmin is None and vmax is None:
+        if statistic == "correlation":
             vmin = -1.0
             vmax = 1.0
             vmin_diff = -0.5
@@ -111,7 +113,7 @@ class PlotNAO(PlotBaseMixin):
             vmin_diff = -5.0
             vmax_diff = 5.0
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, cbar_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Plot details
         proj = NorthPolarStereo(central_longitude=-20.0)
@@ -129,6 +131,7 @@ class PlotNAO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="NAO",
                     statistic=statistic,
+                    var=var,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     season=getattr(maps, "AQUA_season", None),
@@ -140,6 +143,8 @@ class PlotNAO(PlotBaseMixin):
                     ax=ax,
                     vmin=vmin,
                     vmax=vmax,
+                    cmap=cmap,
+                    cbar_label=cbar_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -157,6 +162,7 @@ class PlotNAO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="NAO",
                     statistic=statistic,
+                    var=var,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     season=getattr(maps, "AQUA_season", None),
@@ -174,6 +180,8 @@ class PlotNAO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=cbar_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,

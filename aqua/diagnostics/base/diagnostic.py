@@ -183,6 +183,7 @@ class Diagnostic:
         rebuild: bool = True,
         create_catalog_entry: bool = False,
         dict_catalog_entry: dict = None,
+        extra_keys: dict = None,
         **kwargs,
     ):
         """
@@ -197,6 +198,7 @@ class Diagnostic:
             create_catalog_entry (bool): If True, a catalog entry will be created. Default is False.
             dict_catalog_entry (dict, optional): List of jinja and wildcard variables. Default is None.
                                                  Keys are 'jinjalist' and 'wildcardlist'.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
 
         Keyword Args:
             **kwargs: Additional keyword arguments to be passed to the OutputSaver.save_netcdf method.
@@ -220,7 +222,7 @@ class Diagnostic:
             rebuild=rebuild,
             create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
-            **kwargs,
+            extra_keys=extra_keys,
         )
 
     def _retrieve(

@@ -25,6 +25,7 @@ class NAO(BaseMixin):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
+        var: str = None,
         configdir: str = None,
         definition: str = "teleconnections-destine",
         loglevel: str = "WARNING",
@@ -40,8 +41,10 @@ class NAO(BaseMixin):
             regrid (str): Regrid method.
             startdate (str): Start date for data retrieval.
             enddate (str): End date for data retrieval.
-            configdir (str): Configuration directory. Default is the installation directory.
-            definition (str): definition filename. Default is 'teleconnections-destine'.
+            var (str): Variable to be used. If None, the variable will be determined by the definition.
+            configdir (str): The directory where the definition file is located.
+                             If None, the default directory will be used.
+            definition (str): The filename of the definition file. Default is 'teleconnections-destine'.
             loglevel (str): Logging level. Default is 'WARNING'.
         """
         super().__init__(
@@ -53,13 +56,12 @@ class NAO(BaseMixin):
             regrid=regrid,
             startdate=startdate,
             enddate=enddate,
+            var=var,
             configdir=configdir,
             definition=definition,
             loglevel=loglevel,
         )
         self.logger = log_configure(log_name="NAO", log_level=loglevel)
-
-        self.var = self.definition.get("field")
 
     def retrieve(self, reader_kwargs: dict = {}) -> None:
         """

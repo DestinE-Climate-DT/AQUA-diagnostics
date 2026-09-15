@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
 - Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
 - Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
 

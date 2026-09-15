@@ -36,9 +36,9 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-teleconnections.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-teleconnections.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
-* Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
+* Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/teleconnections/definitions.py`` file.
 
 .. note::
     A command line to evaluate, using the bootstrap method, the concordance maps of regression and correlation is available in the ``cli_bootstrap.py`` file.
@@ -141,12 +141,22 @@ Most of the settings are common to all the diagnostics (see :ref:`diagnostics-co
 Here we describe only the specific settings for the teleconnections diagnostic.
 
 * ``teleconnections``: a block (nested in the ``diagnostics`` block), containing options for the teleconnections.
-    It allows to specify which teleconnections to run, the months window for the rolling mean, the seasons to consider, and the color bar range for the plots.
+    It allows to specify which teleconnections to run, the months window for the rolling mean, the seasons to consider,
+    the variable over which to compute the regression and correlation, and the color bar range for the plots.
     It contains the following blocks:
 
     ``NAO``: a block, nested in the ``teleconnections`` block, that contains the details required for the NAO teleconnection.
 
     ``ENSO``: a block, nested in the ``teleconnections`` block, that contains the details required for the ENSO teleconnection.
+
+    Both blocks contain the following options:
+
+        * ``run``: Whether to run the diagnostic.
+        * ``diagnostic_name``: Name of the diagnostic.
+        * ``months_window``: Number of months to use for the rolling mean.
+        * ``seasons``: List of seasons to consider for the analysis.
+        * ``statistics_var``: List of variables over which to compute the regression and correlation.
+        * ``plot_params``: A dictionary containing the parameters for the plots, such as the color bar range and the colormap.
 
 .. code-block:: yaml
 
@@ -157,13 +167,34 @@ Here we describe only the specific settings for the teleconnections diagnostic.
                 diagnostic_name: 'nao'
                 months_window: 3
                 seasons: ['DJF']
-                cbar_range: [-5, 5]
+                statistics_var: ['msl']
+                plot_params:
+                    default:
+                        vmin: -5
+                        vmax: 5
+                        vmin_diff: -2
+                        vmax_diff: 2
+                        cmap: 'RdBu_r'
             ENSO:
                 run: true
                 diagnostic_name: 'enso'
                 months_window: 3
                 seasons: ['annual']
-                cbar_range: [-2, 2]
+                statistics_var: ['tos', 'tprate']
+                plot_params:
+                    default:
+                        vmin: -2
+                        vmax: 2
+                        vmin_diff: -1
+                        vmax_diff: 1
+                        cmap: 'RdBu_r'
+                    tprate:
+                        vmin: -2.5
+                        vmax: 2.5
+                        vmin_diff: -4
+                        vmax_diff: 4
+                        cmap: 'BrBG'
+                        units: 'mm/day'
 
 Output
 ------
@@ -185,7 +216,7 @@ Observations
 
 The default reference dataset is ERA5 reanalysis, provided by ECMWF.
 
-The diagnostic uses ERA5 monthly averages from the AQUA ``obs`` catalog (``model=ERA5``, ``exp=era5``, ``source=monthly``).
+The diagnostic uses ERA5 monthly averages from the AQUA ``obs`` catalog (``model=ECMWF``, ``exp=era5``, ``source=monthly``).
 
 Custom reference datasets can be configured in the configuration file.
 
@@ -198,7 +229,7 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
    :align: center
    :width: 100%
 
-   ENSO IFS-NEMO ssp370 regression map (avg_tos) compared to ERA5.
+   ENSO IFS-NEMO ssp370 regression map (tos) compared to ERA5.
    The contour lines are the model regression map and the filled contour map is the difference between the model and the reference regression map (ERA5).
 
 Available demo notebooks
