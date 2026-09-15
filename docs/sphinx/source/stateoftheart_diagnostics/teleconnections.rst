@@ -216,7 +216,7 @@ Observations
 
 The default reference dataset is ERA5 reanalysis, provided by ECMWF.
 
-The diagnostic uses ERA5 monthly averages from the AQUA ``obs`` catalog (``model=ERA5``, ``exp=era5``, ``source=monthly``).
+The diagnostic uses ERA5 monthly averages from the AQUA ``obs`` catalog (``model=ECMWF``, ``exp=era5``, ``source=monthly``).
 
 Custom reference datasets can be configured in the configuration file.
 
@@ -229,7 +229,7 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
    :align: center
    :width: 100%
 
-   ENSO IFS-NEMO ssp370 regression map (avg_tos) compared to ERA5.
+   ENSO IFS-NEMO ssp370 regression map (tos) compared to ERA5.
    The contour lines are the model regression map and the filled contour map is the difference between the model and the reference regression map (ERA5).
 
 Available demo notebooks
