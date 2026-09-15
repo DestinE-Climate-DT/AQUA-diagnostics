@@ -64,7 +64,7 @@ class BaseMixin(Diagnostic):
         # Initialize the possible results
         self.index = None
 
-    def compute_regression(self, var: str = None, dim: str = "time", season: str = None):
+    def compute_regression(self, var: str = None, dim: str = "time", season: str = None, units: str = None):
         """
         Compute the regression of the data on the index.
 
@@ -72,15 +72,20 @@ class BaseMixin(Diagnostic):
             var (str): The variable to be used. If None, the variable is the same of the index.
             dim (str): The dimension to be used for the regression. Default is 'time'.
             season (str): The season to be used. If None, no season will be selected.
+            units (str): The units of the variable. If None, the units are not changed.
 
         Returns:
             xr.DataArray: The regression of the data on the index.
         """
-        data, index = self._prepare_statistic(var=var, season=season)
+        data, index = self._prepare_statistic(var=var, season=season, units=units)
         reg = xr.cov(index, data, dim=dim) / index.var(dim=dim, skipna=True).values
 
+        units = units if units else getattr(data, "units", None)
+
         # Populate the attributes of the regression for backend functionalities
-        reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} with {index.long_name}"
+        reg.name = "regression"
+        reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} ({units}) with {index.long_name}"
+        self.logger.warning(f"Regression long_name: {reg.attrs['long_name']}")
         reg.attrs["shortName"] = "linear_regression"
 
         return reg
@@ -101,19 +106,21 @@ class BaseMixin(Diagnostic):
         corr = xr.corr(index, data, dim=dim)
 
         # Modify the attributes to match the correlation
+        corr.name = "correlation"
         corr.attrs["long_name"] = f"Correlation of {data.long_name.lower()} with {index.long_name}"
         corr.attrs["shortName"] = "Pearson_correlation"
         corr.attrs["units"] = "1"
 
         return corr
 
-    def _prepare_statistic(self, var: str = None, season: str = None):
+    def _prepare_statistic(self, var: str = None, season: str = None, units: str = None):
         """
         Hidden method to prepare the data and index for the statistic.
 
         Args:
             var (str): The variable to be used. If None, the variable is the same of the index.
             season (str): The season to be used. If None, no season will be selected
+            units (str): The units of the variable. If None, the units are not changed.
 
         Returns:
             tuple: A tuple containing the prepared data and index.
@@ -143,6 +150,9 @@ class BaseMixin(Diagnostic):
         if season:
             data = select_season(data, season)
             index = select_season(index, season)
+
+        if units:
+            data = self._check_data(data, var=var, units=units)
 
         return data, index
 
@@ -429,7 +439,7 @@ class PlotBaseMixin:
         """
         description = ""
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps)
+        maps, ref_maps, _ = _homogeneize_maps(maps=maps, ref_maps=ref_maps)
 
         if isinstance(maps, xr.DataArray):
             var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
@@ -490,7 +500,7 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
                              If None, inferred from each DataArray.
 
     Returns:
-        tuple: The homogenized maps and reference maps.
+        tuple: The homogenized maps, reference maps and cbar_label.
     """
     maps = to_list(maps)
     maps = [
@@ -514,4 +524,6 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
     if ref_maps is not None and len(ref_maps) == 1:
         ref_maps = ref_maps[0]
 
-    return maps, ref_maps
+    cbar_label = getattr(maps, "long_name", None) or getattr(maps, "shortName", None)
+
+    return maps, ref_maps, cbar_label
