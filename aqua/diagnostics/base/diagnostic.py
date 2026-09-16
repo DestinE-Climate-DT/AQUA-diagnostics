@@ -376,16 +376,12 @@ class Diagnostic:
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
 
-        # If there is a month requirement we infer the data frequency,
-        # then we check how many months are available in the data
+        # If there is a month requirement we check how many months are available in the data
         # and finally raise an error if the requirement is not met.
         if months_required is not None:
-            timedelta = xarray_to_pandas_freq(data)
-            freq = pandas_freq_to_string(timedelta)
-            factor = {"hourly": 1 / (24 * 30), "daily": 1 / 30, "weekly": 1 / 4, "monthly": 1, "seasonal": 3, "annual": 12}
-            # We automatically raise an error if the frequency is not pandas compliant
-            months = len(data["time"]) * factor.get(freq, 0)
-
+            # Count unique (year, month) pairs present in the dataset
+            months = len(set(zip(data.time.dt.year.values, data.time.dt.month.values)))
+            self.logger.debug("Unique months in data: %d", months)
             if months < months_required:
                 raise NotEnoughDataError(
                     f"Not enough months of data found for {model} {exp} {source}, "
