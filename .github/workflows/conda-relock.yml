@@ -1,0 +1,48 @@
+name: relock conda
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 2" # run every Tuesday night at 5AM UTC
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  relock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: mamba-org/setup-micromamba@v3
+        with:
+          environment-name: relock-env
+          create-args: >-
+            python
+            conda-lock
+          condarc: |
+            channels:
+              - conda-forge
+
+      - name: Relock
+        shell: bash -l {0}
+        run: |
+          conda-lock lock --file environment.yml --file pyproject.toml -p linux-64 -k explicit -e tests -e "core-fdb" --filename-template conda-{platform}.lock
+
+      # - name: Relock with cross check
+      #   shell: bash -l {0}
+      #   run: |
+      #     conda-lock lock --file environment-dev.yml --file pyproject.toml -p linux-64 -k explicit -e tests --filename-template conda-crosscheck-{platform}.lock
+
+      - name: Open PR
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.AQUA_GITHUB_PAT }}
+          commit-message: relock with conda-lock
+          title: "[Conda-Lock] Relock AQUA-core with conda-lock"
+          branch: relock-conda-${{ github.run_number }}
+          delete-branch: true
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          labels: |
+            conda-lock
+            run tests

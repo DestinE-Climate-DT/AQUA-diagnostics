@@ -6,7 +6,6 @@
 version: 2
 updates:
   - package-ecosystem: "conda"
-    open-pull-requests-limit: 10
     directory: "/"
     schedule:
       interval: "daily"
@@ -27,4 +26,10 @@ updates:
     directory: "/"
     schedule:
       # Check for updates to GitHub Actions every week
+      interval: "weekly"
+
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      # Check for updates to pre-commit hooks every week
       interval: "weekly"
