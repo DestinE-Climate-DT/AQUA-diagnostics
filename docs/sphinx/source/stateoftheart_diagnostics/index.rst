@@ -86,7 +86,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     * ``save_format``: a list (or single string) that selects the image formats to save plots. Default is SAVE_FORMAT.
     * ``save_netcdf``: a boolean that enables the writing of the NetCDF files of the diagnostic.
     * ``plot_only``: a boolean that skips the evaluation of the diagnostic, producing the plots from the NetCDF files
-      already present in ``outputdir``. Default is ``false``. Not all the diagnostics support it yet.
+      already present in ``outputdir``. Default is ``false``. See :ref:`diagnostics-plot-only`.
     * ``dpi``: the resolution of the plots.
     * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
@@ -123,6 +123,20 @@ The following command line arguments are available for all the diagnostics:
 - ``--outputdir``: Output directory for the plots.
 
 If a diagnostic has extra arguments, these will be described in the individual diagnostic documentation.
+
+.. _diagnostics-plot-only:
+
+Plotting from previous results
+++++++++++++++++++++++++++++++
+
+Some diagnostics can produce their plots from the NetCDF files written by a previous run, without retrieving or computing anything.
+From the CLI, this is enabled by ``plot_only: true`` in the ``output`` block of the configuration file.
+From Python, the diagnostic class provides a ``load()`` method, which populates from the NetCDF files the same attributes as ``run()``,
+so that the plot classes are used in the same way. Results with no file on disk are left untouched.
+``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
+because they take part in the filenames.
+
+This is currently supported by :doc:`lat_lon_profiles`.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
