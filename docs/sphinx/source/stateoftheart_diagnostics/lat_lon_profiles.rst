@@ -147,7 +147,7 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--startdate``: Start date for the analysis.
 - ``--enddate``: End date for the analysis.
 
-Setting ``save_netcdf: false`` in the ``output`` block of the configuration file turns the run into a plot only run:
+Setting ``plot_only: true`` in the ``output`` block of the configuration file turns the run into a plot only run:
 nothing is retrieved or computed, and the plots are produced from the NetCDF files already present in ``outputdir``.
 If those files are not there, no plot is produced and the reason is reported in the log.
 
