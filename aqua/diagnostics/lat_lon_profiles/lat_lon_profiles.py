@@ -385,7 +385,7 @@ class LatLonProfiles(Diagnostic):
         """
         Load one result from disk, the four seasonal profiles or the single longterm one.
 
-        Gives up as soon as one season is missing, because the seasonal plots index the seasons by
+        Returns None if any season is missing, because the seasonal plots index the seasons by
         position and a partial list would silently mislabel them.
 
         Args:
@@ -398,9 +398,11 @@ class LatLonProfiles(Diagnostic):
             list, xarray DataArray or None: [DJF, MAM, JJA, SON] for the seasonal frequency, a
                 single profile for the longterm one, None if any of the files is not on disk.
         """
+        seasons = SEASONS if freq == "seasonal" else [None]
         profiles = []
 
-        for season in SEASONS if freq == "seasonal" else [None]:
+        # Check every file, so that all the missing ones are reported and not only the first
+        for season in seasons:
             data = self.load_netcdf(
                 diagnostic=self.diagnostic_name,
                 diagnostic_product=f"{self.mean_type}_profile",
@@ -409,9 +411,13 @@ class LatLonProfiles(Diagnostic):
                 extra_keys=self._extra_keys(freq=freq, var=var, season=season, std=std),
             )
             if data is None:
-                self.logger.info("No file found for the %s %s profile, nothing loaded", freq, season or var)
-                return None
+                self.logger.info("No file found for the %s %s profile", freq, season or var)
+                continue
             profiles.append(data)
+
+        if len(profiles) < len(seasons):
+            self.logger.info("Some %s profiles are missing, nothing loaded", freq)
+            return None
 
         return profiles if freq == "seasonal" else profiles[0]
 
