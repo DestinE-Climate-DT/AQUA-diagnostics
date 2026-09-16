@@ -11,6 +11,7 @@ Main changes:
 
 Complete list:
 - conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
+- Simplify enforcement of minim number of months for diagnostics (#406)
 - Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
 - Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
 
