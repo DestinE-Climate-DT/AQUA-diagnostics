@@ -165,7 +165,7 @@ class TestBiases:
         # earlier tests may not have run on this worker)
         gb.compute_climatology(var=var, seasonal=True)
 
-        plotgb.plot_seasonal_bias(data=gb.seasonal_climatology, data_ref=gb.seasonal_climatology*0.99, var=var, plev=85000)
+        plotgb.plot_seasonal_bias(data=gb.seasonal_climatology, data_ref=gb.seasonal_climatology * 0.99, var=var, plev=85000)
         pdf = os.path.join(outdir, "pdf", f"biases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.pdf")
         assert os.path.exists(pdf)
         png = os.path.join(outdir, "png", f"biases.seasonal_bias.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.png")
