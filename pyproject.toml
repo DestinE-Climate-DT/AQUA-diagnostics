@@ -38,7 +38,7 @@ classifiers = [
 ]
 dependencies = [
     "ecmean",
-    "cartopy>=0.25.0",
+    "cartopy==0.25.0",
     "matplotlib<=3.10.8"
 ]
 
