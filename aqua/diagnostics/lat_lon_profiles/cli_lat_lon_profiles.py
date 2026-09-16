@@ -46,7 +46,7 @@ def _create_plot(cli, profiles, profile_ref, freq_type, diagnostic_name):
     attribute = "longterm" if freq_type == "longterm" else "seasonal"
     profiles = [profile for profile in profiles if getattr(profile, attribute) is not None]
     if not profiles:
-        reason = "" if cli.save_netcdf else ", and save_netcdf is false so nothing was computed"
+        reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
         cli.logger.warning("No %s results found in %s%s, skipping the plot", freq_type, cli.outputdir, reason)
         return
     if profile_ref is not None and getattr(profile_ref, attribute) is None:
@@ -169,7 +169,7 @@ def process_variable(
                     loglevel=cli.loglevel,
                 )
 
-                if cli.save_netcdf:
+                if not cli.plot_only:
                     try:
                         profile.run(
                             var=var_name,
@@ -184,6 +184,7 @@ def process_variable(
                             box_brd=box_brd,
                             outputdir=cli.outputdir,
                             rebuild=cli.rebuild,
+                            save_netcdf=cli.save_netcdf,
                             reader_kwargs=dataset.get("reader_kwargs") or {},
                         )
                     except NotEnoughDataError:
@@ -204,15 +205,17 @@ def process_variable(
                         )
                         continue
 
-                # Populate from the netcdf files, written just now or by a previous run
-                profile.load(
-                    var=var_name,
-                    standard_name=var_standard_name,
-                    std=compute_std,
-                    freq=freq,
-                    outputdir=cli.outputdir,
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
-                )
+                # Populate from the netcdf files, written just now or by a previous run. Results computed
+                # without saving them are already in memory, and older files must not replace them.
+                if cli.plot_only or cli.save_netcdf:
+                    profile.load(
+                        var=var_name,
+                        standard_name=var_standard_name,
+                        std=compute_std,
+                        freq=freq,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=dataset.get("reader_kwargs") or {},
+                    )
 
                 profiles.append(profile)
 
@@ -242,7 +245,7 @@ def process_variable(
                     loglevel=cli.loglevel,
                 )
 
-                if cli.save_netcdf:
+                if not cli.plot_only:
                     try:
                         profile_ref.run(
                             var=var_name,
@@ -257,6 +260,7 @@ def process_variable(
                             box_brd=box_brd,
                             outputdir=cli.outputdir,
                             rebuild=cli.rebuild,
+                            save_netcdf=cli.save_netcdf,
                             reader_kwargs=ref.get("reader_kwargs") or {},
                         )
                     except NotEnoughDataError:
@@ -277,7 +281,7 @@ def process_variable(
                         )
                         profile_ref = None
 
-                if profile_ref is not None:
+                if profile_ref is not None and (cli.plot_only or cli.save_netcdf):
                     profile_ref.load(
                         var=var_name,
                         standard_name=var_standard_name,

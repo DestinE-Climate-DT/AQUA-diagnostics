@@ -490,6 +490,7 @@ class LatLonProfiles(Diagnostic):
         box_brd: bool = True,
         outputdir: str = "./",
         rebuild: bool = True,
+        save_netcdf: bool = True,
         reader_kwargs: dict = {},
     ):
         """
@@ -510,6 +511,7 @@ class LatLonProfiles(Diagnostic):
             box_brd (bool): Whether to include the box boundaries.
             outputdir (str): The output directory to save the results.
             rebuild (bool): Whether to rebuild existing files.
+            save_netcdf (bool): Whether to save the results as netcdf files. Default is True.
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
         """
         self.logger.info("Running LatLonProfiles for %s", var)
@@ -535,7 +537,8 @@ class LatLonProfiles(Diagnostic):
                 self.logger.info(f"Computing {f} standard deviation")
                 self.compute_std(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
 
-            self.logger.info(f"Saving {f} netcdf file")
-            self.save_netcdf(freq=f, outputdir=outputdir, rebuild=rebuild)
+            if save_netcdf:
+                self.logger.info(f"Saving {f} netcdf file")
+                self.save_netcdf(freq=f, outputdir=outputdir, rebuild=rebuild)
 
         self.logger.info("LatLonProfiles computation completed")
