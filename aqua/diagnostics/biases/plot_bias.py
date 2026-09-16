@@ -436,7 +436,7 @@ class PlotBias:
             "titles_size": 14,
             "figsize": (10, 8),
             # Seasonal maps show the differences only (no model climatology contours).
-            "contour": False,
+            "contour": True,
             "sym": sym,
             "cbar_label": cbar_label,
             "cmap": self.cmap,
