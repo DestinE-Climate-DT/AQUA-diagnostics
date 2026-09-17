@@ -81,6 +81,7 @@ class TestEnsembleZonal:
 
     def test_run(self, ensemble_zonal_instance, zonal_config, tmp_path_str):
         ens = ensemble_zonal_instance
+        ens.outputdir = tmp_path_str
         conf = zonal_config
 
         ens.run()
@@ -106,6 +107,7 @@ class TestEnsembleZonal:
     def test_plotting(self, ensemble_zonal_instance, plot_zonal_instance, zonal_config, tmp_path_str):
         ens = ensemble_zonal_instance
         plot_ens = plot_zonal_instance
+        plot_ens.outputdir = tmp_path_str
         conf = zonal_config
 
         plot_arguments = {
