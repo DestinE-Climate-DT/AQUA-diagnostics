@@ -32,11 +32,11 @@ datasets:
 # Reference
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'aqua-timeseries-monthly'
   - catalog: null
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'aqua-timeseries-annual'
 

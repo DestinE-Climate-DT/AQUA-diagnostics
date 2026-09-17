@@ -10,6 +10,9 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Simplify enforcement of minim number of months for diagnostics (#406)
+- Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+- Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
 
 ## [v0.25.1]
 
