@@ -214,7 +214,7 @@ class Diagnostic:
             loglevel=self.loglevel,
         )
 
-        outputsaver.save_netcdf(
+        return outputsaver.save_netcdf(
             dataset=data,
             diagnostic_product=diagnostic_product,
             rebuild=rebuild,

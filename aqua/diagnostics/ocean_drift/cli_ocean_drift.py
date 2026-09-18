@@ -56,27 +56,27 @@ def main(argv=None):
             # if regions != [None]:
             #    regions.append(None)
 
+            logger.info("Processing regions: %s", regions)
+            try:
+                data_hovmoller = Hovmoller(
+                    **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
+                )
+                data_hovmoller.run(
+                    regions=regions,
+                    var=var,
+                    dim_mean=dim_mean,
+                    anomaly_ref="t0",
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    rebuild=cli.rebuild,
+                )
+            except Exception as e:
+                logger.error("Error processing regions %s: %s", regions, e)
             for region in regions:
-                logger.info("Processing region: %s", region)
-                try:
-                    data_hovmoller = Hovmoller(
-                        **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
-                    )
-                    data_hovmoller.run(
-                        region=region,
-                        var=var,
-                        dim_mean=dim_mean,
-                        anomaly_ref="t0",
-                        outputdir=cli.outputdir,
-                        reader_kwargs=dataset.get("reader_kwargs") or {},
-                        rebuild=cli.rebuild,
-                    )
-                except Exception as e:
-                    logger.error("Error processing region %s: %s", region, e)
                 try:
                     hov_plot = PlotHovmoller(
                         diagnostic_name=diagnostic_name,
-                        data=data_hovmoller.processed_data_list,
+                        data=data_hovmoller.processed_data[region],
                         vert_coord=vert_coord,
                         outputdir=cli.outputdir,
                         loglevel=cli.loglevel,
