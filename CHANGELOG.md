@@ -10,6 +10,9 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
+- Diagnostic: `load_netcdf` method (#392)
+- LatLonProfiles: `load` method and `plot_only` option to plot from previous netCDF files (#392)
 - Simplify enforcement of minim number of months for diagnostics (#406)
 - Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
 - Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
