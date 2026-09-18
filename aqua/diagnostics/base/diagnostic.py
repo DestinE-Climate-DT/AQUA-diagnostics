@@ -281,6 +281,8 @@ class Diagnostic:
         Returns:
             OutputSaver: The output saver for this dataset.
         """
+        # TODO: reuse a single OutputSaver once diagnostic, outputdir and realization can no longer change
+        # between calls. Until then, a cached one could silently address the wrong files.
         return OutputSaver(
             diagnostic=diagnostic,
             catalog=self.catalog,
