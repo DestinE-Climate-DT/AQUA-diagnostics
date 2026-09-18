@@ -1,33 +1,32 @@
-.. _ensemble_latlon:
+.. _ensemble_maps:
 
-Ensemble LatLon diagnostic
+Ensemble Maps diagnostic
 ==========================
 
 Description
 -----------
 
-The **EnsembleLatLon** diagnostic provides tools to compute and visualize ensemble statistics of 2D latitude-longitude spatial maps:
+The **EnsembleMaps** diagnostic provides tools to compute and visualize ensemble statistics of 2D latitude-longitude spatial maps:
 
-- Compute ensemble mean and standard deviation for 2D spatial maps
-- Generate separate maps for ensemble mean and standard deviation
-- Support multiple map projections
+- Compute ensemble mean and standard deviation for 2D spatial maps.
+- Generate separate maps for ensemble mean and standard deviation.
+- Support multiple map projections and bias comparisons against reference datasets.
 
 Classes
 -------
 
-There is one class for the analysis and one for the plotting:
+There is one class for the analysis and one for plotting:
 
-* **EnsembleLatLon**: computes ensemble mean and standard deviation for 2D latitude-longitude spatial maps.
-  Results are saved as class attributes and as NetCDF files.
+* **EnsembleMaps**: computes ensemble mean and standard deviation for 2D latitude-longitude spatial maps.
+  Results are saved as class attributes and optionally as NetCDF files.
 
-* **PlotEnsembleLatLon**: provides methods for plotting spatial maps of ensemble mean and standard deviation.
-  It generates separate maps for each statistic.
+* **PlotEnsembleMaps**: provides methods for plotting spatial maps of ensemble mean, standard deviation, and biases.
+  It generates separate maps for each statistic by passing the specific dataset to the `plot()` or `plot_ensemble_diff_bias()` methods.
 
 File structure
 --------------
 
-* The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command line interface (CLI) scripts.
-* Template configuration files are available in the ``aqua/diagnostics/templates/diagnostics/config-ensemble_latlon.yaml`` directory.
+* The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command-line interface (CLI) scripts.
 * Notebooks are available in the ``notebooks/diagnostics/ensemble`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -36,14 +35,14 @@ Input variables and datasets
 Before using the diagnostic, input data must be loaded and merged using the ``Reader`` class via
 ``aqua.diagnostics.ensemble.util.reader_retrieve_and_merge``. The final merged dataset will contain all the requested ensemble members with appropriate metadata.
 Alternatively, data can be provided as a list of NetCDF file paths and merged with ``merge_from_data_files``.
-The merged dataset must contain all ensemble members concatenated along a pseudo-dimension named ``ensemble`` (by default, but customizable).
+The merged dataset must contain all ensemble members concatenated along a dimension named ``ensemble`` (by default, but customizable).
 
-A variable that is typically used in this diagnostic is:
+Variables typically used in this diagnostic include:
 
 * ``2t`` (2 metre temperature)
 * ``msl`` (mean sea level pressure)
 
-Example: loading and merging a 2D map ensemble into an ``xarray.Dataset``:
+Example: loading and merging a 2D map ensemble from files into an ``xarray.Dataset``:
 
 .. code-block:: python
 
@@ -51,7 +50,7 @@ Example: loading and merging a 2D map ensemble into an ``xarray.Dataset``:
    from aqua.diagnostics import merge_from_data_files
 
    file_list = glob.glob(
-       '/path/to/latlon/*.nc'
+       '/path/to/maps/*.nc'
    )
    file_list.sort()
 
@@ -59,7 +58,7 @@ Example: loading and merging a 2D map ensemble into an ``xarray.Dataset``:
        variable='2t',
        model_names=['IFS-FESOM', 'IFS-NEMO'],
        data_path_list=file_list,
-       log_level="WARNING",
+       loglevel="WARNING",
        ens_dim="ensemble",
    )
 
@@ -72,10 +71,10 @@ Example: loading via the AQUA Reader
    ens_dataset = reader_retrieve_and_merge(
        variable='2t',
        catalog_list=['nextgems4', 'climatedt-phase1'],
-       models_catalog_list=['IFS-FESOM', 'IFS-NEMO'],
-       exps_catalog_list=['historical-1990', 'historical-1990'],
-       sources_catalog_list=['aqua-atmglobalmean', 'aqua-atmglobalmean'],
-       log_level="WARNING",
+       model_list=['IFS-FESOM', 'IFS-NEMO'],
+       exp_list=['historical-1990', 'historical-1990'],
+       source_list=['aqua-atmglobalmean', 'aqua-atmglobalmean'],
+       loglevel="WARNING",
        ens_dim="ensemble",
    )
 
@@ -83,32 +82,41 @@ Basic usage
 -----------
 
 The basic usage of this diagnostic is explained with a working example in the notebook.
-The ensemble analysis is performed on merged ``2D`` map by ``EnsembleLatLon`` class.
+The ensemble analysis is performed on a merged ``2D`` map by the ``EnsembleMaps`` class.
 The basic structure is the following:
 
 .. code-block:: python
 
-    from aqua.diagnostics import EnsembleLatLon, PlotEnsembleLatLon
+    from aqua.diagnostics import EnsembleMaps, PlotEnsembleMaps
 
-    atmglobalmean_ens = EnsembleLatLon(
+    atmglobalmean_ens = EnsembleMaps(
         var='2t',
         dataset=ens_dataset,
         ensemble_dimension_name='ensemble',
     )
     atmglobalmean_ens.run()
 
-    ens_latlon_plot = PlotEnsembleLatLon(
+    ens_latlon_plot = PlotEnsembleMaps(
         model_list=['IFS-FESOM', 'IFS-NEMO'],
     )
 
+    # Plot Mean Map
     ens_latlon_plot.plot(
-        var=var,
-        save_format=['png', 'pdf'], # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
-        title_mean='Map of 2t for Ensemble Multi-Model mean',
-        title_std='Map of 2t for Ensemble Multi-Model standard deviation',
+        var='2t',
+        dataset=atmglobalmean_ens.dataset_mean,
+        data_name='ensemble_mean',
+        save_format=['png', 'pdf'],
+        title='Map of 2t for Ensemble Multi-Model Mean',
         cbar_label='2 meter temperature in K',
-        dataset_mean=atmglobalmean_ens.dataset_mean,
-        dataset_std=atmglobalmean_ens.dataset_std,
+    )
+
+    # Plot STD Map
+    ens_latlon_plot.plot(
+        var='2t',
+        dataset=atmglobalmean_ens.dataset_std,
+        data_name='ensemble_std',
+        title='Map of 2t for Ensemble Multi-Model Standard Deviation',
+        cbar_label='2 meter temperature in K',
     )
 
 .. note::
@@ -119,16 +127,18 @@ The basic structure is the following:
 CLI usage
 ---------
 
-The diagnostic can be run from the command line interface (CLI) by running the following command:
+The diagnostic can be run from the command line interface (CLI) using the following commands:
 
+For running unified diagnostics (Maps + Timeseries):
 .. code-block:: bash
 
     cd $AQUA/aqua/diagnostics/ensemble
-    python cli_latlon_ensemble.py --config <path_to_config_file>
+    python cli_ensemble.py --config <path_to_config_file>
 
-Other CLI scripts available:
+For running exclusively multi-model ensemble maps:
+.. code-block:: bash
 
-* ``cli_single_model_latlon_ensemble.py``: for single-model ensemble timeseries analysis
+    python cli_multi_model_maps_ensemble.py --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
@@ -142,47 +152,24 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--source``: Source to analyse. Can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
 
-
 Configuration file structure
 ----------------------------
 
-The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory and the diagnostic settings.
+The configuration file is a YAML file that contains the details on the dataset to analyse or use as reference, the output directory, and the diagnostic settings.
 Most of the settings are common to all the diagnostics (see :ref:`diagnostics-configuration-files`).
-Here we describe only the specific settings for the ensemble diagnostic.
+Here we describe only the specific settings for the ensemble maps diagnostic.
 
-* ``ensemble``: a block (nested in the ``diagnostics`` block) containing options for the Ensemble LatLon diagnostic.
+* ``ensemble``: a block (nested in the ``diagnostics`` block) containing options for the Ensemble Maps diagnostic.
   Variable-specific parameters override the defaults.
 
     * ``run``: enable/disable the diagnostic.
-    * ``diagnostic_name``: name of the diagnostic. ``Ensemble LatLon`` for this diagnostic.
+    * ``diagnostic_name``: name of the diagnostic.
     * ``variable``: list of variables to analyse.
     * ``projection``: map projection (e.g., ``robinson``).
-    * ``vmin`` / ``vmax``: colorbar limits for the mean plot.
-    * ``vmin_std`` / ``vmax_std``: colorbar limits for the standard deviation plot.
+    * ``vmin`` / ``vmax``: colorbar limits for the mean bias plots.
+    * ``vmin_ensemble`` / ``vmax_ensemble``: colorbar limits for the ensemble mean map.
+    * ``vmin_std_ensemble`` / ``vmax_std_ensemble``: colorbar limits for the ensemble standard deviation map.
     * ``cmap``: colormap to use.
-
-.. code-block:: yaml
-
-    ensemble:
-        run: true
-        diagnostic_name: 'Ensemble LatLon'
-        variable: ['2t']
-        params:
-            default:
-            tprate:
-                standard_name: "tprate"
-                long_name: "Precipitation"
-                units: "mm/day"
-        plot_params:
-            default:
-                projection: 'robinson'
-                projection_params: {}
-            2t:
-                vmin: null
-                vmax: null
-                vmin_std: null
-                vmax_std: null
-                cmap: 'RdBu_r'
 
 Output
 ------
@@ -191,9 +178,9 @@ The diagnostic produces the following outputs:
 
 * 2D spatial map of ensemble mean
 * 2D spatial map of ensemble standard deviation
+* 2D spatial bias maps (if reference data is provided)
 
-Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
-Data outputs are saved as NetCDF files.
+Plots are saved in PDF, PNG, and SVG format by default. Data outputs are saved as NetCDF files.
 
 Example Plots
 -------------
@@ -204,14 +191,13 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
     :align: center
     :width: 100%
 
-    Ensemble mean of multi-model of global mean of 2-meter temperature. Models considered as IFS-NEMO and IFS-FESOM.
+    Ensemble mean of multi-model global 2-meter temperature. Models considered are IFS-NEMO and IFS-FESOM.
 
 .. figure:: figures/ensemble_2t_LatLon_STD.png
     :align: center
     :width: 100%
 
-    Ensemble standard devation of multi-model of the global mean of 2-meter temperature. Models considered as IFS-NEMO and IFS-FESOM.
-
+    Ensemble standard deviation of multi-model global 2-meter temperature. Models considered are IFS-NEMO and IFS-FESOM.
 
 Available demo notebooks
 ------------------------
@@ -226,13 +212,3 @@ Authors and contributors
 This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
 Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
-
-
-Detailed API
-------------
-
-This section provides a detailed reference for the Application Programming Interface (API) of the ``Ensemble LatLon`` diagnostic,
-produced from the diagnostic function docstrings.
-
-.. note::
-   WORK IN PROGRESS

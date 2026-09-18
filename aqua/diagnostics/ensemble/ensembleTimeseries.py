@@ -12,9 +12,15 @@ xr.set_options(keep_attrs=True)
 
 class EnsembleTimeseries(BaseMixin):
     """
-    This class computes mean and standard deviation of the timeseries ensemble.
+    Compute mean and standard deviation of timeseries ensembles.
 
-    NOTE: The STD is computed Point-wise along the mean.
+    This class takes hourly, daily, monthly, or annual timeseries data from
+    multiple ensemble members, computes their point-wise mean and standard
+    deviation along the specified ensemble dimension, and optionally saves
+    the results to NetCDF files.
+
+    Note:
+        The standard deviation (STD) is computed point-wise along the mean.
     """
 
     def __init__(
@@ -34,25 +40,27 @@ class EnsembleTimeseries(BaseMixin):
         loglevel="WARNING",
     ):
         """
+        Initialize the EnsembleTimeseries class.
+
         Args:
-            var (str): Variable name.
-            hourly_data: xarray Dataset of ensemble members of hourly timeseries.
-                     The ensemble memebers are concatenated along a new dimension "ensemble".
-            daily_data: xarray Dataset of ensemble members of daily timeseries.
-                     The ensemble memebers are concatenated along a new dimension "ensemble".
-            monthly_data: xarray Dataset of ensemble members of monthly timeseries.
-                     The ensemble memebers are concatenated along a new dimension "ensemble".
-            annual_data: xarray Dataset of ensemble members of annual timeseries.
-                     The ensemble members are concatenated along the dimension "ensemble"
-            ensemble_dimension_name="ensemble" (str): a default name given to the
-                     dimensions along with the individual Datasets were concatenated.
-            catalog_list (list): list of catalog names.
-            model_list (list): list of model names. This is mandotory.
-            exp_list (list): list of experiment names.
-            source_list (list): list of source list.
-            description (str): Description of the netcdf.
-            outputdir (str): String input for output path.
-            loglevel (str): Log level. Default is "WARNING".
+            var (str, optional): Variable name. Defaults to None.
+            hourly_data (xr.Dataset, optional): Dataset of hourly timeseries ensemble members,
+                concatenated along the ensemble dimension. Defaults to None.
+            daily_data (xr.Dataset, optional): Dataset of daily timeseries ensemble members,
+                concatenated along the ensemble dimension. Defaults to None.
+            monthly_data (xr.Dataset, optional): Dataset of monthly timeseries ensemble members,
+                concatenated along the ensemble dimension. Defaults to None.
+            annual_data (xr.Dataset, optional): Dataset of annual timeseries ensemble members,
+                concatenated along the ensemble dimension. Defaults to None.
+            catalog_list (list[str], optional): List of catalog names. Defaults to None.
+            model_list (list[str], optional): List of model names. This is mandatory for saving. Defaults to None.
+            exp_list (list[str], optional): List of experiment names. Defaults to None.
+            source_list (list[str], optional): List of source names. Defaults to None.
+            ensemble_dimension_name (str, optional): Name of the dimension along which individual
+                datasets are concatenated. Defaults to "ensemble".
+            description (str, optional): Description to include in the output NetCDF metadata. Defaults to None.
+            outputdir (str, optional): Output directory path for saving files. Defaults to "./".
+            loglevel (str, optional): Logging level. Defaults to "WARNING".
         """
         self.loglevel = loglevel
         self.logger = log_configure(log_level=self.loglevel, log_name="Ensemble Timeseries")
@@ -97,9 +105,16 @@ class EnsembleTimeseries(BaseMixin):
 
     def run(self):
         """
-        A function to compute the mean and standard devivation of the input dataset
-        It is import to make sure that the dim along which the mean is compute is correct.
-        The default dim="ensemble". TODO: Test DASK's .compute() function here.
+        Compute the mean and standard deviation for the provided datasets.
+
+        It is important to ensure that the dimension along which the mean is
+        computed (defined by `ensemble_dimension_name`, default: "ensemble")
+        correctly matches the input data. Once computed, the statistics (mean
+        and STD) for each provided frequency (hourly, daily, monthly, annual)
+        are automatically saved to NetCDF files.
+
+        TODO:
+            - Test Dask's `.compute()` function within this execution flow.
         """
         self.logger.info("Compute function in EnsembleTimeseries")
 
