@@ -180,7 +180,7 @@ jobs:
           GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
-          environment-file: AQUA-diagnostics/conda-crosscheck-linux-64.lock
+          environment-file: environment.yml
           environment-name: aqua-cross-check
           cache-downloads: true
           cache-environment: false
