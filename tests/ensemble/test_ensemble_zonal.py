@@ -39,7 +39,7 @@ def zonal_dataset(zonal_config):
         model_list=zonal_config["model_list"],
         exp_list=zonal_config["exp_list"],
         source_list=zonal_config["source_list"],
-        realization=None,
+        realizations=None,
         loglevel=loglevel,
         ens_dim="ensemble",
     )

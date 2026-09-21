@@ -86,7 +86,7 @@ def main(argv=None):
     default_plot = all_plot_params.get("default", {})
 
     region = None
-
+    
     # Single reference
     if "references" in cli.config_dict:
         ref = cli.config_dict.get("references")
@@ -103,7 +103,10 @@ def main(argv=None):
 
     # EnsembleMaps diagnostic
     if cli.config_dict["diagnostics"]["ensemble"]["run"]:
-        # Variables in Timeseries config
+        # All the realizations will be appended here with the key of model names
+        realization_dict = {}
+
+        # Variables in the config file
         for variable in variables:
             diag_config.get("params", {}).get(variable, {})
 
@@ -114,7 +117,6 @@ def main(argv=None):
             model_list = []
             exp_list = []
             source_list = []
-            realization_list = []
             if models is not None:
                 models[0]["catalog"] = get_arg(args, "catalog", models[0]["catalog"])
                 models[0]["model"] = get_arg(args, "model", models[0]["model"])
@@ -129,28 +131,31 @@ def main(argv=None):
                     exp_list.append(model["exp"])
                     source_list.append(model["source"])
                     if model["realization"] is None:
-                        realization_list.append(model["realization"])
-                    else:
                         realization = extract_realizations_list(
                             catalog=model["catalog"],
                             model=model["model"],
                             exp=model["exp"],
                             source=model["source"],
                         )
-                        if realization is not None:
-                            realization_list.append(realization)
-
+                    realization_dict.update({model["model"]: realization})
+                        
                 # Reterive data
+                cli.logger.info(f"Retrieveing data for catalogs: {catalog_list}")
+                cli.logger.info(f"Retrieveing data for models: {model_list}")
+                cli.logger.info(f"Retrieveing data for exps: {exp_list}")
+                cli.logger.info(f"Retrieveing data for sources: {source_list}")
+                cli.logger.info(f"Retrieveing data for realization dict: {realization_dict}")
+
                 dataset = reader_retrieve_and_merge(
                     variable=variable,
                     catalog_list=catalog_list,
                     model_list=model_list,
                     exp_list=exp_list,
                     source_list=source_list,
-                    realization=realization_list,
-                    # fix=fix,
-                    # areas=areas,
-                    # regrid=regrid,
+                    realizations=realization_dict,
+                    #fix=fix,
+                    #areas=areas,
+                    #regrid=regrid,
                     loglevel=cli.loglevel,
                 )
 
@@ -179,12 +184,17 @@ def main(argv=None):
                 ref_realization = extract_realizations_list(
                     catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref
                 )
+                
+                # Hard coded only for rreference dataset
+                if ref_realization is None:
+                    ref_realization = ["r1"]
+                cli.logger.info(f"Reference realization: {ref_realization}") 
                 ref_filenames = generate_realizations_path(
                     catalog=catalog_ref,
                     model=model_ref,
                     exp=exp_ref,
                     realization_list=ref_realization,
-                    diagnostic_name="globalbiases",
+                    diagnostic_name="biases",
                     diagnostic_product="annual_climatology",
                     variable=variable,
                     file_dir=outputdir,
@@ -192,6 +202,9 @@ def main(argv=None):
                     file_format=".nc",
                     loglevel=cli.loglevel,
                 )
+
+                cli.logger.info(f"Reference data filename {ref_filenames}")
+
                 if ref_filenames:
                     dataset_ref = reader_retrieve_and_merge(
                         filenames=ref_filenames,
@@ -201,7 +214,7 @@ def main(argv=None):
                         # exp=exp_ref,
                         # source=source_ref,
                         region=region,
-                        realization=ref_realization,
+                        realizations=ref_realization,
                         # fix=fixer_ref,
                         loglevel=cli.loglevel,
                     )

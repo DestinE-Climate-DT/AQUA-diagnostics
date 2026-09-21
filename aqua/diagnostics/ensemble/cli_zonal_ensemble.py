@@ -149,7 +149,7 @@ def main(argv=None):
                 regrid=False,
                 areas=False,
                 fix=True,
-                realization=realization_dict,
+                realizations=realization_dict,
                 ens_dim="ensemble",
                 loglevel=cli.loglevel,
             )

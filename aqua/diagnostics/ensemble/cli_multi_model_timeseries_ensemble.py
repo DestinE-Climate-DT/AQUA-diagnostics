@@ -101,6 +101,9 @@ def main(argv=None):
 
     # EnsembleTimeseries diagnostic
     if cli.config_dict["diagnostics"]["ensemble"]["run"]:
+        # All the realizations will be appended here with the key of model names
+        realization_dict = {} 
+
         # Variables in Timeseries config
         for variable in variables:
             var_params = diag_config.get("params", {}).get(variable, {})
@@ -122,7 +125,6 @@ def main(argv=None):
                 model_list = []
                 exp_list = []
                 source_list = []
-                realization_list = []
                 if models is not None:
                     models[0]["catalog"] = get_arg(args, "catalog", models[0]["catalog"])
                     models[0]["model"] = get_arg(args, "model", models[0]["model"])
@@ -137,13 +139,21 @@ def main(argv=None):
                         exp_list.append(model["exp"])
                         source_list.append(model["source"])
                         if model["realization"] is None:
-                            realization_list.append(model["realization"])
-                        else:
                             realization = extract_realizations_list(
-                                catalog=model["catalog"], model=model["model"], exp=model["exp"], source=model["source"]
+                                catalog=model["catalog"],
+                                model=model["model"],
+                                exp=model["exp"],
+                                source=model["source"],
                             )
-                            realization_list.append(realization)
+                        realization_dict.update({model["model"]: realization})
 
+                # Reterive data
+                cli.logger.info(f"Retrieveing data for catalogs: {catalog_list}")
+                cli.logger.info(f"Retrieveing data for models: {model_list}")
+                cli.logger.info(f"Retrieveing data for exps: {exp_list}")
+                cli.logger.info(f"Retrieveing data for sources: {source_list}")
+                cli.logger.info(f"Retrieveing data for realization dict: {realization_dict}")
+ 
                 # Reterive monthly data
                 if monthly:
                     monthly_dataset = reader_retrieve_and_merge(
@@ -152,7 +162,7 @@ def main(argv=None):
                         model_list=model_list,
                         exp_list=exp_list,
                         source_list=source_list,
-                        realization=realization_list,
+                        realizations=realization_dict,
                         freq=monthly_freq,
                         startdate=startdate,
                         enddate=enddate,
@@ -169,7 +179,7 @@ def main(argv=None):
                         model_list=model_list,
                         exp_list=exp_list,
                         source_list=source_list,
-                        realization=realization_list,
+                        realizations=realization_dict,
                         freq=annual_freq,
                         startdate=startdate,
                         enddate=enddate,
@@ -215,6 +225,12 @@ def main(argv=None):
                 ref_realization_list = extract_realizations_list(
                     catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref
                 )
+
+                # Hard coded only for rreference dataset
+                if ref_realization_list is None:
+                    ref_realization_list = ["r1"]
+                cli.logger.info(f"Reference realization: {ref_realization_list}") 
+
                 mon_ref_filenames = generate_realizations_path(
                     catalog=catalog_ref,
                     model=model_ref,
@@ -239,7 +255,7 @@ def main(argv=None):
                         # exp=exp_ref,
                         # source=source_ref,
                         region=region,
-                        realization=ref_realization_list,
+                        realizations=ref_realization_list,
                         startdate=startdate,
                         enddate=enddate,
                         fix=fixer_ref,
@@ -283,7 +299,7 @@ def main(argv=None):
                         # exp=exp_ref,
                         # source=source_ref,
                         region=region,
-                        realization=ref_realization_list,
+                        realizations=ref_realization_list,
                         startdate=startdate,
                         enddate=enddate,
                         fix=fixer_ref,

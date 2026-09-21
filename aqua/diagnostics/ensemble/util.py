@@ -25,7 +25,7 @@ def reader_retrieve_and_merge(
     exp_list: list[str] = None,
     source_list: list[str] = None,
     reader_kwargs: dict = None,
-    realization: list = None,
+    realizations: dict[str, list[str]] = None,
     region: str = None,
     lon_limits: float = None,
     lat_limits: float = None,
@@ -55,7 +55,7 @@ def reader_retrieve_and_merge(
         exp_list (list[str], optional): List of experiments corresponding to models and sources. Defaults to None.
         source_list (list[str], optional): List of sources corresponding to models and experiments. Defaults to None.
         reader_kwargs (dict, optional): Additional keyword arguments to pass to the AQUA Reader. Defaults to None.
-        realization (list[str], optional): List specifying realizations per model. Defaults to None.
+        realizations (dict[str, list[str]], optional): Dictionary specifying realizations per model. Defaults to None.
         region (str, optional): Region for zonal or spatial selections. Defaults to None.
         lon_limits (float, optional): Longitude limits for spatial subsetting. Defaults to None.
         lat_limits (float, optional): Latitude limits for spatial subsetting. Defaults to None.
@@ -108,13 +108,10 @@ def reader_retrieve_and_merge(
         source_list = [source_list]
     if isinstance(filenames, str):
         filenames = [filenames]
-    if isinstance(realization, str):
-        realization = [realization]
-
-    if realization is None:
-        realization = ["r1"]
-
+    
+    # to concat inside the loop below
     model_data_list = []
+
     # Need this for return
     merged_dataset = None
 
@@ -122,51 +119,61 @@ def reader_retrieve_and_merge(
     if not filenames:
         for cat_i, model_i, exp_i, source_i in zip(catalog_list, model_list, exp_list, source_list):
             logger.info(f"Processing: catalog={cat_i}, model={model_i}, exp={exp_i}, source={source_i}")
+
+            # Get realizations and set default to ['r1'] if not provided
+            if realizations is not None:
+                reals = realizations.get(model_i)
+                if reals == None:
+                    logger.info(f"No realizations defined for {model_i}, using default ['r1']")
+                    reals = ["r1"]
+            else:
+                logger.info(f"No realizations defined for {model_i}, using default ['r1']")
+                reals = ["r1"]
             # loop over realization(s) for each model 
-            for r in realization:
-                data = reader_loop_over_realizations(
-                    catalog=cat_i,
-                    model=model_i,
-                    exp=exp_i,
-                    source=source_i,
-                    realization_list=r,
-                    areas=areas,
-                    fix=fix,
-                    reader_kwargs=reader_kwargs,
-                    freq=freq,
-                    startdate=startdate,
-                    enddate=enddate,
-                    loglevel=loglevel,
-                )
-                logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={r}")
+            #for reals in realizations:
+            data = reader_loop_over_realizations(
+                catalog=cat_i,
+                model=model_i,
+                exp=exp_i,
+                source=source_i,
+                realization_list=reals,
+                areas=areas,
+                fix=fix,
+                reader_kwargs=reader_kwargs,
+                freq=freq,
+                startdate=startdate,
+                enddate=enddate,
+                loglevel=loglevel,
+            )
+            logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={reals}")
 
-                # Spatial selection
-                if lon_limits and lat_limits:
-                    if "lon" in data.dims and "lat" in data.dims:
-                        data = data.sel(lon=slice(*lon_limits), lat=slice(*lat_limits))
-                    else:
-                        logger.debug(f"Dataset for {model_i}-{r} has no lon/lat dims, skipping spatial subset.")
+            # Spatial selection
+            if lon_limits and lat_limits:
+                if "lon" in data.dims and "lat" in data.dims:
+                    data = data.sel(lon=slice(*lon_limits), lat=slice(*lat_limits))
+                else:
+                    logger.debug(f"Dataset for {model_i}-{reals} has no lon/lat dims, skipping spatial subset.")
 
-                # Temporal selection (only if time dimension exists)
-                if "time" in data.dims and (startdate or enddate):
-                    data = data.sel(time=slice(startdate, enddate))
-                elif "time" not in data.dims and (startdate or enddate):
-                    logger.debug(f"Dataset for {model_i}-{r} has no time dimension.")
+            # Temporal selection (only if time dimension exists)
+            if "time" in data.dims and (startdate or enddate):
+                data = data.sel(time=slice(startdate, enddate))
+            elif "time" not in data.dims and (startdate or enddate):
+                logger.debug(f"Dataset for {model_i}-{reals} has no time dimension.")
 
-                if data is None:
-                    continue
-                # Add ensemble label
-                ens_label = f"{model_i}_{exp_i}_{r}"
-                data = data.expand_dims({ens_dim: [ens_label]})
+            if data is None:
+                continue
+            # Add ensemble label
+            ens_label = f"{model_i}_{exp_i}_{reals}"
+            data = data.expand_dims({ens_dim: [ens_label]})
 
-                model_data_list.append(data)
+            model_data_list.append(data)
 
         if not model_data_list:
             logger.warning("No realizations loaded using Reader. Skipping...")
 
     elif filenames:
         # For now Single model only using AQUA Reader backend
-        for filename, r in zip(filenames, realization):
+        for filename, reals in zip(filenames, realizations):
             logger.info(f"Processing: file {filename}")
             try:
                 # Retrieve the data using AQUA Reader
@@ -196,7 +203,7 @@ def reader_retrieve_and_merge(
                     logger.debug(f"Dataset for filename {filename}  has no time dimension.")
 
                 # Add ensemble label
-                ens_label = f"{r}"
+                ens_label = f"{reals}"
                 data = data.expand_dims({ens_dim: [ens_label]})
 
                 model_data_list.append(data)

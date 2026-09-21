@@ -171,7 +171,7 @@ def main(argv=None):
                             # model=model,
                             # exp=exp,
                             # source=source,
-                            realization=mon_realization_list,
+                            realizations=mon_realization_list,
                             region=region,
                             startdate=startdate,
                             enddate=enddate,
@@ -217,7 +217,7 @@ def main(argv=None):
                             # model=model,
                             # exp=exp,
                             # source=source,
-                            realization=ann_realization_list,
+                            realizations=ann_realization_list,
                             region=region,
                             startdate=startdate,
                             enddate=enddate,
@@ -272,6 +272,10 @@ def main(argv=None):
                     ref_realization_list = extract_realizations_list(
                         catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref
                     )
+
+                    # Hard coded in case realization is None in case of Reference dataset
+                    if ref_realization_list is None: ref_realization_list = ["r1"]
+
                     mon_ref_filenames = generate_realizations_path(
                         catalog=catalog_ref,
                         model=model_ref,
@@ -296,7 +300,7 @@ def main(argv=None):
                             # exp=exp_ref,
                             # source=source_ref,
                             region=region,
-                            realization=ref_realization_list,
+                            realizations=ref_realization_list,
                             startdate=startdate,
                             enddate=enddate,
                             fix=fixer_ref,
@@ -340,7 +344,7 @@ def main(argv=None):
                             # exp=exp_ref,
                             # source=source_ref,
                             region=region,
-                            realization=ref_realization_list,
+                            realizations=ref_realization_list,
                             startdate=startdate,
                             enddate=enddate,
                             fix=fixer_ref,
@@ -399,11 +403,11 @@ def main(argv=None):
 
             cli.logger.info("Ensemble timeseries diagnostic completed!")
 
-    # Global Bias Ensemble
-    gb_diag_config = cli.config_dict["diagnostics"]["globalbiases"]
+    # Bias Ensemble Maps
+    gb_diag_config = cli.config_dict["diagnostics"]["biases"]
 
-    if "globalbiases" in cli.config_dict["diagnostics"]:
-        if cli.config_dict["diagnostics"]["globalbiases"]["run"]:
+    if "biases" in cli.config_dict["diagnostics"]:
+        if cli.config_dict["diagnostics"]["biases"]["run"]:
             cli.logger.info("Running CLI for EnsembleMap diagnostic for a single model")
 
             params = gb_diag_config.get("params", {}).get("default", {})
@@ -424,7 +428,7 @@ def main(argv=None):
                     model=model,
                     exp=exp,
                     realization_list=realization_list,
-                    diagnostic_name="globalbiases",
+                    diagnostic_name="biases",
                     diagnostic_product="annual_climatology",
                     variable=variable,
                     file_dir=outputdir,
@@ -440,7 +444,7 @@ def main(argv=None):
                     # model=model,
                     # exp=exp,
                     # source=source,
-                    realization=realization_list,
+                    realizations=realization_list,
                     fix=fixer,
                     loglevel=cli.loglevel,
                 )
@@ -474,7 +478,7 @@ def main(argv=None):
                     model=model_ref,
                     exp=exp_ref,
                     realization_list=ref_realization_list,
-                    diagnostic_name="globalbiases",
+                    diagnostic_name="biases",
                     diagnostic_product="annual_climatology",
                     variable=variable,
                     file_dir=outputdir,
@@ -491,7 +495,7 @@ def main(argv=None):
                         # exp=exp_ref,
                         # source=source_ref,
                         region=region,
-                        realization=ref_realization_list,
+                        realizations=ref_realization_list,
                         fix=fixer_ref,
                         loglevel=cli.loglevel,
                     )
@@ -647,7 +651,6 @@ def main(argv=None):
             cli.logger.info("Ensemble maps diagnostic completed!")
 
     cli.close_dask_cluster()
-
 
 if __name__ == "__main__":
     main()
