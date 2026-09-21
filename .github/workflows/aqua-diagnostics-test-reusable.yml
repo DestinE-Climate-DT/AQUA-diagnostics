@@ -180,7 +180,7 @@ jobs:
           GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
-          environment-file: environment.yml
+          environment-file: AQUA-diagnostics/environment-dev.yml
           environment-name: aqua-cross-check
           cache-downloads: true
           cache-environment: false
