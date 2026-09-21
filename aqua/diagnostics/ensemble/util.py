@@ -108,7 +108,7 @@ def reader_retrieve_and_merge(
         source_list = [source_list]
     if isinstance(filenames, str):
         filenames = [filenames]
-    
+
     # to concat inside the loop below
     model_data_list = []
 
@@ -123,14 +123,14 @@ def reader_retrieve_and_merge(
             # Get realizations and set default to ['r1'] if not provided
             if realizations is not None:
                 reals = realizations.get(model_i)
-                if reals == None:
+                if reals is None:
                     logger.info(f"No realizations defined for {model_i}, using default ['r1']")
                     reals = ["r1"]
             else:
                 logger.info(f"No realizations defined for {model_i}, using default ['r1']")
                 reals = ["r1"]
-            # loop over realization(s) for each model 
-            #for reals in realizations:
+            # loop over realization(s) for each model
+            # for reals in realizations:
             data = reader_loop_over_realizations(
                 catalog=cat_i,
                 model=model_i,
@@ -257,8 +257,8 @@ def reader_loop_over_realizations(
 ):
     """
     Loop over a list of realizations, fetch data using AQUA Reader, and concatenate.
-    This function is used in "reader_retrieve_and_merge" which assigns the "ensemble" dimension. 
-    
+    This function is used in "reader_retrieve_and_merge" which assigns the "ensemble" dimension.
+
     Args:
         variable (str, optional): Name of the variable to retrieve. Defaults to None.
         ens_dim (str, optional): Dimension name for ensembles (unused directly in concatenation here). Defaults to "ensemble".

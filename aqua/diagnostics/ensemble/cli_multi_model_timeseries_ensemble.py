@@ -102,7 +102,7 @@ def main(argv=None):
     # EnsembleTimeseries diagnostic
     if cli.config_dict["diagnostics"]["ensemble"]["run"]:
         # All the realizations will be appended here with the key of model names
-        realization_dict = {} 
+        realization_dict = {}
 
         # Variables in Timeseries config
         for variable in variables:
@@ -153,7 +153,7 @@ def main(argv=None):
                 cli.logger.info(f"Retrieveing data for exps: {exp_list}")
                 cli.logger.info(f"Retrieveing data for sources: {source_list}")
                 cli.logger.info(f"Retrieveing data for realization dict: {realization_dict}")
- 
+
                 # Reterive monthly data
                 if monthly:
                     monthly_dataset = reader_retrieve_and_merge(
@@ -229,7 +229,7 @@ def main(argv=None):
                 # Hard coded only for rreference dataset
                 if ref_realization_list is None:
                     ref_realization_list = ["r1"]
-                cli.logger.info(f"Reference realization: {ref_realization_list}") 
+                cli.logger.info(f"Reference realization: {ref_realization_list}")
 
                 mon_ref_filenames = generate_realizations_path(
                     catalog=catalog_ref,

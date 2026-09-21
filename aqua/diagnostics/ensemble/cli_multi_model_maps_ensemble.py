@@ -86,7 +86,7 @@ def main(argv=None):
     default_plot = all_plot_params.get("default", {})
 
     region = None
-    
+
     # Single reference
     if "references" in cli.config_dict:
         ref = cli.config_dict.get("references")
@@ -138,7 +138,7 @@ def main(argv=None):
                             source=model["source"],
                         )
                     realization_dict.update({model["model"]: realization})
-                        
+
                 # Reterive data
                 cli.logger.info(f"Retrieveing data for catalogs: {catalog_list}")
                 cli.logger.info(f"Retrieveing data for models: {model_list}")
@@ -153,9 +153,9 @@ def main(argv=None):
                     exp_list=exp_list,
                     source_list=source_list,
                     realizations=realization_dict,
-                    #fix=fix,
-                    #areas=areas,
-                    #regrid=regrid,
+                    # fix=fix,
+                    # areas=areas,
+                    # regrid=regrid,
                     loglevel=cli.loglevel,
                 )
 
@@ -184,11 +184,11 @@ def main(argv=None):
                 ref_realization = extract_realizations_list(
                     catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref
                 )
-                
+
                 # Hard coded only for rreference dataset
                 if ref_realization is None:
                     ref_realization = ["r1"]
-                cli.logger.info(f"Reference realization: {ref_realization}") 
+                cli.logger.info(f"Reference realization: {ref_realization}")
                 ref_filenames = generate_realizations_path(
                     catalog=catalog_ref,
                     model=model_ref,

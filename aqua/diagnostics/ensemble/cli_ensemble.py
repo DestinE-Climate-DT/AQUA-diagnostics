@@ -274,7 +274,8 @@ def main(argv=None):
                     )
 
                     # Hard coded in case realization is None in case of Reference dataset
-                    if ref_realization_list is None: ref_realization_list = ["r1"]
+                    if ref_realization_list is None:
+                        ref_realization_list = ["r1"]
 
                     mon_ref_filenames = generate_realizations_path(
                         catalog=catalog_ref,
@@ -651,6 +652,7 @@ def main(argv=None):
             cli.logger.info("Ensemble maps diagnostic completed!")
 
     cli.close_dask_cluster()
+
 
 if __name__ == "__main__":
     main()
