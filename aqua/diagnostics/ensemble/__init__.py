@@ -14,7 +14,7 @@ __all__ = [
     "EnsembleMaps",
     "EnsembleZonal",
     "PlotEnsembleTimeseries",
-    "PlotEnsembleLatLon",
+    "PlotEnsembleMaps",
     "PlotEnsembleZonal",
     "reader_retrieve_and_merge",
     "merge_from_data_files",

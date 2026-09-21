@@ -122,7 +122,7 @@ def reader_retrieve_and_merge(
     if not filenames:
         for cat_i, model_i, exp_i, source_i in zip(catalog_list, model_list, exp_list, source_list):
             logger.info(f"Processing: catalog={cat_i}, model={model_i}, exp={exp_i}, source={source_i}")
-            # loop over realization(s)
+            # loop over realization(s) for each model 
             for r in realization:
                 data = reader_loop_over_realizations(
                     catalog=cat_i,
@@ -156,7 +156,7 @@ def reader_retrieve_and_merge(
                 if data is None:
                     continue
                 # Add ensemble label
-                ens_label = f"{model_i}_{exp_i}"
+                ens_label = f"{model_i}_{exp_i}_{r}"
                 data = data.expand_dims({ens_dim: [ens_label]})
 
                 model_data_list.append(data)
@@ -250,7 +250,8 @@ def reader_loop_over_realizations(
 ):
     """
     Loop over a list of realizations, fetch data using AQUA Reader, and concatenate.
-
+    This function is used in "reader_retrieve_and_merge" which assigns the "ensemble" dimension. 
+    
     Args:
         variable (str, optional): Name of the variable to retrieve. Defaults to None.
         ens_dim (str, optional): Dimension name for ensembles (unused directly in concatenation here). Defaults to "ensemble".

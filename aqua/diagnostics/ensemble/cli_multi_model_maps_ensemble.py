@@ -137,7 +137,8 @@ def main(argv=None):
                             exp=model["exp"],
                             source=model["source"],
                         )
-                        realization_list.append(realization)
+                        if realization is not None:
+                            realization_list.append(realization)
 
                 # Reterive data
                 dataset = reader_retrieve_and_merge(
