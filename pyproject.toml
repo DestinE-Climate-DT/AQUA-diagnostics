@@ -38,7 +38,7 @@ classifiers = [
 ]
 dependencies = [
     "ecmean",
-    "cartopy==0.24.1",
+    "cartopy>=0.24.1",
     "matplotlib<=3.10.8"
 ]
 
@@ -68,7 +68,7 @@ tests = [
 ]
 style = [
     "pre-commit",
-    "ruff==0.16.7"
+    "ruff==0.16.8"
 ]
 # minimal = [
 #     "aqua-diagnostics[core]"

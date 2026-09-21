@@ -99,6 +99,18 @@ The basic structure of the analysis is the following:
     Start/end dates and reference dataset can be customized.
     If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
 
+Instead of calling ``run()``, the results of a previous run can be read back from its NetCDF files
+(see :ref:`diagnostics-plot-only`):
+
+.. code-block:: python
+
+    lonlat_dataset.load(var='tprate', outputdir='/path/to/previous/output')
+
+.. note::
+
+    The ``standard_name``, if one was used, takes part in the filenames as well and must be given to ``load()``.
+    The seasonal profiles are loaded only if all four seasons are found.
+
 CLI usage
 ---------
 
