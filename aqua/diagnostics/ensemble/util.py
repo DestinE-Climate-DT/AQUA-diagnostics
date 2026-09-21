@@ -417,7 +417,8 @@ def center_timestamp(time: pd.Timestamp, freq: str):
 
 
 def extract_realizations(catalog, model, exp, source):
-    """Extract the realizations available for a given catalog, model, exp and source.
+    """
+    Extract the realizations available for a given catalog, model, exp and source.
 
     Args:
         catalog (str): Intake catalog name.
@@ -430,14 +431,23 @@ def extract_realizations(catalog, model, exp, source):
     """
     configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
     cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
-
     expcat = cat()[model][exp]
-    esmcat = expcat[source].describe().get("user_parameters", {})
+    entry = expcat[source]
 
-    for parameter in esmcat:
-        name = parameter.get("name")
+    user_parameters = {}
+    if hasattr(entry, "describe"):
+        user_parameters = entry.describe().get("user_parameters", {})
+    elif hasattr(entry, "_yaml"):
+        user_parameters = entry._yaml().get("sources", {}).get(source, {}).get("parameters", {})
+        # _yaml() returns a dict of parameter_name -> {default, allowed, ...}
+        for name, param in user_parameters.items():
+            if name == "realization":
+                return param.get("allowed")
+        return None
+    elif hasattr(entry, "entry"):
+        user_parameters = getattr(entry.entry, "user_parameters", {})
 
-        if name == "realization":
-            realization = parameter.get("allowed")
-            return realization
+    for parameter in user_parameters:
+        if parameter.get("name") == "realization":
+            return parameter.get("allowed")
     return None
