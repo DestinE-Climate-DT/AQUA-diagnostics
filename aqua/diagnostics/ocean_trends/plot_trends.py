@@ -6,7 +6,7 @@ import cartopy.crs as ccrs
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, unit_to_latex
+from aqua.core.util import get_realizations, unit_to_latex, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -267,8 +267,13 @@ class PlotTrends:
 
     def set_description(self, content=None):
         """Set the description metadata for the plot."""
+        model_startdate = self.data.attrs.get("AQUA_startdate", None)
+        model_enddate = self.data.attrs.get("AQUA_enddate", None)
         self.description = f"{content} in the {self.region} region of {self.model} {self.exp}."
-
+        if model_startdate and model_enddate:
+            self.description += (
+                f" ({time_to_string(model_startdate, format='%Y-%m')} to {time_to_string(model_enddate, format='%Y-%m')})"
+            )
     def save_plot(
         self,
         fig,
