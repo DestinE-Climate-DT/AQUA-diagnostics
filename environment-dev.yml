@@ -19,7 +19,7 @@ dependencies:
   - hdf5>=2.1.0,<=2.2.0
   - h5py>=3.12.1,<=3.16.0
   # ecmean depends on esmpy binary, so we need to install it first
-  - esmpy
+  - esmpy<=8.9.1
   # various
   - pip
   - pip:
