@@ -6,6 +6,7 @@ optionally write its catalog metadata to ``experiment.yaml``.
 """
 
 import argparse
+import json
 import os
 import sys
 from tempfile import TemporaryDirectory
@@ -13,6 +14,32 @@ from tempfile import TemporaryDirectory
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml
 from aqua.diagnostics.base import Diagnostic, DiagnosticCLI, template_parse_arguments
+
+
+def _parse_reader_kwargs(value):
+    """Parse a JSON object of Reader kwargs without overriding checker options."""
+    reader_kwargs = json.loads(value)
+    
+    if not isinstance(reader_kwargs, dict):
+        raise argparse.ArgumentTypeError("expected a JSON object, for example '{\"engine\": \"polytope\"}'")
+
+    checker_options = {
+        "catalog": "--catalog",
+        "model": "--model",
+        "exp": "--exp",
+        "source": "--source",
+        "regrid": "--regrid",
+        "startdate": "--startdate",
+        "enddate": "--enddate",
+        "loglevel": "--loglevel",
+        "realization": "--realization",
+        "rebuild": "--no-rebuild (rebuild is enabled by default)",
+    }
+    conflicts = [f"{key!r}: use {option}" for key, option in checker_options.items() if key in reader_kwargs]
+    if conflicts:
+        raise argparse.ArgumentTypeError("these parameters have dedicated checker options: " + "; ".join(conflicts))
+
+    return reader_kwargs
 
 
 def parse_arguments(arguments):
@@ -26,6 +53,13 @@ def parse_arguments(arguments):
     """
     parser = argparse.ArgumentParser(description="Check the AQUA diagnostics setup")
     parser = template_parse_arguments(parser)
+    parser.add_argument(
+        "--reader-kwargs",
+        type=_parse_reader_kwargs,
+        metavar="JSON",
+        help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
+        "use dedicated flags for dataset selection, regrid, dates, loglevel, realization and rebuild",
+    )
     parser.add_argument("--yaml", help="write experiment.yaml to this directory")
     parser.add_argument(
         "--no-rebuild",
@@ -53,7 +87,9 @@ def _write_experiment_yaml(diagnostic, outputdir):
 
 def _checker_build_config(args):
     """Build a diagnostic configuration from the effective CLI arguments."""
-    reader_kwargs = {"realization": args.realization} if args.realization else None
+    reader_kwargs = dict(args.reader_kwargs or {})
+    if args.realization:
+        reader_kwargs["realization"] = args.realization
     return {
         "setup": {"loglevel": args.loglevel or "WARNING"},
         "datasets": [
@@ -65,7 +101,7 @@ def _checker_build_config(args):
                 "regrid": args.regrid or "r100",
                 "startdate": args.startdate,
                 "enddate": args.enddate,
-                "reader_kwargs": reader_kwargs,
+                "reader_kwargs": reader_kwargs or None,
             }
         ],
         "output": {
