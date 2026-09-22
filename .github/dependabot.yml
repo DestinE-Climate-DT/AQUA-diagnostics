@@ -6,10 +6,10 @@
 version: 2
 updates:
   - package-ecosystem: "conda"
-    open-pull-requests-limit: 10
     directory: "/"
     schedule:
       interval: "daily"
+      day: "monday"           # You can pick any day
       time: "06:00"
     commit-message:
       prefix: "[Dependabot-conda]"
@@ -17,14 +17,20 @@ updates:
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
       day: "monday"           # You can pick any day
       time: "08:00"
     commit-message:
       prefix: "[Dependabot-pip]"
-
+  
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       # Check for updates to GitHub Actions every week
+      interval: "weekly"
+
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      # Check for updates to pre-commit hooks every week
       interval: "weekly"
