@@ -50,9 +50,7 @@ def test_merge_from_data_files_timeseries(tmp_path):
         loglevel="WARNING",
     )
 
-    # -----------------------
     # Assertions
-    # -----------------------
     assert merged is not None
     assert ens_dim in merged.dims
     assert merged.dims[ens_dim] == 2
