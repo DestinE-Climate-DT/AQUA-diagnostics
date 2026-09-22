@@ -19,9 +19,9 @@ from aqua.diagnostics.base import Diagnostic, DiagnosticCLI, template_parse_argu
 def _parse_reader_kwargs(value):
     """Parse a JSON object of Reader kwargs without overriding checker options."""
     reader_kwargs = json.loads(value)
-    
+
     if not isinstance(reader_kwargs, dict):
-        raise argparse.ArgumentTypeError("expected a JSON object, for example '{\"engine\": \"polytope\"}'")
+        raise argparse.ArgumentTypeError('expected a JSON object, for example \'{"engine": "polytope"}\'')
 
     checker_options = {
         "catalog": "--catalog",
