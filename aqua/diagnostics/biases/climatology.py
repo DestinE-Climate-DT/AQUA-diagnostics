@@ -32,6 +32,14 @@ class Climatology(Diagnostic):
         var (str): Variable name to analyze.
         plev (float): Pressure level to select (if applicable).
         areas (bool): if True, save area weights for statistics computation.
+        region (str): Name of the region to select from the centralized regions file
+            (e.g. 'europe', 'tropics', 'europe_ar6'). If None, the whole domain is used.
+            Supports both plain lon/lat bounding boxes and regionmask-based regions
+            (see aqua/diagnostics/config/definitions/regions.yaml). Applied to the data
+            as soon as it is retrieved, so climatology, area weights and statistics are
+            all computed on the selected region.
+        regions_file_path (str): Path to a custom regions file. If None, the centralized
+            regions file is used.
         diagnostic (str): Name of the diagnostic.
         save_netcdf (bool): If True, saves output climatologies.
         outputdir (str): Output directory for NetCDF files.
@@ -52,6 +60,8 @@ class Climatology(Diagnostic):
         var=None,
         plev=None,
         areas=True,
+        region=None,
+        regions_file_path=None,
         diagnostic="climatology",
         save_netcdf=True,
         outputdir="./",
@@ -73,6 +83,11 @@ class Climatology(Diagnostic):
         self.var = var
         self.plev = plev
         self.areas = areas
+        self.region = region
+        self.regions_file_path = regions_file_path
+        self.region_longname = None
+        self.lon_limits = None
+        self.lat_limits = None
         self.save_netcdf = save_netcdf
         self.outputdir = outputdir
         self.startdate = startdate
@@ -167,6 +182,17 @@ class Climatology(Diagnostic):
         else:
             self.logger.info("All variables retrieved; no variable-specific operations applied.")
 
+        # Region selection (lon/lat box or regionmask-based), applied to the whole retrieved dataset 
+        if self.region is not None:
+            self.logger.info("Selecting region '%s'.", self.region)
+            res_dict = self.select_region(
+                data=self.data, region=self.region, regions_file_path=self.regions_file_path, drop=True
+            )
+            self.data = res_dict["data"]
+            self.region_longname = res_dict["region"]
+            self.lon_limits = res_dict["lon_limits"]
+            self.lat_limits = res_dict["lat_limits"]
+
     def savenetcdf(
         self,
         data: xr.Dataset,
@@ -174,7 +200,7 @@ class Climatology(Diagnostic):
         rebuild: bool = True,
         create_catalog_entry: bool = False,
         extra_keys=None,
-        dict_catalog_entry: dict = {"jinjalist": ["realization"], "wildcardlist": ["var"]},
+        dict_catalog_entry: dict = {"jinjalist": ["region", "realization"], "wildcardlist": ["var"]},
     ):
         """Save data to NetCDF with proper metadata.
 
@@ -249,16 +275,25 @@ class Climatology(Diagnostic):
                 "AQUA_realization": self.realization,
                 "AQUA_startdate": str(self.startdate),
                 "AQUA_enddate": str(self.enddate),
+                **({"AQUA_region": self.region_longname} if self.region_longname is not None else {}),
             }
         )
 
         if areas:
             if self.regrid:
                 self.logger.info("Adding cell area from regridded grid.")
-                self.climatology["cell_area"] = self.reader.tgt_grid_area.cell_area
+                cell_area = self.reader.tgt_grid_area.cell_area
             else:
                 self.logger.info("Adding cell area from source grid.")
-                self.climatology["cell_area"] = self.reader.src_grid_area.cell_area
+                cell_area = self.reader.src_grid_area.cell_area
+
+            if self.region is not None:
+                self.logger.info("Restricting cell area to region '%s'.", self.region)
+                cell_area = self.select_region(
+                    data=cell_area, region=self.region, regions_file_path=self.regions_file_path, drop=True
+                )["data"]
+
+            self.climatology["cell_area"] = cell_area
 
         # Load data in memory for faster plot
         self.logger.debug("Loading climatology data in memory")
@@ -271,6 +306,7 @@ class Climatology(Diagnostic):
                 for k, v in {
                     "var": var,
                     "plev": plev,
+                    "region": self.region_longname,
                 }.items()
                 if v is not None
             }
@@ -307,6 +343,7 @@ class Climatology(Diagnostic):
                     "AQUA_realization": self.realization,
                     "AQUA_startdate": str(self.startdate),
                     "AQUA_enddate": str(self.enddate),
+                    **({"AQUA_region": self.region_longname} if self.region_longname is not None else {}),
                 }
             )
 
@@ -316,7 +353,11 @@ class Climatology(Diagnostic):
             self.logger.debug("Loaded seasonal climatology data in memory")
 
             if save_netcdf:
-                extra_keys = {k: v for k, v in [("var", var), ("plev", plev)] if v is not None}
+                extra_keys = {
+                    k: v
+                    for k, v in [("var", var), ("plev", plev), ("region", self.region_longname)]
+                    if v is not None
+                }
                 self.savenetcdf(
                     data=self.seasonal_climatology,
                     diagnostic_product="seasonal_climatology",
