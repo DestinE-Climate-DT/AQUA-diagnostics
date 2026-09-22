@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
 - OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
 - Diagnostic: `load_netcdf` method (#392)
 - LatLonProfiles: `load` method and `plot_only` option to plot from previous netCDF files (#392)
