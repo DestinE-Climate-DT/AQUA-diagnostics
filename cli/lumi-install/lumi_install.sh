@@ -173,9 +173,9 @@ create_aqua_diagnostics_file() {
   log_message INFO "exports for FDB5 added to load_aqua_diagnostics.sh."
 
   # Config GSV: check load_modules_lumi.sh on GSV repo https://earth.bsc.es/gitlab/digital-twins/de_340/gsv_interface/-/blob/main/load_modules_lumi.sh
-  echo 'export GSV_WEIGHTS_PATH=/scratch/project_465000454/igonzalez/gsv_weights' >>  $load_aqua_diagnostics_file
-  echo 'export GSV_TEST_FILES=/scratch/project_465000454/igonzalez/gsv_test_files' >> $load_aqua_diagnostics_file
-  echo 'export GRID_DEFINITION_PATH=/scratch/project_465000454/igonzalez/grid_definitions' >>  $load_aqua_diagnostics_file
+  echo 'export GSV_WEIGHTS_PATH=/scratch/project_465002727/gsv_files/gsv_weights' >>  $load_aqua_diagnostics_file
+  echo 'export GSV_TEST_FILES=/scratch/project_465002727/gsv_files/gsv_test_files' >> $load_aqua_diagnostics_file
+  echo 'export GRID_DEFINITION_PATH=/scratch/project_465002727/gsv_files/grid_definitions' >>  $load_aqua_diagnostics_file
 
   # Currently (Feb 2025) this is the recommended setup overcoming lumi modules
   # This points to a stack with fdb 5.14.0 and the required associated modules
