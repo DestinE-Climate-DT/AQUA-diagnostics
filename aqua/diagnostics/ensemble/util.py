@@ -129,44 +129,50 @@ def reader_retrieve_and_merge(
             else:
                 logger.info(f"No realizations defined for {model_i}, using default ['r1']")
                 reals = ["r1"]
-            # loop over realization(s) for each model
-            # for reals in realizations:
-            data = reader_loop_over_realizations(
-                catalog=cat_i,
-                model=model_i,
-                exp=exp_i,
-                source=source_i,
-                realization_list=reals,
-                areas=areas,
-                fix=fix,
-                reader_kwargs=reader_kwargs,
-                freq=freq,
-                startdate=startdate,
-                enddate=enddate,
-                loglevel=loglevel,
-            )
-            logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={reals}")
+            # One Reader per realization: each realization is one member along ens_dim
+            for r in reals:
+                try:
+                    reader = Reader(
+                        catalog=cat_i,
+                        model=model_i,
+                        exp=exp_i,
+                        source=source_i,
+                        realization=r,
+                        regrid=regrid,
+                        areas=areas,
+                        fix=fix,
+                        freq=freq,
+                        startdate=startdate,
+                        enddate=enddate,
+                        loglevel=loglevel,
+                        **(reader_kwargs or {}),
+                    )
+                    data = reader.retrieve(var=variable)
+                    logger.info(f"Loaded {variable} for {model_i}, {exp_i}, realization={r}")
 
-            # Spatial selection
-            if lon_limits and lat_limits:
-                if "lon" in data.dims and "lat" in data.dims:
-                    data = data.sel(lon=slice(*lon_limits), lat=slice(*lat_limits))
-                else:
-                    logger.debug(f"Dataset for {model_i}-{reals} has no lon/lat dims, skipping spatial subset.")
+                    # Spatial selection
+                    if lon_limits and lat_limits:
+                        if "lon" in data.dims and "lat" in data.dims:
+                            data = data.sel(lon=slice(*lon_limits), lat=slice(*lat_limits))
+                        else:
+                            logger.debug(f"Dataset for {model_i}-{r} has no lon/lat dims, skipping spatial subset.")
 
-            # Temporal selection (only if time dimension exists)
-            if "time" in data.dims and (startdate or enddate):
-                data = data.sel(time=slice(startdate, enddate))
-            elif "time" not in data.dims and (startdate or enddate):
-                logger.debug(f"Dataset for {model_i}-{reals} has no time dimension.")
+                    # Temporal selection (only if time dimension exists)
+                    if "time" in data.dims and (startdate or enddate):
+                        data = data.sel(time=slice(startdate, enddate))
+                    elif "time" not in data.dims and (startdate or enddate):
+                        logger.debug(f"Dataset for {model_i}-{r} has no time dimension.")
 
-            if data is None:
-                continue
-            # Add ensemble label
-            ens_label = f"{model_i}_{exp_i}_{reals}"
-            data = data.expand_dims({ens_dim: [ens_label]})
+                    # Add ensemble label
+                    ens_label = f"{model_i}_{exp_i}_{r}"
+                    data = data.expand_dims({ens_dim: [ens_label]})
 
-            model_data_list.append(data)
+                    model_data_list.append(data)
+
+                except NoDataError as e:
+                    # Only missing data skips a member; configuration errors must propagate
+                    logger.warning(f"Skipping {model_i}-{exp_i}-{r} due to error: {e}")
+                    continue
 
         if not model_data_list:
             logger.warning("No realizations loaded using Reader. Skipping...")
@@ -237,82 +243,6 @@ def reader_retrieve_and_merge(
         )
 
     return merged_dataset
-
-
-def reader_loop_over_realizations(
-    variable: str = None,
-    ens_dim: str = "ensemble",
-    catalog: str = None,
-    model: str = None,
-    exp: str = None,
-    source: str = None,
-    areas: bool = False,
-    fix: bool = True,
-    realization_list: list[str] = ["r1"],
-    reader_kwargs: dict = None,
-    startdate=None,
-    enddate=None,
-    freq: str = None,
-    loglevel: str = "WARNING",
-):
-    """
-    Loop over a list of realizations, fetch data using AQUA Reader, and concatenate.
-    This function is used in "reader_retrieve_and_merge" which assigns the "ensemble" dimension.
-
-    Args:
-        variable (str, optional): Name of the variable to retrieve. Defaults to None.
-        ens_dim (str, optional): Dimension name for ensembles (unused directly in concatenation here). Defaults to "ensemble".
-        catalog (str, optional): AQUA catalog name. Defaults to None.
-        model (str, optional): Model name. Defaults to None.
-        exp (str, optional): Experiment name. Defaults to None.
-        source (str, optional): Source name. Defaults to None.
-        areas (bool, optional): Area extraction flag. Defaults to False.
-        fix (bool, optional): Fix flag for the reader. Defaults to True.
-        realization_list (list[str], optional): List of realizations to load. Defaults to ['r1'].
-        reader_kwargs (dict, optional): Additional kwargs for the Reader. Defaults to None.
-        startdate (str, optional): Start date string. Defaults to None.
-        enddate (str, optional): End date string. Defaults to None.
-        freq (str, optional): Frequency parameter for the Reader. Defaults to None.
-        loglevel (str, optional): Logging level. Defaults to 'WARNING'.
-
-    Returns:
-        xarray.Dataset: Dataset containing all requested realizations for a given
-        model concatenated along the `model` dimension, with a new `realization` coordinate.
-    """
-    logger = log_configure(log_name="loop_over_realizations", log_level=loglevel)
-    logger.info("Looping over realizations to be merged")
-
-    # Initialize an empty list
-    ds_list = []
-
-    if isinstance(realization_list, str):
-        realization_list = [realization_list]
-
-    if realization_list is None:
-        realization_list = ["r1"]
-    for r in realization_list:
-        reader = Reader(
-            catalog=catalog,
-            model=model,
-            exp=exp,
-            source=source,
-            realization=r,
-            areas=areas,
-            reader_kwargs=reader_kwargs,
-            startdate=startdate,
-            enddate=enddate,
-            fix=fix,
-            freq=freq,
-            loglevel=loglevel,
-        )
-        ds = reader.retrieve(var=variable)
-        # ds = ds[variable]
-
-        # Add a coordinate to know which realization is this
-        ds = ds.assign_coords(realization=r)
-        ds_list.append(ds)
-
-    return xr.concat(ds_list, dim=model)
 
 
 def merge_from_data_files(
