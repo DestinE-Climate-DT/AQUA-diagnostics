@@ -1,9 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-
-from unittest.mock import MagicMock, patch
 
 from aqua.core.exceptions import NoDataError
 from aqua.diagnostics.ensemble.util import (
@@ -15,7 +15,6 @@ from aqua.diagnostics.ensemble.util import (
     merge_from_data_files,
     reader_retrieve_and_merge,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -359,11 +358,7 @@ def test_compute_statistics_multi_model_weighted():
     # weights are [2, 2, 1], normalized to [0.4, 0.4, 0.2]
     expected_mean = (1 * 0.4) + (3 * 0.4) + (10 * 0.2)
 
-    expected_variance = (
-        ((1 - expected_mean) ** 2) * 0.4
-        + ((3 - expected_mean) ** 2) * 0.4
-        + ((10 - expected_mean) ** 2) * 0.2
-    )
+    expected_variance = ((1 - expected_mean) ** 2) * 0.4 + ((3 - expected_mean) ** 2) * 0.4 + ((10 - expected_mean) ** 2) * 0.2
 
     expected_std = np.sqrt(expected_variance)
 
