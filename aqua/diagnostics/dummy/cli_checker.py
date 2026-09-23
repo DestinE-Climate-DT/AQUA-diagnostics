@@ -136,7 +136,7 @@ def main(argv=None):
     if any(dataset.get(key) is None for key in ("model", "exp", "source")):
         raise ValueError("model, exp and source are required arguments")
     if dataset.get("catalog") is None:
-        cli.logger.warning("No catalog provided, determining the catalog with the Reader")
+        cli.logger.info("No catalog provided, determining the catalog with the Reader")
 
     reader_kwargs = dict(dataset.get("reader_kwargs") or {})
     reader_kwargs["rebuild"] = cli.rebuild
