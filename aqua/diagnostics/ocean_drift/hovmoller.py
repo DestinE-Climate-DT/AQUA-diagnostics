@@ -84,8 +84,9 @@ class Hovmoller(Diagnostic):
     ):
         """Run the Hovmoller diagram generation workflow.
 
-        Retrieves data once, then computes and saves Hovmoller products for each
-        requested region.
+        Retrieves data once. With a spatial mean, each year is loaded once and every
+        region is averaged on that year. Hovmoller products are built from the
+        concatenated time series.
 
         Args:
             outputdir (str, optional): Directory to save the output files. Defaults to ".".
@@ -109,28 +110,32 @@ class Hovmoller(Diagnostic):
 
         self.processed_data = {}
         self.logger.debug("Variables retrieved: %s, regions: %s, dim_mean: %s", var, regions_list, dim_mean)
+        region_info = self._region_limits(regions_list)
+
+        if dim_mean is not None:
+            region_means = self._fldmean_regions_by_year(
+                data=retrieved_data,
+                regions_list=regions_list,
+                region_info=region_info,
+                dim_mean=dim_mean,
+            )
+        else:
+            region_means = None
 
         for reg in regions_list:
+            info = region_info[reg]
+            self.region = info["region_name"]
+            self.lat_limits = info["lat_limits"]
+            self.lon_limits = info["lon_limits"]
             self.logger.info(
                 "Processing region: %s for diagnostic '%s'.",
-                reg if reg is not None else "global",
+                self.region,
                 self.diagnostic_name,
             )
-            res_dict = super().select_region(data=retrieved_data, region=reg, drop=True)
-            self.region = res_dict["region"] if res_dict["region"] is not None else "global"
-            self.lat_limits = res_dict["lat_limits"]
-            self.lon_limits = res_dict["lon_limits"]
-            if dim_mean is not None:
-                self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
-                data = self.reader.fldmean(
-                    data=retrieved_data,
-                    dims=dim_mean,
-                    lat_limits=self.lat_limits,
-                    lon_limits=self.lon_limits,
-                )
-                data = data.load()
+            if region_means is not None:
+                data = region_means[reg]
             else:
-                data = res_dict["data"]
+                data = super().select_region(data=retrieved_data, region=reg, drop=True)["data"]
             self.processed_data[reg] = self.compute_hovmoller(
                 data=data,
                 anomaly_ref=anomaly_ref,
@@ -139,6 +144,47 @@ class Hovmoller(Diagnostic):
             self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=reg)
 
         self.logger.info("Hovmoller diagram saved to netCDF file")
+
+    def _region_limits(self, regions_list: list) -> dict:
+        """Look up each region's name and latitude/longitude box once."""
+        info = {}
+        for reg in regions_list:
+            long_name, lon_limits, lat_limits = self._set_region(region=reg)
+            info[reg] = {
+                "region_name": long_name if long_name is not None else "global",
+                "lon_limits": lon_limits,
+                "lat_limits": lat_limits,
+            }
+        return info
+
+    def _fldmean_regions_by_year(self, data: xr.Dataset, regions_list: list, region_info: dict, dim_mean: list) -> dict:
+        """Regrid one year at a time, then average every region on that year.
+
+        The spatial mean does not mix timesteps, so concatenating the yearly
+        means rebuilds the full time series without holding every year in memory.
+        """
+        means = {reg: [] for reg in regions_list}
+        years = sorted({int(year) for year in data.time.dt.year.values})
+        for year in years:
+            self.logger.info("Loading year %s", year)
+            chunk = data.isel(time=(data.time.dt.year == year).values).load()
+            for reg in regions_list:
+                info = region_info[reg]
+                self.logger.debug(
+                    "Computing fldmean over %s for region %s, year %s",
+                    dim_mean,
+                    info["region_name"],
+                    year,
+                )
+                means[reg].append(
+                    self.reader.fldmean(
+                        data=chunk,
+                        dims=dim_mean,
+                        lat_limits=info["lat_limits"],
+                        lon_limits=info["lon_limits"],
+                    )
+                )
+        return {reg: xr.concat(parts, dim="time") for reg, parts in means.items()}
 
     def get_anomaly(self, data: xr.DataArray, anomaly_ref: str = None, dim: str = "time") -> xr.DataArray:
         """Compute anomaly for the given data along a specified dimension.
