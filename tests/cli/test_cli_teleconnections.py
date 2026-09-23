@@ -13,9 +13,15 @@ BASE_TC_BLOCK = {
     "months_window": 3,
 }
 
+BASE_DMI_BLOCK = {
+    "run": True,
+    "seasons": ["annual"],
+}
+
 BASE_TC = {
     "NAO": BASE_TC_BLOCK,
     "ENSO": BASE_TC_BLOCK,
+    "DMI": BASE_DMI_BLOCK,
 }
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
@@ -42,7 +48,7 @@ def test_parse_arguments_cli_options():
 # CLI execution flow (main)
 # ======================================================================
 class TestMainExecutionFlow:
-    """Test main() execution flow with mocked NAO, ENSO and plot classes."""
+    """Test main() execution flow with mocked teleconnections and plot classes."""
 
     @pytest.fixture
     def mock_tc(self, mocker):
@@ -56,20 +62,24 @@ class TestMainExecutionFlow:
         mocks = {
             "NAO": mocker.patch(f"{CLI_MODULE}.NAO"),
             "ENSO": mocker.patch(f"{CLI_MODULE}.ENSO"),
+            "DMI": mocker.patch(f"{CLI_MODULE}.DMI"),
             "PlotNAO": mocker.patch(f"{CLI_MODULE}.PlotNAO"),
             "PlotENSO": mocker.patch(f"{CLI_MODULE}.PlotENSO"),
+            "PlotDMI": mocker.patch(f"{CLI_MODULE}.PlotDMI"),
         }
         mocks["PlotNAO"].return_value.plot_index.return_value = (mocker.MagicMock(), mocker.MagicMock())
         mocks["PlotENSO"].return_value.plot_index.return_value = (mocker.MagicMock(), mocker.MagicMock())
+        mocks["PlotDMI"].return_value.plot_index.return_value = (mocker.MagicMock(), mocker.MagicMock())
         return mocks
 
     def test_all_diagnostics_disabled_skip_processing(self, build_config, mock_cluster, mock_tc):
-        """When both NAO and ENSO have run=False, no diagnostic class is instantiated."""
+        """When all teleconnections have run=False, no diagnostic class is instantiated."""
         config_file = build_config(
             {
                 "teleconnections": {
                     "NAO": {"run": False},
                     "ENSO": {"run": False},
+                    "DMI": {"run": False},
                 },
             }
         )
@@ -78,8 +88,10 @@ class TestMainExecutionFlow:
 
         mock_tc["NAO"].assert_not_called()
         mock_tc["ENSO"].assert_not_called()
+        mock_tc["DMI"].assert_not_called()
         mock_tc["PlotNAO"].assert_not_called()
         mock_tc["PlotENSO"].assert_not_called()
+        mock_tc["PlotDMI"].assert_not_called()
 
     def test_nao_full_pipeline(self, build_config, mock_cluster, mock_tc):
         """
@@ -136,3 +148,29 @@ class TestMainExecutionFlow:
         plot_enso_instance.plot_index.assert_called_once()
         assert plot_enso_instance.plot_maps.call_count == 2
         mock_tc["NAO"].assert_not_called()
+
+    def test_dmi_full_pipeline(self, build_config, mock_cluster, mock_tc):
+        """
+        With DMI enabled, verify DMI is created for each dataset and reference,
+        compute_index + compute_regression + compute_correlation are called,
+        and PlotDMI produces the index and map plots.
+        """
+        config_file = build_config(
+            {
+                "teleconnections": {"DMI": BASE_TC["DMI"]},
+            }
+        )
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        dmi_instance = mock_tc["DMI"].return_value
+        assert mock_tc["DMI"].call_count == 2
+        assert dmi_instance.compute_regression.call_count == 2
+        assert dmi_instance.compute_correlation.call_count == 2
+
+        mock_tc["PlotDMI"].assert_called_once()
+        plot_dmi_instance = mock_tc["PlotDMI"].return_value
+        plot_dmi_instance.plot_index.assert_called_once()
+        assert plot_dmi_instance.plot_maps.call_count == 2
+        mock_tc["NAO"].assert_not_called()
+        mock_tc["ENSO"].assert_not_called()

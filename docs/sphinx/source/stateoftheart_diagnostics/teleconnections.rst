@@ -7,7 +7,7 @@ Description
 -----------
 
 The teleconnections diagnostic is a set of tools to compute the most relevant teleconnections.
-NAO (North Atlantic Oscillation), ENSO (El Niño Southern Oscillation) and MJO (Madden-Julian Oscillation) are the teleconnections currently implemented.
+NAO (North Atlantic Oscillation), ENSO (El Niño Southern Oscillation), DMI (Dipole Mode Index) and MJO (Madden-Julian Oscillation) are the teleconnections currently implemented.
 The diagnostic is built to evaluate the teleconnections indices and to compute regression and correlation maps with respect to the teleconnection index.
 
 .. note::
@@ -16,19 +16,23 @@ The diagnostic is built to evaluate the teleconnections indices and to compute r
 Classes
 -------
 
-There are three classes for the analysis:
+There are four classes for the analysis:
 
 * **NAO**: computes the NAO index based on mean sea level pressure (msl) using the station-based method, and computes regression and correlation maps with respect to the NAO index.
 
 * **ENSO**: computes the ENSO index based on sea surface temperature (tos) using the Niño3.4 region, and computes regression and correlation maps with respect to the ENSO index.
 
+* **DMI**: computes the Dipole Mode Index based on the difference between western and eastern Indian Ocean SST anomaly boxes, and computes regression and correlation maps with respect to the DMI index.
+
 * **MJO**: computes the MJO Hovmoeller plots based on the top net thermal radiation flux (tnlwrf) variable.
 
-There are three other classes for the plots:
+There are four other classes for the plots:
 
 * **PlotNAO**: produces the NAO index time series and the regression and correlation maps.
 
 * **PlotENSO**: produces the ENSO index time series and the regression and correlation maps.
+
+* **PlotDMI**: produces the DMI index time series and the regression and correlation maps.
 
 * **PlotMJO**: produces the MJO Hovmoeller plots.
 
@@ -55,6 +59,7 @@ The necessary variables for the default evaluation are:
 
 * ``msl`` (mean sea level pressure) for NAO
 * ``tos`` (sea surface temperature) for ENSO
+* ``tos`` (sea surface temperature) for DMI
 * ``tnlwrf`` (top net thermal radiation flux) for MJO
 
 Other variables can be used for the regression and correlation maps.
@@ -148,6 +153,8 @@ Here we describe only the specific settings for the teleconnections diagnostic.
 
     ``ENSO``: a block, nested in the ``teleconnections`` block, that contains the details required for the ENSO teleconnection.
 
+    ``DMI``: a block, nested in the ``teleconnections`` block, that contains the details required for the DMI teleconnection.
+
 .. code-block:: yaml
 
     diagnostics:
@@ -164,6 +171,11 @@ Here we describe only the specific settings for the teleconnections diagnostic.
                 months_window: 3
                 seasons: ['annual']
                 cbar_range: [-2, 2]
+            DMI:
+                run: true
+                diagnostic_name: 'dmi'
+                seasons: ['annual']
+                cbar_range: [-2, 2]
 
 Output
 ------
@@ -172,6 +184,7 @@ The diagnostic produces the following outputs:
 
 * NAO: North Atlantic Oscillation index, regression and correlation maps.
 * ENSO: El Niño Southern Oscillation index, regression and correlation maps.
+* DMI: Dipole Mode Index, regression and correlation maps.
 * MJO: Madden-Julian Oscillation Hovmoeller plots of the Mean top net thermal radiation flux variable.
 
 Plots are saved in both PDF and PNG format.
@@ -208,6 +221,7 @@ Notebooks are stored in ``notebooks/diagnostics/teleconnections``:
 
 - `NAO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/NAO.ipynb>`_
 - `ENSO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/ENSO.ipynb>`_
+- `DMI <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/DMI.ipynb>`_
 - `statistical_validation <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/statistical_validation.ipynb>`_
 - `MJO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/MJO.ipynb>`_
 
