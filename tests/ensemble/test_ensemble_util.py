@@ -1065,3 +1065,206 @@ def test_generate_realizations_path_extra_keys_and_format(mock_output_saver):
         diagnostic_product="maps",
         extra_keys={"region": "global"},
     )
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.Reader")
+def test_reader_retrieve_and_merge_filenames_spatial_temporal(mock_reader, tmp_path):
+    """Test spatial and temporal subsetting in the filenames branch."""
+    lat = np.linspace(-90, 90, 3)
+    lon = np.linspace(0, 360, 4)
+    time = pd.date_range("2000-01-01", periods=10, freq="MS")
+    
+    data = xr.Dataset(
+        {"tas": (("time", "lat", "lon"), np.random.rand(10, 3, 4))},
+        coords={"time": time, "lat": lat, "lon": lon},
+    )
+    
+    mock_instance = MagicMock()
+    mock_instance.retrieve.return_value = data
+    mock_reader.return_value = mock_instance
+    
+    filename = str(tmp_path / "data.nc")
+    
+    result = reader_retrieve_and_merge(
+        filenames=[filename],
+        realizations=[["r1"]],
+        variable="tas",
+        lon_limits=[100, 200],
+        lat_limits=[-45, 45],
+        startdate="2000-03-01",
+        enddate="2000-06-01",
+    )
+    
+    assert result is not None
+    # Spatial subsetting check
+    assert result.lon.values[0] >= 100
+    assert result.lon.values[-1] <= 200
+    assert result.lat.values[0] >= -45
+    assert result.lat.values[-1] <= 45
+    # Temporal subsetting check
+    assert result.time.values[0] >= np.datetime64("2000-03-01")
+    assert result.time.values[-1] <= np.datetime64("2000-06-01")
+    
+    result.close()
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.Reader")
+def test_reader_retrieve_and_merge_filenames_missing_dims(mock_reader, tmp_path):
+    """Test missing lon/lat and time dims behavior in the filenames branch."""
+    # Data missing both lat/lon and time coordinates
+    data = xr.Dataset({"tas": np.array(1.0)})
+    
+    mock_instance = MagicMock()
+    mock_instance.retrieve.return_value = data
+    mock_reader.return_value = mock_instance
+    
+    filename = str(tmp_path / "data.nc")
+    
+    result = reader_retrieve_and_merge(
+        filenames=[filename],
+        realizations=[["r1"]],
+        variable="tas",
+        lon_limits=[100, 200],
+        lat_limits=[-45, 45],
+        startdate="2000-03-01",
+        enddate="2000-06-01",
+    )
+    
+    assert result is not None
+    assert "lon" not in result.dims
+    assert "lat" not in result.dims
+    assert "time" not in result.dims
+    
+    result.close()
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.Reader")
+def test_reader_retrieve_and_merge_filenames_reader_kwargs(mock_reader, tmp_path):
+    """Test that reader_kwargs are correctly propagated when using the filenames backend."""
+    data = make_timeseries_dataset()
+    
+    mock_instance = MagicMock()
+    mock_instance.retrieve.return_value = data
+    mock_reader.return_value = mock_instance
+    
+    filename = str(tmp_path / "data.nc")
+    kwargs_to_pass = {"engine": "netcdf4", "chunks": "auto"}
+    
+    reader_retrieve_and_merge(
+        filenames=[filename],
+        realizations=[["r1"]],
+        variable="tas",
+        reader_kwargs=kwargs_to_pass,
+    )
+    
+    # Extract kwargs passed to the Reader constructor
+    _, called_kwargs = mock_reader.call_args
+    assert called_kwargs.get("reader_kwargs") == kwargs_to_pass
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.Reader")
+def test_reader_retrieve_and_merge_filenames_all_fail(mock_reader, tmp_path):
+    """Test behavior when all files fail in the filename branch."""
+    mock_instance = MagicMock()
+    # Trigger a generic Exception as caught by the filename branch
+    mock_instance.retrieve.side_effect = Exception("General file failure")
+    mock_reader.return_value = mock_instance
+    
+    filename = str(tmp_path / "corrupted_data.nc")
+    
+    result = reader_retrieve_and_merge(
+        filenames=[filename],
+        realizations=[["r1"]],
+        variable="tas",
+    )
+    
+    # Should return None and exit gracefully via the `if not model_data_list:` check
+    assert result is None
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.Reader")
+def test_reader_retrieve_and_merge_catalog_error_propagation(mock_reader):
+    """
+    Test that non-NoDataError exceptions (like ValueError from config issues)
+    are strictly propagated and NOT swallowed by the catalog loop.
+    """
+    mock_instance = MagicMock()
+    mock_instance.retrieve.side_effect = ValueError("Severe configuration error")
+    mock_reader.return_value = mock_instance
+
+    with pytest.raises(ValueError, match="Severe configuration error"):
+        reader_retrieve_and_merge(
+            catalog_list=["catalog"],
+            model_list=["ModelA"],
+            exp_list=["exp"],
+            source_list=["source"],
+            variable="tas",
+        )
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.xr.concat")
+@patch("aqua.diagnostics.ensemble.util.Reader")
+def test_reader_retrieve_and_merge_no_close_attr(mock_reader, mock_concat):
+    """
+    Test the garbage collection branch where the data object has no close() method.
+    This ensures the `hasattr(data, "close")` line gets full branch coverage.
+    """
+    # Create a mock object that acts like data but lacks a close() method
+    class MockDataWithoutClose:
+        def __init__(self):
+            self.dims = {"lon": 1, "lat": 1}
+        def expand_dims(self, *args, **kwargs):
+            return self
+
+    mock_instance = MagicMock()
+    mock_instance.retrieve.return_value = MockDataWithoutClose()
+    mock_reader.return_value = mock_instance
+    
+    # Mock the concat function to return a Dataset that has an 'ensemble' coordinate!
+    mock_concat.return_value = xr.Dataset(
+        coords={"ensemble": ["ModelA_exp_r1"]},
+        attrs={}
+    )
+    
+    result = reader_retrieve_and_merge(
+        catalog_list=["catalog"],
+        model_list=["ModelA"],
+        exp_list=["exp"],
+        source_list=["source"],
+        variable="tas",
+    )
+    
+    assert result is not None
+    assert "description" in result.attrs
+    
+    result.close()
+
+@pytest.mark.ensemble
+def test_merge_from_data_files_partial_dates(tmp_path):
+    """
+    Test the time slicing logic in merge_from_data_files when one date is missing.
+    Ensures the `if startdate is not None and enddate is not None:` branch evaluates to False safely.
+    """
+    var = "tas"
+    time = pd.date_range("2000-01-01", periods=3)
+    ds = xr.Dataset({var: (("time",), np.ones(3))}, coords={"time": time})
+    
+    f1 = tmp_path / "model_a.nc"
+    ds.to_netcdf(f1)
+    
+    # Provide startdate but leave enddate as None
+    merged = merge_from_data_files(
+        variable=var,
+        data_path_list=[str(f1)],
+        startdate="2000-01-01",
+        enddate=None, 
+    )
+    
+    assert "time" in merged.dims
+    assert len(merged.time) == 3  # Slicing should not have occurred
+    
+    merged.close()
