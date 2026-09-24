@@ -134,7 +134,7 @@ class PlotNAO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="NAO",
                     statistic=statistic,
-                    var=var,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     season=getattr(maps, "AQUA_season", None),
@@ -165,7 +165,7 @@ class PlotNAO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="NAO",
                     statistic=statistic,
-                    var=var,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     season=getattr(maps, "AQUA_season", None),
