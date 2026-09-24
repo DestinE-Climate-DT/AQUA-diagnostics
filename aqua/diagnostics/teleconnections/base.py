@@ -85,7 +85,6 @@ class BaseMixin(Diagnostic):
         # Populate the attributes of the regression for backend functionalities
         reg.name = "regression"
         reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} ({units}) with {index.long_name}"
-        self.logger.warning(f"Regression long_name: {reg.attrs['long_name']}")
         reg.attrs["shortName"] = "linear_regression"
 
         return reg
