@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Unified CLI for ensemble timeseries and global biases with `aqua-backend` (#327)
 - Update GSV paths for lumi_install (#433)
 - conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
 - OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
@@ -92,7 +93,6 @@ Complete list:
 - Boxplots: improved descriptions (#193)
 - ECmean: time selection is now allowed (#178)
 - Centralized management of months required thresholds (#162)
-- Unified CLI for ensemble timeseries and global biases with `aqua-backend` (#327)
 
 ## [v0.23.0]
 
