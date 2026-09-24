@@ -145,8 +145,15 @@ def main(argv=None):
                     )
 
                     for var in statistics_var:
+                        # Check in the plot_params if the variable has a specific unit defined, otherwise use None.
+                        var_units = None
+                        if "plot_params" in nao_config and var in nao_config["plot_params"]:
+                            var_units = nao_config["plot_params"][var].get("units", None)
+
                         for season in seasons:
-                            nao_ref_regressions[var][season][i] = nao_ref[i].compute_regression(var=var, season=season)
+                            nao_ref_regressions[var][season][i] = nao_ref[i].compute_regression(
+                                var=var, season=season, units=var_units
+                            )
                             nao_ref_correlations[var][season][i] = nao_ref[i].compute_correlation(var=var, season=season)
 
                             extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
@@ -357,8 +364,15 @@ def main(argv=None):
                     )
 
                     for var in statistics_var:
+                        # Check in the plot_params if the variable has a specific unit defined, otherwise use None.
+                        var_units = None
+                        if "plot_params" in enso_config and var in enso_config["plot_params"]:
+                            var_units = enso_config["plot_params"][var].get("units", None)
+
                         for season in seasons:
-                            enso_ref_regressions[var][season][i] = enso_ref[i].compute_regression(var=var, season=season)
+                            enso_ref_regressions[var][season][i] = enso_ref[i].compute_regression(
+                                var=var, season=season, units=var_units
+                            )
                             enso_ref_correlations[var][season][i] = enso_ref[i].compute_correlation(var=var, season=season)
 
                             extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
