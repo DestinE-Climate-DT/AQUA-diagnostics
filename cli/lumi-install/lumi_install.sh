@@ -9,7 +9,7 @@
 # or
 # bash lumi_install.sh --help
 
-set -ex
+set -e
 
 # Check if AQUA is set and the directory exists
 # We need AQUA for the logger and for editable install of aqua-core
