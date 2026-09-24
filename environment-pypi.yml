@@ -10,7 +10,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - aqua-core>=1.1.0
+  - aqua-core>=1.1.0,<1.2.0
   - pip
   - pip:
     - aqua-diagnostics[core,tests]
