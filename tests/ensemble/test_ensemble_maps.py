@@ -4,6 +4,8 @@ import xarray as xr
 from aqua.diagnostics.ensemble.ensembleMaps import EnsembleMaps
 from aqua.diagnostics.ensemble.plot_ensemble_maps import PlotEnsembleMaps
 
+pytestmark = [pytest.mark.diagnostics, pytest.mark.ensemble]
+
 
 @pytest.fixture(scope="module")
 def ensemble_config():
@@ -31,7 +33,7 @@ def dataset_instance(ifs_tco79_short_data_2t):
 
 
 @pytest.fixture
-def ensemble_maps_instance(ensemble_config, dataset_instance):
+def ensemble_maps_instance(ensemble_config, dataset_instance, tmp_path):
     """Create an EnsembleMaps instance using a real ensemble dimension."""
     return EnsembleMaps(
         var=ensemble_config["var"],
@@ -41,6 +43,7 @@ def ensemble_maps_instance(ensemble_config, dataset_instance):
         exp_list=ensemble_config["exp_list"],
         source_list=ensemble_config["source_list"],
         ensemble_dimension_name="ensemble",
+        outputdir=str(tmp_path),
     )
 
 

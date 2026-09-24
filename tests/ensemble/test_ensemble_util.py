@@ -16,6 +16,8 @@ from aqua.diagnostics.ensemble.util import (
     reader_retrieve_and_merge,
 )
 
+pytestmark = [pytest.mark.diagnostics, pytest.mark.ensemble]
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

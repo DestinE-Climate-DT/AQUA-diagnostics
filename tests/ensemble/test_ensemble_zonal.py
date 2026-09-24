@@ -47,7 +47,7 @@ def zonal_dataset(zonal_config):
 
 
 @pytest.fixture(scope="module")
-def ensemble_zonal_instance(zonal_config, zonal_dataset):
+def ensemble_zonal_instance(zonal_config, zonal_dataset, tmp_path_factory):
     ens = EnsembleZonal(
         var=zonal_config["var"],
         dataset=zonal_dataset,
@@ -56,6 +56,7 @@ def ensemble_zonal_instance(zonal_config, zonal_dataset):
         exp_list=zonal_config["exp_list"],
         source_list=zonal_config["source_list"],
         ensemble_dimension_name="ensemble",
+        outputdir=str(tmp_path_factory.mktemp("ensemble_zonal")),
     )
     ens.run()
     return ens

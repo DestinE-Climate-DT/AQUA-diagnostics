@@ -57,7 +57,7 @@ def ts_dataset(ts_config):
 
 
 @pytest.fixture(scope="module")
-def ensemble_ts_instance(ts_config, ts_dataset):
+def ensemble_ts_instance(ts_config, ts_dataset, tmp_path_factory):
     """Create an EnsembleTimeseries instance."""
     ts = EnsembleTimeseries(
         var=ts_config["var"],
@@ -68,6 +68,7 @@ def ensemble_ts_instance(ts_config, ts_dataset):
         exp_list=ts_config["exp_list"],
         source_list=ts_config["source_list"],
         ensemble_dimension_name="ensemble",
+        outputdir=str(tmp_path_factory.mktemp("ensemble_timeseries")),
     )
     ts.run()
     return ts
