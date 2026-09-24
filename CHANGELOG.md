@@ -11,6 +11,7 @@ Main changes:
 
 Complete list:
 - Unified CLI for ensemble timeseries and global biases with `aqua-backend` (#327)
+- lumi_install.sh does not need a separate copy of the env file (#435)
 - Update GSV paths for lumi_install (#433)
 - conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
 - OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
