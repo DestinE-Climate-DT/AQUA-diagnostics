@@ -84,7 +84,9 @@ class BaseMixin(Diagnostic):
 
         # Populate the attributes of the regression for backend functionalities
         reg.name = "regression"
-        reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} ({units}) with {index.long_name}"
+        if units:
+            reg.attrs["units"] = units
+        reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} with {index.long_name}"
         reg.attrs["shortName"] = "linear_regression"
 
         return reg
@@ -524,5 +526,11 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
         ref_maps = ref_maps[0]
 
     var_label = getattr(maps, "long_name", None) or getattr(maps, "shortName", None)
+
+    # Units are read after the conversion above, so that the label matches the plotted values.
+    # Dimensionless quantities (e.g. correlations) are labelled without units.
+    map_units = getattr(maps, "units", None)
+    if var_label and map_units and map_units != "1":
+        var_label = f"{var_label} ({map_units})"
 
     return maps, ref_maps, var_label
