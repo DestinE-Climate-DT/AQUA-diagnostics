@@ -9,6 +9,7 @@ channels:
   - nodefaults
 # please note that some of these dependencies are made explicit on purpose, but are not directly required by conda/mamba
 dependencies:
+  # this only creates the env, the actual installation fo AQUA core is done afterwards with pip install -e ../AQUA[fdb]
   - aqua-core>=1.1.0,<1.2.0
   # ecmean depends on esmpy binary, so we need to install it first
   - esmpy<=8.9.1
