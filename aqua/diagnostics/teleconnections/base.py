@@ -130,7 +130,7 @@ class BaseMixin(Diagnostic):
             raise ValueError("Index is not set. Please compute the index first.")
         else:
             index = self.index
-        if not var:
+        if not var or var == self.var:
             if isinstance(self.data, xr.Dataset):
                 data = self.data[self.var]
         else:
@@ -500,7 +500,7 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
                              If None, inferred from each DataArray.
 
     Returns:
-        tuple: The homogenized maps, reference maps and cbar_label.
+        tuple: The homogenized maps, reference maps and var name to be used in cbar and title.
     """
     maps = to_list(maps)
     maps = [
@@ -524,6 +524,6 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
     if ref_maps is not None and len(ref_maps) == 1:
         ref_maps = ref_maps[0]
 
-    cbar_label = getattr(maps, "long_name", None) or getattr(maps, "shortName", None)
+    var_label = getattr(maps, "long_name", None) or getattr(maps, "shortName", None)
 
-    return maps, ref_maps, cbar_label
+    return maps, ref_maps, var_label

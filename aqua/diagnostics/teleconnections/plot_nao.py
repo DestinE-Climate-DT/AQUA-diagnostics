@@ -99,6 +99,9 @@ class PlotNAO(PlotBaseMixin):
             fig: Figure object.
         """
         map_to_check = maps if isinstance(maps, xr.DataArray) else maps[0]
+
+        # This var is used by _homogeneize_maps to eventually convert units.
+        # The label for title and colorbar is set by _homogeneize_maps, which returns var_label.
         var = map_to_check.shortName if hasattr(map_to_check, "shortName") else map_to_check.long_name
         self.logger.debug(f"Plotting {var} maps")
 
@@ -107,13 +110,13 @@ class PlotNAO(PlotBaseMixin):
             vmax = 1.0
             vmin_diff = -0.5
             vmax_diff = 0.5
-        elif statistic == "regression" and vmin is None and vmax is None and var == "msl":
+        elif statistic == "regression" and vmin is None and vmax is None:
             vmin = -4.0
             vmax = 4.0
             vmin_diff = -5.0
             vmax_diff = 5.0
 
-        maps, ref_maps, cbar_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, var_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Plot details
         proj = NorthPolarStereo(central_longitude=-20.0)
@@ -144,7 +147,7 @@ class PlotNAO(PlotBaseMixin):
                     vmin=vmin,
                     vmax=vmax,
                     cmap=cmap,
-                    cbar_label=cbar_label,
+                    cbar_label=var_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -181,7 +184,7 @@ class PlotNAO(PlotBaseMixin):
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
                     cmap=cmap,
-                    cbar_label=cbar_label,
+                    cbar_label=var_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
