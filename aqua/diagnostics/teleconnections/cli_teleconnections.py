@@ -211,8 +211,9 @@ def main(argv=None):
                         for season in seasons:
                             for i in range(len(nao)):
                                 nao_regressions[var][season][i].load(keep_attrs=True)
-                                nao_ref_regressions[var][season][i].load(keep_attrs=True)
                                 nao_correlations[var][season][i].load(keep_attrs=True)
+                            for i in range(len(nao_ref)):
+                                nao_ref_regressions[var][season][i].load(keep_attrs=True)
                                 nao_ref_correlations[var][season][i].load(keep_attrs=True)
 
                             fig_reg = plot_nao.plot_maps(
@@ -430,8 +431,9 @@ def main(argv=None):
                         for season in seasons:
                             for i in range(len(enso)):
                                 enso_regressions[var][season][i].load(keep_attrs=True)
-                                enso_ref_regressions[var][season][i].load(keep_attrs=True)
                                 enso_correlations[var][season][i].load(keep_attrs=True)
+                            for i in range(len(enso_ref)):
+                                enso_ref_regressions[var][season][i].load(keep_attrs=True)
                                 enso_ref_correlations[var][season][i].load(keep_attrs=True)
 
                             fig_reg = plot_enso.plot_maps(
