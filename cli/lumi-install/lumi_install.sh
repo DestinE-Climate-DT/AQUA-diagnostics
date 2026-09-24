@@ -9,7 +9,7 @@
 # or
 # bash lumi_install.sh --help
 
-set -e
+set -ex
 
 # Check if AQUA is set and the directory exists
 # We need AQUA for the logger and for editable install of aqua-core
@@ -106,7 +106,8 @@ install_aqua_diagnostics() {
 
   SCRIPTDIR="${AQUA_DIAGNOSTICS}/cli/lumi-install"
   cp ../../environment-dev.yml $SCRIPTDIR/environment_lumi.yml
-  sed -i.bak "s;- -e .;- -e $AQUA_DIAGNOSTICS;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with $AQUA_DIAGNOSTICS
+  sed -i.bak "s;- -e ../AQUA\[;- -e ${AQUA}\[;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with ${AQUA_DIAGNOSTICS}/../AQUA
+  sed -i.bak "s;- -e .\[;- -e ${AQUA_DIAGNOSTICS}\[;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with $AQUA_DIAGNOSTICS
 
   # install AQUA-diagnostics framework
   conda-containerize new --prefix "${INSTALLATION_PATH}" "${SCRIPTDIR}/environment_lumi.yml"
