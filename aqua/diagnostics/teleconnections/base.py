@@ -414,7 +414,7 @@ class PlotBaseMixin:
             str: The map title.
         """
         return TitleBuilder(
-            diagnostic=f"{telecname} {statistic} map for {var}" if var else f"{telecname} {statistic} map",
+            diagnostic=f"{var}" if var else f"{telecname} {statistic} map",
             model=model,
             exp=exp,
             comparison="compared to" if ref_model else None,
