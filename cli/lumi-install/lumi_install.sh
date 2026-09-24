@@ -105,7 +105,7 @@ install_aqua_diagnostics() {
   log_message INFO "Modules have been loaded."
 
   SCRIPTDIR="${AQUA_DIAGNOSTICS}/cli/lumi-install"
-  cp ../../environment.yml $SCRIPTDIR/environment_lumi.yml
+  cp ../../environment-dev.yml $SCRIPTDIR/environment_lumi.yml
   sed -i.bak "s;- -e .;- -e $AQUA_DIAGNOSTICS;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with $AQUA_DIAGNOSTICS
 
   # install AQUA-diagnostics framework
