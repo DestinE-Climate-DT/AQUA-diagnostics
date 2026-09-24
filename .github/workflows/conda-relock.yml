@@ -27,8 +27,8 @@ jobs:
       - name: Relock
         shell: bash -l {0}
         run: |
-          conda-lock lock --file environment.yml --file pyproject.toml -p linux-64 -k explicit -e tests -e "core-fdb" 
-    
+          conda-lock lock --file environment.yml --file pyproject.toml -p linux-64 -k explicit -e tests -e "core-fdb"
+
       - name: Open PR
         uses: peter-evans/create-pull-request@v8
         with:

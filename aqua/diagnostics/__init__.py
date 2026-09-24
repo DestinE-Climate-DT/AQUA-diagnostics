@@ -8,8 +8,8 @@ from .lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from .histogram import Histogram, PlotHistogram
 from .biases import Climatology, PlotClimatology, PlotBias, StatBias
 from .boxplots import Boxplots, PlotBoxplots
-from .ensemble import EnsembleTimeseries, EnsembleLatLon, EnsembleZonal
-from .ensemble import PlotEnsembleTimeseries, PlotEnsembleLatLon, PlotEnsembleZonal
+from .ensemble import EnsembleTimeseries, EnsembleMaps, EnsembleZonal
+from .ensemble import PlotEnsembleTimeseries, PlotEnsembleMaps, PlotEnsembleZonal
 from .ensemble import reader_retrieve_and_merge, merge_from_data_files, extract_realizations
 from .ecmean import PerformanceIndices, GlobalMean
 from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
@@ -30,8 +30,8 @@ __all__ = ["__version__", "NAO", "ENSO", "MJO",
            "Histogram", "PlotHistogram",
            "Climatology", "PlotClimatology", "PlotBias", "StatBias",
            "reader_retrieve_and_merge", "merge_from_data_files",
-           "EnsembleTimeseries", "EnsembleLatLon", "EnsembleZonal",
-           "PlotEnsembleTimeseries", "PlotEnsembleLatLon", "PlotEnsembleZonal",
+           "EnsembleTimeseries", "EnsembleMaps", "EnsembleZonal",
+           "PlotEnsembleTimeseries", "PlotEnsembleMaps", "PlotEnsembleZonal",
            "PerformanceIndices", "GlobalMean",
            "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
            "SshVariabilityCompute", "SshVariabilityPlot",

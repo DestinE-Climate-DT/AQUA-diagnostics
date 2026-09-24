@@ -18,7 +18,7 @@ setup:
   loglevel: 'WARNING'
 
 output:
-  outputdir: "./"
+  outputdir: "/work/ab0995/a270260/pre_computed_aqua_analysis/"
   #rebuild: true
   save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
