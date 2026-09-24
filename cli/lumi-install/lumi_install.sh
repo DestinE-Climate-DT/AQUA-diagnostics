@@ -104,9 +104,13 @@ install_aqua_diagnostics() {
   module load lumi-container-wrapper
   log_message INFO "Modules have been loaded."
 
+  cp ../../environment.yml $SCRIPTDIR/environment_lumi.yml
+  sed -i.bak "s;- -e .;- -e $AQUA_DIAGNOSTICS;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with $AQUA_DIAGNOSTICS
+
   # install AQUA-diagnostics framework
-  conda-containerize new --mamba --prefix "${INSTALLATION_PATH}" "${AQUA_DIAGNOSTICS}/cli/lumi-install/environment_lumi.yml"
-  conda-containerize update "${INSTALLATION_PATH}" --post-install "${AQUA_DIAGNOSTICS}/cli/lumi-install/pip_lumi.txt"
+  #conda-containerize new --mamba --prefix "${INSTALLATION_PATH}" "${SCRIPT_DIR}/environment_lumi.yml"
+  conda-containerize new --prefix "${INSTALLATION_PATH}" "$SCRIPT_DIR/environment_lumi.yml"
+  # conda-containerize update "${INSTALLATION_PATH}" --post-install "$SCRIPT_DIR/pip_lumi.txt"
   log_message INFO "AQUA-diagnostics framework has been installed."
 
 }
