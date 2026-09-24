@@ -95,8 +95,13 @@ from matplotlib.colors import Normalize, LinearSegmentedColormap, ListedColormap
 from scipy.stats import gaussian_kde
 from datetime import datetime
 import xarray as xr
- 
- 
+from scipy.spatial import cKDTree
+from matplotlib.colors import (
+    LinearSegmentedColormap,
+    ListedColormap,
+    BoundaryNorm
+)
+
 # ===============================================================================
 # CATEGORY HELPERS
 # ===============================================================================
@@ -726,7 +731,7 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=1,
     lat_bins = np.arange(-50,   50 + grid_size, grid_size)
     counts, lon_edges, lat_edges = np.histogram2d(lon_all, lat_all,
                                                    bins=[lon_bins, lat_bins])
-    tpm = counts / n_months   # transits per month
+    tpm = counts / n_months   # track-point occurrences per month per grid cell
  
     vmax_d = tpm.max()
     vmin_d = tpm[tpm > 0].min() if np.any(tpm > 0) else 0.01
@@ -766,7 +771,7 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=1,
  
     cbar = plt.colorbar(mesh, ax=ax, orientation='horizontal',
                         shrink=0.6, aspect=30, pad=0.08, extend='max')
-    cbar.set_label('TC track density (transits per month)', fontsize=11, fontweight='bold')
+    cbar.set_label('TC frequency (track-point occurrences per month per grid cell)', fontsize=11, fontweight='bold')
     tick_pos = np.arange(n_levels) + 0.5
     cbar.set_ticks(tick_pos)
     tick_labels = []
@@ -786,7 +791,7 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=1,
     method_label  = 'wind-based (IBTrACS)' if cat_method == 'sshs' else 'SLP-based'
     category_str  = f' – {names[category]}{"-" if cat_direction == "minus" else "+"}  [{method_label}]' if category is not None else ''
     m = tdict['dataset']['model']; ex = tdict['dataset']['exp']
-    plt.title(f'TC Track Density (transits/month){category_str}\n'
+    plt.title(f'TC frequency (track-point occurrences per month per grid cell){category_str}\n'
               f'{startdate}–{enddate} | {m} {ex} | Grid: {grid_size}°',
               fontsize=13, fontweight='bold', pad=15)
  
@@ -795,7 +800,7 @@ def plot_track_density_grid(data_or_file, tdict, grid_size=1,
     sd_c = startdate.replace('-', ''); ed_c = enddate.replace('-', '')
     m_c  = m.replace(' ', '_');        ex_c = ex.replace(' ', '_')
     cat_sfx = f'_cat{category}{"minus" if cat_direction == "minus" else "plus"}' if category is not None else ''    
-    base = f'track_density_grid{suffix}{cat_sfx}_{m_c}_{ex_c}_{sd_c}_{ed_c}'
+    base = f'track_frequency_grid{suffix}{cat_sfx}_{m_c}_{ex_c}_{sd_c}_{ed_c}'
  
     pdf_path = os.path.join(tdict['paths']['plotdir'], f'{base}.pdf')
     plt.savefig(pdf_path, dpi=300, bbox_inches='tight')
@@ -1341,26 +1346,6 @@ def plot_track_density_4deg_cap(
         Dataset containing the track-density field.
     """
 
-    # =====================================================================
-    # IMPORTS
-    # =====================================================================
-
-    import os
-    import numpy as np
-    import xarray as xr
-    import matplotlib.pyplot as plt
-
-    from datetime import datetime
-    from scipy.spatial import cKDTree
-
-    import cartopy.crs as ccrs
-    import cartopy.feature as cfeature
-
-    from matplotlib.colors import (
-        LinearSegmentedColormap,
-        ListedColormap,
-        BoundaryNorm
-    )
 
     # =====================================================================
     # VALIDATION
@@ -2503,3 +2488,523 @@ def plot_track_density_4deg_cap(
         )
 
     return ds
+
+
+
+def plot_genesis_density_4deg_cap(
+    data_or_file,
+    tdict,
+    grid_size=1,
+    cap_radius=4.0,
+    category=None,
+    cat_method='slp',
+    season='all',
+    reference_data_or_file=None,
+    reference_tdict=None,
+    difference=False,
+    fixed_boundaries=None,
+):
+    """
+    Tropical cyclone GENESIS density as storm geneses per month per
+    spherical cap.
+
+    Same definition and layout as plot_track_density_4deg_cap, but each
+    storm contributes only its FIRST recorded track point (its genesis
+    position), instead of every point along its trajectory. This mirrors
+    the genesis-density maps in Roberts et al. (2020) and is meant to be
+    directly comparable to the corresponding track-density plot: same
+    grid, same cap radius, same colour palette/boundary mechanism.
+
+    Parameters
+    ----------
+    data_or_file : str or data
+        Main TC track dataset.
+
+    tdict : dict
+        Configuration dictionary containing:
+            tdict['time']['startdate']
+            tdict['time']['enddate']
+            tdict['dataset']['model']
+            tdict['dataset']['exp']
+            tdict['paths']['plotdir']
+
+    grid_size : float, default=1
+        Spacing of the grid points where the spherical caps are centered.
+
+    cap_radius : float, default=4
+        Radius of the spherical cap in degrees (Roberts et al. 2020 use 4°).
+
+    category : int, str or None
+        Peak-category filter (based on the storm's peak intensity over its
+        whole life, same convention as plot_track_density_4deg_cap):
+            category=3   -> Cat 3+
+            category='3+' -> Cat 3+
+            category='2-' -> Cat 2 and below
+            category=None -> all categories
+
+    cat_method : {'slp', 'sshs'}
+        Method used for TC category.
+
+    season : {'all', 'roberts'}
+        'all':     use all geneses in the requested period.
+        'roberts': keep a genesis only if its month falls in the
+                   Roberts et al. (2020) seasonal window for the
+                   hemisphere of the genesis latitude
+                   (NH: May-Nov, SH: Nov-May).
+
+    reference_data_or_file, reference_tdict, difference :
+        Same semantics as in plot_track_density_4deg_cap: if difference=True,
+        computes (main genesis density) - (reference genesis density).
+
+    fixed_boundaries : array-like or None
+        Same semantics as in plot_track_density_4deg_cap: pass the
+        boundaries array from a previous call (e.g. from the matching
+        track-density plot, or from another dataset) to force an
+        identical discrete colour scale across plots.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset containing the genesis-density field.
+    """
+
+ 
+
+    # =====================================================================
+    # VALIDATION
+    # =====================================================================
+
+    if cat_method not in ['slp', 'sshs']:
+        raise ValueError("cat_method must be 'slp' or 'sshs'")
+
+    if season not in ['all', 'roberts']:
+        raise ValueError("season must be 'all' or 'roberts'")
+
+    if difference and reference_data_or_file is None:
+        raise ValueError("difference=True requires reference_data_or_file")
+
+    # =====================================================================
+    # CATEGORY PARSING
+    # =====================================================================
+
+    names = _cat_names(cat_method)
+    suffix = _method_suffix(cat_method)
+
+    cat_direction = 'plus'
+
+    if isinstance(category, str):
+        cat_str = category.strip()
+        if cat_str.endswith('-'):
+            cat_direction = 'minus'
+            category = int(cat_str[:-1])
+        elif cat_str.endswith('+'):
+            cat_direction = 'plus'
+            category = int(cat_str[:-1])
+        else:
+            category = int(cat_str)
+
+    # =====================================================================
+    # HELPER: FILTER TRAJECTORIES BY PEAK CATEGORY
+    # =====================================================================
+
+    def _prepare_trajectories(data):
+
+        trajectories, _ = _get_data_from_input(data)
+
+        if category is not None:
+            if cat_direction == 'minus':
+                trajectories = [
+                    s for s in trajectories
+                    if _peak_category(s, cat_method) <= category
+                ]
+            else:
+                trajectories = [
+                    s for s in trajectories
+                    if _peak_category(s, cat_method) >= category
+                ]
+
+        return trajectories
+
+    # =====================================================================
+    # PREPARE MAIN DATASET
+    # =====================================================================
+
+    trajectories = _prepare_trajectories(data_or_file)
+
+    if len(trajectories) == 0:
+        raise ValueError("No storms remain after category filtering.")
+
+    print(f"✓ Main dataset: {len(trajectories):,} storms")
+
+    if category is not None:
+        label = f"{category}-" if cat_direction == 'minus' else f"{category}+"
+        print(f"✓ Category filter: {label} ({cat_method})")
+    else:
+        print("✓ Category filter: all")
+
+    # =====================================================================
+    # TIME PERIOD
+    # =====================================================================
+
+    startdate = tdict['time']['startdate']
+    enddate = tdict['time']['enddate']
+
+    fmt = '%Y-%m-%d' if '-' in startdate else '%Y%m%d'
+    start = datetime.strptime(startdate, fmt)
+    end = datetime.strptime(enddate, fmt)
+
+    n_months_all = (
+        (end.year - start.year) * 12
+        + (end.month - start.month)
+        + 1
+    )
+
+    if season == 'all':
+        denominator_months = n_months_all
+    else:
+        years = end.year - start.year + 1
+        denominator_months = years * 7  # Roberts seasonal windows: 7 months/hemisphere
+
+    # =====================================================================
+    # GRID
+    # =====================================================================
+
+    lon_centers = np.arange(-180, 180 + grid_size, grid_size)
+    lat_centers = np.arange(-50, 50 + grid_size, grid_size)
+    lon_centers = lon_centers[lon_centers < 180]
+
+    lon2d, lat2d = np.meshgrid(lon_centers, lat_centers)
+    grid_lon = lon2d.ravel()
+    grid_lat = lat2d.ravel()
+    n_grid = len(grid_lon)
+
+    def _lonlat_to_xyz(lon, lat):
+        lon_rad = np.deg2rad(lon)
+        lat_rad = np.deg2rad(lat)
+        x = np.cos(lat_rad) * np.cos(lon_rad)
+        y = np.cos(lat_rad) * np.sin(lon_rad)
+        z = np.sin(lat_rad)
+        return np.column_stack([x, y, z])
+
+    grid_xyz = _lonlat_to_xyz(grid_lon, grid_lat)
+    grid_tree = cKDTree(grid_xyz)
+
+    radius_rad = np.deg2rad(cap_radius)
+    chord_radius = 2.0 * np.sin(radius_rad / 2.0)
+
+    # =====================================================================
+    # SEASONAL FILTER (applied to the GENESIS point only)
+    # =====================================================================
+
+    nh_months = {5, 6, 7, 8, 9, 10, 11}
+    sh_months = {11, 12, 1, 2, 3, 4, 5}
+
+    def _genesis_point(sd):
+        """
+        Return (lon, lat) of the storm's genesis (first recorded point),
+        or None if the point is invalid or filtered out by season.
+        """
+        lon = float(sd['lon'][0])
+        lat = float(sd['lat'][0])
+        lon = lon - 360 if lon > 180 else lon
+
+        if not (np.isfinite(lon) and np.isfinite(lat)):
+            return None
+        if not (-50 <= lat <= 50):
+            return None
+
+        if season == 'roberts':
+            month = int(sd['month'][0])
+            allowed = nh_months if lat >= 0 else sh_months
+            if month not in allowed:
+                return None
+
+        return lon, lat
+
+    # =====================================================================
+    # CALCULATE GENESIS DENSITY
+    # =====================================================================
+
+    def _calculate_genesis_density(trajectory_list):
+
+        counts = np.zeros(n_grid, dtype=float)
+        total_geneses = 0
+
+        genesis_lons = []
+        genesis_lats = []
+
+        for sd in trajectory_list:
+            pt = _genesis_point(sd)
+            if pt is None:
+                continue
+            genesis_lons.append(pt[0])
+            genesis_lats.append(pt[1])
+
+        if len(genesis_lons) == 0:
+            return counts, 0
+
+        genesis_xyz = _lonlat_to_xyz(
+            np.array(genesis_lons), np.array(genesis_lats)
+        )
+
+        # Each genesis point falls inside every grid cap within cap_radius
+        neighbours = grid_tree.query_ball_point(genesis_xyz, r=chord_radius)
+
+        for idx_list in neighbours:
+            for idx in idx_list:
+                counts[idx] += 1
+            total_geneses += 1  # one storm = one genesis point, always counted once
+
+        density = counts / denominator_months
+
+        print(f"✓ Geneses contributing: {total_geneses:,}")
+        print(f"✓ Density denominator: {denominator_months} months")
+
+        return density, total_geneses
+
+    # =====================================================================
+    # MAIN DENSITY
+    # =====================================================================
+
+    density_main, n_main = _calculate_genesis_density(trajectories)
+
+    # =====================================================================
+    # REFERENCE / DIFFERENCE
+    # =====================================================================
+
+    density_reference = None
+
+    if reference_data_or_file is not None:
+
+        reference_trajectories = _prepare_trajectories(reference_data_or_file)
+
+        if len(reference_trajectories) == 0:
+            raise ValueError(
+                "No storms remain in the reference dataset after category filtering."
+            )
+
+        print(f"✓ Reference dataset: {len(reference_trajectories):,} storms")
+
+        density_reference, n_ref = _calculate_genesis_density(reference_trajectories)
+
+    if difference:
+        density = density_main - density_reference
+        density_label = 'Genesis density difference (geneses month$^{-1}$ per 4° cap)'
+        density_title = 'TC Genesis Density Difference'
+    else:
+        density = density_main
+        density_label = 'Storm geneses per month per 4° cap'
+        density_title = 'TC Genesis Density'
+
+    # =====================================================================
+    # RESHAPE TO LAT/LON
+    # =====================================================================
+
+    density_2d = density.reshape(len(lat_centers), len(lon_centers))
+
+    # =====================================================================
+    # COLOUR LIMITS (identical mechanism to plot_track_density_4deg_cap)
+    # =====================================================================
+
+    finite = density_2d[np.isfinite(density_2d)]
+
+    if len(finite) == 0:
+        raise ValueError("No finite density values.")
+
+    if difference:
+
+        if fixed_boundaries is not None:
+            boundaries = np.asarray(fixed_boundaries, dtype=float)
+        else:
+            vmax = np.nanmax(np.abs(finite))
+            if vmax == 0:
+                vmax = 1.0
+            n_diff_levels = 10
+            boundaries = np.linspace(-vmax, vmax, n_diff_levels + 1)
+
+        n_levels = len(boundaries) - 1
+
+        cmap = plt.get_cmap('RdBu_r', n_levels)
+        norm = BoundaryNorm(boundaries, cmap.N)
+
+    else:
+
+        positive = finite[finite > 0]
+
+        if len(positive) == 0:
+            raise ValueError("No positive density values.")
+
+        vmin = positive.min()
+        vmax = positive.max()
+
+        if fixed_boundaries is not None:
+            boundaries = np.asarray(fixed_boundaries, dtype=float)
+            n_levels = len(boundaries) - 1
+        else:
+            if vmax < 0.5:
+                vmax_plot = np.ceil(vmax * 20) / 20
+            elif vmax < 1.0:
+                vmax_plot = np.ceil(vmax * 10) / 10
+            elif vmax < 3.0:
+                vmax_plot = np.ceil(vmax * 2) / 2
+            else:
+                vmax_plot = np.ceil(vmax)
+
+            vmin_plot = max(0.01, vmin)
+            if vmax_plot <= vmin_plot:
+                vmax_plot = vmin_plot * 2
+
+            n_levels = 12
+            boundaries = np.logspace(np.log10(vmin_plot), np.log10(vmax_plot), n_levels + 1)
+            boundaries[0] = 0.0
+
+        base_colors = [
+            '#FFFFFF', '#F5DEB3', '#8B4513', '#D2691E', '#FFD700',
+            '#ADFF2F', '#00FF00', '#00CED1', '#0000FF'
+        ]
+        cmap_continuous = LinearSegmentedColormap.from_list('roberts_density', base_colors, N=256)
+        cmap = ListedColormap([cmap_continuous(i / n_levels) for i in range(n_levels)])
+        norm = BoundaryNorm(boundaries, cmap.N)
+
+    # =====================================================================
+    # FIGURE
+    # =====================================================================
+
+    fig = plt.figure(figsize=(14, 8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([-180, 180, -50, 50], crs=ccrs.PlateCarree())
+
+    mesh = ax.pcolormesh(
+        lon_centers, lat_centers, density_2d,
+        cmap=cmap, norm=norm,
+        transform=ccrs.PlateCarree(), shading='auto'
+    )
+
+    ax.add_feature(cfeature.LAND, color='lightgray', zorder=2, alpha=0.3)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.5, zorder=3)
+    gl = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray',
+                       alpha=0.5, linestyle='--', zorder=4)
+    gl.top_labels = False
+    gl.right_labels = False
+
+    cbar = plt.colorbar(
+        mesh, ax=ax, orientation='horizontal', shrink=0.6, aspect=30, pad=0.08,
+        extend='both' if difference else 'max'
+    )
+    cbar.set_label(density_label, fontsize=11, fontweight='bold')
+
+    # =====================================================================
+    # LABELS / TITLE
+    # =====================================================================
+
+    method_label = 'wind-based (SSHS)' if cat_method == 'sshs' else 'SLP-based'
+
+    if category is None:
+        category_label = 'All categories'
+    elif cat_direction == 'minus':
+        category_label = f'{names[category]}-'
+    else:
+        category_label = f'{names[category]}+'
+
+    model_main = tdict['dataset']['model']
+    exp_main = tdict['dataset']['exp']
+
+    if difference:
+        if reference_tdict is None:
+            reference_tdict = tdict
+        model_ref = reference_tdict['dataset']['model']
+        comparison_label = f'{model_main} − {model_ref}'
+    else:
+        comparison_label = f'{model_main} {exp_main}'
+
+    season_label = 'All months' if season == 'all' else 'Roberts seasonal definition'
+
+    plt.title(
+        f'{density_title}: {comparison_label}\n'
+        f'{category_label} | {method_label} | {startdate}–{enddate}\n'
+        f'{season_label} | {cap_radius}° cap | grid spacing: {grid_size}°',
+        fontsize=13, fontweight='bold', pad=15
+    )
+
+    # =====================================================================
+    # FILE NAMES
+    # =====================================================================
+
+    os.makedirs(tdict['paths']['plotdir'], exist_ok=True)
+
+    sd_c = startdate.replace('-', '')
+    ed_c = enddate.replace('-', '')
+    m_c = model_main.replace(' ', '_')
+    ex_c = exp_main.replace(' ', '_')
+
+    if category is None:
+        cat_sfx = '_catAll'
+    elif cat_direction == 'minus':
+        cat_sfx = f'_cat{category}minus'
+    else:
+        cat_sfx = f'_cat{category}plus'
+
+    season_sfx = '_allmonths' if season == 'all' else '_robertsseason'
+
+    if difference:
+        ref_m = reference_tdict['dataset']['model'].replace(' ', '_')
+        base = (
+            f'genesis_density_{cap_radius:g}degcap{suffix}{cat_sfx}'
+            f'_{m_c}_minus_{ref_m}_{sd_c}_{ed_c}{season_sfx}'
+        )
+    else:
+        base = (
+            f'genesis_density_{cap_radius:g}degcap{suffix}{cat_sfx}'
+            f'_{m_c}_{ex_c}_{sd_c}_{ed_c}{season_sfx}'
+        )
+
+    pdf_path = os.path.join(tdict['paths']['plotdir'], f'{base}.pdf')
+    plt.savefig(pdf_path, dpi=300, bbox_inches='tight')
+    print(f'✓ PDF  → {pdf_path}')
+    plt.show()
+    plt.close()
+
+    # =====================================================================
+    # SAVE NETCDF
+    # =====================================================================
+
+    try:
+        ds = xr.Dataset(
+            {'genesis_density_per_month_4deg_cap': (['latitude', 'longitude'], density_2d)},
+            coords={'longitude': lon_centers, 'latitude': lat_centers},
+            attrs={
+                'model': model_main,
+                'experiment': exp_main,
+                'cat_method': cat_method,
+                'category_filter': 'all' if category is None else names[category],
+                'category_direction': 'none' if category is None else cat_direction,
+                'density_definition': 'storm geneses per month per spherical cap (first track point only)',
+                'cap_radius_degrees': cap_radius,
+                'grid_spacing_degrees': grid_size,
+                'season': season,
+                'startdate': startdate,
+                'enddate': enddate,
+                'n_months': n_months_all if season == 'all' else denominator_months,
+                'difference': str(difference),
+                'colour_boundaries': boundaries.tolist(),
+                'reference_model': (
+                    reference_tdict['dataset']['model']
+                    if (difference and reference_tdict is not None) else ''
+                ),
+                'creation_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        )
+
+        ds['genesis_count'] = (
+            ['latitude', 'longitude'],
+            density_2d * (n_months_all if season == 'all' else denominator_months)
+        )
+
+        nc_path = os.path.join(tdict['paths']['plotdir'], f'{base}.nc')
+        ds.to_netcdf(nc_path)
+        print(f'✓ NetCDF → {nc_path}')
+
+    except Exception as e:
+        print(f'⚠ NetCDF save failed: {e}')
+
+    return ds    
