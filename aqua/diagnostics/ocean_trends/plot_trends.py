@@ -6,7 +6,7 @@ import cartopy.crs as ccrs
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, unit_to_latex, time_to_string
+from aqua.core.util import get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
