@@ -1,5 +1,6 @@
 """Tests for the AQUA diagnostics setup checker CLI."""
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -41,6 +42,54 @@ def test_parse_arguments_uses_common_and_checker_options():
     assert args.regrid == "r200"
     assert args.yaml == "/tmp/output"
     assert args.rebuild is False
+    assert args.reader_kwargs is None
+
+
+@pytest.mark.parametrize(
+    "value", ["engine=polytope", "{'engine': 'polytope'}", '{"engine":}', "[]", "null", "false", '"polytope"', "12"]
+)
+def test_parse_arguments_rejects_invalid_reader_kwargs(value, capsys):
+    """Invalid JSON and non-object values fail before configuration or retrieval."""
+    with pytest.raises(SystemExit) as error:
+        parse_arguments(["--reader-kwargs", value])
+
+    assert error.value.code == 2
+    message = capsys.readouterr().err
+    assert "--reader-kwargs" in message
+    assert "JSON object" in message
+
+
+@pytest.mark.parametrize(
+    ("key", "option"),
+    [
+        ("catalog", "--catalog"),
+        ("model", "--model"),
+        ("exp", "--exp"),
+        ("source", "--source"),
+        ("regrid", "--regrid"),
+        ("startdate", "--startdate"),
+        ("enddate", "--enddate"),
+        ("loglevel", "--loglevel"),
+        ("realization", "--realization"),
+        ("rebuild", "--no-rebuild"),
+    ],
+)
+def test_parse_arguments_rejects_checker_options_in_reader_kwargs(key, option, capsys):
+    """Reserved keys point users to the flag that controls the checker setting."""
+    with pytest.raises(SystemExit) as error:
+        parse_arguments(["--reader-kwargs", json.dumps({key: None})])
+
+    assert error.value.code == 2
+    assert f"'{key}': use {option}" in capsys.readouterr().err
+
+
+def test_parse_arguments_rejects_unknown_flags(capsys):
+    """Misspelled checker flags must not become Reader kwargs."""
+    with pytest.raises(SystemExit) as error:
+        parse_arguments(["--soruce", "short", "--reader-kwargs", '{"engine": "polytope"}'])
+
+    assert error.value.code == 2
+    assert "unrecognized arguments: --soruce short" in capsys.readouterr().err
 
 
 def test_checker_config_uses_effective_operational_arguments():
@@ -82,6 +131,54 @@ def test_checker_config_uses_effective_operational_arguments():
         }
     ]
     assert config["output"] == {"outputdir": "/tmp/output", "rebuild": False}
+
+
+@pytest.mark.parametrize("reader_kwargs", [{}, {"engine": "polytope", "chunks": {"time": 12}, "zoom": 0}])
+def test_checker_config_merges_reader_kwargs_with_realization(reader_kwargs):
+    """Additional kwargs and the dedicated realization flag share the config field."""
+    args = parse_arguments(["--reader-kwargs", json.dumps(reader_kwargs), "--realization", "r2"])
+
+    config = _checker_build_config(args)
+
+    assert config["datasets"][0]["reader_kwargs"] == {**reader_kwargs, "realization": "r2"}
+    assert args.reader_kwargs == reader_kwargs
+
+
+@pytest.mark.parametrize("rebuild_flags, rebuild", [([], True), (["--no-rebuild"], False)])
+def test_main_forwards_typed_reader_kwargs(rebuild_flags, rebuild):
+    """JSON types survive config preparation and reach diagnostic retrieval."""
+    reader_kwargs = {
+        "engine": "polytope",
+        "chunks": {"time": 12},
+        "zoom": 0,
+        "fix": False,
+        "preproc": None,
+        "custom_parameter": [1, "r2", True, 1.5],
+    }
+    diagnostic = MagicMock()
+    with patch("aqua.diagnostics.dummy.cli_checker.Diagnostic", return_value=diagnostic):
+        main(
+            [
+                "--model",
+                "IFS",
+                "--exp",
+                "test-tco79",
+                "--source",
+                "short",
+                "--realization",
+                "r1",
+                "--reader-kwargs",
+                json.dumps(reader_kwargs),
+                *rebuild_flags,
+            ]
+        )
+
+    diagnostic.retrieve.assert_called_once_with(reader_kwargs={**reader_kwargs, "realization": "r1", "rebuild": rebuild})
+    forwarded = diagnostic.retrieve.call_args.kwargs["reader_kwargs"]
+    assert forwarded["fix"] is False
+    assert forwarded["preproc"] is None
+    assert isinstance(forwarded["zoom"], int) and not isinstance(forwarded["zoom"], bool)
+    assert forwarded["custom_parameter"][2] is True
 
 
 def test_main_removes_temporary_config():
