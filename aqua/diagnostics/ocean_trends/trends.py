@@ -85,12 +85,9 @@ class Trends(Diagnostic):
         # self.data = self.data.chunk(chunks={"time": 12, "level": 1})  # this is needed to avoid a too large graph
 
         self.data, self.region = self.select_region(data=self.data, region=region, dim_mean=dim_mean)
-
         self.logger.info("Computing trend coefficients")
         self.trend_coef = self.compute_trend(data=self.data)
-        self.logger.info("Saving results to NetCDF")
         self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
-        self.logger.info("Trend analysis workflow completed")
 
     def select_region(self, data, region=None, drop=True, dim_mean=None):
         """Select a region and optionally compute mean over specified dimensions.
@@ -107,7 +104,6 @@ class Trends(Diagnostic):
         """
         # If a region is specified, apply area selection to self.data
         if region:
-            self.logger.info(f"Selecting region: {region}.")
             res_dict = super().select_region(data=data, region=region, drop=True)
             lat_limits = res_dict["lat_limits"]
             lon_limits = res_dict["lon_limits"]
@@ -180,11 +176,9 @@ class Trends(Diagnostic):
             xr.DataArray or xr.Dataset: Trend coefficients adjusted for time frequency.
 
         """
-        self.logger.info("Calculating linear trend")
         trend_init = Trender()
         trend_data = trend_init.coeffs(data, dim="time", skipna=True, normalize=True)
         trend_data = trend_data.sel(degree=1)
-        trend_data.attrs = data.attrs
         trend_dict = {}
         for var in data.data_vars:
             self.logger.debug("Adjusting trend for variable: %s", var)
@@ -192,11 +186,11 @@ class Trends(Diagnostic):
             trend_dict[var] = self.adjust_trend_for_time_frequency(trend_data[var], data)
         trend_data = xr.Dataset(trend_dict)
         trend_data.attrs["AQUA_region"] = self.region
-        self.logger.info("Trend value calculated")
+        trend_data.attrs = data.attrs
+        trend_data.attrs["product"] = "Calculated trend coefficients"
 
         self.logger.debug("Loading trend data in memory")
         trend_data.load()
-        self.logger.debug("Loaded trend data in memory")
         return trend_data
 
     def save_netcdf(
@@ -224,4 +218,3 @@ class Trends(Diagnostic):
             data=self.trend_coef,
             extra_keys={"region": self.region},
         )
-        self.logger.info("Trend coefficients saved to NetCDF file")

@@ -219,7 +219,7 @@ class Diagnostic:
 
         outputsaver = self._outputsaver(diagnostic=diagnostic, outputdir=outputdir)
 
-        outputsaver.save_netcdf(
+        return outputsaver.save_netcdf(
             dataset=data,
             diagnostic_product=diagnostic_product,
             rebuild=rebuild,
