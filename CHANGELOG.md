@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
 - lumi_install.sh does not need a separate copy of the env file (#435)
 - Update GSV paths for lumi_install (#433)
 - conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)

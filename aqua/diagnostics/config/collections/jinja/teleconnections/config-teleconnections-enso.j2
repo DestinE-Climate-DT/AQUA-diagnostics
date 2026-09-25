@@ -36,4 +36,18 @@ diagnostics:
       diagnostic_name: 'enso'
       months_window: 3
       seasons: ['annual']
-      cbar_range: [-2, 2]
+      statistics_var: ['tos', 'tprate']
+      plot_params:
+        default:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1
+          vmax_diff: 1
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2.5
+          vmax: 2.5
+          vmin_diff: -4
+          vmax_diff: 4
+          cmap: 'BrBG'
+          units: 'mm/day'
