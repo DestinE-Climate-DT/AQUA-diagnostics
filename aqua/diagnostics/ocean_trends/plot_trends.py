@@ -274,6 +274,7 @@ class PlotTrends:
             self.description += (
                 f" ({time_to_string(model_startdate, format='%Y-%m')} to {time_to_string(model_enddate, format='%Y-%m')})"
             )
+
     def save_plot(
         self,
         fig,
