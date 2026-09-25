@@ -187,7 +187,7 @@ class Trends(Diagnostic):
         trend_data = xr.Dataset(trend_dict)
         trend_data.attrs["AQUA_region"] = self.region
         trend_data.attrs = data.attrs
-        trend_data.attrs["product"] = f"Calculated trend coefficients"
+        trend_data.attrs["product"] = "Calculated trend coefficients"
 
         self.logger.debug("Loading trend data in memory")
         trend_data.load()
