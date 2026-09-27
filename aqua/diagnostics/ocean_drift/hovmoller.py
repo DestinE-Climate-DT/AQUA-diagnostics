@@ -3,7 +3,7 @@
 from itertools import product
 
 import xarray as xr
-
+import dask
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
@@ -84,9 +84,9 @@ class Hovmoller(Diagnostic):
     ):
         """Run the Hovmoller diagram generation workflow.
 
-        Retrieves data once. With a spatial mean, each year is loaded once and every
-        region is averaged on that year. Hovmoller products are built from the
-        concatenated time series.
+        Retrieves data once. With a spatial mean, each year is reduced once and every
+        region is averaged on that year in a single scheduler pass. Hovmoller products
+        are built from the concatenated time series.
 
         Args:
             outputdir (str, optional): Directory to save the output files. Defaults to ".".
@@ -158,16 +158,18 @@ class Hovmoller(Diagnostic):
         return info
 
     def _fldmean_regions_by_year(self, data: xr.Dataset, regions_list: list, region_info: dict, dim_mean: list) -> dict:
-        """Regrid one year at a time, then average every region on that year.
+        """Average every region over one year at a time, in a single scheduler pass.
 
-        The spatial mean does not mix timesteps, so concatenating the yearly
-        means rebuilds the full time series without holding every year in memory.
+        The year slice stays lazy. All region means share one ``xr.compute`` so
+        each chunk is read once and discarded after the reductions. Concatenating
+        the yearly means rebuilds the full time series without holding a year.
         """
         means = {reg: [] for reg in regions_list}
         years = sorted({int(year) for year in data.time.dt.year.values})
         for year in years:
-            self.logger.info("Loading year %s", year)
-            chunk = data.isel(time=(data.time.dt.year == year).values).load()
+            self.logger.info("Computing year %s", year)
+            block = data.isel(time=(data.time.dt.year == year).values)
+            lazy_means = []
             for reg in regions_list:
                 info = region_info[reg]
                 self.logger.debug(
@@ -176,14 +178,17 @@ class Hovmoller(Diagnostic):
                     info["region_name"],
                     year,
                 )
-                means[reg].append(
+                lazy_means.append(
                     self.reader.fldmean(
-                        data=chunk,
+                        data=block,
                         dims=dim_mean,
                         lat_limits=info["lat_limits"],
                         lon_limits=info["lon_limits"],
                     )
                 )
+            computed = dask.compute(*lazy_means)
+            for reg, result in zip(regions_list, computed):
+                means[reg].append(result)
         return {reg: xr.concat(parts, dim="time") for reg, parts in means.items()}
 
     def get_anomaly(self, data: xr.DataArray, anomaly_ref: str = None, dim: str = "time") -> xr.DataArray:
