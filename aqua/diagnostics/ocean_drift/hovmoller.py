@@ -2,8 +2,9 @@
 
 from itertools import product
 
-import xarray as xr
 import dask
+import xarray as xr
+
 from aqua.core.logger import log_configure
 from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
