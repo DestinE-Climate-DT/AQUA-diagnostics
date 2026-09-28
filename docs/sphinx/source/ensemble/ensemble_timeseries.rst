@@ -103,7 +103,7 @@ The basic structure is the following:
 
     ts_plot = PlotEnsembleTimeseries(
         model_list=['IFS-FESOM', 'IFS-NEMO'],
-        ref_model='ERA5',
+        ref_model='ECMWF',
         loglevel='WARNING',
     )
 
