@@ -37,4 +37,11 @@ diagnostics:
       diagnostic_name: 'nao'
       months_window: 3
       seasons: ['DJF']
-      cbar_range: [-5, 5]
+      statistics_var: ['msl']
+      plot_params:
+        default:
+          vmin: -5
+          vmax: 5
+          vmin_diff: -2
+          vmax_diff: 2
+          cmap: 'RdBu_r'
