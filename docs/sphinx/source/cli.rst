@@ -11,7 +11,7 @@ The setup checker verifies that a dataset can be retrieved through AQUA's
 
 .. code-block:: bash
 
-   python -m aqua.diagnostics.dummy.cli_checker \
+   python -m aqua.diagnostics.checker.cli_checker \
      --catalog CATALOG --model MODEL --exp EXP --source SOURCE \
      --realization r1
 
@@ -30,7 +30,7 @@ a JSON object. For example, to select the Polytope engine and set time chunks:
 
 .. code-block:: bash
 
-   python -m aqua.diagnostics.dummy.cli_checker \
+   python -m aqua.diagnostics.checker.cli_checker \
      --catalog CATALOG --model MODEL --exp EXP --source SOURCE \
      --realization r1 \
      --reader-kwargs '{"engine": "polytope", "chunks": {"time": 12}}'
