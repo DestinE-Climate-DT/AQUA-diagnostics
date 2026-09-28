@@ -24,7 +24,7 @@ datasets:
 # Reference
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
     regrid:
@@ -34,7 +34,7 @@ setup:
   loglevel: 'WARNING'
 
 output:
-  outputdir: "/work/ab0995/a270260/pre_computed_aqua_analysis/"
+  outputdir: "./"
   rebuild: true
   save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
