@@ -23,8 +23,16 @@ def _parse_reader_kwargs(value):
         raise argparse.ArgumentTypeError("expected a JSON object")
 
     checker_options = {
-        "catalog", "model", "exp", "source", "regrid",
-        "startdate", "enddate", "loglevel", "realization", "rebuild",
+        "catalog",
+        "model",
+        "exp",
+        "source",
+        "regrid",
+        "startdate",
+        "enddate",
+        "loglevel",
+        "realization",
+        "rebuild",
     }
     conflicts = checker_options.intersection(reader_kwargs)
     if conflicts:

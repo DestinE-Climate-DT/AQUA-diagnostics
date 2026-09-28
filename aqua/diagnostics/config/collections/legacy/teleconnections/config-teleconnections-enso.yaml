@@ -51,4 +51,3 @@ diagnostics:
           vmax_diff: 4
           cmap: 'BrBG'
           units: 'mm/day'
-
