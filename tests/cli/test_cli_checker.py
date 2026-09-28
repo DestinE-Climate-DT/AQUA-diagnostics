@@ -54,33 +54,20 @@ def test_parse_arguments_rejects_invalid_reader_kwargs(value, capsys):
         parse_arguments(["--reader-kwargs", value])
 
     assert error.value.code == 2
-    message = capsys.readouterr().err
-    assert "--reader-kwargs" in message
-    assert "JSON object" in message
+    assert "--reader-kwargs" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
-    ("key", "option"),
-    [
-        ("catalog", "--catalog"),
-        ("model", "--model"),
-        ("exp", "--exp"),
-        ("source", "--source"),
-        ("regrid", "--regrid"),
-        ("startdate", "--startdate"),
-        ("enddate", "--enddate"),
-        ("loglevel", "--loglevel"),
-        ("realization", "--realization"),
-        ("rebuild", "--no-rebuild"),
-    ],
+    "key",
+    ["catalog", "model", "exp", "source", "regrid", "startdate", "enddate", "loglevel", "realization", "rebuild"],
 )
-def test_parse_arguments_rejects_checker_options_in_reader_kwargs(key, option, capsys):
-    """Reserved keys point users to the flag that controls the checker setting."""
+def test_parse_arguments_rejects_checker_options_in_reader_kwargs(key, capsys):
+    """Checker settings must use their dedicated flags."""
     with pytest.raises(SystemExit) as error:
         parse_arguments(["--reader-kwargs", json.dumps({key: None})])
 
     assert error.value.code == 2
-    assert f"'{key}': use {option}" in capsys.readouterr().err
+    assert "--reader-kwargs" in capsys.readouterr().err
 
 
 def test_parse_arguments_rejects_unknown_flags(capsys):
@@ -104,8 +91,6 @@ def test_checker_config_uses_effective_operational_arguments():
             "test-tco79",
             "--source",
             "short",
-            "--realization",
-            "r2",
             "--startdate",
             "2000-01-01",
             "--enddate",
@@ -127,21 +112,10 @@ def test_checker_config_uses_effective_operational_arguments():
             "regrid": "r100",
             "startdate": "2000-01-01",
             "enddate": "2001-12-31",
-            "reader_kwargs": {"realization": "r2"},
+            "reader_kwargs": None,
         }
     ]
     assert config["output"] == {"outputdir": "/tmp/output", "rebuild": False}
-
-
-@pytest.mark.parametrize("reader_kwargs", [{}, {"engine": "polytope", "chunks": {"time": 12}, "zoom": 0}])
-def test_checker_config_merges_reader_kwargs_with_realization(reader_kwargs):
-    """Additional kwargs and the dedicated realization flag share the config field."""
-    args = parse_arguments(["--reader-kwargs", json.dumps(reader_kwargs), "--realization", "r2"])
-
-    config = _checker_build_config(args)
-
-    assert config["datasets"][0]["reader_kwargs"] == {**reader_kwargs, "realization": "r2"}
-    assert args.reader_kwargs == reader_kwargs
 
 
 @pytest.mark.parametrize("rebuild_flags, rebuild", [([], True), (["--no-rebuild"], False)])

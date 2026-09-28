@@ -8,7 +8,6 @@ optionally write its catalog metadata to ``experiment.yaml``.
 import argparse
 import json
 import os
-import sys
 from tempfile import TemporaryDirectory
 
 from aqua.core.exceptions import NoDataError
@@ -21,23 +20,15 @@ def _parse_reader_kwargs(value):
     reader_kwargs = json.loads(value)
 
     if not isinstance(reader_kwargs, dict):
-        raise argparse.ArgumentTypeError('expected a JSON object, for example \'{"engine": "polytope"}\'')
+        raise argparse.ArgumentTypeError("expected a JSON object")
 
     checker_options = {
-        "catalog": "--catalog",
-        "model": "--model",
-        "exp": "--exp",
-        "source": "--source",
-        "regrid": "--regrid",
-        "startdate": "--startdate",
-        "enddate": "--enddate",
-        "loglevel": "--loglevel",
-        "realization": "--realization",
-        "rebuild": "--no-rebuild (rebuild is enabled by default)",
+        "catalog", "model", "exp", "source", "regrid",
+        "startdate", "enddate", "loglevel", "realization", "rebuild",
     }
-    conflicts = [f"{key!r}: use {option}" for key, option in checker_options.items() if key in reader_kwargs]
+    conflicts = checker_options.intersection(reader_kwargs)
     if conflicts:
-        raise argparse.ArgumentTypeError("these parameters have dedicated checker options: " + "; ".join(conflicts))
+        raise argparse.ArgumentTypeError("use dedicated checker flags for: " + ", ".join(sorted(conflicts)))
 
     return reader_kwargs
 
@@ -46,7 +37,7 @@ def parse_arguments(arguments):
     """Parse command-line arguments for the setup checker.
 
     Args:
-        arguments (list): Command-line arguments to parse.
+        arguments (list | None): Arguments to parse, or None to use sys.argv[1:].
 
     Returns:
         argparse.Namespace: Parsed command-line arguments.
@@ -65,7 +56,6 @@ def parse_arguments(arguments):
         "--no-rebuild",
         action="store_false",
         dest="rebuild",
-        default=None,
         help="reuse existing areas and regridding weights",
     )
     return parser.parse_args(arguments)
@@ -87,9 +77,6 @@ def _write_experiment_yaml(diagnostic, outputdir):
 
 def _checker_build_config(args):
     """Build a diagnostic configuration from the effective CLI arguments."""
-    reader_kwargs = dict(args.reader_kwargs or {})
-    if args.realization:
-        reader_kwargs["realization"] = args.realization
     return {
         "setup": {"loglevel": args.loglevel or "WARNING"},
         "datasets": [
@@ -101,12 +88,12 @@ def _checker_build_config(args):
                 "regrid": args.regrid or "r100",
                 "startdate": args.startdate,
                 "enddate": args.enddate,
-                "reader_kwargs": reader_kwargs or None,
+                "reader_kwargs": args.reader_kwargs,
             }
         ],
         "output": {
             "outputdir": args.outputdir or "./",
-            "rebuild": True if args.rebuild is None else args.rebuild,
+            "rebuild": args.rebuild,
         },
     }
 
@@ -121,7 +108,7 @@ def main(argv=None):
         ValueError: If model, experiment, or source is not configured.
         NoDataError: If the configured dataset cannot be retrieved.
     """
-    args = parse_arguments(argv if argv is not None else sys.argv[1:])
+    args = parse_arguments(argv)
     with TemporaryDirectory(prefix="aqua-checker-") as config_dir:
         args.config = os.path.join(config_dir, "config-checker.yaml")
         dump_yaml(outfile=args.config, cfg=_checker_build_config(args))
