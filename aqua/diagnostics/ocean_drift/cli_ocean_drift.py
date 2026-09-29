@@ -72,26 +72,27 @@ def main(argv=None):
                 )
             except Exception as e:
                 logger.error("Error processing regions %s: %s", regions, e)
-            for region in regions:
-                try:
-                    hov_plot = PlotHovmoller(
-                        diagnostic_name=diagnostic_name,
-                        data=data_hovmoller.processed_data[region],
-                        vert_coord=vert_coord,
-                        outputdir=cli.outputdir,
-                        loglevel=cli.loglevel,
-                    )
+            else:
+                for region, processed in data_hovmoller.processed_data.items():
+                    try:
+                        hov_plot = PlotHovmoller(
+                            diagnostic_name=diagnostic_name,
+                            data=processed,
+                            vert_coord=vert_coord,
+                            outputdir=cli.outputdir,
+                            loglevel=cli.loglevel,
+                        )
 
-                    save_format = getattr(cli, "save_format", None)
-                    if not save_format:
-                        logger.debug("No plot output requested, skipping plot generation for region %s", region)
-                        continue
-                    logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
+                        save_format = getattr(cli, "save_format", None)
+                        if not save_format:
+                            logger.debug("No plot output requested, skipping plot generation for region %s", region)
+                            continue
+                        logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
 
-                    hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
-                    hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
-                except Exception as e:
-                    logger.error("Error plotting region %s: %s", region, e)
+                        hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                        hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                    except Exception as e:
+                        logger.error("Error plotting region %s: %s", region, e)
 
     cli.close_dask_cluster()
 
