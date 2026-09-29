@@ -112,6 +112,10 @@ class Hovmoller(Diagnostic):
         self.processed_data = {}
         self.logger.debug("Variables retrieved: %s, regions: %s, dim_mean: %s", var, regions_list, dim_mean)
         region_info = self._region_limits(regions_list)
+        # Invalid regions are dropped by _region_limits, so they do not stop the valid ones
+        regions_list = list(region_info)
+        if not regions_list:
+            raise ValueError(f"None of the requested regions {to_list(regions)} is defined in the regions file")
 
         if dim_mean is not None:
             region_means = self._fldmean_regions_by_year(
