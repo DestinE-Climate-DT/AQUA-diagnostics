@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Move and update the cli_checker using diagnosticCLI (#401)
 - Unified CLI for ensemble timeseries and global biases (#327)
 - Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
 - lumi_install.sh does not need a separate copy of the env file (#435)
