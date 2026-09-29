@@ -21,6 +21,7 @@ Complete list:
 - Simplify enforcement of minim number of months for diagnostics (#406)
 - Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
 - Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
+- Ocean3D: ocean drift refractored. Now it handle handle multiple region list in the netcdf class. And, yearly chunking is implemented to laod fldmean data into memory (#413)
 
 ## [v0.25.1]
 
