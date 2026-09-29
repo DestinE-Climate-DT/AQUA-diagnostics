@@ -50,7 +50,7 @@ def template_parse_arguments(
     # to _parse_reader_kwargs and allow the parser to call it with a single argument
     # while still having access to extra_parser_options for conflict checking.
     parser.add_argument(
-        "--reader-kwargs",
+        "--reader_kwargs",
         type=partial(_parse_reader_kwargs, extra_parser_options=extra_parser_options),
         metavar="JSON",
         help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
