@@ -3,7 +3,9 @@ Utility functions for the CLI
 """
 
 import argparse
+import json
 import os
+from functools import partial
 
 import xarray as xr
 from dask.distributed import Client, LocalCluster
@@ -14,12 +16,17 @@ from aqua.core.logger import log_configure
 from aqua.core.util import get_arg, load_yaml
 
 
-def template_parse_arguments(parser: argparse.ArgumentParser):
+def template_parse_arguments(
+    parser: argparse.ArgumentParser,
+    extra_parser_options: set | None = None,
+) -> argparse.ArgumentParser:
     """
     Add the default arguments to the parser.
 
     Args:
         parser: argparse.ArgumentParser
+        extra_parser_options: Additional parser options to check for conflicts in reader_kwargs.
+                             Defaults to None.
 
     Returns:
         argparse.ArgumentParser
@@ -37,6 +44,18 @@ def template_parse_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("--outputdir", type=str, required=False, help="output directory")
     parser.add_argument("--startdate", type=str, required=False, help="start date (YYYY-MM-DD)")
     parser.add_argument("--enddate", type=str, required=False, help="end date (YYYY-MM-DD)")
+
+    # New type can be defined only by function taking a single argument and returning the parsed value,
+    # or raising argparse.ArgumentTypeError. For this reason, we use partial to pass extra_parser_options
+    # to _parse_reader_kwargs and allow the parser to call it with a single argument
+    # while still having access to extra_parser_options for conflict checking.
+    parser.add_argument(
+        "--reader-kwargs",
+        type=partial(_parse_reader_kwargs, extra_parser_options=extra_parser_options),
+        metavar="JSON",
+        help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
+        "use dedicated flags for dataset selection, regrid, dates, loglevel, realization and rebuild",
+    )
 
     return parser
 
@@ -262,3 +281,42 @@ def find_vert_coord(ds: xr.Dataset | xr.DataArray) -> list[str]:
     coords = CoordIdentifier(ds.coords).identify_coords()
     full_vert_coord = [y["name"] for x, y in coords.items() if y is not None and x in ["isobaric", "depth", "height"]]
     return full_vert_coord
+
+
+def _parse_reader_kwargs(value, extra_parser_options=None):
+    """
+    Parse a JSON object of Reader kwargs without overriding default parser options.
+
+    Args:
+        value (str): JSON string representing Reader kwargs.
+        extra_parser_options (set, optional): Additional parser options to check for conflicts. Defaults to None.
+
+    Returns:
+        dict: Parsed Reader kwargs.
+    """
+    reader_kwargs = json.loads(value)
+
+    if not isinstance(reader_kwargs, dict):
+        raise argparse.ArgumentTypeError("expected a JSON object")
+
+    # Some tool like the checker may have additional parser options that
+    # should not be overridden by reader_kwargs.
+    parser_options = {
+        "catalog",
+        "model",
+        "exp",
+        "source",
+        "regrid",
+        "startdate",
+        "enddate",
+        "loglevel",
+        "realization",
+    }
+    if extra_parser_options:
+        parser_options.update(extra_parser_options)
+
+    conflicts = parser_options.intersection(reader_kwargs)
+    if conflicts:
+        raise argparse.ArgumentTypeError("use dedicated checker flags for: " + ", ".join(sorted(conflicts)))
+
+    return reader_kwargs
