@@ -5,7 +5,7 @@ Utility functions for the CLI
 import argparse
 import json
 import os
-from functools import partial
+from functools import partial, wraps
 
 import xarray as xr
 from dask.distributed import Client, LocalCluster
@@ -45,13 +45,12 @@ def template_parse_arguments(
     parser.add_argument("--startdate", type=str, required=False, help="start date (YYYY-MM-DD)")
     parser.add_argument("--enddate", type=str, required=False, help="end date (YYYY-MM-DD)")
 
-    # New type can be defined only by function taking a single argument and returning the parsed value,
-    # or raising argparse.ArgumentTypeError. For this reason, we use partial to pass extra_parser_options
-    # to _parse_reader_kwargs and allow the parser to call it with a single argument
-    # while still having access to extra_parser_options for conflict checking.
+    # argparse's `type` callable only ever receives the raw string value, so we bind
+    # extra_parser_options via partial; `wraps` keeps a readable __name__ for error messages.
+    reader_kwargs_type = wraps(_parse_reader_kwargs)(partial(_parse_reader_kwargs, extra_parser_options=extra_parser_options))
     parser.add_argument(
         "--reader_kwargs",
-        type=partial(_parse_reader_kwargs, extra_parser_options=extra_parser_options),
+        type=reader_kwargs_type,
         metavar="JSON",
         help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
         "use dedicated flags for dataset selection, regrid, dates, loglevel, realization and rebuild",
@@ -252,11 +251,16 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     datasets[0]["exp"] = get_arg(args, "exp", datasets[0]["exp"])
     datasets[0]["source"] = get_arg(args, "source", datasets[0]["source"])
     # CLI dataset overrides apply only to the first configured dataset.
+    reader_kwargs_arg = get_arg(args, "reader_kwargs", None)
     realization = get_arg(args, "realization", None)
-    if realization:
-        logger.info("Realization option is set to: %s", realization)
+    if reader_kwargs_arg or realization:
         reader_kwargs = dict(datasets[0].get("reader_kwargs") or {})
-        reader_kwargs["realization"] = realization
+        if reader_kwargs_arg:
+            logger.info("Merging --reader-kwargs into dataset reader_kwargs: %s", reader_kwargs_arg)
+            reader_kwargs.update(reader_kwargs_arg)
+        if realization:
+            logger.info("Realization option is set to: %s", realization)
+            reader_kwargs["realization"] = realization
         datasets[0]["reader_kwargs"] = reader_kwargs
 
     config["output"]["outputdir"] = get_arg(args, "outputdir", config["output"]["outputdir"])
