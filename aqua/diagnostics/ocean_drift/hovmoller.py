@@ -148,8 +148,12 @@ class Hovmoller(Diagnostic):
 
     def _region_limits(self, regions_list: list) -> dict:
         """Look up each region's name and latitude/longitude box once."""
+        known_regions = self._load_regions_from_file()
         info = {}
         for reg in regions_list:
+            if reg is not None and reg not in known_regions:
+                self.logger.error("Skipping region %s: not found in the regions file", reg)
+                continue
             long_name, lon_limits, lat_limits = self._set_region(region=reg)
             info[reg] = {
                 "region_name": long_name if long_name is not None else "global",
