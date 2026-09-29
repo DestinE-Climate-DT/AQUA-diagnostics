@@ -86,7 +86,7 @@ def test_multiple_regions_in_one_run(hovmoller_result):
     for region in ("sss", "ao"):
         types = [ds.attrs["AQUA_ocean_drift_type"] for ds in hov.processed_data[region]]
         assert types == EXPECTED_DRIFT_TYPES
-        
+
 @pytest.mark.parametrize("var, expected", sorted(EXPECTED_FULL.items()))
 def test_full_values(hovmoller_result, var, expected):
     """Anchor the untransformed field, the one value the derived checks build on."""
