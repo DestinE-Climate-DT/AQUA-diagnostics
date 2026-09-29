@@ -104,9 +104,13 @@ install_aqua_diagnostics() {
   module load lumi-container-wrapper
   log_message INFO "Modules have been loaded."
 
+  SCRIPTDIR="${AQUA_DIAGNOSTICS}/cli/lumi-install"
+  cp ../../environment-dev.yml $SCRIPTDIR/environment_lumi.yml
+  sed -i.bak "s;- -e ../AQUA\[;- -e ${AQUA}\[;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with ${AQUA_DIAGNOSTICS}/../AQUA
+  sed -i.bak "s;- -e .\[;- -e ${AQUA_DIAGNOSTICS}\[;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with $AQUA_DIAGNOSTICS
+
   # install AQUA-diagnostics framework
-  conda-containerize new --mamba --prefix "${INSTALLATION_PATH}" "${AQUA_DIAGNOSTICS}/cli/lumi-install/environment_lumi.yml"
-  conda-containerize update "${INSTALLATION_PATH}" --post-install "${AQUA_DIAGNOSTICS}/cli/lumi-install/pip_lumi.txt"
+  conda-containerize new --prefix "${INSTALLATION_PATH}" "${SCRIPTDIR}/environment_lumi.yml"
   log_message INFO "AQUA-diagnostics framework has been installed."
 
 }
@@ -173,9 +177,9 @@ create_aqua_diagnostics_file() {
   log_message INFO "exports for FDB5 added to load_aqua_diagnostics.sh."
 
   # Config GSV: check load_modules_lumi.sh on GSV repo https://earth.bsc.es/gitlab/digital-twins/de_340/gsv_interface/-/blob/main/load_modules_lumi.sh
-  echo 'export GSV_WEIGHTS_PATH=/scratch/project_465000454/igonzalez/gsv_weights' >>  $load_aqua_diagnostics_file
-  echo 'export GSV_TEST_FILES=/scratch/project_465000454/igonzalez/gsv_test_files' >> $load_aqua_diagnostics_file
-  echo 'export GRID_DEFINITION_PATH=/scratch/project_465000454/igonzalez/grid_definitions' >>  $load_aqua_diagnostics_file
+  echo 'export GSV_WEIGHTS_PATH=/scratch/project_465002727/gsv_files/gsv_weights' >>  $load_aqua_diagnostics_file
+  echo 'export GSV_TEST_FILES=/scratch/project_465002727/gsv_files/gsv_test_files' >> $load_aqua_diagnostics_file
+  echo 'export GRID_DEFINITION_PATH=/scratch/project_465002727/gsv_files/grid_definitions' >>  $load_aqua_diagnostics_file
 
   # Currently (Feb 2025) this is the recommended setup overcoming lumi modules
   # This points to a stack with fdb 5.14.0 and the required associated modules
