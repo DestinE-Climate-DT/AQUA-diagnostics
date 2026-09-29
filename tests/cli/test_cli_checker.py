@@ -234,7 +234,7 @@ def test_main_uses_default_regrid_and_wraps_retrieval_errors():
     diagnostic.retrieve.side_effect = RuntimeError("catalog unavailable")
 
     with (
-        patch("aqua.diagnostics.dummy.cli_checker.Diagnostic", return_value=diagnostic) as diagnostic_class,
+        patch("aqua.diagnostics.checker.cli_checker.Diagnostic", return_value=diagnostic) as diagnostic_class,
         pytest.raises(NoDataError, match="catalog unavailable"),
     ):
         main(
