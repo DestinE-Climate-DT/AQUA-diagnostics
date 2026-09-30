@@ -9,7 +9,7 @@ on:
         type: string
         default: '["3.14"]'
       pytest-markers:
-        description: 'Pytest markers to run (e.g., "aqua or slow")'
+        description: 'Pytest markers to run (e.g., "diagnostics")'
         required: true
         type: string
         default: 'aqua or diagnostics or ensemble'
@@ -33,6 +33,11 @@ on:
         required: false
         type: string
         default: 'local'
+      container-image:
+        description: 'Container image to use (empty string = ubuntu-latest, default = FDB container)'
+        required: false
+        type: string
+        default: 'ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container'
       pr-number:
         description: 'Pull Request number (empty for non-PR runs)'
         required: false
@@ -48,6 +53,11 @@ on:
         required: false
         type: string
         default: 'auto'
+      is-dependabot:
+        description: 'Is this a Dependabot PR? Automatically sets use-environment-file and disables coverage'
+        required: false
+        type: boolean
+        default: false
     secrets:
       AQUA_GITHUB_PAT:
         required: true
@@ -70,16 +80,6 @@ permissions:
 
 defaults:
   run:
-    # NOTE: We must take care with the shell value here. We have steps
-    #       with multiline YAML strings.
-    #       These get converted into shell scripts.
-    #       If execute as ``bash -l fail_first_command.sh``
-    #       then it would fail the first command but run the second
-    #       command. The default value in GitHub is ``--noprofile --norc -eo pipefail``.
-    #       https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell
-    #       We removed the noprofile and norc so we have pytest set by Conda in our PATH.
-    # NOTE2: login should be kept because the action micromamba/setup-micromamba
-    #        writes the environment activation script in the .bashrc file.
     shell: bash -l -eo pipefail {0}
 
 jobs:
@@ -93,7 +93,7 @@ jobs:
 
     container:
       # To run FDB tests we need to use a Docker image with FDB installed.
-      image: ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container
+      image: ${{ inputs.container-image }}
       options: --user root
 
     permissions:
@@ -160,7 +160,7 @@ jobs:
       # 3. SETUP PYTHON ENVIRONMENT
       # ========================================
       - name: Set up Micromamba (local mode)
-        if: ${{ inputs.install-mode == 'local' }}
+        if: ${{ inputs.install-mode == 'local' && !inputs.is-dependabot }} 
         uses: mamba-org/setup-micromamba@v3
         env:
           GITHUB_TOKEN: ''
@@ -182,6 +182,20 @@ jobs:
           micromamba-version: 'latest'
           environment-file: AQUA-diagnostics/environment-dev.yml
           environment-name: aqua-cross-check
+          cache-downloads: true
+          cache-environment: false
+          create-args: >-
+            python=${{ matrix.python-version }}
+
+      - name: Set up Micromamba (local mode with dependabot using environment.yml)
+        if: ${{ inputs.install-mode == 'local' && inputs.is-dependabot }}
+        uses: mamba-org/setup-micromamba@v3
+        env:
+          GITHUB_TOKEN: ''
+        with:
+          micromamba-version: 'latest'
+          environment-file: AQUA/environment.yml
+          environment-name: aqua
           cache-downloads: true
           cache-environment: false
           create-args: >-
