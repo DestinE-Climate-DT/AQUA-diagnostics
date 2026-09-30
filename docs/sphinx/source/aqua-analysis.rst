@@ -81,6 +81,12 @@ so that the script can be used in a batch job or in a workflow. These override c
     If not specified, all available data until the end will be used.
     Can be specified in the format YYYY-MM-DD.
 
+.. option:: --no-reference
+
+    Run every diagnostic without any reference/observational dataset, even if one is configured.
+    Useful on machines without observations available, or when the comparison has no scientific meaning.
+    Default is ``false``.
+
 .. option:: -d <dir>, --outputdir <dir>
 
     The output directory to use.
@@ -137,6 +143,9 @@ The job section contains the following keys:
 - ``max_threads``: the maximum number of diagnostics running in parallel. Leave it to 0 for no limit.
 - ``loglevel``: the log level to use for the cli and the diagnostics. Default is ``WARNING``.
 - ``run_checker``: a boolean flag to activate the checker diagnostic. Default is ``true``.
+- ``no_reference``: a boolean flag that, if ``true``, runs every diagnostic without any reference/observational
+  dataset. Default is ``false``. Equivalent to the ``--no-reference`` command line argument, which takes
+  precedence. Can also be overridden diagnostic-by-diagnostic with ``extra: "--no-reference"``.
 - ``outputdir``: the output directory to use. Default is ``$AQUA/cli/aqua-analysis/output``.
 - ``catalog``: the catalog to use. Default is ``null``.
 - ``model``: the model to use. Default is ``IFS-NEMO``.

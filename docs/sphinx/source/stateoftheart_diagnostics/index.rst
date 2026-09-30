@@ -68,6 +68,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
 
 * ``references``: a list of reference datasets to use for the analysis.
   Some diagnostics may not work with multiple references, it is better to specify it in the documentation and in the configuration file.
+  It can be left empty, or ignored altogether with ``setup.no_reference``, to run without any reference dataset.
 
 .. code-block:: yaml
 
@@ -78,6 +79,20 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
         source: monthly
         regrid: null
         reader_kwargs: null # it can be a dictionary with reader kwargs
+
+* ``setup``: a block for general settings. It contains:
+
+    * ``loglevel``: the logging level, overridden by ``--loglevel``.
+    * ``no_reference``: a boolean that, if ``true``, makes the diagnostic ignore any configured reference
+      dataset, as if ``references`` were empty. Default is ``false``. Useful when no observational data is
+      available, or when comparing against it has no scientific meaning. Can also be set with the shared
+      ``--no-reference`` CLI argument, which takes precedence. See :ref:`diagnostics-cli-arguments`.
+
+.. code-block:: yaml
+
+    setup:
+      loglevel: WARNING
+      no_reference: false
 
 * ``output``: a block describing the details of the output. It contains:
 
@@ -121,6 +136,8 @@ The following command line arguments are available for all the diagnostics:
 - ``--exp``: Experiment to analyse. It can be defined in the config file.
 - ``--source``: Source to analyse. It can be defined in the config file.
 - ``--outputdir``: Output directory for the plots.
+- ``--no-reference``: Ignore any reference/observational dataset, even if configured. Default is ``false``.
+  Equivalent to setting ``setup.no_reference: true`` in the config file.
 
 If a diagnostic has extra arguments, these will be described in the individual diagnostic documentation.
 
