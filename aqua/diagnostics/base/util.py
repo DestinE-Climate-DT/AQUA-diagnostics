@@ -256,7 +256,7 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     if reader_kwargs_arg or realization:
         reader_kwargs = dict(datasets[0].get("reader_kwargs") or {})
         if reader_kwargs_arg:
-            logger.info("Merging --reader-kwargs into dataset reader_kwargs: %s", reader_kwargs_arg)
+            logger.info("Merging --reader_kwargs into dataset reader_kwargs: %s", reader_kwargs_arg)
             reader_kwargs.update(reader_kwargs_arg)
         if realization:
             logger.info("Realization option is set to: %s", realization)
