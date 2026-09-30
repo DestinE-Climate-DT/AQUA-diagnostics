@@ -1,0 +1,62 @@
+# Configuration file for the "aqua analysis ensemble" entry point.
+#
+# This reuses the exact same aqua.core.analysis.Analysis engine as
+# config.aqua-analysis.yaml (no code duplication): only the list of
+# available CLI tools and the diagnostics/run blocks differ, since the
+# ensemble CLIs share the same argument interface (template_parse_arguments)
+# as every other AQUA diagnostic CLI.
+#
+# Variables $AQUA_CORE, $AQUA_DIAGNOSTICS, $AQUA_CONFIG and $OUTPUT can be used to refer to
+# the directory of the AQUA-core module, the directory of the AQUA-diagnostics module,
+# the config directory (i.e. .aqua) and the output directory respectively.
+
+job:
+    max_threads: 0  # Set to the desired maximum number of threads, or leave it as 0 for no limit
+    loglevel: "WARNING" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+    run_checker: false  # ensemble runs post-process existing diagnostic output, no data-availability check needed
+
+    outputdir: "./output"
+
+    # Default values, overridden from command line arguments
+    catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    startdate: null
+    enddate: null
+
+    script_path_base: "${AQUA_DIAGNOSTICS}"  # Base directory for the diagnostic scripts
+
+cluster:  # options for dask cluster (this works well on lumi)
+    workers: 8
+    threads: 1  # per worker
+    memory_limit: 7GiB  # per worker
+    connect_timeout: 120  # seconds to wait for client to connect to the cluster
+
+# List of available CLI tools (ensemble diagnostics)
+cli:
+  ensemble: "ensemble/cli_ensemble.py"
+  ensemble_maps: "ensemble/cli_multi_model_maps_ensemble.py"
+  ensemble_timeseries: "ensemble/cli_multi_model_timeseries_ensemble.py"
+  ensemble_zonal: "ensemble/cli_zonal_ensemble.py"
+
+run:
+    - ["ensemble"]
+
+# Each diagnostic can have the following options (all optional):
+#    config: the configuration file(s) for the diagnostic.
+#    extra: extra command line arguments to pass to the diagnostic script.
+#    outname: the name of the output directory for the diagnostic. Default is the diagnostic name itself.
+#    nocluster: boolean, if true the diagnostic will not use the global dask cluster.
+diagnostics:
+  ensemble:
+    ensemble:
+      config: "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley-ensemble.yaml"
+    ensemble_maps:
+      config: "${AQUA_CONFIG}/collections/legacy/ensemble/config_multi_model_maps_ensemble.yaml"
+    ensemble_timeseries:
+      config: "${AQUA_CONFIG}/collections/legacy/ensemble/config_multi_model_timeseries_ensemble.yaml"
+    ensemble_zonal:
+      config: "${AQUA_CONFIG}/collections/legacy/ensemble/config_single_zonalmean_ensemble.yaml"
