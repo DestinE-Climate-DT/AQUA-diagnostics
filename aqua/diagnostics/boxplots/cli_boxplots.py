@@ -53,7 +53,7 @@ def main(argv=None):
 
         diagnostic_name = tool_dict.get("diagnostic_name", TOOLNAME_KEY)
         datasets = cli.config_dict["datasets"]
-        references = cli.config_dict["references"]
+        references = cli.config_dict.get("references", [])
         variable_groups = tool_dict.get("variables", [])
 
         for group in variable_groups:

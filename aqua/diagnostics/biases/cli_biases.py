@@ -41,8 +41,10 @@ def main(argv=None):
 
     # Retrieve tool-specific configuration
     tool_dict = cli.config_dict["diagnostics"].get(TOOLNAME_KEY, {})
-    # Biases diagnostic
-    if tool_dict and tool_dict.get("run", False):
+    # Biases diagnostic. A reference dataset is mandatory since biases are computed against it.
+    if tool_dict and tool_dict.get("run", False) and not cli.config_dict.get("references"):
+        cli.logger.warning(f"No reference dataset available: skipping {TOOLNAME} diagnostic.")
+    elif tool_dict and tool_dict.get("run", False):
         cli.logger.info(f"{TOOLNAME} diagnostic is enabled.")
 
         if len(cli.config_dict["datasets"]) > 1:

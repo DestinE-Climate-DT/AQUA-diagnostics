@@ -107,7 +107,7 @@ def main(argv=None):
                 plot_ts_seaice["monthly_models"] = monthly_mod
 
             # Initialize a list of len from the number of references
-            if "references" in conf_dict_ts:
+            if conf_dict_ts.get("references"):
                 references = conf_dict_ts["references"]
 
                 # Initialise monthly_refs with the number of refs (also for std)
@@ -243,7 +243,7 @@ def main(argv=None):
             plot_ts_seaice["monthly_models"] = monthly_mod
 
             # Initialize a list of len from the number of references
-            if "references" in conf_dict_ts:
+            if conf_dict_ts.get("references"):
                 references = conf_dict_ts["references"]
 
                 # Initialise monthly_refs with the number of refs (also for std)
@@ -384,7 +384,7 @@ def main(argv=None):
             plot_bias_seaice["models"] = clims_mod
 
             # Initialize a list of len from the number of references
-            if "references" in conf_dict_2d:
+            if conf_dict_2d.get("references"):
                 references = conf_dict_2d["references"]
 
                 clims_ref = [None] * len(references)
