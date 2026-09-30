@@ -47,7 +47,7 @@ def main(argv=None):
     dataset_args = cli.dataset_args(dataset)
     cli.logger.debug(f"Dataset args: {dataset_args}")
 
-    if "references" in config_dict:
+    if config_dict.get("references"):
         references = config_dict["references"]
         logger.info(f"References found: {references}")
         reference = config_dict["references"][0]
@@ -86,7 +86,7 @@ def main(argv=None):
                     rebuild=cli.rebuild,
                 )
                 # Reference data
-                if "references" in config_dict:
+                if config_dict.get("references"):
                     logger.info("Processing reference data")
                     obs_stratification = Stratification(
                         **reference_args,
@@ -147,7 +147,7 @@ def main(argv=None):
                     rebuild=cli.rebuild,
                 )
                 # Reference data
-                if "references" in config_dict:
+                if config_dict.get("references"):
                     logger.info("Processing reference data")
                     obs_stratification = Stratification(
                         **reference_args,

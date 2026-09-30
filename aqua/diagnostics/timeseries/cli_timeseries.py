@@ -101,7 +101,7 @@ def main(argv=None):
                         cli.logger.info(f"Total start date: {startdate}, end date: {enddate}")
 
                         # Initialize a list of len from the number of references
-                        if "references" in cli.config_dict:
+                        if cli.config_dict.get("references"):
                             ts_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
@@ -151,20 +151,22 @@ def main(argv=None):
                             else:
                                 ref_monthly_data = (
                                     [ts_ref[i].monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
                                 ref_annual_data = (
-                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
+                                    [ts_ref[i].annual for i in range(len(ts_ref))]
+                                    if cli.config_dict.get("references")
+                                    else None
                                 )
                                 std_monthly_data = (
                                     [ts_ref[i].std_monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
                                 std_annual_data = (
                                     [ts_ref[i].std_annual for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
 
@@ -248,7 +250,7 @@ def main(argv=None):
                         enddate = pd.Timestamp(max(t.enddate for t in ts))
 
                         # Initialize a list of len from the number of references
-                        if "references" in cli.config_dict:
+                        if cli.config_dict.get("references"):
                             ts_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
@@ -297,20 +299,22 @@ def main(argv=None):
                             else:
                                 ref_monthly_data = (
                                     [ts_ref[i].monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
                                 ref_annual_data = (
-                                    [ts_ref[i].annual for i in range(len(ts_ref))] if "references" in cli.config_dict else None
+                                    [ts_ref[i].annual for i in range(len(ts_ref))]
+                                    if cli.config_dict.get("references")
+                                    else None
                                 )
                                 std_monthly_data = (
                                     [ts_ref[i].std_monthly for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
                                 std_annual_data = (
                                     [ts_ref[i].std_annual for i in range(len(ts_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
 
@@ -398,7 +402,7 @@ def main(argv=None):
                         enddate = pd.Timestamp(max(s.enddate for s in sc))
 
                         # Initialize a list of len from the number of references
-                        if "references" in cli.config_dict:
+                        if cli.config_dict.get("references"):
                             sc_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
@@ -447,12 +451,12 @@ def main(argv=None):
                             else:
                                 ref_monthly_data = (
                                     [sc_ref[i].monthly for i in range(len(sc_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
                                 std_monthly_data = (
                                     [sc_ref[i].std_monthly for i in range(len(sc_ref))]
-                                    if "references" in cli.config_dict
+                                    if cli.config_dict.get("references")
                                     else None
                                 )
 

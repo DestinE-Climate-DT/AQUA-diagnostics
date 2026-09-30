@@ -66,6 +66,7 @@ class DiagnosticCLI:
         self.plot_only = None
         self.dpi = None
         self.create_catalog_entry = None  # Default behavior; can be overridden in prepare()
+        self.no_reference = None
 
     def prepare(self, **overrides):
         """
@@ -140,6 +141,11 @@ class DiagnosticCLI:
         self.plot_only = output_config.get("plot_only", False)
         self.dpi = output_config.get("dpi", 300)
         self.create_catalog_entry = output_config.get("create_catalog_entry", False)
+
+        # Resolved by merge_config_args from --no-reference and/or setup.no_reference
+        self.no_reference = self.config_dict.get("setup", {}).get("no_reference", False)
+        if self.no_reference:
+            self.logger.info("no_reference option is set: reference dataset(s) will be ignored.")
 
     def dataset_args(self, dataset):
         """
