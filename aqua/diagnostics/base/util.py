@@ -321,6 +321,6 @@ def _parse_reader_kwargs(value, extra_parser_options=None):
 
     conflicts = parser_options.intersection(reader_kwargs)
     if conflicts:
-        raise argparse.ArgumentTypeError("use dedicated checker flags for: " + ", ".join(sorted(conflicts)))
+        raise argparse.ArgumentTypeError("use dedicated CLI flags for: " + ", ".join(sorted(conflicts)))
 
     return reader_kwargs
