@@ -1221,6 +1221,13 @@ def plot_tc_basin_doughnut(data_or_file, tdict, reference_freq=90.0,
     plt.show(); plt.close()
 
 
+from matplotlib.ticker import MaxNLocator
+
+def _symmetric_ticks(vmax, nbins=6):
+    """Tick 'puliti' e simmetrici attorno allo zero, per colorbar divergenti."""
+    locator = MaxNLocator(nbins=nbins, symmetric=True, min_n_ticks=3)
+    ticks = locator.tick_values(-vmax, vmax)
+    return ticks[(ticks >= -vmax - 1e-9) & (ticks <= vmax + 1e-9)]
 
 
 def plot_track_density_4deg_cap(
@@ -1963,7 +1970,7 @@ def plot_track_density_4deg_cap(
             if vmax == 0:
                 vmax = 1.0
 
-            n_diff_levels = 10  # even, so zero falls exactly on a boundary
+            n_diff_levels = 11  # even, so zero falls exactly in the middle
 
             boundaries = np.linspace(
                 -vmax,
@@ -2161,6 +2168,11 @@ def plot_track_density_4deg_cap(
         fontsize=11,
         fontweight='bold'
     )
+
+    #adding    
+    if difference:
+       vmax_for_ticks = float(np.max(np.abs(boundaries)))
+       cbar.set_ticks(_symmetric_ticks(vmax_for_ticks))
 
     # =====================================================================
     # LABELS
@@ -2819,7 +2831,7 @@ def plot_genesis_density_4deg_cap(
             vmax = np.nanmax(np.abs(finite))
             if vmax == 0:
                 vmax = 1.0
-            n_diff_levels = 10
+            n_diff_levels = 11 #so zero is in the middle
             boundaries = np.linspace(-vmax, vmax, n_diff_levels + 1)
 
         n_levels = len(boundaries) - 1
@@ -2892,6 +2904,11 @@ def plot_genesis_density_4deg_cap(
         extend='both' if difference else 'max'
     )
     cbar.set_label(density_label, fontsize=11, fontweight='bold')
+    
+        #adding    
+    if difference:
+       vmax_for_ticks = float(np.max(np.abs(boundaries)))
+       cbar.set_ticks(_symmetric_ticks(vmax_for_ticks))
 
     # =====================================================================
     # LABELS / TITLE
