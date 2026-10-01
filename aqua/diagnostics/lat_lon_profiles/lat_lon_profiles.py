@@ -1,6 +1,6 @@
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import time_to_string, to_list
+from aqua.core.util import DEFAULT_REALIZATION, time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic
 
 SEASONS = ["DJF", "MAM", "JJA", "SON"]
@@ -255,9 +255,7 @@ class LatLonProfiles(Diagnostic):
             for i, season_data in enumerate(data):
                 var = getattr(season_data, "standard_name", "unknown")
 
-                extra_keys = {"freq": freq, "season": SEASONS[i], "var": var}
-                if self.region is not None:
-                    extra_keys["region"] = self.region
+                extra_keys = self._extra_keys(freq=freq, var=var, season=SEASONS[i])
 
                 self.logger.info("Saving %s data for %s to netcdf in %s", SEASONS[i], diagnostic_product, outputdir)
                 super().save_netcdf(
@@ -271,9 +269,7 @@ class LatLonProfiles(Diagnostic):
         elif freq == "longterm":
             var = getattr(data, "standard_name", "unknown")
 
-            extra_keys = {"freq": freq, "var": var}
-            if self.region is not None:
-                extra_keys["region"] = self.region
+            extra_keys = self._extra_keys(freq=freq, var=var)
 
             self.logger.info("Saving %s data for %s to netcdf in %s", freq, diagnostic_product, outputdir)
             super().save_netcdf(
@@ -290,9 +286,7 @@ class LatLonProfiles(Diagnostic):
                 # Seasonal std data: always has 4 seasons (DJF, MAM, JJA, SON)
                 for i, std_data in enumerate(data_std):
                     var = getattr(std_data, "standard_name", "unknown")
-                    extra_keys = {"freq": freq, "season": SEASONS[i], "std": "std", "var": var}
-                    if self.region is not None:
-                        extra_keys["region"] = self.region
+                    extra_keys = self._extra_keys(freq=freq, var=var, season=SEASONS[i], std=True)
 
                     super().save_netcdf(
                         data=std_data,
@@ -306,9 +300,7 @@ class LatLonProfiles(Diagnostic):
             elif freq == "longterm":
                 var = getattr(data_std, "standard_name", "unknown")
 
-                extra_keys = {"freq": "longterm", "std": "std", "var": var}
-                if self.region is not None:
-                    extra_keys["region"] = self.region
+                extra_keys = self._extra_keys(freq="longterm", var=var, std=True)
 
                 super().save_netcdf(
                     data=data_std,
@@ -318,6 +310,116 @@ class LatLonProfiles(Diagnostic):
                     rebuild=rebuild,
                     extra_keys=extra_keys,
                 )
+
+    def load(
+        self,
+        var: str,
+        standard_name: str = None,
+        std: bool = False,
+        freq: list = ["seasonal", "longterm"],
+        outputdir: str = "./",
+        reader_kwargs: dict = {},
+    ):
+        """
+        Populate the results from the netcdf files written by a previous run.
+
+        Results with no file on disk are left untouched, so that load can be called both before run,
+        to keep previous results, and after it, or alone to plot without recomputing anything.
+
+        Args:
+            var (str): The variable that was computed.
+            standard_name (str): The standard name of the variable, if one was used to compute it.
+            std (bool): If True, load the standard deviation as well.
+            freq (list): The frequencies to load ('seasonal' or 'longterm').
+            outputdir (str): The directory where the data was saved.
+            reader_kwargs (dict): The Reader keyword arguments of the run, to match its realization.
+        """
+        self.realization = reader_kwargs["realization"] if "realization" in reader_kwargs else DEFAULT_REALIZATION
+
+        # save_netcdf names the files after the standard_name that retrieve attached to the data
+        name = standard_name if standard_name is not None else var
+
+        freq_mapping = {"seasonal": ("seasonal", "std_seasonal"), "longterm": ("longterm", "std_annual")}
+
+        for f in to_list(freq):
+            if f not in freq_mapping:
+                self.logger.error("Invalid frequency: %s", f)
+                continue
+            mean_attribute, std_attribute = freq_mapping[f]
+
+            data = self._load_profiles(var=name, freq=f, outputdir=outputdir)
+            if data is not None:
+                setattr(self, mean_attribute, data)
+
+            if std:
+                data_std = self._load_profiles(var=name, freq=f, std=True, outputdir=outputdir)
+                if data_std is not None:
+                    setattr(self, std_attribute, data_std)
+
+    def _extra_keys(self, freq: str, var: str, season: str = None, std: bool = False):
+        """
+        Build the filename keys identifying one result.
+
+        Shared by save_netcdf and load, so that the two always address the same file.
+
+        Args:
+            freq (str): The frequency of the data ('seasonal' or 'longterm').
+            var (str): The variable name appearing in the filename.
+            season (str): The season, for seasonal results only.
+            std (bool): Whether the keys refer to the standard deviation.
+
+        Returns:
+            dict: The extra keys, in the order in which they appear in the filename.
+        """
+        extra_keys = {"freq": freq}
+        if season is not None:
+            extra_keys["season"] = season
+        if std:
+            extra_keys["std"] = "std"
+        extra_keys["var"] = var
+        if self.region is not None:
+            extra_keys["region"] = self.region
+        return extra_keys
+
+    def _load_profiles(self, var: str, freq: str, std: bool = False, outputdir: str = "./"):
+        """
+        Load one result from disk, the four seasonal profiles or the single longterm one.
+
+        Returns None if any season is missing, because the seasonal plots index the seasons by
+        position and a partial list would silently mislabel them.
+
+        Args:
+            var (str): The variable name appearing in the filename.
+            freq (str): The frequency of the data ('seasonal' or 'longterm').
+            std (bool): If True, load the standard deviation files.
+            outputdir (str): The directory where the data was saved.
+
+        Returns:
+            list, xarray DataArray or None: [DJF, MAM, JJA, SON] for the seasonal frequency, a
+                single profile for the longterm one, None if any of the files is not on disk.
+        """
+        seasons = SEASONS if freq == "seasonal" else [None]
+        profiles = []
+
+        # Check every file, so that all the missing ones are reported and not only the first
+        for season in seasons:
+            data = self.load_netcdf(
+                diagnostic=self.diagnostic_name,
+                diagnostic_product=f"{self.mean_type}_profile",
+                outputdir=outputdir,
+                as_dataarray=True,
+                extra_keys=self._extra_keys(freq=freq, var=var, season=season, std=std),
+            )
+            if data is None:
+                self.logger.info("No file found for the %s %s profile", freq, season or var)
+                continue
+            profiles.append(data)
+
+        if len(profiles) < len(seasons):
+            self.logger.info("Some %s profiles are missing, nothing loaded", freq)
+            return None
+
+        return profiles if freq == "seasonal" else profiles[0]
 
     def compute_dim_mean(self, freq: str, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):
         """
@@ -394,6 +496,7 @@ class LatLonProfiles(Diagnostic):
         box_brd: bool = True,
         outputdir: str = "./",
         rebuild: bool = True,
+        save_netcdf: bool = True,
         reader_kwargs: dict = {},
     ):
         """
@@ -414,6 +517,7 @@ class LatLonProfiles(Diagnostic):
             box_brd (bool): Whether to include the box boundaries.
             outputdir (str): The output directory to save the results.
             rebuild (bool): Whether to rebuild existing files.
+            save_netcdf (bool): Whether to save the results as netcdf files. Default is True.
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
         """
         self.logger.info("Running LatLonProfiles for %s", var)
@@ -439,7 +543,8 @@ class LatLonProfiles(Diagnostic):
                 self.logger.info(f"Computing {f} standard deviation")
                 self.compute_std(freq=f, exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
 
-            self.logger.info(f"Saving {f} netcdf file")
-            self.save_netcdf(freq=f, outputdir=outputdir, rebuild=rebuild)
+            if save_netcdf:
+                self.logger.info(f"Saving {f} netcdf file")
+                self.save_netcdf(freq=f, outputdir=outputdir, rebuild=rebuild)
 
         self.logger.info("LatLonProfiles computation completed")

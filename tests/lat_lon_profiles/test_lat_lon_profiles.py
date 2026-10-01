@@ -371,3 +371,99 @@ class TestLatLonProfilesRealization:
         files = list(tmp_path.rglob("*.nc"))
         assert len(files) > 0
         assert any("r5" in f.name for f in files), "Realization 'r5' not found in any filename"
+
+
+@pytest.mark.diagnostics
+class TestLatLonProfilesLoad:
+    """Tests for reading back the results written by a previous run"""
+
+    def _profile(self, value: float):
+        """A profile like the ones compute_dim_mean produces, without retrieving anything"""
+        data = xr.DataArray(np.full(5, value), dims=["lat"], coords={"lat": np.arange(5.0)}, name="skt")
+        data.attrs.update(
+            {
+                "standard_name": "skt",
+                "units": "K",
+                "AQUA_catalog": "ci",
+                "AQUA_model": "IFS",
+                "AQUA_exp": "test-tco79",
+                "AQUA_mean_type": "zonal",
+            }
+        )
+        return data
+
+    def _producer(self, region=None):
+        """A LatLonProfiles holding results, as it would be right before saving them"""
+        diagnostic = LatLonProfiles(
+            model="IFS", exp="test-tco79", source="teleconnections", catalog="ci", region=region, loglevel=loglevel
+        )
+        diagnostic.seasonal = [self._profile(value) for value in range(4)]
+        diagnostic.longterm = self._profile(10.0)
+        diagnostic.std_seasonal = [self._profile(value + 0.5) for value in range(4)]
+        diagnostic.std_annual = self._profile(10.5)
+        return diagnostic
+
+    def _consumer(self, region=None):
+        """A LatLonProfiles that never retrieved and does not even know its catalog"""
+        return LatLonProfiles(model="IFS", exp="test-tco79", source="teleconnections", region=region, loglevel=loglevel)
+
+    @pytest.mark.parametrize("region", [None, "tropics"])
+    def test_load_roundtrip(self, tmp_path, region):
+        """A run that only plots finds on disk exactly the results a previous run computed"""
+        producer = self._producer(region=region)
+        producer.save_netcdf(freq="seasonal", outputdir=str(tmp_path))
+        producer.save_netcdf(freq="longterm", outputdir=str(tmp_path))
+
+        consumer = self._consumer(region=region)
+        consumer.load(var="skt", std=True, outputdir=str(tmp_path))
+
+        # Each profile was built with its own constant, so the values pin down the season order too
+        assert consumer.longterm.values[0] == 10.0
+        assert consumer.std_annual.values[0] == 10.5
+        np.testing.assert_allclose([data.values[0] for data in consumer.seasonal], [0.0, 1.0, 2.0, 3.0])
+        np.testing.assert_allclose([data.values[0] for data in consumer.std_seasonal], [0.5, 1.5, 2.5, 3.5])
+
+        # The attributes the plot classes read survived the round trip
+        assert consumer.longterm.attrs["AQUA_mean_type"] == "zonal"
+        assert consumer.longterm.attrs["units"] == "K"
+
+    def test_load_nothing_on_disk(self, tmp_path):
+        """With no files to read, the results are left as they are instead of being wiped"""
+        consumer = self._consumer()
+        consumer.load(var="skt", std=True, outputdir=str(tmp_path))
+
+        assert consumer.seasonal is None
+        assert consumer.longterm is None
+
+        # A load that finds nothing must not destroy what a run has just computed
+        consumer.longterm = self._profile(10.0)
+        consumer.load(var="skt", outputdir=str(tmp_path))
+        assert consumer.longterm is not None
+
+    def test_load_incomplete_seasons(self, tmp_path):
+        """A missing season gives no seasonal data at all, rather than a shorter, mislabelled list"""
+        self._producer().save_netcdf(freq="seasonal", outputdir=str(tmp_path))
+
+        # the season is lower cased in the filename, match it regardless of the case
+        files = sorted(f for f in (tmp_path / "netcdf").glob("*.nc") if "jja" in f.name.lower())
+        assert len(files) == 2  # the mean and the std of that season
+        files[0].unlink()
+
+        consumer = self._consumer()
+        consumer.load(var="skt", freq="seasonal", outputdir=str(tmp_path))
+
+        assert consumer.seasonal is None
+
+    def test_load_realization(self, tmp_path):
+        """The realization takes part in the filename, so a load has to be told the one of the run"""
+        producer = self._producer()
+        producer.realization = 2  # what retrieve would set from reader_kwargs
+        producer.save_netcdf(freq="longterm", outputdir=str(tmp_path))
+
+        # Without the reader_kwargs of the run, the default realization addresses another file
+        consumer = self._consumer()
+        consumer.load(var="skt", freq="longterm", outputdir=str(tmp_path))
+        assert consumer.longterm is None
+
+        consumer.load(var="skt", freq="longterm", outputdir=str(tmp_path), reader_kwargs={"realization": 2})
+        assert consumer.longterm is not None

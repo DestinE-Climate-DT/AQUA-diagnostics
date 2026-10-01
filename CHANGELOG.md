@@ -10,6 +10,18 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Move and update the cli_checker using diagnosticCLI (#401)
+- Unified CLI for ensemble timeseries and global biases (#327)
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
+- lumi_install.sh does not need a separate copy of the env file (#435)
+- Update GSV paths for lumi_install (#433)
+- conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
+- OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
+- Diagnostic: `load_netcdf` method (#392)
+- LatLonProfiles: `load` method and `plot_only` option to plot from previous netCDF files (#392)
+- Simplify enforcement of minim number of months for diagnostics (#406)
+- Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+- Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
 
 ## [v0.25.1]
 

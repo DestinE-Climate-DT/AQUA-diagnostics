@@ -92,6 +92,7 @@ class PlotENSO(PlotBaseMixin):
         vmax: float = None,
         vmin_diff: float = None,
         vmax_diff: float = None,
+        cmap: str = "RdBu_r",
         **kwargs,
     ):
         """
@@ -105,25 +106,29 @@ class PlotENSO(PlotBaseMixin):
             vmax (float): Maximum value for the color value. Default is None.
             vmin_diff (float): Minimum value for the color value for the difference. Default is None.
             vmax_diff (float): Maximum value for the color value for the difference. Default is None.
+            cmap (str): Colormap to use for the plots. Default is 'RdBu_r'.
             **kwargs: Additional arguments for the plotting function.
 
         Returns:
             fig: Figure object.
         """
         map_to_check = maps if isinstance(maps, xr.DataArray) else maps[0]
+
+        # This var is used by _homogeneize_maps to eventually convert units.
+        # The label for title and colorbar is set by _homogeneize_maps, which returns var_label.
         var = map_to_check.shortName if hasattr(map_to_check, "shortName") else map_to_check.long_name
-        if statistic == "correlation" and vmin is None and vmax is None:
+        if statistic == "correlation":
             vmin = -1.0
             vmax = 1.0
             vmin_diff = -0.5
             vmax_diff = 0.5
-        elif statistic == "regression" and vmin is None and vmax is None and var == "tos":
+        elif statistic == "regression" and vmin is None and vmax is None:
             vmin = -1.0
             vmax = 1.0
             vmin_diff = -1.0
             vmax_diff = 1.0
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, var_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Case 1: no reference maps
         if maps is not None and ref_maps is None:
@@ -132,13 +137,22 @@ class PlotENSO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="Niño 3.4",
                     statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     season=getattr(maps, "AQUA_season", None),
                 )
 
                 fig, _ = plot_single_map(
-                    data=maps, vmin=vmin, vmax=vmax, title=title, return_fig=True, loglevel=self.loglevel, **kwargs
+                    data=maps,
+                    vmin=vmin,
+                    vmax=vmax,
+                    cmap=cmap,
+                    cbar_label=var_label,
+                    title=title,
+                    return_fig=True,
+                    loglevel=self.loglevel,
+                    **kwargs,
                 )
                 return fig
 
@@ -149,13 +163,22 @@ class PlotENSO(PlotBaseMixin):
                     title = self.set_map_title(
                         telecname="Niño 3.4",
                         statistic=statistic,
+                        var=var_label,
                         model=map.AQUA_model,
                         exp=map.AQUA_exp,
                         season=getattr(map, "AQUA_season", None),
                     )
                     titles.append(title)
                 fig = plot_maps(
-                    maps=maps, vmin=vmin, vmax=vmax, titles=titles, return_fig=True, loglevel=self.loglevel, **kwargs
+                    maps=maps,
+                    vmin=vmin,
+                    vmax=vmax,
+                    titles=titles,
+                    cmap=cmap,
+                    cbar_label=var_label,
+                    return_fig=True,
+                    loglevel=self.loglevel,
+                    **kwargs,
                 )
                 return fig
 
@@ -166,6 +189,7 @@ class PlotENSO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="Niño 3.4",
                     statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     season=getattr(maps, "AQUA_season", None),
@@ -181,6 +205,8 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -197,6 +223,7 @@ class PlotENSO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="Niño 3.4",
                     statistic=statistic,
+                    var=var_label,
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
                     season=getattr(ref_maps, "AQUA_season", None),
@@ -213,6 +240,8 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     titles=titles,
                     title=title,
                     return_fig=True,
@@ -231,6 +260,7 @@ class PlotENSO(PlotBaseMixin):
                 title = self.set_map_title(
                     telecname="Niño 3.4",
                     statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
                     season=getattr(maps, "AQUA_season", None),
@@ -247,6 +277,8 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     titles=titles,
                     title=title,
                     return_fig=True,
