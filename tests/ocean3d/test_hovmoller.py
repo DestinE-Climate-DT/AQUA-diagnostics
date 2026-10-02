@@ -14,6 +14,7 @@ dpi = DPI
 EXPECTED_FULL = {"thetao": 22.2086629652034, "so": 36.57638045014168}
 EXPECTED_DRIFT_TYPES = ["full", "anom_t0", "std_anom_t0"]
 PLOT_STEM = "oceandrift.{product}.ci.FESOM.hpz3.r1.sargasso_sea"
+EXPECTED_NTIME = 15  # crosses a year boundary, so the yearly split/concat is tested
 
 pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="ocean_drift")]
 
@@ -24,13 +25,14 @@ HOVMOLLER_CONFIG = {
         "exp": "hpz3",
         "source": "monthly-3d",
         "startdate": "1990-01-01",
-        "enddate": "1990-03-31",
+        "enddate": "1991-03-31",
         "regrid": "r200",
         "loglevel": loglevel,
     },
     "run": {
         "anomaly_ref": "t0",
-        "region": "sss",
+        # The unknown region must be skipped without stopping the valid ones
+        "regions": ["sss", "ao", "not_a_region"],
     },
     "plot": {
         "save_format": ["png", "pdf", "svg"],
@@ -60,7 +62,7 @@ def hovmoller_plot(hovmoller_result, hovmoller_config):
     """Run both plot types once. Hovmoller must run before timeseries."""
     hov, tmp_path = hovmoller_result
     save_format = hovmoller_config["plot"]["save_format"]
-    hov_plot = PlotHovmoller(data=hov.processed_data_list, loglevel=loglevel, outputdir=tmp_path)
+    hov_plot = PlotHovmoller(data=hov.processed_data["sss"], loglevel=loglevel, outputdir=tmp_path)
     hov_plot.plot_hovmoller(save_format=save_format, dpi=dpi)
     hov_plot.plot_timeseries(save_format=save_format, dpi=dpi)
     return tmp_path
@@ -71,13 +73,23 @@ def hovmoller_plot(hovmoller_result, hovmoller_config):
 
 def _by_drift_type(hov):
     """Index the processed datasets by drift type, so tests do not rely on list order."""
-    return {ds.attrs["AQUA_ocean_drift_type"]: ds for ds in hov.processed_data_list}
+    return {ds.attrs["AQUA_ocean_drift_type"]: ds for ds in hov.processed_data["sss"]}
 
 
 def test_processed_data_types(hovmoller_result):
     hov, _ = hovmoller_result
-    types = [ds.attrs["AQUA_ocean_drift_type"] for ds in hov.processed_data_list]
+    types = [ds.attrs["AQUA_ocean_drift_type"] for ds in hov.processed_data["sss"]]
     assert types == EXPECTED_DRIFT_TYPES
+
+
+def test_multiple_regions_in_one_run(hovmoller_result):
+    """One run() stores every valid region, each with the three drift products over the whole period."""
+    hov, _ = hovmoller_result
+    assert set(hov.processed_data) == {"sss", "ao"}
+    for region in ("sss", "ao"):
+        types = [ds.attrs["AQUA_ocean_drift_type"] for ds in hov.processed_data[region]]
+        assert types == EXPECTED_DRIFT_TYPES
+        assert all(ds.sizes["time"] == EXPECTED_NTIME for ds in hov.processed_data[region])
 
 
 @pytest.mark.parametrize("var, expected", sorted(EXPECTED_FULL.items()))
