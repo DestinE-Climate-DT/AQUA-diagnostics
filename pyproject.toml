@@ -38,8 +38,6 @@ classifiers = [
 ]
 dependencies = [
     "ecmean>=0.2.2",
-    "cartopy>=0.24.1",
-    "matplotlib"
 ]
 
 [project.optional-dependencies]
