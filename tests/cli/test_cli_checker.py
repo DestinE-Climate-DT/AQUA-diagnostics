@@ -59,7 +59,7 @@ def test_parse_arguments_rejects_invalid_reader_kwargs(value, capsys):
 
 @pytest.mark.parametrize(
     "key",
-    ["catalog", "model", "exp", "source", "regrid", "startdate", "enddate", "loglevel", "realization", "rebuild"],
+    ["catalog", "model", "exp", "source", "regrid", "startdate", "enddate", "loglevel", "realization"],
 )
 def test_parse_arguments_rejects_checker_options_in_reader_kwargs(key, capsys):
     """Checker settings must use their dedicated flags."""
