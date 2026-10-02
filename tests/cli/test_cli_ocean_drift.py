@@ -54,7 +54,7 @@ class TestMainExecutionFlow:
         """With run=True, Hovmoller.run and both plotting methods are called."""
         mock_hov_cls, mock_plot_cls = mock_od
         mock_hov_instance = mock_hov_cls.return_value
-        mock_hov_instance.processed_data_list = [object()]
+        mock_hov_instance.processed_data = {"global_ocean": [object()]}
         config_file = build_config({"ocean_drift": BASE_DRIFT})
 
         main(["--config", config_file, "--loglevel", "WARNING"])
@@ -62,7 +62,7 @@ class TestMainExecutionFlow:
         mock_hov_cls.assert_called_once()
         mock_hov_instance.run.assert_called_once()
         run_call = mock_hov_instance.run.call_args
-        assert run_call.kwargs["region"] == "global_ocean"
+        assert run_call.kwargs["regions"] == ["global_ocean"]
         assert run_call.kwargs["var"] == ["thetao"]
 
         mock_plot_cls.assert_called_once()

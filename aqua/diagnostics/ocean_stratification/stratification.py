@@ -146,7 +146,6 @@ class Stratification(Diagnostic):
         None
 
         """
-        self.climatology = climatology
         self.logger.info("Starting stratification diagnostic run.")
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         if "lev" in self.data.dims:
@@ -186,7 +185,7 @@ class Stratification(Diagnostic):
         if mld:
             self.logger.info("Computing mixed layer depth (MLD).")
             self.compute_mld()
-        self.compute_climatology(climatology=self.climatology)
+        self.compute_climatology(climatology=climatology)
         self.logger.debug("Loading data in memory.")
         self.data.load()
         self.logger.debug("Loaded data in memory.")
@@ -219,10 +218,10 @@ class Stratification(Diagnostic):
     def compute_climatology(self, climatology: str = "season"):
         """Compute climatology for the dataset based on the specified period type.
 
-        Depending on the value of `self.climatology`, the method will:
+        Depending on the value of `climatology`, the method will:
         - Group and average the data along the corresponding time accessor if
-        `self.climatology` is not one of ["month", "year", "season"].
-        - Compute the overall mean across the time dimension if `self.climatology` is "total".
+        `climatology` is not one of ["month", "year", "season"].
+        - Compute the overall mean across the time dimension if `climatology` is "total".
 
         Parameters
         ----------
@@ -232,7 +231,7 @@ class Stratification(Diagnostic):
             - "year"    : Yearly climatology
             - "season"  : Seasonal climatology
             - "total"   : Mean over all available time steps
-            - Other     : Groups data by `time.<self.climatology>` and averages
+            - Other     : Groups data by `time.<climatology>` and averages
             Default is "season".
 
         Returns
@@ -240,12 +239,12 @@ class Stratification(Diagnostic):
         None
 
         """
-        self.logger.debug(f"Computing {self.climatology} climatology.")
+        self.logger.debug(f"Computing {climatology} climatology.")
         month_list = list(calendar.month_name)[1:]
         season_list = ["DJF", "MAM", "JJA", "SON"]
-        if self.climatology in month_list:
+        if climatology in month_list:
             self.clim_type = "month"
-        elif self.climatology in season_list:
+        elif climatology in season_list:
             self.clim_type = "season"
         else:
             self.clim_type = "Total"
@@ -256,12 +255,12 @@ class Stratification(Diagnostic):
                 self.data = self.data.rename({f"{self.clim_type}": "time"})
                 if self.clim_type == "month":
                     self.data = self.data.assign_coords(time=[calendar.month_name[m] for m in self.data["time"].values])
-                self.data = self.data.sel(time=self.climatology)
+                self.data = self.data.sel(time=climatology)
         else:
-            self.climatology = "total"
+            climatology = "total"
             self.data = self.data.mean("time", keep_attrs=True)
-        self.data.attrs["AQUA_stratification_climatology"] = self.climatology
-        self.logger.debug(f"{self.climatology.upper()} climatology computed successfully.")
+        self.data.attrs["AQUA_stratification_climatology"] = climatology
+        self.logger.debug(f"{climatology.upper()} climatology computed successfully.")
 
     def calculate_rho(self):
         """Convert variables to absolute salinity and conservative temperature, then compute potential density.

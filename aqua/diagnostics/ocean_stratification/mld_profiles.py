@@ -143,7 +143,7 @@ def plot_maps(
             fig=fig,
             loglevel=loglevel,
             ax_pos=(nrows, ncols, i + 1),
-            gridlines=False,
+            gridlines=True,
             **kwargs,
         )
 
