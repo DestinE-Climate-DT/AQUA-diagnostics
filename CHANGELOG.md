@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Reorganise OSI-SAF data and update source call (#448)
 - reader_kwargs in default parser (#442)
 - Ocean3D: Drift refactor to improve performance (#413)
 - Move and update the cli_checker using diagnosticCLI (#401)
