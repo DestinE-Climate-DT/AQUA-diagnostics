@@ -53,7 +53,7 @@ def template_parse_arguments(
         type=reader_kwargs_type,
         metavar="JSON",
         help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
-        "use dedicated flags for dataset selection, regrid, dates, loglevel, realization and rebuild",
+        "use dedicated flags for dataset selection, regrid, dates, loglevel, realization etc.",
     )
 
     return parser
