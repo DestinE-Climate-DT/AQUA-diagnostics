@@ -24,7 +24,7 @@ def parse_arguments(arguments):
         argparse.Namespace: Parsed command-line arguments.
     """
     parser = argparse.ArgumentParser(description="Check the AQUA diagnostics setup")
-    parser = template_parse_arguments(parser, extra_parser_options={"yaml", "rebuild"})
+    parser = template_parse_arguments(parser, extra_parser_options={"yaml", "no-rebuild"})
     parser.add_argument("--yaml", help="write experiment.yaml to this directory")
     parser.add_argument(
         "--no-rebuild",
