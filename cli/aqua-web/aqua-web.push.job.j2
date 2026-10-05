@@ -28,7 +28,7 @@ if [[ "{{ nativeaqua }}" == "true" ]]; then
         bash "{{ push_analysis_script }}" --no-ensemble "$OUTDIR" "{{ explist }}"
     fi
 else
-    bash "$AQUA/cli/aqua-container/load-aqua-container.sh" {{ machine }} <<EOF
+    bash $AQUA/cli/aqua-container/load-aqua-container.sh {{ machine }} --diagnostics <<EOF
 #!/bin/bash
     if [[ "{{ ensemble }}" == "true" ]]; then
         bash "{{ push_analysis_script }}" "$OUTDIR" "{{ explist }}"
