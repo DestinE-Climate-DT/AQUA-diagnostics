@@ -142,7 +142,9 @@ print_help() {
     echo
     echo "Options:"
     echo "  -b, --bucket BUCKET    push to the specified bucket (defaults to 'aqua-web')"
-    echo "  -c, --config FILE      alternate config file to determine diagnostic groupings for make_contents (defaults to config.grouping.yaml in \$AQUA/config/analysis)"
+    echo "  -c, --config FILE      alternate configuration file for diagnostic groupings"
+    echo '                         default: $AQUA_CONFIG/analysis/config.grouping.yaml when AQUA_CONFIG is set,'
+    echo '                         otherwise $HOME/.aqua/analysis/config.grouping.yaml'
     echo "  -d, --no-update        do not update the remote github repository"
     echo "  --no-ensemble          use old ensemble structure with only 3 levels catalog/model/exp"
     echo "  -f, --format FORMAT    specify image formats to transfer (default is 'pdf,png,svg')"
