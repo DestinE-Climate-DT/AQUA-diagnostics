@@ -66,7 +66,7 @@ class PlotGregory(PlotBaseMixin):
         data_labels: list = None,
         ref_label: str = None,
         style: str = "aqua",
-        cmap: str = None,
+        cmap: str = 'plasma_r',
     ):
         """
         Plot the data
@@ -77,7 +77,7 @@ class PlotGregory(PlotBaseMixin):
             data_labels: List of labels for the data. Default is None
             ref_label: Label for the reference data. Default is None
             style: Style of the plot. Default is 'aqua'
-            cmap: Colormap marking time evolution, with a colorbar. Default is None (disabled)
+            cmap: Colormap marking time evolution, with a colorbar. Default is 'plasma_r'.
         """
         ConfigStyle(style=style)
         ax_monthly = None
