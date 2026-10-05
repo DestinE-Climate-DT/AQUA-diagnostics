@@ -37,7 +37,17 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = [
+    "cartopy",
+    "dask",
+    "distributed",
     "ecmean>=0.2.2",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "pillow",
+    "pypdf",
+    "scipy",
+    "xarray"
 ]
 
 [project.optional-dependencies]
