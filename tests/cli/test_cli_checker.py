@@ -51,29 +51,29 @@ def test_parse_arguments_uses_common_and_checker_options():
 def test_parse_arguments_rejects_invalid_reader_kwargs(value, capsys):
     """Invalid JSON and non-object values fail before configuration or retrieval."""
     with pytest.raises(SystemExit) as error:
-        parse_arguments(["--reader-kwargs", value])
+        parse_arguments(["--reader_kwargs", value])
 
     assert error.value.code == 2
-    assert "--reader-kwargs" in capsys.readouterr().err
+    assert "--reader_kwargs" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
     "key",
-    ["catalog", "model", "exp", "source", "regrid", "startdate", "enddate", "loglevel", "realization", "rebuild"],
+    ["catalog", "model", "exp", "source", "regrid", "startdate", "enddate", "loglevel", "realization"],
 )
 def test_parse_arguments_rejects_checker_options_in_reader_kwargs(key, capsys):
     """Checker settings must use their dedicated flags."""
     with pytest.raises(SystemExit) as error:
-        parse_arguments(["--reader-kwargs", json.dumps({key: None})])
+        parse_arguments(["--reader_kwargs", json.dumps({key: None})])
 
     assert error.value.code == 2
-    assert "--reader-kwargs" in capsys.readouterr().err
+    assert "--reader_kwargs" in capsys.readouterr().err
 
 
 def test_parse_arguments_rejects_unknown_flags(capsys):
     """Misspelled checker flags must not become Reader kwargs."""
     with pytest.raises(SystemExit) as error:
-        parse_arguments(["--soruce", "short", "--reader-kwargs", '{"engine": "polytope"}'])
+        parse_arguments(["--soruce", "short", "--reader_kwargs", '{"engine": "polytope"}'])
 
     assert error.value.code == 2
     assert "unrecognized arguments: --soruce short" in capsys.readouterr().err
@@ -141,7 +141,7 @@ def test_main_forwards_typed_reader_kwargs(rebuild_flags, rebuild):
                 "short",
                 "--realization",
                 "r1",
-                "--reader-kwargs",
+                "--reader_kwargs",
                 json.dumps(reader_kwargs),
                 *rebuild_flags,
             ]

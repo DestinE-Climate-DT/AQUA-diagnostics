@@ -11,6 +11,7 @@ Main changes:
 
 Complete list:
 - Unpin matplotlib and list all directly imported packages as dependencies (#446)
+- reader_kwargs in default parser (#442)
 - Ocean3D: Drift refactor to improve performance (#413)
 - Move and update the cli_checker using diagnosticCLI (#401)
 - Unified CLI for ensemble timeseries and global biases (#327)
