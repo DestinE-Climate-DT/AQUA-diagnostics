@@ -10,7 +10,7 @@ from typing import Optional, Union
 import xarray as xr
 from matplotlib.figure import Figure
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigLocator
 from aqua.core.lock import SafeFileLock
 from aqua.core.logger import log_configure, log_history
 from aqua.core.util import (
@@ -525,8 +525,7 @@ class OutputSaver:
             dict: The updated catalog entry block.
         """
         self.logger.info("Creating catalog entry for %s", filepath)
-        configpath = ConfigPath(catalog=self.catalog)
-        configdir = configpath.configdir
+        configdir = ConfigLocator(logger=self.logger).configdir
         # find the catalog of the experiment and load it
         catalogfile = os.path.join(configdir, "catalogs", self.catalog, "catalog", self.model, self.exp + ".yaml")
 

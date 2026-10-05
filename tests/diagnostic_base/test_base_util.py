@@ -130,11 +130,11 @@ def test_load_diagnostic_config():
 def test_get_diagnostic_configpath(monkeypatch):
     """Path resolver handles collections/tools/templates and rejects invalid folder names."""
 
-    class _RepoConfigPath:
-        def __init__(self, loglevel=None):
+    class _RepoConfigLocator:
+        def __init__(self, logger=None):
             self.configdir = str(REAL_CONFIG_DIR)
 
-    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _RepoConfigPath)
+    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigLocator", _RepoConfigLocator)
 
     assert get_diagnostic_configpath("timeseries", folder="collections") == str(REAL_CONFIG_DIR / "collections" / "timeseries")
     assert get_diagnostic_configpath("timeseries", folder="tools") == str(REAL_CONFIG_DIR / "tools" / "timeseries")
@@ -142,6 +142,30 @@ def test_get_diagnostic_configpath(monkeypatch):
 
     with pytest.raises(ValueError, match="Invalid folder name"):
         get_diagnostic_configpath("timeseries", folder="invalid")
+
+
+@pytest.mark.parametrize("use_env", [True, False], ids=["AQUA_CONFIG", "HOME"])
+@pytest.mark.parametrize(
+    "folder, suffix",
+    [
+        ("collections", "collections/timeseries"),
+        ("tools", "tools/timeseries"),
+        ("templates", "templates/collections"),
+    ],
+)
+def test_get_diagnostic_configpath_without_catalogs(tmp_path, monkeypatch, use_env, folder, suffix):
+    """Resolve diagnostic paths from the environment without requiring catalog settings."""
+    home = tmp_path / "home"
+    configdir = tmp_path / "custom-config" if use_env else home / ".aqua"
+    configdir.mkdir(parents=True)
+    dump_yaml(outfile=str(configdir / "config-aqua.yaml"), cfg={"machine": "test-machine"})
+    monkeypatch.setenv("HOME", str(home))
+    if use_env:
+        monkeypatch.setenv("AQUA_CONFIG", str(configdir))
+    else:
+        monkeypatch.delenv("AQUA_CONFIG", raising=False)
+
+    assert get_diagnostic_configpath("timeseries", folder=folder) == str(configdir / suffix)
 
 
 def test_load_diagnostic_config_default_filename(monkeypatch):

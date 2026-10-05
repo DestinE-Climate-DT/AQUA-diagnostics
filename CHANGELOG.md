@@ -10,7 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
-- Update the deprecated `ConfigPath` (#)
+- Update the deprecated `ConfigPath` (#451)
 - Unpin matplotlib and list all directly imported packages as dependencies (#446)
 - reader_kwargs in default parser (#442)
 - Ocean3D: Drift refactor to improve performance (#413)
