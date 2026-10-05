@@ -15,7 +15,7 @@ from tempfile import NamedTemporaryFile
 from jinja2 import Template
 from ruamel.yaml import YAML
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigContext
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 
@@ -209,7 +209,8 @@ class Submitter:
         yaml = YAML(typ="rt")
         with open(self.config, "r", encoding="utf-8") as file:
             definitions = yaml.load(file)
-        definitions["aqua_web_script"] = os.path.join(self.script_location, "push_analysis.sh")
+        # The push script belongs to diagnostics; aquadir still locates the core container launcher.
+        definitions["push_analysis_script"] = os.path.join(self.script_location, "push_analysis.sh")
 
         username = definitions["username"]
         full_job_name = definitions.get("jobname", "aqua-web.push")
@@ -272,9 +273,9 @@ class Submitter:
         """
 
         # Find the AQUA config directory
-        configurer = ConfigPath()
+        configurer = ConfigContext()
 
-        search_paths = [configurer.configdir, ".", self.script_location]
+        search_paths = [configurer.get_config_dir(), ".", self.script_location]
 
         # If the config file does not exists find it either in the AQUA config dir, the location of the script or here
         if not os.path.isfile(config):
