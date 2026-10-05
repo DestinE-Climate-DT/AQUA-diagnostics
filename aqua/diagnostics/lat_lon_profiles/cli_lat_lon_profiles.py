@@ -41,6 +41,18 @@ def _create_plot(cli, profiles, profile_ref, freq_type, diagnostic_name):
     """
     cli.logger.info(f"Creating {freq_type} plot")
 
+    # A plot only run reads the results from disk, where some of them may be missing:
+    # keep the datasets that have the ones this plot needs.
+    attribute = "longterm" if freq_type == "longterm" else "seasonal"
+    profiles = [profile for profile in profiles if getattr(profile, attribute) is not None]
+    if not profiles:
+        reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+        cli.logger.warning("No %s results found in %s%s, skipping the plot", freq_type, cli.outputdir, reason)
+        return
+    if profile_ref is not None and getattr(profile_ref, attribute) is None:
+        cli.logger.warning("No %s results available for the reference, plotting without it", freq_type)
+        profile_ref = None
+
     if freq_type == "longterm":
         # For longterm: single profile per dataset
         data_list = [p.longterm for p in profiles]
@@ -157,39 +169,53 @@ def process_variable(
                     loglevel=cli.loglevel,
                 )
 
-                try:
-                    profile.run(
+                if not cli.plot_only:
+                    try:
+                        profile.run(
+                            var=var_name,
+                            formula=formula,
+                            long_name=var_long_name,
+                            units=var_units,
+                            standard_name=var_standard_name,
+                            std=compute_std,
+                            freq=freq,
+                            exclude_incomplete=exclude_incomplete,
+                            center_time=center_time,
+                            box_brd=box_brd,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                            save_netcdf=cli.save_netcdf,
+                            reader_kwargs=dataset.get("reader_kwargs") or {},
+                        )
+                    except NotEnoughDataError:
+                        cli.logger.warning(
+                            "Skipping %s (%s, %s): not enough data",
+                            dataset["model"],
+                            dataset["exp"],
+                            dataset["source"],
+                        )
+                        continue
+                    except Exception as e:
+                        cli.logger.error(
+                            "Unexpected error for %s (%s, %s): %s",
+                            dataset["model"],
+                            dataset["exp"],
+                            dataset["source"],
+                            e,
+                        )
+                        continue
+
+                # Populate from the netcdf files, written just now or by a previous run. Results computed
+                # without saving them are already in memory, and older files must not replace them.
+                if cli.plot_only or cli.save_netcdf:
+                    profile.load(
                         var=var_name,
-                        formula=formula,
-                        long_name=var_long_name,
-                        units=var_units,
                         standard_name=var_standard_name,
                         std=compute_std,
                         freq=freq,
-                        exclude_incomplete=exclude_incomplete,
-                        center_time=center_time,
-                        box_brd=box_brd,
                         outputdir=cli.outputdir,
-                        rebuild=cli.rebuild,
                         reader_kwargs=dataset.get("reader_kwargs") or {},
                     )
-                except NotEnoughDataError:
-                    cli.logger.warning(
-                        "Skipping %s (%s, %s): not enough data",
-                        dataset["model"],
-                        dataset["exp"],
-                        dataset["source"],
-                    )
-                    continue
-                except Exception as e:
-                    cli.logger.error(
-                        "Unexpected error for %s (%s, %s): %s",
-                        dataset["model"],
-                        dataset["exp"],
-                        dataset["source"],
-                        e,
-                    )
-                    continue
 
                 profiles.append(profile)
 
@@ -219,39 +245,51 @@ def process_variable(
                     loglevel=cli.loglevel,
                 )
 
-                try:
-                    profile_ref.run(
+                if not cli.plot_only:
+                    try:
+                        profile_ref.run(
+                            var=var_name,
+                            formula=formula,
+                            long_name=var_long_name,
+                            units=var_units,
+                            standard_name=var_standard_name,
+                            std=True,  # Always compute std for reference
+                            freq=freq,
+                            exclude_incomplete=exclude_incomplete,
+                            center_time=center_time,
+                            box_brd=box_brd,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                            save_netcdf=cli.save_netcdf,
+                            reader_kwargs=ref.get("reader_kwargs") or {},
+                        )
+                    except NotEnoughDataError:
+                        cli.logger.warning(
+                            "Skipping reference %s (%s, %s): not enough data",
+                            ref["model"],
+                            ref["exp"],
+                            ref["source"],
+                        )
+                        profile_ref = None
+                    except Exception as e:
+                        cli.logger.error(
+                            "Unexpected error for reference %s (%s, %s): %s",
+                            ref["model"],
+                            ref["exp"],
+                            ref["source"],
+                            e,
+                        )
+                        profile_ref = None
+
+                if profile_ref is not None and (cli.plot_only or cli.save_netcdf):
+                    profile_ref.load(
                         var=var_name,
-                        formula=formula,
-                        long_name=var_long_name,
-                        units=var_units,
                         standard_name=var_standard_name,
-                        std=True,  # Always compute std for reference
+                        std=True,  # The reference std is always used by the plots
                         freq=freq,
-                        exclude_incomplete=exclude_incomplete,
-                        center_time=center_time,
-                        box_brd=box_brd,
                         outputdir=cli.outputdir,
-                        rebuild=cli.rebuild,
                         reader_kwargs=ref.get("reader_kwargs") or {},
                     )
-                except NotEnoughDataError:
-                    cli.logger.warning(
-                        "Skipping reference %s (%s, %s): not enough data",
-                        ref["model"],
-                        ref["exp"],
-                        ref["source"],
-                    )
-                    profile_ref = None
-                except Exception as e:
-                    cli.logger.error(
-                        "Unexpected error for reference %s (%s, %s): %s",
-                        ref["model"],
-                        ref["exp"],
-                        ref["source"],
-                        e,
-                    )
-                    profile_ref = None
 
             # Create plots using helper function
             if compute_longterm and "longterm" in freq:

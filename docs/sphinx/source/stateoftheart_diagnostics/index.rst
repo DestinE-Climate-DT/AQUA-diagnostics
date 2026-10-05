@@ -73,7 +73,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
 
     references:
       - catalog: obs
-        model: ERA5
+        model: ECMWF
         exp: era5
         source: monthly
         regrid: null
@@ -84,6 +84,9 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     * ``outputdir``: the output directory for the plots.
     * ``rebuild``: a boolean that enables the rebuilding of the plots.
     * ``save_format``: a list (or single string) that selects the image formats to save plots. Default is SAVE_FORMAT.
+    * ``save_netcdf``: a boolean that enables the writing of the NetCDF files of the diagnostic.
+    * ``plot_only``: a boolean that skips the evaluation of the diagnostic, producing the plots from the NetCDF files
+      already present in ``outputdir``. Default is ``false``. See :ref:`diagnostics-plot-only`.
     * ``dpi``: the resolution of the plots.
     * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
@@ -93,6 +96,8 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
       outputdir: "/path/to/output"
       rebuild: true
       save_format: ['png', 'svg'] # default is SAVE_FORMAT (['png', 'pdf', 'svg'])
+      save_netcdf: true
+      plot_only: false
       dpi: 300
       create_catalog_entry: true
 
@@ -115,9 +120,45 @@ The following command line arguments are available for all the diagnostics:
 - ``--model``: Model to analyse. It can be defined in the config file.
 - ``--exp``: Experiment to analyse. It can be defined in the config file.
 - ``--source``: Source to analyse. It can be defined in the config file.
+- ``--realization``: Realization name. Merged into the first dataset's ``reader_kwargs``.
+- ``--regrid``: Target regrid resolution.
+- ``--startdate``: Start date (``YYYY-MM-DD``).
+- ``--enddate``: End date (``YYYY-MM-DD``).
 - ``--outputdir``: Output directory for the plots.
+- ``--reader_kwargs``: Additional Reader kwargs as a JSON object, merged into the first dataset's
+  ``reader_kwargs`` (CLI values take precedence over the config file on matching keys). For example:
 
+  .. code-block:: bash
+
+     --reader_kwargs '{"engine": "polytope", "chunks": {"time": 12}}'
+
+  Quote the entire object with single quotes in the shell and use double quotes for JSON keys and
+  strings. JSON preserves numbers, booleans (``true`` and ``false``), lists, nested objects and
+  ``null`` (Python ``None``). The selected Reader/backend determines which additional parameters
+  it supports.
+
+  ``catalog``, ``model``, ``exp``, ``source``, ``regrid``, ``startdate``, ``enddate``, ``loglevel``
+  and ``realization`` must be set with their dedicated CLI flags: they are rejected inside
+  ``--reader_kwargs`` to avoid conflicting settings. Invalid JSON or a value that is not an object
+  also produces a CLI error before retrieval. Individual diagnostics may reject additional keys
+  when they have their own dedicated flags for them (see their documentation).
+
+Only the first dataset in the ``datasets`` list is affected by these CLI overrides.
 If a diagnostic has extra arguments, these will be described in the individual diagnostic documentation.
+
+.. _diagnostics-plot-only:
+
+Plotting from previous results
+++++++++++++++++++++++++++++++
+
+Some diagnostics can produce their plots from the NetCDF files written by a previous run, without retrieving or computing anything.
+From the CLI, this is enabled by ``plot_only: true`` in the ``output`` block of the configuration file.
+From Python, the diagnostic class provides a ``load()`` method, which populates from the NetCDF files the same attributes as ``run()``,
+so that the plot classes are used in the same way. Results with no file on disk are left untouched.
+``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
+because they take part in the filenames.
+
+This is currently supported by :doc:`lat_lon_profiles`.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
