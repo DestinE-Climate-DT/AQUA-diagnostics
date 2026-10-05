@@ -10,7 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
-- Unpin matplotlib (#446)
+- Unpin matplotlib and list all directly imported packages as dependencies (#446)
 - Ocean3D: Drift refactor to improve performance (#413)
 - Move and update the cli_checker using diagnosticCLI (#401)
 - Unified CLI for ensemble timeseries and global biases (#327)
