@@ -4,6 +4,7 @@ Title generation class and utilities for AQUA plots.
 
 from typing import Optional, Union
 
+from aqua.core.logger import log_configure
 from aqua.core.util import strlist_to_phrase, to_list
 
 from .strings import collapse_era5_duplicate, harmonize_lists
@@ -58,6 +59,7 @@ class TitleBuilder:
         ref_startyear: Optional[int | str] = None,
         ref_endyear: Optional[int | str] = None,
         extra_info: Optional[Union[str, list]] = None,
+        loglevel: str = "WARNING",
     ):
 
         self.title = title
@@ -79,6 +81,7 @@ class TitleBuilder:
         self.ref_startyear = str(ref_startyear) if isinstance(ref_startyear, int) else ref_startyear
         self.ref_endyear = str(ref_endyear) if isinstance(ref_endyear, int) else ref_endyear
         self.extra_info = extra_info
+        self.logger = log_configure(log_name="TitleBuilder", log_level=loglevel)
 
     def _format_models(self) -> str | None:
         """Format catalogs, models, and exps into a single models phrase.
@@ -197,10 +200,11 @@ class TitleBuilder:
                 title += f" {variable[0].upper()}{variable[1:]}"
 
         if self.regions:
-            regions_list = to_list(self.regions)
-            regions_str = strlist_to_phrase(regions_list)
-            if regions_str:
-                title += f" [{regions_str}]"
+            if isinstance(self.regions, list):
+                self.logger.warning("regions_str is a list, no such case is expected but converting an anyway")
+                title += f" in {strlist_to_phrase(self.regions)}"
+            else:
+                title += f" in {self.regions.capitalize()}"
 
         models_part = self._format_models()
         if models_part:
