@@ -4,7 +4,7 @@ import xarray as xr
 from aqua.core.exceptions import NoDataError
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
-from aqua.core.util import select_season
+from aqua.core.util import DEFAULT_REALIZATION, select_season
 from aqua.diagnostics.base import Diagnostic
 
 from .util import handle_pressure_level
@@ -197,6 +197,48 @@ class Climatology(Diagnostic):
             dict_catalog_entry=dict_catalog_entry,
             extra_keys=extra_keys,
         )
+
+    def load(
+        self,
+        var: str = None,
+        plev: float = None,
+        seasonal: bool = False,
+        reader_kwargs: dict = {},
+        expect_netcdf: bool = False,
+    ) -> None:
+        """
+        Load the climatologies saved by a previous run, without retrieving any data.
+
+        Climatologies with no file on disk are left untouched.
+
+        Args:
+            var (str, optional): Variable name as it appears in the filename. If None, uses self.var.
+            plev (float, optional): Pressure level used when saving. If None, uses self.plev.
+            seasonal (bool): If True, also load the seasonal climatology.
+            reader_kwargs (dict, optional): Reader keyword arguments of the run, to match its realization.
+            expect_netcdf (bool): If True, a missing file is logged as an error instead of info.
+        """
+        self.var = var or self.var
+        self.plev = plev or self.plev
+        self.realization = reader_kwargs.get("realization", DEFAULT_REALIZATION)
+
+        extra_keys = {k: v for k, v in [("var", self.var), ("plev", self.plev)] if v is not None}
+        products = {"annual_climatology": "climatology"}
+        if seasonal:
+            products["seasonal_climatology"] = "seasonal_climatology"
+
+        for product, attribute in products.items():
+            data = self.load_netcdf(
+                diagnostic=self.diagnostic,
+                diagnostic_product=product,
+                outputdir=self.outputdir,
+                startdate=self.startdate,
+                enddate=self.enddate,
+                extra_keys=extra_keys,
+                expect_netcdf=expect_netcdf,
+            )
+            if data is not None:
+                setattr(self, attribute, data)
 
     def compute_climatology(
         self,
