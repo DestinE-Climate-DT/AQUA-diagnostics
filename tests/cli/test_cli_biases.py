@@ -59,7 +59,7 @@ class TestMainExecutionFlow:
         mock_gb_cls = mocker.patch(f"{CLI_MODULE}.Climatology")
         mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotBias")
         mock_gb_cls.return_value.data = _mock_data("2t")
-        mock_gb_cls.return_value.climatology = {}
+        mock_gb_cls.return_value.climatology = _mock_data("2t")
         return mock_gb_cls, mock_plot_cls
 
     def test_diagnostic_disabled_skips_processing(self, build_config, mock_cluster, mock_gb):
@@ -114,6 +114,50 @@ class TestMainExecutionFlow:
         mock_gb_cls.return_value.compute_climatology.assert_not_called()
         mock_plot_cls.return_value.plot_bias.assert_not_called()
 
+    @pytest.mark.parametrize(
+        "output, runs, loads",
+        [
+            ({}, True, True),  # compute, save and plot from the files just written
+            ({"save_netcdf": False}, True, False),  # compute and plot from memory only
+            ({"plot_only": True}, False, True),  # no evaluation, plot from previous files
+        ],
+    )
+    def test_plot_only_and_save_netcdf(self, build_config, mock_cluster, mock_gb, output, runs, loads):
+        """plot_only skips retrieve and compute, loading happens only when files are written or read."""
+        mock_gb_cls, mock_plot_cls = mock_gb
+        mock_gb_instance = mock_gb_cls.return_value
+        config_file = build_config({"biases": BASE_SET}, output_overrides=output)
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        # 1 dataset + 1 reference
+        assert mock_gb_instance.retrieve.call_count == (2 if runs else 0)
+        assert mock_gb_instance.compute_climatology.call_count == (2 if runs else 0)
+        assert mock_gb_instance.load.call_count == (2 if loads else 0)
+        mock_plot_cls.return_value.plot_bias.assert_called_once()
+
+    def test_missing_climatology_skips_variable(self, build_config, mock_cluster, mock_gb):
+        """If nothing is available after loading, the variable is not plotted."""
+        mock_gb_cls, mock_plot_cls = mock_gb
+        mock_gb_cls.return_value.climatology = None
+        config_file = build_config({"biases": BASE_SET}, output_overrides={"plot_only": True})
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        mock_plot_cls.return_value.plot_bias.assert_not_called()
+
+    def test_load_uses_short_name(self, build_config, mock_cluster, mock_gb):
+        """Files are named after the short name, so that is what load must look for."""
+        mock_gb_cls, _ = mock_gb
+        mock_gb_cls.return_value.climatology = _mock_data("t2m")
+        config_file = build_config(
+            {"biases": {**BASE_SET, "params": {"default": {}, "2t": {"short_name": "t2m"}}}},
+        )
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        assert mock_gb_cls.return_value.load.call_args.kwargs["var"] == "t2m"
+
     def test_seasonal_bias_plotted_when_seasons_enabled(self, build_config, mock_cluster, mock_gb):
         """When seasons=True, plot_seasonal_bias should be called."""
         mock_gb_cls, mock_plot_cls = mock_gb
@@ -136,6 +180,7 @@ class TestMainExecutionFlow:
         mock_gb_cls, mock_plot_cls = mock_gb
         mock_gb_instance = mock_gb_cls.return_value
         mock_gb_instance.data = _mock_data("2t", "tprate", "net_toa")
+        mock_gb_instance.climatology = _mock_data("2t", "tprate", "net_toa")
         config_file = build_config(
             {
                 "biases": {
