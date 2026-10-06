@@ -167,3 +167,31 @@ def test_save_netcdf_names_anonymous_dataarray(tmp_path):
     assert data.name == "tcc"
     loaded = diag.load_netcdf(diagnostic="test", diagnostic_product="save", outputdir=tmp_path)
     assert "tcc" in loaded.data_vars
+
+
+@pytest.mark.aqua
+@pytest.mark.parametrize("region", ["tropics", "io"])
+def test_select_region_without_retrieve(region):
+    """A Diagnostic with no Reader selects a region exactly as one that retrieved the data.
+
+    This is the plot only path, where results loaded from disk are cut into regions afterwards.
+    """
+    producer = Diagnostic(
+        model="ERA5",
+        exp="era5-hpz3",
+        source="monthly",
+        regrid="r100",
+        startdate="19900101",
+        enddate="19900301",
+        loglevel=loglevel,
+    )
+    producer.retrieve(var="tcc")
+    expected = producer.select_region(data=producer.data, region=region)
+
+    consumer = Diagnostic(model="ERA5", exp="era5-hpz3", source="monthly", loglevel=loglevel)
+    assert consumer.reader is None
+    result = consumer.select_region(data=producer.data, region=region)
+
+    assert result["region"] == expected["region"]
+    assert result["data"].attrs["AQUA_region"] == expected["region"]
+    xr.testing.assert_identical(result["data"], expected["data"])
