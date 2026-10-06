@@ -11,7 +11,25 @@ Main changes:
 
 Complete list:
 - Adopt new seldate() method for robust date selection (#403)
+- Update the deprecated `ConfigPath` (#451)
+- Remove parenthesis and capitalise regions (#456)
+- OutputSaver: `load_netcdf` can take the `expect_netcdf` argument to log missing files as errors instead of info. It also use start and end dates to check need of eventually recomputing results. (#452)
+- Reorganise OSI-SAF data and update source call from osi-saf-aqua to osi-saf-ssmis (#448)
+- Unpin matplotlib and list all directly imported packages as dependencies (#446)
+- reader_kwargs in default parser (#442)
+- Ocean3D: Drift refactor to improve performance (#413)
+- Move and update the cli_checker using diagnosticCLI (#401)
+- Unified CLI for ensemble timeseries and global biases (#327)
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
+- lumi_install.sh does not need a separate copy of the env file (#435)
+- Update GSV paths for lumi_install (#433)
+- conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
+- OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
+- Diagnostic: `load_netcdf` method (#392)
+- LatLonProfiles: `load` method and `plot_only` option to plot from previous netCDF files (#392)
+- Simplify enforcement of minimum number of months for diagnostics (#406)
 - Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+- Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
 
 ## [v0.25.1]
 
