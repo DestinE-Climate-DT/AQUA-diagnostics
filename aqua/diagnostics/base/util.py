@@ -3,21 +3,30 @@ Utility functions for the CLI
 """
 
 import argparse
+import json
 import os
+from functools import partial, wraps
 
+import xarray as xr
 from dask.distributed import Client, LocalCluster
 
 from aqua.core.configurer import ConfigPath
+from aqua.core.data_model.coordidentifier import CoordIdentifier
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg, load_yaml
 
 
-def template_parse_arguments(parser: argparse.ArgumentParser):
+def template_parse_arguments(
+    parser: argparse.ArgumentParser,
+    extra_parser_options: set | None = None,
+) -> argparse.ArgumentParser:
     """
     Add the default arguments to the parser.
 
     Args:
         parser: argparse.ArgumentParser
+        extra_parser_options: Additional parser options to check for conflicts in reader_kwargs.
+                             Defaults to None.
 
     Returns:
         argparse.ArgumentParser
@@ -35,6 +44,17 @@ def template_parse_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("--outputdir", type=str, required=False, help="output directory")
     parser.add_argument("--startdate", type=str, required=False, help="start date (YYYY-MM-DD)")
     parser.add_argument("--enddate", type=str, required=False, help="end date (YYYY-MM-DD)")
+
+    # argparse's `type` callable only ever receives the raw string value, so we bind
+    # extra_parser_options via partial; `wraps` keeps a readable __name__ for error messages.
+    reader_kwargs_type = wraps(_parse_reader_kwargs)(partial(_parse_reader_kwargs, extra_parser_options=extra_parser_options))
+    parser.add_argument(
+        "--reader_kwargs",
+        type=reader_kwargs_type,
+        metavar="JSON",
+        help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
+        "use dedicated flags for dataset selection, regrid, dates, loglevel, realization etc.",
+    )
 
     return parser
 
@@ -121,6 +141,7 @@ def load_diagnostic_config(
 
     Args:
         diagnostic (str): diagnostic name
+        default_config (str): default config file name. If not provided, it defaults to "config-{diagnostic}.yaml".
         config (str): config argument can modify the default configuration file.
         folder (str): folder name. Default is "collections". Can be "tools" or "templates" as well.
         loglevel (str): logging level. Default is 'WARNING'.
@@ -229,6 +250,18 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     datasets[0]["model"] = get_arg(args, "model", datasets[0]["model"])
     datasets[0]["exp"] = get_arg(args, "exp", datasets[0]["exp"])
     datasets[0]["source"] = get_arg(args, "source", datasets[0]["source"])
+    # CLI dataset overrides apply only to the first configured dataset.
+    reader_kwargs_arg = get_arg(args, "reader_kwargs", None)
+    realization = get_arg(args, "realization", None)
+    if reader_kwargs_arg or realization:
+        reader_kwargs = dict(datasets[0].get("reader_kwargs") or {})
+        if reader_kwargs_arg:
+            logger.info("Merging --reader_kwargs into dataset reader_kwargs: %s", reader_kwargs_arg)
+            reader_kwargs.update(reader_kwargs_arg)
+        if realization:
+            logger.info("Realization option is set to: %s", realization)
+            reader_kwargs["realization"] = realization
+        datasets[0]["reader_kwargs"] = reader_kwargs
 
     config["output"]["outputdir"] = get_arg(args, "outputdir", config["output"]["outputdir"])
 
@@ -242,3 +275,52 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
             logger.debug(f"  - {ref['catalog']} {ref['model']} {ref['exp']} {ref['source']}")
 
     return config
+
+
+def find_vert_coord(ds: xr.Dataset | xr.DataArray) -> list[str]:
+    """
+    Identify the vertical coordinate name(s) based on coordinate units. Returns always a list.
+    The list will be empty if none found.
+    """
+    coords = CoordIdentifier(ds.coords).identify_coords()
+    full_vert_coord = [y["name"] for x, y in coords.items() if y is not None and x in ["isobaric", "depth", "height"]]
+    return full_vert_coord
+
+
+def _parse_reader_kwargs(value, extra_parser_options=None):
+    """
+    Parse a JSON object of Reader kwargs without overriding default parser options.
+
+    Args:
+        value (str): JSON string representing Reader kwargs.
+        extra_parser_options (set, optional): Additional parser options to check for conflicts. Defaults to None.
+
+    Returns:
+        dict: Parsed Reader kwargs.
+    """
+    reader_kwargs = json.loads(value)
+
+    if not isinstance(reader_kwargs, dict):
+        raise argparse.ArgumentTypeError("expected a JSON object")
+
+    # Some tool like the checker may have additional parser options that
+    # should not be overridden by reader_kwargs.
+    parser_options = {
+        "catalog",
+        "model",
+        "exp",
+        "source",
+        "regrid",
+        "startdate",
+        "enddate",
+        "loglevel",
+        "realization",
+    }
+    if extra_parser_options:
+        parser_options.update(extra_parser_options)
+
+    conflicts = parser_options.intersection(reader_kwargs)
+    if conflicts:
+        raise argparse.ArgumentTypeError("use dedicated CLI flags for: " + ", ".join(sorted(conflicts)))
+
+    return reader_kwargs

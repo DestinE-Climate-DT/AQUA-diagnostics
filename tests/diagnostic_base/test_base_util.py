@@ -196,6 +196,40 @@ def test_merge_config_args():
     assert merged_config["output"]["outputdir"] == "test_outputdir"
 
 
+@pytest.mark.parametrize("configured_kwargs", [None, {"chunks": {"time": 12}}])
+def test_merge_config_args_normalizes_and_preserves_reader_kwargs(configured_kwargs):
+    """CLI realization is merged into the first dataset without leaking to others."""
+    parser = argparse.ArgumentParser()
+    args = template_parse_arguments(parser).parse_args(["--realization", "r2"])
+    config = {
+        "datasets": [
+            {
+                "catalog": "test",
+                "model": "Model1",
+                "exp": "exp1",
+                "source": "source1",
+                "reader_kwargs": configured_kwargs,
+            },
+            {
+                "catalog": "test",
+                "model": "Model2",
+                "exp": "exp2",
+                "source": "source2",
+                "reader_kwargs": {"realization": "r3"},
+            },
+        ],
+        "output": {"outputdir": "./"},
+    }
+
+    merged_config = merge_config_args(config=config, args=args, loglevel=loglevel)
+
+    expected = {"realization": "r2"}
+    if configured_kwargs:
+        expected["chunks"] = {"time": 12}
+    assert merged_config["datasets"][0]["reader_kwargs"] == expected
+    assert merged_config["datasets"][1]["reader_kwargs"] == {"realization": "r3"}
+
+
 def test_close_private_cluster_when_flag_true():
     """close_cluster always closes client, and closes cluster only if private_cluster=True."""
 
@@ -311,6 +345,17 @@ def test_minimum_months_enough(mock_reader_class):
     diag = Diagnostic(model="M", exp="E", source="S")
     result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=12)
     assert len(result.time) == 12
+
+
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_enough_1month(mock_reader_class):
+    """No error when available months >= months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(1)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=1)
+    assert len(result.time) == 1
 
 
 def test_minimum_months_required_class_attribute():

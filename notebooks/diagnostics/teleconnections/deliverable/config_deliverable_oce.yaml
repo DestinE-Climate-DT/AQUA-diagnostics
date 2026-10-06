@@ -31,7 +31,7 @@ models:
 # Reference is analyzed if --ref is passed to the script
 # The same extra keyword arguments as for the models can be used.
 reference:
-  - model: 'ERA5'
+  - model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
 

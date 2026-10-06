@@ -121,22 +121,22 @@ class TestDiagnosticCLI:
         assert cli.save_netcdf is True
         assert cli.dpi == 150
         assert cli.create_catalog_entry is True
-        assert cli.reader_kwargs == {"chunks": {"time": 1}}
 
-    def test_extract_options_with_realization(self, mock_args, mock_config_yaml):
-        """Test that realization is correctly handled."""
+    def test_load_config_merges_realization_into_first_dataset(self, mock_args, mock_config_yaml):
+        """Test that realization is merged with the first dataset Reader kwargs."""
         mock_args.config = str(mock_config_yaml)
         mock_args.realization = "r1i1p1f1"
 
         cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
-
         cli._load_config()
-        cli._setup_logging()
-        cli._extract_options()
 
-        assert cli.realization == "r1i1p1f1"
-        assert cli.reader_kwargs.get("realization") == "r1i1p1f1"
-        assert cli.reader_kwargs.get("chunks") == {"time": 1}
+        assert cli.config_dict["datasets"][0]["reader_kwargs"] == {
+            "chunks": {"time": 1},
+            "realization": "r1i1p1f1",
+        }
+        assert cli.config_dict["references"][0]["reader_kwargs"] == {
+            "chunks": {"time": 1},
+        }
 
     def test_dataset_args_returns_correct_mapping(self, mock_args):
         """Test that dataset_args extracts correct dataset arguments."""
@@ -163,6 +163,7 @@ class TestDiagnosticCLI:
         assert result["regrid"] == "r100"
         assert result["startdate"] == "2000-01-01"
         assert result["enddate"] == "2010-12-31"
+        assert "reader_kwargs" not in result
 
         result = cli.reference_args(dataset)
 
@@ -173,6 +174,7 @@ class TestDiagnosticCLI:
         assert result["regrid"] is None  # reference doesn't have regrid specified
         assert result["startdate"] == "2000-01-01"  # Takes from dataset itself
         assert result["enddate"] == "2010-12-31"  # Takes from dataset itself
+        assert "reader_kwargs" not in result
 
     def test_dataset_args_uses_defaults(self, mock_args):
         """Test that dataset_args uses defaults for missing keys."""
@@ -301,9 +303,10 @@ class TestDiagnosticCLI:
         # Verify all args are correctly applied
         assert cli.loglevel == "DEBUG"
         assert cli.regrid == "r400"
-        assert cli.realization == "r2i1p1f1"
-        assert cli.reader_kwargs.get("realization") == "r2i1p1f1"
-        assert cli.reader_kwargs.get("chunks") == {"time": 1}
+        assert cli.config_dict["datasets"][0]["reader_kwargs"] == {
+            "chunks": {"time": 1},
+            "realization": "r2i1p1f1",
+        }
         assert cli.outputdir == str(tmp_path / "test_output")
 
         # Test dataset_args with the prepared CLI

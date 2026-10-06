@@ -5,10 +5,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Unreleased in the current development version (target v0.25.0):
+Unreleased in the current development version (target v0.26.0):
+
+Main changes:
+
+Complete list:
+- Unpin matplotlib and list all directly imported packages as dependencies (#446)
+- reader_kwargs in default parser (#442)
+- Ocean3D: Drift refactor to improve performance (#413)
+- Move and update the cli_checker using diagnosticCLI (#401)
+- Unified CLI for ensemble timeseries and global biases (#327)
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
+- lumi_install.sh does not need a separate copy of the env file (#435)
+- Update GSV paths for lumi_install (#433)
+- conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
+- OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
+- Diagnostic: `load_netcdf` method (#392)
+- LatLonProfiles: `load` method and `plot_only` option to plot from previous netCDF files (#392)
+- Simplify enforcement of minimum number of months for diagnostics (#406)
+- Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+- Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
+
+## [v0.25.1]
+
+Complete list:
+- Timeseries: support no overlap between observations and model data (#370)
+
+## [v0.25.0]
+
+Main changes:
+1. Biases & Climatology refactor
+2. Centralize CLI arguments management via `reader_kwargs`
+3. Implement new DVC remote from ECMWF
+4. Specify min and max allowed versions for all dependencies
 
 Complete list:
 - Move aqua-web and DROP CLI tools, examples and job templates from AQUA-core (#301)
+- Ocean3D: corrected the drift plots along with adjustments in trends and stratification plots (#298)
+- Dependencies update (#368)
+- `reader_kwargs` centralization management of cli arguments (#264)
+- Biases & Climatology refactor (#331)
+- Add bokeh as dependency (#365)
+- Dependabot and sync bot adjustments (#347)
 - Implement new DVC remote from ECMWF (#1392)
 - LatLonProfiles: std dates selection fix (#345)
 - Update outputsaver notebook (#351)
@@ -157,8 +195,10 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...HEAD
-[v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.1...HEAD
+[v0.25.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.0...v0.25.1
+[v0.25.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...v0.25.0
+[v0.24.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
 [v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...v0.24.0
 [v0.23.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...v0.23.0
 [v0.22.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...v0.22.0

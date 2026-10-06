@@ -37,16 +37,25 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = [
-    "ecmean",
-    "cartopy==0.24.1"
+    "cartopy",
+    "dask",
+    "distributed",
+    "ecmean>=0.2.2",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "pillow",
+    "pypdf",
+    "scipy",
+    "xarray"
 ]
 
 [project.optional-dependencies]
 core = [
-    "aqua-core>=1.0.0"
+    "aqua-core>=1.2.0"
 ]
 core-fdb = [
-    "aqua-core[fdb]>=1.0.0"
+    "aqua-core[fdb]>=1.2.0"
 ]
 docs = [
     "sphinx",
@@ -61,35 +70,37 @@ tests = [
     "pytest-mock",
     "pytest-xdist",
     "coverage",
-    "cdo"
+    "cdo",
+    "dvc>3.60.0",
+    "dvc-s3"
 ]
 style = [
     "pre-commit",
-    "ruff==0.16.4"
+    "ruff==0.16.9"
 ]
-minimal = [
-    "aqua-diagnostics[core]"
-]
-dev = [
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]",
-    "aqua-diagnostics[style]"
-]
-additional = [
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]",
-    "aqua-diagnostics[style]"
-]
-all = [
-    "aqua-diagnostics[core]",
-    "aqua-diagnostics[additional]",
-]
-all-fdb = [
-    "aqua-diagnostics[core-fdb]",
-    "aqua-diagnostics[additional]",
-]
+# minimal = [
+#     "aqua-diagnostics[core]"
+# ]
+# dev = [
+#     "aqua-diagnostics[docs]",
+#     "aqua-diagnostics[notebooks]",
+#     "aqua-diagnostics[tests]",
+#     "aqua-diagnostics[style]"
+# ]
+# additional = [
+#     "aqua-diagnostics[docs]",
+#     "aqua-diagnostics[notebooks]",
+#     "aqua-diagnostics[tests]",
+#     "aqua-diagnostics[style]"
+# ]
+# all = [
+#     "aqua-diagnostics[core]",
+#     "aqua-diagnostics[additional]",
+# ]
+# all-fdb = [
+#     "aqua-diagnostics[core-fdb]",
+#     "aqua-diagnostics[additional]",
+# ]
 
 [project.urls]
 homepage = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
@@ -170,3 +181,11 @@ known-first-party = ["aqua"]
 quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
+
+[tool.conda-lock]
+default-non-conda-source = "pip"
+platforms = [
+    "linux-64",
+#    "osx-64",
+#    "osx-arm64",
+]

@@ -11,7 +11,7 @@ datasets:
 
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
     regrid: 'r100'
@@ -30,7 +30,7 @@ output:
   create_catalog_entry: true
 
 diagnostics:
-  globalbiases:
+  biases:
     run: true
     diagnostic_name: 'atmosphere2d'
     variables: ['msl']
