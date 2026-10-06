@@ -24,4 +24,4 @@ dependencies:
   - pip
   - pip:
     - -e ../AQUA[fdb]
-    - -e .[style,notebook,tests,docs]
+    - -e .[style,notebooks,tests,docs]
