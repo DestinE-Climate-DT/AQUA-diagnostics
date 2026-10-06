@@ -4,8 +4,8 @@ Title generation class and utilities for AQUA plots.
 
 from typing import Optional, Union
 
-from aqua.core.util import strlist_to_phrase, to_list
 from aqua.core.logger import log_configure
+from aqua.core.util import strlist_to_phrase, to_list
 
 from .strings import collapse_era5_duplicate, harmonize_lists
 
@@ -82,7 +82,6 @@ class TitleBuilder:
         self.ref_endyear = str(ref_endyear) if isinstance(ref_endyear, int) else ref_endyear
         self.extra_info = extra_info
         self.logger = log_configure(log_name="TitleBuilder", log_level=loglevel)
-
 
     def _format_models(self) -> str | None:
         """Format catalogs, models, and exps into a single models phrase.
@@ -201,7 +200,7 @@ class TitleBuilder:
                 title += f" {variable[0].upper()}{variable[1:]}"
 
         if self.regions:
-            if isinstance(self.regions,list):
+            if isinstance(self.regions, list):
                 self.logger.debug("regions_str is a list, no such case is expected but converting an anyway")
                 title += f" in {strlist_to_phrase(self.regions)}"
             else:
