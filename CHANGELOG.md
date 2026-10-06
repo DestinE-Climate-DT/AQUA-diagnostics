@@ -10,7 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
-- Reorganise OSI-SAF data and update source call (#448)
+- Reorganise OSI-SAF data and update source call from osi-saf-aqua to osi-saf-ssmis (#448)
 - Unpin matplotlib and list all directly imported packages as dependencies (#446)
 - reader_kwargs in default parser (#442)
 - Ocean3D: Drift refactor to improve performance (#413)
