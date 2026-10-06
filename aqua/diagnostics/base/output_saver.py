@@ -317,6 +317,7 @@ class OutputSaver:
         as_dataarray: bool = False,
         startdate: Optional[str] = None,
         enddate: Optional[str] = None,
+        expected: bool = False,
     ):
         """
         Load a NetCDF file previously written by save_netcdf.
@@ -335,6 +336,7 @@ class OutputSaver:
                 a DataArray. Defaults to False, which returns the Dataset as it is on disk.
             startdate (str, optional): Start date to match against the file's AQUA_startdate metadata.
             enddate (str, optional): End date to match against the file's AQUA_enddate metadata.
+            expected (bool, optional): If True a missing file is logged as an error instead of info.
 
         Returns:
             xr.Dataset, xr.DataArray or None: The data read from disk, None if the file does not exist.
@@ -343,16 +345,18 @@ class OutputSaver:
             ValueError: If as_dataarray is True but the file does not hold exactly one data variable.
         """
         filepath = self._build_filepath(diagnostic_product=diagnostic_product, file_format="nc", extra_keys=extra_keys)
+        loginfo = self.logger.error if expected else self.logger.info
+        logwarning = self.logger.error if expected else self.logger.warning
 
         if not os.path.exists(filepath):
-            self.logger.info("No NetCDF file to load at: %s", filepath)
+            loginfo("No NetCDF file to load at: %s", filepath)
             return None
 
         # Read eagerly and close: the caller is allowed to overwrite this same file afterwards.
         with xr.open_dataset(filepath) as dataset:
             data = dataset.load()
 
-        self.logger.info("Loaded NetCDF: %s", filepath)
+        loginfo("Loaded NetCDF: %s", filepath)
 
         # Compare only requested boundaries; date strings are normalized before comparison.
         if startdate or enddate:
@@ -362,7 +366,7 @@ class OutputSaver:
             file_enddate = data.attrs.get("AQUA_enddate")
 
             if startdate and (file_startdate is None or startdate != file_startdate):
-                self.logger.warning(
+                logwarning(
                     "Requested startdate %s does not match the file's startdate %s. Returning None.",
                     startdate,
                     file_startdate,
@@ -370,7 +374,7 @@ class OutputSaver:
                 return None
 
             if enddate and (file_enddate is None or enddate != file_enddate):
-                self.logger.warning(
+                logwarning(
                     "Requested enddate %s does not match the file's enddate %s. Returning None.",
                     enddate,
                     file_enddate,
