@@ -317,7 +317,7 @@ class OutputSaver:
         as_dataarray: bool = False,
         startdate: Optional[str] = None,
         enddate: Optional[str] = None,
-        expected: bool = False,
+        expect_netcdf: bool = False,
     ):
         """
         Load a NetCDF file previously written by save_netcdf.
@@ -336,7 +336,7 @@ class OutputSaver:
                 a DataArray. Defaults to False, which returns the Dataset as it is on disk.
             startdate (str, optional): Start date to match against the file's AQUA_startdate metadata.
             enddate (str, optional): End date to match against the file's AQUA_enddate metadata.
-            expected (bool, optional): If True a missing file is logged as an error instead of info.
+            expect_netcdf (bool, optional): If True a missing file is logged as an error instead of info.
 
         Returns:
             xr.Dataset, xr.DataArray or None: The data read from disk, None if the file does not exist.
@@ -345,8 +345,8 @@ class OutputSaver:
             ValueError: If as_dataarray is True but the file does not hold exactly one data variable.
         """
         filepath = self._build_filepath(diagnostic_product=diagnostic_product, file_format="nc", extra_keys=extra_keys)
-        loginfo = self.logger.error if expected else self.logger.info
-        logwarning = self.logger.error if expected else self.logger.warning
+        loginfo = self.logger.error if expect_netcdf else self.logger.info
+        logwarning = self.logger.error if expect_netcdf else self.logger.warning
 
         if not os.path.exists(filepath):
             loginfo("No NetCDF file to load at: %s", filepath)

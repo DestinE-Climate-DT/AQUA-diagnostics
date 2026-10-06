@@ -319,7 +319,7 @@ class LatLonProfiles(Diagnostic):
         freq: list = ["seasonal", "longterm"],
         outputdir: str = "./",
         reader_kwargs: dict = {},
-        expected: bool = False,
+        expect_netcdf: bool = False,
     ):
         """
         Populate the results from the netcdf files written by a previous run.
@@ -334,7 +334,7 @@ class LatLonProfiles(Diagnostic):
             freq (list): The frequencies to load ('seasonal' or 'longterm').
             outputdir (str): The directory where the data was saved.
             reader_kwargs (dict): The Reader keyword arguments of the run, to match its realization.
-            expected (bool): If True, a missing file is logged as an error instead of info.
+            expect_netcdf (bool): If True, a missing file is logged as an error instead of info.
         """
         self.realization = reader_kwargs["realization"] if "realization" in reader_kwargs else DEFAULT_REALIZATION
 
@@ -349,12 +349,12 @@ class LatLonProfiles(Diagnostic):
                 continue
             mean_attribute, std_attribute = freq_mapping[f]
 
-            data = self._load_profiles(var=name, freq=f, outputdir=outputdir, expected=expected)
+            data = self._load_profiles(var=name, freq=f, outputdir=outputdir, expect_netcdf=expect_netcdf)
             if data is not None:
                 setattr(self, mean_attribute, data)
 
             if std:
-                data_std = self._load_profiles(var=name, freq=f, std=True, outputdir=outputdir, expected=expected)
+                data_std = self._load_profiles(var=name, freq=f, std=True, outputdir=outputdir, expect_netcdf=expect_netcdf)
                 if data_std is not None:
                     setattr(self, std_attribute, data_std)
 
@@ -389,7 +389,7 @@ class LatLonProfiles(Diagnostic):
         freq: str,
         std: bool = False,
         outputdir: str = "./",
-        expected: bool = False,
+        expect_netcdf: bool = False,
     ):
         """
         Load one result from disk, the four seasonal profiles or the single longterm one.
@@ -402,7 +402,7 @@ class LatLonProfiles(Diagnostic):
             freq (str): The frequency of the data ('seasonal' or 'longterm').
             std (bool): If True, load the standard deviation files.
             outputdir (str): The directory where the data was saved.
-            expected (bool): If True, a missing file is logged as an error instead of info.
+            expect_netcdf (bool): If True, a missing file is logged as an error instead of info.
         Returns:
             list, xarray DataArray or None: [DJF, MAM, JJA, SON] for the seasonal frequency, a
                 single profile for the longterm one, None if any of the files is not on disk.
@@ -420,7 +420,7 @@ class LatLonProfiles(Diagnostic):
                 enddate=self.enddate,
                 as_dataarray=True,
                 extra_keys=self._extra_keys(freq=freq, var=var, season=season, std=std),
-                expected=expected,
+                expect_netcdf=expect_netcdf,
             )
             if data is None:
                 self.logger.info("No file found for the %s %s profile", freq, season or var)
