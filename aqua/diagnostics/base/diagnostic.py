@@ -239,6 +239,7 @@ class Diagnostic:
         as_dataarray: bool = False,
         startdate: str = None,
         enddate: str = None,
+        expected: bool = False,
     ):
         """
         Load from a netcdf file previously written by save_netcdf.
@@ -257,6 +258,7 @@ class Diagnostic:
                                  data was saved as a DataArray. Default is False.
             startdate (str): The start date of the data. Default is None.
             enddate (str): The end date of the data. Default is None.
+            expected (bool): If True, a missing file is logged as an error instead of info. Default is False.
 
         Returns:
             xarray Dataset, DataArray or None: The data read from disk, None if there is no file.
@@ -274,6 +276,7 @@ class Diagnostic:
             startdate=startdate,
             enddate=enddate,
             extra_keys=extra_keys,
+            expected=expected,
         )
 
     def _outputsaver(self, diagnostic: str, outputdir: str = "."):
