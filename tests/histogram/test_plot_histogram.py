@@ -59,7 +59,7 @@ class TestPlotHistogram:
         assert p.models[0] == "IFS" and p.exps[0] == "test-tco79"
         assert p.region == "global"
         assert "IFS test-tco79" in p.set_data_labels()[0]
-        assert p.set_ref_label() == "ERA5"
+        assert p.set_ref_label() == "ERA5 era5"
         assert "era5" not in p.set_ref_label()
         title = p.set_title()
         # Variable rendered lower case, but title still starts with a capital letter
