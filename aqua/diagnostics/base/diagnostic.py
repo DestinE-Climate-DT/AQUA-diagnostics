@@ -235,8 +235,11 @@ class Diagnostic:
         diagnostic: str,
         diagnostic_product: str = None,
         outputdir: str = ".",
+        extra_keys: dict = None,
         as_dataarray: bool = False,
-        **kwargs,
+        startdate: str = None,
+        enddate: str = None,
+        expect_netcdf: bool = False,
     ):
         """
         Load from a netcdf file previously written by save_netcdf.
@@ -245,14 +248,17 @@ class Diagnostic:
         there. It does not require a retrieve, which is what allows plot only runs.
 
         Args:
-            diagnostic (str): The diagnostic name.
+            diagnostic (str): The diagnostic name. Used to define the OutputSaver
             diagnostic_product (str): The diagnostic product.
             outputdir (str): The path where the data was saved. Default is '.'.
+                Used to define the OutputSaver.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
+                Must match the ones used when saving, otherwise the file will not be found.
             as_dataarray (bool): If True, return a DataArray instead of a Dataset. Use it when the
                                  data was saved as a DataArray. Default is False.
-
-        Keyword Args:
-            **kwargs: Additional keyword arguments to be passed to the OutputSaver.load_netcdf method.
+            startdate (str): The start date of the data. Default is None.
+            enddate (str): The end date of the data. Default is None.
+            expect_netcdf (bool): If True, a missing file is logged as an error instead of info. Default is False.
 
         Returns:
             xarray Dataset, DataArray or None: The data read from disk, None if there is no file.
@@ -267,7 +273,10 @@ class Diagnostic:
         return outputsaver.load_netcdf(
             diagnostic_product=diagnostic_product,
             as_dataarray=as_dataarray,
-            **kwargs,
+            startdate=startdate,
+            enddate=enddate,
+            extra_keys=extra_keys,
+            expect_netcdf=expect_netcdf,
         )
 
     def _outputsaver(self, diagnostic: str, outputdir: str = "."):

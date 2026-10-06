@@ -11,6 +11,7 @@ Main changes:
 
 Complete list:
 - Remove parenthesis and capitalise regions (#456)
+- OutputSaver: `load_netcdf` can take the `expect_netcdf` argument to log missing files as errors instead of info. It also use start and end dates to check need of eventually recomputing results. (#452)
 - Reorganise OSI-SAF data and update source call from osi-saf-aqua to osi-saf-ssmis (#448)
 - Unpin matplotlib and list all directly imported packages as dependencies (#446)
 - reader_kwargs in default parser (#442)
