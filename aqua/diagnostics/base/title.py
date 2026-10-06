@@ -200,7 +200,7 @@ class TitleBuilder:
             regions_list = to_list(self.regions)
             regions_str = strlist_to_phrase(regions_list)
             if regions_str:
-                title += f" {regions_str.capitalize()}"
+                title += f" in {regions_str.capitalize()}"
 
         models_part = self._format_models()
         if models_part:
