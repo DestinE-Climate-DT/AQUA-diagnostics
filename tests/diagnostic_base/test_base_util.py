@@ -154,9 +154,7 @@ def test_get_diagnostic_configpath_without_catalogs(tmp_path, monkeypatch):
     )
     monkeypatch.setenv("AQUA_CONFIG", str(configdir))
 
-    assert get_diagnostic_configpath("timeseries") == str(
-        configdir / "collections" / "timeseries"
-    )
+    assert get_diagnostic_configpath("timeseries") == str(configdir / "collections" / "timeseries")
 
 
 def test_load_diagnostic_config_default_filename(monkeypatch):
