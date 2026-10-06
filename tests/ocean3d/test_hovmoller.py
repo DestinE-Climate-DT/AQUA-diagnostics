@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import pytest
@@ -132,3 +133,58 @@ def test_netcdf_output(hovmoller_result, drift_type):
 def test_plot_output(hovmoller_plot, product, ext):
     path = Path(hovmoller_plot) / ext / f"{PLOT_STEM.format(product=product)}.{ext}"
     assert_nonempty(path)
+
+
+def _consumer():
+    """A Hovmoller that never retrieved and does not even know its catalog"""
+    return Hovmoller(model="FESOM", exp="hpz3", source="monthly-3d", loglevel=loglevel)
+
+
+def test_load_roundtrip(hovmoller_result, hovmoller_config):
+    """A run that only plots finds on disk exactly the products a previous run computed.
+
+    The consumer never retrieves: catalog, realization and region names are rebuilt without data access.
+    """
+    producer, tmp_path = hovmoller_result
+    consumer = _consumer()
+    consumer.load(outputdir=tmp_path, **{key: hovmoller_config["run"][key] for key in ("regions", "anomaly_ref")})
+
+    # The unknown region is skipped, as run does
+    assert set(consumer.processed_data) == set(producer.processed_data)
+    for region, produced in producer.processed_data.items():
+        loaded = consumer.processed_data[region]
+        # Same products in the same order, which sets the rows of the plots
+        assert [ds.attrs["AQUA_ocean_drift_type"] for ds in loaded] == EXPECTED_DRIFT_TYPES
+        for loaded_ds, produced_ds in zip(loaded, produced):
+            xr.testing.assert_allclose(loaded_ds, produced_ds)
+            # The attributes PlotHovmoller reads survived the round trip
+            assert loaded_ds.attrs["AQUA_region"] == produced_ds.attrs["AQUA_region"]
+            for attr in ["AQUA_catalog", "AQUA_model", "AQUA_exp"]:
+                assert loaded_ds["thetao"].attrs[attr] == produced_ds["thetao"].attrs[attr]
+
+
+def test_load_nothing_on_disk(tmp_path):
+    """With no files to read, the results are left as they are instead of being wiped."""
+    consumer = _consumer()
+    consumer.load(outputdir=tmp_path, regions=["sss"], anomaly_ref="t0")
+    assert consumer.processed_data == {}
+
+    # A load that finds nothing must not destroy what a run has just computed
+    computed = [xr.Dataset()]
+    consumer.processed_data["sss"] = computed
+    consumer.load(outputdir=tmp_path, regions=["sss"], anomaly_ref="t0")
+    assert consumer.processed_data["sss"] is computed
+
+
+def test_load_incomplete_products(hovmoller_result, tmp_path):
+    """A missing product gives no data for its region, rather than a plot silently missing a row."""
+    _, run_dir = hovmoller_result
+    (tmp_path / "netcdf").mkdir()
+    for drift_type in ["full", "anom_t0"]:  # std_anom_t0 is missing
+        name = f"{PLOT_STEM.format(product='hovmoller')}.{drift_type}.nc"
+        shutil.copy(Path(run_dir) / "netcdf" / name, tmp_path / "netcdf" / name)
+
+    consumer = _consumer()
+    consumer.load(outputdir=tmp_path, regions=["sss"], anomaly_ref="t0")
+
+    assert "sss" not in consumer.processed_data
