@@ -110,7 +110,7 @@ def test_title_wrap_not_triggered():
     "title,max_chars,split_on,expected",
     [
         # Two different markers used in sequence
-        ("Bias in IFS historical vs ERA5 era5", 20, ["vs", "in"], None),
+        ("Bias in IFS historical vs ECMWF era5", 20, ["vs", "in"], None),
         # Tail short enough after a single split – loop must stop
         ("AAAA for BBB", 9, ["for"], "AAAA\nfor BBB"),
         # Later marker handles what the earlier marker could not
@@ -156,11 +156,11 @@ def test_title_format_helpers_and_unique_refs():
     """Cover helper formatting behavior: years and duplicate reference removal."""
     tb = TitleBuilder(
         ref_catalog=["obs", "obs"],
-        ref_model=["ERA5", "ERA5"],
+        ref_model=["ECMWF", "ECMWF"],
         ref_exp=["era5", "era5"],
     )
     # Duplicates from harmonized reference parts are removed in output.
-    assert tb._format_refs() == "obs ERA5 era5"
+    assert tb._format_refs() == "obs ECMWF era5"
 
     # Year helper handles all partial combinations.
     assert tb._format_years(startyear="1990", endyear="1991") == "1990-1991"
@@ -171,5 +171,6 @@ def test_title_format_helpers_and_unique_refs():
 
 def test_title_models_multi_model_when_harmonized_list_has_multiple_entries():
     """_format_models returns 'Multi-model ' when more than one model tuple exists."""
-    title = TitleBuilder(catalog=["ci", "ci"], model=["IFS", "FESOM"], exp=["historical", "historical"]).generate()
+    tb = TitleBuilder(catalog=["ci", "ci"], model=["IFS", "FESOM"], exp=["historical", "historical"])
+    title = tb.generate()
     assert title == "Multi-model"
