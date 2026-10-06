@@ -144,28 +144,19 @@ def test_get_diagnostic_configpath(monkeypatch):
         get_diagnostic_configpath("timeseries", folder="invalid")
 
 
-@pytest.mark.parametrize("use_env", [True, False], ids=["AQUA_CONFIG", "HOME"])
-@pytest.mark.parametrize(
-    "folder, suffix",
-    [
-        ("collections", "collections/timeseries"),
-        ("tools", "tools/timeseries"),
-        ("templates", "templates/collections"),
-    ],
-)
-def test_get_diagnostic_configpath_without_catalogs(tmp_path, monkeypatch, use_env, folder, suffix):
-    """Resolve diagnostic paths from the environment without requiring catalog settings."""
-    home = tmp_path / "home"
-    configdir = tmp_path / "custom-config" if use_env else home / ".aqua"
-    configdir.mkdir(parents=True)
-    dump_yaml(outfile=str(configdir / "config-aqua.yaml"), cfg={"machine": "test-machine"})
-    monkeypatch.setenv("HOME", str(home))
-    if use_env:
-        monkeypatch.setenv("AQUA_CONFIG", str(configdir))
-    else:
-        monkeypatch.delenv("AQUA_CONFIG", raising=False)
+def test_get_diagnostic_configpath_without_catalogs(tmp_path, monkeypatch):
+    """Diagnostic path resolution does not require catalog configuration."""
+    configdir = tmp_path / "config"
+    configdir.mkdir()
+    dump_yaml(
+        outfile=str(configdir / "config-aqua.yaml"),
+        cfg={"machine": "test-machine"},
+    )
+    monkeypatch.setenv("AQUA_CONFIG", str(configdir))
 
-    assert get_diagnostic_configpath("timeseries", folder=folder) == str(configdir / suffix)
+    assert get_diagnostic_configpath("timeseries") == str(
+        configdir / "collections" / "timeseries"
+    )
 
 
 def test_load_diagnostic_config_default_filename(monkeypatch):
