@@ -14,6 +14,7 @@ output:
   outputdir: "./"
   rebuild: true
   save_netcdf: true
+  plot_only: false  # if true, plots are produced from the netcdf files already in outputdir
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
 
