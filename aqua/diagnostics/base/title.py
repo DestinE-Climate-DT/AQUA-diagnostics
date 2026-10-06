@@ -201,7 +201,7 @@ class TitleBuilder:
 
         if self.regions:
             if isinstance(self.regions, list):
-                self.logger.debug("regions_str is a list, no such case is expected but converting an anyway")
+                self.logger.warning("regions_str is a list, no such case is expected but converting an anyway")
                 title += f" in {strlist_to_phrase(self.regions)}"
             else:
                 title += f" in {self.regions.capitalize()}"
