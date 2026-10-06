@@ -22,7 +22,7 @@ job:
 
     # Run a check analysis to test the configuration and the presence of needed data
     # This also rebuild the area files, to avoid error with corrupted files
-    run_checker: true
+    run_setup_checker: true
 
     # Default output directory for the analysis. Can be overridden by the command line arguments
     outputdir: "./output"
