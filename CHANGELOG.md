@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- OutputSaver: `load_netcdf` can take the `expect_netcdf` argument to log missing files as errors instead of info (#452)
 - Unpin matplotlib and list all directly imported packages as dependencies (#446)
 - reader_kwargs in default parser (#442)
 - Ocean3D: Drift refactor to improve performance (#413)
