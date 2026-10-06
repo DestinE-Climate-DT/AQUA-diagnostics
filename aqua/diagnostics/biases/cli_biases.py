@@ -91,26 +91,27 @@ def main(argv=None):
             long_name = param_dict.get("long_name", None)
             short_name = param_dict.get("short_name", None)
 
-            try:
-                biases_dataset.retrieve(
-                    var=var,
-                    units=units,
-                    formula=is_formula,
-                    long_name=long_name,
-                    short_name=short_name,
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
-                )
-                biases_reference.retrieve(
-                    var=var,
-                    units=units,
-                    formula=is_formula,
-                    long_name=long_name,
-                    short_name=short_name,
-                    reader_kwargs=reference.get("reader_kwargs") or {},
-                )
-            except (NoDataError, KeyError, ValueError) as e:
-                cli.logger.warning("Variable '%s' not found in dataset. Skipping. (%s)", var, e)
-                continue
+            if not cli.plot_only:
+                try:
+                    biases_dataset.retrieve(
+                        var=var,
+                        units=units,
+                        formula=is_formula,
+                        long_name=long_name,
+                        short_name=short_name,
+                        reader_kwargs=dataset.get("reader_kwargs") or {},
+                    )
+                    biases_reference.retrieve(
+                        var=var,
+                        units=units,
+                        formula=is_formula,
+                        long_name=long_name,
+                        short_name=short_name,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                    )
+                except (NoDataError, KeyError, ValueError) as e:
+                    cli.logger.warning("Variable '%s' not found in dataset. Skipping. (%s)", var, e)
+                    continue
 
             show_stats = default_params.get("show_stats", False)
             show_significance = plot_params.get("show_significance", False)
@@ -120,18 +121,40 @@ def main(argv=None):
             target_spacing_deg = plot_params.get("target_spacing_deg", 2)
 
             # Compute climatologies (seasonal if specified) and areas if stats are to be shown
-            biases_dataset.compute_climatology(
-                seasonal=seasons,
-                seasons_stat=seasons_stat,
-                create_catalog_entry=cli.create_catalog_entry,
-                areas=bool(show_stats),
-            )
-            biases_reference.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, areas=bool(show_stats))
+            if not cli.plot_only:
+                biases_dataset.compute_climatology(
+                    seasonal=seasons,
+                    seasons_stat=seasons_stat,
+                    create_catalog_entry=cli.create_catalog_entry,
+                    areas=bool(show_stats),
+                )
+                biases_reference.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, areas=bool(show_stats))
+
+            # Populate from the netcdf files, written just now or by a previous run. Results computed
+            # without saving them are already in memory, and older files must not replace them.
+            if cli.plot_only or cli.save_netcdf:
+                # Files are named after the short name, if any
+                biases_dataset.load(
+                    var=short_name or var,
+                    seasonal=seasons,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    expect_netcdf=True,
+                )
+                biases_reference.load(
+                    var=short_name or var,
+                    seasonal=seasons,
+                    reader_kwargs=reference.get("reader_kwargs") or {},
+                    expect_netcdf=True,
+                )
+
+            if biases_dataset.climatology is None or biases_reference.climatology is None:
+                cli.logger.warning("Climatology for '%s' not available. Skipping.", var)
+                continue
 
             if short_name is not None:
                 var = short_name
 
-            if "plev" in biases_dataset.data.get(var, {}).dims and plev:
+            if "plev" in biases_dataset.climatology[var].dims and plev:
                 plev_list = to_list(plev)
             else:
                 plev_list = [None]
@@ -194,7 +217,7 @@ def main(argv=None):
                         vmax=vmax,
                     )
 
-            if vertical and "plev" in biases_dataset.data.get(var, {}).dims:
+            if vertical and "plev" in biases_dataset.climatology[var].dims:
                 cli.logger.debug("Plotting vertical bias for variable:  %s", var)
                 vmin_v, vmax_v = plot_params.get("vmin_v"), plot_params.get("vmax_v")
                 plot_biases.plot_vertical_bias(
