@@ -123,6 +123,33 @@ def test_load_netcdf_roundtrip(base_saver, tmp_path):
 
 
 @pytest.mark.aqua
+def test_load_netcdf_date_match(base_saver):
+    """Requested dates must match the corresponding file metadata exactly."""
+    data = xr.Dataset({"data": ("x", [1, 2])})
+    metadata = {"AQUA_startdate": "1991-01-01", "AQUA_enddate": "1992-12-31"}
+    base_saver.save_netcdf(dataset=data, diagnostic_product="mean", metadata=metadata)
+
+    loaded = base_saver.load_netcdf(diagnostic_product="mean", startdate="19910101", enddate="1992-12-31")
+    assert isinstance(loaded, xr.Dataset)
+
+    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1992-01-01") is None
+    assert base_saver.load_netcdf(diagnostic_product="mean", enddate="1991-12-31") is None
+
+    # Each boundary can be checked independently.
+    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01"), xr.Dataset)
+    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", enddate="1992-12-31"), xr.Dataset)
+
+
+@pytest.mark.aqua
+def test_load_netcdf_date_match_requires_metadata(base_saver):
+    """A requested date cannot match a file that has no corresponding date metadata."""
+    base_saver.save_netcdf(dataset=xr.Dataset({"data": ("x", [1, 2])}), diagnostic_product="mean")
+
+    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01") is None
+    assert base_saver.load_netcdf(diagnostic_product="mean", enddate="1992-12-31") is None
+
+
+@pytest.mark.aqua
 def test_load_netcdf_missing_file(base_saver, tmp_path):
     """A missing file is not an error: None is returned and no output folder is created."""
     assert base_saver.load_netcdf(diagnostic_product="mean") is None
@@ -149,6 +176,10 @@ def test_load_netcdf_as_dataarray(base_saver):
     assert loaded.attrs["units"] == "mm/day"
     assert loaded.attrs["AQUA_model"] == "IFS-NEMO"
     assert loaded.attrs["AQUA_region"] == "tropics"
+
+    # Keep the original positional argument order: diagnostic_product, extra_keys, as_dataarray.
+    positional_loaded = base_saver.load_netcdf("mean", None, True)
+    assert isinstance(positional_loaded, xr.DataArray)
 
 
 @pytest.mark.aqua
