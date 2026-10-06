@@ -21,6 +21,7 @@ from aqua.core.util import (
     replace_intake_vars,
     replace_urlpath_jinja,
     replace_urlpath_wildcard,
+    time_to_string,
     to_list,
     update_metadata,
 )
@@ -314,12 +315,16 @@ class OutputSaver:
         diagnostic_product: str,
         extra_keys: Optional[dict] = None,
         as_dataarray: bool = False,
+        startdate: Optional[str] = None,
+        enddate: Optional[str] = None,
     ):
         """
         Load a NetCDF file previously written by save_netcdf.
 
         The filename is built exactly as save_netcdf builds it. A missing file is not an error:
         None is returned. The file is read eagerly and closed, so that it can then be overwritten.
+        If startdate or enddate is provided, the corresponding file metadata must exactly match
+        the requested date. If it does not, or the metadata is missing, None is returned.
 
         Args:
             diagnostic_product (str): Product of the diagnostic analysis.
@@ -328,6 +333,8 @@ class OutputSaver:
             as_dataarray (bool, optional): If True, return the single data variable of the file as a
                 DataArray, merging the dataset attributes into it. Use it when the data was saved as
                 a DataArray. Defaults to False, which returns the Dataset as it is on disk.
+            startdate (str, optional): Start date to match against the file's AQUA_startdate metadata.
+            enddate (str, optional): End date to match against the file's AQUA_enddate metadata.
 
         Returns:
             xr.Dataset, xr.DataArray or None: The data read from disk, None if the file does not exist.
@@ -346,6 +353,29 @@ class OutputSaver:
             data = dataset.load()
 
         self.logger.info("Loaded NetCDF: %s", filepath)
+
+        # Compare only requested boundaries; date strings are normalized before comparison.
+        if startdate or enddate:
+            startdate = time_to_string(startdate) if startdate else None
+            enddate = time_to_string(enddate) if enddate else None
+            file_startdate = data.attrs.get("AQUA_startdate")
+            file_enddate = data.attrs.get("AQUA_enddate")
+
+            if startdate and (file_startdate is None or startdate != file_startdate):
+                self.logger.warning(
+                    "Requested startdate %s does not match the file's startdate %s. Returning None.",
+                    startdate,
+                    file_startdate,
+                )
+                return None
+
+            if enddate and (file_enddate is None or enddate != file_enddate):
+                self.logger.warning(
+                    "Requested enddate %s does not match the file's enddate %s. Returning None.",
+                    enddate,
+                    file_enddate,
+                )
+                return None
 
         if not as_dataarray:
             return data
