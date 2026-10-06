@@ -10,7 +10,7 @@ import pytest
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml as write_yaml
 from aqua.core.util import load_yaml
-from aqua.diagnostics.checker.cli_setup_checker import _checker_build_config, main, parse_arguments
+from aqua.diagnostics.base.cli_setup_checker import _checker_build_config, main, parse_arguments
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
