@@ -296,7 +296,7 @@ The default reference datasets are:
 
 Details are available on the `OSI-SAF website <https://osi-saf.eumetsat.int/>`_.
 
-An updated OSI-SAF version is available in the AQUA ``obs`` catalog (``exp=osi-saf-ssmis``), which concatenates OSI-SAF osi-450-a1 (1979-2021) and OSI-SAF osi-430 (2022-2024) datasets.
+An updated OSI-SAF version is available in the AQUA ``obs`` catalog (``exp=osi-saf-ssmis``), which concatenates OSI-SAF osi-450-a1 (1979-2021) and OSI-SAF osi-430 (2022-2025) datasets.
 
 Custom reference datasets can be configured in the configuration file.
 
