@@ -201,12 +201,11 @@ class TitleBuilder:
                 title += f" {variable[0].upper()}{variable[1:]}"
 
         if self.regions:
-            if region_name:
-                if isinstance(self.regions,list):
-                    self.logger.debug("regions_str is a list, no such case is expected but converting an anyway")
-                    title += f" in {strlist_to_phrase(self.regions)}"
-                else:
-                    title += f" in {self.regions.capitalize()}"
+            if isinstance(self.regions,list):
+                self.logger.debug("regions_str is a list, no such case is expected but converting an anyway")
+                title += f" in {strlist_to_phrase(self.regions)}"
+            else:
+                title += f" in {self.regions.capitalize()}"
 
         models_part = self._format_models()
         if models_part:
