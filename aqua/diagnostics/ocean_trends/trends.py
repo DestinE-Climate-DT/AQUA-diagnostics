@@ -5,6 +5,7 @@ import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.reader import Trender
+from aqua.core.util import DEFAULT_REALIZATION
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -60,6 +61,8 @@ class Trends(Diagnostic):
             vert_coord = DEFAULT_OCEAN_VERT_COORD
         self.vert_coord = vert_coord
 
+        self.trend_coef = None
+
     def run(
         self,
         outputdir: str = ".",
@@ -68,6 +71,7 @@ class Trends(Diagnostic):
         var: list = ["thetao", "so"],
         dim_mean: type = None,
         reader_kwargs: dict = {},
+        save_netcdf: bool = True,
     ):
         """Run the trend analysis workflow.
 
@@ -78,6 +82,7 @@ class Trends(Diagnostic):
             var (list, optional): List of variable names to analyze. Default is ['thetao', 'so'].
             dim_mean (str or list, optional): Dimension(s) over which to compute the mean. Default is None.
             reader_kwargs (dict, optional): Additional keyword arguments for the data reader. Default is {}.
+            save_netcdf (bool, optional): Whether to save the trend coefficients as a netcdf file. Default is True.
 
         """
         self.logger.info("Starting trend analysis workflow")
@@ -87,7 +92,51 @@ class Trends(Diagnostic):
         self.data, self.region = self.select_region(data=self.data, region=region, dim_mean=dim_mean)
         self.logger.info("Computing trend coefficients")
         self.trend_coef = self.compute_trend(data=self.data)
-        self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
+        if save_netcdf:
+            self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
+
+    def load(
+        self,
+        diagnostic_product: str = "trend",
+        outputdir: str = ".",
+        region: str = None,
+        reader_kwargs: dict = {},
+    ):
+        """Populate the trend coefficients from the netcdf file written by a previous run.
+
+        A missing file leaves the result untouched, so that load can be called both before run,
+        to keep a previous result, and after it, or alone to plot without recomputing anything.
+
+        Args:
+            diagnostic_product (str, optional): Product type for filenames. Default is "trend".
+            outputdir (str, optional): Directory where the data was saved. Default is current directory.
+            region (str, optional): Geographical region given to run. Default is None, the global data.
+            reader_kwargs (dict, optional): The Reader keyword arguments of the run, to match its realization.
+
+        """
+        self.realization = reader_kwargs.get("realization", DEFAULT_REALIZATION)
+        # run names the file after the region long name, which is resolved here without any data access
+        self.region = self._set_region(region=region)[0] if region else "global"
+
+        data = self.load_netcdf(
+            diagnostic=self.diagnostic_name,
+            diagnostic_product=diagnostic_product,
+            outputdir=outputdir,
+            extra_keys=self._extra_keys(),
+        )
+        if data is not None:
+            self.trend_coef = data
+
+    def _extra_keys(self):
+        """Build the filename keys identifying the result.
+
+        Shared by save_netcdf and load, so that the two always address the same file.
+
+        Returns:
+            dict: The extra keys of the filename.
+
+        """
+        return {"region": self.region}
 
     def select_region(self, data, region=None, drop=True, dim_mean=None):
         """Select a region and optionally compute mean over specified dimensions.
@@ -216,5 +265,5 @@ class Trends(Diagnostic):
             outputdir=outputdir,
             rebuild=rebuild,
             data=self.trend_coef,
-            extra_keys={"region": self.region},
+            extra_keys=self._extra_keys(),
         )
