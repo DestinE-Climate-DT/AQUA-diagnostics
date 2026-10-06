@@ -247,12 +247,12 @@ def test_save_figure_single_and_multiple_formats(base_saver, tmp_path):
 def test_create_catalog_entry_new_entry(base_saver, tmp_path):
     """Test creating a new catalog entry when none exists."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     mock_catalog_file = {"sources": {}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_intake_vars", return_value="/mocked/path/data.nc"),
@@ -270,8 +270,8 @@ def test_create_catalog_entry_new_entry(base_saver, tmp_path):
 def test_create_catalog_entry_existing_entry(base_saver, tmp_path, monkeypatch):
     """Test updating an existing catalog entry."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     existing_catblock = {
         "driver": "netcdf",
         "description": "Existing",
@@ -281,7 +281,7 @@ def test_create_catalog_entry_existing_entry(base_saver, tmp_path, monkeypatch):
     mock_catalog_file = {"sources": {"aqua-dummy-mean": existing_catblock}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_intake_vars", return_value="/new/path/data.nc"),
@@ -300,12 +300,12 @@ def test_create_catalog_entry_existing_entry(base_saver, tmp_path, monkeypatch):
 def test_create_catalog_entry_with_variables(base_saver, tmp_path):
     """Test creating catalog entry with jinja and wildcard variable replacements."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     mock_catalog_file = {"sources": {}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_urlpath_jinja") as mock_replace_jinja,
@@ -337,12 +337,12 @@ def test_create_catalog_entry_with_variables(base_saver, tmp_path):
 def test_create_catalog_entry_edge_cases(base_saver, tmp_path):
     """Test edge cases: None metadata values, file operations, and entry naming."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     mock_catalog_file = {"sources": {}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_intake_vars", return_value="/mocked/path/data.nc"),

@@ -757,8 +757,8 @@ def test_reader_retrieve_and_merge_reader_kwargs(mock_reader):
 
 
 @pytest.mark.ensemble
-@patch("aqua.diagnostics.ensemble.util.ConfigPath")
-def test_extract_realizations_returns_realizations(mock_config_path):
+@patch("aqua.diagnostics.ensemble.util.ConfigCatalog")
+def test_extract_realizations_returns_realizations(mock_config_catalog):
     """Return allowed realizations from the catalog."""
     source_entry = MagicMock()
 
@@ -784,7 +784,7 @@ def test_extract_realizations_returns_realizations(mock_config_path):
         "machine.yaml",
     )
 
-    mock_config_path.return_value = configurer
+    mock_config_catalog.return_value = configurer
 
     result = extract_realizations(
         catalog="catalog",
@@ -797,8 +797,8 @@ def test_extract_realizations_returns_realizations(mock_config_path):
 
 
 @pytest.mark.ensemble
-@patch("aqua.diagnostics.ensemble.util.ConfigPath")
-def test_extract_realizations_no_realization(mock_config_path):
+@patch("aqua.diagnostics.ensemble.util.ConfigCatalog")
+def test_extract_realizations_no_realization(mock_config_catalog):
     """Return None if no realization parameter exists."""
     source_entry = MagicMock()
 
@@ -828,7 +828,7 @@ def test_extract_realizations_no_realization(mock_config_path):
         "machine.yaml",
     )
 
-    mock_config_path.return_value = configurer
+    mock_config_catalog.return_value = configurer
 
     result = extract_realizations(
         catalog="catalog",
@@ -846,8 +846,8 @@ def test_extract_realizations_no_realization(mock_config_path):
 
 
 @pytest.mark.ensemble
-@patch("aqua.diagnostics.ensemble.util.ConfigPath")
-def test_extract_realizations_list_returns_realizations(mock_config_path):
+@patch("aqua.diagnostics.ensemble.util.ConfigCatalog")
+def test_extract_realizations_list_returns_realizations(mock_config_catalog):
     """Return realizations from an uninstantiated catalog entry."""
     source_entry = MagicMock()
 
@@ -878,7 +878,7 @@ def test_extract_realizations_list_returns_realizations(mock_config_path):
         "machine.yaml",
     )
 
-    mock_config_path.return_value = configurer
+    mock_config_catalog.return_value = configurer
 
     result = extract_realizations_list(
         catalog="catalog",
@@ -891,8 +891,8 @@ def test_extract_realizations_list_returns_realizations(mock_config_path):
 
 
 @pytest.mark.ensemble
-@patch("aqua.diagnostics.ensemble.util.ConfigPath")
-def test_extract_realizations_list_source_missing(mock_config_path):
+@patch("aqua.diagnostics.ensemble.util.ConfigCatalog")
+def test_extract_realizations_list_source_missing(mock_config_catalog):
     """Return None when the requested source is absent."""
     exp_entry = MagicMock()
     exp_entry._entries = {}
@@ -912,7 +912,7 @@ def test_extract_realizations_list_source_missing(mock_config_path):
         "machine.yaml",
     )
 
-    mock_config_path.return_value = configurer
+    mock_config_catalog.return_value = configurer
 
     result = extract_realizations_list(
         catalog="catalog",
@@ -925,8 +925,8 @@ def test_extract_realizations_list_source_missing(mock_config_path):
 
 
 @pytest.mark.ensemble
-@patch("aqua.diagnostics.ensemble.util.ConfigPath")
-def test_extract_realizations_list_no_realization(mock_config_path):
+@patch("aqua.diagnostics.ensemble.util.ConfigCatalog")
+def test_extract_realizations_list_no_realization(mock_config_catalog):
     """Return None when no realization parameter is available."""
     source_entry = MagicMock()
 
@@ -957,7 +957,7 @@ def test_extract_realizations_list_no_realization(mock_config_path):
         "machine.yaml",
     )
 
-    mock_config_path.return_value = configurer
+    mock_config_catalog.return_value = configurer
 
     result = extract_realizations_list(
         catalog="catalog",
