@@ -47,7 +47,7 @@ def test_title_references():
         variable="Temperature",
         model="IFS",
         exp="test-exp",
-        ref_model="ERA5",
+        ref_model="ECMWF",
         ref_exp="era5",
         ref_startyear=1980,
         ref_endyear="1990",
@@ -57,8 +57,7 @@ def test_title_references():
     assert "  " not in result
     assert "Bias of temperature" in result
     assert "in IFS" in result
-    assert "vs ERA5" in result
-    assert "era5" not in result
+    assert "vs ECMWF era5" in result
     assert "1980-1990" in result
 
 
