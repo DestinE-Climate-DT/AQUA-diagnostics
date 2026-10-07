@@ -280,7 +280,9 @@ class Stratification(Diagnostic):
             self.clim_type = "Total"
 
         if self.clim_type:
-            if self.clim_type in ["month", "year", "season"]:
+            if self.clim_type == "season":
+                self.data = self.data.sel(time=self.data.time.dt.season == climatology).mean("time")
+            elif self.clim_type in ["month", "year"]:
                 self.data = self.data.groupby(f"time.{self.clim_type}").mean("time")
                 self.data = self.data.rename({f"{self.clim_type}": "time"})
                 if self.clim_type == "month":
