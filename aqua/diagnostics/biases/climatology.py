@@ -182,7 +182,7 @@ class Climatology(Diagnostic):
         else:
             self.logger.info("All variables retrieved; no variable-specific operations applied.")
 
-        # Region selection (lon/lat box or regionmask-based), applied to the whole retrieved dataset 
+        # Region selection (lon/lat box or regionmask-based), applied to the whole retrieved dataset
         if self.region is not None:
             self.logger.info("Selecting region '%s'.", self.region)
             res_dict = self.select_region(
@@ -354,9 +354,7 @@ class Climatology(Diagnostic):
 
             if save_netcdf:
                 extra_keys = {
-                    k: v
-                    for k, v in [("var", var), ("plev", plev), ("region", self.region_longname)]
-                    if v is not None
+                    k: v for k, v in [("var", var), ("plev", plev), ("region", self.region_longname)] if v is not None
                 }
                 self.savenetcdf(
                     data=self.seasonal_climatology,

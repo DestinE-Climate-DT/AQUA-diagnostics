@@ -228,7 +228,8 @@ class PlotBias:
                                                   between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
             extent (list, optional): Map extent [lon_min, lon_max, lat_min, lat_max] in PlateCarree coordinates.
-                                     If None and the data has an AQUA_region attribute, it is computed from the data limits with a 2 degree pad.
+                                    If None and the data has an AQUA_region attribute,
+                                    it is computed from the data limits with a 2 degree pad.
             cyclic_lon (bool, optional): Whether to add a cyclic longitude point. Default is True.
                                          It is set to False automatically for regional data (AQUA_region attribute present).
 
@@ -264,7 +265,7 @@ class PlotBias:
                     ]
                 if proj == "plate_carree" and lon_min < 180 <= lon_max:
                     proj_params = {**proj_params, "central_longitude": 180}
-        
+
         proj = get_projection(proj, **proj_params)
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
