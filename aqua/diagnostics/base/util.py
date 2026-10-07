@@ -10,7 +10,7 @@ from functools import partial, wraps
 import xarray as xr
 from dask.distributed import Client, LocalCluster
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigLocator
 from aqua.core.data_model.coordidentifier import CoordIdentifier
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg, load_yaml
@@ -125,7 +125,8 @@ def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel="W
     Returns:
         str: path to the diagnostic configuration directory
     """
-    configdir = ConfigPath(loglevel=loglevel).configdir
+    logger = log_configure(log_name="get_diagnostic_configpath", log_level=loglevel)
+    configdir = ConfigLocator(logger=logger).configdir
     if folder == "templates":
         return os.path.join(configdir, folder, "collections")
     if folder in ["collections", "tools"]:
