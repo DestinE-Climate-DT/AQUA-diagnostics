@@ -202,7 +202,11 @@ class Stratification(Diagnostic):
             if clim not in clim_cache:
                 self.data = data_whole_region
                 self.compute_climatology(climatology=clim)
+                self.logger.info("Loading %s climatology into memory.", clim)
                 clim_cache[clim] = self.data.load()
+                self.logger.info("Loaded %s climatology into memory.", clim)
+            else:
+                self.logger.info("Reusing %s climatology already in memory.", clim)
             self.data = clim_cache[clim]
             res_dict = super().select_region(data=self.data, region=reg, drop=True)
             self.region = res_dict["region"] if res_dict["region"] is not None else "global"
