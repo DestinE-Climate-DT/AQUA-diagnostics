@@ -305,7 +305,6 @@ class Stratification(Diagnostic):
         cons_thetao = convert_thetao(abs_so, thetao)
         return compute_rho(abs_so, cons_thetao, 0) - 1000
 
-
     def calculate_rho(self):
         data_thetao = super()._check_data(data=self.data["thetao"], var="thetao", units="degreeC")
         rho = xr.apply_ufunc(
