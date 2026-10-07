@@ -3,10 +3,10 @@ from typing import Union
 
 import xarray as xr
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigLocator
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 xr.set_options(keep_attrs=True)
 
@@ -22,6 +22,7 @@ class BaseMixin(Diagnostic):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
+        var: str = None,
         configdir: str = None,
         definition: str = "teleconnections-destine",
         loglevel: str = "WARNING",
@@ -39,10 +40,10 @@ class BaseMixin(Diagnostic):
                              If None, all available data will be retrieved.
             enddate (str): The end date of the data to be retrieved.
                            If None, all available data will be retrieved.
+            var (str): The variable to be used. If None, the variable will be determined by the definition.
             configdir (str): The directory where the definition file is located.
                              If None, the default directory will be used.
-            definition (str): The filename of the definition file.
-                             Default is 'teleconnections-destine'.
+            definition (str): The filename of the definition file. Default is 'teleconnections-destine'.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
         super().__init__(
@@ -57,12 +58,13 @@ class BaseMixin(Diagnostic):
         )
 
         self.definition = self.load_definition(configdir=configdir, definition=definition, telecname=telecname)
+        self.var = var or self.definition.get("field")
         self.telecname = telecname
 
         # Initialize the possible results
         self.index = None
 
-    def compute_regression(self, var: str = None, dim: str = "time", season: str = None):
+    def compute_regression(self, var: str = None, dim: str = "time", season: str = None, units: str = None):
         """
         Compute the regression of the data on the index.
 
@@ -70,14 +72,20 @@ class BaseMixin(Diagnostic):
             var (str): The variable to be used. If None, the variable is the same of the index.
             dim (str): The dimension to be used for the regression. Default is 'time'.
             season (str): The season to be used. If None, no season will be selected.
+            units (str): The units of the variable. If None, the units are not changed.
 
         Returns:
             xr.DataArray: The regression of the data on the index.
         """
-        data, index = self._prepare_statistic(var=var, season=season)
+        data, index = self._prepare_statistic(var=var, season=season, units=units)
         reg = xr.cov(index, data, dim=dim) / index.var(dim=dim, skipna=True).values
 
+        units = units if units else getattr(data, "units", None)
+
         # Populate the attributes of the regression for backend functionalities
+        reg.name = "regression"
+        if units:
+            reg.attrs["units"] = units
         reg.attrs["long_name"] = f"Linear regression of {data.long_name.lower()} with {index.long_name}"
         reg.attrs["shortName"] = "linear_regression"
 
@@ -99,20 +107,31 @@ class BaseMixin(Diagnostic):
         corr = xr.corr(index, data, dim=dim)
 
         # Modify the attributes to match the correlation
+        corr.name = "correlation"
         corr.attrs["long_name"] = f"Correlation of {data.long_name.lower()} with {index.long_name}"
         corr.attrs["shortName"] = "Pearson_correlation"
         corr.attrs["units"] = "1"
 
         return corr
 
-    def _prepare_statistic(self, var: str = None, season: str = None):
-        """Hidden method to prepare the data and index for the statistic."""
+    def _prepare_statistic(self, var: str = None, season: str = None, units: str = None):
+        """
+        Hidden method to prepare the data and index for the statistic.
+
+        Args:
+            var (str): The variable to be used. If None, the variable is the same of the index.
+            season (str): The season to be used. If None, no season will be selected
+            units (str): The units of the variable. If None, the units are not changed.
+
+        Returns:
+            tuple: A tuple containing the prepared data and index.
+        """
         # Preparing data and index. Both have to be xr.DataArray
         if self.index is None:
             raise ValueError("Index is not set. Please compute the index first.")
         else:
             index = self.index
-        if not var:
+        if not var or var == self.var:
             if isinstance(self.data, xr.Dataset):
                 data = self.data[self.var]
         else:
@@ -133,6 +152,9 @@ class BaseMixin(Diagnostic):
             data = select_season(data, season)
             index = select_season(index, season)
 
+        if units:
+            data = self._check_data(data, var=var, units=units)
+
         return data, index
 
     def load_definition(self, configdir: str = None, definition: str = "teleconnections-destine", telecname: str = None):
@@ -152,8 +174,9 @@ class BaseMixin(Diagnostic):
         # Add yaml to definition if not present
         if not definition.endswith(".yaml"):
             definition = f"{definition}.yaml"
+        # If configdir is not provided, use the default configdir from Locator
         if not configdir:
-            configdir = ConfigPath().get_config_dir()
+            configdir = ConfigLocator().configdir
             configdir = os.path.join(configdir, "tools", "teleconnections", "definitions")
 
         definition_file = os.path.join(configdir, definition)
@@ -288,7 +311,7 @@ class PlotBaseMixin:
         """
         labels_dataset = [f"{self.models[i]} {self.exps[i]}" for i in range(self.len_data)]
         labels_ref = [f"{self.ref_models[i]} {self.ref_exps[i]}" for i in range(self.len_ref)]
-        labels = labels_dataset + labels_ref
+        labels = [collapse_era5_duplicate(label) for label in labels_dataset + labels_ref]
         return labels
 
     def set_index_description(self, index_name: str = None):
@@ -320,13 +343,14 @@ class PlotBaseMixin:
         if self.len_data > 0:
             description += f" {', '.join(dataset)}"
         if self.len_ref > 0:
-            description += " using reference data from"
+            description += " and for"
             description += f" {', '.join(refs)}"
         description += "."
 
         if index_name in ["ENSO", "Niño 3.4 index"]:
             description += " El Niño and La Niña events are defined when exceeding a 0.5 °C threshold."
 
+        description = collapse_era5_duplicate(description)
         self.logger.debug(f"Index description: {description}")
         return description
 
@@ -364,6 +388,43 @@ class PlotBaseMixin:
             dpi=dpi,
         )
 
+    def set_map_title(
+        self,
+        telecname: str = None,
+        statistic: str = None,
+        var: str = None,
+        model: str = None,
+        exp: str = None,
+        season: str = None,
+        ref_model: str = None,
+        ref_exp: str = None,
+    ):
+        """
+        Build the title for a correlation/regression map.
+
+        Args:
+            telecname (str): Teleconnection prefix (e.g. "NAO", "Niño 3.4").
+            statistic (str): Statistic name (e.g. "correlation", "regression").
+            var (str): Variable name (e.g. "msl", "tprate").
+            model (str): Model name.
+            exp (str): Experiment name.
+            season (str): Season label (e.g. "DJF"); rendered in parentheses.
+            ref_model (str): Reference model name.
+            ref_exp (str): Reference experiment name.
+
+        Returns:
+            str: The map title.
+        """
+        return TitleBuilder(
+            diagnostic=f"{var}" if var else f"{telecname} {statistic} map",
+            model=model,
+            exp=exp,
+            comparison="compared to" if ref_model else None,
+            ref_model=ref_model,
+            ref_exp=ref_exp,
+            timeseason=f"({season})" if season else None,
+        ).generate()
+
     def set_map_description(self, maps=None, ref_maps=None, statistic: str = None, telecname: str = None):
         """
         Set the description for the maps.
@@ -379,7 +440,7 @@ class PlotBaseMixin:
         """
         description = ""
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps)
+        maps, ref_maps, _ = _homogeneize_maps(maps=maps, ref_maps=ref_maps)
 
         if isinstance(maps, xr.DataArray):
             var = maps.long_name if hasattr(maps, "long_name") else maps.shortName
@@ -402,18 +463,27 @@ class PlotBaseMixin:
         if isinstance(ref_maps, xr.DataArray):
             var = ref_maps.long_name if hasattr(ref_maps, "long_name") else ref_maps.shortName
             description += f" compared to {ref_maps.AQUA_model} {ref_maps.AQUA_exp}"
+            description += (
+                f" (from {time_to_string(self.ref_startdate[0], format='%Y-%m')} "
+                f"to {time_to_string(self.ref_enddate[0], format='%Y-%m')})"
+            )
         elif isinstance(ref_maps, list):
             var = ref_maps[0].long_name if hasattr(ref_maps[0], "long_name") else ref_maps[0].shortName
-            description += f" compared to {ref_maps[0].AQUA_model} {ref_maps[0].AQUA_exp}"
-            for map in ref_maps:
-                description += f"{map.AQUA_model} {map.AQUA_exp}, "
+            description += " compared to "
+            for i, map in enumerate(ref_maps):
+                description += (
+                    f"{map.AQUA_model} {map.AQUA_exp} "
+                    f"(from {time_to_string(self.ref_startdate[i], format='%Y-%m')} "
+                    f"to {time_to_string(self.ref_enddate[i], format='%Y-%m')}), "
+                )
             description = description[:-2]
         description += "."
         if ref_maps is not None:
             description += f" Contours represent the model {statistic}, "
             description += "while shading is the difference between the model and the reference."
 
-        self.logger.debug(f"Map description: {description}")
+        description = collapse_era5_duplicate(description)
+        self.logger.info(f"Map description: {description}")
 
         return description
 
@@ -431,7 +501,7 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
                              If None, inferred from each DataArray.
 
     Returns:
-        tuple: The homogenized maps and reference maps.
+        tuple: The homogenized maps, reference maps and var name to be used in cbar and title.
     """
     maps = to_list(maps)
     maps = [
@@ -455,4 +525,12 @@ def _homogeneize_maps(maps, ref_maps=None, var=None):
     if ref_maps is not None and len(ref_maps) == 1:
         ref_maps = ref_maps[0]
 
-    return maps, ref_maps
+    var_label = getattr(maps, "long_name", None) or getattr(maps, "shortName", None)
+
+    # Units are read after the conversion above, so that the label matches the plotted values.
+    # Dimensionless quantities (e.g. correlations) are labelled without units.
+    map_units = getattr(maps, "units", None)
+    if var_label and map_units and map_units != "1":
+        var_label = f"{var_label} ({map_units})"
+
+    return maps, ref_maps, var_label

@@ -1,10 +1,12 @@
+"""Module for plotting ocean stratification vertical profiles."""
+
 import math
 from typing import Union
 
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label, get_realizations
+from aqua.core.util import cbar_get_label, get_realizations, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -14,6 +16,8 @@ xr.set_options(keep_attrs=True)
 
 
 class PlotStratification:
+    """Class for plotting ocean stratification vertical profiles."""
+
     def __init__(
         self,
         data: xr.Dataset,
@@ -23,6 +27,17 @@ class PlotStratification:
         outputdir: str = ".",
         loglevel: str = "WARNING",
     ):
+        """Initialize PlotStratification with model and observational datasets.
+
+        Args:
+            data (xr.Dataset): Dataset containing stratification variables to plot.
+            obs (xr.Dataset, optional): Observational dataset for comparison. Default is None.
+            diagnostic_name (str, optional): Name of the diagnostic. Default is "ocean_stratification".
+            vert_coord (str, optional): Vertical coordinate name. Default is DEFAULT_OCEAN_VERT_COORD.
+            outputdir (str, optional): Directory to save output plots. Default is ".".
+            loglevel (str, optional): Logging level. Default is "WARNING".
+
+        """
         self.data = data
         self.obs = obs
 
@@ -61,6 +76,14 @@ class PlotStratification:
         save_format: Union[str, list] = SAVE_FORMAT,
         dpi: int = 300,
     ):
+        """Generate and save the stratification vertical profile plot.
+
+        Args:
+            rebuild (bool, optional): If True, rebuild existing output files. Default is True.
+            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
+            dpi (int, optional): Resolution of the saved figure. Default is 300.
+
+        """
         self.diagnostic_product = "stratification"
         self.clim_time = self.data.attrs.get("AQUA_stratification_climatology", "Total")
         # self.data_list = [self.data, self.obs] if self.obs else [self.data]
@@ -68,6 +91,7 @@ class PlotStratification:
         self.set_suptitle()
         self.set_title()
         self.set_description()
+        self.set_xtext()
         self.set_ytext()
         self.set_nrowcol()
         # self.set_cbar_labels(var= 'rho')
@@ -82,7 +106,10 @@ class PlotStratification:
             data_label=self.data_label,
             obs_label=self.obs_label if self.obs else None,
             title=self.suptitle,
-            figsize=(4 * self.ncols, 10 * self.nrows),
+            titles=self.title_list,
+            figsize=(4 * self.ncols, 5 * self.nrows),
+            xtext=self.xtext,
+            ytext=self.ytext,
             return_fig=True,
             loglevel=self.loglevel,
         )
@@ -98,15 +125,21 @@ class PlotStratification:
         )
 
     def set_nrowcol(self):
-        if hasattr(self, "levels") and self.levels:
-            self.nrows = len(self.levels)
-        else:
-            self.nrows = 1
+        """Set subplot grid layout: ``nrows=1``, ``ncols=len(self.vars)``."""
+        self.nrows = 1
         self.ncols = len(self.vars)
-        if self.obs:
-            self.ncols = self.ncols * 2
+
+    def set_xtext(self):
+        """Build x-axis labels from variable name and units (one per column)."""
+        self.xtext = []
+        for var in self.vars:
+            units = self.data[var].attrs.get("units", "")
+            units_latex = unit_to_latex(units) if units else ""
+            self.xtext.append(f"{var} ({units_latex})")
+        self.logger.debug("X-axis text labels set to: %s", self.xtext)
 
     def set_ytext(self):
+        """Build y-axis labels from depth levels. Empty unless ``self.levels`` is set."""
         self.ytext = []
         if hasattr(self, "levels") and self.levels:
             for level in self.levels:
@@ -117,11 +150,13 @@ class PlotStratification:
                         self.ytext.append(None)
 
     def set_label_line_plot(self):
+        """Set the legend labels for the model and observation lines."""
         self.data_label = self.model
         if self.obs:
             self.obs_label = self.obs.attrs.get("model", "Observation")
 
     def set_data_list(self):
+        """Populate the data and reference data lists for plotting."""
         self.data_list = [self.data]
         if self.obs:
             self.ref_data_list = [self.obs]
@@ -131,9 +166,16 @@ class PlotStratification:
         #         self.data_list.append(data_var)
 
     def set_cbar_labels(self, var: str = None):
+        """Set the colorbar label for the given variable.
+
+        Args:
+            var (str, optional): Variable name to derive the colorbar label from.
+
+        """
         self.cbar_label = cbar_get_label(data=self.data[var], cbar_label=None, loglevel=self.loglevel)
 
     def _round_up(self, value):
+        """Round a value up to the nearest 50 or 100 for colorbar limits."""
         if value % 100 == 0:
             return value  # Already a multiple of 100
         elif value % 100 <= 50:
@@ -142,6 +184,7 @@ class PlotStratification:
             return math.ceil(value / 100) * 100  # Round up to next 100
 
     def set_cbar_limits(self):
+        """Set colorbar limits and level count (used by MLD plotting, not stratification profiles)."""
         self.vmin = 0.0
         if self.obs:
             self.vmax = max(self.obs["mld"].max(), self.obs["mld"].max())
@@ -158,11 +201,10 @@ class PlotStratification:
         self.logger.debug(f"Colorbar limits set to vmin: {self.vmin}, vmax: {self.vmax}, nlevels: {self.nlevels}")
 
     def set_suptitle(self):
-        """Set the title for the MLD plot."""
+        """Set the figure suptitle for the stratification plot."""
         self.suptitle = TitleBuilder(
             diagnostic="Stratification",
             regions=self.region,
-            catalog=self.catalog,
             model=self.model,
             exp=self.exp,
             timeseason=f"{self.clim_time} climatology",
@@ -170,33 +212,38 @@ class PlotStratification:
         self.logger.debug(f"Suptitle set to: {self.suptitle}")
 
     def set_title(self):
-        """
-        Set the title for the Hovmoller plot.
-        This method can be extended to set specific titles based on the data.
-        """
+        """Set subplot titles from each variable's ``long_name`` (one per column)."""
         self.title_list = []
         for j in range(len(self.data_list)):
-            attrs = self.data_list[j].attrs
-            for i, var in enumerate(self.vars):
-                # if j == 0:
-                # title = f"{var} ({self.data[var].attrs.get('units')})"
-                title = f"{attrs.get('AQUA_catalog')} {attrs.get('AQUA_model')} {attrs.get('AQUA_exp')}"
-                self.title_list.append(title)
-                # else:
-                #     self.title_list.append(" ")
+            for var in self.vars:
+                if j == 0:
+                    title = f"{self.data[var].attrs.get('long_name', var)}"
+                    self.title_list.append(title)
+                else:
+                    self.title_list.append(" ")
         self.logger.debug("Title list set to: %s", self.title_list)
 
-    def set_description(
-        self,
-    ):
+    def set_description(self):
+        """Build the figure description string including model and observation date ranges."""
+        model_startdate = self.data.attrs.get("startdate", None)
+        model_enddate = self.data.attrs.get("enddate", None)
         self.description = (
-            f"Stratification plot of spatially averaged {self.region} region, {self.clim_time} climatology "
-            f"for the {self.catalog} {self.model} {self.exp} experiment"
+            f"Vertical profiles of temperature, salinity and density for the spatially averaged"
+            f" {self.region} region, {self.clim_time} climatology for {self.model} {self.exp} (solid)"
         )
-        if self.obs:
-            self.description = self.description + (
-                f" with the reference data from {self.obs_catalog} {self.obs_model} {self.obs_exp}"
+        if model_startdate and model_enddate:
+            self.description += (
+                f" (from {time_to_string(model_startdate, format='%Y-%m')} to {time_to_string(model_enddate, format='%Y-%m')})"
             )
+        if self.obs:
+            obs_startdate = self.obs.attrs.get("startdate", None)
+            obs_enddate = self.obs.attrs.get("enddate", None)
+            self.description += f" with reference {self.obs.attrs['model']} {self.obs.attrs['exp']} (dashed)"
+            if obs_startdate and obs_enddate:
+                self.description += (
+                    f" (from {time_to_string(obs_startdate, format='%Y-%m')} to {time_to_string(obs_enddate, format='%Y-%m')})"
+                )
+        self.description += "."
 
     def save_plot(
         self,
@@ -208,8 +255,7 @@ class PlotStratification:
         dpi: int = 300,
         format: Union[str, list] = SAVE_FORMAT,
     ):
-        """
-        Save the plot to a file.
+        """Save the plot to a file.
 
         Args:
             fig (matplotlib.figure.Figure): The figure to be saved.
@@ -221,6 +267,7 @@ class PlotStratification:
             metadata (dict): The metadata to be used for the figure. Default is None.
                              They will be complemented with the metadata from the outputsaver.
                              We usually want to add here the description of the figure.
+
         """
         self.outputsaver.save_figure(
             fig,

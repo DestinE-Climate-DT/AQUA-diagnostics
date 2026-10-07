@@ -61,7 +61,9 @@ class TestMainExecutionFlow:
         - 4 Stratification runs (model+obs for stratification and MLD)
         - 1 PlotStratification and 1 PlotMLD call.
         """
-        config_file = build_config({"ocean_stratification": BASE_STRAT})
+        config_file = build_config(
+            {"ocean_stratification": {"stratification": BASE_STRAT["stratification"], "mld": BASE_STRAT["stratification"]}}
+        )
 
         main(["--config", config_file, "--loglevel", "WARNING"])
 

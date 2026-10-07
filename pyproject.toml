@@ -21,7 +21,7 @@ description = "AQUA-diagnostics: the diagnostics set of the AQUA framework for h
 readme = "README.md"
 keywords = ["climate", "modeling", "diagnostics", "high-resolution"]
 license = {file = "LICENSE"}
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.15"
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
@@ -29,28 +29,40 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = [
-    "ecmean",
-    "cartopy<=0.24.1"
+    "cartopy",
+    "dask",
+    "distributed",
+    "ecmean>=0.2.2",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "pillow",
+    "pypdf",
+    "scipy",
+    "xarray"
 ]
 
 [project.optional-dependencies]
 core = [
-    "aqua-core>=1.0.0a4"
+    "aqua-core>=1.2.0"
+]
+core-fdb = [
+    "aqua-core[fdb]>=1.2.0"
 ]
 docs = [
     "sphinx",
     "sphinx-rtd-theme"
 ]
 notebooks = [
-    "ipykernel",
-    "healpy"
+    "ipykernel"
 ]
 tests = [
     "pytest",
@@ -58,34 +70,46 @@ tests = [
     "pytest-mock",
     "pytest-xdist",
     "coverage",
-    "cdo"
+    "cdo",
+    "dvc>3.60.0",
+    "dvc-s3"
 ]
 style = [
     "pre-commit",
-    "ruff==0.15.12"
+    "ruff==0.16.9"
 ]
-minimal = [
-    "aqua-diagnostics[core]"
-]
-dev = [
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]",
-    "aqua-diagnostics[style]"
-]
-all = [
-    "aqua-diagnostics[core]",
-    "aqua-diagnostics[docs]",
-    "aqua-diagnostics[notebooks]",
-    "aqua-diagnostics[tests]",
-    "aqua-diagnostics[style]"
-]
+# minimal = [
+#     "aqua-diagnostics[core]"
+# ]
+# dev = [
+#     "aqua-diagnostics[docs]",
+#     "aqua-diagnostics[notebooks]",
+#     "aqua-diagnostics[tests]",
+#     "aqua-diagnostics[style]"
+# ]
+# additional = [
+#     "aqua-diagnostics[docs]",
+#     "aqua-diagnostics[notebooks]",
+#     "aqua-diagnostics[tests]",
+#     "aqua-diagnostics[style]"
+# ]
+# all = [
+#     "aqua-diagnostics[core]",
+#     "aqua-diagnostics[additional]",
+# ]
+# all-fdb = [
+#     "aqua-diagnostics[core-fdb]",
+#     "aqua-diagnostics[additional]",
+# ]
 
 [project.urls]
 homepage = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 documentation = "https://aqua-diagnostics.readthedocs.io/en/latest/index.html"
 repository = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/"
 issues = "https://github.com/DestinE-Climate-DT/AQUA-diagnostics/issues/"
+
+[project.entry-points."aqua.plugins"]
+diagnostics = "aqua.diagnostics:get_install_dirs"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -137,7 +161,7 @@ omit = [
 
 [tool.ruff]
 line-length = 127
-target-version = "py310"
+target-version = "py311"
 exclude = ["**/__init__.py"]
 
 [tool.ruff.lint]
@@ -157,3 +181,11 @@ known-first-party = ["aqua"]
 quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
+
+[tool.conda-lock]
+default-non-conda-source = "pip"
+platforms = [
+    "linux-64",
+#    "osx-64",
+#    "osx-arm64",
+]

@@ -15,6 +15,8 @@ on:
         required: false
         default: 'main'
         type: string
+  schedule:
+    - cron: "0 3 * * *"
 
 permissions:
   contents: read
@@ -46,18 +48,19 @@ jobs:
     if: needs.check-trigger.outputs.should-run == 'true'
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
-      python-versions: '["3.12"]'
+      python-versions: '["3.14"]'
       pytest-markers: 'diagnostics'
       enable-parallel: true
       enable-coverage: true
       fail-fast: false
       install-mode: 'cross-check'
       aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+      test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
       AQUA_DVC_PAT: ${{ secrets.AQUA_DVC_PAT }}
-      BSC_GITLAB: ${{ secrets.BSC_GITLAB }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      AQUA_DVC_PEM: ${{ secrets.AQUA_DVC_PEM }}

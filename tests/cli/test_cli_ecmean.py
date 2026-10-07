@@ -82,7 +82,7 @@ class TestMainExecutionFlow:
         mock_reader_data = mocker.patch(f"{CLI_MODULE}.reader_data", return_value=MagicMock(name="dataset"))
         mocker.patch(f"{CLI_MODULE}.data_check", return_value=MagicMock(name="checked_dataset"))
         mock_time_check = mocker.patch(f"{CLI_MODULE}.time_check", return_value=(2000, 2001))
-        mock_configpath = mocker.patch(f"{CLI_MODULE}.ConfigPath")
+        mock_configcatalog = mocker.patch(f"{CLI_MODULE}.ConfigCatalog")
         mock_outputsaver = mocker.patch(f"{CLI_MODULE}.OutputSaver")
         mock_perf = mocker.patch(f"{CLI_MODULE}.PerformanceIndices")
         mock_gm = mocker.patch(f"{CLI_MODULE}.GlobalMean")
@@ -91,7 +91,7 @@ class TestMainExecutionFlow:
             "merge": mock_merge,
             "reader_data": mock_reader_data,
             "time_check": mock_time_check,
-            "configpath": mock_configpath,
+            "configcatalog": mock_configcatalog,
             "outputsaver": mock_outputsaver,
             "performance": mock_perf,
             "global_mean": mock_gm,
@@ -123,15 +123,15 @@ class TestMainExecutionFlow:
         assert mock_ecmean["outputsaver"].return_value.save_figure.call_count == 2
 
     def test_main_uses_catalog_fallback_when_missing(self, mock_ecmean, build_config):
-        """If dataset catalog is missing, ConfigPath fallback should provide it."""
+        """If dataset catalog is missing, ConfigCatalog fallback should provide it."""
         _prepare_config_load(mock_ecmean, build_config, save_format=[], catalog=None)
         catalog_obj = MagicMock()
         catalog_obj.name = "fallback-catalog"
-        mock_ecmean["configpath"].return_value.deliver_intake_catalog.return_value = (catalog_obj, None, None)
+        mock_ecmean["configcatalog"].return_value.deliver_intake_catalog.return_value = (catalog_obj, None, None)
 
         main(["--config", "dummy.yaml", "--loglevel", "WARNING"])
 
-        mock_ecmean["configpath"].assert_called_once()
+        mock_ecmean["configcatalog"].assert_called_once()
         first_outputsaver_call = mock_ecmean["outputsaver"].call_args_list[0]
         assert first_outputsaver_call.kwargs["catalog"] == "fallback-catalog"
 
@@ -187,7 +187,7 @@ def test_set_description_global_mean():
     config = {"global_mean": {"regions": ["Global", "NH"]}}
     description = set_description("global_mean", "IFS", "hist", 2000, 2001, config)
 
-    assert "IFS hist from 2000-01 to 2001-12" in description
+    assert "IFS hist (from 2000-01 to 2001-12)" in description
     assert "Global (90°S-90°N)" in description
     assert "NH (20°N-90°N)" in description
 

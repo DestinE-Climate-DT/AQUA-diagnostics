@@ -3,7 +3,7 @@ import matplotlib as plt
 from aqua.core.graphics import boxplot
 from aqua.core.logger import log_configure
 from aqua.core.util import extract_attrs, get_realizations, time_to_string, to_list, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, collapse_era5_duplicate
 
 
 class PlotBoxplots:
@@ -140,13 +140,10 @@ class PlotBoxplots:
             fldmeans = [ds - ref.mean("time") for ds in fldmeans]
 
         if not title:
-            title = TitleBuilder(
-                diagnostic="Boxplot",
-                model=model_names,
-                exp=exp_names,
-                ref_model=model_names_ref if model_names_ref else None,
-                ref_exp=exp_names_ref if exp_names_ref else None,
-            ).generate()
+            # List every dataset (model exp) after "for:" on a new line
+            datasets = [f"{m} {e}" for m, e in zip(model_names, exp_names)]
+            datasets += [f"{m} {e}" for m, e in zip(model_names_ref, exp_names_ref)]
+            title = collapse_era5_duplicate("Boxplot\nfor: " + ", ".join(datasets))
 
         # Plot boxplot
         fig, ax = boxplot(

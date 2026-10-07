@@ -19,7 +19,6 @@ pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="diagnostic_
 class TestPlotSeaIce:
     @classmethod
     def setup_class(cls):
-        cls.tmp_path = "./"
         cls.catalog = "ci"
         cls.model = "FESOM"
         cls.exp = "hpz3"
@@ -186,14 +185,16 @@ class TestPlotSeaIce:
         """Test label generation for single DataArray."""
         psi = PlotSeaIce(dpi=DPI)
         da = self._dummy_da("m1")
-        assert psi._gen_labelname(da) == "m1 e s"
+        expected = "m1 e"  # AQUA_source is intentionally ignored in labels
+        assert psi._gen_labelname(da) == expected
 
     def test_gen_labelname_list(self):
         """Test label generation for list of DataArrays."""
         psi = PlotSeaIce(dpi=DPI)
         da_list = [self._dummy_da("m1"), self._dummy_da("m2")]
         labels = psi._gen_labelname(da_list)
-        assert labels == ["m1 e s", "m2 e s"]
+        expected = ["m1 e", "m2 e"]  # AQUA_source is intentionally ignored in labels
+        assert labels == expected
 
     def test_getdata_fromdict_single(self):
         """Test data extraction from dict with single item."""
@@ -244,7 +245,7 @@ class TestPlotSeaIce:
         assert "png" in formats
         assert "pdf" in formats
 
-    def test_plot_saves_outputs(self):
+    def test_plot_saves_outputs(self, tmp_path):
         """Test that plotting saves output files."""
         psi = PlotSeaIce(
             monthly_models=self.siext,
@@ -256,13 +257,13 @@ class TestPlotSeaIce:
             catalog=self.catalog,
             loglevel=self.loglevel,
             dpi=DPI,
-            outputdir=self.tmp_path,
+            outputdir=str(tmp_path),
         )
 
         psi.plot_seaice(plot_type="timeseries", save_format=["png", "pdf"])
 
-        png_files = glob.glob(os.path.join(self.tmp_path, "**/*.png"), recursive=True)
-        pdf_files = glob.glob(os.path.join(self.tmp_path, "**/*.pdf"), recursive=True)
+        png_files = glob.glob(os.path.join(str(tmp_path), "**/*.png"), recursive=True)
+        pdf_files = glob.glob(os.path.join(str(tmp_path), "**/*.pdf"), recursive=True)
 
         assert len(png_files) > 0, "No PNG file saved."
         assert len(pdf_files) > 0, "No PDF file saved."

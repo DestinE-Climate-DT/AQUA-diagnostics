@@ -1,0 +1,57 @@
+# Default date for jinja templates for reference datasets:
+
+# default: default date range for all analyses
+# radiation_ceres: date range for ceres radiation analyses
+# timeseries: date range for timeseries analyses
+
+# startdate, enddate: values for the date range for references to be used in the analysis
+# std_startdate, std_enddate: standard deviation for references to be used in the analysis
+
+default:
+  default:
+    startdate: "1990-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1990-01-01"
+    std_enddate: "2014-12-31"
+  radiation_ceres:
+    startdate: "2001-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2001-01-01"
+    std_enddate: "2024-12-31"
+  timeseries:
+    startdate: "1990-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1990-01-01"
+    std_enddate: "2014-12-31"
+scenario:
+  default: # default compare to historical period
+    startdate: "1990-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1990-01-01"
+    std_enddate: "2014-12-31"
+  radiation_ceres: #same as default due to data availability
+    startdate: "2001-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2001-01-01"
+    std_enddate: "2024-12-31"
+  timeseries: # timeseries exploit all data available (25 years up to last obs avail year)
+    startdate: "2000-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2000-01-01"
+    std_enddate: "2024-12-31"
+storyline:
+  default:
+    startdate: "2017-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2000-01-01"
+    std_enddate: "2024-12-31"
+  radiation_ceres:
+    startdate: "2017-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2001-01-01"
+    std_enddate: "2024-12-31"
+  timeseries:
+    startdate: "2017-01-01"
+    enddate: "2024-12-31"
+    std_startdate: "2000-01-01"
+    std_enddate: "2024-12-31"

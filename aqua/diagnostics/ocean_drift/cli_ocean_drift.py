@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line interface for Ocean drift diagnostic.
+"""Command-line interface for Ocean drift diagnostic.
 
 This CLI allows to run the hovmoller, OceanDrift diagnostics.
 Details of the run are defined in a yaml configuration file for a
@@ -12,6 +11,7 @@ import sys
 
 from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.ocean_drift.hovmoller import Hovmoller
 from aqua.diagnostics.ocean_drift.plot_hovmoller import PlotHovmoller
 
@@ -21,6 +21,7 @@ def parse_arguments(args):
 
     Args:
         args (list): list of command-line arguments to parse.
+
     """
     parser = argparse.ArgumentParser(description="OceanDrift CLI")
     parser = template_parse_arguments(parser)
@@ -28,6 +29,7 @@ def parse_arguments(args):
 
 
 def main(argv=None):
+    """Run the OceanDrift diagnostic CLI."""
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
@@ -49,48 +51,48 @@ def main(argv=None):
             diagnostic_name = hovmoller_config.get("diagnostic_name", "ocean_drift")
             var = hovmoller_config.get("var", None)
             dim_mean = hovmoller_config.get("dim_mean", ["lat", "lon"])
-            vert_coord = hovmoller_config.get("vert_coord", None)
+            vert_coord = hovmoller_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
             # Add the global region if not present
             # if regions != [None]:
             #    regions.append(None)
 
-            data_hovmoller = Hovmoller(
-                **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
-            )
+            logger.info("Processing regions: %s", regions)
+            try:
+                data_hovmoller = Hovmoller(
+                    **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
+                )
+                data_hovmoller.run(
+                    regions=regions,
+                    var=var,
+                    dim_mean=dim_mean,
+                    anomaly_ref="t0",
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    rebuild=cli.rebuild,
+                )
+            except Exception as e:
+                logger.error("Error processing regions %s: %s", regions, e)
+            else:
+                for region, processed in data_hovmoller.processed_data.items():
+                    try:
+                        hov_plot = PlotHovmoller(
+                            diagnostic_name=diagnostic_name,
+                            data=processed,
+                            vert_coord=vert_coord,
+                            outputdir=cli.outputdir,
+                            loglevel=cli.loglevel,
+                        )
 
-            for region in regions:
-                logger.info("Processing region: %s", region)
-                try:
-                    data_hovmoller.run(
-                        region=region,
-                        var=var,
-                        dim_mean=dim_mean,
-                        anomaly_ref="t0",
-                        outputdir=cli.outputdir,
-                        reader_kwargs=cli.reader_kwargs,
-                        rebuild=cli.rebuild,
-                    )
-                except Exception as e:
-                    logger.error("Error processing region %s: %s", region, e)
-                try:
-                    hov_plot = PlotHovmoller(
-                        diagnostic_name=diagnostic_name,
-                        data=data_hovmoller.processed_data_list,
-                        vert_coord=vert_coord,
-                        outputdir=cli.outputdir,
-                        loglevel=cli.loglevel,
-                    )
+                        save_format = getattr(cli, "save_format", None)
+                        if not save_format:
+                            logger.debug("No plot output requested, skipping plot generation for region %s", region)
+                            continue
+                        logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
 
-                    save_format = getattr(cli, "save_format", None)
-                    if not save_format:
-                        logger.debug("No plot output requested, skipping plot generation for region %s", region)
-                        continue
-                    logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
-
-                    hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
-                    hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
-                except Exception as e:
-                    logger.error("Error plotting region %s: %s", region, e)
+                        hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                        hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                    except Exception as e:
+                        logger.error("Error plotting region %s: %s", region, e)
 
     cli.close_dask_cluster()
 

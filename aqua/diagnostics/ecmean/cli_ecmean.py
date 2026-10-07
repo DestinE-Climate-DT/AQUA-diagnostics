@@ -13,10 +13,17 @@ from ecmean import __version__ as eceversion
 
 from aqua import Reader
 from aqua import __version__ as aquaversion
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigCatalog
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure
-from aqua.core.util import get_arg, lat_to_phrase, pandas_freq_to_string, strlist_to_phrase, xarray_to_pandas_freq
+from aqua.core.util import (
+    get_arg,
+    lat_to_phrase,
+    pandas_freq_to_string,
+    strlist_to_phrase,
+    to_list,
+    xarray_to_pandas_freq,
+)
 from aqua.diagnostics import GlobalMean, PerformanceIndices
 from aqua.diagnostics.base import (
     OutputSaver,
@@ -204,7 +211,7 @@ def set_title(diagnostic: str, model: str, exp: str, year1: int | None, year2: i
     if diagnostic == "performance_indices":
         diag_name = "Performance Indices"
     elif diagnostic == "global_mean":
-        diag_name = "Global Mean Bias"
+        diag_name = "Global Mean differences"
     else:
         raise ValueError(f"Unknown diagnostic {diagnostic} for title generation")
 
@@ -227,7 +234,7 @@ def set_description(diagnostic, model, exp, year1, year2, config):
     Returns:
         description (str)
     """
-    model_time = f"for {model} {exp} from {year1}-01 to {year2}-12."
+    model_time = f"for {model} {exp} (from {year1}-01 to {year2}-12)."
 
     region_bounds = {
         "Global": (-90.0, 90.0),
@@ -306,6 +313,15 @@ def main(argv=None):
     config = load_diagnostic_config(
         diagnostic="ecmean", folder="tools", config=None, default_config=ecmean_config.get("config_file"), loglevel=loglevel
     )
+
+    # this prevents ecmean from creating its own dirs
+    config["dirs"]["tab"] = os.path.join(outputdir, "yml")
+    if save_format:
+        config["dirs"]["fig"] = os.path.join(outputdir, to_list(save_format)[0])
+    else:
+        # this will create an empy pdf directory if no figures are produced
+        config["dirs"]["fig"] = os.path.join(outputdir, "pdf")
+
     # this is required to access the predefined areas and masks
     config["dirs"]["exp"] = ecmeandir
     logger.debug("Default config file: %s", config)
@@ -322,7 +338,7 @@ def main(argv=None):
         startdate = get_arg(args, "startdate", dataset.get("startdate"))
         enddate = get_arg(args, "enddate", dataset.get("enddate"))
         if catalog is None:
-            configurer = ConfigPath(loglevel=loglevel)
+            configurer = ConfigCatalog(loglevel=loglevel)
             cat, _, _ = configurer.deliver_intake_catalog(model=model, exp=exp, source=source_atm)
             catalog = cat.name
 
@@ -402,7 +418,6 @@ def main(argv=None):
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )
@@ -416,7 +431,6 @@ def main(argv=None):
                     config=config,
                     interface=interface,
                     loglevel=loglevel,
-                    outputdir=outputdir,
                     xdataset=data,
                     title=title,
                 )

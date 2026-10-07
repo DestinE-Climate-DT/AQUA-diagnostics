@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
 from aqua.core.util import DEFAULT_REALIZATION, strlist_to_phrase, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
 
 
 class PlotLatLonProfiles:
@@ -101,7 +101,7 @@ class PlotLatLonProfiles:
             if ref_item is not None and hasattr(ref_item, "AQUA_model"):
                 model = ref_item.attrs.get("AQUA_model", "Unknown")
                 exp = ref_item.attrs.get("AQUA_exp", "Unknown")
-                ref_label = f"{model} {exp}"
+                ref_label = collapse_era5_duplicate(f"{model} {exp}")
 
         self.logger.debug("Reference label: %s", ref_label)
         return ref_label
@@ -116,7 +116,6 @@ class PlotLatLonProfiles:
         self.long_name = None
         self.units = None
         self.mean_type = None
-        self.data_freq = None
 
         # Get all data items to extract metadata from
         data_items = []
@@ -160,12 +159,10 @@ class PlotLatLonProfiles:
         if self.region == "global":
             self.region = None
 
-        # Set mean_type and data frequency from first data item if not already set
+        # Set mean_type from first data item if not already set
         first_data = data_items[0] if data_items else None
         if first_data is not None and hasattr(first_data, "AQUA_mean_type"):
             self.mean_type = first_data.AQUA_mean_type
-        if first_data is not None and hasattr(first_data, "AQUA_data_freq"):
-            self.data_freq = first_data.AQUA_data_freq
 
         self.logger.debug(f"Extracted metadata for {len(self.models)} datasets: {list(zip(self.models, self.exps))}")
         self.logger.debug(f"Extracted realizations: {self.realizations}")
@@ -300,29 +297,24 @@ class PlotLatLonProfiles:
                 variable = name
                 break
 
+        if not self.mean_type:
+            diagnostic = "Profile"
+        elif self.data_type == "seasonal":
+            # e.g. "Seasonal zonal profiles" (lower-case mean type, plural)
+            diagnostic = f"Seasonal {self.mean_type.lower()} profiles"
+        else:
+            diagnostic = f"{self.mean_type.capitalize()} profile"
+
         title = TitleBuilder(
-            diagnostic=f"{self.mean_type.capitalize()} profile" if self.mean_type else "Profile",
+            diagnostic=diagnostic,
             variable=variable,
             regions=self.region,
-            catalog=self.catalogs,
             model=self.models,
             exp=self.exps,
         ).generate()
 
         self.logger.debug("Title: %s", title)
         return title
-
-    def _fmt_date(self, date):
-        """Format a date string for display, truncating to year-month when the
-        source data frequency is coarser than daily.
-
-        Returns None if date is None.
-        """
-        if date is None:
-            return None
-        if self.data_freq in ("monthly", "seasonal", "annual"):
-            return time_to_string(date, format="%Y-%m")
-        return time_to_string(date, format="%Y-%m-%d")
 
     def set_description(self):
         """
@@ -381,21 +373,21 @@ class PlotLatLonProfiles:
 
         # Build the three formatted date pairs upfront so they can be compared
         data_pair = (
-            self._fmt_date(getattr(data_item, "AQUA_startdate", None)) if data_item is not None else None,
-            self._fmt_date(getattr(data_item, "AQUA_enddate", None)) if data_item is not None else None,
+            time_to_string(data_item.AQUA_startdate, format="%Y-%m") if data_item is not None else None,
+            time_to_string(data_item.AQUA_enddate, format="%Y-%m") if data_item is not None else None,
         )
         ref_pair = (
-            self._fmt_date(getattr(ref_item, "AQUA_startdate", None)) if ref_item is not None else None,
-            self._fmt_date(getattr(ref_item, "AQUA_enddate", None)) if ref_item is not None else None,
+            time_to_string(ref_item.AQUA_startdate, format="%Y-%m") if ref_item is not None else None,
+            time_to_string(ref_item.AQUA_enddate, format="%Y-%m") if ref_item is not None else None,
         )
         std_pair = (
-            self._fmt_date(getattr(ref_std_item, "AQUA_std_startdate", None)) if ref_std_item is not None else None,
-            self._fmt_date(getattr(ref_std_item, "AQUA_std_enddate", None)) if ref_std_item is not None else None,
+            time_to_string(ref_std_item.AQUA_std_startdate, format="%Y-%m") if ref_std_item is not None else None,
+            time_to_string(ref_std_item.AQUA_std_enddate, format="%Y-%m") if ref_std_item is not None else None,
         )
 
         # Data dates
         if data_pair != (None, None):
-            description += f" from {data_pair[0]} to {data_pair[1]}"
+            description += f" (from {data_pair[0]} to {data_pair[1]})"
 
         # Reference data description
         if self.len_ref > 0 and ref_item is not None:
@@ -418,6 +410,7 @@ class PlotLatLonProfiles:
                 description += f" (from {std_pair[0]} to {std_pair[1]})"
 
         description += "."
+        description = collapse_era5_duplicate(description)
         self.logger.info("Description: %s", description)
         return description
 

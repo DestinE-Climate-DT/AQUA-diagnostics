@@ -90,7 +90,7 @@ class BaseMixin(Diagnostic):
         if region is not None and lon_limits is not None and lat_limits is not None:
             # Set the region based on the region name or the lon and lat limits
             self.region, self.lon_limits, self.lat_limits = self._set_region(
-                region=region, diagnostic="sshVariability", lon_limits=lon_limits, lat_limits=lat_limits
+                region=region, lon_limits=lon_limits, lat_limits=lat_limits
             )
             self.logger.debug(f"Region: {self.region}, Lon limits: {self.lon_limits}, Lat limits: {self.lat_limits}")
 

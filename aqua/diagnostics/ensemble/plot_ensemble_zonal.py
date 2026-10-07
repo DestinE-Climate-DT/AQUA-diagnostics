@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import xarray as xr
 
-from aqua.core.exceptions import NoDataError
-from aqua.core.util import find_vert_coord
+from aqua.core.data_model import CoordIdentifier
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
+
+VERTICAL_CANDIDATES = ("isobaric", "depth", "height")
 
 
 class PlotEnsembleZonal(BaseMixin):
@@ -85,139 +86,119 @@ class PlotEnsembleZonal(BaseMixin):
     def plot(
         self,
         var: str = None,
-        dataset_mean=None,
-        dataset_std=None,
+        dataset=None,
+        data_name=None,
         description=None,
-        title_mean=None,
-        title_std=None,
+        title=None,
         figure_size=[10, 8],
         cbar_label=None,
         save_format=SAVE_FORMAT,
         dpi=300,
         units=None,
         ylim=(5500, 0),
-        levels=20,
+        countour_levels=20,
         cmap="RdBu_r",
         ylabel="Depth (in m)",
         xlabel="Latitude (in deg North)",
+        rebuild=True,
     ):
         """
-        Plot ensemble mean and standard deviation of zonal averages in Lev-Lat coordinates.
+        Plot zonal averages in Level-Latitude coordinates.
 
-        This method generates contour plots of the ensemble mean and standard deviation
-        for a given variable on a latitude vs. vertical level (Lev) grid. The resulting
-        plots can be saved as PNG and/or PDF files using the `save_figure` method.
-        `find_vert_coord` from `aqua.core.util` is used to read the vertical coordiante.
+        This method generates contour plots for a given variable on a latitude
+        vs. vertical level (Lev) grid. The resulting plots can be automatically
+        saved as PNG and/or PDF files.
 
         Args:
-            var (str): Name of the variable to plot.
-            dataset_mean (xarray.DataArray or xarray.Dataset): Ensemble mean data.
-            dataset_std (xarray.DataArray or xarray.Dataset): Ensemble standard deviation data.
-            description (str, optional): Description for saving the plots.
-            title_mean (str, optional): Title for the mean plot. Auto-generated if None.
-            title_std (str, optional): Title for the standard deviation plot. Auto-generated if None.
-            figure_size (list[int], optional): Figure size [width, height]. Default is [10, 8].
-            cbar_label (str, optional): Label for the colorbar.
-            save_format (str or list, optional): Format(s) to save plots in (e.g. 'png', 'pdf', 'svg'). Default is SAVE_FORMAT.
-            dpi (int, optional): Resolution for saved figures. Default is 300.
-            units (str, optional): Units of the variable. Used in titles and labels if provided.
-            ylim (tuple, optional): Y-axis limits for the plot (vertical levels). Default is (5500, 0).
-            levels (int, optional): Number of contour levels. Default is 20.
-            cmap (str, optional): Colormap to use. Default is "RdBu_r".
-            ylabel (str, optional): Label for y-axis. Default is "Depth (in m)".
-            xlabel (str, optional): Label for x-axis. Default is "Latitude (in deg North)".
+            var (str, optional): Name of the variable to plot. Defaults to None.
+            dataset (xarray.DataArray or xarray.Dataset, optional): The 2D zonal dataset
+                (vertical level vs. latitude) to be plotted. Defaults to None.
+            data_name (str, optional): File naming label to distinguish saved plots
+                (e.g., 'mean', 'std'). Defaults to None.
+            description (str, optional): Description used for auto-generating the title
+                and saving the plots. Defaults to None.
+            title (str, optional): Title for the plot. Auto-generated if None. Defaults to None.
+            figure_size (list[int], optional): Figure size [width, height]. Defaults to [10, 8].
+            cbar_label (str, optional): Label for the colorbar. Defaults to None.
+            save_format (str or list, optional): Format(s) to save plots in (e.g., 'png', 'pdf').
+                Defaults to SAVE_FORMAT.
+            dpi (int, optional): Resolution for saved figures. Defaults to 300.
+            units (str, optional): Units of the variable. Defaults to None.
+            ylim (tuple, optional): Y-axis limits for the plot (vertical levels).
+                Defaults to (5500, 0) for descending depth.
+            countour_levels (int, optional): Number of contour levels to plot. Defaults to 20.
+            cmap (str, optional): Colormap to use. Defaults to "RdBu_r".
+            ylabel (str, optional): Label for y-axis. Defaults to "Depth (in m)".
+            xlabel (str, optional): Label for x-axis. Defaults to "Latitude (in deg North)".
+            rebuild (bool, optional): Whether to rebuild the output file path in `save_figure`. Defaults to True.
 
         Returns:
-            dict: Dictionary containing figure and axes objects for mean and std plots::
-
-                {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}
-
-        Raises:
-            NoDataError: If `dataset_mean` or `dataset_std` is None.
+            tuple or None: A tuple containing the `(matplotlib.figure.Figure, matplotlib.axes.Axes)`
+            objects if plotting succeeds, or `None` if no dataset is provided or plotting fails due to
+            missing vertical coordinates.
 
         Notes:
-            - Automatically generates titles for mean and STD if not provided.
-            - Uses `self.save_figure` to save the plots as PNG and PDF.
-            - Designed for zonal mean visualizations in Lev-Lat coordinates.
-            - Default y-axis (vertical levels) is set to descend from 5500 m to 0 m.
-
-        TODO:
-            - Add support for multiple variables in a single call.
-            - Include optional overlay of observations or reference zonal datasets.
-            - Improve automatic scaling of colorbars for multiple variables or ensembles.
-            - Add interactive plotting options.
+            - Automatically detects vertical coordinates (isobaric, depth, height).
+            - Automatically generates titles if not provided.
+            - Uses `self.save_figure` to save the plots.
+            - Dimensions outside of vertical and latitude are squeezed.
         """
-        self.logger.info("Plotting the ensemble computation of Zonal-averages as mean and STD in Lev-Lon of var {self.var}")
+        self.logger.info("Plotting the ensemble computation of ensemble {data_name} zonal-averages for variable {self.var}")
 
-        if title_mean is None:
-            title_mean = TitleBuilder(diagnostic="Ensemble mean", model=self.model).generate()
-        if title_std is None:
-            title_std = TitleBuilder(diagnostic="Ensemble standard deviation", model=self.model).generate()
+        if title is None:
+            title = TitleBuilder(diagnostic=description, model=self.model).generate()
+        if dataset is None:
+            self.logger.warning("Ensemble Zonal data not provided for plotting. Skipping plotting!")
+            return None
 
-        if (dataset_mean is None) or (dataset_std is None):
-            raise NoDataError("No data given to the plotting function")
+        if isinstance(dataset, xr.Dataset):
+            dataset = dataset[var]
+        self.logger.info(f"Plotting ensemble Zonal-average for {var}")
 
-        if isinstance(dataset_mean, xr.Dataset):
-            dataset_mean = dataset_mean[var]
-        else:
-            dataset_mean = dataset_mean
-        self.logger.info("Plotting ensemble-mean Zonal-average")
+        # Define the candidate keys in order of preference
+        _coords = CoordIdentifier(dataset.coords)
+        coords = _coords.identify_coords()
 
-        vert_coord = find_vert_coord(dataset_mean)
+        for k in VERTICAL_CANDIDATES:
+            if coords.get(k) is not None:
+                vert_coord = coords[k]["name"]
+                self.logger.info(f"Vertical coordiante {vert_coord} for {var}")
 
-        # return if no vertical coordinate is found
-        if not vert_coord:
-            raise ValueError("No vertical coordinate found in data!")
+        # check if a vertical coordinate is found
+        if len(vert_coord) is None:
+            self.logger.warning(f"Skipping plotting due to missing vertical coordinate for {var}")
+            return
 
-        # do the selection on the first vertical coordinate found
-        if len(vert_coord) > 1:
-            self.logger.warning("Found more than one vertical coordinate, using the first one: %s", vert_coord[0])
+        ## do the selection on the first vertical coordinate found
+        # if len(vert_coord) > 1:
+        #    self.logger.warning("Skipping plotting due to more than one vertical coordinate : %s", vert_coord)
+        #    return
 
-        fig1 = plt.figure(figsize=figure_size)
-        ax1 = fig1.add_subplot(1, 1, 1)
-        im = ax1.contourf(
-            dataset_mean["lat"],  # Safely hardcoded to "lat"
-            dataset_mean[vert_coord[0]],
-            dataset_mean,
+        # squeeze all other dimensions if present
+        dataset = dataset.squeeze()
+
+        fig = plt.figure(figsize=figure_size)
+        ax = fig.add_subplot(1, 1, 1)
+        im = ax.contourf(
+            dataset["lat"],  # Safely hardcoded to "lat"
+            dataset[vert_coord],
+            dataset,
             cmap=cmap,
-            levels=levels,
+            levels=countour_levels,
             extend="both",
         )
-        ax1.set_ylim(ylim)
-        ax1.set_ylabel(ylabel, fontsize=9)
-        ax1.set_xlabel(xlabel, fontsize=9)
-        ax1.set_facecolor("grey")
-        ax1.set_title(title_mean)
-        cbar = fig1.colorbar(im, ax=ax1, shrink=0.9, extend="both")
+        ax.set_ylim(ylim)
+        ax.set_ylabel(ylabel, fontsize=9)
+        ax.set_xlabel(xlabel, fontsize=9)
+        ax.set_facecolor("grey")
+        ax.set_title(title)
+        cbar = fig.colorbar(im, ax=ax, shrink=0.9, extend="both")
         cbar.set_label(cbar_label)
-        self.logger.debug("Saving Lev-Lon Zonal-average ensemble-mean as pdf and png")
-
-        if isinstance(dataset_std, xr.Dataset):
-            dataset_std = dataset_std[var]
-        else:
-            dataset_std = dataset_std
-        self.logger.info("Plotting ensemble-STD Zonal-average")
-
-        fig2 = plt.figure(figsize=(figure_size[0], figure_size[1]))
-        ax2 = fig2.add_subplot(1, 1, 1)
-        im = ax2.contourf(
-            dataset_std.lat,
-            dataset_std[vert_coord[0]],
-            dataset_std,
-            cmap=cmap,
-            levels=levels,
-            extend="both",
-        )
-        ax2.set_ylim(ylim)
-        ax2.set_ylabel(ylabel, fontsize=9)
-        ax2.set_xlabel(xlabel, fontsize=9)
-        ax2.set_facecolor("grey")
-        ax2.set_title(title_std)
-        cbar = fig2.colorbar(im, ax=ax2, shrink=0.9, extend="both")
-        cbar.set_label(cbar_label)
-        self.logger.debug("Saving Lev-Lon Zonal-average ensemble-STD as pdf and png")
+        self.logger.info("Saving Lev-Lon Zonal-average ensemble-mean as pdf and png")
 
         # Saving plots
-        self.save_figure(var=var, fig=fig1, fig_std=fig2, description=description, format=save_format, dpi=dpi)
+        self.save_figure(
+            var=var, fig=fig, data_name=data_name, description=description, format=save_format, rebuild=rebuild, dpi=dpi
+        )
 
-        return {"mean_plot": [fig1, ax1], "std_plot": [fig2, ax2]}
+        return fig, ax

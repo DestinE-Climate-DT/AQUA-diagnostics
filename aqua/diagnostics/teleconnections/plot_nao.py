@@ -27,15 +27,30 @@ class PlotNAO(PlotBaseMixin):
         )
         self.logger = log_configure(log_name="PlotNAO", log_level=loglevel)
 
-    def plot_index(self, thresh: float = 0.0):
+    def plot_index(self, thresh: float = 0.0, labels: list = None):
+        """
+        Plot the NAO index.
 
+        Args:
+            thresh (float): Threshold for the index. Default is 0.0.
+            labels (list): List of labels for the indexes. Default is None, in which case the labels are set automatically.
+
+        Returns:
+            fig: Figure object.
+            axs: Axes object.
+        """
         # Join the indexes in a single list
         indexes = self.indexes + self.ref_indexes
 
-        labels = super().set_labels()
+        labels = super().set_labels() if labels is None else labels
 
         title = TitleBuilder(
-            diagnostic="NAO index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
+            diagnostic="NAO index",
+            model=self.models,
+            exp=self.exps,
+            comparison="compared to" if self.ref_models else None,
+            ref_model=self.ref_models,
+            ref_exp=self.ref_exps,
         ).generate()
 
         fig, axs = indexes_plot(
@@ -63,6 +78,7 @@ class PlotNAO(PlotBaseMixin):
         vmax: float = None,
         vmin_diff: float = None,
         vmax_diff: float = None,
+        cmap: str = "RdBu_r",
         **kwargs,
     ):
         """
@@ -76,27 +92,31 @@ class PlotNAO(PlotBaseMixin):
             vmax (float): Maximum value for the color value. Default is None.
             vmin_diff (float): Minimum value for the color value for the difference. Default is None.
             vmax_diff (float): Maximum value for the color value for the difference. Default is None.
+            cmap (str): Colormap to use for the plots. Default is 'RdBu_r'.
             **kwargs: Additional arguments for the plotting function.
 
         Returns:
             fig: Figure object.
         """
         map_to_check = maps if isinstance(maps, xr.DataArray) else maps[0]
+
+        # This var is used by _homogeneize_maps to eventually convert units.
+        # The label for title and colorbar is set by _homogeneize_maps, which returns var_label.
         var = map_to_check.shortName if hasattr(map_to_check, "shortName") else map_to_check.long_name
         self.logger.debug(f"Plotting {var} maps")
 
-        if statistic == "correlation" and vmin is None and vmax is None:
+        if statistic == "correlation":
             vmin = -1.0
             vmax = 1.0
             vmin_diff = -0.5
             vmax_diff = 0.5
-        elif statistic == "regression" and vmin is None and vmax is None and var == "msl":
+        elif statistic == "regression" and vmin is None and vmax is None:
             vmin = -4.0
             vmax = 4.0
             vmin_diff = -5.0
             vmax_diff = 5.0
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, var_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Plot details
         proj = NorthPolarStereo(central_longitude=-20.0)
@@ -111,12 +131,14 @@ class PlotNAO(PlotBaseMixin):
         if maps is not None and ref_maps is None:
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"NAO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="NAO",
+                    statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(maps, "AQUA_season", None),
+                )
 
                 fig, ax = plot_single_map(
                     data=maps,
@@ -124,6 +146,8 @@ class PlotNAO(PlotBaseMixin):
                     ax=ax,
                     vmin=vmin,
                     vmax=vmax,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -138,14 +162,16 @@ class PlotNAO(PlotBaseMixin):
         if ref_maps is not None:
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"NAO {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="NAO",
+                    statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
+                    season=getattr(maps, "AQUA_season", None),
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                )
                 fig, _ = plot_single_map_diff(
                     data=maps,
                     data_ref=ref_maps,
@@ -157,6 +183,8 @@ class PlotNAO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,

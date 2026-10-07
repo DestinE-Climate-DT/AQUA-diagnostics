@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line interface for Ocean trends diagnostic.
+"""Command-line interface for Ocean trends diagnostic.
 
 This CLI allows to run the trends, OceanTrends diagnostics.
 Details of the run are defined in a yaml configuration file for a
@@ -11,6 +10,7 @@ import argparse
 import sys
 
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.ocean_trends import PlotTrends, Trends
 
 
@@ -19,6 +19,7 @@ def parse_arguments(args):
 
     Args:
         args (list): list of command-line arguments to parse.
+
     """
     parser = argparse.ArgumentParser(description="OceanTrends CLI")
     parser = template_parse_arguments(parser)
@@ -26,6 +27,7 @@ def parse_arguments(args):
 
 
 def main(argv=None):
+    """Run the OceanTrends diagnostic CLI."""
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(args, "ocean3d", "config-ocean3d-en4-trend-drift.yaml", log_name="OceanTrends CLI").prepare()
@@ -37,7 +39,7 @@ def main(argv=None):
     dataset_args = cli.dataset_args(dataset)
 
     # Output options (from cli_base)
-    reader_kwargs = cli.reader_kwargs
+    reader_kwargs = dataset.get("reader_kwargs") or {}
     outputdir = cli.outputdir
     rebuild = cli.rebuild
     save_format = cli.save_format
@@ -51,7 +53,7 @@ def main(argv=None):
             diagnostic_name = trends_config.get("diagnostic_name", "ocean_trends")
             var = trends_config.get("var", None)
             # dim_mean = trends_config.get("dim_mean", None)
-            vert_coord = trends_config.get("vert_coord", None)
+            vert_coord = trends_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
             #     regions.append('go')
@@ -81,7 +83,23 @@ def main(argv=None):
                         rebuild=rebuild,
                         loglevel=cli.loglevel,
                     )
-                    trends_plot.plot_multilevel(save_format=save_format, dpi=dpi)
+
+                    trends_plot.plot_multilevel(
+                        levels=[10, 100, 500, 1000],
+                        cbar_limits={
+                            "thetao": {
+                                "vmin": -0.7,
+                                "vmax": 0.7,
+                            },
+                            "so": {
+                                "vmin": -0.12,
+                                "vmax": 0.12,
+                            },
+                        },
+                        sym=True,
+                        save_format=save_format,
+                        dpi=dpi,
+                    )
 
                     zonal_trend_plot = PlotTrends(
                         data=data_trends_region.mean("lon"),

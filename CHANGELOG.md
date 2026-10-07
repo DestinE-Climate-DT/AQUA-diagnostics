@@ -5,8 +5,91 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Unreleased in the current development version (target v0.24.0):
+Unreleased in the current development version (target v0.26.0):
+
+Main changes:
+
 Complete list:
+- Update the deprecated `ConfigPath` (#451)
+- Remove parenthesis and capitalise regions (#456)
+- OutputSaver: `load_netcdf` can take the `expect_netcdf` argument to log missing files as errors instead of info. It also use start and end dates to check need of eventually recomputing results. (#452)
+- Reorganise OSI-SAF data and update source call from osi-saf-aqua to osi-saf-ssmis (#448)
+- Unpin matplotlib and list all directly imported packages as dependencies (#446)
+- reader_kwargs in default parser (#442)
+- Ocean3D: Drift refactor to improve performance (#413)
+- Move and update the cli_checker using diagnosticCLI (#401)
+- Unified CLI for ensemble timeseries and global biases (#327)
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
+- lumi_install.sh does not need a separate copy of the env file (#435)
+- Update GSV paths for lumi_install (#433)
+- conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
+- OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
+- Diagnostic: `load_netcdf` method (#392)
+- LatLonProfiles: `load` method and `plot_only` option to plot from previous netCDF files (#392)
+- Simplify enforcement of minimum number of months for diagnostics (#406)
+- Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+- Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
+
+## [v0.25.1]
+
+Complete list:
+- Timeseries: support no overlap between observations and model data (#370)
+
+## [v0.25.0]
+
+Main changes:
+1. Biases & Climatology refactor
+2. Centralize CLI arguments management via `reader_kwargs`
+3. Implement new DVC remote from ECMWF
+4. Specify min and max allowed versions for all dependencies
+
+Complete list:
+- Ocean3D: corrected the drift plots along with adjustments in trends and stratification plots (#298)
+- Dependencies update (#368)
+- `reader_kwargs` centralization management of cli arguments (#264)
+- Biases & Climatology refactor (#331)
+- Add bokeh as dependency (#365)
+- Dependabot and sync bot adjustments (#347)
+- Implement new DVC remote from ECMWF (#1392)
+- LatLonProfiles: std dates selection fix (#345)
+- Update outputsaver notebook (#351)
+- GlobalBiases: seasonal biases test fix (#346)
+- Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
+- Removing dask tokenization for non-local clusters (#337)
+- Specify min and max allowed versions for all dependencies (#333)
+- Change dask load order in LonLatProfiles (#338)
+
+## [v0.24.1]
+
+Complete list:
+- Fix micromamba setup broken by setup-micromamba v3.2.0 (#328)
+- Set as default pyfdb/GSV during installation (#326)
+
+## [v0.24.0]
+
+Complete list:
+- Dashboard review: title/description aesthetic fixes across diagnostics (#290)
+- Setting up aqua-like fixed environment (#314)
+- Update image to latest core container (#308)
+- Fix loglevel setup from YAML in DiagnosticCLI (#304)
+- GlobalBiases: add target spacing option for stippling (#305)
+- Global Biases: fix titles and descriptions (#284)
+- CI/CD: improve temporary folders handling (#302)
+- LatLonProfiles: seasonal profiles computation fix (#288)
+- Environment LUMI dependencies update (#297)
+- Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)
+- Bug report template update (#283)
+- Upgrade to aqua-core==1.0.0a5, to python <=3.14 and to eccodes<=2.47 (#254)
+- Porting of config.grouping.yaml adjustments (#280)
+- Teleconnections: added the possibility to override default labels in the plot_index method (#273)
+- Regions config file centralization (#267)
+- Fallback test download from wilma (#269)
+- Jinja templates for configuration files for collections (#230, #270, #271, #281)
+- Histogram: diagnostic updates (#255)
+- Seaice: Port changes from Dashboard v0.19-op (#190)
+- ECmean: prevent creation of default empty dirs (#263)
+- Remove `healpy` dependency (#248)
+- Timeseries: backporting of dashboard updates (#250)
 - Timeseries: adapt to startdate and enddate centralisation in Diagnostic, remove extend feauture (#244)
 - Dashboard porting: ECmean (#192)
 - CLI `load_var_config` centralization (#246)
@@ -115,6 +198,10 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...HEAD
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.1...HEAD
+[v0.25.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.0...v0.25.1
+[v0.25.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...v0.25.0
+[v0.24.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
+[v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...v0.24.0
 [v0.23.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...v0.23.0
 [v0.22.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...v0.22.0

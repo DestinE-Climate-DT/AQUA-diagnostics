@@ -20,6 +20,8 @@ def sample_lat_lon_data():
         base_attrs = {
             "AQUA_mean_type": mean_type,
             "AQUA_region": "global",
+            "AQUA_startdate": "1990-01-01",
+            "AQUA_enddate": "1999-12-31",
             "short_name": "skt",
             "standard_name": "skin_temperature",
             "long_name": "Skin Temperature",
@@ -161,6 +163,14 @@ class TestPlotLatLonProfilesSeasonal:
         with pytest.raises(ValueError, match="must contain at least 4 elements"):
             plotter.plot_seasonal_lines()
 
+    def test_seasonal_title(self, sample_lat_lon_data):
+        """Seasonal title reads 'Seasonal <mean_type> profiles ...' (plural, lower-case mean type)."""
+        seasonal_data = sample_lat_lon_data(seasonal=True)
+        plotter = PlotLatLonProfiles(data=seasonal_data, data_type="seasonal", loglevel=loglevel)
+
+        title = plotter.set_title()
+        assert title.startswith(f"Seasonal {plotter.mean_type.lower()} profiles")
+
 
 @pytest.mark.diagnostics
 class TestPlotLatLonProfilesIntegration:
@@ -245,20 +255,20 @@ class TestPlotLatLonProfilesDescription:
         "data_dates,ref_dates,std_dates,expected_pattern",
         [
             # Case 1: All dates identical - data dates shown once, ref dates suppressed,
-            # std dates shown in parens after the uncertainty bands.
+            # std dates shown in parens after the uncertainty bands. Description renders dates in %Y-%m.
             (
                 ("2020-01-01", "2029-12-31"),
                 ("2020-01-01", "2029-12-31"),
                 ("2020-01-01", "2029-12-31"),
-                r"from 2020-01-01 to 2029-12-31 compared to .* with ±2σ uncertainty bands \(from 2020-01-01 to 2029-12-31\)\.",
+                r"\(from 2020-01 to 2029-12\) compared to .* with ±2σ uncertainty bands \(from 2020-01 to 2029-12\)\.",
             ),
             # Case 2: All different - data, ref, and std dates all shown
             (
                 ("2050-01-01", "2059-12-31"),
                 ("1990-01-01", "1999-12-31"),
                 ("1850-01-01", "2014-12-31"),
-                r"from 2050-01-01 to 2059-12-31.*compared to .*\(from 1990-01-01 to 1999-12-31\)"
-                r".*with ±2σ uncertainty bands \(from 1850-01-01 to 2014-12-31\)",
+                r"\(from 2050-01 to 2059-12\).*compared to .*\(from 1990-01 to 1999-12\)"
+                r".*with ±2σ uncertainty bands \(from 1850-01 to 2014-12\)",
             ),
         ],
     )

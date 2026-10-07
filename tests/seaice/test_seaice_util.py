@@ -12,6 +12,7 @@ from aqua.diagnostics.seaice.util import (
     defaultdict_to_dict,
     ensure_istype,
     extract_dates,
+    extract_std_period_dates,
     filter_region_list,
 )
 
@@ -117,7 +118,7 @@ class TestExtractDates:
                 "AQUA_enddate": datetime(2021, 4, 2),
             },
         )
-        assert extract_dates(da) == ("2020-03-01", "2021-04-02")
+        assert extract_dates(da) == ("2020-03", "2021-04")
 
     def test_iso_string_with_time_part_is_trimmed(self):
         da = xr.DataArray(
@@ -141,7 +142,40 @@ class TestExtractDates:
 
 
 # ======================================================================
-# _check_list_regions_type
+# extract_std_period_dates
+# ======================================================================
+class TestExtractStdDates:
+    def test_formats_std_attrs_like_main_period(self):
+        da = xr.DataArray(
+            [0.0],
+            attrs={
+                "AQUA_startdate": "1991-01",
+                "AQUA_enddate": "2000-01",
+                "AQUA_std_startdate": "1994-01",
+                "AQUA_std_enddate": "1996-12",
+            },
+        )
+        assert extract_std_period_dates(da) == ("1994-01", "1996-12")
+
+    def test_iso_string_std_attrs_trimmed(self):
+        da = xr.DataArray(
+            [0.0],
+            attrs={
+                "AQUA_std_startdate": "2020-01-01T00:00:00",
+                "AQUA_std_enddate": "2020-12-31T23:59:59",
+            },
+        )
+        assert extract_std_period_dates(da) == ("2020-01-01", "2020-12-31")
+
+    def test_missing_std_attrs_return_placeholder(self):
+        da = xr.DataArray([0.0])
+        start, end = extract_std_period_dates(da)
+        assert "No AQUA_std_startdate" in start
+        assert "No AQUA_std_enddate" in end
+
+
+# ======================================================================
+# _check_list_regions_type#
 # ======================================================================
 class TestCheckListRegionsType:
     @pytest.fixture(scope="module")
