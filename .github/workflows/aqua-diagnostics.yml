@@ -36,9 +36,9 @@ jobs:
           # 5) Pushed to main branch
           SHOULD_RUN="false"
 
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'run tests') }}" == "true" ]] || \
-             [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready to merge') }}" == "true" ]] || \
-             [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready for review') }}" == "true" ]] || \
+          if [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'run tests') }}" == "true" ]] || \
+             [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'ready for review') }}" == "true" ]] || \
+             [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'ready to merge') }}" == "true" ]] || \
              [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]] || \
              [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
              [[ "${{ github.event_name }}" == "schedule" ]] || \
