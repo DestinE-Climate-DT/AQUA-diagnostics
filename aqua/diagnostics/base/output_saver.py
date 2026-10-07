@@ -10,7 +10,7 @@ from typing import Optional, Union
 import xarray as xr
 from matplotlib.figure import Figure
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigLocator
 from aqua.core.lock import SafeFileLock
 from aqua.core.logger import log_configure, log_history
 from aqua.core.util import (
@@ -21,6 +21,7 @@ from aqua.core.util import (
     replace_intake_vars,
     replace_urlpath_jinja,
     replace_urlpath_wildcard,
+    time_to_string,
     to_list,
     update_metadata,
 )
@@ -314,12 +315,17 @@ class OutputSaver:
         diagnostic_product: str,
         extra_keys: Optional[dict] = None,
         as_dataarray: bool = False,
+        startdate: Optional[str] = None,
+        enddate: Optional[str] = None,
+        expect_netcdf: bool = False,
     ):
         """
         Load a NetCDF file previously written by save_netcdf.
 
         The filename is built exactly as save_netcdf builds it. A missing file is not an error:
         None is returned. The file is read eagerly and closed, so that it can then be overwritten.
+        If startdate or enddate is provided, the corresponding file metadata must exactly match
+        the requested date. If it does not, or the metadata is missing, None is returned.
 
         Args:
             diagnostic_product (str): Product of the diagnostic analysis.
@@ -328,6 +334,9 @@ class OutputSaver:
             as_dataarray (bool, optional): If True, return the single data variable of the file as a
                 DataArray, merging the dataset attributes into it. Use it when the data was saved as
                 a DataArray. Defaults to False, which returns the Dataset as it is on disk.
+            startdate (str, optional): Start date to match against the file's AQUA_startdate metadata.
+            enddate (str, optional): End date to match against the file's AQUA_enddate metadata.
+            expect_netcdf (bool, optional): If True a missing file is logged as an error instead of info.
 
         Returns:
             xr.Dataset, xr.DataArray or None: The data read from disk, None if the file does not exist.
@@ -336,16 +345,41 @@ class OutputSaver:
             ValueError: If as_dataarray is True but the file does not hold exactly one data variable.
         """
         filepath = self._build_filepath(diagnostic_product=diagnostic_product, file_format="nc", extra_keys=extra_keys)
+        loginfo = self.logger.error if expect_netcdf else self.logger.info
+        logwarning = self.logger.error if expect_netcdf else self.logger.warning
 
         if not os.path.exists(filepath):
-            self.logger.info("No NetCDF file to load at: %s", filepath)
+            loginfo("No NetCDF file to load at: %s", filepath)
             return None
 
         # Read eagerly and close: the caller is allowed to overwrite this same file afterwards.
         with xr.open_dataset(filepath) as dataset:
             data = dataset.load()
 
-        self.logger.info("Loaded NetCDF: %s", filepath)
+        loginfo("Loaded NetCDF: %s", filepath)
+
+        # Compare only requested boundaries; date strings are normalized before comparison.
+        if startdate or enddate:
+            startdate = time_to_string(startdate) if startdate else None
+            enddate = time_to_string(enddate) if enddate else None
+            file_startdate = data.attrs.get("AQUA_startdate")
+            file_enddate = data.attrs.get("AQUA_enddate")
+
+            if startdate and (file_startdate is None or startdate != file_startdate):
+                logwarning(
+                    "Requested startdate %s does not match the file's startdate %s. Returning None.",
+                    startdate,
+                    file_startdate,
+                )
+                return None
+
+            if enddate and (file_enddate is None or enddate != file_enddate):
+                logwarning(
+                    "Requested enddate %s does not match the file's enddate %s. Returning None.",
+                    enddate,
+                    file_enddate,
+                )
+                return None
 
         if not as_dataarray:
             return data
@@ -525,8 +559,7 @@ class OutputSaver:
             dict: The updated catalog entry block.
         """
         self.logger.info("Creating catalog entry for %s", filepath)
-        configpath = ConfigPath(catalog=self.catalog)
-        configdir = configpath.configdir
+        configdir = ConfigLocator(logger=self.logger).configdir
         # find the catalog of the experiment and load it
         catalogfile = os.path.join(configdir, "catalogs", self.catalog, "catalog", self.model, self.exp + ".yaml")
 

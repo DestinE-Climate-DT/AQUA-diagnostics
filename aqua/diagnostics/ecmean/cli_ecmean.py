@@ -13,7 +13,7 @@ from ecmean import __version__ as eceversion
 
 from aqua import Reader
 from aqua import __version__ as aquaversion
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigCatalog
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import (
@@ -338,7 +338,7 @@ def main(argv=None):
         startdate = get_arg(args, "startdate", dataset.get("startdate"))
         enddate = get_arg(args, "enddate", dataset.get("enddate"))
         if catalog is None:
-            configurer = ConfigPath(loglevel=loglevel)
+            configurer = ConfigCatalog(loglevel=loglevel)
             cat, _, _ = configurer.deliver_intake_catalog(model=model, exp=exp, source=source_atm)
             catalog = cat.name
 
