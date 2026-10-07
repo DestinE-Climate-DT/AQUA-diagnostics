@@ -169,7 +169,8 @@ class PlotHistogram:
                 description += f"for {self.models[0]}/{self.exps[0]}"
                 if ref_item is not None:
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f" compared to {ref_model}"
+                    ref_exp = getattr(ref_item, "AQUA_exp", "reference")
+                    description += f" compared to {ref_model} {ref_exp}"
                 description += f" (from {data_pair[0]} to {data_pair[1]})"
             else:
                 # Different periods
@@ -177,8 +178,9 @@ class PlotHistogram:
                     description += f"for {self.models[0]}/{self.exps[0]} "
                     description += f"(from {data_pair[0]} to {data_pair[1]})"
                 if ref_pair != (None, None):
+                    ref_exp = getattr(ref_item, "AQUA_exp", "reference")
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f", {ref_model} (from {ref_pair[0]} to {ref_pair[1]})"
+                    description += f", {ref_model} {ref_exp} (from {ref_pair[0]} to {ref_pair[1]})"
         else:
             # Multiple datasets
             description += f"comparing {self.len_data} datasets: "
@@ -190,7 +192,8 @@ class PlotHistogram:
 
             if self.ref_data is not None:
                 ref_model = getattr(self.ref_data, "AQUA_model", "reference")
-                description += f" compared to {ref_model}"
+                ref_exp = getattr(self.ref_data, "AQUA_exp", "reference")
+                description += f" compared to {ref_model} {ref_exp}"
 
             # Add common date range if all datasets share it
             if self.data:
@@ -203,10 +206,6 @@ class PlotHistogram:
                     description += f" (from {first_dates[0]} to {first_dates[1]})"
 
         description += "."
-
-        # Use the full reference name for MSWEP precipitation observations.
-        if "MSWEP" in description and "MSWEP v2.8" not in description:
-            description = description.replace("MSWEP", "MSWEP v2.8")
 
         self.logger.info("Description: %s", description)
         return description
