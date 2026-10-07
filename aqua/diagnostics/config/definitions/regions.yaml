@@ -31,7 +31,7 @@ regions:
       - South Pacific Ocean
       - INDIAN OCEAN
       - Arctic Ocean
-      - Southern Ocean
+      - SOUTHERN OCEAN
     longname: Global Ocean
   ao:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
@@ -51,7 +51,7 @@ regions:
     longname: Arctic Ocean
   so:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
-    regionmask_names: [Southern Ocean]
+    regionmask_names: [SOUTHERN OCEAN]
     longname: Southern Ocean
   ls:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
