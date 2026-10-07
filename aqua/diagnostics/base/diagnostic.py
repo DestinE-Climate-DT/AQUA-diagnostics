@@ -560,9 +560,7 @@ class Diagnostic:
 
         return region_object, region_sel
 
-    def select_region(
-        self, data: xr.Dataset, region: str = None, regions_file_path: str = None, drop: bool = True, **kwargs
-    ):
+    def select_region(self, data: xr.Dataset, region: str = None, regions_file_path: str = None, drop: bool = True, **kwargs):
         """
         Select a geographic region from the dataset. Used when selection is not on the self.data attribute.
 
@@ -573,6 +571,8 @@ class Diagnostic:
                 regions file will be used.
             drop (bool): Whether to drop coordinates outside the selected region.
             **kwargs: Additional keyword arguments passed to the select_area reader method.
+                For regionmask-based regions, the optional ``frac_threshold`` key of the regions file
+                is passed as well, unless it is already given here.
 
         Returns:
             dict: A dictionary containing the modified dataset and region information.
@@ -590,14 +590,14 @@ class Diagnostic:
             region_object, region_sel = self._resolve_regionmask_object(
                 region=region, regions_file_path=regions_file_path
             )
-            # Optional: select all cells touching the region instead of only cell centers
+
+            self.logger.info("Applying area selection for region: %s", region)
             if region_object is not None:
+                # Optional: select all cells touching the region instead of only the cell centers
                 spec = self._load_regions_from_file(regions_file_path=regions_file_path).get(region, {})
                 if spec.get("frac_threshold") is not None:
                     kwargs.setdefault("frac_threshold", spec["frac_threshold"])
-        
-            self.logger.info("Applying area selection for region: %s", region)
-            if region_object is not None:
+
                 self.logger.info("Using regionmask object: %s (region_sel=%s)", region_object, region_sel)
                 data = self.reader.select_area(data=data, region=region_object, region_sel=region_sel, drop=drop, **kwargs)
             elif lon_limits is not None and lat_limits is not None:
