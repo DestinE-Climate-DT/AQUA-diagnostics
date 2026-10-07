@@ -1,27 +1,203 @@
 # Centralized region definitions for all AQUA diagnostics.
 #
 # To use a custom regions file, pass ``regions_file_path`` to a diagnostic.
+#
+# Regions are defined with predefined regionmask objects whenever possible:
+#   - ``regionmask``: a regionmask.defined_regions object (e.g. ar6.all)
+#   - ``regionmask_names``: sub-regions to select and merge. If omitted, ``longname`` is used.
+#   - ``frac_threshold`` (optional): select all cells whose fractional coverage by the region
+#     is above the threshold (0.0 = every cell touching the region), instead of only the cells
+#     whose center falls inside. Useful on coarse grids (e.g. r100).
+# Regions without a predefined equivalent can still be defined with ``lon_limits``/``lat_limits``.
 
 regions:
 
-  arctic_test:
-    regionmask: natural_earth_v5_1_2.ocean_basins_50
-    longname: Arctic Ocean
-
-  europe_ar6:
-    # A true regionmask-based "Europe", built as the union of 4 IPCC AR6
-    # reference land regions covering the continent:
-    # Northern Europe, West & Central Europe, Eastern Europe and the
-    # Mediterranean. 
-    regionmask: ar6.land
-    regionmask_names:
-      - N.Europe
-      - West&Central-Europe
-      - E.Europe
-      - Mediterranean
+  # --- Land regions (IPCC AR6) ---
+  # ar6.all (not ar6.land) is used for Europe because its polygons are not clipped to
+  # the coastline, so coastal cells and small islands (e.g. Ireland) are less likely to be lost.
+  europe:
+    regionmask: ar6.all
+    regionmask_names: [N.Europe, West&Central-Europe, E.Europe, Mediterranean]
+    frac_threshold: 0.0
     longname: Europe
 
-  # Atmospheric / generic geographical bands
+  # --- Ocean basins and seas (Natural Earth ocean_basins_50) ---
+  go:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names:
+      - North Atlantic Ocean
+      - South Atlantic Ocean
+      - North Pacific Ocean
+      - South Pacific Ocean
+      - Indian Ocean
+      - Arctic Ocean
+      - Southern Ocean
+    longname: Global Ocean
+  ao:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [North Atlantic Ocean, South Atlantic Ocean]
+    longname: Atlantic Ocean
+  po:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [North Pacific Ocean, South Pacific Ocean]
+    longname: Pacific Ocean
+  io:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Indian Ocean]
+    longname: Indian Ocean
+  arc_o:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Arctic Ocean]
+    longname: Arctic Ocean
+  so:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Southern Ocean]
+    longname: Southern Ocean
+  ls:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Labrador Sea]
+    longname: Labrador Sea
+  lgs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Labrador Sea, Greenland Sea, Norwegian Sea]
+    longname: Labrador Gin Seas
+  is:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Irminger Sea]
+    longname: Irminger Sea
+  gs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Greenland Sea, Norwegian Sea]
+    longname: Gin Sea
+  ws:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Weddell Sea]
+    longname: Weddell Sea
+  bs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Bering Sea]
+    longname: Bering Sea
+  gom:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Gulf of Mexico]
+    longname: Gulf of Mexico
+  hb:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Hudson Bay]
+    longname: Hudson Bay
+  rs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Red Sea]
+    longname: Red Sea
+    frac_threshold: 0.0
+  pg:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Persian Gulf]
+    longname: Persian Gulf
+    frac_threshold: 0.0
+  adr:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Adriatic Sea]
+    longname: Adriatic Sea
+    frac_threshold: 0.0
+  cs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Caribbean Sea]
+    longname: Caribbean Sea
+  sj:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Sea of Japan]
+    longname: Sea of Japan
+  ms:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Mediterranean Sea Western Basin, Mediterranean Sea Eastern Basin]
+    longname: Mediterranean Sea
+  bks:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Black Sea]
+    longname: Black Sea
+  scs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [South China Sea]
+    longname: South China Sea
+  as:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Arabian Sea]
+    longname: Arabian Sea
+  cos:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Coral Sea]
+    longname: Coral Sea
+  ts:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Timor Sea]
+    longname: Timor Sea
+    frac_threshold: 0.0
+  goa:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Gulf of Alaska]
+    longname: Gulf of Alaska
+  ecs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [East China Sea]
+    longname: East China Sea
+  oks:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Sea of Okhotsk]
+    longname: Sea of Okhotsk
+  ps:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Philippine Sea]
+    longname: Philippine Sea
+  ros:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Ross Sea]
+    longname: Ross Sea
+  sss:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Sargasso Sea]
+    longname: Sargasso Sea
+  ans:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Andaman Sea]
+    longname: Andaman Sea
+    frac_threshold: 0.0
+  jas:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Java Sea]
+    longname: Java Sea
+  bfs:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Beaufort Sea]
+    longname: Beaufort Sea
+
+  # --- Sea ice: ---
+  arctic:
+    longname: Arctic
+    lon_limits: [0, 360]
+    lat_limits: [0, 90]
+  antarctic:
+    longname: Antarctic
+    lon_limits: [0, 360]
+    lat_limits: [-90, 0]
+  hudson_bay:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Hudson Bay]
+    longname: Hudson Bay
+  ross_sea:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Ross Sea]
+    longname: Ross Sea
+  weddell_sea:
+    regionmask: natural_earth_v5_1_2.ocean_basins_50
+    regionmask_names: [Weddell Sea]
+    longname: Weddell Sea
+  amundsen_bellingshausen_seas:
+    longname: Amundsen-Bellingshausen Seas
+    lon_limits: [230, 300]
+    lat_limits: [-90, 0]
+
+  # --- No predefined equivalent: latitude bands ---
   nh:
     longname: North Midlatitudes
     lon_limits: [-180, 180]
@@ -34,179 +210,3 @@ regions:
     longname: Tropics
     lon_limits: [-180, 180]
     lat_limits: [-15, 15]
-  europe:
-    longname: Europe
-    lon_limits: [-10, 40]
-    lat_limits: [35, 70]
-
-  # Ocean basins and seas
-  go:
-    longname: Global Ocean
-    lon_limits: [0, 360]
-    lat_limits: [-90, 90]
-  ao:
-    longname: Atlantic Ocean
-    lon_limits: [-80, 30]
-    lat_limits: [-35, 65]
-  po:
-    longname: Pacific Ocean
-    lon_limits: [120, 290]
-    lat_limits: [-55, 65]
-  io:
-    longname: Indian Ocean
-    lon_limits: [30, 110]
-    lat_limits: [-30, 30]
-  arc_o:
-    longname: Arctic Ocean
-    lon_limits: [0, 360]
-    lat_limits: [65, 90]
-  so:
-    longname: Southern Ocean
-    lon_limits: [0, 360]
-    lat_limits: [-80, -50]
-  ls:
-    longname: Labrador Sea
-    lon_limits: [300, 316]
-    lat_limits: [52, 65]
-  lgs:
-    longname: Labrador Gin Seas
-    lon_limits: [-70, 20]
-    lat_limits: [50, 80]
-  is:
-    longname: Irminger Sea
-    lon_limits: [316, 330]
-    lat_limits: [60, 70]
-  gs:
-    longname: Gin Sea
-    lon_limits: [-10, 20]
-    lat_limits: [70, 80]
-  ws:
-    longname: Weddell Sea
-    lon_limits: [295, 350]
-    lat_limits: [-80, -65]
-  bs:
-    longname: Bering Sea
-    lon_limits: [-178, 168]
-    lat_limits: [53, 66]
-  gom:
-    longname: Gulf of Mexico
-    lon_limits: [-97, -81]
-    lat_limits: [18, 30]
-  hb:
-    longname: Hudson Bay
-    lon_limits: [-95, -75]
-    lat_limits: [51, 63]
-  rs:
-    longname: Red Sea
-    lon_limits: [32, 44]
-    lat_limits: [12, 30]
-  pg:
-    longname: Persian Gulf
-    lon_limits: [48, 56]
-    lat_limits: [24, 30]
-  adr:
-    longname: Adriatic Sea
-    lon_limits: [13, 19]
-    lat_limits: [40, 45]
-  cs:
-    longname: Caribbean Sea
-    lon_limits: [-85, -60]
-    lat_limits: [9, 23]
-  sj:
-    longname: Sea of Japan
-    lon_limits: [129, 132]
-    lat_limits: [34, 43]
-  ms:
-    longname: Mediterranean Sea
-    lon_limits: [-6, 36]
-    lat_limits: [30, 46]
-  bks:
-    longname: Black Sea
-    lon_limits: [27, 41]
-    lat_limits: [41, 45]
-  scs:
-    longname: South China Sea
-    lon_limits: [99, 121]
-    lat_limits: [3, 21]
-  as:
-    longname: Arabian Sea
-    lon_limits: [50, 70]
-    lat_limits: [12, 25]
-  cos:
-    longname: Coral Sea
-    lon_limits: [147, 157]
-    lat_limits: [-24, -10]
-  ts:
-    longname: Timor Sea
-    lon_limits: [123, 129]
-    lat_limits: [-13, -10]
-  goa:
-    longname: Gulf of Alaska
-    lon_limits: [-145, -136]
-    lat_limits: [48, 60]
-  ecs:
-    longname: East China Sea
-    lon_limits: [120, 128]
-    lat_limits: [30, 35]
-  oks:
-    longname: Sea of Okhotsk
-    lon_limits: [142, 163]
-    lat_limits: [45, 60]
-  ps:
-    longname: Philippine Sea
-    lon_limits: [117, 135]
-    lat_limits: [5, 25]
-  ros:
-    longname: Ross Sea
-    lon_limits: [160, -150]
-    lat_limits: [-78, -60]
-  sss:
-    longname: Sargasso Sea
-    lon_limits: [-70, -50]
-    lat_limits: [20, 35]
-  ans:
-    longname: Andaman Sea
-    lon_limits: [93, 98]
-    lat_limits: [6, 20]
-  jas:
-    longname: Java Sea
-    lon_limits: [105, 117]
-    lat_limits: [-8, -6]
-  bfs:
-    longname: Beaufort Sea
-    lon_limits: [-148, -140]
-    lat_limits: [68, 79]
-
-  # Sea ice — hemispheric and sea ice sector geometries
-  arctic:
-    longname: Arctic
-    lon_limits: [0, 360]
-    lat_limits: [0, 90]
-  hudson_bay:
-    longname: Hudson Bay
-    lon_limits: [265, 285]
-    lat_limits: [50, 63]
-  antarctic:
-    longname: Antarctic
-    lon_limits: [0, 360]
-    lat_limits: [-90, 0]
-  ross_sea:
-    longname: Ross Sea
-    lon_limits: [160, 230]
-    lat_limits: [-90, 0]
-  amundsen_bellingshausen_seas:
-    longname: Amundsen-Bellingshausen Seas
-    lon_limits: [230, 300]
-    lat_limits: [-90, 0]
-  weddell_sea:
-    longname: Weddell Sea
-    lon_limits: [300, 20]
-    lat_limits: [-90, 0]
-  indian_ocean:
-    longname: Indian Ocean
-    lon_limits: [20, 90]
-    lat_limits: [-90, 0]
-  pacific_ocean:
-    longname: Pacific Ocean
-    lon_limits: [90, 160]
-    lat_limits: [-90, 0]
