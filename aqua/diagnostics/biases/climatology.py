@@ -33,7 +33,7 @@ class Climatology(Diagnostic):
         plev (float): Pressure level to select (if applicable).
         areas (bool): if True, save area weights for statistics computation.
         region (str): Name of the region to select from the centralized regions file
-            (e.g. 'europe', 'tropics', 'europe_ar6'). If None, the whole domain is used.
+            (e.g. 'europe', 'tropics'). If None, the whole domain is used.
             Supports both plain lon/lat bounding boxes and regionmask-based regions
             (see aqua/diagnostics/config/definitions/regions.yaml). Applied to the data
             as soon as it is retrieved, so climatology, area weights and statistics are
