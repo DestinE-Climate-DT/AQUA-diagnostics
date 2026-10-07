@@ -190,6 +190,7 @@ class Stratification(Diagnostic):
             self.compute_mld()
 
         data_whole_region = self.data
+        clim_cache = {}
         for reg, clim in zip(regions_list, clim_list):
             self.data = data_whole_region
             self.logger.info(
@@ -198,7 +199,11 @@ class Stratification(Diagnostic):
                 clim,
                 self.diagnostic_name,
             )
-            self.compute_climatology(climatology=clim)
+            if clim not in clim_cache:
+                self.data = data_whole_region
+                self.compute_climatology(climatology=clim)
+                clim_cache[clim] = self.data.load()
+            self.data = clim_cache[clim]
             res_dict = super().select_region(data=self.data, region=reg, drop=True)
             self.region = res_dict["region"] if res_dict["region"] is not None else "global"
             self.lat_limits = res_dict["lat_limits"]
