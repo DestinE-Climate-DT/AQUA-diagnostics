@@ -62,54 +62,50 @@ def main(argv=None):
             diagnostic_name = stratification_config.get("diagnostic_name", "ocean_stratification")
             climatologies = stratification_config.get("climatology", None)
             vert_coord = stratification_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
-            for region, climatology in zip(regions, climatologies):
-                logger.info(f"Processing region: {region}, climatology: {climatology}")
-                var = stratification_config.get("var", None)
-                # dim_mean = stratification_config.get("dim_mean", ["lat", "lon"])
-                dim_mean = ["lat", "lon"]
-                # Stratification instance
-                # Model data
-                model_stratification = Stratification(
-                    **dataset_args,
+            var = stratification_config.get("var", None)
+            # dim_mean = stratification_config.get("dim_mean", ["lat", "lon"])
+            dim_mean = ["lat", "lon"]
+            model_stratification = Stratification(
+                **dataset_args,
+                diagnostic_name=diagnostic_name,
+                vert_coord=vert_coord,
+                loglevel=cli.loglevel,
+            )
+            model_stratification.run(
+                regions=regions,
+                var=var,
+                dim_mean=dim_mean,
+                mld=False,
+                climatology=climatologies,
+                outputdir=cli.outputdir,
+                reader_kwargs=dataset.get("reader_kwargs") or {},
+                rebuild=cli.rebuild,
+            )
+            if "references" in config_dict:
+                logger.info("Processing reference data")
+                obs_stratification = Stratification(
+                    **reference_args,
                     diagnostic_name=diagnostic_name,
                     vert_coord=vert_coord,
                     loglevel=cli.loglevel,
                 )
-                model_stratification.run(
-                    region=region,
+                obs_stratification.run(
+                    regions=regions,
                     var=var,
                     dim_mean=dim_mean,
                     mld=False,
-                    climatology=climatology,
+                    climatology=climatologies,
                     outputdir=cli.outputdir,
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    reader_kwargs=reference.get("reader_kwargs") or {},
                     rebuild=cli.rebuild,
                 )
-                # Reference data
-                if "references" in config_dict:
-                    logger.info("Processing reference data")
-                    obs_stratification = Stratification(
-                        **reference_args,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        loglevel=cli.loglevel,
-                    )
-                    obs_stratification.run(
-                        region=region,
-                        var=var,
-                        dim_mean=dim_mean,
-                        mld=False,
-                        climatology=climatology,
-                        outputdir=cli.outputdir,
-                        reader_kwargs=reference.get("reader_kwargs") or {},
-                        rebuild=cli.rebuild,
-                    )
-                else:
-                    obs_stratification = None
-                # Plotting Stratification
+            else:
+                obs_stratification = None
+            for region, model_data in model_stratification.processed_data.items():
+                obs_data = obs_stratification.processed_data[region] if obs_stratification is not None else None
                 strat_plot = PlotStratification(
-                    data=model_stratification.data[["thetao", "so", "rho"]],
-                    obs=(obs_stratification.data[["thetao", "so", "rho"]] if obs_stratification is not None else None),
+                    data=model_data[["thetao", "so", "rho"]],
+                    obs=(obs_data[["thetao", "so", "rho"]] if obs_data is not None else None),
                     diagnostic_name=diagnostic_name,
                     vert_coord=vert_coord,
                     outputdir=cli.outputdir,
@@ -125,52 +121,46 @@ def main(argv=None):
             diagnostic_name = mld_config.get("diagnostic_name", "ocean_stratification")
             climatologies = mld_config.get("climatology", None)
             vert_coord = mld_config.get("vert_coord", None)
-            for region, climatology in zip(regions, climatologies):
-                logger.info(f"Processing region: {region}, climatology: {climatology}")
-                var = mld_config.get("var", None)
-                # Mixed Layer Depth instance
-                # Model data
-                model_stratification = Stratification(
-                    **dataset_args,
+            var = mld_config.get("var", None)
+            model_stratification = Stratification(
+                **dataset_args,
+                diagnostic_name=diagnostic_name,
+                vert_coord=vert_coord,
+                loglevel=cli.loglevel,
+            )
+            model_stratification.run(
+                regions=regions,
+                var=var,
+                mld=True,
+                climatology=climatologies,
+                outputdir=cli.outputdir,
+                reader_kwargs=dataset.get("reader_kwargs") or {},
+                rebuild=cli.rebuild,
+            )
+            if "references" in config_dict:
+                logger.info("Processing reference data")
+                obs_stratification = Stratification(
+                    **reference_args,
                     diagnostic_name=diagnostic_name,
                     vert_coord=vert_coord,
                     loglevel=cli.loglevel,
                 )
-                model_stratification.run(
-                    region="go",
+                obs_stratification.run(
+                    regions=regions,
                     var=var,
-                    # dim_mean=dim_mean,
                     mld=True,
-                    climatology=climatology,
+                    climatology=climatologies,
                     outputdir=cli.outputdir,
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    reader_kwargs=reference.get("reader_kwargs") or {},
                     rebuild=cli.rebuild,
                 )
-                # Reference data
-                if "references" in config_dict:
-                    logger.info("Processing reference data")
-                    obs_stratification = Stratification(
-                        **reference_args,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        loglevel=cli.loglevel,
-                    )
-                    obs_stratification.run(
-                        region="go",
-                        var=var,
-                        # dim_mean=dim_mean,
-                        mld=True,
-                        climatology=climatology,
-                        outputdir=cli.outputdir,
-                        reader_kwargs=reference.get("reader_kwargs") or {},
-                        rebuild=cli.rebuild,
-                    )
-                else:
-                    obs_stratification = None
-                # Plotting MLD
+            else:
+                obs_stratification = None
+            for region, model_data in model_stratification.processed_data.items():
+                obs_data = obs_stratification.processed_data[region] if obs_stratification is not None else None
                 mld_plot = PlotMLD(
-                    data=model_stratification.data[["mld"]],
-                    obs=(obs_stratification.data[["mld"]] if obs_stratification is not None else None),
+                    data=model_data[["mld"]],
+                    obs=(obs_data[["mld"]] if obs_data is not None else None),
                     diagnostic_name=diagnostic_name,
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
