@@ -292,39 +292,27 @@ class Stratification(Diagnostic):
         self.data.attrs["AQUA_stratification_climatology"] = climatology
         self.logger.debug(f"{climatology.upper()} climatology computed successfully.")
 
+    @staticmethod
+    def _rho_numpy(so, thetao):
+        abs_so = convert_so(so)
+        cons_thetao = convert_thetao(abs_so, thetao)
+        return compute_rho(abs_so, cons_thetao, 0) - 1000
+
+
     def calculate_rho(self):
-        """Convert variables to absolute salinity and conservative temperature, then compute potential density.
-
-        Updates the internal dataset with the computed potential density anomaly ('rho').
-
-        Returns
-        -------
-        None
-
-        """
-        self.logger.debug("Converting variables to absolute salinity and conservative temperature.")
-        # Convert practical salinity to absolute salinity
-        abs_so = convert_so(self.data["so"])
-        self.logger.debug("Practical salinity converted to absolute salinity.")
-
-        # Convert potential temperature to conservative temperature
         data_thetao = super()._check_data(data=self.data["thetao"], var="thetao", units="degreeC")
-        cons_thetao = convert_thetao(abs_so, data_thetao)
-        self.logger.debug("Potential temperature converted to conservative temperature.")
-
-        # Update the dataset with converted variables
-        # self.data["cons_thetao"] = cons_thetao
-        # self.data["so"] = abs_so
-        self.logger.info("Variables successfully converted and updated in dataset.")
-
-        # self.data = convert_variables(self.data, loglevel=self.loglevel)
-        self.logger.debug("Computing potential density at reference pressure 0 dbar.")
-        rho = compute_rho(abs_so, cons_thetao, 0)
-        self.data["rho"] = rho - 1000  # Convert to kg/m^3
+        rho = xr.apply_ufunc(
+            self._rho_numpy,
+            self.data["so"],
+            data_thetao,
+            dask="parallelized",
+            output_dtypes=[data_thetao.dtype],
+        )
+        self.data["rho"] = rho
         self.data["rho"].attrs["long_name"] = "Potential Density"
         self.data["rho"].attrs["units"] = "kg/m^3"
         self.data["rho"].attrs["standard_name"] = "sea_water_potential_density"
-        self.logger.debug("Added 'rho' (potential density anomaly) to dataset.")
+        self.logger.debug("Potential density computed successfully.")
 
     def compute_mld(self):
         """Compute the mixed layer depth (MLD) from the density field.
