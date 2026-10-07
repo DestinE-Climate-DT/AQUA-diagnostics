@@ -58,6 +58,8 @@ def main(argv=None):
         reference = cli.config_dict["references"][0]
         dataset_args = cli.dataset_args(dataset)
         reference_args = cli.reference_args(reference)
+        region = tool_dict.get("region")
+        regions_file_path = tool_dict.get("regions_file_path")
 
         variables = tool_dict.get("variables", [])
         formulae = tool_dict.get("formulae", [])
@@ -69,10 +71,18 @@ def main(argv=None):
         cli.logger.debug("Selected levels for vertical plots: %s", plev)
 
         biases_dataset = Climatology(
-            **dataset_args, diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
+            **dataset_args, 
+            region=region,
+            regions_file_path=regions_file_path,
+            diagnostic=diagnostic_name, outputdir=cli.outputdir,
+            loglevel=cli.loglevel
         )
         biases_reference = Climatology(
-            **reference_args, diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
+            **reference_args, 
+            region=region,
+            regions_file_path=regions_file_path,
+            diagnostic=diagnostic_name, outputdir=cli.outputdir, 
+            loglevel=cli.loglevel
         )
 
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
