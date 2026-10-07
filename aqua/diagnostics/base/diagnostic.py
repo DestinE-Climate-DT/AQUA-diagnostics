@@ -590,6 +590,12 @@ class Diagnostic:
             region_object, region_sel = self._resolve_regionmask_object(
                 region=region, regions_file_path=regions_file_path
             )
+            # Optional: select all cells touching the region instead of only cell centers
+            if region_object is not None:
+                spec = self._load_regions_from_file(regions_file_path=regions_file_path).get(region, {})
+                if spec.get("frac_threshold") is not None:
+                    kwargs.setdefault("frac_threshold", spec["frac_threshold"])
+        
             self.logger.info("Applying area selection for region: %s", region)
             if region_object is not None:
                 self.logger.info("Using regionmask object: %s (region_sel=%s)", region_object, region_sel)
