@@ -184,7 +184,7 @@ class PlotBias:
         data_ref,
         var,
         plev=None,
-        proj="robinson",
+        proj=None,
         proj_params={},
         vmin=None,
         vmax=None,
@@ -210,7 +210,8 @@ class PlotBias:
             data_ref (xarray.Dataset): Reference dataset.
             var (str): Variable name.
             plev (float, optional): Pressure level.
-            proj (str, optional): Desired projection for the map.
+            proj (str, optional): Desired projection for the map. If None, 'plate_carree' is used for
+                regional data (AQUA_region attribute present) and 'robinson' otherwise.
             proj_params (dict, optional): Additional arguments for the projection.
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
@@ -241,6 +242,10 @@ class PlotBias:
         realization = get_realizations(data)
 
         sym = vmin is None or vmax is None
+
+        # Default projection: plate carree for regional data, robinson for global data
+        if proj is None:
+            proj = "plate_carree" if data.attrs.get("AQUA_region") is not None else "robinson"
 
         # For regional data, set extent and avoid the cyclic point. If the region
         # crosses the dateline (lon in 0-360, e.g. New Zealand), center the map on 180.
@@ -409,7 +414,7 @@ class PlotBias:
         data_ref,
         var,
         plev=None,
-        proj="robinson",
+        proj=None
         proj_params={},
         vmin=None,
         vmax=None,
@@ -455,6 +460,9 @@ class PlotBias:
             timeseason="climatology ",
             extra_info=extra_info,
         ).generate()
+
+        if proj is None:
+            proj = "plate_carree" if data.attrs.get("AQUA_region") is not None else "robinson"
 
         plot_kwargs = {
             "maps": [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
