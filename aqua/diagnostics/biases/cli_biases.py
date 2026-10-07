@@ -71,18 +71,20 @@ def main(argv=None):
         cli.logger.debug("Selected levels for vertical plots: %s", plev)
 
         biases_dataset = Climatology(
-            **dataset_args, 
+            **dataset_args,
             region=region,
             regions_file_path=regions_file_path,
-            diagnostic=diagnostic_name, outputdir=cli.outputdir,
-            loglevel=cli.loglevel
+            diagnostic=diagnostic_name,
+            outputdir=cli.outputdir,
+            loglevel=cli.loglevel,
         )
         biases_reference = Climatology(
-            **reference_args, 
+            **reference_args,
             region=region,
             regions_file_path=regions_file_path,
-            diagnostic=diagnostic_name, outputdir=cli.outputdir, 
-            loglevel=cli.loglevel
+            diagnostic=diagnostic_name,
+            outputdir=cli.outputdir,
+            loglevel=cli.loglevel,
         )
 
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
