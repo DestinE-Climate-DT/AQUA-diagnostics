@@ -551,9 +551,7 @@ class Diagnostic:
             return None, None
 
         regionmask_string = f"regionmask.defined_regions.{spec['regionmask']}"
-        parts = regionmask_string.split(
-            ".", 1
-        )  # e.g["regionmask", "defined_regions.natural_earth_v5_1_2.ocean_basins_50"]
+        parts = regionmask_string.split(".", 1)  # e.g["regionmask", "defined_regions.natural_earth_v5_1_2.ocean_basins_50"]
         region_object = attrgetter(parts[1])(regionmask)
         long_name = spec.get("longname", region)
         region_sel = spec.get("regionmask_names", long_name)
@@ -587,9 +585,7 @@ class Diagnostic:
 
         if region is not None:
             longname, lon_limits, lat_limits = self._set_region(region=region, regions_file_path=regions_file_path)
-            region_object, region_sel = self._resolve_regionmask_object(
-                region=region, regions_file_path=regions_file_path
-            )
+            region_object, region_sel = self._resolve_regionmask_object(region=region, regions_file_path=regions_file_path)
 
             self.logger.info("Applying area selection for region: %s", region)
             if region_object is not None:
