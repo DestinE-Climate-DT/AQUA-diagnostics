@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
                 "exp": "era5-hpz3",
                 "timeseason": "climatology",
             },
-            "MLD [global] for ci ERA5 era5-hpz3 climatology",
+            "MLD in Global for ci ERA5 era5-hpz3 climatology",
         ),
         ({}, ""),  # Empty result
         ({"variable": "Temperature"}, "Temperature"),
@@ -81,7 +81,7 @@ def test_title_complex():
         extra_info="info",
     ).generate()
     assert result == (
-        "Stratification [global] for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
+        "Stratification in Global for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
     )
     assert "  " not in result
 
@@ -94,7 +94,7 @@ def test_title_models_edge_cases():
     result2 = TitleBuilder(diagnostic="Bias", extra_info=["info1", "info2"]).generate()
     assert "info1 info2" in result2
 
-    assert TitleBuilder(diagnostic="Bias", regions=[""]).generate() == "Bias"
+    assert TitleBuilder(diagnostic="Bias", regions=[""]).generate() == "Bias in"
 
 
 def test_title_wrap_not_triggered():

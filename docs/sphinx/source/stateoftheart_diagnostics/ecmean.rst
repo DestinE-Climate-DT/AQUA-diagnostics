@@ -122,7 +122,8 @@ The general structure of the analysis is the following:
 
     import os
     from aqua import Reader
-    from aqua.util import load_yaml, ConfigPath
+    from aqua.core.configurer import ConfigContext
+    from aqua.core.util import load_yaml
     from aqua.diagnostics import PerformanceIndices
 
     models = ['IFS-NEMO', 'ICON']
@@ -130,9 +131,9 @@ The general structure of the analysis is the following:
     year1 = 1996
     year2 = 2000
 
-    Configurer = ConfigPath()
-    machine = Configurer.machine
-    ecmeandir = os.path.join(Configurer.configdir, 'diagnostics', 'ecmean')
+    context = ConfigContext()
+    machine = context.machine
+    ecmeandir = os.path.join(context.configdir, 'tools', 'ecmean')
     interface = os.path.join(ecmeandir, 'interface_AQUA_climatedt.yaml')
     config = os.path.join(ecmeandir, 'ecmean_config_climatedt.yaml')
     config = load_yaml(config)
@@ -142,7 +143,7 @@ The general structure of the analysis is the following:
     for model in models:
         reader = Reader(model=model, exp=exp, source="lra-r100-monthly", fix=False)
         data = reader.retrieve()
-        PerformanceIndices(exp, year1, year2, model=model, loglevel='info', xdataset=data, config=load_yaml(config))
+        PerformanceIndices(exp, year1, year2, model=model, loglevel='info', xdataset=data, config=config)
 
 Please refer also to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_.
 

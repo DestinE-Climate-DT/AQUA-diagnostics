@@ -123,6 +123,33 @@ def test_load_netcdf_roundtrip(base_saver, tmp_path):
 
 
 @pytest.mark.aqua
+def test_load_netcdf_date_match(base_saver):
+    """Requested dates must match the corresponding file metadata exactly."""
+    data = xr.Dataset({"data": ("x", [1, 2])})
+    metadata = {"AQUA_startdate": "1991-01-01", "AQUA_enddate": "1992-12-31"}
+    base_saver.save_netcdf(dataset=data, diagnostic_product="mean", metadata=metadata)
+
+    loaded = base_saver.load_netcdf(diagnostic_product="mean", startdate="19910101", enddate="1992-12-31")
+    assert isinstance(loaded, xr.Dataset)
+
+    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1992-01-01") is None
+    assert base_saver.load_netcdf(diagnostic_product="mean", enddate="1991-12-31") is None
+
+    # Each boundary can be checked independently.
+    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01"), xr.Dataset)
+    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", enddate="1992-12-31"), xr.Dataset)
+
+
+@pytest.mark.aqua
+def test_load_netcdf_date_match_requires_metadata(base_saver):
+    """A requested date cannot match a file that has no corresponding date metadata."""
+    base_saver.save_netcdf(dataset=xr.Dataset({"data": ("x", [1, 2])}), diagnostic_product="mean")
+
+    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01") is None
+    assert base_saver.load_netcdf(diagnostic_product="mean", enddate="1992-12-31") is None
+
+
+@pytest.mark.aqua
 def test_load_netcdf_missing_file(base_saver, tmp_path):
     """A missing file is not an error: None is returned and no output folder is created."""
     assert base_saver.load_netcdf(diagnostic_product="mean") is None
@@ -149,6 +176,10 @@ def test_load_netcdf_as_dataarray(base_saver):
     assert loaded.attrs["units"] == "mm/day"
     assert loaded.attrs["AQUA_model"] == "IFS-NEMO"
     assert loaded.attrs["AQUA_region"] == "tropics"
+
+    # Keep the original positional argument order: diagnostic_product, extra_keys, as_dataarray.
+    positional_loaded = base_saver.load_netcdf("mean", None, True)
+    assert isinstance(positional_loaded, xr.DataArray)
 
 
 @pytest.mark.aqua
@@ -216,12 +247,12 @@ def test_save_figure_single_and_multiple_formats(base_saver, tmp_path):
 def test_create_catalog_entry_new_entry(base_saver, tmp_path):
     """Test creating a new catalog entry when none exists."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     mock_catalog_file = {"sources": {}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_intake_vars", return_value="/mocked/path/data.nc"),
@@ -239,8 +270,8 @@ def test_create_catalog_entry_new_entry(base_saver, tmp_path):
 def test_create_catalog_entry_existing_entry(base_saver, tmp_path, monkeypatch):
     """Test updating an existing catalog entry."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     existing_catblock = {
         "driver": "netcdf",
         "description": "Existing",
@@ -250,7 +281,7 @@ def test_create_catalog_entry_existing_entry(base_saver, tmp_path, monkeypatch):
     mock_catalog_file = {"sources": {"aqua-dummy-mean": existing_catblock}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_intake_vars", return_value="/new/path/data.nc"),
@@ -269,12 +300,12 @@ def test_create_catalog_entry_existing_entry(base_saver, tmp_path, monkeypatch):
 def test_create_catalog_entry_with_variables(base_saver, tmp_path):
     """Test creating catalog entry with jinja and wildcard variable replacements."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     mock_catalog_file = {"sources": {}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_urlpath_jinja") as mock_replace_jinja,
@@ -306,12 +337,12 @@ def test_create_catalog_entry_with_variables(base_saver, tmp_path):
 def test_create_catalog_entry_edge_cases(base_saver, tmp_path):
     """Test edge cases: None metadata values, file operations, and entry naming."""
 
-    mock_config_path = MagicMock()
-    mock_config_path.configdir = str(tmp_path)
+    mock_config_locator = MagicMock()
+    mock_config_locator.configdir = str(tmp_path)
     mock_catalog_file = {"sources": {}}
 
     with (
-        patch("aqua.diagnostics.base.output_saver.ConfigPath", return_value=mock_config_path),
+        patch("aqua.diagnostics.base.output_saver.ConfigLocator", return_value=mock_config_locator),
         patch("aqua.diagnostics.base.output_saver.load_yaml", return_value=mock_catalog_file),
         patch("aqua.diagnostics.base.output_saver.dump_yaml") as mock_dump_yaml,
         patch("aqua.diagnostics.base.output_saver.replace_intake_vars", return_value="/mocked/path/data.nc"),
