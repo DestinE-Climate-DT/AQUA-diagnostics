@@ -414,7 +414,7 @@ class PlotBias:
         data_ref,
         var,
         plev=None,
-        proj=None
+        proj=None,
         proj_params={},
         vmin=None,
         vmax=None,
