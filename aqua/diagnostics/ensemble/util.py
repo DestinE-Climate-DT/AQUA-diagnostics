@@ -1,7 +1,8 @@
 """
 Utility functions for the ensemble class
 """
-
+import os
+from pathlib import Path
 import gc
 from collections import Counter
 
@@ -574,28 +575,39 @@ def generate_realizations_path(
     """
     logger = log_configure(log_name="generate_realizations_path", log_level=loglevel)
     logger.info("Generating realization paths")
-
     filenames = []
+    if file_format==".nc":
+       file_format_dir = "netcdf"
+    else:
+        file_format_dir = "zarr"
     if realization_list:
         for r in realization_list:
+            input_file_path = Path(file_dir).parents[1]   # two up
+            input_file_path = os.path.join(input_file_path, f"r{r}", diagnostic_name)
             outputsaver = OutputSaver(
                 diagnostic=diagnostic_name,
                 catalog=catalog,
                 model=model,
                 exp=exp,
                 realization=r,
-                outputdir=file_dir,
+                outputdir=input_file_path,
                 loglevel=loglevel,
             )
-            _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-            path = file_dir + "/" + _path + file_format
+            filename = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
+            filename = filename + file_format
+            path = os.path.join(input_file_path, file_format_dir , filename)
             filenames.append(path)
     else:
+        ###### TODO fix for two level up
+        input_file_path = Path(file_dir).parents[1]   # two up
+        input_file_path = os.path.join(input_file_path, f"r{r}", diagnostic_name) 
         outputsaver = OutputSaver(
-            diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=file_dir, loglevel=loglevel
+            diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=input_file_path, loglevel=loglevel
         )
-        _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-        path = file_dir + "/" + _path + file_format
+
+        filename = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
+        filename = filename + file_format
+        path = os.path.join(input_file_path, file_format_dir , filename)
         filenames.append(path)
 
     logger.debug(f"generated file names for realizations are {filenames}")

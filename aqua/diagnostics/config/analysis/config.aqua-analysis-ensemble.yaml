@@ -38,12 +38,12 @@ cluster:  # options for dask cluster (this works well on lumi)
 # List of available CLI tools (ensemble diagnostics)
 cli:
   ensemble: "ensemble/cli_ensemble.py"
-  ensemble_maps: "ensemble/cli_multi_model_maps_ensemble.py"
-  ensemble_timeseries: "ensemble/cli_multi_model_timeseries_ensemble.py"
-  ensemble_zonal: "ensemble/cli_zonal_ensemble.py"
+  #ensemble_maps: "ensemble/cli_multi_model_maps_ensemble.py"
+  #ensemble_timeseries: "ensemble/cli_multi_model_timeseries_ensemble.py"
+  #ensemble_zonal: "ensemble/cli_zonal_ensemble.py"
 
 run:
-    - ["ensemble"]
+    - ["ensemble_atmosphere2d"]
 
 # Each diagnostic can have the following options (all optional):
 #    config: the configuration file(s) for the diagnostic.
@@ -51,12 +51,9 @@ run:
 #    outname: the name of the output directory for the diagnostic. Default is the diagnostic name itself.
 #    nocluster: boolean, if true the diagnostic will not use the global dask cluster.
 diagnostics:
-  ensemble:
+  ensemble_atmosphere2d:
     ensemble:
       config: "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley-ensemble.yaml"
-    ensemble_maps:
-      config: "${AQUA_CONFIG}/collections/legacy/ensemble/config_multi_model_maps_ensemble.yaml"
-    ensemble_timeseries:
-      config: "${AQUA_CONFIG}/collections/legacy/ensemble/config_multi_model_timeseries_ensemble.yaml"
-    ensemble_zonal:
-      config: "${AQUA_CONFIG}/collections/legacy/ensemble/config_single_zonalmean_ensemble.yaml"
+  ensemble_ocean2d:
+    ensemble:
+      config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-ensemble.yaml"

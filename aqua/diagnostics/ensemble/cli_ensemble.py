@@ -54,7 +54,7 @@ def parse_arguments(args):
     """
     parser = argparse.ArgumentParser(
         description=("Unified Ensemble diagnostic CLI. Runs EnsembleTimeseries and EnsembleMaps back-to-back, "),
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        #formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser = template_parse_arguments(parser)
 
@@ -103,9 +103,10 @@ def main(argv=None):
         cli.logger.debug(f"Reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
 
     # Output parameters
-    outputdir = cli.config_dict.get("output", {}).get("outputdir", "./")
-    cli.config_dict.get("output", {}).get("rebuild", True)
-    cli.config_dict.get("output", {}).get("save_netcdf", True)
+    #outputdir = cli.outputdir #config_dict.get("output", {}).get("outputdir", "./")
+    #config_dict.get("output", {}).get("rebuild", True)
+    #cli.config_dict.get("output", {}).get("save_netcdf", True)
+    cli.logger.info(f"CLI.outputdir: {cli.outputdir} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
     save_format = cli.config_dict.get("output", {}).get("save_format", SAVE_FORMAT)
     dpi = cli.config_dict.get("output", {}).get("dpi", 300)
 
@@ -147,6 +148,7 @@ def main(argv=None):
                     if monthly:
                         extra_dict = {"variable": variable, "freq": "monthly", "region": region}
                         mon_realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
+                        cli.logger.info(f"realization list: {mon_realization_list}")
                         mon_filenames = generate_realizations_path(
                             catalog=catalog,
                             model=model,
@@ -155,7 +157,7 @@ def main(argv=None):
                             diagnostic_name="timeseries",
                             diagnostic_product="timeseries",
                             variable=variable,
-                            file_dir=outputdir,
+                            file_dir=cli.outputdir,
                             extra_keys=extra_dict,
                             file_format=".nc",
                             loglevel=cli.loglevel,
@@ -193,6 +195,7 @@ def main(argv=None):
                     if annual:
                         extra_dict = {"variable": variable, "freq": "annual", "region": region}
                         ann_realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
+                        cli.logger.info(f"realization list: { ann_realization_list}")
                         ann_filenames = generate_realizations_path(
                             catalog=catalog,
                             model=model,
@@ -201,7 +204,7 @@ def main(argv=None):
                             diagnostic_name="timeseries",
                             diagnostic_product="timeseries",
                             variable=variable,
-                            file_dir=outputdir,
+                            file_dir=cli.outputdir,
                             extra_keys=extra_dict,
                             file_format=".nc",
                             loglevel=cli.loglevel,
@@ -243,7 +246,7 @@ def main(argv=None):
                         model_list=model,
                         exp_list=exp,
                         source_list=source,
-                        outputdir=outputdir,
+                        outputdir=cli.outputdir,
                         loglevel=cli.loglevel,
                     )
                     # Compute statistics and save the results as netcdf
@@ -285,7 +288,7 @@ def main(argv=None):
                         diagnostic_name="timeseries",
                         diagnostic_product="timeseries",
                         variable=variable,
-                        file_dir=outputdir,
+                        file_dir=cli.outputdir,
                         extra_keys=extra_dict,
                         file_format=".nc",
                         loglevel=cli.loglevel,
@@ -329,7 +332,7 @@ def main(argv=None):
                         diagnostic_name="timeseries",
                         diagnostic_product="timeseries",
                         variable=variable,
-                        file_dir=outputdir,
+                        file_dir=cli.outputdir,
                         extra_keys=extra_dict,
                         file_format=".nc",
                         loglevel=cli.loglevel,
@@ -372,7 +375,7 @@ def main(argv=None):
                         ref_catalog=catalog_ref,
                         ref_model=model_ref,
                         ref_exp=exp_ref,
-                        outputdir=outputdir,
+                        outputdir=cli.outputdir,
                         loglevel=cli.loglevel,
                     )
 
@@ -423,16 +426,17 @@ def main(argv=None):
                 region = None
 
                 realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
+                cli.logger.info(f"Realization list: {realization_list}")
                 extra_dict = {"variable": variable}
                 filenames = generate_realizations_path(
                     catalog=catalog,
                     model=model,
                     exp=exp,
                     realization_list=realization_list,
-                    diagnostic_name="biases",
+                    diagnostic_name=gb_diag_config.get("diagnostic_name","biases"),
                     diagnostic_product="annual_climatology",
                     variable=variable,
-                    file_dir=outputdir,
+                    file_dir=cli.outputdir,
                     extra_keys=extra_dict,
                     file_format=".nc",
                     loglevel=cli.loglevel,
@@ -462,7 +466,7 @@ def main(argv=None):
                     model_list=model,
                     exp_list=exp,
                     source_list=source,
-                    outputdir=outputdir,
+                    outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
                 ens_latlon.run()
@@ -473,7 +477,7 @@ def main(argv=None):
                 # Reference dataset STD bias is not plotted because we do not have reference STD data
                 dataset_std_ref = None
 
-                extract_realizations_list(catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref)
+                ref_realization_list = extract_realizations_list(catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref)
                 ref_filenames = generate_realizations_path(
                     catalog=catalog_ref,
                     model=model_ref,
@@ -482,7 +486,7 @@ def main(argv=None):
                     diagnostic_name="biases",
                     diagnostic_product="annual_climatology",
                     variable=variable,
-                    file_dir=outputdir,
+                    file_dir=cli.outputdir,
                     extra_keys=extra_dict,
                     file_format=".nc",
                     loglevel=cli.loglevel,
@@ -542,7 +546,7 @@ def main(argv=None):
                     ref_model=model_ref,
                     ref_exp=exp_ref,
                     region=region,
-                    outputdir=outputdir,
+                    outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
 
