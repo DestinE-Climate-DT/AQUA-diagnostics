@@ -1,13 +1,13 @@
 # Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
 datasets:
-  - catalog: "climatedt-gen2"
-    model: "IFS-FESOM-10km"
-    exp: "story-nudging-hist"
-    source: 'lra-r100-monthly'
+  - catalog: null
+    model: null
+    exp: null
+    source: null
     regrid: null
     reader_kwargs: null # it can be a dictionary with reader kwargs
-    startdate: "2017-01-01"
-    enddate: "2020-12-31"
+    startdate: null
+    enddate: null
 
 references:
   - catalog: 'obs'
@@ -92,8 +92,9 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        startdate: "2017-01-01"
-        enddate: "2020-12-31"
+        # TODO: remove the time stamps here
+        startdate: null
+        enddate: null
         plot_ensemble_members: True
       2t:
         regions: ['global']

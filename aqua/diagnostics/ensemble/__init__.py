@@ -7,7 +7,7 @@ from .plot_ensemble_maps import PlotEnsembleMaps
 from .plot_ensemble_timeseries import PlotEnsembleTimeseries
 from .plot_ensemble_zonal import PlotEnsembleZonal
 from .util import merge_from_data_files, reader_retrieve_and_merge
-from .util import extract_realizations, extract_realizations_list, generate_realizations_path
+from .util import extract_realizations, extract_realizations_list, generate_realizations_path, generate_realizations_path_ref
 
 __all__ = [
     "EnsembleTimeseries",
@@ -21,4 +21,5 @@ __all__ = [
     "extract_realizations",
     "extract_realizations_list",
     "generate_realizations_path",
+    "generate_realizations_path_ref",
 ]
