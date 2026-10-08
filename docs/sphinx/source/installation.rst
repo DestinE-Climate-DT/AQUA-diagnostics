@@ -38,6 +38,9 @@ This can be achieved with:
 
 The same environment is available in the AQUA-diagnostics GitHub repository in the ``environment-pypi.yml`` file.
 
+Once the package is installed, set up AQUA with ``aqua install <machine>`` and ``aqua add <catalog>``
+as described in :ref:`getting_started`.
+
 .. note::
 
     If you need to access data written in a local FDB database (not polytope), you need to install the FDB5 library.
@@ -113,6 +116,7 @@ Finally, activate the environment:
 
 At this point, you should have successfully installed the AQUA-diagnostics package and its dependencies
 in the newly created aqua-diagnostics environment.
+Now set up AQUA with ``aqua install <machine>`` and ``aqua add <catalog>`` as described in :ref:`getting_started`.
 
 
 .. note::
@@ -130,6 +134,11 @@ in the newly created aqua-diagnostics environment.
 
 HPC Installation
 ----------------
+
+.. note::
+
+    On all the HPC systems, once the installation is completed remember to set up AQUA with
+    ``aqua install <machine>`` and ``aqua add <catalog>`` as described in :ref:`getting_started`.
 
 Installation on LUMI HPC
 ^^^^^^^^^^^^^^^^^^^^^^^^
