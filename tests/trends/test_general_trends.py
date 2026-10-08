@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from aqua.core.exceptions import NotEnoughDataError
 from aqua.diagnostics.trends import PlotTrends, Trends
 from tests.shared_constants import APPROX_REL, LOGLEVEL
 
@@ -68,32 +69,35 @@ def test_trends_region_dim_mean(ocean_trend):
 
 
 @pytest.mark.diagnostics
-@pytest.mark.parametrize(
-    "model, exp, source, var",
-    [
-        ("ERA5", "era5-hpz3", "monthly", "2t"),
-        ("NEMO", "test-eORCA1", "long-2d", "tos"),
-    ],
-)
-def test_surface_trend_outputs(model, exp, source, var, tmp_path):
-    trend = Trends(catalog="ci", model=model, exp=exp, source=source, regrid="r100", loglevel=loglevel)
-    result = trend.run(var=var, outputdir=tmp_path)
-    assert set(result[var].dims) == {"lat", "lon"}
-    assert result[var].attrs["units"].endswith("/year")
+def test_surface_trend_outputs(tmp_path):
+    trend = Trends(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", regrid="r100", loglevel=loglevel)
+    result = trend.run(var="2t", outputdir=tmp_path)
+    assert set(result["2t"].dims) == {"lat", "lon"}
+    assert result["2t"].attrs["units"].endswith("/year")
     PlotTrends(result, outputdir=tmp_path).plot_trend(save_format="png", dpi=50)
     assert len(list((tmp_path / "png").glob("*.png"))) == 1
     assert len(list((tmp_path / "netcdf").glob("*.nc"))) == 1
 
 
 @pytest.mark.diagnostics
-def test_native_coordinates_and_reusable_regions(era5_hpz3_monthly_reader, era5_hpz3_monthly_data, tmp_path):
-    trend = Trends(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", loglevel=loglevel)
-    trend.reader = era5_hpz3_monthly_reader
-    # The HEALPix fields omit geographic coordinates; use the Reader's native grid
-    # to exercise preservation of auxiliary coordinates supplied with the input.
-    trend.data = era5_hpz3_monthly_data[["2t"]].assign_coords(
-        {coord: trend.reader.src_grid_area[coord] for coord in ["lat", "lon"]}
-    )
+def test_surface_trend_requires_a_year(tmp_path):
+    """The NEMO fixture has six months and must fail the annual coverage check."""
+    trend = Trends(catalog="ci", model="NEMO", exp="test-eORCA1", source="long-2d", loglevel=loglevel)
+    with pytest.raises(NotEnoughDataError, match="at least 12 months required, only 6 found"):
+        trend.run(var="tos", outputdir=tmp_path, reader_kwargs={"areas": False})
+    assert trend.trend_coef is None
+    assert not list(tmp_path.rglob("*.nc"))
+
+
+@pytest.mark.diagnostics
+def test_native_coordinates_and_reusable_regions(icon_test_r2b0_short_reader, icon_test_r2b0_short_data, tmp_path):
+    """Native ICON fields carry geographic coordinates over their cell dimension."""
+    trend = Trends(catalog="ci", model="ICON", exp="test-r2b0", source="short", loglevel=loglevel)
+    trend.reader = icon_test_r2b0_short_reader
+    # This tests fitting already retrieved fields; retrieve/run enforce annual coverage.
+    trend.data = icon_test_r2b0_short_data[["t"]]
+    # drop=True needs eager coordinate masks; keep the temperature field lazy.
+    trend.data = trend.data.assign_coords({coord: trend.data[coord].compute() for coord in ["lat", "lon"]})
     original = trend.data.copy(deep=True)
     global_trend = trend.compute_trend()
     for coord in ["lat", "lon"]:
