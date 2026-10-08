@@ -125,7 +125,7 @@ def icon_test_r2b0_short_data(icon_test_r2b0_short_reader):
 # ======================================================================
 @pytest.fixture(scope="session")
 def nemo_test_e_orca1_long_2d_reader():
-    return Reader(model="NEMO", exp="test-e_orca1", source="long-2d", loglevel=LOGLEVEL)
+    return Reader(model="NEMO", exp="test-eORCA1", source="long-2d", loglevel=LOGLEVEL)
 
 
 @pytest.fixture(scope="session")
@@ -135,7 +135,7 @@ def nemo_test_e_orca1_long_2d_data(nemo_test_e_orca1_long_2d_reader):
 
 @pytest.fixture(scope="session")
 def nemo_test_e_orca1_short_3d_reader():
-    return Reader(model="NEMO", exp="test-e_orca1", source="short-3d", loglevel=LOGLEVEL)
+    return Reader(model="NEMO", exp="test-eORCA1", source="short-3d", loglevel=LOGLEVEL)
 
 
 @pytest.fixture(scope="session")
