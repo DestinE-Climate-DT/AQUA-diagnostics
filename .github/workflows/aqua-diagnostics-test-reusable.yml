@@ -134,7 +134,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/Climate-DT-catalog
-          ref: main
           path: Climate-DT-catalog
           token: ${{ secrets.AQUA_GITHUB_PAT }}
 
@@ -142,7 +141,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: DestinE-Climate-DT/aqua-dvc
-          ref: main
           path: aqua-dvc
           token: ${{ secrets.AQUA_DVC_PAT }}
 
