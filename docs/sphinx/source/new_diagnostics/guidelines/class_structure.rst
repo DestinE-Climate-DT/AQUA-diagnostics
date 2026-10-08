@@ -122,61 +122,49 @@ which would be less informative.
 Configuration Files and AQUA console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the section :ref:`installation`, the tool to expose configuration files for the diagnostic or
-its CLI is described.
-This section provides more details on how to update the code if you want to expose a new configuration file or
-you are developing a new diagnostic.
+The configuration files shipped with AQUA-diagnostics are copied in the AQUA configuration folder
+(by default ``$HOME/.aqua``) by the ``aqua install`` command of the AQUA console (see :ref:`getting_started`).
+The console finds them through the ``aqua.plugins`` entry point declared in the ``pyproject.toml`` of the package,
+which points to the ``get_install_dirs()`` function of ``aqua.diagnostics``.
+This function returns the folders to be installed (``DIAGNOSTIC_CONFIG_DIRECTORIES`` and
+``DIAGNOSTIC_TEMPLATE_DIRECTORIES`` in ``aqua/diagnostics/__init__.py``).
+The mechanism is described in the AQUA-core
+`documentation <https://aqua.readthedocs.io/en/latest/aqua_console.html#how-aqua-discovers-installable-components>`_.
 
-The structure is defined in the ``aqua/cli/diagnostic_config.py`` file. Each diagnostic is associated
-with multiple configuration files and their corresponding source and target paths.
+To expose the configuration files of a new diagnostic it is therefore enough to add them to the existing folders of the
+package, without any change to the code:
 
-Example ``diagnostic_config.py`` structure:
+- ``aqua/diagnostics/templates/collections/config-<diagnostic>.yaml``: the template configuration file of the diagnostic;
+- ``aqua/diagnostics/config/collections``: the configuration files used by ``aqua analysis``
+  (jinja templates in ``jinja`` and legacy YAML files in ``legacy``);
+- ``aqua/diagnostics/config/analysis/config.aqua-analysis.yaml``: to run the diagnostic with ``aqua analysis``,
+  add its command line interface to the ``cli:`` block (e.g. ``biases: "biases/cli_biases.py"``);
+- ``aqua/diagnostics/config/tools/<diagnostic>``: optional, settings and lookup files specific to the diagnostic only;
+- ``aqua/diagnostics/config/definitions``: lookup files shared by all the diagnostics.
 
-.. code-block:: python
-
-    diagnostic_config = {
-        'biases': [
-        {
-            'config_file': 'config_biases.yaml',
-            'source_path': 'config/diagnostics/biases',
-            'target_path': 'diagnostics/biases/cli'
-        },
-        ]
-    }
-
-During the installation process, the configuration and CLI files for each diagnostics type are copied or linked
-from the source path to the target path specified in the ``diagnostic_config.py``.
-
-.. note::
-    This method will be update in the future in order to allow the copy or link of the entire ``config/diagnostics``
-    folder, instead of individual files. This will simplify the process of adding new diagnostics.
-    This also means that the source and target paths will not be defined in the
-    ``diagnostic_config.py`` file, but will be assumed to be the same for all the files.
-
-The folder structure should follow this pattern:
+After the installation the folder structure is:
 
 .. code-block:: text
 
     $HOME/.aqua/
+        ├── analysis/
+        ├── collections/
         ├── definitions/
         │   └── regions.yaml
-        ├── tools/
-        │   ├── diagnostic_name/
-        │   │   ├── definitions/
-        │   │   │   └── definitions.yaml
-        │   │   └── config_diagnostic_name.yaml
+        ├── templates/
+        │   └── collections/
+        │       └── config-<diagnostic>.yaml
+        └── tools/
+            └── <diagnostic>/
 
-The ``definitions/`` top-level folder contains shared lookup files used by all diagnostics.
+The ``definitions/`` folder contains shared lookup files used by all diagnostics.
 ``regions.yaml`` is the centralized registry of all available geographic regions:
 any diagnostic can refer to a region by name (e.g. ``nh``, ``arctic``, ``io``) and the
 ``Diagnostic`` base class resolves it against this single file.
 
-The ``tools/`` folder contains a subfolder for each diagnostic, which in turn may contain a
-``definitions/`` folder with lookup files that are *specific to that diagnostic only* (e.g. custom
-index definitions for teleconnections).
-The configuration files used to run each diagnostic are contained in the main diagnostic folder and
-should be used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
+The ``tools/`` folder contains a subfolder only for the diagnostics that need settings or lookup files
+*specific to that diagnostic* (e.g. custom index definitions for teleconnections).
 
 .. note::
-    After the implementation of the diagnostic in the aqua console, be sure that the configuration files are
-    correctly found in the installation folder when running the diagnostic and its CLI.
+    If AQUA-diagnostics is installed in editable mode, with ``aqua install <machine> --diagnostics <path/to/AQUA-diagnostics>``,
+    the folders are linked and new files are available immediately. Otherwise run ``aqua update`` to copy them.

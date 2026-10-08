@@ -44,7 +44,7 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/lat_lon_profiles`` directory, which contains both the source code and
   the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-lat_lon_profiles.yaml``.
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-lat_lon_profiles.yaml``.
 * Regional definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/lat_lon_profiles`` directory and contain examples of how to use the diagnostic.
 
@@ -118,8 +118,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/lat_lon_profiles
-    python cli_lat_lon_profiles.py --config <path_to_config_file>
+    python -m aqua.diagnostics.lat_lon_profiles.cli_lat_lon_profiles --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

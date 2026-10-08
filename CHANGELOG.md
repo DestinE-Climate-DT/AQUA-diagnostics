@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Major documentation update (#473)
 - Ocean3D: Stratification refactor to improve performance (#462)
 - Update the deprecated `ConfigPath` (#451)
 - Remove parenthesis and capitalise regions (#456)
