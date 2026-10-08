@@ -44,25 +44,11 @@ Before you start
    The state-of-the-art diagnostics are designed for the low-resolution archive (``lra-r100-monthly`` source,
    see :ref:`stateoftheart_diagnostics`).
 
-Three ways to run a diagnostic
-------------------------------
+Running a diagnostic
+--------------------
 
-.. list-table::
-   :header-rows: 1
-   :widths: 25 50 25
-
-   * - How
-     - When to use it
-     - Described in
-   * - Notebooks and Python classes
-     - Exploring a diagnostic interactively: the best way to start
-     - :ref:`first-diagnostic-python`
-   * - Command line of a diagnostic
-     - A reproducible run, driven by a YAML configuration file
-     - :ref:`first-diagnostic-cli`
-   * - ``aqua analysis``
-     - Advanced: many diagnostics at once on one experiment, mostly for production runs
-     - :ref:`first-diagnostic-analysis`
+A diagnostic can be run in three ways (see :ref:`running-diagnostics`): from a notebook, from the command line,
+or with ``aqua analysis``, to run many diagnostics at once. This guide follows them from the simplest to the most advanced.
 
 .. _first-diagnostic-python:
 
