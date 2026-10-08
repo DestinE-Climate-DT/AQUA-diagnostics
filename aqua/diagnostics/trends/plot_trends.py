@@ -109,7 +109,8 @@ class PlotTrends:
         long_name = self.data[var].attrs.get("long_name", var)
         period = (
             f" between {time_to_string(self.startdate, format='%Y-%m')} and {time_to_string(self.enddate, format='%Y-%m')}"
-            if self.startdate is not None and self.enddate is not None else ""
+            if self.startdate is not None and self.enddate is not None
+            else ""
         )
         description = (
             f"Trend of {long_name} in the {self.region or 'global'} region "
