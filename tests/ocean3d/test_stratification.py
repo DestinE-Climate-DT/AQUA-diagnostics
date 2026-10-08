@@ -180,31 +180,33 @@ def monthly_dataset():
     return xr.Dataset({"thetao": ("time", np.arange(24.0))}, coords={"time": time})
 
 
-@pytest.mark.parametrize("climatology, expected_clim_type", [("January", "month"), ("DJF", "season")])
-def test_compute_climatology_selects_single_slice(monthly_dataset, climatology, expected_clim_type):
+@pytest.mark.parametrize("climatology", ["January", "DJF"])
+def test_compute_climatology_selects_single_slice(monthly_dataset, climatology):
     """A month name or a season name collapses time onto the requested slice."""
     strat = _bare_stratification(monthly_dataset, climatology)
     strat.compute_climatology(climatology=climatology)
 
-    assert strat.clim_type == expected_clim_type
     assert "time" not in strat.data.dims
     assert strat.data.attrs["AQUA_stratification_climatology"] == climatology
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "compute_climatology leaves the time axis untouched for these values. clim_type is set "
-        "to the truthy string 'Total', so if self.clim_type: enters the branch that only handles "
-        "month/year/season and the else computing the time mean is unreachable. The data comes "
-        "out unreduced while AQUA_stratification_climatology claims a climatology was computed. "
-        "'month' is the default of Stratification.run, so the default is a silent no-op."
-    ),
-)
-@pytest.mark.parametrize("climatology", ["month", "season", "total"])
-def test_compute_climatology_reduces_time_for_documented_values(monthly_dataset, climatology):
-    """Every value advertised in the run/compute_climatology docstrings must reduce time."""
+@pytest.mark.parametrize("climatology, expected_ntime", [("month", 12), ("season", 4), ("year", 2), ("total", None)])
+def test_compute_climatology_reduces_time_for_documented_values(monthly_dataset, climatology, expected_ntime):
+    """Every value advertised in the run/compute_climatology docstrings must reduce time.
+
+    Stratification.run loads the climatology of the whole field into memory before
+    selecting regions, so a value that left time untouched would load every time step.
+    'month' is the default of Stratification.run.
+    """
     strat = _bare_stratification(monthly_dataset, climatology)
     strat.compute_climatology(climatology=climatology)
 
-    assert strat.data.sizes["time"] < monthly_dataset.sizes["time"]
+    assert strat.data.sizes.get("time") == expected_ntime
+    assert strat.data.attrs["AQUA_stratification_climatology"] == climatology
+
+
+def test_compute_climatology_rejects_unknown_value(monthly_dataset):
+    """An unknown value raises instead of silently leaving the data unreduced."""
+    strat = _bare_stratification(monthly_dataset, "Jan")
+    with pytest.raises(ValueError, match="Unknown climatology 'Jan'"):
+        strat.compute_climatology(climatology="Jan")
