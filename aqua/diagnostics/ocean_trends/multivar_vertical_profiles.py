@@ -10,6 +10,8 @@ from aqua.core.logger import log_configure
 from aqua.core.util import evaluate_colorbar_limits, plot_box
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
+xr.set_options(keep_attrs=True)
+
 
 def plot_multivars_vertical_profile(
     maps: list[xr.DataArray],
@@ -70,7 +72,7 @@ def plot_multivars_vertical_profile(
         raise ValueError("Maps should be a list of xarray.DataArray")
     else:
         logger.debug("Loading maps")
-        maps = [data_map.load(keep_attrs=True) for data_map in maps]
+        maps = [data_map.compute() for data_map in maps]
 
     # Generate the figure, if the number of rows and columns is not provided,
     # try to make a square figure with a reasonable aspect ratio

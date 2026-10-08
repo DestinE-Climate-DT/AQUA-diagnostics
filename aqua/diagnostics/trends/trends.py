@@ -1,8 +1,8 @@
-"""Module for computing trends of one or more variables along the time dimension."""
+"""Compute trends along time for atmospheric and ocean fields."""
 
 import xarray as xr
 
-from aqua.core.logger import log_configure
+from aqua.core.logger import log_configure, log_history
 from aqua.core.reader import Trender
 from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
@@ -74,10 +74,10 @@ class Trends(Diagnostic):
         self.logger = log_configure(log_level=loglevel, log_name="Trends")
         self.diagnostic_name = diagnostic_name
 
-        # Trend coefficients produced by the last run(), as an xr.Dataset with one variable each.
+        # Trend coefficients produced by the last compute_trend() or run().
         self.trend_coef = None
 
-    def retrieve(self, var, reader_kwargs: dict = {}):
+    def retrieve(self, var, reader_kwargs: dict = None):
         """
         Retrieve the data for one or more variables.
 
@@ -86,7 +86,8 @@ class Trends(Diagnostic):
             reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
         """
         self.logger.info("Retrieving variable(s): %s", var)
-        super().retrieve(var=to_list(var), reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+        self.trend_coef = None
+        super().retrieve(var=to_list(var), reader_kwargs=reader_kwargs or {}, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
     def compute_trend(
         self,
@@ -102,6 +103,9 @@ class Trends(Diagnostic):
         The data are optionally restricted to a region and optionally averaged over one
         or more dimensions before the fit. Can be called repeatedly on the same instance,
         the retrieved data being left untouched.
+
+        A year is defined as 365.25 elapsed days, independent of sampling frequency.
+        Results remain lazy until explicitly computed, plotted or saved.
 
         Args:
             region (str, optional): Region name in the centralized regions file.
@@ -149,18 +153,27 @@ class Trends(Diagnostic):
             self.logger.debug("Restoring coordinates dropped by polyfit: %s", list(dropped_coords))
             trend = trend.assign_coords(dropped_coords)
 
-        trend.attrs.update(data.attrs)
+        # Keep the fit history added by Trender; source metadata only fills gaps.
+        trend.attrs = {**data.attrs, **coeffs.attrs}
         for name in trend.data_vars:
             trend[name].attrs = dict(data[name].attrs)
             units = trend[name].attrs.get("units", "")
             trend[name].attrs["units"] = f"{units}/year" if units else "per year"
-        if region is not None:
-            trend.attrs["AQUA_region"] = region
+        if region is None and (lon_limits is not None or lat_limits is not None):
+            parts = ["custom"]
+            for dimension, limits in (("lon", lon_limits), ("lat", lat_limits)):
+                if limits is not None:
+                    parts.append(f"{dimension}_{float(limits[0]):g}_{float(limits[1]):g}")
+            region = "_".join(parts)
+        trend.attrs["AQUA_region"] = region or "global"
+        trend.attrs["product"] = "Calculated trend coefficients"
+        trend.attrs["AQUA_trend_year_days"] = 365.25
         if dim_mean is not None:
             trend.attrs["AQUA_dim_mean"] = "_".join(to_list(dim_mean))
-
-        self.logger.debug("Loading trend data in memory")
-        return trend.load()
+        log_history(trend, "Linear trend scaled to per year (365.25 elapsed days)")
+        trend.aqua.set_default(self.reader)
+        self.trend_coef = trend
+        return trend
 
     def save_netcdf(
         self,
@@ -180,6 +193,9 @@ class Trends(Diagnostic):
             diagnostic_product (str, optional): Diagnostic product tag for the filename. Defaults to 'trend'.
             outputdir (str, optional): Output directory.
             rebuild (bool, optional): Overwrite existing files.
+
+        Returns:
+            str or None: Saved file path, or None when there is no data to save.
         """
         data = self.trend_coef if data is None else data
         if data is None:
@@ -195,7 +211,7 @@ class Trends(Diagnostic):
             extra_keys["dim_mean"] = dim_mean
 
         self.logger.info("Saving trend coefficients to NetCDF file")
-        super().save_netcdf(
+        return super().save_netcdf(
             data=data,
             diagnostic=self.diagnostic_name,
             diagnostic_product=diagnostic_product,
@@ -214,7 +230,7 @@ class Trends(Diagnostic):
         dim_mean=None,
         outputdir: str = "./",
         rebuild: bool = True,
-        reader_kwargs: dict = {},
+        reader_kwargs: dict = None,
     ) -> xr.Dataset:
         """
         Run the full trend analysis workflow: retrieve, compute the trend and save it.
