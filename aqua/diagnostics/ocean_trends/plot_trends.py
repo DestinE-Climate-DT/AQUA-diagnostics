@@ -3,6 +3,7 @@
 from typing import Union
 
 import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.logger import log_configure
@@ -42,6 +43,8 @@ class PlotTrends:
         self.loglevel = loglevel
         self.logger = log_configure(self.loglevel, "PlotTrends")
 
+        if not isinstance(data, xr.Dataset) or not data.data_vars:
+            raise ValueError("PlotTrends requires a nonempty xarray.Dataset.")
         self.data = data
         self.diagnostic_name = diagnostic_name
         self.vert_coord = vert_coord
@@ -76,7 +79,8 @@ class PlotTrends:
         """Plot multi-level maps of trends.
 
         Args:
-            levels (list, optional): List of depth levels to plot. Defaults to None.
+            levels (list, optional): Depths in metres. Zero selects the native level nearest the surface.
+                Defaults to [10, 100, 500, 1000, 3000, 5000]. Empty levels are skipped only when all variables are NaN.
             rebuild (bool, optional): If True, rebuild existing output files. Defaults to True.
             cbar_limits (dict, optional): Per-variable colorbar limits as {var: {'vmin': v, 'vmax': v}}. Defaults to None.
             sym (bool, optional): If True, use symmetric colorbar limits. Defaults to False.
@@ -85,14 +89,15 @@ class PlotTrends:
 
         """
         self.diagnostic_product = "multilevel_trend"
-        if levels:
-            self.levels = levels
+        if levels is not None:
+            if not len(levels):
+                raise ValueError("At least one depth level is required.")
+            self.levels = list(levels)
         else:
             self.levels = [10, 100, 500, 1000, 3000, 5000]
-        self.logger.debug(f"Levels set to: {self.levels}")
+        self.logger.debug("Levels set to: %s", self.levels)
         self.cbar_limits = cbar_limits
-        self.vmin = None
-        self.vmax = None
+        self.set_vmin_vmax()
         self.sym = sym
         self.set_central_longitude()
         self.set_data_list()
@@ -129,6 +134,7 @@ class PlotTrends:
             dpi=dpi,
             extra_keys={"region": self.region},
         )
+        plt.close(fig)
 
     def plot_zonal(self, rebuild: bool = True, save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
         """Plot zonal mean vertical profiles of trends.
@@ -139,11 +145,14 @@ class PlotTrends:
             dpi (int, optional): Resolution of the saved figure. Defaults to 300.
 
         """
+        if any(set(self.data[var].dims) != {self.vert_coord, "lat"} for var in self.vars):
+            raise ValueError("plot_zonal() requires latitude-depth fields; prepare the longitude mean explicitly.")
         self.diagnostic_product = "zonal_mean"
+        self.levels = None
         self.set_data_list()
         self.set_suptitle(plot_type="Trends of zonal mean")
         self.set_title()
-        self.set_description(content="Trends of zonal mean of temperature (left) and salinity (right)")
+        self.set_description(content="Zonal trends of " + ", ".join(self.data[v].attrs.get("long_name", v) for v in self.vars))
         self.set_ytext()
         self.set_cbar_labels()
         self.set_nrowcol()
@@ -170,14 +179,13 @@ class PlotTrends:
             format=save_format,
             dpi=dpi,
         )
+        plt.close(fig)
 
     def set_vmin_vmax(self):
         """Set per-variable colorbar min/max from cbar_limits if provided."""
-        self.vmin = []
-        self.vmax = []
-        if self.cbar_limits:
-            self.vmin = [self.cbar_limits[var]["vmin"] for var in self.vars]
-            self.vmax = [self.cbar_limits[var]["vmax"] for var in self.vars]
+        limits = self.cbar_limits or {}
+        self.vmin = [limits.get(var, {}).get("vmin") for var in self.vars]
+        self.vmax = [limits.get(var, {}).get("vmax") for var in self.vars]
 
     def set_nrowcol(self):
         """Set the number of rows and columns for the subplot grid."""
@@ -195,7 +203,7 @@ class PlotTrends:
             self.data_list[0].lat.min().values,
             self.data_list[0].lat.max().values,
         ]
-        self.logger.debug(f"Extent set to: {self.extent}")
+        self.logger.debug("Extent set to: %s", self.extent)
 
     def set_ytext(self):
         """Set the y-axis text for the multi-level plots."""
@@ -211,27 +219,35 @@ class PlotTrends:
     def set_central_longitude(self):
         """Set the central longitude for the map projection from the data."""
         self.central_longitude = self.data.lon.mean().values
-        self.logger.debug(f"Central longitude set to: {self.central_longitude}")
+        self.logger.debug("Central longitude set to: %s", self.central_longitude)
 
     def set_data_list(self):
         """Prepare the list of data arrays to plot."""
         self.data_list = []
         if hasattr(self, "levels") and self.levels:
-            self.data = self.data.interp({self.vert_coord: self.levels})
+            if any(set(self.data[var].dims) != {self.vert_coord, "lat", "lon"} for var in self.vars):
+                raise ValueError("Multilevel maps require depth-latitude-longitude fields; regrid through Reader first.")
+            # Plotting is an output boundary. Compute a separate view once, leaving the
+            # original Dataset and the caller's requested levels unchanged.
+            interpolated = self.data.interp({self.vert_coord: self.levels}).compute()
+            retained_levels = []
             for level in self.levels:
+                if level == 0:
+                    index = abs(self.data[self.vert_coord]).argmin().item()
+                    level_data = self.data.isel({self.vert_coord: index}).compute()
+                else:
+                    level_data = interpolated.sel({self.vert_coord: level})
+                if all(bool(level_data[var].isnull().all()) for var in self.vars):
+                    self.logger.warning("All variables are NaN at %sm; skipping this level", level)
+                    continue
+                retained_levels.append(level)
                 for var in self.vars:
-                    if level == 0:
-                        data_level_var = self.data[var].isel({self.vert_coord: -1})
-                    else:
-                        data_level_var = self.data[var].sel({self.vert_coord: level})
-
-                    if data_level_var.isnull().all():
-                        self.logger.warning(f"All values are NaN for {var} at {level}m")
-                        self.levels.pop(self.levels.index(level))
-                        break
-
+                    data_level_var = level_data[var].copy(deep=False)
                     data_level_var.attrs["long_name"] = f"{data_level_var.attrs.get('long_name', var)} at {level}m"
                     self.data_list.append(data_level_var)
+            self.levels = retained_levels
+            if not self.data_list:
+                raise ValueError("No valid trend data at the requested depth levels.")
         else:
             for var in self.vars:
                 data_var = self.data[var]
@@ -240,29 +256,23 @@ class PlotTrends:
     def set_suptitle(self, plot_type=None):
         """Set the title for the plot."""
         self.suptitle = TitleBuilder(diagnostic=plot_type, regions=self.region, model=self.model, exp=self.exp).generate()
-        self.logger.debug(f"Suptitle set to: {self.suptitle}")
+        self.logger.debug("Suptitle set to: %s", self.suptitle)
 
     def set_title(self):
         """Set the title for each subplot panel."""
         self.title_list = []
-        for j in range(len(self.data_list)):
-            for var in self.vars:
-                if j == 0:
-                    title = f"{self.data[var].attrs.get('long_name', var)}"
-                    self.title_list.append(title)
-                else:
-                    self.title_list.append(" ")
+        for i in range(len(self.data_list)):
+            var = self.vars[i % len(self.vars)]
+            self.title_list.append(self.data[var].attrs.get("long_name", var) if i < len(self.vars) else " ")
         self.logger.debug("Title list set to: %s", self.title_list)
 
     def set_cbar_labels(self):
         """Set the colorbar labels for each subplot from variable units."""
         self.cbar_labels = []
-        for _ in range(len(self.data_list)):
-            for var in self.vars:
-                units = self.data[var].attrs.get("units", "")
-                units_latex = unit_to_latex(units) if units else ""
-                cbar_label = f"{self.data[var].attrs.get('short_name', var)} ({units_latex})"
-                self.cbar_labels.append(cbar_label)
+        for data_var in self.data_list:
+            units = data_var.attrs.get("units", "")
+            units_latex = unit_to_latex(units) if units else ""
+            self.cbar_labels.append(f"{data_var.attrs.get('short_name', data_var.name)} ({units_latex})")
         self.logger.debug("Colorbar labels set to: %s", self.cbar_labels)
 
     def set_description(self, content=None):
@@ -279,7 +289,7 @@ class PlotTrends:
         self,
         fig,
         diagnostic_product: str,
-        extra_keys: dict = {},
+        extra_keys: dict = None,
         rebuild: bool = True,
         dpi: int = 300,
         format: Union[str, list] = SAVE_FORMAT,
@@ -299,7 +309,9 @@ class PlotTrends:
                              We usually want to add here the description of the figure.
 
         """
-        extra_keys.update({"region": self.region})
+        extra_keys = {**(extra_keys or {}), "region": self.region}
+        if "AQUA_dim_mean" in self.data.attrs:
+            extra_keys["dim_mean"] = self.data.attrs["AQUA_dim_mean"]
 
         self.outputsaver.save_figure(
             fig,
@@ -313,8 +325,10 @@ class PlotTrends:
 
     def _get_info(self):
         """Extract model, catalog, exp, region from data attributes."""
-        self.catalog = self.data[self.vars[0]].AQUA_catalog
-        self.model = self.data[self.vars[0]].AQUA_model
-        self.exp = self.data[self.vars[0]].AQUA_exp
-        self.realizations = get_realizations(self.data[self.vars[0]])
+        first_var = self.data[self.vars[0]]
+        attrs = {**self.data.attrs, **first_var.attrs}
+        self.catalog = attrs.get("AQUA_catalog")
+        self.model = attrs.get("AQUA_model")
+        self.exp = attrs.get("AQUA_exp")
+        self.realizations = get_realizations(first_var if "AQUA_realization" in first_var.attrs else self.data)
         self.region = self.data.attrs.get("AQUA_region", "global")

@@ -9,7 +9,9 @@ from matplotlib import ticker
 from aqua.core.graphics import ConfigStyle
 from aqua.core.graphics.single_map import plot_single_map
 from aqua.core.logger import log_configure
-from aqua.core.util import add_cyclic_lon, evaluate_colorbar_limits, generate_colorbar_ticks
+from aqua.core.util import evaluate_colorbar_limits, generate_colorbar_ticks
+
+xr.set_options(keep_attrs=True)
 
 
 def plot_maps(
@@ -96,39 +98,42 @@ def plot_maps(
 
     if maps is None or any(not isinstance(data_map, xr.DataArray) for data_map in maps):
         raise ValueError("Maps should be a list of xarray.DataArray")
+    if not maps or len(maps) != nrows * ncols:
+        raise ValueError("The number of maps must equal nrows * ncols.")
     logger.debug("Loading maps")
-    maps = [data_map.load(keep_attrs=True) for data_map in maps]
+    maps = [data_map.compute() for data_map in maps]
 
-    figsize = (ncols * 4.5, nrows * 2.5)
+    figsize = (ncols * 4.5, nrows * 2.5 + 1.4)
     fig, axs = plt.subplots(
         nrows=nrows,
         ncols=ncols,
         figsize=figsize,
-        subplot_kw={"projection": ccrs.PlateCarree()},
+        subplot_kw={"projection": proj},
+        squeeze=False,
     )
+    fig.subplots_adjust(left=0.15, right=0.95, bottom=0.9 / figsize[1], top=1 - 0.8 / figsize[1], hspace=0.15)
     axs = axs.flatten()
 
     for i in range(len(maps)):
-        try:
-            maps[i] = add_cyclic_lon(maps[i])
-        except Exception as e:
-            logger.warning(f"Could not add cyclic longitude to map {i}: {e}")
-
         row = i // ncols
         col = i % ncols
 
-        if col_vmax and col_vmin:
-            vmin, vmax = col_vmin[col], col_vmax[col]
-            if sym:
-                vmin, vmax = -max(abs(vmin), abs(vmax)), max(abs(vmin), abs(vmax))
-        else:
-            col_maps = [maps[j] for j in range(len(maps)) if j % ncols == col]
-            vmin, vmax = evaluate_colorbar_limits(maps=col_maps, sym=sym)
+        vmin = col_vmin[col] if col_vmin is not None else None
+        vmax = col_vmax[col] if col_vmax is not None else None
+        if vmin is None or vmax is None:
+            col_maps = [maps[j] for j in range(len(maps)) if j % ncols == col and bool(maps[j].notnull().any())]
+            # Keep empty panels aligned with the other variables. An entirely
+            # empty column has no meaningful automatic scale.
+            auto_min, auto_max = evaluate_colorbar_limits(maps=col_maps, sym=sym) if col_maps else (-1, 1)
+            vmin = auto_min if vmin is None else vmin
+            vmax = auto_max if vmax is None else vmax
+        if sym:
+            vmin, vmax = -max(abs(vmin), abs(vmax)), max(abs(vmin), abs(vmax))
 
         ticks = np.linspace(vmin, vmax, int(nlevels / 2) + 1)
         if len(ticks) < 3:  # ensure at least 3 ticks for colorbar
             ticks = np.linspace(vmin, vmax, 3)
-        logger.debug(f"Colorbar limits for map {i}: vmin={vmin}, vmax={vmax}")
+        logger.debug("Colorbar limits for map %d: vmin=%s, vmax=%s", i, vmin, vmax)
 
         logger.debug("Plotting map %d", i)
         fig, ax = plot_single_map(
@@ -147,6 +152,7 @@ def plot_maps(
             return_fig=True,
             cyclic_lon=cyclic_lon,
             fig=fig,
+            ax=axs[i],
             gridlines=False,
             loglevel=loglevel,
             ax_pos=(nrows, ncols, i + 1),
@@ -156,11 +162,16 @@ def plot_maps(
         )
         ax.set_aspect("auto")  # NEW: stretch plot to fill subplot
         ax.set_facecolor(color="grey")  # adding land
+        # Geographic labels are supplied by the gridliner below.
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        ax.set_xticks([])
+        ax.set_yticks([])
 
         gl = ax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.3)
 
-        gl.xlabel_style = {"color": "gray"}
-        gl.ylabel_style = {"color": "gray"}
+        gl.xlabel_style = {"color": "gray", "size": 8}
+        gl.ylabel_style = {"color": "gray", "size": 8}
 
         gl.top_labels = False
         gl.right_labels = False
@@ -170,13 +181,20 @@ def plot_maps(
         else:
             gl.bottom_labels = False
 
-        if col == ncols - 1:
-            gl.left_labels = False
-        else:
-            gl.left_labels = True
+        gl.left_labels = col == 0
 
-        if ytext:
-            ax.text(-0.3, 0.33, ytext[i], fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
+        if ytext and ytext[i]:
+            ax.text(
+                -0.18,
+                0.5,
+                ytext[i],
+                fontsize=11,
+                color="dimgray",
+                rotation=90,
+                transform=ax.transAxes,
+                ha="center",
+                va="center",
+            )
         if row == nrows - 1:
             if ax.collections:
                 mappable = ax.collections[-1]
@@ -191,9 +209,11 @@ def plot_maps(
             mappable.set_cmap(cmap)
 
             pos = ax.get_position()
-            cax = fig.add_axes([pos.x0, pos.y0 - 0.05, pos.width, 0.02])
+            cax = fig.add_axes([pos.x0, pos.y0 - 0.5 / figsize[1], pos.width, 0.14 / figsize[1]])
             cbar = fig.colorbar(mappable, cax=cax, orientation="horizontal")
-            cbar.set_label(cbar_labels[i])
+            if cbar_labels is not None:
+                cbar.set_label(cbar_labels[i], fontsize=9)
+            cbar.ax.tick_params(labelsize=8)
 
             cbar_ticks = generate_colorbar_ticks(
                 vmin=vmin,
@@ -212,7 +232,7 @@ def plot_maps(
             ax.set_title(titles[i], fontsize=9)
 
     if title:
-        plt.suptitle(title, fontsize=ncols * 7, y=0.95)
+        fig.suptitle(title, fontsize=12, y=1 - 0.15 / figsize[1])
 
     if return_fig:
         return fig
