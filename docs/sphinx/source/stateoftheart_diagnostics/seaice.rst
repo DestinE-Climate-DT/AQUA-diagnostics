@@ -110,14 +110,14 @@ The basic structure of the analysis is the following:
 
     # Compute reference data
     # For Arctic region:
-    si_ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua',
+    si_ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis',
                        source='nh-monthly', regrid='r100',
                        regions=['arctic'],
                        loglevel="DEBUG")
     ref_nh = si_ref_nh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
 
     # For Antarctic region:
-    si_ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua',
+    si_ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis',
                        source='sh-monthly', regrid='r100',
                        regions=['antarctic'],
                        loglevel="DEBUG")
@@ -195,7 +195,7 @@ The sea ice configuration file is organized into several main sections:
       - &ref_osi_nh
         catalog: 'obs'             # mandatory
         model: 'OSI-SAF'           # mandatory
-        exp: 'osi-saf-aqua'        # mandatory
+        exp: 'osi-saf-ssmis'        # mandatory
         source: 'nh-monthly'       # mandatory
         regrid: 'r100'
         domain: "nh"
@@ -296,7 +296,7 @@ The default reference datasets are:
 
 Details are available on the `OSI-SAF website <https://osi-saf.eumetsat.int/>`_.
 
-An updated OSI-SAF version is available in the AQUA ``obs`` catalog (``exp=osi-saf-aqua``), which concatenates OSI-SAF osi-450-a1 (1979-2021) and OSI-SAF osi-430 (2022-2024) datasets.
+An updated OSI-SAF version is available in the AQUA ``obs`` catalog (``exp=osi-saf-ssmis``), which concatenates OSI-SAF osi-450-a1 (1979-2021) and OSI-SAF osi-430 (2022-2025) datasets.
 
 Custom reference datasets can be configured in the configuration file.
 

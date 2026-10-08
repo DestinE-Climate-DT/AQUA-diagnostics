@@ -29,15 +29,16 @@ jobs:
         id: check
         run: |
           # Run tests if:
-          # 1) PR has label "run tests" or "ready to merge"
+          # 1) PR has label "run tests" or "ready to merge" or "ready for review"
           # 2) Opened by Dependabot
           # 3) Triggered manually (workflow_dispatch)
           # 4) Triggered by schedule
           # 5) Pushed to main branch
           SHOULD_RUN="false"
 
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'run tests') }}" == "true" ]] || \
-             [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready to merge') }}" == "true" ]] || \
+          if [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'run tests') }}" == "true" ]] || \
+             [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'ready for review') }}" == "true" ]] || \
+             [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'ready to merge') }}" == "true" ]] || \
              [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]] || \
              [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
              [[ "${{ github.event_name }}" == "schedule" ]] || \
