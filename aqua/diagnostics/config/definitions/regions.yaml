@@ -22,17 +22,7 @@ regions:
     longname: Europe
 
   # --- Ocean basins and seas (Natural Earth ocean_basins_50) ---
-  go:
-    regionmask: natural_earth_v5_1_2.ocean_basins_50
-    regionmask_names:
-      - North Atlantic Ocean
-      - South Atlantic Ocean
-      - North Pacific Ocean
-      - South Pacific Ocean
-      - INDIAN OCEAN
-      - Arctic Ocean
-      - SOUTHERN OCEAN
-    longname: Global Ocean
+
   ao:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [North Atlantic Ocean, South Atlantic Ocean]
@@ -57,6 +47,7 @@ regions:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [Labrador Sea]
     longname: Labrador Sea
+    frac_threshold: 0.0
   lgs:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [Labrador Sea, Greenland Sea, Norwegian Sea]
@@ -157,6 +148,7 @@ regions:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [Sargasso Sea]
     longname: Sargasso Sea
+    frac_threshold: 0.0
   ans:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [Andaman Sea]
@@ -198,6 +190,11 @@ regions:
     lat_limits: [-90, 0]
 
   # --- No predefined equivalent: latitude bands ---
+  go:
+    longname: Global Ocean
+    lon_limits: [0, 360]
+    lat_limits: [-90, 90]
+
   nh:
     longname: North Midlatitudes
     lon_limits: [-180, 180]
