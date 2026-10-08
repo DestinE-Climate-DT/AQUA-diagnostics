@@ -3,7 +3,6 @@
 from typing import Union
 
 import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.logger import log_configure
@@ -134,7 +133,6 @@ class PlotTrends:
             dpi=dpi,
             extra_keys={"region": self.region},
         )
-        plt.close(fig)
 
     def plot_zonal(self, rebuild: bool = True, save_format: Union[str, list] = SAVE_FORMAT, dpi: int = 300):
         """Plot zonal mean vertical profiles of trends.
@@ -179,7 +177,6 @@ class PlotTrends:
             format=save_format,
             dpi=dpi,
         )
-        plt.close(fig)
 
     def set_vmin_vmax(self):
         """Set per-variable colorbar min/max from cbar_limits if provided."""

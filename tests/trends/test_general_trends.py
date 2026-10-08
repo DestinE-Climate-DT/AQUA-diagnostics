@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
@@ -43,10 +44,13 @@ def test_trends(ocean_trend):
         assert "_coeffs" in saved.attrs["history"]
         assert "365.25" in saved.attrs["history"]
         assert saved.attrs["product"] == "Calculated trend coefficients"
-    PlotTrends(result, outputdir=tmp_path).plot_multilevel(levels=[10, 100], save_format="png", dpi=50)
-    PlotTrends(result.mean("lon"), outputdir=tmp_path).plot_zonal(save_format="png", dpi=50)
-    for product in ["multilevel_trend", "zonal_mean"]:
-        assert (tmp_path / "png" / f"trends.{product}.ci.FESOM.hpz3.r1.global_ocean.png").stat().st_size > 0
+    try:
+        PlotTrends(result, outputdir=tmp_path).plot_multilevel(levels=[10, 100], save_format="png", dpi=50)
+        PlotTrends(result.mean("lon"), outputdir=tmp_path).plot_zonal(save_format="png", dpi=50)
+        for product in ["multilevel_trend", "zonal_mean"]:
+            assert (tmp_path / "png" / f"trends.{product}.ci.FESOM.hpz3.r1.global_ocean.png").stat().st_size > 0
+    finally:
+        plt.close("all")
 
 
 @pytest.mark.diagnostics
@@ -68,7 +72,7 @@ def test_trends_region_dim_mean(ocean_trend):
     "model, exp, source, var",
     [
         ("ERA5", "era5-hpz3", "monthly", "2t"),
-        ("NEMO", "test-e_orca1", "long-2d", "tos"),
+        ("NEMO", "test-eORCA1", "long-2d", "tos"),
     ],
 )
 def test_surface_trend_outputs(model, exp, source, var, tmp_path):
@@ -85,12 +89,18 @@ def test_surface_trend_outputs(model, exp, source, var, tmp_path):
 def test_native_coordinates_and_reusable_regions(era5_hpz3_monthly_reader, era5_hpz3_monthly_data, tmp_path):
     trend = Trends(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", loglevel=loglevel)
     trend.reader = era5_hpz3_monthly_reader
-    trend.data = era5_hpz3_monthly_data[["2t"]]
+    # The HEALPix fields omit geographic coordinates; use the Reader's native grid
+    # to exercise preservation of auxiliary coordinates supplied with the input.
+    trend.data = era5_hpz3_monthly_data[["2t"]].assign_coords(
+        {coord: trend.reader.src_grid_area[coord] for coord in ["lat", "lon"]}
+    )
     original = trend.data.copy(deep=True)
     global_trend = trend.compute_trend()
     for coord in ["lat", "lon"]:
+        assert coord not in trend.data.dims
         xr.testing.assert_identical(global_trend[coord], trend.data[coord])
     first = trend.compute_trend(lon_limits=[160, -160], lat_limits=[-30, 30])
+    assert first.lon.size > 0
     wrapped_lon = (first.lon + 180) % 360 - 180
     assert bool((abs(wrapped_lon) >= 160).all())
     second = trend.compute_trend(lon_limits=[20, 100], lat_limits=[-30, 30])

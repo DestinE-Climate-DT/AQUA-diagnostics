@@ -140,24 +140,26 @@ def test_ocean_products_and_colour_limits(plot_class, variables, levels, ocean_c
     data = ocean_coefficients[variables].chunk({"depth": 1})
     original = data.copy(deep=True)
     requested = list(levels)
-    plotter = plot_class(data, outputdir=tmp_path)
-    plotter.plot_multilevel(levels=levels, cbar_limits={"thetao": {"vmin": -1, "vmax": 2}}, save_format="png", dpi=40)
-    args, figure = captured[0]
-    assert args["col_vmin"][0] == -1
-    assert args["col_vmax"][0] == 2
-    assert len(figure.axes) == len(variables) * (len([level for level in levels if level <= 500]) + 1)
-    assert figure.axes[0].collections[0].get_clim() == (-1, 2)
-    assert levels == requested
-    assert figure.axes[-1].get_position().y1 < figure.axes[-len(variables) - 1].get_position().y0
-    assert data.chunks
-    xr.testing.assert_identical(data, original)
-    with pytest.raises(ValueError, match="longitude mean"):
-        plotter.plot_zonal(save_format="png", dpi=40)
-    zonal = data.mean("lon")
-    plot_class(zonal, outputdir=tmp_path).plot_zonal(save_format="png", dpi=40)
-    for product in ["multilevel_trend", "zonal_mean"]:
-        assert (tmp_path / "png" / f"trends.{product}.ci.model.exp.r1.global.png").stat().st_size > 0
-    assert not plt.get_fignums()
+    try:
+        plotter = plot_class(data, outputdir=tmp_path)
+        plotter.plot_multilevel(levels=levels, cbar_limits={"thetao": {"vmin": -1, "vmax": 2}}, save_format="png", dpi=40)
+        args, figure = captured[0]
+        assert args["col_vmin"][0] == -1
+        assert args["col_vmax"][0] == 2
+        assert len(figure.axes) == len(variables) * (len([level for level in levels if level <= 500]) + 1)
+        assert figure.axes[0].collections[0].get_clim() == (-1, 2)
+        assert levels == requested
+        assert figure.axes[-1].get_position().y1 < figure.axes[-len(variables) - 1].get_position().y0
+        assert data.chunks
+        xr.testing.assert_identical(data, original)
+        with pytest.raises(ValueError, match="longitude mean"):
+            plotter.plot_zonal(save_format="png", dpi=40)
+        zonal = data.mean("lon")
+        plot_class(zonal, outputdir=tmp_path).plot_zonal(save_format="png", dpi=40)
+        for product in ["multilevel_trend", "zonal_mean"]:
+            assert (tmp_path / "png" / f"trends.{product}.ci.model.exp.r1.global.png").stat().st_size > 0
+    finally:
+        plt.close("all")
 
 
 def test_map_projection_and_partial_limits(ocean_coefficients):
