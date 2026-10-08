@@ -59,9 +59,8 @@ def trends_plots(trends_result, trends_config):
     """Run both plot types once. Multilevel must use full maps; zonal uses lon-mean."""
     trend, tmp_path = trends_result
     save_format = trends_config["plot"]["save_format"]
-    # Copy the levels: PlotTrends.set_data_list pops all-NaN levels from the list it receives.
     PlotTrends(data=trend.trend_coef, outputdir=tmp_path, loglevel=loglevel).plot_multilevel(
-        levels=list(trends_config["plot"]["levels"]), save_format=save_format, dpi=dpi
+        levels=trends_config["plot"]["levels"], save_format=save_format, dpi=dpi
     )
     PlotTrends(data=trend.trend_coef.mean("lon"), outputdir=tmp_path, loglevel=loglevel).plot_zonal(
         save_format=save_format, dpi=dpi
