@@ -37,7 +37,8 @@ def mock_config_yaml(tmp_path):
             "save_format": ["pdf"],
             "save_netcdf": True,
             "dpi": 150,
-            "create_catalog_entry": True,
+            # DEPRECATED
+            # "create_catalog_entry": True,
         },
         "setup": {
             "loglevel": "DEBUG",
@@ -120,7 +121,8 @@ class TestDiagnosticCLI:
         assert cli.save_format == ["pdf"]
         assert cli.save_netcdf is True
         assert cli.dpi == 150
-        assert cli.create_catalog_entry is True
+        # DEPRECATED
+        # assert cli.create_catalog_entry is True
 
     def test_load_config_merges_realization_into_first_dataset(self, mock_args, mock_config_yaml):
         """Test that realization is merged with the first dataset Reader kwargs."""

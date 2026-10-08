@@ -33,7 +33,8 @@ DEFAULT_OUTPUT = {
     "save_format": ["pdf"],
     "save_netcdf": True,
     "dpi": 50,
-    "create_catalog_entry": False,
+    # DEPRECATED
+    # "create_catalog_entry": False,
 }
 
 

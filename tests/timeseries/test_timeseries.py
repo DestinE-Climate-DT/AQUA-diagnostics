@@ -71,7 +71,9 @@ class TestTimeseries:
             regrid=self.regrid,
         )
 
-        ts.run(var=self.var, freq=["monthly", "annual"], outputdir=tmp_path, std=True, create_catalog_entry=True)
+        ts.run(
+            var=self.var, freq=["monthly", "annual"], outputdir=tmp_path, std=True
+        )  # DEPRECATED: create_catalog_entry=True)
 
         assert ts.lon_limits == [-180, 180]
         assert ts.lat_limits == [-15, 15]
