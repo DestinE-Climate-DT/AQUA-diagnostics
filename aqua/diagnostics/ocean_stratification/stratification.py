@@ -80,7 +80,6 @@ class Stratification(Diagnostic):
             vert_coord = DEFAULT_OCEAN_VERT_COORD
         self.vert_coord = vert_coord
         self.processed_data = {}
-        self.exported_files = {}
 
     def run(
         self,
@@ -145,7 +144,6 @@ class Stratification(Diagnostic):
             )
 
         self.processed_data = {}
-        self.exported_files = {}
         self.logger.debug(
             "Variables retrieved: %s, regions: %s, climatology: %s, dim_mean: %s",
             var,
@@ -163,7 +161,6 @@ class Stratification(Diagnostic):
         data_whole_region = self.data
         clim_cache = {}
         for reg, clim in zip(regions_list, clim_list):
-            self.data = data_whole_region
             self.logger.info(
                 "Processing region: %s, climatology: %s for diagnostic '%s'.",
                 reg if reg is not None else "global",
@@ -200,24 +197,22 @@ class Stratification(Diagnostic):
             self.processed_data[reg] = self.data
             product = "mld" if mld else "stratification"
             data_to_save = self.data["mld"] if mld else self.data
-            filepath = self.save_netcdf(
+            self.save_netcdf(
                 data_to_save,
                 diagnostic_product=product,
                 outputdir=outputdir,
                 rebuild=rebuild,
                 region=self.region,
             )
-            self.exported_files[reg] = filepath
             self.logger.info("%s diagnostic saved to netCDF file.", product)
 
     def compute_stratification(self):
-        """Compute the stratification by calculating climatology and density.
+        """Compute the stratification by calculating the potential density.
 
-        This method first computes the climatology (default: seasonal) and then computes the potential density.
-        Updates the internal dataset with the results.
+        Adds 'rho' to the internal dataset; the climatology is computed later, in run().
 
         """
-        self.logger.debug("Starting computation of climatology and density.")
+        self.logger.debug("Starting computation of potential density.")
         self.calculate_rho()
         self.logger.debug("Stratification computation completed successfully.")
 
@@ -247,6 +242,7 @@ class Stratification(Diagnostic):
         season_list = ["DJF", "MAM", "JJA", "SON"]
         if climatology in season_list:
             self.data = self.data.sel(time=self.data.time.dt.season == climatology).mean("time")
+            self.data = self.data.assign_coords(time=climatology)
         elif climatology in month_list or climatology == "month":
             self.data = self.data.groupby("time.month").mean("time").rename({"month": "time"})
             self.data = self.data.assign_coords(time=[calendar.month_name[m] for m in self.data["time"].values])
@@ -268,6 +264,7 @@ class Stratification(Diagnostic):
     def _rho_numpy(so, thetao):
         abs_so = convert_so(so)
         cons_thetao = convert_thetao(abs_so, thetao)
+        # Potential density at 0 dbar minus 1000 kg/m^3 (units stay kg/m^3)
         return compute_rho(abs_so, cons_thetao, 0) - 1000
 
     def calculate_rho(self):
@@ -280,10 +277,10 @@ class Stratification(Diagnostic):
             output_dtypes=[data_thetao.dtype],
         )
         self.data["rho"] = rho
-        self.data["rho"].attrs["long_name"] = "Potential Density"
+        self.data["rho"].attrs["long_name"] = "Potential Density Anomaly"
         self.data["rho"].attrs["units"] = "kg/m^3"
-        self.data["rho"].attrs["standard_name"] = "sea_water_potential_density"
-        self.logger.debug("Potential density computed successfully.")
+        self.data["rho"].attrs["standard_name"] = "sea_water_sigma_theta"
+        self.logger.debug("Potential density anomaly computed successfully.")
 
     def compute_mld(self):
         """Compute the mixed layer depth (MLD) from the density field.

@@ -182,11 +182,12 @@ def monthly_dataset():
 
 @pytest.mark.parametrize("climatology", ["January", "DJF"])
 def test_compute_climatology_selects_single_slice(monthly_dataset, climatology):
-    """A month name or a season name collapses time onto the requested slice."""
+    """A month name or a season name collapses time onto the requested slice, labelled by name."""
     strat = _bare_stratification(monthly_dataset, climatology)
     strat.compute_climatology(climatology=climatology)
 
     assert "time" not in strat.data.dims
+    assert strat.data["time"].item() == climatology
     assert strat.data.attrs["AQUA_stratification_climatology"] == climatology
 
 
