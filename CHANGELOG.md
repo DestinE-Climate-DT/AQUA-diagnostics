@@ -10,6 +10,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Update to aqua-core v1.2.1 (#466)
 - Update the deprecated `ConfigPath` (#451)
 - Remove parenthesis and capitalise regions (#456)
 - OutputSaver: `load_netcdf` can take the `expect_netcdf` argument to log missing files as errors instead of info. It also use start and end dates to check need of eventually recomputing results. (#452)
