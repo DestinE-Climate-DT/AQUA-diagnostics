@@ -58,7 +58,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/seaice`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-seaice.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-seaice.yaml``
 * Regional definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/seaice`` directory and contain examples of how to use the diagnostic.
 
@@ -147,8 +147,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/seaice
-    python cli_seaice.py --config <path_to_config_file>
+    python -m aqua.diagnostics.seaice.cli_seaice --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

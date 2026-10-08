@@ -37,7 +37,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ocean_drift`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-ocean_drift.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-drift.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/ocean_drift`` directory and contain examples of how to use the diagnostic.
 * Regions definitions are available in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``
 
@@ -100,8 +100,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ocean_drift
-    python cli_ocean_drift.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ocean_drift.cli_ocean_drift --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

@@ -40,7 +40,7 @@ File structure
 Directory locations:
 
 * Source code and CLI: ``aqua/diagnostics/dummy/``
-* Template configuration file: ``aqua/diagnostics/templates/diagnostics/config-dummy.yaml``
+* Template configuration file: ``aqua/diagnostics/templates/collections/config-dummy.yaml``
 * Notebooks: ``notebooks/diagnostics/dummy/``
 * Interface files (optional): ``aqua/diagnostics/config/tools/dummy/`` — for custom regions, variable definitions, or other diagnostic-specific settings.
 
@@ -92,8 +92,7 @@ CLI usage
 
 .. code-block:: bash
 
-    cd $AQUA/AQUA-diagnostics/aqua/diagnostics/dummy/
-    python cli_dummy.py --config <path_to_config_file>
+    python -m aqua.diagnostics.dummy.cli_dummy --config <path_to_config_file>
 
 Common options: ``--model``, ``--exp``, ``--source``, ``--outputdir``, ``--loglevel``, ``--nworkers``.
 
