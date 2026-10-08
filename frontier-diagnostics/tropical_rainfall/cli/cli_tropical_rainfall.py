@@ -4,6 +4,7 @@ import sys
 from src.tropical_rainfall_cli_class import TropicalRainfallCLI
 from src.tropical_rainfall_utils import load_configuration, parse_arguments, validate_arguments
 
+from aqua.core.configurer import ConfigLocator
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 
@@ -13,19 +14,23 @@ logger = log_configure(log_name="Trop. Rainfall CLI", log_level="INFO")
 
 def load_config(args):
     """Load the configuration file."""
-    homedir = os.environ.get("HOME")
-    config_filename = os.path.join(homedir, ".aqua", "diagnostics", "tropical_rainfall", "cli", "cli_config_trop_rainfall.yml")
-
-    # Load the configuration
-    config_path = get_arg(args, "config", config_filename)
+    config_path = get_arg(args, "config", None)
     try:
+        if config_path is None:
+            config_path = os.path.join(
+                ConfigLocator(logger=logger).configdir,
+                "diagnostics",
+                "tropical_rainfall",
+                "cli",
+                "cli_config_trop_rainfall.yml",
+            )
         config = load_configuration(config_path)
-        logger.info(f"Configuration successfully loaded from {config_path}")
+        logger.info("Configuration successfully loaded from %s", config_path)
     except FileNotFoundError:
-        logger.error(f"Configuration file not found at {config_filename}")
+        logger.error("Configuration file not found at %s", config_path)
         sys.exit(2)
     except Exception as e:
-        logger.error(f"An error occurred while loading configuration: {e}")
+        logger.error("An error occurred while loading configuration: %s", e)
         sys.exit(3)
 
     return config
