@@ -34,6 +34,10 @@ diagnostics:
     diagnostic_name: 'biases'
     variables: ['tprate', 'u']
     formulae: ['(10u^2+10v^2)^0.5']
+    # Optional: region to select, as a key of the regions file (e.g. 'europe_ar', 'new_zealand').
+    # If null, the whole domain is used. Applied to both dataset and reference.
+    region: null
+    regions_file_path: null # The default region file will be used if null
     params:
       default:
         plev: [85000, 20000] # Level plot for 2D bias map if variable 3d
@@ -54,7 +58,7 @@ diagnostics:
         long_name: "Wind speed at 10m"
     plot_params:
       default:
-        projection: 'robinson'
+        projection: null
         projection_params: {}
         show_stats: true
         show_significance: true    # Enable significance stippling

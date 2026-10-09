@@ -11,7 +11,9 @@ approx_rel = APPROX_REL * 10
 dpi = DPI
 
 # --- Constants ---
-EXPECTED_FULL = {"thetao": 22.2086629652034, "so": 36.57638045014168}
+# Sargasso Sea ('sss') is a regionmask region (frac_threshold 0.0) of the regions file.
+# thetao is in K: the FESOM data are no longer in degC since aqua-core #3176.
+EXPECTED_FULL = {"thetao": 295.2684740408682, "so": 36.577130895750535}
 EXPECTED_DRIFT_TYPES = ["full", "anom_t0", "std_anom_t0"]
 PLOT_STEM = "oceandrift.{product}.ci.FESOM.hpz3.r1.sargasso_sea"
 EXPECTED_NTIME = 15  # crosses a year boundary, so the yearly split/concat is tested
