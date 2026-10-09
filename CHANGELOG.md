@@ -45,6 +45,7 @@ Main changes:
 4. Specify min and max allowed versions for all dependencies
 
 Complete list:
+- Move aqua-web and DROP CLI tools, examples and job templates from AQUA-core (#301)
 - Ocean3D: corrected the drift plots along with adjustments in trends and stratification plots (#298)
 - Dependencies update (#368)
 - `reader_kwargs` centralization management of cli arguments (#264)
