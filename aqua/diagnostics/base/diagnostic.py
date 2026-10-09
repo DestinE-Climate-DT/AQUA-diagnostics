@@ -553,11 +553,12 @@ class Diagnostic:
                 from, or None if the region is not regionmask-based.
             region_sel (str | list): The name(s) to pass as ``region_sel`` to
                 ``Reader.select_area``, or None if the region is not regionmask-based.
+            frac_threshold (float): The optional ``frac_threshold`` of the region, or None.
         """
         regions_dict = self._load_regions_from_file(regions_file_path=regions_file_path)
         spec = regions_dict.get(region, {})
         if spec.get("regionmask") is None:
-            return None, None
+            return None, None, None
 
         regionmask_string = f"regionmask.defined_regions.{spec['regionmask']}"
         parts = regionmask_string.split(".", 1)  # e.g["regionmask", "defined_regions.natural_earth_v5_1_2.ocean_basins_50"]
@@ -565,7 +566,7 @@ class Diagnostic:
         long_name = spec.get("longname", region)
         region_sel = spec.get("regionmask_names", long_name)
 
-        return region_object, region_sel
+        return region_object, region_sel, spec.get("frac_threshold")
 
     def select_region(self, data: xr.Dataset, region: str = None, regions_file_path: str = None, drop: bool = True, **kwargs):
         """
@@ -594,14 +595,15 @@ class Diagnostic:
 
         if region is not None:
             longname, lon_limits, lat_limits = self._set_region(region=region, regions_file_path=regions_file_path)
-            region_object, region_sel = self._resolve_regionmask_object(region=region, regions_file_path=regions_file_path)
+            region_object, region_sel, frac_threshold = self._resolve_regionmask_object(
+                region=region, regions_file_path=regions_file_path
+            )
 
             self.logger.info("Applying area selection for region: %s", region)
             if region_object is not None:
                 # Optional: select all cells touching the region instead of only the cell centers
-                spec = self._load_regions_from_file(regions_file_path=regions_file_path).get(region, {})
-                if spec.get("frac_threshold") is not None:
-                    kwargs.setdefault("frac_threshold", spec["frac_threshold"])
+                if frac_threshold is not None:
+                    kwargs.setdefault("frac_threshold", frac_threshold)
 
                 self.logger.info("Using regionmask object: %s (region_sel=%s)", region_object, region_sel)
                 data = self.reader.select_area(data=data, region=region_object, region_sel=region_sel, drop=drop, **kwargs)
