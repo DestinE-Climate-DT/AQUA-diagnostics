@@ -76,13 +76,13 @@ def test_set_ref_label_and_description_with_and_without_reference():
     p_ref = PlotGregory(
         t2m_monthly_data=_FakeData([1.0, 2.0]),
         net_toa_monthly_data=_FakeData([2.0, 3.0]),
-        t2m_monthly_ref=_FakeData([1.0, 2.0], model="ERA5", exp="era5"),
+        t2m_monthly_ref=_FakeData([1.0, 2.0], model="ECMWF", exp="era5"),
         net_toa_monthly_ref=_FakeData([2.0, 3.0], model="CERES", exp="obs"),
     )
     ref_label = p_ref.set_ref_label()
     desc = p_ref.set_description()
-    assert ref_label == "ERA5 CERES obs"
-    assert "using as a reference ERA5 (2m temperature)" in desc
+    assert ref_label == "ECMWF era5 CERES obs"
+    assert "using as a reference ECMWF era5 (2m temperature)" in desc
     assert "CERES obs (net TOA)" in desc
 
 

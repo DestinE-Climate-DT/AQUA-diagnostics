@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
+- Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
 Main changes:
 
