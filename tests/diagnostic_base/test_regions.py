@@ -43,7 +43,9 @@ def test_load_regions_from_file_centralized_has_known_entries():
     # A handful of entries that should always be present
     for name in ("nh", "tropics", "arctic", "antarctic", "io"):
         assert name in regions, f"missing '{name}' in centralized regions file"
-        assert "lon_limits" in regions[name] and "lat_limits" in regions[name]
+        # Each region is either a lon/lat box or a regionmask-based region (e.g. 'io')
+        is_box = "lon_limits" in regions[name] and "lat_limits" in regions[name]
+        assert is_box or "regionmask" in regions[name]
 
 
 # _set_region
