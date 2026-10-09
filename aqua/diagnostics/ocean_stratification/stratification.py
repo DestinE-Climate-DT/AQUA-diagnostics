@@ -182,11 +182,15 @@ class Stratification(Diagnostic):
             self.lon_limits = res_dict["lon_limits"]
             if dim_mean:
                 self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
+                region_object, region_sel, frac_threshold = self._resolve_regionmask_object(region=reg)
                 self.data = self.reader.fldmean(
                     self.data,
                     dims=dim_mean,
                     lat_limits=self.lat_limits,
                     lon_limits=self.lon_limits,
+                    region=region_object,
+                    region_sel=region_sel,
+                    frac_threshold=frac_threshold,
                 )
             else:
                 self.data = res_dict["data"]
