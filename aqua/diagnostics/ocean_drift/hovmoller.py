@@ -6,7 +6,7 @@ import dask
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list
+from aqua.core.util import DEFAULT_REALIZATION, to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -82,6 +82,7 @@ class Hovmoller(Diagnostic):
         dim_mean=["lat", "lon"],
         anomaly_ref: str = None,
         reader_kwargs: dict = {},
+        save_netcdf: bool = True,
     ):
         """Run the Hovmoller diagram generation workflow.
 
@@ -98,6 +99,7 @@ class Hovmoller(Diagnostic):
             dim_mean (list, optional): List of dimensions over which to compute the mean. Defaults to ["lat", "lon"].
             anomaly_ref (str or None, optional): Reference for anomaly calculation. Can be "t0", "tmean", or None.
             reader_kwargs (dict, optional): Additional keyword arguments for the Reader. Defaults to {}.
+            save_netcdf (bool, optional): Whether to save the processed data as netcdf files. Defaults to True.
 
         """
         self.logger.info("Running Hovmoller diagram generation")
@@ -146,9 +148,57 @@ class Hovmoller(Diagnostic):
                 anomaly_ref=anomaly_ref,
                 region_name=self.region,
             )
-            self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=reg)
+            if save_netcdf:
+                self.save_netcdf(outputdir=outputdir, rebuild=rebuild, region=reg)
 
-        self.logger.info("Hovmoller diagram saved to netCDF file")
+        self.logger.info("Hovmoller diagram computation completed")
+
+    def load(
+        self,
+        diagnostic_product: str = "hovmoller",
+        outputdir: str = ".",
+        regions: str | list = None,
+        anomaly_ref: str | list = None,
+        reader_kwargs: dict = {},
+    ):
+        """Populate the processed data from the netcdf files written by a previous run.
+
+        Regions with no files on disk are left untouched, so that load can be called both before run,
+        to keep previous results, and after it, or alone to plot without recomputing anything.
+
+        Args:
+            diagnostic_product (str, optional): Name of the diagnostic product. Defaults to "hovmoller".
+            outputdir (str, optional): Directory where the data was saved. Defaults to ".".
+            regions (str, list, or None, optional): Region(s) given to run. None means global evaluation.
+            anomaly_ref (str, list or None, optional): Reference for anomaly calculation given to run.
+            reader_kwargs (dict, optional): The Reader keyword arguments of the run, to match its realization.
+
+        """
+        self.realization = reader_kwargs.get("realization", DEFAULT_REALIZATION)
+        drift_types = [self._drift_type(ref, do_standardise) for do_standardise, ref in self._drift_products(anomaly_ref)]
+
+        regions_list = to_list(regions)
+        if not regions_list:
+            regions_list = [None]
+
+        # The region names used in the filenames are resolved without any data access
+        for reg, info in self._region_limits(regions_list).items():
+            processed = []
+            for drift_type in drift_types:
+                data = self.load_netcdf(
+                    diagnostic=self.diagnostic_name,
+                    diagnostic_product=diagnostic_product,
+                    outputdir=outputdir,
+                    extra_keys=self._extra_keys(region_name=info["region_name"], drift_type=drift_type),
+                )
+                if data is not None:
+                    processed.append(data)
+
+            # A partial set would silently plot fewer rows than a run does
+            if len(processed) < len(drift_types):
+                self.logger.info("Some Hovmoller products are missing for %s, nothing loaded", info["region_name"])
+                continue
+            self.processed_data[reg] = sorted(processed, key=self.sort_drift_type)
 
     def _region_limits(self, regions_list: list) -> dict:
         """Look up each region's name and latitude/longitude box once."""
@@ -269,11 +319,7 @@ class Hovmoller(Diagnostic):
         # (needed when anomaly_ref is None and no new array was created).
         data = data.copy(deep=False)
 
-        s_std = "std_" if do_standardise else ""
-        anom = "anom" if anomaly_ref is not None else "full"
-        anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
-
-        data.attrs["AQUA_ocean_drift_type"] = f"{s_std}{anom}{anom_ref}"
+        data.attrs["AQUA_ocean_drift_type"] = self._drift_type(anomaly_ref, do_standardise)
         if region_name is not None:
             data.attrs["AQUA_region"] = region_name
         return data
@@ -303,13 +349,8 @@ class Hovmoller(Diagnostic):
         if data is None:
             data = self.data
 
-        refs = to_list(anomaly_ref)
-        refs.append(None)
-
         processed = []
-        for do_standardise, ref in product([False, True], refs):
-            if do_standardise and ref is None:
-                continue
+        for do_standardise, ref in self._drift_products(anomaly_ref):
             self.logger.info("Processing data with standardise=%s, anomaly_ref=%s", do_standardise, ref)
             processed.append(
                 self.apply_std_anomaly(
@@ -321,6 +362,29 @@ class Hovmoller(Diagnostic):
                 )
             )
         return sorted(processed, key=self.sort_drift_type)
+
+    def _drift_products(self, anomaly_ref: str | list = None) -> list:
+        """List the (do_standardise, anomaly_ref) combinations computed for the given anomaly references.
+
+        Full values are always included, and only anomalies are standardised.
+        Shared by compute_hovmoller and load, so that the two always address the same products.
+        """
+        refs = to_list(anomaly_ref) + [None]
+        return [(std, ref) for std, ref in product([False, True], refs) if not (std and ref is None)]
+
+    def _drift_type(self, anomaly_ref: str = None, do_standardise: bool = False) -> str:
+        """Name a drift product, as stored in the AQUA_ocean_drift_type attribute and in the filenames."""
+        s_std = "std_" if do_standardise else ""
+        anom = "anom" if anomaly_ref is not None else "full"
+        anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
+        return f"{s_std}{anom}{anom_ref}"
+
+    def _extra_keys(self, region_name: str, drift_type: str) -> dict:
+        """Build the filename keys identifying one product.
+
+        Shared by save_netcdf and load, so that the two always address the same file.
+        """
+        return {"region": region_name, "ocean_drift_type": drift_type}
 
     def sort_drift_type(self, data) -> tuple:
         """Return a sort key for ordering processed data by drift type."""
@@ -368,10 +432,9 @@ class Hovmoller(Diagnostic):
                     diagnostic_product=f"{diagnostic_product}",
                     outputdir=outputdir,
                     rebuild=rebuild,
-                    extra_keys={
-                        "region": file_region,
-                        "ocean_drift_type": processed_data.attrs["AQUA_ocean_drift_type"],
-                    },
+                    extra_keys=self._extra_keys(
+                        region_name=file_region, drift_type=processed_data.attrs["AQUA_ocean_drift_type"]
+                    ),
                 )
 
     def _fix_vert_coord_units(self):
