@@ -42,7 +42,9 @@ class TestMainExecutionFlow:
             "PlotMLD": mocker.patch(f"{CLI_MODULE}.PlotMLD"),
         }
         # Allow data[["thetao", "so", "rho"]] and data[["mld"]] in CLI.
-        mocks["Stratification"].return_value.data = mocker.MagicMock()
+        data = mocker.MagicMock()
+        mocks["Stratification"].return_value.data = data
+        mocks["Stratification"].return_value.processed_data = {"global_ocean": data}
         return mocks
 
     def test_stratification_disabled_skips_processing(self, build_config, mock_cluster, mock_os):
