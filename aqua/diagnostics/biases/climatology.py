@@ -172,7 +172,8 @@ class Climatology(Diagnostic):
         data: xr.Dataset,
         diagnostic_product: str,
         rebuild: bool = True,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         extra_keys=None,
         dict_catalog_entry: dict = {"jinjalist": ["realization"], "wildcardlist": ["var"]},
     ):
@@ -182,7 +183,6 @@ class Climatology(Diagnostic):
             data (xr.Dataset): Input dataset.
             diagnostic_product (str): The product name to be used in the filename (e.g., 'annual_climatology').
             rebuild (bool): If True, rebuild the data from the original files.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
             extra_keys (dict): Extra keys for filename generation.
             dict_catalog_entry (dict): A dictionary with catalog entry information.
                 Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
@@ -193,7 +193,8 @@ class Climatology(Diagnostic):
             diagnostic_product=diagnostic_product,
             rebuild=rebuild,
             outputdir=self.outputdir,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
             extra_keys=extra_keys,
         )
@@ -207,7 +208,8 @@ class Climatology(Diagnostic):
         seasonal: bool = False,
         seasons_stat: str = "mean",
         areas=False,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
     ) -> None:
         """
         Compute total and optionally seasonal climatology for a variable.
@@ -220,7 +222,6 @@ class Climatology(Diagnostic):
             seasonal (bool): If True, compute seasonal climatology (DJF, MAM, JJA, SON).
             seasons_stat (str): Aggregation statistic: 'mean', 'std', 'max', 'min'.
             areas (bool): If True, include cell area in the output dataset.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         Raises:
             ValueError: If `seasons_stat` is invalid.
         """
@@ -277,7 +278,8 @@ class Climatology(Diagnostic):
             self.savenetcdf(
                 data=self.climatology,
                 diagnostic_product="annual_climatology",
-                create_catalog_entry=create_catalog_entry,
+                # DEPRECATED
+                # create_catalog_entry=create_catalog_entry,
                 extra_keys=extra_keys,
             )
 
@@ -320,7 +322,8 @@ class Climatology(Diagnostic):
                 self.savenetcdf(
                     data=self.seasonal_climatology,
                     diagnostic_product="seasonal_climatology",
-                    create_catalog_entry=create_catalog_entry,
+                    # DEPRECATED
+                    # create_catalog_entry=create_catalog_entry,
                     extra_keys=extra_keys,
                 )
                 self.logger.info(f"Seasonal climatology saved to {self.outputdir}.")

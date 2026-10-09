@@ -84,7 +84,8 @@ class Timeseries(BaseMixin):
         outputdir: str = "./",
         rebuild: bool = True,
         reader_kwargs: dict = {},
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
     ):
         """
         Run all the steps necessary for the computation of the Timeseries.
@@ -106,7 +107,6 @@ class Timeseries(BaseMixin):
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         """
         self.logger.info("Running Timeseries for %s", var)
         self.retrieve(
@@ -128,7 +128,8 @@ class Timeseries(BaseMixin):
                 freq=f,
                 outputdir=outputdir,
                 rebuild=rebuild,
-                create_catalog_entry=create_catalog_entry,
+                # DEPRECATED
+                # create_catalog_entry=create_catalog_entry,
             )
 
     def compute(self, freq: str, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):

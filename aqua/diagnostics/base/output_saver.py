@@ -10,17 +10,10 @@ from typing import Optional, Union
 import xarray as xr
 from matplotlib.figure import Figure
 
-from aqua.core.configurer import ConfigLocator
-from aqua.core.lock import SafeFileLock
 from aqua.core.logger import log_configure, log_history
 from aqua.core.util import (
     create_folder,
-    dump_yaml,
     format_realization,
-    load_yaml,
-    replace_intake_vars,
-    replace_urlpath_jinja,
-    replace_urlpath_wildcard,
     time_to_string,
     to_list,
     update_metadata,
@@ -248,7 +241,8 @@ class OutputSaver:
         rebuild: bool = True,
         extra_keys: Optional[dict] = None,
         metadata: Optional[dict] = None,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: Optional[dict] = None,
     ):
         """
@@ -260,7 +254,6 @@ class OutputSaver:
             rebuild (bool, optional): Whether to rebuild the output file if it already exists. Defaults to True.
             extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
             metadata (dict, optional): Additional metadata to include in the NetCDF file.
-            create_catalog_entry (bool, optional): Whether to create a catalog entry for the NetCDF file. Defaults to False.
             dict_catalog_entry (dict, optional): List of jinja and wildcard variables. Default is none.
         """
 
@@ -298,14 +291,15 @@ class OutputSaver:
 
         dataset.to_netcdf(filepath)
 
-        # create catalog entry for netcdf file
-        if create_catalog_entry:
-            self._create_catalog_entry(
-                metadata=metadata,
-                filepath=filepath,
-                jinjalist=dict_catalog_entry.get("jinjalist", None),
-                wildcardlist=dict_catalog_entry.get("wildcardlist", None),
-            )
+        # DEPRECATED
+        # # create catalog entry for netcdf file
+        # if create_catalog_entry:
+        #     self._create_catalog_entry(
+        #         metadata=metadata,
+        #         filepath=filepath,
+        #         jinjalist=dict_catalog_entry.get("jinjalist", None),
+        #         wildcardlist=dict_catalog_entry.get("wildcardlist", None),
+        #     )
 
         self.logger.info("Saved NetCDF: %s", filepath)
         return filepath
@@ -545,79 +539,81 @@ class OutputSaver:
         self.logger.debug("Available metadata: %s", metadata)
         return metadata
 
-    def _create_catalog_entry(self, filepath, metadata, jinjalist=None, wildcardlist=None):
-        """
-        Creates an entry in the catalog
+    # def _create_catalog_entry(self, filepath, metadata, jinjalist=None, wildcardlist=None):
+    #     """
+    #     Creates an entry in the catalog
 
-        Args:
-            filepath (str): The file path where the data is stored.
-            metadata (dict): Metadata dictionary containing information about the diagnostic.
-            jinjalist (list, optional): List of Jinja variables to replace in the URL path.
-            wildcardlist (list, optional): List of wildcard variables to replace in the URL path.
+    #     Args:
+    #         filepath (str): The file path where the data is stored.
+    #         metadata (dict): Metadata dictionary containing information about the diagnostic.
+    #         jinjalist (list, optional): List of Jinja variables to replace in the URL path.
+    #         wildcardlist (list, optional): List of wildcard variables to replace in the URL path.
 
-        Returns:
-            dict: The updated catalog entry block.
-        """
-        self.logger.info("Creating catalog entry for %s", filepath)
-        configdir = ConfigLocator(logger=self.logger).configdir
-        # find the catalog of the experiment and load it
-        catalogfile = os.path.join(configdir, "catalogs", self.catalog, "catalog", self.model, self.exp + ".yaml")
+    #     Returns:
+    #         dict: The updated catalog entry block.
+    #     """
+    #     self.logger.info("Creating catalog entry for %s", filepath)
+    #     configdir = ConfigLocator(logger=self.logger).configdir
+    #     # find the catalog of the experiment and load it
+    #     catalogfile = os.path.join(configdir, "catalogs", self.catalog, "catalog", self.model, self.exp + ".yaml")
 
-        # The following block must be locked because else two diagnostics may attempt to modify the same file at the same time
+    #     # The following block must be locked because else two diagnostics may attempt
+    #     # to modify the same file at the same time
 
-        self.logger.debug("Locking catalog file %s", catalogfile)
-        with SafeFileLock(catalogfile + ".lock", loglevel=self.loglevel):
-            cat_file = load_yaml(catalogfile)
-            # Remove None values
-            urlpath = replace_intake_vars(catalog=self.catalog, path=filepath)
+    #     self.logger.debug("Locking catalog file %s", catalogfile)
+    #     with SafeFileLock(catalogfile + ".lock", loglevel=self.loglevel):
+    #         cat_file = load_yaml(catalogfile)
+    #         # Remove None values
+    #         urlpath = replace_intake_vars(catalog=self.catalog, path=filepath)
 
-            entry_name = f"aqua-{self.diagnostic}-{metadata.get('diagnostic_product')}"
-            if entry_name in cat_file["sources"]:
-                catblock = cat_file["sources"][entry_name]
-            else:
-                catblock = None
+    #         entry_name = f"aqua-{self.diagnostic}-{metadata.get('diagnostic_product')}"
+    #         if entry_name in cat_file["sources"]:
+    #             catblock = cat_file["sources"][entry_name]
+    #         else:
+    #             catblock = None
 
-            if catblock is None:
-                # if the entry is not there, define the block to be uploaded into the catalog
-                catblock = {
-                    "driver": "netcdf",
-                    "description": f"AQUA diagnostic {self.diagnostic} data for product {metadata.get('diagnostic_product')}",
-                    "args": {
-                        "urlpath": urlpath,
-                        "chunks": {},
-                    },
-                    "metadata": {
-                        "source_grid_name": False,
-                    },
-                }
-            else:
-                # if the entry is there, we just update the urlpath
-                catblock["args"]["urlpath"] = urlpath
+    #         if catblock is None:
+    #             # if the entry is not there, define the block to be uploaded into the catalog
+    #             catblock = {
+    #                 "driver": "netcdf",
+    #                 "description":
+    #                   f"AQUA diagnostic {self.diagnostic} data for product {metadata.get('diagnostic_product')}",
+    #                 "args": {
+    #                     "urlpath": urlpath,
+    #                     "chunks": {},
+    #                 },
+    #                 "metadata": {
+    #                     "source_grid_name": False,
+    #                 },
+    #             }
+    #         else:
+    #             # if the entry is there, we just update the urlpath
+    #             catblock["args"]["urlpath"] = urlpath
 
-                catblock["args"]["xarray_kwargs"] = {
-                    "decode_times": True,
-                }
-            # These variables are replaced from the url as {{ variable }}
-            if jinjalist:
-                for key in jinjalist:
-                    value = metadata.get(key)
-                    if value is not None:
-                        self.logger.debug("Replacing jinja variable %s with value %s in urlpath", key, value)
-                        catblock = replace_urlpath_jinja(catblock, value, key)
+    #             catblock["args"]["xarray_kwargs"] = {
+    #                 "decode_times": True,
+    #             }
+    #         # These variables are replaced from the url as {{ variable }}
+    #         if jinjalist:
+    #             for key in jinjalist:
+    #                 value = metadata.get(key)
+    #                 if value is not None:
+    #                     self.logger.debug("Replacing jinja variable %s with value %s in urlpath", key, value)
+    #                     catblock = replace_urlpath_jinja(catblock, value, key)
 
-            if wildcardlist:
-                for key in wildcardlist:
-                    value = metadata.get(key)
-                    if value is not None:
-                        self.logger.debug("Replacing wildcard variable %s with value %s in urlpath", key, value)
-                        catblock = replace_urlpath_wildcard(catblock, value)
+    #         if wildcardlist:
+    #             for key in wildcardlist:
+    #                 value = metadata.get(key)
+    #                 if value is not None:
+    #                     self.logger.debug("Replacing wildcard variable %s with value %s in urlpath", key, value)
+    #                     catblock = replace_urlpath_wildcard(catblock, value)
 
-            self.logger.info("Final urlpath: %s", catblock["args"]["urlpath"])
+    #         self.logger.info("Final urlpath: %s", catblock["args"]["urlpath"])
 
-            cat_file["sources"][entry_name] = catblock
+    #         cat_file["sources"][entry_name] = catblock
 
-            # dump the update file
-            dump_yaml(outfile=catalogfile, cfg=cat_file)
+    #         # dump the update file
+    #         dump_yaml(outfile=catalogfile, cfg=cat_file)
 
-        self.logger.debug("Releasing catalog file %s", catalogfile)
-        return catblock  # using this in the tests
+    #     self.logger.debug("Releasing catalog file %s", catalogfile)
+    #     return catblock  # using this in the tests

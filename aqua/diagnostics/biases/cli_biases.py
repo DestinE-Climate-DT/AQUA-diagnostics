@@ -123,7 +123,8 @@ def main(argv=None):
             biases_dataset.compute_climatology(
                 seasonal=seasons,
                 seasons_stat=seasons_stat,
-                create_catalog_entry=cli.create_catalog_entry,
+                # DEPRECATED
+                # create_catalog_entry=cli.create_catalog_entry,
                 areas=bool(show_stats),
             )
             biases_reference.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, areas=bool(show_stats))
