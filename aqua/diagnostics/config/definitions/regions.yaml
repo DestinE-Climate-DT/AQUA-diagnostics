@@ -52,10 +52,11 @@ regions:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [Labrador Sea, Greenland Sea, Norwegian Sea]
     longname: Labrador Gin Seas
+  # No Irminger Sea polygon in Natural Earth (it is part of the North Atlantic Ocean): kept as a box.
   is:
-    regionmask: natural_earth_v5_1_2.ocean_basins_50
-    regionmask_names: [Irminger Sea]
     longname: Irminger Sea
+    lon_limits: [316, 330]
+    lat_limits: [60, 70]
   gs:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [Greenland Sea, Norwegian Sea]
@@ -99,9 +100,11 @@ regions:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
     regionmask_names: [Sea of Japan]
     longname: Sea of Japan
+  # Natural Earth has a single Mediterranean Sea polygon, with its marginal seas as separate polygons.
+  # The Strait of Gibraltar is left out: it has no cells on coarse grids (e.g. r100).
   ms:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
-    regionmask_names: [Mediterranean Sea Western Basin, Mediterranean Sea Eastern Basin]
+    regionmask_names: [Mediterranean Sea, Adriatic Sea, Aegean Sea, Ionian Sea, Tyrrhenian Sea, Balearic Sea, Golfe du Lion]
     longname: Mediterranean Sea
   bks:
     regionmask: natural_earth_v5_1_2.ocean_basins_50
