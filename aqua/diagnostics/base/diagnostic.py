@@ -6,6 +6,7 @@ import xarray as xr
 from aqua import Reader
 from aqua.core.configurer import ConfigCatalog, ConfigLocator
 from aqua.core.exceptions import NotEnoughDataError
+from aqua.core.fldstat import AreaSelection
 from aqua.core.logger import log_configure
 from aqua.core.util import (
     DEFAULT_REALIZATION,
@@ -71,6 +72,8 @@ class Diagnostic:
         # Data to be retrieved
         self.data = None
         self.std_data = None
+        # Set by retrieve, stays None in a plot only run
+        self.reader = None
 
     def retrieve(self, var: str | None = None, reader_kwargs: dict = {}, months_required: int | None = None):
         """
@@ -551,7 +554,10 @@ class Diagnostic:
         if region is not None:
             region, lon_limits, lat_limits = self._set_region(region=region)
             self.logger.info("Applying area selection for region: %s", region)
-            data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
+            # The Reader only forwards to AreaSelection, which needs no grid information: use it
+            # directly when no retrieve was done, as in a run that plots from the netcdf files.
+            selector = self.reader if self.reader is not None else AreaSelection(loglevel=self.loglevel)
+            data = selector.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
             data.attrs["AQUA_region"] = region
 
             if original_name is not None:
