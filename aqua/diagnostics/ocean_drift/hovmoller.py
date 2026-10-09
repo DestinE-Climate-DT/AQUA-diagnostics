@@ -159,10 +159,14 @@ class Hovmoller(Diagnostic):
                 self.logger.error("Skipping region %s: not found in the regions file", reg)
                 continue
             long_name, lon_limits, lat_limits = self._set_region(region=reg)
+            region_object, region_sel, frac_threshold = self._resolve_regionmask_object(region=reg)
             info[reg] = {
                 "region_name": long_name if long_name is not None else "global",
                 "lon_limits": lon_limits,
                 "lat_limits": lat_limits,
+                "region_object": region_object,
+                "region_sel": region_sel,
+                "frac_threshold": frac_threshold,
             }
         return info
 
@@ -193,6 +197,9 @@ class Hovmoller(Diagnostic):
                         dims=dim_mean,
                         lat_limits=info["lat_limits"],
                         lon_limits=info["lon_limits"],
+                        region=info["region_object"],
+                        region_sel=info["region_sel"],
+                        frac_threshold=info["frac_threshold"],
                     )
                 )
             computed = dask.compute(*lazy_means)
