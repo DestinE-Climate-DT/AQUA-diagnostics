@@ -13,6 +13,24 @@ from .multiple_timeseries import plot_multi_timeseries
 
 xr.set_options(keep_attrs=True)
 
+# Fixed color limits of the Hovmoller panels
+DEFAULT_CBAR_LIMITS = {
+    "thetao": {
+        "full": (272, 302),
+        "anom_t0": (-1, 1),
+        "anom_tmean": (-1, 1),
+        "std_anom_t0": (-5, 5),
+        "std_anom_tmean": (-3, 3),
+    },
+    "so": {
+        "full": (33, 37),
+        "anom_t0": (-0.2, 0.2),
+        "anom_tmean": (-0.2, 0.2),
+        "std_anom_t0": (-5, 5),
+        "std_anom_tmean": (-3, 3),
+    },
+}
+
 
 class PlotHovmoller:
     """Class for plotting Hovmoller diagrams and timeseries from AQUA ocean drift diagnostics.
@@ -70,10 +88,10 @@ class PlotHovmoller:
             loglevel=self.loglevel,
         )
 
-    def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
+    def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300, cbar_limits: dict = None):
         """Plot the Hovmoller diagram for the given data.
 
-        This method sets the title, description and texts for the plot.
+        This method sets the title, description, texts and color limits for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -81,6 +99,8 @@ class PlotHovmoller:
             rebuild (bool): Whether to rebuild the output, default is True.
             save_format (str or list): List of formats to save the figure. Default is SAVE_FORMAT.
             dpi (int): Dots per inch for the saved figure. Default is 300.
+            cbar_limits (dict, optional): Color limits as {var: {drift_type: (vmin, vmax)}},
+                replacing the matching entries of DEFAULT_CBAR_LIMITS.
 
         Returns:
             None
@@ -93,6 +113,7 @@ class PlotHovmoller:
         )
         self.set_texts()
         self.set_units_labels()
+        self.set_cbar_limits(cbar_limits)
         self.logger.debug("Plotting Hovmöller for variables: %s", self.vars)
         fig = plot_multi_hovmoller(
             maps=self.data,
@@ -100,6 +121,8 @@ class PlotHovmoller:
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
+            vmin=self.vmin,
+            vmax=self.vmax,
             cbar_labels=self.units_labels,
             text=self.texts,
         )
@@ -261,6 +284,27 @@ class PlotHovmoller:
                 else:
                     self.units_labels.append(None)
         self.logger.debug("Units labels set to: %s", self.units_labels)
+
+    def set_cbar_limits(self, cbar_limits: dict = None):
+        """Set the fixed color limits of each subplot panel from its variable and drift type.
+
+        Panels without limits, in cbar_limits or in DEFAULT_CBAR_LIMITS, are scaled on their data.
+
+        Args:
+            cbar_limits (dict, optional): Color limits as {var: {drift_type: (vmin, vmax)}},
+                replacing the matching entries of DEFAULT_CBAR_LIMITS.
+        """
+        cbar_limits = cbar_limits or {}
+        self.vmin = []
+        self.vmax = []
+        for data in self.data:
+            drift_type = data.attrs.get("AQUA_ocean_drift_type")
+            for var in self.vars:
+                limits = cbar_limits.get(var, {}).get(drift_type) or DEFAULT_CBAR_LIMITS.get(var, {}).get(drift_type)
+                vmin, vmax = limits if limits else (None, None)
+                self.vmin.append(vmin)
+                self.vmax.append(vmax)
+        self.logger.debug("Color limits set to: vmin %s, vmax %s", self.vmin, self.vmax)
 
     def save_plot(
         self,

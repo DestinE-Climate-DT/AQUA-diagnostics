@@ -5,6 +5,7 @@ This function is custom for the Ocean Drift diagnostics in AQUA.
 
 import matplotlib.pyplot as plt
 import xarray as xr
+from matplotlib import ticker
 
 from aqua.core.graphics import ConfigStyle, plot_hovmoller
 from aqua.core.logger import log_configure
@@ -20,8 +21,10 @@ def plot_multi_hovmoller(
     variables: list = None,
     invert_space_coord=True,
     style=None,
+    vmin: list[float] = None,
+    vmax: list[float] = None,
     text: list[float] = None,
-    nlevels: int = 20,
+    nlevels: int = 21,
     title: str = None,
     titles: list[str] = None,
     cbar_labels: list[str] = None,
@@ -40,8 +43,12 @@ def plot_multi_hovmoller(
             If None, all variables in the datasets will be used.
         invert_space_coord (bool): Whether to invert the space coordinate. Default is True.
         style (str): Style to be used for the plot. Default is None. This will use the default AQUA style.
+        vmin (list[float]): List of minimum color limits for each subplot.
+            If None, or None for a subplot, the limits are evaluated from its data.
+        vmax (list[float]): List of maximum color limits for each subplot.
+            If None, or None for a subplot, the limits are evaluated from its data.
         text (list[float]): List of text values to be displayed on the plot for each variable.
-        nlevels (int): Number of contour levels. Default is 20.
+        nlevels (int): Number of contour levels. Default is 21, i.e. 20 color intervals.
         title (str): Title for the entire figure. Default is None.
         titles (list[str]): List of titles for each subplot. If None, no titles will be set.
         cbar_labels (list[str]): List of colorbar labels for each subplot.
@@ -77,6 +84,8 @@ def plot_multi_hovmoller(
                 dim=None,
                 contour=contour,
                 sym=sym,
+                vmin=vmin[k] if vmin else None,
+                vmax=vmax[k] if vmax else None,
                 nlevels=nlevels,
                 invert_space_coord=invert_space_coord,
                 cbar=False,
@@ -102,6 +111,12 @@ def plot_multi_hovmoller(
 
             # Colorbar next to its panel, placed by the constrained layout
             cbar = fig.colorbar(mappable, ax=ax, orientation="vertical", pad=0.02)
+            # Round tick values, not tied to the boundaries of the color intervals and
+            # kept within the color limits, so that none is drawn next to an extension
+            low, high = cbar.norm.vmin, cbar.norm.vmax
+            tolerance = 1e-6 * (high - low)
+            ticks = ticker.MaxNLocator(nbins=6, steps=[1, 2, 2.5, 5, 10]).tick_values(low, high)
+            cbar.set_ticks([tick for tick in ticks if low - tolerance <= tick <= high + tolerance])
             if cbar_labels and cbar_labels[k]:
                 cbar.set_label(cbar_labels[k])
 
