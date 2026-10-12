@@ -5,7 +5,6 @@ This function is custom for the Ocean Drift diagnostics in AQUA.
 
 import matplotlib.pyplot as plt
 import xarray as xr
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from aqua.core.graphics import ConfigStyle, plot_hovmoller
 from aqua.core.logger import log_configure
@@ -18,22 +17,13 @@ def plot_multi_hovmoller(
     figsize: tuple = None,
     variables: list = None,
     invert_space_coord=True,
-    fig: plt.Figure = None,
-    ax: plt.Axes = None,
     style=None,
-    vmin: list[float] = None,
-    vmax: list[float] = None,
-    ylim: tuple = None,
-    ylabel: str = None,
     text: list[float] = None,
     nlevels: int = 20,
     title: str = None,
     titles: list[str] = None,
-    cmap: list[str] = None,
-    cbar_label: list[str] = None,
     return_fig=True,
     loglevel="WARNING",
-    **kwargs,
 ):
     """Plot multiple hovmoller diagrams in a grid layout.
 
@@ -46,25 +36,13 @@ def plot_multi_hovmoller(
         variables (list): List of variable names to be plotted.
             If None, all variables in the datasets will be used.
         invert_space_coord (bool): Whether to invert the space coordinate. Default is True.
-        fig (plt.Figure): Matplotlib figure object to plot on. If None, a new figure will be created.
-        ax (plt.Axes): Matplotlib axes object to plot on. If None, a new axes will be created.
         style (str): Style to be used for the plot. Default is None. This will use the default AQUA style.
-        vmin (list[float]): List of minimum values for color limits for each variable.
-        vmax (list[float]): List of maximum values for color limits for each variable.
-        ylim (tuple): (bottom, top) limits of the y-axis, shared by all subplots.
-            If None, the full range of the space coordinate is shown.
-        ylabel (str): Label of the y-axis, shared by all subplots.
-            If None, the name of the space coordinate is used.
         text (list[float]): List of text values to be displayed on the plot for each variable.
         nlevels (int): Number of contour levels. Default is 20.
         title (str): Title for the entire figure. Default is None.
         titles (list[str]): List of titles for each subplot. If None, no titles will be set.
-        cmap (list[str]): List of colormaps for each variable. If None, the default colormap will be used.
-        cbar_label (list[str]): List of colorbar labels for each subplot.
-            If None, labels will be generated based on the variable names.
         return_fig (bool): Whether to return the figure object. Default is True.
         loglevel (str): Logging level. Default is "WARNING".
-        **kwargs: Additional keyword arguments to be passed to the plotting function.
 
     Returns:
         plt.Figure: The matplotlib figure object containing the hovmoller plots.
@@ -79,8 +57,8 @@ def plot_multi_hovmoller(
         figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
-    fig = plt.figure(figsize=figsize)
-    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.5)
+    fig = plt.figure(figsize=figsize, layout="constrained")
+    spec = fig.add_gridspec(nrows=nrows, ncols=ncols)
 
     for j in range(nrows):
         for i, var in enumerate(variables):
@@ -92,8 +70,10 @@ def plot_multi_hovmoller(
                 data=maps[j][var],
                 box_text=False,
                 dim=None,
+                contour=contour,
+                sym=sym,
                 nlevels=nlevels,
-                invert_space_coord=True,
+                invert_space_coord=invert_space_coord,
                 text=text[k] if text else None,
                 cbar=False,
                 title=titles[k] if titles else None,
@@ -102,12 +82,9 @@ def plot_multi_hovmoller(
                 fig=fig,
                 loglevel=loglevel,
             )
-            if ylim is not None:
-                ax.set_ylim(ylim)
-            if ylabel is not None:
-                ax.set_ylabel(ylabel)
             ax.set_xticks(ax.get_xticks())
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
+            # Anchored at the tick end, so the last date does not push the colorbar away
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=30, ha="right", rotation_mode="anchor")
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
             if text and text[k]:
@@ -125,19 +102,8 @@ def plot_multi_hovmoller(
                 logger.warning("No mappable object found for subplot (%d, %d)", j, i)
                 continue
 
-            # Create colorbar axis next to plot
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.15)
-            cbar = fig.colorbar(mappable, cax=cax, orientation="vertical")  # noqa: F841
-
-            # if cbar_label and j < len(cbar_label):
-            #     cbar.set_label(cbar_label[j])
-            # else:
-            #     cbar.set_label(cbar_get_label(mappable, var))
-
-    # Adjust overall layout
-    fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
+            # Colorbar next to its panel, placed by the constrained layout
+            fig.colorbar(mappable, ax=ax, orientation="vertical", pad=0.02)
 
     if title:
         logger.debug("Setting super title to %s", title)

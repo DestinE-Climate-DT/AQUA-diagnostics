@@ -73,7 +73,7 @@ class PlotHovmoller:
     def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
         """Plot the Hovmoller diagram for the given data.
 
-        This method sets the title, description, vmax, vmin, depth limits, y-axis label and texts for the plot.
+        This method sets the title, description and texts for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -91,11 +91,7 @@ class PlotHovmoller:
         self.set_description(
             content="Hovmöller plot of temperature (left column) and salinity (right column) of spatially averaged"
         )
-        self.set_data_type()
         self.set_texts()
-        self.set_vmax_vmin()
-        self.set_depth_limits()
-        self.set_ylabel()
         self.logger.debug("Plotting Hovmöller for variables: %s", self.vars)
         fig = plot_multi_hovmoller(
             maps=self.data,
@@ -103,11 +99,6 @@ class PlotHovmoller:
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
-            vmax=self.vmax,
-            vmin=self.vmin,
-            ylim=self.depth_limits,
-            ylabel=self.ylabel,
-            cmap=self.cmap,
             text=self.texts,
         )
 
@@ -124,7 +115,7 @@ class PlotHovmoller:
     def plot_timeseries(self, levels: list = None, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
         """Plot the timeseries for the given data.
 
-        This method sets the title, description, vmax, vmin, and texts for the plot.
+        This method sets the title, description, line colours and texts for the plot.
         It then calls the `plot_multi_timeseries` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -147,9 +138,7 @@ class PlotHovmoller:
             content="Time series of temperature (left column) and salinity (right column)"
             " at multiple depths, spatially averaged"
         )
-        self.set_data_type()
         self.set_texts()
-        self.set_vmax_vmin()
         self.set_line_plot_colours()
         self.logger.debug("Plotting Timeseries for variables: %s", self.vars)
         fig = plot_multi_timeseries(
@@ -161,9 +150,6 @@ class PlotHovmoller:
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
-            vmax=self.vmax,
-            vmin=self.vmin,
-            cmap=self.cmap,
             text=self.texts,
         )
 
@@ -241,65 +227,6 @@ class PlotHovmoller:
             " the second row shows the anomalies from the initial time,"
             " the third row shows the standardized anomalies from the initial time."
         )
-
-    def set_vmax_vmin(self):
-        """Set the vmax, vmin, and colormap for each subplot from the data type."""
-        self.logger.debug("Setting vmax and vmin")
-        hovmoller_plot_dic = {
-            "thetao": {
-                "full": {"vmax": 40, "vmin": 10},
-                "anom_t0": {"vmax": 6, "vmin": -6, "cbar": "coolwarm"},
-                "std_anom_t0": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
-                "anom_tmean": {"vmax": 6, "vmin": -6, "cbar": "coolwarm"},
-                "std_anom_tmean": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
-            },
-            "so": {
-                "full": {"vmax": 38, "vmin": 33, "cbar": "coolwarm"},
-                "anom_t0": {"vmax": 0.9, "vmin": -0.3, "cbar": "coolwarm"},
-                "std_anom_t0": {"vmax": 5, "vmin": -6, "cbar": "coolwarm"},
-                "anom_tmean": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
-                "std_anom_tmean": {"vmax": 1, "vmin": -1, "cbar": "coolwarm"},
-            },
-        }
-        self.vmax = []
-        self.vmin = []
-        self.cmap = []
-        for type in self.data_type:
-            for var in self.vars:
-                self.vmax.append(hovmoller_plot_dic[var][type].get("vmax"))
-                self.vmin.append(hovmoller_plot_dic[var][type].get("vmin"))
-                self.cmap.append(hovmoller_plot_dic[var][type].get("cbar", "jet"))
-
-    def set_depth_limits(self):
-        """Set the depth range of the Hovmoller panels to the levels holding data."""
-        valid_levels = []
-        for data in self.data:
-            for var in self.vars:
-                other_dims = [dim for dim in data[var].dims if dim != self.vert_coord]
-                has_data = data[var].notnull().any(dim=other_dims).values
-                valid_levels.extend(data[self.vert_coord].values[has_data])
-        if not valid_levels:
-            self.logger.warning("No valid data along %s, plotting its full range", self.vert_coord)
-            self.depth_limits = None
-            return
-        # Deepest level as bottom, so that depth increases downwards
-        self.depth_limits = (float(max(valid_levels)), float(min(valid_levels)))
-        self.logger.debug("Depth limits set to: %s", self.depth_limits)
-
-    def set_ylabel(self):
-        """Set the y-axis label of the Hovmoller panels from the vertical coordinate and its units."""
-        units = self.data[0][self.vert_coord].attrs.get("units", "")
-        units_latex = unit_to_latex(units) if units else ""
-        self.ylabel = f"{self.vert_coord} ({units_latex})" if units_latex else self.vert_coord
-        self.logger.debug("Y-axis label set to: %s", self.ylabel)
-
-    def set_data_type(self):
-        """Set the data type list for each dataset based on its AQUA attributes."""
-        self.logger.debug("Setting data types")
-        self.data_type = []
-        for data in self.data:
-            type = data.attrs.get("AQUA_ocean_drift_type", "NA")
-            self.data_type.append(type)
 
     def set_texts(self):
         """Set the text annotations for each subplot panel based on drift type."""
