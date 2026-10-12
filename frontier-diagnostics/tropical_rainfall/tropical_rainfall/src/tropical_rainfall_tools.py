@@ -15,7 +15,7 @@ import xarray as xr
 import yaml
 from dateutil.relativedelta import relativedelta
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigContext
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_units
 
@@ -81,7 +81,7 @@ class ToolsClass:
         try:
             with open(config_path, "r") as file:
                 data = yaml.safe_load(file)
-            machine = ConfigPath().get_machine()
+            machine = ConfigContext(loglevel=self.loglevel).machine
             path_to_netcdf = data[machine]["path_to_netcdf"]
         except FileNotFoundError as e:
             # Handle FileNotFoundError exception
@@ -182,7 +182,7 @@ class ToolsClass:
         try:
             with open(config_path, "r") as file:
                 data = yaml.safe_load(file)
-            machine = ConfigPath().get_machine()
+            machine = ConfigContext(loglevel=self.loglevel).machine
             path_to_pdf = data[machine]["path_to_pdf"]
         except FileNotFoundError as e:
             # Handle FileNotFoundError exception

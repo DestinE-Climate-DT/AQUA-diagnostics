@@ -120,8 +120,30 @@ The following command line arguments are available for all the diagnostics:
 - ``--model``: Model to analyse. It can be defined in the config file.
 - ``--exp``: Experiment to analyse. It can be defined in the config file.
 - ``--source``: Source to analyse. It can be defined in the config file.
+- ``--realization``: Realization name. Merged into the first dataset's ``reader_kwargs``.
+- ``--regrid``: Target regrid resolution.
+- ``--startdate``: Start date (``YYYY-MM-DD``).
+- ``--enddate``: End date (``YYYY-MM-DD``).
 - ``--outputdir``: Output directory for the plots.
+- ``--reader_kwargs``: Additional Reader kwargs as a JSON object, merged into the first dataset's
+  ``reader_kwargs`` (CLI values take precedence over the config file on matching keys). For example:
 
+  .. code-block:: bash
+
+     --reader_kwargs '{"engine": "polytope", "chunks": {"time": 12}}'
+
+  Quote the entire object with single quotes in the shell and use double quotes for JSON keys and
+  strings. JSON preserves numbers, booleans (``true`` and ``false``), lists, nested objects and
+  ``null`` (Python ``None``). The selected Reader/backend determines which additional parameters
+  it supports.
+
+  ``catalog``, ``model``, ``exp``, ``source``, ``regrid``, ``startdate``, ``enddate``, ``loglevel``
+  and ``realization`` must be set with their dedicated CLI flags: they are rejected inside
+  ``--reader_kwargs`` to avoid conflicting settings. Invalid JSON or a value that is not an object
+  also produces a CLI error before retrieval. Individual diagnostics may reject additional keys
+  when they have their own dedicated flags for them (see their documentation).
+
+Only the first dataset in the ``datasets`` list is affected by these CLI overrides.
 If a diagnostic has extra arguments, these will be described in the individual diagnostic documentation.
 
 .. _diagnostics-plot-only:

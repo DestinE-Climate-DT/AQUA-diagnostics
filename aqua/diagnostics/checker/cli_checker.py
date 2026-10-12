@@ -6,39 +6,12 @@ optionally write its catalog metadata to ``experiment.yaml``.
 """
 
 import argparse
-import json
 import os
 from tempfile import TemporaryDirectory
 
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml
 from aqua.diagnostics.base import Diagnostic, DiagnosticCLI, template_parse_arguments
-
-
-def _parse_reader_kwargs(value):
-    """Parse a JSON object of Reader kwargs without overriding checker options."""
-    reader_kwargs = json.loads(value)
-
-    if not isinstance(reader_kwargs, dict):
-        raise argparse.ArgumentTypeError("expected a JSON object")
-
-    checker_options = {
-        "catalog",
-        "model",
-        "exp",
-        "source",
-        "regrid",
-        "startdate",
-        "enddate",
-        "loglevel",
-        "realization",
-        "rebuild",
-    }
-    conflicts = checker_options.intersection(reader_kwargs)
-    if conflicts:
-        raise argparse.ArgumentTypeError("use dedicated checker flags for: " + ", ".join(sorted(conflicts)))
-
-    return reader_kwargs
 
 
 def parse_arguments(arguments):
@@ -51,14 +24,7 @@ def parse_arguments(arguments):
         argparse.Namespace: Parsed command-line arguments.
     """
     parser = argparse.ArgumentParser(description="Check the AQUA diagnostics setup")
-    parser = template_parse_arguments(parser)
-    parser.add_argument(
-        "--reader-kwargs",
-        type=_parse_reader_kwargs,
-        metavar="JSON",
-        help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
-        "use dedicated flags for dataset selection, regrid, dates, loglevel, realization and rebuild",
-    )
+    parser = template_parse_arguments(parser, extra_parser_options={"yaml", "no-rebuild"})
     parser.add_argument("--yaml", help="write experiment.yaml to this directory")
     parser.add_argument(
         "--no-rebuild",

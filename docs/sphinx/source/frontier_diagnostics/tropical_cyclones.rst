@@ -127,15 +127,3 @@ Available demo notebooks
 Notebooks are stored in diagnostics/tropical_cyclones/notebooks
 
 * `tropical_cyclones.ipynb <https://github.com/oloapinivad/AQUA/blob/main/diagnostics/tropical_cyclones/notebooks/tropical_cyclones.ipynb>`_
-
-
-Detailed API
-------------
-
-This section provides a detailed reference for the Application Programming Interface (API) of the "tropical_cyclones" diagnostic,
-produced from the diagnostic function docstrings.
-
-.. automodule:: tropical_cyclones
-    :members:
-    :undoc-members:
-    :show-inheritance:
