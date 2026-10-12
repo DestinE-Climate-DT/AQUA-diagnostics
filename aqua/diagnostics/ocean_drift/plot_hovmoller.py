@@ -31,10 +31,12 @@ DEFAULT_CBAR_LIMITS = {
     },
 }
 
-# Colormaps of the Hovmoller panels: sequential for the full values, diverging for the anomalies
+# Colormaps of the Hovmoller panels: sequential for the full values, diverging for the anomalies,
+# from the same color family for each variable
 FULL_CMAPS = {"thetao": "plasma", "so": "YlGnBu"}
+ANOMALY_CMAPS = {"thetao": "RdBu_r", "so": "BrBG"}
 DEFAULT_FULL_CMAP = "YlGnBu"
-ANOMALY_CMAP = "PuOr_r"
+DEFAULT_ANOMALY_CMAP = "PuOr_r"
 
 
 class PlotHovmoller:
@@ -323,7 +325,10 @@ class PlotHovmoller:
         for data in self.data:
             full = data.attrs.get("AQUA_ocean_drift_type") == "full"
             for var in self.vars:
-                self.cmap.append(FULL_CMAPS.get(var, DEFAULT_FULL_CMAP) if full else ANOMALY_CMAP)
+                if full:
+                    self.cmap.append(FULL_CMAPS.get(var, DEFAULT_FULL_CMAP))
+                else:
+                    self.cmap.append(ANOMALY_CMAPS.get(var, DEFAULT_ANOMALY_CMAP))
         self.logger.debug("Colormaps set to: %s", self.cmap)
 
     def save_plot(
