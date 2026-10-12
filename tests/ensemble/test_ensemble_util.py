@@ -986,6 +986,7 @@ def test_generate_realizations_path_with_realizations(mock_output_saver):
 
     mock_output_saver.side_effect = [saver1, saver2]
 
+    # file_dir is <base>/r<N>/<diagnostic>; the function goes two levels up to <base>
     result = generate_realizations_path(
         catalog="catalog",
         model="ModelA",
@@ -993,16 +994,35 @@ def test_generate_realizations_path_with_realizations(mock_output_saver):
         diagnostic_name="ensemble",
         diagnostic_product="timeseries",
         variable="tas",
-        file_dir="/tmp/output",
-        realization_list=["r1", "r2"],
+        file_dir="/tmp/output/r1/ensemble",
+        realization_list=["1", "2"],
     )
 
     assert result == [
-        "/tmp/output/output_r1.nc",
-        "/tmp/output/output_r2.nc",
+        "/tmp/output/r1/ensemble/netcdf/output_r1.nc",
+        "/tmp/output/r2/ensemble/netcdf/output_r2.nc",
     ]
 
     assert mock_output_saver.call_count == 2
+    mock_output_saver.assert_any_call(
+        diagnostic="ensemble",
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        realization="1",
+        outputdir="/tmp/output/r1/ensemble",
+        loglevel="WARNING",
+    )
+    mock_output_saver.assert_any_call(
+        diagnostic="ensemble",
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        realization="2",
+        outputdir="/tmp/output/r2/ensemble",
+        loglevel="WARNING",
+    )
+
     saver1.generate_name.assert_called_once_with(
         diagnostic_product="timeseries",
         extra_keys=None,

@@ -1,10 +1,11 @@
 """
 Utility functions for the ensemble class
 """
-import os
-from pathlib import Path
+
 import gc
+import os
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -195,7 +196,6 @@ def reader_retrieve_and_merge(
 
                 data = reader.retrieve(var=variable)
 
-                logger.info(f"LOADED data: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% {data}")
                 logger.info(f"Loaded {variable} for {filename}")
                 # Spatial selection
                 if lon_limits and lat_limits:
@@ -547,15 +547,21 @@ def generate_realizations_path(
     variable: str,
     file_dir: str,
     realization_list: list[str] = None,
+    catalog_ref: str = None,
+    model_ref: str = None,
+    exp_ref: str = None,
+    realization_ref: str = None,
     extra_keys=None,
     file_format: str = ".nc",
     loglevel="WARNING",
 ):
     """
-    Generate output file paths for specific diagnostic realizations.
+    Generate output file paths for diagnostic realizations, optionally for a reference dataset.
 
     Leverages the `OutputSaver` class to standardly generate filenames
     and concatenates them with the specified output directory and file extension.
+    If any of `catalog_ref`, `model_ref`, `exp_ref` is given, the function runs in
+    reference mode and the filenames are generated from the reference dataset.
 
     Args:
         catalog (str): Name of the data catalog.
@@ -567,6 +573,10 @@ def generate_realizations_path(
         file_dir (str): Base directory where the files will be saved.
         realization_list (list[str], optional): List of ensemble realizations.
             If None, generates a single path without realization info. Defaults to None.
+        catalog_ref (str, optional): Name of the reference data catalog. Defaults to None.
+        model_ref (str, optional): Name of the reference model. Defaults to None.
+        exp_ref (str, optional): Name of the reference experiment. Defaults to None.
+        realization_ref (str, optional): Realization of the reference dataset. Defaults to None.
         extra_keys (dict, optional): Additional keys for the `OutputSaver` filename generation. Defaults to None.
         file_format (str, optional): Extension for the output files. Defaults to ".nc".
         loglevel (str, optional): Logging level. Defaults to "WARNING".
@@ -575,121 +585,50 @@ def generate_realizations_path(
         list[str]: A list of full file paths correctly formatted for the diagnostic outputs.
     """
     logger = log_configure(log_name="generate_realizations_path", log_level=loglevel)
-    logger.info("Generating realization paths")
-    filenames = []
-    if file_format==".nc":
-       file_format_dir = "netcdf"
+
+    is_ref = any(x is not None for x in (catalog_ref, model_ref, exp_ref))
+    if is_ref:
+        if None in (catalog, model, exp, catalog_ref, model_ref, exp_ref):
+            logger.warning("Incomplete inputs for generating reference paths")
+        else:
+            logger.info("Generating paths for the reference")
+        out_catalog, out_model, out_exp = catalog_ref, model_ref, exp_ref
     else:
-        file_format_dir = "zarr"
+        logger.info("Generating realization paths")
+        out_catalog, out_model, out_exp = catalog, model, exp
+
+    file_format_dir = "netcdf" if file_format == ".nc" else "zarr"
+    filenames = []
+
     if realization_list:
+        base_dir = Path(file_dir).parents[1]  # two levels up
         for r in realization_list:
-            input_file_path = Path(file_dir).parents[1]   # two up
-            input_file_path = os.path.join(input_file_path, f"r{r}", diagnostic_name)
+            input_file_path = os.path.join(base_dir, f"r{r}", diagnostic_name)
             outputsaver = OutputSaver(
                 diagnostic=diagnostic_name,
-                catalog=catalog,
-                model=model,
-                exp=exp,
-                realization=r,
+                catalog=out_catalog,
+                model=out_model,
+                exp=out_exp,
+                realization=realization_ref if is_ref else r,
                 outputdir=input_file_path,
                 loglevel=loglevel,
             )
             filename = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-            filename = filename + file_format
-            path = os.path.join(input_file_path, file_format_dir , filename)
-            filenames.append(path)
+            filenames.append(os.path.join(input_file_path, file_format_dir, filename + file_format))
     else:
-        # This part of the is for working with files with no realizations list given
-        # For Reference file in CLI for aqua ensemble will take "r1" as default and
-        # will be treated by the "if" conditional part of the function not by "else".
+        # No realization list given: single path without realization info.
+        # The reference file in the aqua ensemble CLI defaults to "r1" and is
+        # therefore handled by the branch above, not here.
         outputsaver = OutputSaver(
-            diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=file_dir, loglevel=loglevel
+            diagnostic=diagnostic_name,
+            catalog=out_catalog,
+            model=out_model,
+            exp=out_exp,
+            outputdir=file_dir,
+            loglevel=loglevel,
         )
-
         filename = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-        filename = filename + file_format
-        path = os.path.join(file_dir, file_format , filename)
-        filenames.append(path)
-
-    logger.debug(f"generated file names for realizations are {filenames}")
-    return filenames
-
-def generate_realizations_path_ref(
-    catalog: str,
-    model: str,
-    exp: str,
-    catalog_ref: str,
-    model_ref: str,
-    exp_ref: str,
-    realization_ref: str,    
-    diagnostic_name: str,
-    diagnostic_product: str,
-    variable: str,
-    file_dir: str,
-    realization_list: list[str] = None,
-    extra_keys=None,
-    file_format: str = ".nc",
-    loglevel="WARNING",
-):
-    """
-    Generate output file paths for specific diagnostic realizations.
-
-    Leverages the `OutputSaver` class to standardly generate filenames
-    and concatenates them with the specified output directory and file extension.
-
-    Args:
-        catalog (str): Name of the data catalog.
-        model (str): Name of the model.
-        exp (str): Name of the experiment.
-        diagnostic_name (str): The name of the diagnostic being run.
-        diagnostic_product (str): The specific product/output type of the diagnostic.
-        variable (str): The variable associated with the diagnostic.
-        file_dir (str): Base directory where the files will be saved.
-        realization_list (list[str], optional): List of ensemble realizations.
-            If None, generates a single path without realization info. Defaults to None.
-        extra_keys (dict, optional): Additional keys for the `OutputSaver` filename generation. Defaults to None.
-        file_format (str, optional): Extension for the output files. Defaults to ".nc".
-        loglevel (str, optional): Logging level. Defaults to "WARNING".
-
-    Returns:
-        list[str]: A list of full file paths correctly formatted for the diagnostic outputs.
-    """
-    logger = log_configure(log_name="generate_realizations_path", log_level=loglevel)
-    logger.info("Generating realization paths")
-    filenames = []
-    if file_format==".nc":
-       file_format_dir = "netcdf"
-    else:
-        file_format_dir = "zarr"
-    if realization_list:
-        for r in realization_list:
-            input_file_path = Path(file_dir).parents[1]   # two up
-            input_file_path = os.path.join(input_file_path, f"r{r}", diagnostic_name)
-            outputsaver = OutputSaver(
-                diagnostic=diagnostic_name,
-                catalog=catalog_ref,
-                model=model_ref,
-                exp=exp_ref,
-                realization=realization_ref,
-                outputdir=input_file_path,
-                loglevel=loglevel,
-            )
-            filename = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-            filename = filename + file_format
-            path = os.path.join(input_file_path, file_format_dir , filename)
-            filenames.append(path)
-    else:
-        # This part of the is for working with files with no realizations list given
-        # For Reference file in CLI for aqua ensemble will take "r1" as default and
-        # will be treated by the "if" conditional part of the function not by "else".
-        outputsaver = OutputSaver(
-            diagnostic=diagnostic_name, catalog=catalog_ref, model=model_ref, exp=exp_ref, outputdir=file_dir, loglevel=loglevel
-        )
-
-        filename = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
-        filename = filename + file_format
-        path = os.path.join(file_dir, file_format , filename)
-        filenames.append(path)
+        filenames.append(os.path.join(file_dir, file_format_dir, filename + file_format))
 
     logger.debug(f"generated file names for realizations are {filenames}")
     return filenames
