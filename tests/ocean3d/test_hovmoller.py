@@ -138,6 +138,8 @@ def test_panel_settings(hovmoller_result, tmp_path):
     expected = [DEFAULT_CBAR_LIMITS[var][drift] for drift in EXPECTED_DRIFT_TYPES for var in ("thetao", "so")]
     expected[2] = (-2.0, 2.0)  # the asymmetric anomaly limits are centered on zero
     assert list(zip(hov_plot.vmin, hov_plot.vmax)) == expected
+    # Uneven levels for the anomalies in physical units only
+    assert [levels is not None for levels in hov_plot.cbar_levels] == [False, False, True, True, False, False]
 
 
 def test_timeseries_levels(hovmoller_result, tmp_path):
