@@ -145,7 +145,7 @@ class PlotHovmoller:
         self.set_line_plot_colours()
         self.logger.debug("Plotting Timeseries for variables: %s", self.vars)
         fig = plot_multi_timeseries(
-            maps=self.data,
+            maps=self.timeseries_data,
             levels=self.timeseries_labels,
             line_plot_colours=self.line_plot_colours,
             variables=self.vars,
@@ -175,7 +175,7 @@ class PlotHovmoller:
         self.timeseries_labels = [f"{level} {level_unit}" for level in self.levels]
 
     def set_data_for_levels(self):
-        """Extract and set the data at the specified depth levels."""
+        """Extract the data at the specified depth levels, leaving the full profiles in self.data."""
         self.logger.debug("Setting data for levels: %s", self.levels)
         new_data_list = []
         for _, data in enumerate(self.data):
@@ -190,13 +190,13 @@ class PlotHovmoller:
                 new_data_level_list.append(new_data)
             merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords="different", compat="equals")
             new_data_list.append(merged_data)
-        self.data = new_data_list
+        self.timeseries_data = new_data_list
 
     def set_line_plot_colours(self):
         """Set the color list for line plots based on the number of levels."""
         nlev = len(self.levels)
         cmap = plt.cm.plasma_r
-        self.line_plot_colours = [cmap(0.3 + 0.7 * i / (nlev - 1)) for i in range(nlev)]
+        self.line_plot_colours = [cmap(0.3 + 0.7 * i / max(nlev - 1, 1)) for i in range(nlev)]
 
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
