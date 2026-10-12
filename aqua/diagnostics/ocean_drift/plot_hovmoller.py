@@ -73,7 +73,7 @@ class PlotHovmoller:
     def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
         """Plot the Hovmoller diagram for the given data.
 
-        This method sets the title, description, vmax, vmin, depth limits and texts for the plot.
+        This method sets the title, description, vmax, vmin, depth limits, y-axis label and texts for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -95,6 +95,7 @@ class PlotHovmoller:
         self.set_texts()
         self.set_vmax_vmin()
         self.set_depth_limits()
+        self.set_ylabel()
         self.logger.debug("Plotting Hovmöller for variables: %s", self.vars)
         fig = plot_multi_hovmoller(
             maps=self.data,
@@ -105,6 +106,7 @@ class PlotHovmoller:
             vmax=self.vmax,
             vmin=self.vmin,
             ylim=self.depth_limits,
+            ylabel=self.ylabel,
             cmap=self.cmap,
             text=self.texts,
         )
@@ -283,6 +285,13 @@ class PlotHovmoller:
         # Deepest level as bottom, so that depth increases downwards
         self.depth_limits = (float(max(valid_levels)), float(min(valid_levels)))
         self.logger.debug("Depth limits set to: %s", self.depth_limits)
+
+    def set_ylabel(self):
+        """Set the y-axis label of the Hovmoller panels from the vertical coordinate and its units."""
+        units = self.data[0][self.vert_coord].attrs.get("units", "")
+        units_latex = unit_to_latex(units) if units else ""
+        self.ylabel = f"{self.vert_coord} ({units_latex})" if units_latex else self.vert_coord
+        self.logger.debug("Y-axis label set to: %s", self.ylabel)
 
     def set_data_type(self):
         """Set the data type list for each dataset based on its AQUA attributes."""

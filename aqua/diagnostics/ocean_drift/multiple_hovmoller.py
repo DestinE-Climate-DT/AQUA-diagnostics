@@ -24,6 +24,7 @@ def plot_multi_hovmoller(
     vmin: list[float] = None,
     vmax: list[float] = None,
     ylim: tuple = None,
+    ylabel: str = None,
     text: list[float] = None,
     nlevels: int = 20,
     title: str = None,
@@ -52,6 +53,8 @@ def plot_multi_hovmoller(
         vmax (list[float]): List of maximum values for color limits for each variable.
         ylim (tuple): (bottom, top) limits of the y-axis, shared by all subplots.
             If None, the full range of the space coordinate is shown.
+        ylabel (str): Label of the y-axis, shared by all subplots.
+            If None, the name of the space coordinate is used.
         text (list[float]): List of text values to be displayed on the plot for each variable.
         nlevels (int): Number of contour levels. Default is 20.
         title (str): Title for the entire figure. Default is None.
@@ -101,6 +104,8 @@ def plot_multi_hovmoller(
             )
             if ylim is not None:
                 ax.set_ylim(ylim)
+            if ylabel is not None:
+                ax.set_ylabel(ylabel)
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
             if titles and titles[k]:
