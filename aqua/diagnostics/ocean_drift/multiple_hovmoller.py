@@ -10,7 +10,7 @@ from matplotlib import ticker
 from aqua.core.graphics import ConfigStyle, plot_hovmoller
 from aqua.core.logger import log_configure
 
-from .util import add_row_label, set_year_ticks
+from .util import add_row_label, set_depth_axis, set_year_ticks
 
 
 def plot_multi_hovmoller(
@@ -23,6 +23,7 @@ def plot_multi_hovmoller(
     style=None,
     vmin: list[float] = None,
     vmax: list[float] = None,
+    levels: list[list[float]] = None,
     cmap: list[str] = None,
     text: list[float] = None,
     nlevels: int = 21,
@@ -48,6 +49,8 @@ def plot_multi_hovmoller(
             If None, or None for a subplot, the limits are evaluated from its data.
         vmax (list[float]): List of maximum color limits for each subplot.
             If None, or None for a subplot, the limits are evaluated from its data.
+        levels (list[list[float]]): List of contour levels for each subplot, also unevenly spaced ones,
+            replacing its vmin and vmax. If None, or None for a subplot, evenly spaced nlevels are used.
         cmap (list[str]): List of colormaps for each subplot. If None, the diverging PuOr_r is used.
         text (list[float]): List of text values to be displayed on the plot for each variable.
         nlevels (int): Number of contour levels. Default is 21, i.e. 20 color intervals.
@@ -88,6 +91,7 @@ def plot_multi_hovmoller(
                 sym=sym,
                 vmin=vmin[k] if vmin else None,
                 vmax=vmax[k] if vmax else None,
+                levels=levels[k] if levels else None,
                 cmap=cmap[k] if cmap else "PuOr_r",
                 nlevels=nlevels,
                 invert_space_coord=invert_space_coord,
@@ -99,6 +103,7 @@ def plot_multi_hovmoller(
                 loglevel=loglevel,
             )
             set_year_ticks(ax)
+            set_depth_axis(ax)
             if i > 0:
                 # Same depth axis as the first column: its label would only crowd the colorbar on the left
                 ax.set_ylabel("")
@@ -117,12 +122,16 @@ def plot_multi_hovmoller(
 
             # Colorbar next to its panel, placed by the constrained layout
             cbar = fig.colorbar(mappable, ax=ax, orientation="vertical", pad=0.02)
-            # Round tick values, not tied to the boundaries of the color intervals and
-            # kept within the color limits, so that none is drawn next to an extension
-            low, high = cbar.norm.vmin, cbar.norm.vmax
-            tolerance = 1e-6 * (high - low)
-            ticks = ticker.MaxNLocator(nbins=6, steps=[1, 2, 2.5, 5, 10]).tick_values(low, high)
-            cbar.set_ticks([tick for tick in ticks if low - tolerance <= tick <= high + tolerance])
+            if levels and levels[k] is not None:
+                # Uneven levels, each interval with the same room
+                cbar.set_ticks(levels[k], labels=[f"{level:g}" for level in levels[k]])
+            else:
+                # Round tick values, not tied to the boundaries of the color intervals and
+                # kept within the color limits, so that none is drawn next to an extension
+                low, high = cbar.norm.vmin, cbar.norm.vmax
+                tolerance = 1e-6 * (high - low)
+                ticks = ticker.MaxNLocator(nbins=6, steps=[1, 2, 2.5, 5, 10]).tick_values(low, high)
+                cbar.set_ticks([tick for tick in ticks if low - tolerance <= tick <= high + tolerance])
             if cbar_labels and cbar_labels[k]:
                 cbar.set_label(cbar_labels[k])
 

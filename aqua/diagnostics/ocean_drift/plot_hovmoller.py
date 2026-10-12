@@ -31,6 +31,10 @@ DEFAULT_CBAR_LIMITS = {
     },
 }
 
+# Contour levels of the anomalies in physical units, as fractions of their color limit: the uneven
+# spacing shows the small deep anomalies next to the large ones of the surface
+LOG_LEVEL_FRACTIONS = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1)
+
 # Colormaps of the Hovmoller panels: sequential for the full values, diverging for the anomalies,
 # from the same color family for each variable
 FULL_CMAPS = {"thetao": "plasma", "so": "YlGnBu"}
@@ -131,6 +135,7 @@ class PlotHovmoller:
             titles=self.title_list,
             vmin=self.vmin,
             vmax=self.vmax,
+            levels=self.cbar_levels,
             cmap=self.cmap,
             cbar_labels=self.units_labels,
             text=self.texts,
@@ -298,7 +303,8 @@ class PlotHovmoller:
         """Set the fixed color limits of each subplot panel from its variable and drift type.
 
         Panels without limits, in cbar_limits or in DEFAULT_CBAR_LIMITS, are scaled on their data.
-        The limits of the anomalies are always centered on zero.
+        The limits of the anomalies are always centered on zero, and the anomalies in physical
+        units get the uneven contour levels of LOG_LEVEL_FRACTIONS (None for the evenly spaced ones).
 
         Args:
             cbar_limits (dict, optional): Color limits as {var: {drift_type: (vmin, vmax)}},
@@ -307,16 +313,22 @@ class PlotHovmoller:
         cbar_limits = cbar_limits or {}
         self.vmin = []
         self.vmax = []
+        self.cbar_levels = []
         for data in self.data:
             drift_type = data.attrs.get("AQUA_ocean_drift_type")
             for var in self.vars:
                 limits = cbar_limits.get(var, {}).get(drift_type) or DEFAULT_CBAR_LIMITS.get(var, {}).get(drift_type)
+                levels = None
                 if drift_type != "full":
                     half = max(abs(limit) for limit in limits) if limits else float(abs(data[var]).max())
                     limits = (-half, half)
+                    if drift_type.startswith("anom"):
+                        positive = [half * fraction for fraction in LOG_LEVEL_FRACTIONS]
+                        levels = [-level for level in reversed(positive)] + positive
                 vmin, vmax = limits if limits else (None, None)
                 self.vmin.append(vmin)
                 self.vmax.append(vmax)
+                self.cbar_levels.append(levels)
         self.logger.debug("Color limits set to: vmin %s, vmax %s", self.vmin, self.vmax)
 
     def set_cmaps(self):

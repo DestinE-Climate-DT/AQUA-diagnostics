@@ -1,9 +1,13 @@
 """Utility for the ocean drift plots."""
 
 import matplotlib.dates as mdates
+import numpy as np
 
 # Round year steps for the time axis ticks
 YEAR_STEPS = (1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500)
+
+# Ticks of the depth axis, which set_depth_axis stretches near the surface
+DEPTH_TICKS = (100, 500, 1000, 2000, 3000, 4000, 5000, 6000)
 
 
 def set_year_ticks(ax, max_intervals: int = 5):
@@ -31,3 +35,16 @@ def add_row_label(ax, text: str):
         text (str): Label of the row.
     """
     ax.text(-0.3, 0.5, text, fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center", va="center")
+
+
+def set_depth_axis(ax):
+    """Stretch the depth axis of a panel near the surface, where most of the variability is.
+
+    Args:
+        ax (matplotlib.axes.Axes): Panel with depth on the y-axis.
+    """
+    limits = ax.get_ylim()
+    ax.set_yscale("function", functions=(np.sqrt, np.square))
+    ax.set_ylim(limits)
+    low, high = sorted(limits)
+    ax.set_yticks([tick for tick in DEPTH_TICKS if low <= tick <= high])
