@@ -23,6 +23,7 @@ def plot_multi_hovmoller(
     style=None,
     vmin: list[float] = None,
     vmax: list[float] = None,
+    ylim: tuple = None,
     text: list[float] = None,
     nlevels: int = 20,
     title: str = None,
@@ -49,6 +50,8 @@ def plot_multi_hovmoller(
         style (str): Style to be used for the plot. Default is None. This will use the default AQUA style.
         vmin (list[float]): List of minimum values for color limits for each variable.
         vmax (list[float]): List of maximum values for color limits for each variable.
+        ylim (tuple): (bottom, top) limits of the y-axis, shared by all subplots.
+            If None, the full range of the space coordinate is shown.
         text (list[float]): List of text values to be displayed on the plot for each variable.
         nlevels (int): Number of contour levels. Default is 20.
         title (str): Title for the entire figure. Default is None.
@@ -96,6 +99,8 @@ def plot_multi_hovmoller(
                 fig=fig,
                 loglevel=loglevel,
             )
+            if ylim is not None:
+                ax.set_ylim(ylim)
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
             if titles and titles[k]:

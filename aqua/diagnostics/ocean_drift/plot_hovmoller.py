@@ -73,7 +73,7 @@ class PlotHovmoller:
     def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
         """Plot the Hovmoller diagram for the given data.
 
-        This method sets the title, description, vmax, vmin, and texts for the plot.
+        This method sets the title, description, vmax, vmin, depth limits and texts for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -94,6 +94,7 @@ class PlotHovmoller:
         self.set_data_type()
         self.set_texts()
         self.set_vmax_vmin()
+        self.set_depth_limits()
         self.logger.debug("Plotting Hovmöller for variables: %s", self.vars)
         fig = plot_multi_hovmoller(
             maps=self.data,
@@ -103,6 +104,7 @@ class PlotHovmoller:
             titles=self.title_list,
             vmax=self.vmax,
             vmin=self.vmin,
+            ylim=self.depth_limits,
             cmap=self.cmap,
             text=self.texts,
         )
@@ -265,6 +267,22 @@ class PlotHovmoller:
                 self.vmax.append(hovmoller_plot_dic[var][type].get("vmax"))
                 self.vmin.append(hovmoller_plot_dic[var][type].get("vmin"))
                 self.cmap.append(hovmoller_plot_dic[var][type].get("cbar", "jet"))
+
+    def set_depth_limits(self):
+        """Set the depth range of the Hovmoller panels to the levels holding data."""
+        valid_levels = []
+        for data in self.data:
+            for var in self.vars:
+                other_dims = [dim for dim in data[var].dims if dim != self.vert_coord]
+                has_data = data[var].notnull().any(dim=other_dims).values
+                valid_levels.extend(data[self.vert_coord].values[has_data])
+        if not valid_levels:
+            self.logger.warning("No valid data along %s, plotting its full range", self.vert_coord)
+            self.depth_limits = None
+            return
+        # Deepest level as bottom, so that depth increases downwards
+        self.depth_limits = (float(max(valid_levels)), float(min(valid_levels)))
+        self.logger.debug("Depth limits set to: %s", self.depth_limits)
 
     def set_data_type(self):
         """Set the data type list for each dataset based on its AQUA attributes."""
