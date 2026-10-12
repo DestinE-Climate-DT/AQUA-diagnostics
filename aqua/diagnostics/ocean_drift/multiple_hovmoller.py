@@ -9,7 +9,7 @@ import xarray as xr
 from aqua.core.graphics import ConfigStyle, plot_hovmoller
 from aqua.core.logger import log_configure
 
-from .util import set_year_ticks
+from .util import add_row_label, set_year_ticks
 
 
 def plot_multi_hovmoller(
@@ -79,7 +79,6 @@ def plot_multi_hovmoller(
                 sym=sym,
                 nlevels=nlevels,
                 invert_space_coord=invert_space_coord,
-                text=text[k] if text else None,
                 cbar=False,
                 title=titles[k] if titles else None,
                 return_fig=True,
@@ -91,11 +90,7 @@ def plot_multi_hovmoller(
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
             if text and text[k]:
-                for t in ax.texts:
-                    if t.get_text() == text[k]:
-                        logger.debug("Setting text position for %s", text[k])
-                        t.set_position((-0.3, 0.5))  # x left margin, y middle
-                        t.set_verticalalignment("center")
+                add_row_label(ax, text[k])
             # Retrieve last plotted object for colorbar (QuadMesh or ContourSet)
             if ax.collections:
                 mappable = ax.collections[-1]
