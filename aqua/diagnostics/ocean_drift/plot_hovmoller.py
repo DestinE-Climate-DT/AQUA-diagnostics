@@ -31,6 +31,11 @@ DEFAULT_CBAR_LIMITS = {
     },
 }
 
+# Colormaps of the Hovmoller panels: sequential for the full values, diverging for the anomalies
+FULL_CMAPS = {"thetao": "plasma", "so": "YlGnBu"}
+DEFAULT_FULL_CMAP = "YlGnBu"
+ANOMALY_CMAP = "PuOr_r"
+
 
 class PlotHovmoller:
     """Class for plotting Hovmoller diagrams and timeseries from AQUA ocean drift diagnostics.
@@ -91,7 +96,7 @@ class PlotHovmoller:
     def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300, cbar_limits: dict = None):
         """Plot the Hovmoller diagram for the given data.
 
-        This method sets the title, description, texts and color limits for the plot.
+        This method sets the title, description, texts, color limits and colormaps for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -114,6 +119,7 @@ class PlotHovmoller:
         self.set_texts()
         self.set_units_labels()
         self.set_cbar_limits(cbar_limits)
+        self.set_cmaps()
         self.logger.debug("Plotting Hovmöller for variables: %s", self.vars)
         fig = plot_multi_hovmoller(
             maps=self.data,
@@ -123,6 +129,7 @@ class PlotHovmoller:
             titles=self.title_list,
             vmin=self.vmin,
             vmax=self.vmax,
+            cmap=self.cmap,
             cbar_labels=self.units_labels,
             text=self.texts,
         )
@@ -289,6 +296,7 @@ class PlotHovmoller:
         """Set the fixed color limits of each subplot panel from its variable and drift type.
 
         Panels without limits, in cbar_limits or in DEFAULT_CBAR_LIMITS, are scaled on their data.
+        The limits of the anomalies are always centered on zero.
 
         Args:
             cbar_limits (dict, optional): Color limits as {var: {drift_type: (vmin, vmax)}},
@@ -301,10 +309,22 @@ class PlotHovmoller:
             drift_type = data.attrs.get("AQUA_ocean_drift_type")
             for var in self.vars:
                 limits = cbar_limits.get(var, {}).get(drift_type) or DEFAULT_CBAR_LIMITS.get(var, {}).get(drift_type)
+                if drift_type != "full":
+                    half = max(abs(limit) for limit in limits) if limits else float(abs(data[var]).max())
+                    limits = (-half, half)
                 vmin, vmax = limits if limits else (None, None)
                 self.vmin.append(vmin)
                 self.vmax.append(vmax)
         self.logger.debug("Color limits set to: vmin %s, vmax %s", self.vmin, self.vmax)
+
+    def set_cmaps(self):
+        """Set the colormap of each subplot panel: sequential for the full values, diverging for the anomalies."""
+        self.cmap = []
+        for data in self.data:
+            full = data.attrs.get("AQUA_ocean_drift_type") == "full"
+            for var in self.vars:
+                self.cmap.append(FULL_CMAPS.get(var, DEFAULT_FULL_CMAP) if full else ANOMALY_CMAP)
+        self.logger.debug("Colormaps set to: %s", self.cmap)
 
     def save_plot(
         self,
