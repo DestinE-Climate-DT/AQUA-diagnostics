@@ -1,9 +1,13 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 import xarray as xr
 
 from aqua.diagnostics.ocean_drift import Hovmoller, PlotHovmoller
+from aqua.diagnostics.ocean_drift.plot_hovmoller import DEFAULT_CBAR_LIMITS
+from aqua.diagnostics.ocean_drift.util import set_year_ticks
 from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL, assert_nonempty
 
 loglevel = LOGLEVEL
@@ -11,7 +15,7 @@ approx_rel = APPROX_REL * 10
 dpi = DPI
 
 # --- Constants ---
-EXPECTED_FULL = {"thetao": 22.2086629652034, "so": 36.57638045014168}
+EXPECTED_FULL = {"thetao": 295.3586629652034, "so": 36.57638045014168}
 EXPECTED_DRIFT_TYPES = ["full", "anom_t0", "std_anom_t0"]
 PLOT_STEM = "oceandrift.{product}.ci.FESOM.hpz3.r1.sargasso_sea"
 EXPECTED_NTIME = 15  # crosses a year boundary, so the yearly split/concat is tested
@@ -59,7 +63,7 @@ def hovmoller_result(tmp_path_factory, hovmoller_config):
 
 @pytest.fixture(scope="module")
 def hovmoller_plot(hovmoller_result, hovmoller_config):
-    """Run both plot types once. Hovmoller must run before timeseries."""
+    """Run both plot types once."""
     hov, tmp_path = hovmoller_result
     save_format = hovmoller_config["plot"]["save_format"]
     hov_plot = PlotHovmoller(data=hov.processed_data["sss"], loglevel=loglevel, outputdir=tmp_path)
@@ -112,12 +116,64 @@ def test_anomaly_is_referenced_to_first_timestep(hovmoller_result):
 
 
 def test_standardised_anomaly_is_scaled_by_its_own_std(hovmoller_result):
-    """std_anom_t0 is anom_t0 divided by its temporal standard deviation."""
+    """std_anom_t0 is anom_t0 divided by its temporal standard deviation, hence dimensionless."""
     hov, _ = hovmoller_result
     data = _by_drift_type(hov)
     anom, std_anom = data["anom_t0"], data["std_anom_t0"]
 
     xr.testing.assert_allclose(std_anom, anom / anom.std("time"))
+    assert all(std_anom[var].attrs["units"] == "1" for var in std_anom.data_vars)
+
+
+def test_panel_settings(hovmoller_result, tmp_path):
+    """Units, colormaps and color limits of the panels (rows: full, anom_t0, std_anom_t0; columns: thetao, so)."""
+    hov, _ = hovmoller_result
+    hov_plot = PlotHovmoller(data=hov.processed_data["sss"], loglevel=loglevel, outputdir=tmp_path)
+    hov_plot.set_units_labels()
+    hov_plot.set_cmaps()
+    hov_plot.set_cbar_limits({"thetao": {"anom_t0": (-0.5, 2.0)}})
+
+    assert hov_plot.units_labels == ["K", "g kg$^{-1}$", "K", "g kg$^{-1}$", None, None]
+    assert hov_plot.cmap == ["plasma", "YlGnBu"] + ["RdBu_r", "BrBG"] * 2
+    expected = [DEFAULT_CBAR_LIMITS[var][drift] for drift in EXPECTED_DRIFT_TYPES for var in ("thetao", "so")]
+    expected[2] = (-2.0, 2.0)  # the asymmetric anomaly limits are centered on zero
+    assert list(zip(hov_plot.vmin, hov_plot.vmax)) == expected
+
+
+def test_timeseries_levels(hovmoller_result, tmp_path):
+    """Selecting the timeseries levels, even a single one, leaves the full profiles to the Hovmoller plot."""
+    hov, _ = hovmoller_result
+    data = hov.processed_data["sss"]
+    hov_plot = PlotHovmoller(data=data, loglevel=loglevel, outputdir=tmp_path)
+    hov_plot.levels = [1500]
+    hov_plot.set_levels()
+    hov_plot.set_data_for_levels()
+    hov_plot.set_line_plot_colours()
+
+    assert hov_plot.timeseries_data[0].sizes[hov.vert_coord] == 1
+    assert len(hov_plot.line_plot_colours) == 1
+    assert hov_plot.data is data
+
+
+@pytest.mark.parametrize(
+    "start, end, expected",
+    [
+        ("1990-01", "1991-03", ["1990", "1991"]),
+        ("1950-01", "2049-12", ["1960", "1980", "2000", "2020", "2040"]),
+        ("1990-03", "1990-11", ["1990"]),  # no year start within the span
+    ],
+)
+def test_year_ticks(start, end, expected):
+    """The time axis shows round years only, at most six of them."""
+    time = np.arange(start, end, dtype="datetime64[M]").astype("datetime64[ns]")
+    _, ax = plt.subplots()
+    ax.plot(time, np.zeros(time.size))
+    ax.set_xlim(time[0], time[-1])
+    set_year_ticks(ax)
+
+    low, high = ax.get_xlim()
+    ticks = [tick for tick in ax.get_xticks() if low <= tick <= high]
+    assert ax.xaxis.get_major_formatter().format_ticks(ticks) == expected
 
 
 @pytest.mark.parametrize("drift_type", EXPECTED_DRIFT_TYPES)
