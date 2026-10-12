@@ -99,6 +99,9 @@ def plot_multi_hovmoller(
                 loglevel=loglevel,
             )
             set_year_ticks(ax)
+            if i > 0:
+                # Same depth axis as the first column: its label would only crowd the colorbar on the left
+                ax.set_ylabel("")
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
             if text and text[k]:
