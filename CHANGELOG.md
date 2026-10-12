@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Update to aqua-core v1.2.1 (#466)
 - Adopt new seldate() method for robust date selection (#403)
 - Ocean3D: Stratification refactor to improve performance (#462)
 - Update the deprecated `ConfigPath` (#451)
