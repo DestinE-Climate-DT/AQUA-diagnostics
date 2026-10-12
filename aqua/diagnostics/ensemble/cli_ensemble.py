@@ -259,7 +259,6 @@ def main(argv=None):
                         if dataset_mon:
                             timeseries_dict["monthly_data"] = dataset_mon
 
-                        cli.logger.info(f"CLI monthly timeseries before ensemble computation: {dataset_mon}")
                     # Annual dataset
                     if annual:
                         extra_dict = {"variable": variable, "freq": "annual", "region": region}
