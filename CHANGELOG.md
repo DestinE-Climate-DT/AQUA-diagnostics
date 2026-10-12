@@ -6,11 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
+- Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
 Main changes:
 
 Complete list:
 - Ocean3D: Hovmoller graphical improvements (#478)
+- Update to aqua-core v1.2.1 (#466)
+- Adopt new seldate() method for robust date selection (#403)
 - Ocean3D: Stratification refactor to improve performance (#462)
 - Update the deprecated `ConfigPath` (#451)
 - Remove parenthesis and capitalise regions (#456)

@@ -3,7 +3,7 @@ import xarray as xr
 
 from aqua.core.graphics import indexes_plot, plot_maps, plot_maps_diff, plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import TitleBuilder, collapse_era5_duplicate
+from aqua.diagnostics.base import TitleBuilder
 
 from .base import PlotBaseMixin, _homogeneize_maps
 
@@ -218,7 +218,7 @@ class PlotENSO(PlotBaseMixin):
             if isinstance(maps, list) and isinstance(ref_maps, xr.DataArray):
                 titles = []
                 for map in maps:
-                    title = collapse_era5_duplicate(f"{map.AQUA_model} {map.AQUA_exp}")
+                    title = f"{map.AQUA_model} {map.AQUA_exp}"
                     titles.append(title)
                 title = self.set_map_title(
                     telecname="Niño 3.4",
@@ -255,7 +255,7 @@ class PlotENSO(PlotBaseMixin):
                 self.logger.critical("maps is a single map, ref_maps is a list.")
                 titles = []
                 for map in ref_maps:
-                    title = collapse_era5_duplicate(f"Compared to {map.AQUA_model} {map.AQUA_exp}")
+                    title = f"Compared to {map.AQUA_model} {map.AQUA_exp}"
                     titles.append(title)
                 title = self.set_map_title(
                     telecname="Niño 3.4",
