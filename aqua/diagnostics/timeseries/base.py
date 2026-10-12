@@ -7,7 +7,7 @@ import xarray as xr
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, time_to_string
-from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, collapse_era5_duplicate
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
 
@@ -484,7 +484,6 @@ class PlotBaseMixin:
             std_end_str = time_to_string(self.std_enddate, format="%Y-%m")
             description += f"The shaded area represents ±2σ uncertainty bands computed from {std_start_str} to {std_end_str}."
 
-        description = collapse_era5_duplicate(description)
         self.logger.debug("Description: %s", description)
         return description
 
