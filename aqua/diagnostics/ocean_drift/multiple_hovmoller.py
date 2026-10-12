@@ -9,6 +9,8 @@ import xarray as xr
 from aqua.core.graphics import ConfigStyle, plot_hovmoller
 from aqua.core.logger import log_configure
 
+from .util import set_year_ticks
+
 
 def plot_multi_hovmoller(
     maps: list,
@@ -85,9 +87,7 @@ def plot_multi_hovmoller(
                 fig=fig,
                 loglevel=loglevel,
             )
-            ax.set_xticks(ax.get_xticks())
-            # Anchored at the tick end, so the last date does not push the colorbar away
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=30, ha="right", rotation_mode="anchor")
+            set_year_ticks(ax)
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
             if text and text[k]:

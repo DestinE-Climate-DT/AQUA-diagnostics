@@ -10,6 +10,8 @@ from aqua.core.graphics import ConfigStyle, plot_timeseries
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
+from .util import set_year_ticks
+
 
 def plot_multi_timeseries(
     maps: list,
@@ -85,8 +87,7 @@ def plot_multi_timeseries(
             )
             if ylabels is not None:
                 ax.set_ylabel(ylabels[k] or "")
-            ax.set_xticks(ax.get_xticks())
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
+            set_year_ticks(ax)
 
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
