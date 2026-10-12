@@ -23,6 +23,7 @@ def plot_multi_hovmoller(
     style=None,
     vmin: list[float] = None,
     vmax: list[float] = None,
+    cmap: list[str] = None,
     text: list[float] = None,
     nlevels: int = 21,
     title: str = None,
@@ -47,6 +48,7 @@ def plot_multi_hovmoller(
             If None, or None for a subplot, the limits are evaluated from its data.
         vmax (list[float]): List of maximum color limits for each subplot.
             If None, or None for a subplot, the limits are evaluated from its data.
+        cmap (list[str]): List of colormaps for each subplot. If None, the diverging PuOr_r is used.
         text (list[float]): List of text values to be displayed on the plot for each variable.
         nlevels (int): Number of contour levels. Default is 21, i.e. 20 color intervals.
         title (str): Title for the entire figure. Default is None.
@@ -86,6 +88,7 @@ def plot_multi_hovmoller(
                 sym=sym,
                 vmin=vmin[k] if vmin else None,
                 vmax=vmax[k] if vmax else None,
+                cmap=cmap[k] if cmap else "PuOr_r",
                 nlevels=nlevels,
                 invert_space_coord=invert_space_coord,
                 cbar=False,
