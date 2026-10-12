@@ -9,11 +9,15 @@ Which diagnostics run is controlled by the ``run`` flag inside each config's
 ``diagnostics.ensemble`` block, exactly as before.  Both configs are loaded
 every time; set ``run: false`` in either one to skip it.
 
+If no reference is configured, or the reference files cannot be found or
+loaded, the reference is skipped and only the ensemble products are plotted.
+
 CLI overrides (``--catalog``, ``--model``, ``--exp``, ``--source``,
 ``--outputdir``, ``--loglevel``) are applied to both configs.
 """
 
 import argparse
+import os
 import sys
 
 import xarray as xr
@@ -58,6 +62,74 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
+def _squeeze(data):
+    """Squeeze a DataArray/Dataset, passing None through unchanged."""
+    return data.squeeze() if data is not None else None
+
+
+def load_reference(cli, filenames, variable, region, fix, label, select_variable=True):
+    """
+    Load a reference dataset, returning None if it is not available.
+
+    Args:
+        cli (DiagnosticCLI): CLI object, used for logging and loglevel.
+        filenames (list[str]): Candidate reference file paths.
+        variable (str): Variable to load.
+        region (str): Region to select (may be None).
+        fix (bool): Fixer flag for the reference.
+        label (str): Short description used in log messages.
+        select_variable (bool): If True, return the variable's DataArray instead of the Dataset.
+
+    Returns:
+        xarray.DataArray | xarray.Dataset | None: The reference data, or None if unavailable.
+    """
+    existing = [f for f in (filenames or []) if os.path.exists(f)]
+    if not existing:
+        cli.logger.warning(
+            "Reference %s not available for variable '%s', region '%s' (no file found among %s). Skipping reference.",
+            label,
+            variable,
+            region,
+            filenames,
+        )
+        return None
+
+    try:
+        data = reader_retrieve_and_merge(
+            filenames=existing,
+            variable=variable,
+            region=region,
+            realizations="1",  # TODO
+            fix=fix,
+            loglevel=cli.loglevel,
+        )
+    except Exception as e:
+        cli.logger.warning(
+            "Failed to load reference %s for variable '%s', region '%s': %s. Skipping reference.",
+            label,
+            variable,
+            region,
+            e,
+        )
+        return None
+
+    if data is None:
+        cli.logger.warning(
+            "Reference %s could not be loaded for variable '%s', region '%s'. Skipping reference.",
+            label,
+            variable,
+            region,
+        )
+        return None
+
+    if select_variable and isinstance(data, xr.Dataset) and variable in data:
+        data = data[variable]
+    if "ensemble" in data.dims:
+        data = data.squeeze("ensemble", drop=True)
+
+    return data
+
+
 def main(argv=None):
     """
     Main function for running multiple Ensemble classes
@@ -87,17 +159,22 @@ def main(argv=None):
 
     cli.logger.debug(f"Ensemble single model catalog: {catalog}, model: {model}, exp: {exp}, and source {source}")
 
-    # Single reference
-    if "references" in cli.config_dict:
-        ref = cli.config_dict.get("references")
-        first_ref = ref[0]
-        catalog_ref = first_ref["catalog"]
-        model_ref = first_ref["model"]
-        exp_ref = first_ref["exp"]
-        source_ref = first_ref["source"]
+    # Single reference (optional)
+    catalog_ref = model_ref = exp_ref = source_ref = fixer_ref = None
+    references = cli.config_dict.get("references") or []
+    if references:
+        first_ref = references[0]
+        catalog_ref = first_ref.get("catalog")
+        model_ref = first_ref.get("model")
+        exp_ref = first_ref.get("exp")
+        source_ref = first_ref.get("source")
         fixer_ref = first_ref.get("fix")
 
+    has_ref = all(x is not None for x in (catalog_ref, model_ref, exp_ref, source_ref))
+    if has_ref:
         cli.logger.debug(f"Reference catalog: {catalog_ref}, model: {model_ref}, exp: {exp_ref} and source: {source_ref}")
+    else:
+        cli.logger.warning("No complete reference configured. Reference data will be skipped.")
 
     # Output parameters
     # outputdir = cli.outputdir #config_dict.get("output", {}).get("outputdir", "./")
@@ -138,9 +215,8 @@ def main(argv=None):
 
                     # Dictionary to contain all the inputs for the Ensemble Timeseries class
                     timeseries_dict = {}
-
-                    # Dictionary to contain reference the outputs for the Ensemble Timeseries class
-                    # needed for the plot class
+                    mon_realization_list = None
+                    ann_realization_list = None
 
                     # Monthly dataset
                     if monthly:
@@ -167,14 +243,8 @@ def main(argv=None):
                         dataset_mon = reader_retrieve_and_merge(
                             filenames=mon_filenames,
                             variable=variable,
-                            # catalog=catalog,
-                            # model=model,
-                            # exp=exp,
-                            # source=source,
                             realizations=mon_realization_list,
                             region=region,
-                            # startdate=startdate,
-                            # enddate=enddate,
                             fix=fixer,
                             loglevel=cli.loglevel,
                         )
@@ -211,18 +281,12 @@ def main(argv=None):
 
                         cli.logger.debug(f"Files for annual ensemble timeseries {ann_filenames}")
 
-                        # Loading and merging monthly Timeseries datasets
+                        # Loading and merging annual Timeseries datasets
                         dataset_ann = reader_retrieve_and_merge(
                             filenames=ann_filenames,
                             variable=variable,
-                            # catalog=catalog,
-                            # model=model,
-                            # exp=exp,
-                            # source=source,
                             realizations=ann_realization_list,
                             region=region,
-                            # startdate=startdate,
-                            # enddate=enddate,
                             fix=fixer,
                             loglevel=cli.loglevel,
                         )
@@ -269,150 +333,87 @@ def main(argv=None):
                         )
                         continue
 
-                    # Monthly reference timeseries
-                    extra_dict = {"variable": variable, "freq": "monthly", "region": region}
-                    ref_realization_list = extract_realizations_list(
-                        catalog=catalog_ref, model=model_ref, exp=exp_ref, source=source_ref
-                    )
-                    # TODO change the HARD coded realization anme for reference
-                    # Hard coded in case realization is None in case of Reference dataset
-                    if ref_realization_list is None:
-                        ref_realization_list = ["r1"]
+                    # Reference timeseries (optional)
+                    dataset_mon_ref = None
+                    dataset_ann_ref = None
 
-                    mon_ref_filenames = generate_realizations_path(
-                        catalog=catalog,
-                        model=model,
-                        exp=exp,
-                        catalog_ref=catalog_ref,
-                        model_ref=model_ref,
-                        exp_ref=exp_ref,
-                        realization_list=mon_realization_list,
-                        realization_ref="r1",  # TODO
-                        diagnostic_name=ts_diag_config.get("diagnostic_name", "timeseries"),
-                        diagnostic_product="timeseries",
-                        variable=variable,
-                        file_dir=cli.outputdir,
-                        extra_keys=extra_dict,
-                        file_format=".nc",
-                        loglevel=cli.loglevel,
-                    )
+                    if has_ref:
+                        ts_realization_list = mon_realization_list or ann_realization_list
 
-                    # Loading reference monthly timeseries
-                    if mon_ref_filenames:
-                        dataset_mon_ref = reader_retrieve_and_merge(
-                            filenames=mon_ref_filenames,
-                            variable=variable,
-                            # catalog=catalog_ref,
-                            # model=model_ref,
-                            # exp=exp_ref,
-                            # source=source_ref,
-                            region=region,
-                            realizations="1",  # TODO
-                            # startdate=startdate,
-                            # enddate=enddate,
-                            fix=fixer_ref,
-                            loglevel=cli.loglevel,
-                        )
-                        if dataset_mon_ref is None:
-                            cli.logger.warning(
-                                "Skipping monthly reference timeseries for variable '%s', region '%s'.",
-                                variable,
-                                region,
+                        # Monthly reference timeseries
+                        if monthly:
+                            extra_dict = {"variable": variable, "freq": "monthly", "region": region}
+                            mon_ref_filenames = generate_realizations_path(
+                                catalog=catalog,
+                                model=model,
+                                exp=exp,
+                                catalog_ref=catalog_ref,
+                                model_ref=model_ref,
+                                exp_ref=exp_ref,
+                                realization_list=ts_realization_list,
+                                realization_ref="r1",  # TODO
+                                diagnostic_name=ts_diag_config.get("diagnostic_name", "timeseries"),
+                                diagnostic_product="timeseries",
+                                variable=variable,
+                                file_dir=cli.outputdir,
+                                extra_keys=extra_dict,
+                                file_format=".nc",
+                                loglevel=cli.loglevel,
                             )
-                            continue
-
-                        if dataset_mon_ref:
-                            if isinstance(dataset_mon_ref, xr.Dataset):
-                                dataset_mon_ref = dataset_mon_ref[variable]
-
-                    # Annual reference timeseries
-                    extra_dict = {"variable": variable, "freq": "annual", "region": region}
-
-                    ann_ref_filenames = generate_realizations_path(
-                        catalog=catalog,
-                        model=model,
-                        exp=exp,
-                        catalog_ref=catalog_ref,
-                        model_ref=model_ref,
-                        exp_ref=exp_ref,
-                        realization_list=ann_realization_list,
-                        realization_ref="r1",  # TODO
-                        diagnostic_name=ts_diag_config.get("diagnostic_name", "timeseries"),
-                        diagnostic_product="timeseries",
-                        variable=variable,
-                        file_dir=cli.outputdir,
-                        extra_keys=extra_dict,
-                        file_format=".nc",
-                        loglevel=cli.loglevel,
-                    )
-
-                    cli.logger.info(f"Reference anaual timeseries file: {ann_ref_filenames}")
-                    # Loading reference annual timeseries
-                    if ann_ref_filenames:
-                        dataset_ann_ref = reader_retrieve_and_merge(
-                            filenames=mon_ref_filenames,
-                            variable=variable,
-                            # catalog=catalog_ref,
-                            # model=model_ref,
-                            # exp=exp_ref,
-                            # source=source_ref,
-                            region=region,
-                            realizations="1",  # TODO
-                            # startdate=startdate,
-                            # enddate=enddate,
-                            fix=fixer_ref,
-                            loglevel=cli.loglevel,
-                        )
-
-                        if dataset_ann_ref is None:
-                            cli.logger.warning(
-                                "Skipping annual reference timeseries for variable '%s', region '%s'.",
-                                variable,
-                                region,
+                            cli.logger.info(f"Reference monthly timeseries file: {mon_ref_filenames}")
+                            dataset_mon_ref = load_reference(
+                                cli, mon_ref_filenames, variable, region, fixer_ref, label="monthly timeseries"
                             )
-                            continue
 
-                        if dataset_ann_ref:
-                            if isinstance(dataset_ann_ref, xr.Dataset):
-                                dataset_ann_ref = dataset_ann_ref[variable]
+                        # Annual reference timeseries
+                        if annual:
+                            extra_dict = {"variable": variable, "freq": "annual", "region": region}
+                            ann_ref_filenames = generate_realizations_path(
+                                catalog=catalog,
+                                model=model,
+                                exp=exp,
+                                catalog_ref=catalog_ref,
+                                model_ref=model_ref,
+                                exp_ref=exp_ref,
+                                realization_list=ts_realization_list,
+                                realization_ref="r1",  # TODO
+                                diagnostic_name=ts_diag_config.get("diagnostic_name", "timeseries"),
+                                diagnostic_product="timeseries",
+                                variable=variable,
+                                file_dir=cli.outputdir,
+                                extra_keys=extra_dict,
+                                file_format=".nc",
+                                loglevel=cli.loglevel,
+                            )
+                            cli.logger.info(f"Reference annual timeseries file: {ann_ref_filenames}")
+                            dataset_ann_ref = load_reference(
+                                cli, ann_ref_filenames, variable, region, fixer_ref, label="annual timeseries"
+                            )
 
-                    # Instiatating ensemble timeseries plotting class
+                    # Instantiating ensemble timeseries plotting class
                     ts_plot = PlotEnsembleTimeseries(
                         catalog_list=catalog,
                         model_list=model,
                         exp_list=exp,
                         source_list=source,
-                        ref_catalog=catalog_ref,
-                        ref_model=model_ref,
-                        ref_exp=exp_ref,
+                        ref_catalog=catalog_ref if dataset_mon_ref is not None or dataset_ann_ref is not None else None,
+                        ref_model=model_ref if dataset_mon_ref is not None or dataset_ann_ref is not None else None,
+                        ref_exp=exp_ref if dataset_mon_ref is not None or dataset_ann_ref is not None else None,
                         outputdir=cli.outputdir,
                         loglevel=cli.loglevel,
                     )
 
-                    # Derive time bounds; prefer monthly, fall back to annual
-                    _time_src = ts.monthly_data if ts.monthly_data is not None else ts.annual_data
-                    # TODO: Check the startdate and enddate
-                    # if startdate is None:
-                    #    startdate = _time_src.time.isel(time=0).values
-                    # if enddate is None:
-                    #    enddate = _time_src.time.isel(time=-1).values
-                    # startdate = _time_src.time.isel(time=0).values
-                    # enddate = _time_src.time.isel(time=-1).values
-                    # dataset_mon_ref["time"] = pd.to_datetime(dataset_mon_ref["time"].values)
-                    # dataset_ann_ref["time"] = pd.to_datetime(dataset_ann_ref["time"].values)
-                    dataset_mon_ref = dataset_mon_ref.squeeze("ensemble", drop=True)
-                    dataset_ann_ref = dataset_ann_ref.squeeze("ensemble", drop=True)
                     # Ensemble Timeseries plotting function
                     ts_plot.plot(
                         var=variable,
-                        monthly_data=ts.monthly_data.squeeze(),
-                        monthly_data_mean=ts.monthly_data_mean.squeeze(),
-                        monthly_data_std=ts.monthly_data_std.squeeze(),
-                        annual_data=ts.annual_data.squeeze(),
-                        annual_data_mean=ts.annual_data_mean.squeeze(),
-                        annual_data_std=ts.annual_data_std.squeeze(),
-                        ref_monthly_data=dataset_mon_ref.squeeze(),
-                        ref_annual_data=dataset_ann_ref.squeeze(),
+                        monthly_data=_squeeze(ts.monthly_data),
+                        monthly_data_mean=_squeeze(ts.monthly_data_mean),
+                        monthly_data_std=_squeeze(ts.monthly_data_std),
+                        annual_data=_squeeze(ts.annual_data),
+                        annual_data_mean=_squeeze(ts.annual_data_mean),
+                        annual_data_std=_squeeze(ts.annual_data_std),
+                        ref_monthly_data=_squeeze(dataset_mon_ref),
+                        ref_annual_data=_squeeze(dataset_ann_ref),
                         save_format=save_format,
                         plot_ensemble_members=plot_ensemble_members,
                         # startdate=startdate,
@@ -461,10 +462,6 @@ def main(argv=None):
                 dataset = reader_retrieve_and_merge(
                     filenames=filenames,
                     variable=variable,
-                    # catalog=catalog,
-                    # model=model,
-                    # exp=exp,
-                    # source=source,
                     realizations=realization_list,
                     fix=fixer,
                     loglevel=cli.loglevel,
@@ -487,89 +484,64 @@ def main(argv=None):
                 )
                 ens_latlon.run()
 
-                # Reference
+                # Plot parameters (needed with or without a reference)
+                var_plot = all_plot_params.get(variable, {})
+                plot_params = {**default_plot, **var_plot}
+                param_dict = gb_diag_config.get("plot_params", {}).get(variable, {}) or {}
+
+                # Need to define them in the config files
+                vmin_ensemble = param_dict.get("vmin_ensemble") or None
+                vmax_ensemble = param_dict.get("vmax_ensemble") or None
+                vmin_std_ensemble = param_dict.get("vmin_std_ensemble") or None
+                vmax_std_ensemble = param_dict.get("vmax_std_ensemble") or None
+
+                # will be taken from the original analysis config file
+                vmin_bias = param_dict.get("vmin") or None
+                vmax_bias = param_dict.get("vmax") or None
+                vmin_std_bias = param_dict.get("vmin_std") or None
+                vmax_std_bias = param_dict.get("vmax_std") or None
+
+                cmap = param_dict.get("cmap") or None
+                cbar_label = param_dict.get("cbar_label") or None
+
+                # Reference (optional)
                 dataset_ref = None
                 # TODO:
                 # Reference dataset STD bias is not plotted because we do not have reference STD data
                 dataset_std_ref = None
 
-                ref_filenames = generate_realizations_path(
-                    catalog=catalog,
-                    model=model,
-                    exp=exp,
-                    catalog_ref=catalog_ref,
-                    model_ref=model_ref,
-                    exp_ref=exp_ref,
-                    realization_ref="r1",  # TODO
-                    realization_list=realization_list,
-                    diagnostic_name=gb_diag_config.get("diagnostic_name", "biases"),
-                    diagnostic_product="annual_climatology",
-                    variable=variable,
-                    file_dir=cli.outputdir,
-                    extra_keys=extra_dict,
-                    file_format=".nc",
-                    loglevel=cli.loglevel,
-                )
-                cli.logger.info(f"reference file name: {ref_filenames}")
-                if ref_filenames:
-                    dataset_ref = reader_retrieve_and_merge(
-                        filenames=ref_filenames,
+                if has_ref:
+                    ref_filenames = generate_realizations_path(
+                        catalog=catalog,
+                        model=model,
+                        exp=exp,
+                        catalog_ref=catalog_ref,
+                        model_ref=model_ref,
+                        exp_ref=exp_ref,
+                        realization_ref="r1",  # TODO
+                        realization_list=realization_list,
+                        diagnostic_name=gb_diag_config.get("diagnostic_name", "biases"),
+                        diagnostic_product="annual_climatology",
                         variable=variable,
-                        # catalog=catalog_ref,
-                        # model=model_ref,
-                        # exp=exp_ref,
-                        # source=source_ref,
-                        region=region,
-                        realizations="1",  # TODO change this to Default
-                        fix=fixer_ref,
+                        file_dir=cli.outputdir,
+                        extra_keys=extra_dict,
+                        file_format=".nc",
                         loglevel=cli.loglevel,
                     )
-
-                    cli.logger.info(f"Reference dataset: {dataset_ref}")
-                    if dataset_ref is None:
-                        cli.logger.warning(
-                            "Unable to load reference map for variable '%s', region '%s'.",
-                            variable,
-                            region,
-                        )
-                        continue
-                    # TODO: check here
-                    # if dataset_ref is not None:
-                    #    if "ensemble" in dataset_ref.dims and dataset_ref.sizes["ensemble"] == 1:
-                    #        dataset_ref = dataset_ref.squeeze("ensemble", drop=True)
-                    if dataset_ref:
-                        if dataset_ref["ensemble"] is not None:
-                            dataset_ref = dataset_ref.squeeze("ensemble")
-                    #    if isinstance(dataset_ref, xr.Dataset):
-                    #        dataset_ref = dataset_ref[variable]
-                    # Merge default and per-variable plot parameters
-                    var_plot = all_plot_params.get(variable, {})
-                    plot_params = {**default_plot, **var_plot}
-                    param_dict = gb_diag_config.get("plot_params", {}).get(variable, {}) or {}
-
-                    # Need to define them in the config files
-                    vmin_ensemble = param_dict.get("vmin_ensemble") or None
-                    vmax_ensemble = param_dict.get("vmax_ensemble") or None
-                    vmin_std_ensemble = param_dict.get("vmin_std_ensemble") or None
-                    vmax_std_ensemble = param_dict.get("vmax_std_ensemble") or None
-
-                    # will be taken from the original analysis config file
-                    vmin_bias = param_dict.get("vmin") or None
-                    vmax_bias = param_dict.get("vmax") or None
-                    vmin_std_bias = param_dict.get("vmin_std") or None
-                    vmax_std_bias = param_dict.get("vmax_std") or None
-
-                    cmap = param_dict.get("cmap") or None
-                    cbar_label = param_dict.get("cbar_label") or None
+                    cli.logger.info(f"reference file name: {ref_filenames}")
+                    dataset_ref = load_reference(
+                        cli, ref_filenames, variable, region, fixer_ref, label="map", select_variable=False
+                    )
+                    cli.logger.debug(f"Reference dataset: {dataset_ref}")
 
                 ens_latlon_plot = PlotEnsembleMaps(
                     catalog_list=catalog,
                     model_list=model,
                     exp_list=exp,
                     source_list=source,
-                    ref_catalog=catalog_ref,
-                    ref_model=model_ref,
-                    ref_exp=exp_ref,
+                    ref_catalog=catalog_ref if dataset_ref is not None else None,
+                    ref_model=model_ref if dataset_ref is not None else None,
+                    ref_exp=exp_ref if dataset_ref is not None else None,
                     region=region,
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
@@ -624,7 +596,7 @@ def main(argv=None):
                         title=title,
                     )
 
-                # Ensemble mean bias plot
+                # Ensemble mean bias plot (only with a reference)
                 if (ens_latlon.dataset_mean is not None) and (dataset_ref is not None):
                     title = TitleBuilder(diagnostic="Mean ensemble bias diagnostic", variable=variable, model=model).generate()
 
@@ -649,6 +621,8 @@ def main(argv=None):
                         cmap=cmap,
                         title=title,
                     )
+                elif dataset_ref is None:
+                    cli.logger.info("No reference for variable '%s': skipping ensemble bias plots.", variable)
 
                 # Ensemble STD bias plot
                 if (ens_latlon.dataset_std is not None) and (dataset_std_ref is not None):
