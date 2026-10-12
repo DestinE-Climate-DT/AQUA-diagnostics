@@ -107,6 +107,7 @@ The CLI test framework relies on one small refactor and a shared set of fixtures
        # ... orchestration ...
        cli.close_dask_cluster()
 
+
    if __name__ == "__main__":
        main()
    ```
@@ -122,7 +123,7 @@ The CLI test framework relies on one small refactor and a shared set of fixtures
    ```python
    @pytest.fixture
    def mock_gb(self, mocker):
-       mock_gb_cls   = mocker.patch(f"{CLI_MODULE}.Climatology")
+       mock_gb_cls = mocker.patch(f"{CLI_MODULE}.Climatology")
        mock_plot_cls = mocker.patch(f"{CLI_MODULE}.PlotBias")
        return mock_gb_cls, mock_plot_cls
    ```

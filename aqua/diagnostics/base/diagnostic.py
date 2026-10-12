@@ -167,9 +167,9 @@ class Diagnostic:
             self.std_enddate = eff_end
             self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
 
-        self.data = data.sel(time=slice(self.startdate, self.enddate))
+        self.data = data.aqua.seldate(self.startdate, self.enddate)
         if self.std_startdate is not None and self.std_enddate is not None:
-            self.std_data = data.sel(time=slice(self.std_startdate, self.std_enddate))
+            self.std_data = data.aqua.seldate(self.std_startdate, self.std_enddate)
 
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs()
@@ -183,6 +183,7 @@ class Diagnostic:
         rebuild: bool = True,
         create_catalog_entry: bool = False,
         dict_catalog_entry: dict = None,
+        extra_keys: dict = None,
         **kwargs,
     ):
         """
@@ -197,6 +198,7 @@ class Diagnostic:
             create_catalog_entry (bool): If True, a catalog entry will be created. Default is False.
             dict_catalog_entry (dict, optional): List of jinja and wildcard variables. Default is None.
                                                  Keys are 'jinjalist' and 'wildcardlist'.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
 
         Keyword Args:
             **kwargs: Additional keyword arguments to be passed to the OutputSaver.save_netcdf method.
@@ -219,13 +221,13 @@ class Diagnostic:
 
         outputsaver = self._outputsaver(diagnostic=diagnostic, outputdir=outputdir)
 
-        outputsaver.save_netcdf(
+        return outputsaver.save_netcdf(
             dataset=data,
             diagnostic_product=diagnostic_product,
             rebuild=rebuild,
             create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
-            **kwargs,
+            extra_keys=extra_keys,
         )
 
     def load_netcdf(
@@ -233,8 +235,11 @@ class Diagnostic:
         diagnostic: str,
         diagnostic_product: str = None,
         outputdir: str = ".",
+        extra_keys: dict = None,
         as_dataarray: bool = False,
-        **kwargs,
+        startdate: str = None,
+        enddate: str = None,
+        expect_netcdf: bool = False,
     ):
         """
         Load from a netcdf file previously written by save_netcdf.
@@ -243,14 +248,17 @@ class Diagnostic:
         there. It does not require a retrieve, which is what allows plot only runs.
 
         Args:
-            diagnostic (str): The diagnostic name.
+            diagnostic (str): The diagnostic name. Used to define the OutputSaver
             diagnostic_product (str): The diagnostic product.
             outputdir (str): The path where the data was saved. Default is '.'.
+                Used to define the OutputSaver.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
+                Must match the ones used when saving, otherwise the file will not be found.
             as_dataarray (bool): If True, return a DataArray instead of a Dataset. Use it when the
                                  data was saved as a DataArray. Default is False.
-
-        Keyword Args:
-            **kwargs: Additional keyword arguments to be passed to the OutputSaver.load_netcdf method.
+            startdate (str): The start date of the data. Default is None.
+            enddate (str): The end date of the data. Default is None.
+            expect_netcdf (bool): If True, a missing file is logged as an error instead of info. Default is False.
 
         Returns:
             xarray Dataset, DataArray or None: The data read from disk, None if there is no file.
@@ -265,7 +273,10 @@ class Diagnostic:
         return outputsaver.load_netcdf(
             diagnostic_product=diagnostic_product,
             as_dataarray=as_dataarray,
-            **kwargs,
+            startdate=startdate,
+            enddate=enddate,
+            extra_keys=extra_keys,
+            expect_netcdf=expect_netcdf,
         )
 
     def _outputsaver(self, diagnostic: str, outputdir: str = "."):
@@ -363,17 +374,12 @@ class Diagnostic:
             catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel, **reader_kwargs
         )
 
-        data = reader.retrieve(var=var)
+        data = reader.retrieve(var=var, startdate=startdate, enddate=enddate)
 
         # If the data is empty, raise an error
         if not data:
             raise ValueError(f"No data found for {model} {exp} {source} with variable {var}")
 
-        # FIX: issues with some time selection for pandas using Timestamp.
-        # see https://github.com/pydata/xarray/issues/10975
-        start = pd.Timestamp(startdate) if startdate is not None else None
-        end = pd.Timestamp(enddate) if enddate is not None else None
-        data = data.sel(time=slice(start, end))
         if data.time.size == 0:
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
