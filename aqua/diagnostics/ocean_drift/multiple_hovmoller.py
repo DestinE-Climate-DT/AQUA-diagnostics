@@ -22,6 +22,7 @@ def plot_multi_hovmoller(
     nlevels: int = 20,
     title: str = None,
     titles: list[str] = None,
+    cbar_labels: list[str] = None,
     return_fig=True,
     loglevel="WARNING",
 ):
@@ -41,6 +42,8 @@ def plot_multi_hovmoller(
         nlevels (int): Number of contour levels. Default is 20.
         title (str): Title for the entire figure. Default is None.
         titles (list[str]): List of titles for each subplot. If None, no titles will be set.
+        cbar_labels (list[str]): List of colorbar labels for each subplot.
+            If None, or None for a subplot, its colorbar has no label.
         return_fig (bool): Whether to return the figure object. Default is True.
         loglevel (str): Logging level. Default is "WARNING".
 
@@ -103,7 +106,9 @@ def plot_multi_hovmoller(
                 continue
 
             # Colorbar next to its panel, placed by the constrained layout
-            fig.colorbar(mappable, ax=ax, orientation="vertical", pad=0.02)
+            cbar = fig.colorbar(mappable, ax=ax, orientation="vertical", pad=0.02)
+            if cbar_labels and cbar_labels[k]:
+                cbar.set_label(cbar_labels[k])
 
     if title:
         logger.debug("Setting super title to %s", title)
