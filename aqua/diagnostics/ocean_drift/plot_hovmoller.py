@@ -92,6 +92,7 @@ class PlotHovmoller:
             content="Hovmöller plot of temperature (left column) and salinity (right column) of spatially averaged"
         )
         self.set_texts()
+        self.set_units_labels()
         self.logger.debug("Plotting Hovmöller for variables: %s", self.vars)
         fig = plot_multi_hovmoller(
             maps=self.data,
@@ -99,6 +100,7 @@ class PlotHovmoller:
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
+            cbar_labels=self.units_labels,
             text=self.texts,
         )
 
@@ -139,6 +141,7 @@ class PlotHovmoller:
             " at multiple depths, spatially averaged"
         )
         self.set_texts()
+        self.set_units_labels()
         self.set_line_plot_colours()
         self.logger.debug("Plotting Timeseries for variables: %s", self.vars)
         fig = plot_multi_timeseries(
@@ -150,6 +153,7 @@ class PlotHovmoller:
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
+            ylabels=self.units_labels,
             text=self.texts,
         )
 
@@ -207,10 +211,7 @@ class PlotHovmoller:
         for j in range(len(self.data)):
             for _, var in enumerate(self.vars):
                 if j == 0:
-                    units = self.data[j][var].attrs.get("units", "")
-                    units_latex = unit_to_latex(units) if units else ""
-                    long_name = self.data[j][var].attrs.get("long_name", var)
-                    title = f"{long_name} ({units_latex})"
+                    title = self.data[j][var].attrs.get("long_name", var)
                 else:
                     title = None
                 self.title_list.append(title)
@@ -248,6 +249,18 @@ class PlotHovmoller:
                 else:
                     self.texts.append(None)
         self.logger.debug("Texts set to: %s", self.texts)
+
+    def set_units_labels(self):
+        """Set the units label of each subplot panel, None for dimensionless data."""
+        self.units_labels = []
+        for data in self.data:
+            for var in self.vars:
+                units = data[var].attrs.get("units", "")
+                if units and str(units).strip() not in ("1", "dimensionless"):
+                    self.units_labels.append(unit_to_latex(units))
+                else:
+                    self.units_labels.append(None)
+        self.logger.debug("Units labels set to: %s", self.units_labels)
 
     def save_plot(
         self,
