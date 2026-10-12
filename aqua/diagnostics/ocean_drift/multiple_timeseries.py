@@ -24,6 +24,7 @@ def plot_multi_timeseries(
     text: list[float] = None,
     title: str = None,
     titles: list[str] = None,
+    ylabels: list[str] = None,
     return_fig=True,
     loglevel="WARNING",
     **kwargs,
@@ -43,6 +44,8 @@ def plot_multi_timeseries(
         text (list, optional): List of text annotations for each subplot.
         title (str, optional): Title for the entire figure.
         titles (list of str, optional): List of titles for each subplot. If None, no titles will be set.
+        ylabels (list of str, optional): List of y-axis labels for each subplot, replacing the default
+            ones built from the data attributes. A None entry leaves the y-axis of that subplot unlabelled.
         return_fig (bool, optional): If True, return the matplotlib Figure object.
         loglevel (str, optional): Logging level for the function.
         **kwargs: Additional keyword arguments passed to the plotting function.
@@ -80,6 +83,8 @@ def plot_multi_timeseries(
                 loglevel=loglevel,
                 colors=line_plot_colours,
             )
+            if ylabels is not None:
+                ax.set_ylabel(ylabels[k] or "")
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
 
