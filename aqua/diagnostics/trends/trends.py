@@ -1,8 +1,15 @@
-"""Module for computing trends of one or more variables along the time dimension."""
+"""Compute trends of one or more variables along the time dimension.
+
+Example:
+    trend = Trends(catalog="ci", model="FESOM", exp="hpz3", source="monthly-3d")
+    trend.retrieve(var=["thetao", "so"])
+    coefficients = trend.compute_trend()
+    trend.save_netcdf(data=coefficients)
+"""
 
 import xarray as xr
 
-from aqua.core.logger import log_configure
+from aqua.core.logger import log_configure, log_history
 from aqua.core.reader import Trender
 from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
@@ -101,7 +108,8 @@ class Trends(Diagnostic):
 
         The data are optionally restricted to a region and optionally averaged over one
         or more dimensions before the fit. Can be called repeatedly on the same instance,
-        the retrieved data being left untouched.
+        the retrieved data being left untouched. Results remain lazy until explicitly
+        computed, plotted or saved.
 
         Args:
             region (str, optional): Region name in the centralized regions file.
@@ -149,18 +157,22 @@ class Trends(Diagnostic):
             self.logger.debug("Restoring coordinates dropped by polyfit: %s", list(dropped_coords))
             trend = trend.assign_coords(dropped_coords)
 
-        trend.attrs.update(data.attrs)
+        # Preserve the fit history added by Trender as well as the source metadata.
+        trend.attrs = {**data.attrs, **coeffs.attrs}
         for name in trend.data_vars:
             trend[name].attrs = dict(data[name].attrs)
             units = trend[name].attrs.get("units", "")
             trend[name].attrs["units"] = f"{units}/year" if units else "per year"
+        trend.attrs["product"] = "Calculated trend coefficients"
         if region is not None:
             trend.attrs["AQUA_region"] = region
         if dim_mean is not None:
             trend.attrs["AQUA_dim_mean"] = "_".join(to_list(dim_mean))
 
-        self.logger.debug("Loading trend data in memory")
-        return trend.load()
+        log_history(trend, "Linear trend scaled to per year (365.25 elapsed days)")
+        # Newly created xarray objects otherwise default to the latest global Reader.
+        trend.aqua.set_default(self.reader)
+        return trend
 
     def save_netcdf(
         self,
@@ -183,7 +195,7 @@ class Trends(Diagnostic):
         """
         data = self.trend_coef if data is None else data
         if data is None:
-            self.logger.error("No trend data to save, run compute_trend() first.")
+            self.logger.error("No trend data to save; call run() or pass data explicitly.")
             return
 
         extra_keys = {}

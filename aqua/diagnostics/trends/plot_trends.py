@@ -1,4 +1,8 @@
-"""Module for plotting 2D trend maps."""
+"""Plot 2D trend maps.
+
+Example:
+    PlotTrends(data=coefficients, outputdir=".").plot_trend()
+"""
 
 from typing import Union
 
@@ -7,7 +11,7 @@ import xarray as xr
 
 from aqua.core.graphics import plot_single_map
 from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, to_list, unit_to_latex
+from aqua.core.util import get_realizations, time_to_string, to_list, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 xr.set_options(keep_attrs=True)
@@ -98,7 +102,11 @@ class PlotTrends:
     def set_description(self, var: str) -> str:
         """Build the figure description metadata for a given variable."""
         long_name = self.data[var].attrs.get("long_name", var)
-        period = f" between {self.start_year} and {self.end_year}" if self.start_year and self.end_year else ""
+        period = (
+            f" between {time_to_string(self.startdate, format='%Y-%m')} and {time_to_string(self.enddate, format='%Y-%m')}"
+            if self.startdate is not None and self.enddate is not None
+            else ""
+        )
         description = (
             f"Trend of {long_name} in the {self.region or 'global'} region "
             f"from {self.catalog} {self.model} {self.exp}{period}."
