@@ -17,7 +17,7 @@ from .sshVariability import SshVariabilityCompute, SshVariabilityPlot
 from .ocean_drift import Hovmoller, PlotHovmoller
 from .ocean_stratification import Stratification, PlotStratification, PlotMLD
 from .ocean_trends import PlotTrends as PlotOceanTrends
-from .ocean_trends import Trends, PlotTrends
+from .trends import Trends, PlotTrends
 
 
 DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections", "definitions"]
