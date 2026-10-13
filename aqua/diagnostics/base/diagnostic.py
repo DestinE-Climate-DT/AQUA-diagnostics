@@ -181,7 +181,8 @@ class Diagnostic:
         diagnostic_product: str = None,
         outputdir: str = ".",
         rebuild: bool = True,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: dict = None,
         extra_keys: dict = None,
         **kwargs,
@@ -195,7 +196,6 @@ class Diagnostic:
             diagnostic_product (str): The diagnostic product.
             outputdir(str): The path to save the data. Default is '.'.
             rebuild (bool): If True, the netcdf file will be rebuilt. Default is True.
-            create_catalog_entry (bool): If True, a catalog entry will be created. Default is False.
             dict_catalog_entry (dict, optional): List of jinja and wildcard variables. Default is None.
                                                  Keys are 'jinjalist' and 'wildcardlist'.
             extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
@@ -225,7 +225,8 @@ class Diagnostic:
             dataset=data,
             diagnostic_product=diagnostic_product,
             rebuild=rebuild,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
             extra_keys=extra_keys,
         )
