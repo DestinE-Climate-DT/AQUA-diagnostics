@@ -91,7 +91,8 @@ def main(argv=None):
                             ts[i] = Timeseries(**init_args, **dataset_args)
                             ts[i].run(
                                 **run_args,
-                                create_catalog_entry=cli.create_catalog_entry,
+                                # DEPRECATED
+                                # create_catalog_entry=cli.create_catalog_entry,
                                 reader_kwargs=dataset.get("reader_kwargs") or {},
                             )
 
@@ -120,7 +121,8 @@ def main(argv=None):
                                     ts_ref[i].run(
                                         **run_args,
                                         std=True,
-                                        create_catalog_entry=False,
+                                        # DEPRECATED
+                                        # create_catalog_entry=False,
                                         reader_kwargs=reference.get("reader_kwargs") or {},
                                     )
                                 except ValueError as e:
@@ -239,7 +241,8 @@ def main(argv=None):
                             ts[i] = Timeseries(**init_args, **dataset_args)
                             ts[i].run(
                                 **run_args,
-                                create_catalog_entry=cli.create_catalog_entry,
+                                # DEPRECATED
+                                # create_catalog_entry=cli.create_catalog_entry,
                                 reader_kwargs=dataset.get("reader_kwargs") or {},
                             )
 
@@ -266,7 +269,8 @@ def main(argv=None):
                                     ts_ref[i].run(
                                         **run_args,
                                         std=True,
-                                        create_catalog_entry=False,
+                                        # DEPRECATED
+                                        # create_catalog_entry=False,
                                         reader_kwargs=reference.get("reader_kwargs") or {},
                                     )
                                 except ValueError as e:
@@ -389,7 +393,8 @@ def main(argv=None):
                             sc[i] = SeasonalCycles(**init_args, **dataset_args)
                             sc[i].run(
                                 **run_args,
-                                create_catalog_entry=cli.create_catalog_entry,
+                                # DEPRECATED
+                                # create_catalog_entry=cli.create_catalog_entry,
                                 reader_kwargs=dataset.get("reader_kwargs") or {},
                             )
 
@@ -416,7 +421,8 @@ def main(argv=None):
                                     sc_ref[i].run(
                                         **run_args,
                                         std=True,
-                                        create_catalog_entry=False,
+                                        # DEPRECATED
+                                        # create_catalog_entry=False,
                                         reader_kwargs=reference.get("reader_kwargs") or {},
                                     )
                                 except ValueError as e:
