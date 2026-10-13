@@ -5,6 +5,7 @@ import calendar
 import xarray as xr
 
 from aqua.core.logger import log_configure
+from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -18,29 +19,18 @@ xr.set_options(keep_attrs=True)
 class Stratification(Diagnostic):
     """Diagnostic class for analyzing ocean stratification.
 
-    Parameters
-    ----------
-    catalog : str, optional
-        Path to the data catalog (e.g., intake-esm catalog).
-    model : str, optional
-        Name of the climate model to analyze.
-    exp : str, optional
-        Experiment name (e.g., 'historical', 'ssp585').
-    source : str, optional
-        Data source (e.g., 'CMIP6', 'OBS').
-    regrid : str, optional
-        Regridding method or target grid (e.g., '1x1', 'nearest').
-    startdate : str, optional
-        Start date of the analysis period (format: 'YYYY-MM-DD').
-    enddate : str, optional
-        End date of the analysis period (format: 'YYYY-MM-DD').
-    loglevel : str, optional
-        Logging level (default is "WARNING").
+    Args:
+        catalog (str, optional): Path to the data catalog (e.g., intake-esm catalog).
+        model (str, optional): Name of the climate model to analyze.
+        exp (str, optional): Experiment name (e.g., 'historical', 'ssp585').
+        source (str, optional): Data source (e.g., 'CMIP6', 'OBS').
+        regrid (str, optional): Regridding method or target grid (e.g., '1x1', 'nearest').
+        startdate (str, optional): Start date of the analysis period (format: 'YYYY-MM-DD').
+        enddate (str, optional): End date of the analysis period (format: 'YYYY-MM-DD').
+        loglevel (str, optional): Logging level. Defaults to "WARNING".
 
-    Attributes
-    ----------
-    logger : logging.Logger
-        Configured logger for the diagnostic.
+    Attributes:
+        logger (logging.Logger): Configured logger for the diagnostic.
 
     """
 
@@ -61,28 +51,17 @@ class Stratification(Diagnostic):
     ):
         """Initialize the Stratification diagnostic.
 
-        Parameters
-        ----------
-        catalog : str, optional
-            Path to the data catalog.
-        model : str, optional
-            Name of the climate model to analyze.
-        exp : str, optional
-            Experiment name.
-        source : str, optional
-            Data source identifier.
-        regrid : str, optional
-            Regridding method or target grid.
-        startdate : str, optional
-            Start date of the analysis period (format: 'YYYY-MM-DD').
-        enddate : str, optional
-            End date of the analysis period (format: 'YYYY-MM-DD').
-        diagnostic_name : str, optional
-            Name of the diagnostic (default: "stratification").
-        vert_coord : str, optional
-            Vertical coordinate name (default: DEFAULT_OCEAN_VERT_COORD).
-        loglevel : str, optional
-            Logging level (default: "WARNING").
+        Args:
+            catalog (str, optional): Path to the data catalog.
+            model (str, optional): Name of the climate model to analyze.
+            exp (str, optional): Experiment name.
+            source (str, optional): Data source identifier.
+            regrid (str, optional): Regridding method or target grid.
+            startdate (str, optional): Start date of the analysis period (format: 'YYYY-MM-DD').
+            enddate (str, optional): End date of the analysis period (format: 'YYYY-MM-DD').
+            diagnostic_name (str, optional): Name of the diagnostic. Defaults to "stratification".
+            vert_coord (str, optional): Vertical coordinate name. Defaults to DEFAULT_OCEAN_VERT_COORD.
+            loglevel (str, optional): Logging level. Defaults to "WARNING".
 
         """
         super().__init__(
@@ -100,52 +79,48 @@ class Stratification(Diagnostic):
         if vert_coord is None:
             vert_coord = DEFAULT_OCEAN_VERT_COORD
         self.vert_coord = vert_coord
+        self.processed_data = {}
 
     def run(
         self,
         outputdir: str = ".",
         rebuild: bool = True,
         region: str = None,
+        regions: str | list = None,
         var: list = ["thetao", "so"],
         dim_mean=None,
-        climatology: str = "month",
+        climatology: str | list = "month",
         reader_kwargs: dict = {},
         mld: bool = False,
     ):
         """Run the stratification diagnostic workflow.
 
-        This method orchestrates the complete diagnostic process:
-        1. Reads the required variables from the input source.
-        2. Optionally selects a specified region.
-        3. Optionally computes mean values over given dimensions.
-        4. Computes stratification by generating climatology and potential density.
-        5. Optionally computes mixed layer depth (MLD).
-        6. Saves the processed dataset to a NetCDF file.
+        Retrieves data once, computes density (and MLD) on that field, then
+        applies each region/climatology pair.
 
-        Parameters
-        ----------
-        outputdir : str, optional
-            Directory where the output NetCDF file will be saved. Default is the current directory (" . ").
-        rebuild : bool, optional
-            If True, overwrite the existing output file. Default is True.
-        region : str, optional
-            Name of the region to select for analysis. If None, no region selection is applied.
-        var : list of str, optional
-            Names of variables to retrieve. Default is ["thetao", "so"].
-        dim_mean : list of str or str, optional
-            Dimensions over which to average the data. If None, no averaging is applied.
-        climatology : str, optional
-            Type of climatology to compute ("month", "year", "season", "total"). Default is "month".
-        reader_kwargs : dict, optional
-            Additional keyword arguments passed to the data reader.
-        mld : bool, optional
-            If True, compute mixed layer depth (MLD) and include it in the output.
+        Args:
+            outputdir (str, optional): Directory where the output NetCDF file will be saved.
+                Defaults to the current directory (".").
+            rebuild (bool, optional): If True, overwrite the existing output file. Defaults to True.
+            region (str, optional): Single region. Used when ``regions`` is not passed.
+            regions (str, list, or None, optional): Region(s) for area selection. None means global
+                evaluation. A list is processed with a single retrieve. Paired 1:1 with ``climatology``.
+            var (list of str, optional): Names of variables to retrieve. Defaults to ["thetao", "so"].
+            dim_mean (list of str or str, optional): Dimensions over which to average the data.
+                If None, no averaging is applied.
+            climatology (str or list, optional): Climatology period(s) (e.g. "DJF", "January"; see
+                compute_climatology for all accepted values). A list must match ``regions`` in length.
+                Defaults to "month".
+            reader_kwargs (dict, optional): Additional keyword arguments passed to the data reader.
+            mld (bool, optional): If True, compute mixed layer depth (MLD) and include it in the output.
 
-        Returns
-        -------
-        None
+        Raises:
+            ValueError: If ``regions`` and ``climatology`` have different lengths, or if a
+                climatology is not accepted by compute_climatology.
 
         """
+        if regions is None:
+            regions = region
         self.logger.info("Starting stratification diagnostic run.")
         super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         if "lev" in self.data.dims:
@@ -156,154 +131,161 @@ class Stratification(Diagnostic):
 
         self.data.attrs["startdate"] = f"{self.data.time[0].values.astype('datetime64[D]')}"
         self.data.attrs["enddate"] = f"{self.data.time[-1].values.astype('datetime64[D]')}"
-        self.logger.debug(f"Variables retrieved: {var}, region: {region}, dim_mean: {dim_mean}")
+
+        regions_list = to_list(regions)
+        if not regions_list:
+            regions_list = [None]
+        clim_list = to_list(climatology)
+        if not clim_list:
+            clim_list = ["month"]
+        if len(clim_list) != len(regions_list):
+            raise ValueError(
+                f"regions ({len(regions_list)}) and climatology ({len(clim_list)}) must have the same length (paired 1:1)"
+            )
+
+        self.processed_data = {}
+        self.logger.debug(
+            "Variables retrieved: %s, regions: %s, climatology: %s, dim_mean: %s",
+            var,
+            regions_list,
+            clim_list,
+            dim_mean,
+        )
+
         self.logger.info("Computing stratification.")
         self.compute_stratification()
-        # If a region is specified, apply area selection to self.data
-        if region:
-            self.logger.info(f"Selecting region: {region} for diagnostic '{self.diagnostic_name}'.")
-            res_dict = super().select_region(data=self.data, region=region, drop=True)
-            self.region = res_dict["region"]
-            self.lat_limits = res_dict["lat_limits"]
-            self.lon_limits = res_dict["lon_limits"]
-        else:
-            res_dict = super().select_region(data=self.data, region="global", diagnostic="ocean3d", drop=True)
-            self.region = "global"
-            self.lat_limits = None
-            self.lon_limits = None
-        self.data.attrs["AQUA_region"] = self.region
-        if dim_mean:
-            self.logger.debug(f"Computing fldmean over dimension: {dim_mean}")
-            self.data = self.reader.fldmean(
-                self.data,
-                dims=dim_mean,
-                lat_limits=self.lat_limits,
-                lon_limits=self.lon_limits,
-            )
-        else:
-            self.data = res_dict["data"]
         if mld:
             self.logger.info("Computing mixed layer depth (MLD).")
             self.compute_mld()
-        self.compute_climatology(climatology=climatology)
-        self.logger.debug("Loading data in memory.")
-        self.data.load()
-        self.logger.debug("Loaded data in memory.")
-        if not mld:
-            self.save_netcdf(
-                self.data, diagnostic_product="stratification", outputdir=outputdir, rebuild=rebuild, region=self.region
+
+        data_whole_region = self.data
+        clim_cache = {}
+        for reg, clim in zip(regions_list, clim_list):
+            self.logger.info(
+                "Processing region: %s, climatology: %s for diagnostic '%s'.",
+                reg if reg is not None else "global",
+                clim,
+                self.diagnostic_name,
             )
-            self.logger.info("Stratification diagnostic saved to netCDF file.")
-        else:
+            if clim not in clim_cache:
+                self.data = data_whole_region
+                self.compute_climatology(climatology=clim)
+                self.logger.info("Loading %s climatology into memory.", clim)
+                clim_cache[clim] = self.data.load()
+                self.logger.info("Loaded %s climatology into memory.", clim)
+            else:
+                self.logger.info("Reusing %s climatology already in memory.", clim)
+            self.data = clim_cache[clim]
+            res_dict = super().select_region(data=self.data, region=reg, drop=True)
+            self.region = res_dict["region"] if res_dict["region"] is not None else "global"
+            self.lat_limits = res_dict["lat_limits"]
+            self.lon_limits = res_dict["lon_limits"]
+            if dim_mean:
+                self.logger.debug("Computing fldmean over dimension: %s", dim_mean)
+                self.data = self.reader.fldmean(
+                    self.data,
+                    dims=dim_mean,
+                    lat_limits=self.lat_limits,
+                    lon_limits=self.lon_limits,
+                )
+            else:
+                self.data = res_dict["data"]
+            self.data.attrs["AQUA_region"] = self.region
+            self.logger.debug("Loading data in memory.")
+            self.data.load()
+            self.logger.debug("Loaded data in memory.")
+            self.processed_data[reg] = self.data
+            product = "mld" if mld else "stratification"
+            data_to_save = self.data["mld"] if mld else self.data
             self.save_netcdf(
-                self.data["mld"], diagnostic_product="mld", outputdir=outputdir, rebuild=rebuild, region=self.region
+                data_to_save,
+                diagnostic_product=product,
+                outputdir=outputdir,
+                rebuild=rebuild,
+                region=self.region,
             )
-            self.logger.info("MLD diagnostic saved to netCDF file.")
+            self.logger.info("%s diagnostic saved to netCDF file.", product)
 
     def compute_stratification(self):
-        """Compute the stratification by calculating climatology and density.
+        """Compute the stratification by calculating the potential density.
 
-        This method first computes the climatology (default: seasonal) and then computes the potential density.
-        Updates the internal dataset with the results.
-
-        Returns
-        -------
-        None
+        Adds 'rho' to the internal dataset; the climatology is computed later, in run().
 
         """
-        self.logger.debug("Starting computation of climatology and density.")
+        self.logger.debug("Starting computation of potential density.")
         self.calculate_rho()
         self.logger.debug("Stratification computation completed successfully.")
 
     def compute_climatology(self, climatology: str = "season"):
         """Compute climatology for the dataset based on the specified period type.
 
-        Depending on the value of `climatology`, the method will:
-        - Group and average the data along the corresponding time accessor if
-        `climatology` is not one of ["month", "year", "season"].
-        - Compute the overall mean across the time dimension if `climatology` is "total".
+        Every accepted value reduces the time axis, so that run() never loads the
+        unreduced field into memory.
 
-        Parameters
-        ----------
-        climatology : str, optional
-            Type of climatology to compute. Expected values:
-            - "month"   : Monthly climatology
-            - "year"    : Yearly climatology
-            - "season"  : Seasonal climatology
-            - "total"   : Mean over all available time steps
-            - Other     : Groups data by `time.<climatology>` and averages
-            Default is "season".
+        Args:
+            climatology (str, optional): Type of climatology to compute. Defaults to "season".
+                Expected values:
 
-        Returns
-        -------
-        None
+                - A month name (e.g. "January"): mean of that month.
+                - A season (e.g. "DJF"): mean of that season.
+                - "month": monthly climatology, the 12 months kept along time.
+                - "season": seasonal climatology, the 4 seasons kept along time.
+                - "year": yearly means, one per year along time.
+                - "total": mean over all available time steps.
+
+        Raises:
+            ValueError: If ``climatology`` is none of the values above.
 
         """
         self.logger.debug(f"Computing {climatology} climatology.")
         month_list = list(calendar.month_name)[1:]
         season_list = ["DJF", "MAM", "JJA", "SON"]
-        if climatology in month_list:
-            self.clim_type = "month"
-        elif climatology in season_list:
-            self.clim_type = "season"
-        else:
-            self.clim_type = "Total"
-
-        if self.clim_type:
-            if self.clim_type in ["month", "year", "season"]:
-                self.data = self.data.groupby(f"time.{self.clim_type}").mean("time")
-                self.data = self.data.rename({f"{self.clim_type}": "time"})
-                if self.clim_type == "month":
-                    self.data = self.data.assign_coords(time=[calendar.month_name[m] for m in self.data["time"].values])
+        if climatology in season_list:
+            self.data = self.data.sel(time=self.data.time.dt.season == climatology).mean("time")
+            self.data = self.data.assign_coords(time=climatology)
+        elif climatology in month_list or climatology == "month":
+            self.data = self.data.groupby("time.month").mean("time").rename({"month": "time"})
+            self.data = self.data.assign_coords(time=[calendar.month_name[m] for m in self.data["time"].values])
+            if climatology in month_list:
                 self.data = self.data.sel(time=climatology)
-        else:
-            climatology = "total"
+        elif climatology in ["season", "year"]:
+            self.data = self.data.groupby(f"time.{climatology}").mean("time").rename({climatology: "time"})
+        elif climatology == "total":
             self.data = self.data.mean("time", keep_attrs=True)
+        else:
+            raise ValueError(
+                f"Unknown climatology '{climatology}': expected a month name, one of {season_list}, "
+                "'month', 'season', 'year' or 'total'."
+            )
         self.data.attrs["AQUA_stratification_climatology"] = climatology
         self.logger.debug(f"{climatology.upper()} climatology computed successfully.")
 
+    @staticmethod
+    def _rho_numpy(so, thetao):
+        abs_so = convert_so(so)
+        cons_thetao = convert_thetao(abs_so, thetao)
+        # Potential density at 0 dbar minus 1000 kg/m^3 (units stay kg/m^3)
+        return compute_rho(abs_so, cons_thetao, 0) - 1000
+
     def calculate_rho(self):
-        """Convert variables to absolute salinity and conservative temperature, then compute potential density.
-
-        Updates the internal dataset with the computed potential density anomaly ('rho').
-
-        Returns
-        -------
-        None
-
-        """
-        self.logger.debug("Converting variables to absolute salinity and conservative temperature.")
-        # Convert practical salinity to absolute salinity
-        abs_so = convert_so(self.data["so"])
-        self.logger.debug("Practical salinity converted to absolute salinity.")
-
-        # Convert potential temperature to conservative temperature
         data_thetao = super()._check_data(data=self.data["thetao"], var="thetao", units="degreeC")
-        cons_thetao = convert_thetao(abs_so, data_thetao)
-        self.logger.debug("Potential temperature converted to conservative temperature.")
-
-        # Update the dataset with converted variables
-        # self.data["cons_thetao"] = cons_thetao
-        # self.data["so"] = abs_so
-        self.logger.info("Variables successfully converted and updated in dataset.")
-
-        # self.data = convert_variables(self.data, loglevel=self.loglevel)
-        self.logger.debug("Computing potential density at reference pressure 0 dbar.")
-        rho = compute_rho(abs_so, cons_thetao, 0)
-        self.data["rho"] = rho - 1000  # Convert to kg/m^3
-        self.data["rho"].attrs["long_name"] = "Potential Density"
+        rho = xr.apply_ufunc(
+            self._rho_numpy,
+            self.data["so"],
+            data_thetao,
+            dask="parallelized",
+            output_dtypes=[data_thetao.dtype],
+        )
+        self.data["rho"] = rho
+        self.data["rho"].attrs["long_name"] = "Potential Density Anomaly"
         self.data["rho"].attrs["units"] = "kg/m^3"
-        self.data["rho"].attrs["standard_name"] = "sea_water_potential_density"
-        self.logger.debug("Added 'rho' (potential density anomaly) to dataset.")
+        self.data["rho"].attrs["standard_name"] = "sea_water_sigma_theta"
+        self.logger.debug("Potential density anomaly computed successfully.")
 
     def compute_mld(self):
         """Compute the mixed layer depth (MLD) from the density field.
 
         Uses the potential density anomaly ('rho') in the dataset to compute MLD and adds it as 'mld'.
-
-        Returns
-        -------
-        None
 
         """
         self.logger.debug("Computing mixed layer depth (MLD) from density.")
@@ -322,27 +304,24 @@ class Stratification(Diagnostic):
     ):
         """Save the diagnostic output to a NetCDF file.
 
-        Parameters
-        ----------
-        data : xarray.Dataset or xarray.DataArray
-            The dataset or data array to save.
-        diagnostic : str, optional
-            High-level diagnostic category (default is "ocean_circulation").
-        diagnostic_product : str, optional
-            Specific diagnostic product name (default is "stratification").
-        region : str, optional
-            Region name to include in metadata or filename.
-        outputdir : str, optional
-            Directory where the NetCDF file will be saved (default is current directory).
-        rebuild : bool, optional
-            If True, force rebuild of NetCDF file even if it exists (default is True).
+        Args:
+            data (xarray.Dataset or xarray.DataArray): The dataset or data array to save.
+            diagnostic (str, optional): High-level diagnostic category. Defaults to "ocean_circulation".
+            diagnostic_product (str, optional): Specific diagnostic product name. Defaults to "stratification".
+            region (str, optional): Region name to include in metadata or filename.
+            outputdir (str, optional): Directory where the NetCDF file will be saved.
+                Defaults to the current directory.
+            rebuild (bool, optional): If True, force rebuild of NetCDF file even if it exists. Defaults to True.
+
+        Returns:
+            str: Path of the NetCDF file.
 
         """
         self.logger.info(
             f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, "
             f"outputdir={outputdir}, region={region}"
         )
-        super().save_netcdf(
+        filepath = super().save_netcdf(
             data=data,
             diagnostic=self.diagnostic_name,
             diagnostic_product=diagnostic_product,
@@ -351,3 +330,4 @@ class Stratification(Diagnostic):
             extra_keys={"region": region},
         )
         self.logger.info("NetCDF file saved successfully.")
+        return filepath
