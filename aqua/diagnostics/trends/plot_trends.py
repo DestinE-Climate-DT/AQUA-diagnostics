@@ -159,6 +159,9 @@ class PlotTrends:
             dpi (int, optional): Output DPI. Defaults to 300.
             show (bool, optional): If True, display each figure interactively
                 (useful in notebooks). Defaults to False.
+
+        Raises:
+            ValueError: When a variable is not a horizontal field with latitude and longitude coordinates.
         """
         vars_to_plot = to_list(var) if var is not None else self.vars
         rebuild = self.rebuild if rebuild is None else rebuild
@@ -168,7 +171,14 @@ class PlotTrends:
                 self.logger.warning("Variable %s not in data, skipping", v)
                 continue
 
-            da = self.data[v]
+            da = self.data[v].copy(deep=False)
+            if "lat" not in da.coords or "lon" not in da.coords:
+                raise ValueError(f"Trend map for '{v}' requires latitude and longitude coordinates.")
+
+            horizontal_dims = set(da.lat.dims) | set(da.lon.dims)
+            if not horizontal_dims or set(da.dims) != horizontal_dims:
+                raise ValueError(f"Trend map for '{v}' requires a horizontal field.")
+
             short_name = da.attrs.get("short_name", v)
             units = da.attrs.get("units", "")
             units_latex = unit_to_latex(units) if units else ""
@@ -190,8 +200,9 @@ class PlotTrends:
                 loglevel=self.loglevel,
             )
 
-            self.save_plot(fig, v, description, rebuild, save_format, dpi)
-
-            if show:
-                plt.show()
-            plt.close(fig)
+            try:
+                self.save_plot(fig, v, description, rebuild, save_format, dpi)
+                if show:
+                    plt.show()
+            finally:
+                plt.close(fig)

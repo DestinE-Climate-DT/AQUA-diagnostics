@@ -2,13 +2,14 @@
 """Run the generic trend diagnostic from a YAML configuration.
 
 Example:
-    python -m aqua.diagnostics.trends.cli_trend --config config-trends.yaml
+    python -m aqua.diagnostics.trends.cli_trend --config config-trends-2d.yaml
 
 The CLI reads only ``diagnostics.trends``. Its configuration may also contain
 ``ocean_trends`` for the separate ocean CLI. All variables share the configured
 regions and dimensional mean. Without ``--config``, the installed shared
 ``templates/collections/config-trends.yaml`` is used. Plotting supports horizontal maps;
 set ``plot: false`` to save three-dimensional or spatially averaged coefficients.
+The separate ``config-trends-2d.yaml`` template provides a horizontal-map example.
 """
 
 import argparse
@@ -41,16 +42,6 @@ def _save_and_plot(cli, diagnostic, coefficients, config):
 
     if not config.get("plot", True) or not cli.save_format:
         return
-
-    for var in coefficients.data_vars:
-        field = coefficients[var]
-        if "lat" not in field.coords or "lon" not in field.coords:
-            raise ValueError(
-                f"Trend map for '{var}' requires latitude and longitude coordinates. Set plot: false to save only."
-            )
-        horizontal_dims = set(field.lat.dims) | set(field.lon.dims)
-        if not horizontal_dims or set(field.dims) != horizontal_dims:
-            raise ValueError(f"Trend map for '{var}' requires a horizontal field. Set plot: false to save other dimensions.")
 
     plotter = PlotTrends(
         data=coefficients,

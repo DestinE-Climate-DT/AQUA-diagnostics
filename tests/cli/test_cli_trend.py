@@ -133,16 +133,13 @@ def test_missing_plot_only_output_fails(build_config, mock_cluster, mock_trend, 
     close.assert_called_once()
 
 
-def test_three_dimensional_output_can_be_saved_without_plotting(build_config, mock_cluster, mock_trend):
+def test_non_horizontal_output_can_be_saved_without_plotting(build_config, mock_cluster, mock_trend):
     coefficients = mock_trend[0].return_value.compute_trend.return_value.expand_dims(depth=[10, 100])
     mock_trend[0].return_value.compute_trend.return_value = coefficients
     config = build_config({"trends": {**BASE_CONFIG, "plot": False}})
     main(["--config", config])
     assert mock_trend[0].return_value.save_netcdf.call_count == 2
     mock_trend[1].assert_not_called()
-    config = build_config({"trends": BASE_CONFIG})
-    with pytest.raises(ValueError, match="horizontal field"):
-        main(["--config", config])
 
 
 def test_default_shared_template_loads(mock_cluster, mock_trend, mocker):
@@ -152,6 +149,16 @@ def test_default_shared_template_loads(mock_cluster, mock_trend, mocker):
     default_path.assert_called_once_with("trends", folder="templates", loglevel="WARNING")
     mock_trend[0].return_value.retrieve.assert_called_once_with(var=["thetao", "so"], reader_kwargs={"chunks": {"time": 12}})
     mock_trend[1].assert_not_called()
+
+
+def test_separate_2d_template_runs_generic_maps(mock_cluster, mock_trend):
+    config = REPO_ROOT / "aqua/diagnostics/templates/collections/config-trends-2d.yaml"
+    main(["--config", str(config)])
+    trend_cls, plot_cls = mock_trend
+    assert trend_cls.call_args.kwargs["source"] == "monthly-2d"
+    assert trend_cls.call_args.kwargs["regrid"] == "r100"
+    trend_cls.return_value.retrieve.assert_called_once_with(var=["siconc", "sithick"], reader_kwargs={"chunks": {"time": 12}})
+    plot_cls.return_value.plot_trend.assert_called_once()
 
 
 def test_shared_template_remains_usable_by_ocean_cli(mock_cluster, mock_trend, mocker):
