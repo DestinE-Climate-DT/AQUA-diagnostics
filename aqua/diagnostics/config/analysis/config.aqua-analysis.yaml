@@ -62,6 +62,7 @@ cli:
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
   stratification: "ocean_stratification/cli_ocean_stratification.py"
   timeseries: "timeseries/cli_timeseries.py"
+  trend: "trends/cli_trend.py"  # generic trend tool
   trends: "ocean_trends/cli_ocean_trends.py"
 
 run:
