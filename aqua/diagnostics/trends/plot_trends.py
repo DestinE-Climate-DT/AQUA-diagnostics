@@ -1,8 +1,4 @@
-"""Plot 2D trend maps.
-
-Example:
-    PlotTrends(data=coefficients, outputdir=".").plot_trend()
-"""
+"""Plot 2D trend maps"""
 
 from typing import Union
 

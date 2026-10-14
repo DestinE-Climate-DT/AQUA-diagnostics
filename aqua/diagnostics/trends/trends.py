@@ -1,11 +1,4 @@
-"""Compute trends of one or more variables along the time dimension.
-
-Example:
-    trend = Trends(catalog="ci", model="FESOM", exp="hpz3", source="monthly-3d")
-    trend.retrieve(var=["thetao", "so"])
-    coefficients = trend.compute_trend()
-    trend.save_netcdf(data=coefficients)
-"""
+"""Compute trends of one or more variables along the time dimension"""
 
 import xarray as xr
 

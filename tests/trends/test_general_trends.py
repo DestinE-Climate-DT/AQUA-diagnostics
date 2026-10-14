@@ -71,7 +71,7 @@ def test_lazy_trend_metadata_and_save(icon_test_r2b0_short_reader, icon_test_r2b
         assert "polynomial of order 1" in saved.attrs["history"]
         assert "365.25 elapsed days" in saved.attrs["history"]
         assert saved.attrs["product"] == "Calculated trend coefficients"
-        assert saved.attrs["AQUA_model"] == source.attrs["AQUA_model"]
+        assert saved.t.attrs["AQUA_model"] == source.t.attrs["AQUA_model"]
     assert trend.data.chunks
 
 
