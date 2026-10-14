@@ -161,6 +161,58 @@ def test_separate_2d_template_runs_generic_maps(mock_cluster, mock_trend):
     plot_cls.return_value.plot_trend.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "collection",
+    [
+        "jinja/atmosphere2d/config-atmosphere2d-trends.j2",
+        "legacy/atmosphere2d/config-atmosphere2d-trends.yaml",
+    ],
+    ids=["jinja", "legacy"],
+)
+def test_atmosphere_collection_uses_model_period_and_output_prefix(mock_cluster, mock_trend, tmp_path, collection):
+    config = REPO_ROOT / "aqua/diagnostics/config/collections" / collection
+    trend_cls, plot_cls = mock_trend
+    trend_cls.return_value.diagnostic_name = "atmosphere2d"
+    main(
+        [
+            "--config",
+            str(config),
+            "--catalog",
+            "climatedt-gen2",
+            "--model",
+            "IFS-NEMO-5km",
+            "--exp",
+            "baseline-hist",
+            "--source",
+            "lra-r100-monthly",
+            "--outputdir",
+            str(tmp_path),
+            "--startdate",
+            "2001-01-01",
+            "--enddate",
+            "2005-12-31",
+        ]
+    )
+    assert trend_cls.call_args.kwargs == {
+        "catalog": "climatedt-gen2",
+        "model": "IFS-NEMO-5km",
+        "exp": "baseline-hist",
+        "source": "lra-r100-monthly",
+        "regrid": None,
+        "startdate": "2001-01-01",
+        "enddate": "2005-12-31",
+        "diagnostic_name": "atmosphere2d",
+        "loglevel": "WARNING",
+    }
+    instance = trend_cls.return_value
+    instance.retrieve.assert_called_once_with(var=["2t", "msl"], reader_kwargs={"chunks": {"time": 12}})
+    instance.compute_trend.assert_called_once_with()
+    assert [call.kwargs["region"] for call in instance.select_region.call_args_list] == [None]
+    instance.save_netcdf.assert_called_once()
+    assert plot_cls.call_args.kwargs["diagnostic_name"] == "atmosphere2d"
+    plot_cls.return_value.plot_trend.assert_called_once()
+
+
 def test_shared_template_remains_usable_by_ocean_cli(mock_cluster, mock_trend, mocker):
     ocean_cls = mocker.patch("aqua.diagnostics.ocean_trends.cli_ocean_trends.Trends")
     mocker.patch("aqua.diagnostics.ocean_trends.cli_ocean_trends.PlotTrends")

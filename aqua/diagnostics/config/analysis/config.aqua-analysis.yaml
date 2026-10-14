@@ -91,6 +91,8 @@ diagnostics:
                "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"
+    trends:
+      config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-trends.j2"
 
   atmosphere3d:
     biases:
