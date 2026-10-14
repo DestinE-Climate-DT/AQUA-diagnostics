@@ -16,7 +16,7 @@ xr.set_options(keep_attrs=True)
 # Fixed color limits of the Hovmoller panels
 DEFAULT_CBAR_LIMITS = {
     "thetao": {
-        "full": (272, 302),
+        "full": (270, 300),
         "anom_t0": (-1, 1),
         "anom_tmean": (-1, 1),
         "std_anom_t0": (-5, 5),
