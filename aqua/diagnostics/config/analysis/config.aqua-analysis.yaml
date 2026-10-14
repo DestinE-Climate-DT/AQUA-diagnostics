@@ -62,8 +62,8 @@ cli:
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
   stratification: "ocean_stratification/cli_ocean_stratification.py"
   timeseries: "timeseries/cli_timeseries.py"
-  trend: "trends/cli_trend.py"  # generic trend tool
-  trends: "ocean_trends/cli_ocean_trends.py"
+  trends: "trends/cli_trend.py"
+  ocean_trends: "ocean_trends/cli_ocean_trends.py"
 
 run:
     - ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
@@ -113,7 +113,7 @@ diagnostics:
       config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.j2"
 
   ocean3d-part1:
-    trends:
+    ocean_trends:
       config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-en4-trend-drift.j2"  # these diagnostics need a different chunking
       outname: "ocean3d"
     drift:
