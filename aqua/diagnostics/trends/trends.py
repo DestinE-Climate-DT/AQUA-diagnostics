@@ -7,8 +7,6 @@ from aqua.core.reader import Trender
 from aqua.core.util import to_list
 from aqua.diagnostics.base import Diagnostic
 
-xr.set_options(keep_attrs=True)
-
 # Nanoseconds in a Julian year. The polynomial fit returns the slope per nanosecond of the
 # time axis, so a single multiplication rescales the trend to per-year units whatever the
 # frequency of the input data is.

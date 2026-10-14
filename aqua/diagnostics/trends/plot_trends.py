@@ -10,8 +10,6 @@ from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, time_to_string, to_list, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
-xr.set_options(keep_attrs=True)
-
 
 class PlotTrends:
     """
