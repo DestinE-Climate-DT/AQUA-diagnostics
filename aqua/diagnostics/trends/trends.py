@@ -163,8 +163,6 @@ class Trends(Diagnostic):
             trend.attrs["AQUA_dim_mean"] = "_".join(to_list(dim_mean))
 
         log_history(trend, "Linear trend scaled to per year (365.25 elapsed days)")
-        # Newly created xarray objects otherwise default to the latest global Reader.
-        trend.aqua.set_default(self.reader)
         return trend
 
     def save_netcdf(

@@ -3,7 +3,6 @@ import pytest
 import xarray as xr
 from dask.callbacks import Callback
 
-from aqua.core.reader import Reader
 from aqua.diagnostics.trends import PlotTrends, Trends
 from tests.shared_constants import APPROX_REL, LOGLEVEL
 
@@ -43,7 +42,7 @@ def test_trends_region_dim_mean():
 
 
 @pytest.mark.diagnostics
-def test_lazy_trend_metadata_and_save(icon_test_r2b0_short_reader, icon_test_r2b0_short_data, tmp_path, monkeypatch):
+def test_lazy_trend_metadata_and_save(icon_test_r2b0_short_reader, icon_test_r2b0_short_data, tmp_path):
     """Fit without execution, then preserve the known slope and provenance through writing."""
     source = icon_test_r2b0_short_data
     trend = Trends(catalog="ci", model="ICON", exp="test-r2b0", source="short", loglevel=loglevel)
@@ -53,14 +52,12 @@ def test_lazy_trend_metadata_and_save(icon_test_r2b0_short_reader, icon_test_r2b
     trend.data = source.assign(t=xr.zeros_like(source.t) + 280 + 2 * years)
     trend.data.t.attrs = source.t.attrs.copy()
     assert trend.data.chunks
-    monkeypatch.setattr(Reader, "instance", None)
 
     # Check the fit trend is lazy, without executing the Dask graph.
     with Callback(pretask=lambda *args: pytest.fail("Trend fitting executed the Dask graph")):
         result = trend.compute_trend()
 
     assert result.chunks
-    assert result.aqua.instance is trend.reader
     assert trend.trend_coef is None  # Only run() stores the result on the diagnostic.
     trend.save_netcdf(data=result, outputdir=tmp_path)
     (path,) = (tmp_path / "netcdf").glob("*.nc")
