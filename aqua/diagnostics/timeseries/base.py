@@ -258,7 +258,8 @@ class BaseMixin(Diagnostic):
         freq: str,
         outputdir: str = "./",
         rebuild: bool = True,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: dict = {"jinjalist": ["freq", "realization", "region"], "wildcardlist": ["var"]},
     ):
         """
@@ -269,7 +270,6 @@ class BaseMixin(Diagnostic):
             freq (str): The frequency of the data.
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
             dict_catalog_entry (dict): A dictionary with catalog entry information.
                 Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
@@ -311,7 +311,8 @@ class BaseMixin(Diagnostic):
             outputdir=outputdir,
             rebuild=rebuild,
             extra_keys=extra_keys,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
         )
         if data_std is not None:

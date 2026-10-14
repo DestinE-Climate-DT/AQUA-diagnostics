@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Deprecate the `create_catalog_entry` option in the diagnostics (#471)
 - Update to aqua-core v1.2.1 (#466)
 - Adopt new seldate() method for robust date selection (#403)
 - Ocean3D: Stratification refactor to improve performance (#462)
