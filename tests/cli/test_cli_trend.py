@@ -161,18 +161,17 @@ def test_separate_2d_template_runs_generic_maps(mock_cluster, mock_trend):
     plot_cls.return_value.plot_trend.assert_called_once()
 
 
+@pytest.mark.parametrize("kind,suffix", [("jinja", "j2"), ("legacy", "yaml")], ids=["jinja", "legacy"])
 @pytest.mark.parametrize(
-    "collection",
-    [
-        "jinja/atmosphere2d/config-atmosphere2d-trends.j2",
-        "legacy/atmosphere2d/config-atmosphere2d-trends.yaml",
-    ],
-    ids=["jinja", "legacy"],
+    "collection,variables",
+    [("atmosphere2d", ["2t", "msl"]), ("water_cycle", ["tprate"]), ("ocean2d", ["tos"])],
 )
-def test_atmosphere_collection_uses_model_period_and_output_prefix(mock_cluster, mock_trend, tmp_path, collection):
-    config = REPO_ROOT / "aqua/diagnostics/config/collections" / collection
+def test_collection_uses_model_period_and_output_prefix(
+    mock_cluster, mock_trend, tmp_path, kind, suffix, collection, variables
+):
+    config = REPO_ROOT / f"aqua/diagnostics/config/collections/{kind}/{collection}/config-{collection}-trends.{suffix}"
     trend_cls, plot_cls = mock_trend
-    trend_cls.return_value.diagnostic_name = "atmosphere2d"
+    trend_cls.return_value.diagnostic_name = collection
     main(
         [
             "--config",
@@ -201,15 +200,15 @@ def test_atmosphere_collection_uses_model_period_and_output_prefix(mock_cluster,
         "regrid": None,
         "startdate": "2001-01-01",
         "enddate": "2005-12-31",
-        "diagnostic_name": "atmosphere2d",
+        "diagnostic_name": collection,
         "loglevel": "WARNING",
     }
     instance = trend_cls.return_value
-    instance.retrieve.assert_called_once_with(var=["2t", "msl"], reader_kwargs={"chunks": {"time": 12}})
+    instance.retrieve.assert_called_once_with(var=variables, reader_kwargs={"chunks": {"time": 12}})
     instance.compute_trend.assert_called_once_with()
     assert [call.kwargs["region"] for call in instance.select_region.call_args_list] == [None]
     instance.save_netcdf.assert_called_once()
-    assert plot_cls.call_args.kwargs["diagnostic_name"] == "atmosphere2d"
+    assert plot_cls.call_args.kwargs["diagnostic_name"] == collection
     plot_cls.return_value.plot_trend.assert_called_once()
 
 

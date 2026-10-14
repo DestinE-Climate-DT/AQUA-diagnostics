@@ -111,6 +111,8 @@ diagnostics:
       config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
+    trends:
+      config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-trends.yaml"
 
 
   ocean3d-part1:
@@ -164,3 +166,5 @@ diagnostics:
       config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
+    trends:
+      config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-trends.yaml"
