@@ -1,0 +1,68 @@
+# Configuration file for the Taylor diagnostic
+# The spatial pattern of the annual (and seasonal) climatology of each dataset is
+# compared with the one of the reference, producing a normalised Taylor diagram
+# with all the variables and, if seasons is true, a seasonal diagram per variable.
+# Datasets and reference must be on the same grid: regrid them if needed.
+
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+  # Possible second/third/fourth datasets here, not present by default.
+  # Each dataset adds a marker to the diagrams.
+  # - catalog: 'climatedt-gen2'
+  #   model: 'ICON-5km'
+  #   exp: 'baseline-hist'
+  #   source: 'lra-r100-monthly'
+  #   regrid: null
+  #   startdate: '1990-01-01'
+  #   enddate: '2014-12-31'
+
+# Only the first reference is used
+references:
+  - catalog: 'obs'
+    model: 'ECMWF'
+    exp: 'era5'
+    source: 'monthly'
+    regrid: 'r100'
+    reader_kwargs: null
+    startdate: '1990-01-01'
+    enddate: '2014-12-31'
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  plot_only: false
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  taylor:
+    run: true
+    diagnostic_name: 'taylor'
+    seasons: true            # Seasonal diagram per variable, in addition to the annual one
+    variables: ['2t', 'msl', 'tcc', 'tprate']
+    formulae: ['(10u^2+10v^2)^0.5']
+    # Variables can also be dictionaries, e.g. to select more pressure levels of the same variable:
+    # - name: 't'
+    #   plev: 85000
+    params:
+      default:
+        regions: [null]      # null is the whole domain, other regions from the regions definitions file
+      tprate:
+        units: 'mm/day'
+      (10u^2+10v^2)^0.5:
+        short_name: '10si'   # Needed for formulae, it is used in the filenames and in the plots
+        long_name: '10m wind speed'
+    plot_params:
+      std_max: null          # Maximum of the normalised standard deviation axis, null for automatic
+      annotate: false        # Write the variable name next to each point

@@ -101,3 +101,28 @@ diagnostics:
       tnlwrf-tnlwrfcs:
         vmin: -30
         vmax: 30
+
+  taylor:
+    run: true
+    diagnostic_name: 'radiation_toa'
+    seasons: true
+    variables: ['tnlwrf', 'tnswrf']
+    formulae: ['tnlwrf+tnswrf', 'tnlwrf-tnlwrfcs', 'tnswrf-tnswrfcs', 'tnlwrf+tnswrf-tnlwrfcs-tnswrfcs']
+    params:
+      default:
+        regions: [null]
+      tnlwrf+tnswrf:
+        short_name: "tnr"
+        long_name: "Top net radiation"
+      tnlwrf-tnlwrfcs:
+        short_name: "cre_toa_lw"
+        long_name: "Long wave cloud radiative effect at TOA (All Sky - Clear Sky)"
+      tnswrf-tnswrfcs:
+        short_name: "cre_toa_sw"
+        long_name: "Short wave cloud radiative effect at TOA (All Sky - Clear Sky)"
+      tnlwrf+tnswrf-tnlwrfcs-tnswrfcs:
+        short_name: "cre_toa_net"
+        long_name: "Net cloud radiative effect at TOA (All Sky - Clear Sky)"
+    plot_params:
+      std_max: null
+      annotate: false

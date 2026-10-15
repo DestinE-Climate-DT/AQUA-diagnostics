@@ -30,6 +30,7 @@ Currently implemented diagnostics are:
    teleconnections
    lat_lon_profiles
    histogram
+   taylor
 
 .. _diagnostics-configuration-files:
 
@@ -153,7 +154,7 @@ so that the plot classes are used in the same way. Results with no file on disk 
 ``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
 because they take part in the filenames.
 
-This is currently supported by :doc:`lat_lon_profiles`, :doc:`ocean_trends` and :doc:`ocean_stratification`.
+This is currently supported by :doc:`lat_lon_profiles`, :doc:`ocean_trends`, :doc:`ocean_stratification` and :doc:`taylor`.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
@@ -208,6 +209,8 @@ Here you can find the minimum requirements for each diagnostic.
      - 2 months
    * - Seaice
      - 1 month (12 months when computing seasonal cycle)
+   * - Taylor
+     - 12 months (1 year)
    * - Teleconnections
      - 24 months (2 years)
 

@@ -61,6 +61,7 @@ cli:
   seaice: "seaice/cli_seaice.py"
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
   stratification: "ocean_stratification/cli_ocean_stratification.py"
+  taylor: "taylor/cli_taylor.py"
   timeseries: "timeseries/cli_timeseries.py"
   trends: "ocean_trends/cli_ocean_trends.py"
 
@@ -90,6 +91,8 @@ diagnostics:
                "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"
+    taylor:
+      config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"
 
   atmosphere3d:
     biases:
@@ -129,6 +132,8 @@ diagnostics:
       config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-ceres.j2"
     boxplots:
       config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-boxplots.j2"
+    taylor:
+      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-ceres.j2"
     timeseries:
       config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-ceres.j2"
 

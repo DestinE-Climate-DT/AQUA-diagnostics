@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Taylor: new diagnostic for Taylor diagrams, with `plot_taylor_diagram` graphics function, added to the atmosphere2d and radiation_toa collections (#30)
 - Implementation of load netcdf and plot only in ocean trend CLI, (#454)
 - `Diagnostic.select_region()` now works without a `retrieve()` (#454)
 - Deprecate the `create_catalog_entry` option in the diagnostics (#471)

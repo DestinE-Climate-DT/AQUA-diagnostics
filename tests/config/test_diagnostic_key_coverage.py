@@ -27,6 +27,7 @@ KNOWN_DIAGNOSTIC_KEYS = {
     "seaice_seasonal_cycle",
     "seaice_timeseries",
     "seasonalcycles",
+    "taylor",
     "teleconnections",
     "timeseries",
 }
