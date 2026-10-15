@@ -103,9 +103,17 @@ def test_load_roundtrip(trends_result, trends_config):
     """A run that only plots finds on disk exactly the trend a previous run computed.
 
     The consumer never retrieves: catalog, realization and region name are rebuilt without data access.
+    The period is the one the producer ended up with, so the date check must accept it.
     """
     producer, tmp_path = trends_result
-    consumer = Trends(model="FESOM", exp="hpz3", source="monthly-3d", loglevel=loglevel)
+    consumer = Trends(
+        model="FESOM",
+        exp="hpz3",
+        source="monthly-3d",
+        startdate=producer.startdate,
+        enddate=producer.enddate,
+        loglevel=loglevel,
+    )
     consumer.load(outputdir=tmp_path, region=trends_config["run"]["region"])
 
     assert consumer.region == producer.region
@@ -120,6 +128,21 @@ def test_load_roundtrip(trends_result, trends_config):
     data, region = consumer.select_region(data=consumer.trend_coef, region="io")
     assert region == "Indian Ocean"
     assert data.attrs["AQUA_region"] == "Indian Ocean"
+
+
+def test_load_other_period(trends_result, trends_config):
+    """A trend computed over another period is not plotted as if it were the requested one."""
+    producer, tmp_path = trends_result
+    consumer = Trends(
+        model="FESOM",
+        exp="hpz3",
+        source="monthly-3d",
+        startdate="1992-01-01",
+        enddate=producer.enddate,
+        loglevel=loglevel,
+    )
+    consumer.load(outputdir=tmp_path, region=trends_config["run"]["region"])
+    assert consumer.trend_coef is None
 
 
 def test_load_nothing_on_disk(tmp_path):

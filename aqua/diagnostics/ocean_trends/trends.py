@@ -106,6 +106,7 @@ class Trends(Diagnostic):
 
         A missing file leaves the result untouched, so that load can be called both before run,
         to keep a previous result, and after it, or alone to plot without recomputing anything.
+        If startdate or enddate is set, a file computed over a different period is not loaded.
 
         Args:
             diagnostic_product (str, optional): Product type for filenames. Default is "trend".
@@ -123,6 +124,8 @@ class Trends(Diagnostic):
             diagnostic_product=diagnostic_product,
             outputdir=outputdir,
             extra_keys=self._extra_keys(),
+            startdate=self.startdate,
+            enddate=self.enddate,
         )
         if data is not None:
             self.trend_coef = data
