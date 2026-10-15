@@ -167,9 +167,9 @@ class Diagnostic:
             self.std_enddate = eff_end
             self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
 
-        self.data = data.sel(time=slice(self.startdate, self.enddate))
+        self.data = data.aqua.seldate(self.startdate, self.enddate)
         if self.std_startdate is not None and self.std_enddate is not None:
-            self.std_data = data.sel(time=slice(self.std_startdate, self.std_enddate))
+            self.std_data = data.aqua.seldate(self.std_startdate, self.std_enddate)
 
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs()
@@ -181,7 +181,8 @@ class Diagnostic:
         diagnostic_product: str = None,
         outputdir: str = ".",
         rebuild: bool = True,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: dict = None,
         extra_keys: dict = None,
         **kwargs,
@@ -195,7 +196,6 @@ class Diagnostic:
             diagnostic_product (str): The diagnostic product.
             outputdir(str): The path to save the data. Default is '.'.
             rebuild (bool): If True, the netcdf file will be rebuilt. Default is True.
-            create_catalog_entry (bool): If True, a catalog entry will be created. Default is False.
             dict_catalog_entry (dict, optional): List of jinja and wildcard variables. Default is None.
                                                  Keys are 'jinjalist' and 'wildcardlist'.
             extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
@@ -225,7 +225,8 @@ class Diagnostic:
             dataset=data,
             diagnostic_product=diagnostic_product,
             rebuild=rebuild,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
             extra_keys=extra_keys,
         )
@@ -374,17 +375,12 @@ class Diagnostic:
             catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel, **reader_kwargs
         )
 
-        data = reader.retrieve(var=var)
+        data = reader.retrieve(var=var, startdate=startdate, enddate=enddate)
 
         # If the data is empty, raise an error
         if not data:
             raise ValueError(f"No data found for {model} {exp} {source} with variable {var}")
 
-        # FIX: issues with some time selection for pandas using Timestamp.
-        # see https://github.com/pydata/xarray/issues/10975
-        start = pd.Timestamp(startdate) if startdate is not None else None
-        end = pd.Timestamp(enddate) if enddate is not None else None
-        data = data.sel(time=slice(start, end))
         if data.time.size == 0:
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
