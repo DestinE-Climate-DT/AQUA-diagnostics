@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
 from aqua.core.util import DEFAULT_REALIZATION, strlist_to_phrase, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, collapse_era5_duplicate
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
 class PlotLatLonProfiles:
@@ -101,7 +101,7 @@ class PlotLatLonProfiles:
             if ref_item is not None and hasattr(ref_item, "AQUA_model"):
                 model = ref_item.attrs.get("AQUA_model", "Unknown")
                 exp = ref_item.attrs.get("AQUA_exp", "Unknown")
-                ref_label = collapse_era5_duplicate(f"{model} {exp}")
+                ref_label = f"{model} {exp}"
 
         self.logger.debug("Reference label: %s", ref_label)
         return ref_label
@@ -410,7 +410,6 @@ class PlotLatLonProfiles:
                 description += f" (from {std_pair[0]} to {std_pair[1]})"
 
         description += "."
-        description = collapse_era5_duplicate(description)
         self.logger.info("Description: %s", description)
         return description
 

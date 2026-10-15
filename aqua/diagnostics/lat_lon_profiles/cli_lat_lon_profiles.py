@@ -215,6 +215,7 @@ def process_variable(
                         freq=freq,
                         outputdir=cli.outputdir,
                         reader_kwargs=dataset.get("reader_kwargs") or {},
+                        expect_netcdf=True,
                     )
 
                 profiles.append(profile)
@@ -288,6 +289,7 @@ def process_variable(
                         std=True,  # The reference std is always used by the plots
                         freq=freq,
                         outputdir=cli.outputdir,
+                        expect_netcdf=True,
                         reader_kwargs=ref.get("reader_kwargs") or {},
                     )
 
