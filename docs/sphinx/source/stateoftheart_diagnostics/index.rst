@@ -24,6 +24,7 @@ Currently implemented diagnostics are:
    ecmean
    timeseries
    ocean_stratification
+   trends
    ocean_trends
    ocean_drift
    seaice
@@ -158,7 +159,8 @@ so that the plot classes are used in the same way. Results with no file on disk 
 ``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
 because they take part in the filenames.
 
-This is currently supported by :doc:`lat_lon_profiles`.
+The CLI ``plot_only`` option is supported by :doc:`lat_lon_profiles` and :doc:`trends`.
+See the individual diagnostic documentation for usage details.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
@@ -204,6 +206,8 @@ Here you can find the minimum requirements for each diagnostic.
    * - Histogram
      - 12 months (1 year)
    * - Ocean Stratification
+     - 12 months (1 year)
+   * - Trends
      - 12 months (1 year)
    * - Ocean Trends
      - 12 months (1 year)
