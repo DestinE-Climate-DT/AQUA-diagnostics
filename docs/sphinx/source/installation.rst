@@ -123,11 +123,6 @@ Now set up AQUA with ``aqua install <machine>`` and ``aqua add <catalog>`` as de
 
     By default, the environment file installs the cloned version of AQUA-diagnostics in editable mode with ``pip install -e .[core-fdb,tests]``.
 
-.. note::
-
-    If you need to install AQUA-core in editable mode for development purposes, you must clone the
-    AQUA-core repository separately and install it in editable mode before installing AQUA-diagnostics.
-
 
 .. _installation-lumi:
 
