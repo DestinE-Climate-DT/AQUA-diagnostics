@@ -13,7 +13,7 @@ Before you start
 
 1. **Install AQUA-diagnostics**, following the :ref:`installation` guide (which also installs AQUA-core).
 
-2. **Set up AQUA** (once per machine). The ``aqua`` console copies the configuration files in ``$HOME/.aqua``
+2. **Set up AQUA** (once per machine). The ``aqua`` console copies the configuration files into ``$HOME/.aqua``
    and adds the catalogs describing where the data are:
 
    .. code-block:: bash
@@ -26,8 +26,8 @@ Before you start
    `Getting Started <https://aqua.readthedocs.io/en/latest/getting_started.html>`_
    and `console <https://aqua.readthedocs.io/en/latest/aqua_console.html>`_ pages.
 
-   When AQUA-diagnostics is installed in the same environment, ``aqua install`` copies in ``$HOME/.aqua``
-   also the files used by the diagnostics:
+   When AQUA-diagnostics is installed in the same environment, ``aqua install`` also copies into ``$HOME/.aqua``
+   the files used by the diagnostics:
 
    - ``templates/collections``: one template configuration file for each diagnostic (the starting point to write your own);
    - ``collections`` and ``analysis``: the configuration files used by ``aqua analysis`` (see :ref:`first-diagnostic-analysis`);
@@ -41,7 +41,7 @@ Before you start
        from aqua import show_catalog_content
        show_catalog_content(model="IFS-NEMO-5km")
 
-   The state-of-the-art diagnostics are designed for the low-resolution archive (``lra-r100-monthly`` source,
+   The state-of-the-art diagnostics are designed for the Low Resolution Archive (LRA, ``lra-r100-monthly`` source,
    see :ref:`stateoftheart_diagnostics`).
 
 Running a diagnostic
@@ -53,7 +53,7 @@ or with ``aqua analysis``, to run many diagnostics at once. This guide follows t
 .. _first-diagnostic-python:
 
 In a notebook
--------------
+~~~~~~~~~~~~~
 
 The easiest way to start is to run one of the example notebooks, available for each diagnostic in the
 `notebooks/diagnostics <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics>`_
@@ -80,8 +80,8 @@ The other diagnostics work in the same way.
 
 .. _first-diagnostic-cli:
 
-Your first diagnostic from the command line
--------------------------------------------
+From the command line
+~~~~~~~~~~~~~~~~~~~~~
 
 Each diagnostic has a command line interface driven by a YAML configuration file.
 Start from the template installed in ``$HOME/.aqua``, copy it and edit the variables and options you need:
@@ -112,8 +112,8 @@ File names are built automatically from the diagnostic, the dataset and the vari
 
 .. _first-diagnostic-analysis:
 
-Advanced: running a complete analysis
--------------------------------------
+With aqua analysis (advanced)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``aqua analysis`` command runs the whole set of state-of-the-art diagnostics on an experiment, in parallel and
 with a shared output folder. It is meant for monitoring and production runs on HPC systems (in a batch job):
@@ -123,7 +123,21 @@ with a shared output folder. It is meant for monitoring and production runs on H
     aqua analysis --catalog climatedt-gen2 --model IFS-NEMO-5km --exp baseline-hist \
         --source lra-r100-monthly --realization r1 --outputdir /path/to/output
 
-Options and configuration are described in the AQUA-core `documentation <https://aqua.readthedocs.io/en/latest/aqua-analysis.html>`_.
+Options and configuration are described in :ref:`aqua_analysis`.
+
+Additional resources
+--------------------
+
+A step-by-step installation guide and a data access example are available in the
+`example_aqua <https://github.com/DestinE-Climate-DT/climatedt-community-resources/tree/main/example_aqua>`_
+folder of the `climatedt-community-resources <https://github.com/DestinE-Climate-DT/climatedt-community-resources>`_
+repository:
+
+* ``aqua_installation_and_setup.md``: setup walkthrough for the ``climatedt-gen2`` catalog.
+* ``aqua_access.ipynb``: notebook using ``show_catalog_content`` and the ``Reader`` class.
+
+See also the `ClimateDT external user guide
+<https://github.com/DestinE-Climate-DT/climatedt-external-user-guide>`_.
 
 Where to go next
 ----------------
