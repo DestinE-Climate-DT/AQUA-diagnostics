@@ -153,7 +153,7 @@ so that the plot classes are used in the same way. Results with no file on disk 
 ``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
 because they take part in the filenames.
 
-This is currently supported by :doc:`lat_lon_profiles` and :doc:`ocean_stratification`.
+This is currently supported by :doc:`lat_lon_profiles`, :doc:`ocean_trends` and :doc:`ocean_stratification`.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
