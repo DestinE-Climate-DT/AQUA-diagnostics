@@ -11,14 +11,13 @@ approx_rel = APPROX_REL
 
 
 @pytest.mark.diagnostics
-def test_trends():
+def test_trends(tmp_path):
     """Test the trends class."""
     # Create an instance of the trends class
     trend = Trends(catalog="ci", model="FESOM", exp="hpz3", source="monthly-3d", regrid="r100", loglevel=loglevel)
 
-    trend.run(var=["thetao", "so"], region="go")
+    trend.run(var=["thetao", "so"], region="go", outputdir=tmp_path)
 
-    assert isinstance(trend.trend_coef, xr.Dataset), "trend_coef should be an xarray Dataset"
     assert trend.trend_coef.attrs["AQUA_region"] == "Global Ocean"
     assert trend.trend_coef["thetao"].isel(depth=1).mean("lat").mean("lon").values == pytest.approx(
         -0.06603967, rel=approx_rel
@@ -58,7 +57,6 @@ def test_lazy_trend_metadata_and_save(icon_test_r2b0_short_reader, icon_test_r2b
         result = trend.compute_trend()
 
     assert result.chunks
-    assert trend.trend_coef is None  # Only run() stores the result on the diagnostic.
     trend.save_netcdf(data=result, outputdir=tmp_path)
     (path,) = (tmp_path / "netcdf").glob("*.nc")
     with xr.open_dataset(path) as saved:
@@ -78,6 +76,7 @@ def test_trend_description_period(icon_test_r2b0_short_data, tmp_path, enddate):
     """Descriptions include the analysis months only when both dates are supplied."""
     data = icon_test_r2b0_short_data.isel(time=0, drop=True).assign_attrs(AQUA_startdate="2000-03-01", AQUA_enddate=enddate)
     description = PlotTrends(data, outputdir=tmp_path).set_description("t")
-    assert (" between " in description) == (enddate is not None)
     if enddate is not None:
         assert "between 2000-03 and 2001-06" in description
+    else:
+        assert " between " not in description

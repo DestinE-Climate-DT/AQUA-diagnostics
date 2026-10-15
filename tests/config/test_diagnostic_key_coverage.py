@@ -10,8 +10,8 @@ pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
 COLLECTIONS_DIR = Path(__file__).resolve().parents[2] / "aqua" / "diagnostics" / "config" / "collections"
 
-# Keep this explicit: when a new diagnostic key appears in collection configs,
-# we want this test to fail so corresponding CLI coverage is added on purpose.
+# Keep additions and removals of diagnostic keys explicit and reviewed.
+# This allowlist does not verify that corresponding CLI tests exist.
 KNOWN_DIAGNOSTIC_KEYS = {
     "boxplots",
     "ecmean",
@@ -67,7 +67,7 @@ def test_collection_have_valid_diag_keys(config_path):
 
 
 def test_diag_keys_coverage_is_explicit():
-    """Keep diagnostic key coverage intentional and reviewed."""
+    """Require explicit review of diagnostic key additions and removals."""
     discovered_keys = set()
     for config_path in _collection_files():
         cfg = load_yaml(str(config_path))

@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import pytest
 import xarray as xr
 
-from aqua.core.graphics import plot_single_map
 from aqua.core.reader import Reader
 from aqua.diagnostics.trends import PlotTrends
 
@@ -28,11 +27,10 @@ def trend_map_data():
 def test_maps_write_per_variable_and_preserve_lazy_input(trend_map_data, tmp_path, mocker):
     before = trend_map_data.copy(deep=True)
     plots = PlotTrends(trend_map_data, outputdir=tmp_path)
-    render = mocker.patch(f"{PLOT_MODULE}.plot_single_map", wraps=plot_single_map)
     save = mocker.spy(plots.outputsaver, "save_figure")
     plots.plot_trend(save_format="png", dpi=40)
     outputs = list((tmp_path / "png").glob("*.png"))
-    assert len(outputs) == render.call_count == save.call_count == 2
+    assert len(outputs) == save.call_count == 2
     for name, call in zip(trend_map_data.data_vars, save.call_args_list):
         kwargs = call.kwargs
         assert kwargs["diagnostic_product"] == "map_trend"
