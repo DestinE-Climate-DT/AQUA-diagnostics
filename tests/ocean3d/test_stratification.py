@@ -22,8 +22,9 @@ dpi = DPI
 # dim_mean run used to produce: MLD is now taken from the map branch, as in production.
 EXPECTED_MLD_MEAN = 45.12769451
 EXPECTED_RHO = 26.82583261
-PLOT_STEM = "ocean_stratification.{product}.ci.FESOM.hpz3.r1.{region}"
-NC_STEM = "stratification.{product}.ci.FESOM.hpz3.r1.{region}"
+# The climatology comes before the region in the filenames, lower cased as all the keys
+PLOT_STEM = "ocean_stratification.{product}.ci.FESOM.hpz3.r1.djf.{region}"
+NC_STEM = "stratification.{product}.ci.FESOM.hpz3.r1.djf.{region}"
 
 pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="ocean_stratification")]
 
@@ -90,10 +91,15 @@ def strat_map_result(tmp_path_factory, strat_config):
 
 @pytest.fixture(scope="module")
 def stratification_plot(strat_dimean_result):
-    """Run PlotStratification once, saving PNG."""
+    """Run PlotStratification once, saving PNG.
+
+    The reference has no dataset level 'model' and 'exp', as when it is not saved (save_netcdf: false):
+    they are written by save_netcdf, so the plot has to describe it from its variable attributes.
+    """
     strat, tmp_path = strat_dimean_result
     data = strat.data[["thetao", "so", "rho"]]
     obs = data * 1.2
+    obs.attrs = {k: v for k, v in obs.attrs.items() if k not in ("model", "exp")}
     PlotStratification(
         data=data,
         obs=obs,
@@ -119,9 +125,6 @@ def mld_plot(strat_map_result, strat_config):
         loglevel=loglevel,
     ).plot_mld(region=strat_config["map_region"], proj_name="Orthographic", save_format=["png"], dpi=dpi)
     return tmp_path
-
-
-# --- Tests ---
 
 
 def test_mld_map(strat_map_result):
@@ -211,3 +214,40 @@ def test_compute_climatology_rejects_unknown_value(monthly_dataset):
     strat = _bare_stratification(monthly_dataset, "Jan")
     with pytest.raises(ValueError, match="Unknown climatology 'Jan'"):
         strat.compute_climatology(climatology="Jan")
+
+
+@pytest.mark.parametrize(
+    "result_fixture, region_key, mld, variables",
+    [
+        ("strat_dimean_result", "profile_region", False, ["thetao", "so", "rho"]),
+        ("strat_map_result", "map_region", True, ["mld"]),
+    ],
+)
+def test_load_roundtrip(request, strat_config, result_fixture, region_key, mld, variables):
+    """A run that only plots finds on disk exactly what the CLI hands to the plots after a run.
+
+    The consumer never retrieves: catalog, realization and region name are rebuilt without data access.
+    """
+    producer, tmp_path = request.getfixturevalue(result_fixture)
+    key = (strat_config[region_key], strat_config["run"]["climatology"])
+    consumer_init = {"model": "FESOM", "exp": "hpz3", "source": "monthly-3d", "loglevel": loglevel}
+    load_args = {"outputdir": tmp_path, "regions": key[0], "climatology": key[1], "mld": mld}
+
+    # Asking for the period of the run also exercises the date check of load_netcdf, which reads the
+    # dataset attributes: MLD used to be saved as a DataArray, with no dataset attributes at all.
+    consumer = Stratification(**consumer_init, startdate=producer.startdate, enddate=producer.enddate)
+    consumer.load(**load_args)
+
+    produced = producer.processed_data[key][variables]
+    loaded = consumer.processed_data[key]
+    assert list(loaded.data_vars) == variables
+    xr.testing.assert_allclose(loaded, produced)
+    # The dataset attributes the plots read survived the round trip
+    for attr in ["AQUA_region", "AQUA_stratification_climatology", "startdate", "enddate"]:
+        assert loaded.attrs[attr] == produced.attrs[attr]
+
+    # A file written for another period is not loaded, and does not wipe what is already in memory
+    other = Stratification(**consumer_init, startdate=producer.startdate, enddate="1991-12-01")
+    other.processed_data[key] = produced
+    other.load(**load_args)
+    assert other.processed_data[key] is produced
