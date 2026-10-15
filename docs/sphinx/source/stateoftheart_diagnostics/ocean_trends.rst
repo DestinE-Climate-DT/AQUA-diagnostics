@@ -108,6 +108,18 @@ The basic structure of the analysis is the following:
     * **3000 m** - Deep waters
     * **5000 m** - Abyssal waters
 
+Instead of calling ``run()``, the trend coefficients of a previous run can be read back from its NetCDF file
+(see :ref:`diagnostics-plot-only`):
+
+.. code-block:: python
+
+    trend.load(outputdir="/path/to/previous/output", region="io")
+
+.. note::
+
+    The region, if one was used, takes part in the filename and must be given to ``load()``.
+    If ``startdate`` or ``enddate`` is set, the file is loaded only if it was computed over the same period.
+
 CLI usage
 ---------
 

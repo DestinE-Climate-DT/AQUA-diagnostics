@@ -16,6 +16,7 @@ output:
   outputdir: "./"
   rebuild: true
   save_netcdf: true
+  plot_only: false
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
 
