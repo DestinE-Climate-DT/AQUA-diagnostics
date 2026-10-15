@@ -150,6 +150,8 @@ def test_load_nothing_on_disk(tmp_path):
     consumer = Trends(model="FESOM", exp="hpz3", source="monthly-3d", loglevel=loglevel)
     consumer.load(outputdir=tmp_path)
     assert consumer.trend_coef is None
+    # The CLI runs and loads with no region, a path the roundtrip does not cover: same name as run
+    assert consumer.region == consumer.select_region(data=None, region=None)[1]
 
     # A load that finds nothing must not destroy what a run has just computed
     computed = xr.Dataset({"thetao": ("lat", [1.0, 2.0])})

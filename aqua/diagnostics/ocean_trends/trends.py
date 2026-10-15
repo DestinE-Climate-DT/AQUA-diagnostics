@@ -123,23 +123,13 @@ class Trends(Diagnostic):
             diagnostic=self.diagnostic_name,
             diagnostic_product=diagnostic_product,
             outputdir=outputdir,
-            extra_keys=self._extra_keys(),
+            # Same keys as save_netcdf, otherwise the file is not found
+            extra_keys={"region": self.region},
             startdate=self.startdate,
             enddate=self.enddate,
         )
         if data is not None:
             self.trend_coef = data
-
-    def _extra_keys(self):
-        """Build the filename keys identifying the result.
-
-        Shared by save_netcdf and load, so that the two always address the same file.
-
-        Returns:
-            dict: The extra keys of the filename.
-
-        """
-        return {"region": self.region}
 
     def select_region(self, data, region=None, drop=True, dim_mean=None):
         """Select a region and optionally compute mean over specified dimensions.
@@ -268,5 +258,6 @@ class Trends(Diagnostic):
             outputdir=outputdir,
             rebuild=rebuild,
             data=self.trend_coef,
-            extra_keys=self._extra_keys(),
+            # load builds the same keys
+            extra_keys={"region": self.region},
         )
