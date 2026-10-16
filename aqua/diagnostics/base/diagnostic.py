@@ -20,6 +20,7 @@ from aqua.core.util import (
 )
 
 from .output_saver import OutputSaver
+from .region_sources import load_region_source
 from .time_util import round_enddate, round_startdate, start_end_dates
 
 
@@ -542,6 +543,9 @@ class Diagnostic:
         select (and combine into a single mask) one or more sub-regions with different
         names, e.g. several regionmask sub-regions covering "Europe".
 
+        The ``regionmask`` key names a collection of the ``sources`` section of the regions file
+        (downloaded and cached on first use) or a ``regionmask.defined_regions`` object (e.g. ``ar6.all``).
+
         Args:
             region (str): The region key in the regions file.
             regions_file_path (str): The path to the regions file. If None, the centralized
@@ -554,14 +558,19 @@ class Diagnostic:
                 ``Reader.select_area``, or None if the region is not regionmask-based.
             frac_threshold (float): The optional ``frac_threshold`` of the region, or None.
         """
-        regions_dict = self._load_regions_from_file(regions_file_path=regions_file_path)
-        spec = regions_dict.get(region, {})
-        if spec.get("regionmask") is None:
+        if regions_file_path is None:
+            regions_file_path = self._get_default_regions_file()
+        regions_content = self._read_regions_file(regions_file_path)
+        spec = (regions_content.get("regions") or {}).get(region, {})
+        source = spec.get("regionmask")
+        if source is None:
             return None, None, None
 
-        regionmask_string = f"regionmask.defined_regions.{spec['regionmask']}"
-        parts = regionmask_string.split(".", 1)  # e.g["regionmask", "defined_regions.natural_earth_v5_1_2.ocean_basins_50"]
-        region_object = attrgetter(parts[1])(regionmask)
+        sources = regions_content.get("sources") or {}
+        if source in sources:
+            region_object = load_region_source(source, **sources[source])
+        else:
+            region_object = attrgetter(f"defined_regions.{source}")(regionmask)
         long_name = spec.get("longname", region)
         region_sel = spec.get("regionmask_names", long_name)
 
