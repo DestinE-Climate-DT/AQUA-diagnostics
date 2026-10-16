@@ -4,6 +4,7 @@ import os
 from functools import cache
 
 import geopandas as gpd
+import numpy as np
 import pooch
 import regionmask
 import shapely
@@ -21,7 +22,10 @@ def load_region_source(name: str, url: str, names: str, simplify: float) -> regi
         if not os.path.exists(cached):
             raw = pooch.retrieve(url, known_hash=None, fname=f"{name}.zip", path=cache_dir)
             data = gpd.read_file(f"zip://{raw}")
-            data["geometry"] = shapely.make_valid(shapely.simplify(data.geometry.values, simplify, preserve_topology=False))
+            geometry = shapely.simplify(data.geometry.values, simplify, preserve_topology=False)
+            # Some polygons stop a hair short of ±180°: snap them to it, or the cells centred there are lost
+            geometry = shapely.transform(geometry, lambda xy: np.where(np.abs(xy) > 179.99, np.sign(xy) * 180, xy))
+            data["geometry"] = shapely.make_valid(geometry, method="structure", keep_collapsed=False)
             data.to_file(cached)
             os.remove(raw)
     return regionmask.from_geopandas(gpd.read_file(cached), names=names, name=name, overlap=False)
