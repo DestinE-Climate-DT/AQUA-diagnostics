@@ -288,7 +288,10 @@ class Hovmoller(Diagnostic):
 
         """
         data = data / data.std(dim=dim)
-        data.attrs["units"] = "Stand. Units"
+        # Standardised values are dimensionless, "1" is their CF canonical unit
+        variables = data.data_vars.values() if isinstance(data, xr.Dataset) else [data]
+        for variable in variables:
+            variable.attrs["units"] = "1"
         data.attrs["AQUA_standardise"] = f"Standardised with {dim}"
         return data
 
