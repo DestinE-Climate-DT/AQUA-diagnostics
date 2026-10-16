@@ -34,7 +34,7 @@ jobs:
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-version: '3.14'
-      pytest-markers: 'diagnostics'
+      pytest-markers: 'aqua or diagnostics or ensemble'
       enable-parallel: true
       enable-coverage: false
       install-mode: 'cross-check'

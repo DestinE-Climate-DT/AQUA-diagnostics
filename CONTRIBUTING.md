@@ -61,7 +61,7 @@ Do not merge your Pull Request yourself, it will be merged by the AQUA-diagnosti
 
 CI is organised in **suites**, as in [aqua-core](https://github.com/DestinE-Climate-DT/AQUA/blob/main/CONTRIBUTING.md#testing):
 each suite tests a different way of installing AQUA-diagnostics, so that a broken dependency, an aqua-core change or a
-packaging problem is caught by the suite that owns it, not by the PR tests. Tests are run with `pytest -m diagnostics`.
+packaging problem is caught by the suite that owns it, not by the PR tests. Tests are run with `pytest -m "aqua or diagnostics or ensemble"`.
 
 | Workflow | Suite | When it runs | Platforms | Python | Install mode | Coverage |
 |---|---|---|---|---|---|---|
@@ -69,7 +69,7 @@ packaging problem is caught by the suite that owns it, not by the PR tests. Test
 | `aqua-diagnostics-nightly.yml` | Nightly | every night (04:00 UTC), PR with `nightly` label, Dependabot pip/conda PRs, manual (with aqua-core ref) | `ubuntu-latest` in FDB container, `xcode-27` | 3.14 | `environment` and `cross-check` | no |
 | `aqua-diagnostics-cross-check.yml` | Cross-check | PR with `cross-check` label, manual (with aqua-core ref) | `ubuntu-latest` in FDB container | 3.14 | `cross-check` | no |
 | `aqua-diagnostics-release.yml` | Release | every Monday (06:00 UTC), PR with `release` label, manual | `ubuntu-22.04`, `ubuntu-26.04`, `macos-15`, `xcode-27` | 3.12, 3.13, 3.14 | `release` | no |
-| `aqua-diagnostics-pypi.yml` | PyPI | every Tuesday (04:00 UTC), push to `pypi-test`, manual | `ubuntu-latest` in FDB container, `macos-latest` | 3.12, 3.13, 3.14 | `pypi` | no |
+| `aqua-diagnostics-pypi.yml` | PyPI | every Tuesday (04:00 UTC), push to `pypi-test`, manual | `ubuntu-latest`, `macos-latest` | 3.12, 3.13, 3.14 | `pypi` | no |
 
 The FDB container is only the build environment on Linux: AQUA-diagnostics has no FDB tests.
 

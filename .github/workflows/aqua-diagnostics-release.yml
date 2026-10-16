@@ -39,7 +39,7 @@ jobs:
       platform: ${{ matrix.platform }}
       container-image: ''
       python-version: ${{ matrix.python-version }}
-      pytest-markers: 'diagnostics'
+      pytest-markers: 'aqua or diagnostics or ensemble'
       enable-parallel: true
       enable-coverage: false
       install-mode: 'release'

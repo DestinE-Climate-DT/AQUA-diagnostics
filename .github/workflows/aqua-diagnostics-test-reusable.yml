@@ -19,7 +19,7 @@ on:
         type: string
         default: 'ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container'
       pytest-markers:
-        description: 'Pytest markers to run (e.g., "aqua or slow")'
+        description: 'Pytest markers to run (e.g., "aqua or diagnostics")'
         required: true
         type: string
         default: 'aqua or diagnostics or ensemble'
@@ -314,7 +314,6 @@ jobs:
         uses: ./aqua-ci/.github/actions/setup-aqua
         with:
           catalogs: |
-            climatedt-phase1
             ci
           polytope-key: ${{ secrets.POLYTOPE_KEY }}
 
