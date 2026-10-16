@@ -12,6 +12,7 @@ Main changes:
 
 Complete list:
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
+- CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
 - Implementation of load netcdf and plot only in ocean trend CLI, (#454)
 - `Diagnostic.select_region()` now works without a `retrieve()` (#454)
 - Deprecate the `create_catalog_entry` option in the diagnostics (#471)
