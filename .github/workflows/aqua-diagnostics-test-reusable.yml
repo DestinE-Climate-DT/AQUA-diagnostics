@@ -23,6 +23,13 @@ on:
         required: true
         type: string
         default: 'aqua or diagnostics or ensemble'
+      pytest-timeout-seconds:
+        description: >-
+          Per-test pytest timeout in seconds (the slowest diagnostics test takes up to ~430 s on a loaded runner).
+          Applied only when pytest-timeout is installed (e.g. not in pypi mode before a release including it)
+        required: false
+        type: string
+        default: '600'
       enable-parallel:
         description: 'Enable pytest-xdist parallel execution'
         required: false
@@ -341,9 +348,15 @@ jobs:
           MARKERS: ${{ inputs.pytest-markers }}
           PARALLEL: ${{ inputs.enable-parallel }}
           COVERAGE: ${{ inputs.enable-coverage }}
+          PYTEST_TIMEOUT_SECONDS: ${{ inputs.pytest-timeout-seconds }}
         run: |
           cd AQUA-diagnostics
           ARGS=(--junitxml=junit.xml -o junit_family=legacy -m "$MARKERS")
+          if python -c "import pytest_timeout" 2>/dev/null; then
+            ARGS+=(--timeout="$PYTEST_TIMEOUT_SECONDS")
+          else
+            echo "::warning::pytest-timeout not installed: running without per-test timeout"
+          fi
           if [ "$PARALLEL" = "true" ]; then
             # xdist_group markers run on dedicated workers
             ARGS+=(-n 4 --dist loadgroup --max-worker-restart=3)

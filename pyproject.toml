@@ -68,6 +68,7 @@ tests = [
     "pytest-cov",
     "pytest-mock",
     "pytest-xdist",
+    "pytest-timeout",
     "coverage",
     "cdo",
     "dvc>3.60.0",
