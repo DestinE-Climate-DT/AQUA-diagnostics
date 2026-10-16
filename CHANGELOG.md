@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- `conda-relock`: `aqua-core[fdb]` pinned in `environment.yml` and passed as last `--file`, so conda-lock no longer drops aqua-core (listed in both `core` and `core-fdb` extras, hash-order dependent) from the lock (#491)
 - `pytest-timeout` added to the `tests` extra; CI applies a 600 s per-test timeout when the plugin is installed (#491)
 - `conda-relock` concurrency at job level, so adding another label together with `conda-lock` no longer cancels the relock (#491)
 - CI aligned with aqua-core: new `release` install mode (`environment-pypi.yml` + pip install of the checkout) used by the release matrix, `environment-pypi.yml` now holds only conda dependencies; 40 min test timeout; no coverage on Dependabot PRs and cross-check; GitHub token fallback and check; `pypi-test` push trigger; Dependabot weekly with groups and labels (#491)
@@ -21,6 +22,7 @@ Complete list:
 - CI test runner takes a single `python-version` plus `platform` and `container-image` (callers own the matrix), new `environment` install mode, `cross-check` installs aqua-core on top of `environment.yml`, FDB setup removed (#491)
 - Drop support to Python 3.11, as in aqua-core; `aqua-diagnostics.yml` no longer runs weekly, `check-trigger` job replaced by a job condition as in aqua-core (on `labeled` events only the label just added counts); CI labels aligned with aqua-core (#495)
 - `conda-relock` workflow can be triggered on a PR by adding the `conda-lock` label: it relocks against the PR branch and opens a relock PR targeting it, as in aqua-core (#496)
+- Implementation of load netcdf and plot only in ocean drift CLI (#457)
 - CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
 - Implementation of load netcdf and plot only in ocean trend CLI, (#454)
 - `Diagnostic.select_region()` now works without a `retrieve()` (#454)
