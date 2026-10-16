@@ -3,7 +3,7 @@ name: AQUA-diagnostics nightly
 # aqua-diagnostics both against the released aqua-core and against aqua-core main (cross-check),
 # to catch integration issues before the next aqua-core release.
 # Runs nightly, manually (optionally against a given aqua-core ref), on Dependabot pip/conda PRs,
-# and on PRs whose label contains 'nightly'. A single cross-check on a PR is in aqua-diagnostics-cross-check.yml.
+# and on PRs whose label starts with 'nightly'. A single cross-check on a PR is in aqua-diagnostics-cross-check.yml.
 # When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
 
 on:
@@ -35,9 +35,9 @@ jobs:
       (github.event.action != 'labeled' && (
         startsWith(github.head_ref, 'dependabot/pip/') ||
         startsWith(github.head_ref, 'dependabot/conda/') ||
-        contains(join(github.event.pull_request.labels.*.name, '|'), 'nightly'))) ||
+        contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|nightly'))) ||
       (github.event.action == 'labeled' &&
-        contains(github.event.label.name, 'nightly'))
+        startsWith(github.event.label.name, 'nightly'))
     strategy:
       fail-fast: false
       matrix:

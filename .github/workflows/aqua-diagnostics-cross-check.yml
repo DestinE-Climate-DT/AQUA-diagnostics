@@ -28,9 +28,9 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.action != 'labeled' &&
-        contains(join(github.event.pull_request.labels.*.name, '|'), 'cross-check')) ||
+        contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|cross-check')) ||
       (github.event.action == 'labeled' &&
-        contains(github.event.label.name, 'cross-check'))
+        startsWith(github.event.label.name, 'cross-check'))
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-version: '3.14'

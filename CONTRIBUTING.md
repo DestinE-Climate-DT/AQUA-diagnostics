@@ -94,7 +94,7 @@ Comparing the two nightly modes separates aqua-core regressions (`cross-check` f
 | `conda-lock` 🐍 | regenerate the lock file against the PR branch |
 
 Once a label is set, the corresponding suite runs again at every push. Adding a label triggers a run only for the label
-just added: adding an unrelated label does not restart running tests. To test against another aqua-core branch, tag or
+just added: adding an unrelated label does not restart running tests. Labels are matched by prefix (e.g. `wait for core release` does not start the release suite). To test against another aqua-core branch, tag or
 commit, run **Actions** → **AQUA-diagnostics cross-check** → **Run workflow** and set the aqua-core ref.
 
 **How the CI is built**
