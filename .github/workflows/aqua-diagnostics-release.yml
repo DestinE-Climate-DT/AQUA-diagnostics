@@ -1,6 +1,6 @@
 name: AQUA-diagnostics release
 # Full OS (min/max) x Python matrix from environment.yml (released aqua-core), on the host runners.
-# Runs weekly, manually, and on PRs whose label starts with 'release' (e.g. 'release :sailboat:', not 'wait for core release').
+# Runs weekly, manually, and on PRs whose label starts with 'release' (e.g. 'release :sailboat:').
 # When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
 
 on:

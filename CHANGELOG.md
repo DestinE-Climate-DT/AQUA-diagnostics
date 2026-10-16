@@ -11,7 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
-- CI labels matched by prefix, so that e.g. `wait for core release` does not start the release suite (#491)
+- CI labels matched by prefix; `wait for core release` label renamed `waiting for core`, so that it cannot start the release suite (#491)
 - CI testing strategy documented in `CONTRIBUTING.md`, PR template checkbox for the `cross-check` label (#494)
 - New `aqua-diagnostics-release.yml` (OS min/max x Python 3.12-3.14, weekly, `release` label) replaces the monthly `aqua-diagnostics-complete.yml`; `aqua-diagnostics-pypi.yml` runs on Ubuntu/macOS x Python 3.12-3.14 and reports failures (#493)
 - New `aqua-diagnostics-nightly.yml`: matrix released aqua-core / aqua-core main x Ubuntu (FDB container) / macOS, triggered nightly, manually, by the `nightly` label and Dependabot pip/conda PRs; failure issue via the aqua-core report. `aqua-diagnostics-cross-check.yml` stays as a single cross-check job on the `cross-check` label or manual run, without schedule (#492)
