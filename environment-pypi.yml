@@ -1,9 +1,8 @@
 # this is the minimal environment file to install the dependencies of AQUA-diagnostics,
 # it is not meant to be used directly but is used by github actions
 # Create the environment:
-# mamba env create -f min-environment.yml
-# or if you really want to use conda
-# conda env create -f min-environment.yml
+# mamba env create -f environment-pypi.yml
+# then install AQUA-diagnostics with pip, e.g. pip install aqua-diagnostics[core]
 
 name: aqua-diagnostics
 channels:
@@ -15,5 +14,3 @@ dependencies:
   - eccodes>=2.41.0,<2.50.0
   - esmpy
   - pip
-  - pip:
-    - aqua-diagnostics[core-fdb,tests]

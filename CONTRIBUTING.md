@@ -65,11 +65,11 @@ packaging problem is caught by the suite that owns it, not by the PR tests. Test
 
 | Workflow | Suite | When it runs | Platforms | Python | Install mode | Coverage |
 |---|---|---|---|---|---|---|
-| `aqua-diagnostics.yml` | PR tests | PR with a test label, Dependabot PRs, push to `main`, manual | `ubuntu-latest` in FDB container | 3.14 | `local` | yes |
+| `aqua-diagnostics.yml` | PR tests | PR with a test label, Dependabot PRs, push to `main`, manual | `ubuntu-latest` in FDB container | 3.14 | `local` | yes (not on Dependabot) |
 | `aqua-diagnostics-nightly.yml` | Nightly | every night (04:00 UTC), PR with `nightly` label, Dependabot pip/conda PRs, manual (with aqua-core ref) | `ubuntu-latest` in FDB container, `xcode-27` | 3.14 | `environment` and `cross-check` | no |
-| `aqua-diagnostics-cross-check.yml` | Cross-check | PR with `cross-check` label, manual (with aqua-core ref) | `ubuntu-latest` in FDB container | 3.14 | `cross-check` | yes |
-| `aqua-diagnostics-release.yml` | Release | every Monday (06:00 UTC), PR with `release` label, manual | `ubuntu-22.04`, `ubuntu-26.04`, `macos-15`, `xcode-27` | 3.12, 3.13, 3.14 | `environment` | no |
-| `aqua-diagnostics-pypi.yml` | PyPI | every Tuesday (03:00 UTC), manual | `ubuntu-latest` in FDB container, `macos-latest` | 3.12, 3.13, 3.14 | `pypi` | no |
+| `aqua-diagnostics-cross-check.yml` | Cross-check | PR with `cross-check` label, manual (with aqua-core ref) | `ubuntu-latest` in FDB container | 3.14 | `cross-check` | no |
+| `aqua-diagnostics-release.yml` | Release | every Monday (06:00 UTC), PR with `release` label, manual | `ubuntu-22.04`, `ubuntu-26.04`, `macos-15`, `xcode-27` | 3.12, 3.13, 3.14 | `release` | no |
+| `aqua-diagnostics-pypi.yml` | PyPI | every Tuesday (04:00 UTC), push to `pypi-test`, manual | `ubuntu-latest` in FDB container, `macos-latest` | 3.12, 3.13, 3.14 | `pypi` | no |
 
 The FDB container is only the build environment on Linux: AQUA-diagnostics has no FDB tests.
 
@@ -79,7 +79,8 @@ The install modes are:
 - `environment`: checkout + `environment.yml`, unpinned, with the latest aqua-core release: catches breakages from new upstream releases.
 - `cross-check`: as `environment`, then aqua-core is installed from the [AQUA](https://github.com/DestinE-Climate-DT/AQUA)
   repository at a chosen reference (default `main`): catches integration breaks with the current core codebase before the next aqua-core release.
-- `pypi`: `environment-pypi.yml` + `aqua-diagnostics` from PyPI, tested against the matching release tag.
+- `release`: `environment-pypi.yml` (conda dependencies only) + `pip install -e .[core,tests]` of the checkout: what a user gets when installing from source.
+- `pypi`: `environment-pypi.yml` + `aqua-diagnostics[core,tests]` from PyPI, tested against the matching release tag.
 
 Comparing the two nightly modes separates aqua-core regressions (`cross-check` fails, `environment` passes) from dependency or diagnostics issues (both fail).
 
@@ -108,8 +109,10 @@ commit, run **Actions** → **AQUA-diagnostics cross-check** → **Run workflow*
 All suites call `aqua-diagnostics-test-reusable.yml`, which runs one job (one platform, one Python, one install mode);
 callers only define the matrix and the inputs. Test data, AQUA configuration and reports use the composite actions of
 aqua-core (`setup-test-data`, `setup-aqua`, `pytest-reports`), checked out at `aqua-actions-ref` (default `main`).
-Every job uploads an artifact `aqua-test-artifacts-<install-mode>-<platform>-py<version>` with `junit.xml`,
-`aqua_pytest.log`, `micromamba_list.txt` and `pip_freeze.txt`.
+The test step has a 40 min timeout. Every job uploads an artifact `aqua-test-artifacts-<install-mode>-<platform>-py<version>`
+with `junit.xml`, `aqua_pytest.log`, `micromamba_list.txt` and `pip_freeze.txt`.
+`AQUA_GITHUB_PAT` is used for all GitHub access (fallback: `github.token`). To test changes to `aqua-diagnostics-pypi.yml`,
+push to a branch named `pypi-test`.
 
 When a scheduled or manual run of the Nightly, Release or PyPI suite fails, the aqua-core `report-failure-reusable.yml`
 opens an issue labelled `ci-failure:<suite>` 🤡 listing the broken tests, or comments on the open one.

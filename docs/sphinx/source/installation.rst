@@ -32,7 +32,7 @@ This can be achieved with:
     mamba create -n aquarium -c conda-forge python=3.14 cdo eccodes esmpy
     mamba activate aquarium
     pip install aqua-diagnostics[core]
-å
+
 The same environment is available in the AQUA-diagnostics GitHub repository in the ``environment-pypi.yml`` file.
 
 .. note::

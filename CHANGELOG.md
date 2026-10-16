@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- CI aligned with aqua-core: new `release` install mode (`environment-pypi.yml` + pip install of the checkout) used by the release matrix, `environment-pypi.yml` now holds only conda dependencies; 40 min test timeout; no coverage on Dependabot PRs and cross-check; GitHub token fallback and check; `pypi-test` push trigger; Dependabot weekly with groups and labels (#491)
 - CI labels matched by prefix; `wait for core release` label renamed `waiting for core`, so that it cannot start the release suite (#491)
 - CI testing strategy documented in `CONTRIBUTING.md`, PR template checkbox for the `cross-check` label (#494)
 - New `aqua-diagnostics-release.yml` (OS min/max x Python 3.12-3.14, weekly, `release` label) replaces the monthly `aqua-diagnostics-complete.yml`; `aqua-diagnostics-pypi.yml` runs on Ubuntu/macOS x Python 3.12-3.14 and reports failures (#493)

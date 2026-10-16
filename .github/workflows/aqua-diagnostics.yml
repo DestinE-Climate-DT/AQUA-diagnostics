@@ -1,6 +1,7 @@
 name: AQUA-diagnostics tests
 # Lean feature tests: ubuntu-latest, Python 3.14, FDB container (build environment only), conda-lock environment.
 # Runs on PRs labelled 'run tests', 'ready for review' or 'ready to merge', on Dependabot PRs, on push to main, or manually.
+# 'aqua-diagnostics-tests / aqua_test (3.14)' is a required check, so it must run (not be skipped) on every Dependabot PR.
 # Dependency bumps are tested against environment.yml in aqua-diagnostics-nightly.yml, release checks live in aqua-diagnostics-release.yml.
 # This workflow uses pytest-xdist to run tests in parallel across 4 cores
 
@@ -16,8 +17,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   aqua-diagnostics-tests:
@@ -42,7 +41,7 @@ jobs:
       python-version: '3.14'
       pytest-markers: 'diagnostics'
       enable-parallel: true
-      enable-coverage: true
+      enable-coverage: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
       test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}

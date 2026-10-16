@@ -37,6 +37,7 @@ on:
         description: >-
           Installation mode: "local" (conda-lock file, Linux only),
           "environment" (environment.yml, released aqua-core),
+          "release" (environment-pypi.yml + pip install of the checkout: what a user gets when installing from source),
           "pypi" (environment-pypi.yml + aqua-diagnostics from PyPI + its release tag),
           "cross-check" (environment.yml + aqua-core from aqua-core-ref)
         required: false
@@ -113,7 +114,7 @@ jobs:
     env:
       DEBIAN_FRONTEND: noninteractive
       GRID_DEFINITION_PATH: /tmp
-      GITHUB_TOKEN: ${{ secrets.AQUA_GITHUB_PAT }}
+      GITHUB_TOKEN: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
       ARTIFACT_SUFFIX: ${{ inputs.install-mode }}-${{ inputs.platform }}-py${{ inputs.python-version }}
 
     steps:
@@ -132,7 +133,7 @@ jobs:
           repository: DestinE-Climate-DT/AQUA
           ref: ${{ inputs.aqua-core-ref }} # checkout aqua-core at specified ref
           path: AQUA
-          token: ${{ secrets.AQUA_GITHUB_PAT }}
+          token: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
 
       - name: Checkout shared AQUA CI actions
         uses: actions/checkout@v7
@@ -140,7 +141,7 @@ jobs:
           repository: DestinE-Climate-DT/AQUA
           ref: ${{ inputs.aqua-actions-ref }}
           path: aqua-ci
-          token: ${{ secrets.AQUA_GITHUB_PAT }}
+          token: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
           sparse-checkout: .github/actions
           sparse-checkout-cone-mode: false
 
@@ -149,7 +150,7 @@ jobs:
         with:
           repository: DestinE-Climate-DT/Climate-DT-catalog
           path: Climate-DT-catalog
-          token: ${{ secrets.AQUA_GITHUB_PAT }}
+          token: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
 
       - name: Checkout DVC repo
         uses: actions/checkout@v7
@@ -171,11 +172,34 @@ jobs:
             $SUDO apt-get install -y \
               curl \
               git \
+              jq \
               gpg
 
       - name: Install GH Actions dependencies (macOS)
         if: ${{ runner.os == 'macOS' }}
         run: brew install wget
+
+      - name: Check GitHub token
+        if: ${{ runner.os == 'Linux' }}
+        env:
+          PAT_SET: ${{ secrets.AQUA_GITHUB_PAT != '' }}
+        run: |
+          if [ "$PAT_SET" != "true" ]; then
+            echo "::warning::AQUA_GITHUB_PAT is empty (Dependabot/fork run or secret not passed): falling back to github.token"
+          fi
+          CODE=$(curl -s -o "$RUNNER_TEMP/rate.json" -w "%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/rate_limit)
+          if [ "$CODE" != "200" ]; then
+            echo "::error::GitHub token rejected (HTTP $CODE): PAT expired or lacking permissions?"
+            exit 1
+          fi
+          REMAINING=$(jq -r '.resources.core.remaining // empty' "$RUNNER_TEMP/rate.json")
+          USED=$(jq -r '.resources.core.used // empty' "$RUNNER_TEMP/rate.json")
+          echo "GitHub API core requests remaining: ${REMAINING:-unknown}"
+          echo "GitHub API core requests used: ${USED:-unknown}"
+          if [ -n "$REMAINING" ] && [ "$REMAINING" -lt 100 ]; then
+            echo "::warning::Only $REMAINING GitHub API requests left"
+          fi
 
       # ========================================
       # 3. SETUP PYTHON ENVIRONMENT
@@ -199,7 +223,7 @@ jobs:
               sed "s#- -e \.#- -e ${GITHUB_WORKSPACE}/AQUA-diagnostics#" AQUA-diagnostics/environment.yml > "$ENV_FILE"
               grep -q "${GITHUB_WORKSPACE}/AQUA-diagnostics" "$ENV_FILE" || { echo "::error::'-e .' not found in environment.yml"; exit 1; }
               ;;
-            pypi)
+            pypi|release)
               ENV_FILE=AQUA-diagnostics/environment-pypi.yml
               ;;
             *)
@@ -217,8 +241,10 @@ jobs:
           micromamba-version: 'latest'
           environment-file: ${{ steps.resolve.outputs.env-file }}
           environment-name: aqua-diagnostics
+          generate-run-shell: false
           cache-downloads: true
           cache-environment: false
+          post-cleanup: 'none'
           create-args: >-
             python=${{ inputs.python-version }}
 
@@ -236,6 +262,12 @@ jobs:
         if: ${{ inputs.install-mode == 'cross-check' }}
         # Replaces the released aqua-core installed by environment.yml; pip adds any new aqua-core dependency
         run: python -m pip install -e "${GITHUB_WORKSPACE}/AQUA[fdb]"
+
+      - name: Install local AQUA-diagnostics on top of environment-pypi.yml (release mode)
+        if: ${{ inputs.install-mode == 'release' }}
+        run: |
+          cd AQUA-diagnostics
+          python -m pip install -e ".[core,tests]"
 
       - name: Upgrade pip/setuptools/wheel
         if: ${{ inputs.install-mode == 'pypi' }}
@@ -304,6 +336,7 @@ jobs:
       # 8. RUN TESTS
       # ========================================
       - name: Run tests
+        timeout-minutes: 40
         env:
           MARKERS: ${{ inputs.pytest-markers }}
           PARALLEL: ${{ inputs.enable-parallel }}

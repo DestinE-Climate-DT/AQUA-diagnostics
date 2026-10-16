@@ -5,7 +5,11 @@ name: AQUA-diagnostics PyPI tests
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 3 * * 2" # run every Tuesday night at 3AM UTC, after the aqua-core PyPI tests
+    - cron: "0 4 * * 2" # run every Tuesday night at 4AM UTC, after the aqua-core PyPI and Conda tests
+  push:
+    # if you want to edit this workflow, please create pypi-test branch and push to it
+    branches:
+      - pypi-test
 
 permissions:
   contents: read

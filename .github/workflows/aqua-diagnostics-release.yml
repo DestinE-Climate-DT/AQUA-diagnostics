@@ -1,5 +1,6 @@
 name: AQUA-diagnostics release
-# Full OS (min/max) x Python matrix from environment.yml (released aqua-core), on the host runners.
+# Full OS (min/max) x Python matrix starting from environment-pypi.yml (conda dependencies only), then installing
+# the local AQUA-diagnostics with pip (with the released aqua-core), on the host runners.
 # Runs weekly, manually, and on PRs whose label starts with 'release' (e.g. 'release :sailboat:').
 # When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
 
@@ -41,7 +42,7 @@ jobs:
       pytest-markers: 'diagnostics'
       enable-parallel: true
       enable-coverage: false
-      install-mode: 'environment'
+      install-mode: 'release'
       test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
