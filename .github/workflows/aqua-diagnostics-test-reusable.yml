@@ -100,9 +100,10 @@ jobs:
 
     concurrency:
       # github.event is the caller's event: PR runs cancel superseded runs, other events never do
-      # github.workflow is the caller's name: suites running the same leg (e.g. nightly and cross-check) do not cancel each other
-      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}-${{ inputs.install-mode }}-${{ inputs.platform }}-py${{ inputs.python-version }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+      # github.workflow and github.event are the caller's: suites running the same leg (e.g. nightly and cross-check)
+      # do not cancel each other; PR runs (pull_request or label router dispatch with pr_number) cancel superseded runs
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.inputs.pr_number || github.run_id }}-${{ inputs.install-mode }}-${{ inputs.platform }}-py${{ inputs.python-version }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event.inputs.pr_number != '' }}
 
     container:
       # FDB container used as build environment on Linux (no FDB tests in aqua-diagnostics).

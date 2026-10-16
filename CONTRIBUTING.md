@@ -93,8 +93,11 @@ Comparing the two nightly modes separates aqua-core regressions (`cross-check` f
 | `release` ⛵ | run the full `aqua-diagnostics-release.yml` matrix (use it on release PRs) |
 | `conda-lock` 🐍 | regenerate the lock file against the PR branch |
 
-Once a label is set, the corresponding suite runs again at every push. Adding a label triggers a run only for the label
-just added: adding an unrelated label does not restart running tests. To test against another aqua-core branch, tag or
+Once a label is set, the corresponding suite runs again at every push. Adding a label is handled by
+`aqua-diagnostics-labels.yml`, which starts only the suite of the label just added (as a `workflow_dispatch` run on the
+PR branch, shown in the PR checks): adding an unrelated label does not restart running tests, and adding several labels at
+once starts each suite without hiding the others. Labels are matched by prefix. On PRs from forks the label router cannot
+start the suites: a maintainer has to run them. To test against another aqua-core branch, tag or
 commit, run **Actions** → **AQUA-diagnostics cross-check** → **Run workflow** and set the aqua-core ref.
 
 **How the CI is built**

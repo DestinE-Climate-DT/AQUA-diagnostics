@@ -1,15 +1,21 @@
 name: AQUA-diagnostics cross-check
 # Tests aqua-diagnostics against aqua-core main (or a given ref) instead of the released aqua-core,
 # to catch integration issues early, e.g. when a PR depends on unreleased aqua-core features.
-# Runs on PRs labelled 'cross-check' (then at every push) and manually with a chosen aqua-core ref:
+# Runs on PRs labelled 'cross-check' (adding it dispatches this workflow through aqua-diagnostics-labels.yml,
+# then at every push) and manually with a chosen aqua-core ref:
 #   Actions > AQUA-diagnostics cross-check > Run workflow > aqua-core branch/tag/commit.
 # The scheduled check against aqua-core main is part of aqua-diagnostics-nightly.yml.
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
+      pr_number:
+        description: 'PR number, set by the label router (empty for manual runs)'
+        required: false
+        default: ''
+        type: string
       aqua_core_ref:
         description: 'aqua-core branch/tag/commit to test against'
         required: false
@@ -21,16 +27,10 @@ permissions:
 
 jobs:
   aqua-diagnostics-cross-check-tests:
-    # Manual runs always run. On PRs:
-    #  - opened/synchronize/reopened: run if the PR has the 'cross-check' label
-    #  - labeled: run only if the label just added is 'cross-check', so that adding
-    #    an unrelated label does not restart (and cancel) tests already running
+    # Manual runs and label router dispatches always run. On PR open/push: run if the PR has the 'cross-check' label
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.action != 'labeled' &&
-        contains(join(github.event.pull_request.labels.*.name, '|'), 'cross-check')) ||
-      (github.event.action == 'labeled' &&
-        contains(github.event.label.name, 'cross-check'))
+      contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|cross-check')
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-version: '3.14'
