@@ -61,6 +61,7 @@ def parse_arguments(args):
     parser = template_parse_arguments(parser)  # standard flags; add extra ones after this
     return parser.parse_args(args)
 
+
 def main(argv=None):
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
     cli = DiagnosticCLI(args, diagnostic_name="mydiag", default_config="...").prepare()
@@ -69,6 +70,7 @@ def main(argv=None):
     if tool_dict.get("run", False):
         ...  # loop over variables: catch NoDataError/KeyError/ValueError, log a warning, continue
     cli.close_dask_cluster()
+
 
 if __name__ == "__main__":
     main()
@@ -152,6 +154,8 @@ collection in a `run` group → `config.grouping.yaml` entry. New `<tool_key>`s 
 - **Every test module needs a marker** (`pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]`): CI runs
   `-m "aqua or diagnostics or ensemble"`, so unmarked tests are silently skipped. `frontier` is for `frontier-diagnostics/`
 - Use `DPI`, `LOGLEVEL`, `APPROX_REL` from `tests/shared_constants.py`
+- Write outputs to `tmp_path`; CI runs `pytest -n 4`, so modules sharing setup or output files need
+  `pytest.mark.xdist_group(name=...)` in their `pytestmark`
 
 ```bash
 pytest tests/cli tests/config --no-cov        # fast, no data needed (~20 s)
