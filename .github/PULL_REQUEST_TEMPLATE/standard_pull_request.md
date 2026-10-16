@@ -21,4 +21,4 @@ Please apply the "run tests" label if you want to trigger CI tests.
  - [ ] Changelog is updated.
  - [ ] Notebooks which requires changes are updated.
  - [ ] environment.yml and pyproject.toml are updated if needed, together with the lumi installation tool.
- - [ ] If the change depends on unreleased aqua-core features, the `cross-check` label has been added and the nightly suite passes.
+ - [ ] If the change depends on unreleased aqua-core features, the `cross-check` label has been added and the cross-check tests pass.
