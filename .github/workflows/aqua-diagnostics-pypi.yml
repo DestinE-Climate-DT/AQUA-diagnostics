@@ -1,21 +1,37 @@
 name: AQUA-diagnostics PyPI tests
+# Tests the public aqua-diagnostics release from PyPI on a platform x Python matrix.
+# When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 3 * * 1" # run every Monday night at 3AM UTC
+    - cron: "0 3 * * 2" # run every Tuesday night at 3AM UTC, after the aqua-core PyPI tests
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   # Call the reusable workflow with PyPI installation
   aqua-diagnostics-pypi-tests:
+    strategy:
+      fail-fast: false
+      # Cap on the total number of jobs running at once (platform x Python), to leave runners free for other workflows
+      max-parallel: 3
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.12', '3.13', '3.14']
+        include:
+          # The FDB container is the build environment on Linux (no FDB tests in aqua-diagnostics)
+          - os: ubuntu-latest
+            container: 'ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container'
+          - os: macos-latest
+            container: ''
+    name: AQUA-diagnostics PyPI (${{ matrix.os }}, py${{ matrix.python-version }})
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
-      python-version: '3.14'
+      platform: ${{ matrix.os }}
+      container-image: ${{ matrix.container }}
+      python-version: ${{ matrix.python-version }}
       pytest-markers: 'diagnostics'
       enable-parallel: true
       enable-coverage: false
@@ -29,3 +45,14 @@ jobs:
       POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       AQUA_DVC_PEM: ${{ secrets.AQUA_DVC_PEM }}
+
+  report-failure:
+    needs: aqua-diagnostics-pypi-tests
+    if: ${{ always() && needs.aqua-diagnostics-pypi-tests.result == 'failure' }}
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    uses: DestinE-Climate-DT/AQUA/.github/workflows/report-failure-reusable.yml@main
+    with:
+      test-name: PyPI

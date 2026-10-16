@@ -42,6 +42,12 @@ jobs:
             exit 1
           fi
 
+          # The release tests run on the workflow ref: a manual publish must be started from the tag itself
+          if [ "$GITHUB_REF" != "refs/tags/$TAG" ]; then
+            echo "❌ Run this workflow from the tag $TAG ('Use workflow from'), not from $GITHUB_REF"
+            exit 1
+          fi
+
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Publishing tag: $TAG"
 
@@ -56,8 +62,18 @@ jobs:
             exit 1
           fi
 
-  deploy:
+  # Full release matrix on the tag: PyPI publishing happens only if it passes
+  release-tests:
     needs: validate-tag
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    uses: ./.github/workflows/aqua-diagnostics-release.yml
+    secrets: inherit
+
+  deploy:
+    needs: [validate-tag, release-tests]
     runs-on: ubuntu-latest
     environment:
       name: pypi

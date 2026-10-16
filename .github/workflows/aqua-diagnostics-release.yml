@@ -1,0 +1,66 @@
+name: AQUA-diagnostics release
+# Full OS (min/max) x Python matrix from environment.yml (released aqua-core), on the host runners.
+# Runs weekly, manually, on PRs whose label contains 'release' (e.g. 'release :sailboat:'),
+# and from pypi-publish.yml before publishing to PyPI.
+# When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+  workflow_call:
+  schedule:
+    - cron: "0 6 * * 1" # run every Monday at 6AM UTC, one hour after the aqua-core release tests
+
+permissions:
+  contents: read
+
+jobs:
+  aqua-diagnostics-release-tests:
+    # Non-PR events (listed first) always run. On PRs:
+    #  - opened/synchronize/reopened: run if the PR has the 'release' label
+    #  - labeled: run only if the label just added is 'release', so that adding
+    #    an unrelated label does not restart (and cancel) tests already running
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.action != 'labeled' &&
+        contains(join(github.event.pull_request.labels.*.name, '|'), 'release')) ||
+      (github.event.action == 'labeled' &&
+        contains(github.event.label.name, 'release'))
+    strategy:
+      fail-fast: false
+      # Cap on the total number of jobs running at once (platform x Python), to leave runners free for other workflows
+      max-parallel: 6
+      matrix:
+        platform: [ubuntu-22.04, ubuntu-26.04, macos-15, xcode-27]
+        python-version: ['3.12', '3.13', '3.14']
+    name: AQUA-diagnostics release (${{ matrix.platform }}, py${{ matrix.python-version }})
+    uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
+    with:
+      platform: ${{ matrix.platform }}
+      container-image: ''
+      python-version: ${{ matrix.python-version }}
+      pytest-markers: 'diagnostics'
+      enable-parallel: true
+      enable-coverage: false
+      install-mode: 'environment'
+      test-data-source: 'auto'
+    secrets:
+      AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
+      AQUA_DVC_PAT: ${{ secrets.AQUA_DVC_PAT }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      AQUA_DVC_PEM: ${{ secrets.AQUA_DVC_PEM }}
+
+  report-failure:
+    needs: aqua-diagnostics-release-tests
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.aqua-diagnostics-release-tests.result == 'failure' }}
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    uses: DestinE-Climate-DT/AQUA/.github/workflows/report-failure-reusable.yml@main
+    with:
+      test-name: Release
