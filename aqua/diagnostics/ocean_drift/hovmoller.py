@@ -189,7 +189,8 @@ class Hovmoller(Diagnostic):
                     diagnostic=self.diagnostic_name,
                     diagnostic_product=diagnostic_product,
                     outputdir=outputdir,
-                    extra_keys=self._extra_keys(region_name=info["region_name"], drift_type=drift_type),
+                    # Same keys as save_netcdf, otherwise the file is not found
+                    extra_keys={"region": info["region_name"], "ocean_drift_type": drift_type},
                 )
                 if data is not None:
                     processed.append(data)
@@ -379,13 +380,6 @@ class Hovmoller(Diagnostic):
         anom_ref = f"_{anomaly_ref}" if anomaly_ref else ""
         return f"{s_std}{anom}{anom_ref}"
 
-    def _extra_keys(self, region_name: str, drift_type: str) -> dict:
-        """Build the filename keys identifying one product.
-
-        Shared by save_netcdf and load, so that the two always address the same file.
-        """
-        return {"region": region_name, "ocean_drift_type": drift_type}
-
     def sort_drift_type(self, data) -> tuple:
         """Return a sort key for ordering processed data by drift type."""
         drift_type = data.attrs["AQUA_ocean_drift_type"]
@@ -432,9 +426,11 @@ class Hovmoller(Diagnostic):
                     diagnostic_product=f"{diagnostic_product}",
                     outputdir=outputdir,
                     rebuild=rebuild,
-                    extra_keys=self._extra_keys(
-                        region_name=file_region, drift_type=processed_data.attrs["AQUA_ocean_drift_type"]
-                    ),
+                    # load builds the same keys
+                    extra_keys={
+                        "region": file_region,
+                        "ocean_drift_type": processed_data.attrs["AQUA_ocean_drift_type"],
+                    },
                 )
 
     def _fix_vert_coord_units(self):

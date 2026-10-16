@@ -32,8 +32,9 @@ HOVMOLLER_CONFIG = {
     },
     "run": {
         "anomaly_ref": "t0",
-        # The unknown region must be skipped without stopping the valid ones
-        "regions": ["sss", "ao", "not_a_region"],
+        # The unknown region must be skipped without stopping the valid ones.
+        # None is the global evaluation, which the CLI runs when no region is given.
+        "regions": ["sss", "ao", "not_a_region", None],
     },
     "plot": {
         "save_format": ["png", "pdf", "svg"],
@@ -86,8 +87,8 @@ def test_processed_data_types(hovmoller_result):
 def test_multiple_regions_in_one_run(hovmoller_result):
     """One run() stores every valid region, each with the three drift products over the whole period."""
     hov, _ = hovmoller_result
-    assert set(hov.processed_data) == {"sss", "ao"}
-    for region in ("sss", "ao"):
+    assert set(hov.processed_data) == {"sss", "ao", None}
+    for region in ("sss", "ao", None):
         types = [ds.attrs["AQUA_ocean_drift_type"] for ds in hov.processed_data[region]]
         assert types == EXPECTED_DRIFT_TYPES
         assert all(ds.sizes["time"] == EXPECTED_NTIME for ds in hov.processed_data[region])
@@ -144,6 +145,8 @@ def test_load_roundtrip(hovmoller_result, hovmoller_config):
     """A run that only plots finds on disk exactly the products a previous run computed.
 
     The consumer never retrieves: catalog, realization and region names are rebuilt without data access.
+    The filename keys are written inline in save_netcdf and load: this test is what catches them diverging,
+    for the global evaluation as well.
     """
     producer, tmp_path = hovmoller_result
     consumer = _consumer()
