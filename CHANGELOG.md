@@ -11,12 +11,8 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
-<<<<<<< HEAD
 - CI testing strategy documented in `CONTRIBUTING.md`, PR template checkbox for the `cross-check` label (#494)
-- New `aqua-diagnostics-release.yml` (OS min/max x Python 3.12-3.14, weekly, `release` label) replaces the monthly `aqua-diagnostics-complete.yml` and gates `pypi-publish.yml`; `aqua-diagnostics-pypi.yml` runs on Ubuntu/macOS x Python 3.12-3.14 and reports failures (#493)
-=======
 - New `aqua-diagnostics-release.yml` (OS min/max x Python 3.12-3.14, weekly, `release` label) replaces the monthly `aqua-diagnostics-complete.yml`; `aqua-diagnostics-pypi.yml` runs on Ubuntu/macOS x Python 3.12-3.14 and reports failures (#493)
->>>>>>> ci-release
 - New `aqua-diagnostics-nightly.yml`: matrix released aqua-core / aqua-core main x Ubuntu (FDB container) / macOS, triggered nightly, manually, by the `nightly` label and Dependabot pip/conda PRs; failure issue via the aqua-core report. `aqua-diagnostics-cross-check.yml` stays as a single cross-check job on the `cross-check` label or manual run, without schedule (#492)
 - CI test runner takes a single `python-version` plus `platform` and `container-image` (callers own the matrix), new `environment` install mode, `cross-check` installs aqua-core on top of `environment.yml`, FDB setup removed (#491)
 - CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
