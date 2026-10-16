@@ -68,7 +68,7 @@ packaging problem is caught by the suite that owns it, not by the PR tests. Test
 | `aqua-diagnostics.yml` | PR tests | PR with a test label, Dependabot PRs, push to `main`, manual | `ubuntu-latest` in FDB container | 3.14 | `local` | yes |
 | `aqua-diagnostics-nightly.yml` | Nightly | every night (04:00 UTC), PR with `nightly` label, Dependabot pip/conda PRs, manual (with aqua-core ref) | `ubuntu-latest` in FDB container, `xcode-27` | 3.14 | `environment` and `cross-check` | no |
 | `aqua-diagnostics-cross-check.yml` | Cross-check | PR with `cross-check` label, manual (with aqua-core ref) | `ubuntu-latest` in FDB container | 3.14 | `cross-check` | yes |
-| `aqua-diagnostics-release.yml` | Release | every Monday (06:00 UTC), PR with `release` label, before PyPI publishing, manual | `ubuntu-22.04`, `ubuntu-26.04`, `macos-15`, `xcode-27` | 3.12, 3.13, 3.14 | `environment` | no |
+| `aqua-diagnostics-release.yml` | Release | every Monday (06:00 UTC), PR with `release` label, manual | `ubuntu-22.04`, `ubuntu-26.04`, `macos-15`, `xcode-27` | 3.12, 3.13, 3.14 | `environment` | no |
 | `aqua-diagnostics-pypi.yml` | PyPI | every Tuesday (03:00 UTC), manual | `ubuntu-latest` in FDB container, `macos-latest` | 3.12, 3.13, 3.14 | `pypi` | no |
 
 The FDB container is only the build environment on Linux: AQUA-diagnostics has no FDB tests.
@@ -107,7 +107,6 @@ Every job uploads an artifact `aqua-test-artifacts-<install-mode>-<platform>-py<
 
 When a scheduled or manual run of the Nightly, Release or PyPI suite fails, the aqua-core `report-failure-reusable.yml`
 opens an issue labelled `ci-failure:<suite>` 🤡 listing the broken tests, or comments on the open one.
-PyPI publishing (`pypi-publish.yml`) runs the Release suite on the tag first and publishes only if it passes.
 
 ### Suggesting enhancements
 
