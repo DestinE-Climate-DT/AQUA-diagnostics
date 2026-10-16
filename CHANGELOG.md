@@ -11,6 +11,10 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Drop support to Python 3.11, as in aqua-core (#491)
+- New CI testing strategy aligned with aqua-core (see `CONTRIBUTING.md`): PR tests, nightly against released and `main` aqua-core on Ubuntu/macOS, release matrix (replaces the monthly tests), PyPI matrix, label-driven cross-check and relock, automatic failure issues; `environment-pypi.yml` holds only conda dependencies (#491)
+- `pytest-timeout` added to the `tests` extra; `aqua-core[fdb]` listed in `environment.yml` to keep it in the lock file (#491)
+- Fix flaky `test_select_region_without_retrieve` (#491)
 - Ocean3D: Hovmoller graphical improvements (#478)
 - Implementation of load netcdf and plot only in ocean drift CLI (#457)
 - CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
