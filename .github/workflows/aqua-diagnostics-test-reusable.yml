@@ -25,11 +25,11 @@ on:
         default: 'aqua or diagnostics or ensemble'
       pytest-timeout-seconds:
         description: >-
-          Per-test pytest timeout in seconds (the slowest diagnostics test takes up to ~430 s on a loaded runner).
+          Per-test pytest timeout in seconds (temporarily 800 s: TestBiases::test_stat_biases takes up to ~600 s on loaded runners).
           Applied only when pytest-timeout is installed (e.g. not in pypi mode before a release including it)
         required: false
         type: string
-        default: '600'
+        default: '800'
       enable-parallel:
         description: 'Enable pytest-xdist parallel execution'
         required: false

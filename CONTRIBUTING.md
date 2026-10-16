@@ -109,7 +109,7 @@ commit, run **Actions** → **AQUA-diagnostics cross-check** → **Run workflow*
 All suites call `aqua-diagnostics-test-reusable.yml`, which runs one job (one platform, one Python, one install mode);
 callers only define the matrix and the inputs. Test data, AQUA configuration and reports use the composite actions of
 aqua-core (`setup-test-data`, `setup-aqua`, `pytest-reports`), checked out at `aqua-actions-ref` (default `main`).
-Each test has a 600 s timeout (`pytest-timeout`, input `pytest-timeout-seconds`) and the test step a 40 min timeout. Every job uploads an artifact `aqua-test-artifacts-<install-mode>-<platform>-py<version>`
+Each test has an 800 s timeout (`pytest-timeout`, input `pytest-timeout-seconds`) and the test step a 40 min timeout. Every job uploads an artifact `aqua-test-artifacts-<install-mode>-<platform>-py<version>`
 with `junit.xml`, `aqua_pytest.log`, `micromamba_list.txt` and `pip_freeze.txt`.
 `AQUA_GITHUB_PAT` is used for all GitHub access (fallback: `github.token`). To test changes to `aqua-diagnostics-pypi.yml`,
 push to a branch named `pypi-test`.

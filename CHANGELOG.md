@@ -11,9 +11,10 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Fix flaky `test_select_region_without_retrieve`: `history` holds a per-second timestamp, so it is ignored in the comparison (#491)
 - CI runs `pytest -m "aqua or diagnostics or ensemble"` (50 `aqua`-only tests were never run), `climatedt-phase1` catalog no longer set up, PyPI suite on host runners without container (#491)
 - `conda-relock`: `aqua-core[fdb]` pinned in `environment.yml` and passed as last `--file`, so conda-lock no longer drops aqua-core (listed in both `core` and `core-fdb` extras, hash-order dependent) from the lock (#491)
-- `pytest-timeout` added to the `tests` extra; CI applies a 600 s per-test timeout when the plugin is installed (#491)
+- `pytest-timeout` added to the `tests` extra; CI applies an 800 s per-test timeout when the plugin is installed (#491)
 - `conda-relock` concurrency at job level, so adding another label together with `conda-lock` no longer cancels the relock (#491)
 - CI aligned with aqua-core: new `release` install mode (`environment-pypi.yml` + pip install of the checkout) used by the release matrix, `environment-pypi.yml` now holds only conda dependencies; 40 min test timeout; no coverage on Dependabot PRs and cross-check; GitHub token fallback and check; `pypi-test` push trigger; Dependabot weekly with groups and labels (#491)
 - CI labels matched by prefix; `wait for core release` label renamed `waiting for core`, so that it cannot start the release suite (#491)
