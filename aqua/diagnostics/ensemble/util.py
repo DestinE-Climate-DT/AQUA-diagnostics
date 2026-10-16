@@ -10,7 +10,7 @@ import pandas as pd
 import xarray as xr
 
 from aqua import Reader
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigCatalog
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import OutputSaver
@@ -478,7 +478,7 @@ def extract_realizations(catalog, model, exp, source):
     Returns:
         list: List of available realizations.
     """
-    configurer = ConfigPath(catalog=catalog, loglevel="WARNING")
+    configurer = ConfigCatalog(catalog=catalog, loglevel="WARNING")
     cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
 
     expcat = cat()[model][exp]
@@ -511,7 +511,7 @@ def extract_realizations_list(catalog, model, exp, source, loglevel="WARNING"):
     logger = log_configure(log_name="extract_realizations_list", log_level=loglevel)
     logger.info("extracting realizations list")
 
-    configurer = ConfigPath(catalog=catalog, loglevel=loglevel)
+    configurer = ConfigCatalog(catalog=catalog, loglevel=loglevel)
     cat, catalog_file, machine_file = configurer.deliver_intake_catalog(catalog=catalog, model=model, exp=exp, source=source)
 
     expcat = cat()[model][exp]

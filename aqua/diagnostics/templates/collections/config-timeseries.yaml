@@ -27,7 +27,6 @@ output:
   outputdir: "./"
   rebuild: true
   save_format: ['png', 'pdf', 'svg']
-  create_catalog_entry: true
   dpi: 300
 
 diagnostics:
