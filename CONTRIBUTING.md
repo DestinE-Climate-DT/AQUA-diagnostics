@@ -66,7 +66,8 @@ packaging problem is caught by the suite that owns it, not by the PR tests. Test
 | Workflow | Suite | When it runs | Platforms | Python | Install mode | Coverage |
 |---|---|---|---|---|---|---|
 | `aqua-diagnostics.yml` | PR tests | PR with a test label, Dependabot PRs, push to `main`, manual | `ubuntu-latest` in FDB container | 3.14 | `local` | yes |
-| `aqua-diagnostics-nightly.yml` | Nightly | every night (04:00 UTC), PR with `nightly` or `cross-check` label, Dependabot pip/conda PRs, manual (with aqua-core ref) | `ubuntu-latest` in FDB container, `xcode-27` | 3.14 | `environment` and `cross-check` | no |
+| `aqua-diagnostics-nightly.yml` | Nightly | every night (04:00 UTC), PR with `nightly` label, Dependabot pip/conda PRs, manual (with aqua-core ref) | `ubuntu-latest` in FDB container, `xcode-27` | 3.14 | `environment` and `cross-check` | no |
+| `aqua-diagnostics-cross-check.yml` | Cross-check | PR with `cross-check` label, manual (with aqua-core ref) | `ubuntu-latest` in FDB container | 3.14 | `cross-check` | yes |
 | `aqua-diagnostics-release.yml` | Release | every Monday (06:00 UTC), PR with `release` label, before PyPI publishing, manual | `ubuntu-22.04`, `ubuntu-26.04`, `macos-15`, `xcode-27` | 3.12, 3.13, 3.14 | `environment` | no |
 | `aqua-diagnostics-pypi.yml` | PyPI | every Tuesday (03:00 UTC), manual | `ubuntu-latest` in FDB container, `macos-latest` | 3.12, 3.13, 3.14 | `pypi` | no |
 
@@ -87,13 +88,14 @@ Comparing the two nightly modes separates aqua-core regressions (`cross-check` f
 | Label | Effect |
 |---|---|
 | `run tests` 🏃, `ready for review` 🏂, `ready to merge` 🌈 | run `aqua-diagnostics.yml` |
-| `nightly` 🌙, `cross-check` | run `aqua-diagnostics-nightly.yml`, including aqua-core `main` (use it when your change depends on unreleased aqua-core, or changes dependencies or platform-specific code) |
+| `nightly` 🌙 | run `aqua-diagnostics-nightly.yml` (use it when changing dependencies or platform-specific code) |
+| `cross-check` | run `aqua-diagnostics-cross-check.yml` against aqua-core `main` (use it when your change depends on aqua-core features not yet released) |
 | `release` ⛵ | run the full `aqua-diagnostics-release.yml` matrix (use it on release PRs) |
 | `conda-lock` 🐍 | regenerate the lock file against the PR branch |
 
 Once a label is set, the corresponding suite runs again at every push. Adding a label triggers a run only for the label
 just added: adding an unrelated label does not restart running tests. To test against another aqua-core branch, tag or
-commit, run **Actions** → **AQUA-diagnostics nightly** → **Run workflow** and set the aqua-core ref.
+commit, run **Actions** → **AQUA-diagnostics cross-check** → **Run workflow** and set the aqua-core ref.
 
 **How the CI is built**
 
