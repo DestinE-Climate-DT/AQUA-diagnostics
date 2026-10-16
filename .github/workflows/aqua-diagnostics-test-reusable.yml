@@ -100,7 +100,8 @@ jobs:
 
     concurrency:
       # github.event is the caller's event: PR runs cancel superseded runs, other events never do
-      group: aqua-diagnostics-${{ github.event.pull_request.number || github.run_id }}-${{ inputs.install-mode }}-${{ inputs.platform }}-py${{ inputs.python-version }}
+      # github.workflow is the caller's name: suites running the same leg (e.g. nightly and cross-check) do not cancel each other
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}-${{ inputs.install-mode }}-${{ inputs.platform }}-py${{ inputs.python-version }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     container:
