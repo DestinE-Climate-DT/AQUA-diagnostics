@@ -54,10 +54,12 @@ jobs:
             channels:
               - conda-forge
 
+      # pyproject.toml first: for packages listed in both files, the last file wins, so the explicit
+      # aqua-core[fdb] in environment.yml (category main) overrides the duplicated core/core-fdb extras
       - name: Relock
         shell: bash -l {0}
         run: |
-          conda-lock lock --file environment.yml --file pyproject.toml -p linux-64 -k explicit -e tests -e "core-fdb"
+          conda-lock lock --file pyproject.toml --file environment.yml -p linux-64 -k explicit -e tests -e "core-fdb"
 
       - name: Open PR
         uses: peter-evans/create-pull-request@v8
