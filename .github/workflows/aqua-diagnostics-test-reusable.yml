@@ -109,11 +109,6 @@ jobs:
       image: ${{ inputs.container-image }}
       options: --user root
 
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
-
     env:
       DEBIAN_FRONTEND: noninteractive
       GRID_DEFINITION_PATH: /tmp
