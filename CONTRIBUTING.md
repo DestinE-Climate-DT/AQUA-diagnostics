@@ -94,7 +94,13 @@ Comparing the two nightly modes separates aqua-core regressions (`cross-check` f
 | `conda-lock` 🐍 | regenerate the lock file against the PR branch |
 
 Once a label is set, the corresponding suite runs again at every push. Adding a label triggers a run only for the label
-just added: adding an unrelated label does not restart running tests. Labels are matched by prefix. To test against another aqua-core branch, tag or
+just added: adding an unrelated label does not restart running tests. Labels are matched by prefix.
+
+> **Note:** every label added to a PR starts a run of each suite, skipped when the label is not the suite's own.
+> The PR checks panel shows only the most recent run of each workflow, so when several labels are added at once,
+> or a label is added after the tests ran, a suite may appear as *skipped* even though its real run is running or
+> has finished. The real results are in the **Actions** tab and still count for the PR status and the required check.
+> To refresh the panel, push a new commit: a push starts one run per suite, so the panel shows the real ones. To test against another aqua-core branch, tag or
 commit, run **Actions** → **AQUA-diagnostics cross-check** → **Run workflow** and set the aqua-core ref.
 
 **How the CI is built**
