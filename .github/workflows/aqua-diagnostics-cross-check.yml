@@ -36,7 +36,7 @@ jobs:
       python-version: '3.14'
       pytest-markers: 'diagnostics'
       enable-parallel: true
-      enable-coverage: false
+      enable-coverage: true
       install-mode: 'cross-check'
       aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
       test-data-source: 'auto'
