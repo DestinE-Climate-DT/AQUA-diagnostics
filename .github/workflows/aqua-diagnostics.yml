@@ -54,14 +54,10 @@ jobs:
     if: needs.check-trigger.outputs.should-run == 'true'
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
-      python-versions: '["3.14"]'
+      python-version: '3.14'
       pytest-markers: 'diagnostics'
       enable-parallel: true
       enable-coverage: true
-      fail-fast: false
-      # Enables the concurrency group in the reusable workflow, so a new run
-      # on the same PR cancels the previous one still in progress.
-      pr-number: ${{ github.event.pull_request.number || '' }}
       test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}

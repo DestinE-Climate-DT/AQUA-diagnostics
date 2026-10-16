@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- CI test runner takes a single `python-version` plus `platform` and `container-image` (callers own the matrix), new `environment` install mode, `cross-check` installs aqua-core on top of `environment.yml`, FDB setup removed (#S1)
 - CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
 - Implementation of load netcdf and plot only in ocean trend CLI, (#454)
 - `Diagnostic.select_region()` now works without a `retrieve()` (#454)
