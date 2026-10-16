@@ -10,8 +10,6 @@ on:
     # "run tests" label to an open PR does not trigger this workflow.
     types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
-  schedule:
-    - cron: "0 3 * * 1" # run every Monday night at 3AM UTC
 
 permissions:
   contents: read
@@ -27,22 +25,28 @@ jobs:
     steps:
       - name: Check if tests should run
         id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          REF: ${{ github.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          # On 'labeled' events only the label just added counts, so that adding an
+          # unrelated label does not restart (and cancel) tests already running
+          LABELS: ${{ github.event.action == 'labeled' && github.event.label.name || join(github.event.pull_request.labels.*.name, '|') }}
         run: |
           # Run tests if:
           # 1) PR has label "run tests" or "ready to merge" or "ready for review"
-          # 2) Opened by Dependabot
+          # 2) Opened by Dependabot (not on 'labeled' events)
           # 3) Triggered manually (workflow_dispatch)
-          # 4) Triggered by schedule
-          # 5) Pushed to main branch
+          # 4) Pushed to main branch
           SHOULD_RUN="false"
 
-          if [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'run tests') }}" == "true" ]] || \
-             [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'ready for review') }}" == "true" ]] || \
-             [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'ready to merge') }}" == "true" ]] || \
-             [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]] || \
-             [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
-             [[ "${{ github.event_name }}" == "schedule" ]] || \
-             [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "$LABELS" == *"run tests"* ]] || \
+             [[ "$LABELS" == *"ready for review"* ]] || \
+             [[ "$LABELS" == *"ready to merge"* ]] || \
+             [[ "$ACTION" != "labeled" && "$PR_AUTHOR" == "dependabot[bot]" ]] || \
+             [[ "$EVENT_NAME" == "workflow_dispatch" ]] || \
+             [[ "$EVENT_NAME" == "push" && "$REF" == "refs/heads/main" ]]; then
             SHOULD_RUN="true"
           fi
 

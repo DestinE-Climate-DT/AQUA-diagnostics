@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Drop support to Python 3.11, as in aqua-core; `aqua-diagnostics.yml` no longer runs weekly and on `labeled` events checks only the label just added; CI labels aligned with aqua-core (#M1)
 - CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
 - Implementation of load netcdf and plot only in ocean trend CLI, (#454)
 - `Diagnostic.select_region()` now works without a `retrieve()` (#454)
