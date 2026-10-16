@@ -96,3 +96,15 @@ class TestMainExecutionFlow:
             assert call.kwargs["regions"] == ["global_ocean"]
             assert call.kwargs["anomaly_ref"] == "t0"
         mock_plot_cls.assert_called_once()
+
+    def test_plot_only_without_results(self, build_config, mock_cluster, mock_od):
+        """With no file to plot from, the plots are skipped instead of failing region by region."""
+        mock_hov_cls, mock_plot_cls = mock_od
+        mock_hov_cls.return_value.processed_data = {}
+        config_file = build_config({"ocean_drift": BASE_DRIFT}, output_overrides={"plot_only": True})
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        mock_hov_cls.return_value.run.assert_not_called()
+        mock_hov_cls.return_value.load.assert_called_once()
+        mock_plot_cls.assert_not_called()
