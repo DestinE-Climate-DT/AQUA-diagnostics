@@ -103,6 +103,7 @@ Instead of calling ``run()``, the Hovmöller products of a previous run can be r
 
     The region and the anomaly reference take part in the filenames and must be given to ``load()``.
     Each region is loaded only when all of its products are present (full values, anomalies and standardized anomalies).
+    If ``startdate`` or ``enddate`` is set, the products are loaded only if they were computed over the same period.
 
 CLI usage
 ---------

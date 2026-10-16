@@ -165,6 +165,7 @@ class Hovmoller(Diagnostic):
 
         Regions with no files on disk are left untouched, so that load can be called both before run,
         to keep previous results, and after it, or alone to plot without recomputing anything.
+        If startdate or enddate is set, products computed over a different period are not loaded.
 
         Args:
             diagnostic_product (str, optional): Name of the diagnostic product. Defaults to "hovmoller".
@@ -191,6 +192,8 @@ class Hovmoller(Diagnostic):
                     outputdir=outputdir,
                     # Same keys as save_netcdf, otherwise the file is not found
                     extra_keys={"region": info["region_name"], "ocean_drift_type": drift_type},
+                    startdate=self.startdate,
+                    enddate=self.enddate,
                 )
                 if data is not None:
                     processed.append(data)

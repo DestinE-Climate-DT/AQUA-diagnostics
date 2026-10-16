@@ -136,9 +136,9 @@ def test_plot_output(hovmoller_plot, product, ext):
     assert_nonempty(path)
 
 
-def _consumer():
+def _consumer(**dates):
     """A Hovmoller that never retrieved and does not even know its catalog"""
-    return Hovmoller(model="FESOM", exp="hpz3", source="monthly-3d", loglevel=loglevel)
+    return Hovmoller(model="FESOM", exp="hpz3", source="monthly-3d", loglevel=loglevel, **dates)
 
 
 def test_load_roundtrip(hovmoller_result, hovmoller_config):
@@ -147,9 +147,10 @@ def test_load_roundtrip(hovmoller_result, hovmoller_config):
     The consumer never retrieves: catalog, realization and region names are rebuilt without data access.
     The filename keys are written inline in save_netcdf and load: this test is what catches them diverging,
     for the global evaluation as well.
+    The period is the one the producer ended up with, so the date check must accept it.
     """
     producer, tmp_path = hovmoller_result
-    consumer = _consumer()
+    consumer = _consumer(startdate=producer.startdate, enddate=producer.enddate)
     consumer.load(outputdir=tmp_path, **{key: hovmoller_config["run"][key] for key in ("regions", "anomaly_ref")})
 
     # The unknown region is skipped, as run does
@@ -164,6 +165,14 @@ def test_load_roundtrip(hovmoller_result, hovmoller_config):
             assert loaded_ds.attrs["AQUA_region"] == produced_ds.attrs["AQUA_region"]
             for attr in ["AQUA_catalog", "AQUA_model", "AQUA_exp"]:
                 assert loaded_ds["thetao"].attrs[attr] == produced_ds["thetao"].attrs[attr]
+
+
+def test_load_other_period(hovmoller_result, hovmoller_config):
+    """Products computed over another period are not plotted as if they were the requested one."""
+    producer, tmp_path = hovmoller_result
+    consumer = _consumer(startdate="1990-06-01", enddate=producer.enddate)
+    consumer.load(outputdir=tmp_path, **{key: hovmoller_config["run"][key] for key in ("regions", "anomaly_ref")})
+    assert consumer.processed_data == {}
 
 
 def test_load_nothing_on_disk(tmp_path):
