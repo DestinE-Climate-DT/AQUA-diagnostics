@@ -3,19 +3,14 @@ name: AQUA-diagnostics nightly
 # aqua-diagnostics both against the released aqua-core and against aqua-core main (cross-check),
 # to catch integration issues before the next aqua-core release.
 # Runs nightly, manually (optionally against a given aqua-core ref), on Dependabot pip/conda PRs,
-# and on PRs with the 'nightly' label (adding it dispatches this workflow through aqua-diagnostics-labels.yml). A single cross-check on a PR is in aqua-diagnostics-cross-check.yml.
-# When a scheduled or manual (not label-dispatched) run fails, an issue listing the broken tests is opened (or updated).
+# and on PRs whose label contains 'nightly'. A single cross-check on a PR is in aqua-diagnostics-cross-check.yml.
+# When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
     inputs:
-      pr_number:
-        description: 'PR number, set by the label router (empty for manual runs)'
-        required: false
-        default: ''
-        type: string
       aqua_core_ref:
         description: 'aqua-core branch/tag/commit to cross-check against'
         required: false
@@ -30,14 +25,19 @@ permissions:
 
 jobs:
   aqua-diagnostics-nightly-tests:
-    # Non-PR events (listed first, including label router dispatches) always run.
-    # On PR open/push: run if the PR is a Dependabot pip/conda bump or has the 'nightly' label
+    # Non-PR events (listed first) always run. On PRs:
+    #  - opened/synchronize/reopened: run if the PR is a Dependabot pip/conda bump or has the 'nightly' label
+    #  - labeled: run only if the label just added is 'nightly', so that adding
+    #    an unrelated label does not restart (and cancel) tests already running
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'schedule' ||
-      startsWith(github.head_ref, 'dependabot/pip/') ||
-      startsWith(github.head_ref, 'dependabot/conda/') ||
-      contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|nightly')
+      (github.event.action != 'labeled' && (
+        startsWith(github.head_ref, 'dependabot/pip/') ||
+        startsWith(github.head_ref, 'dependabot/conda/') ||
+        contains(join(github.event.pull_request.labels.*.name, '|'), 'nightly'))) ||
+      (github.event.action == 'labeled' &&
+        contains(github.event.label.name, 'nightly'))
     strategy:
       fail-fast: false
       matrix:
@@ -75,7 +75,7 @@ jobs:
 
   report-failure:
     needs: aqua-diagnostics-nightly-tests
-    if: ${{ always() && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.pr_number == '')) && needs.aqua-diagnostics-nightly-tests.result == 'failure' }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.aqua-diagnostics-nightly-tests.result == 'failure' }}
     permissions:
       contents: read
       actions: read

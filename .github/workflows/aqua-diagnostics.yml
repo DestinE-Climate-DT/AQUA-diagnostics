@@ -9,15 +9,10 @@ on:
     branches:
       - main
   pull_request:
-    # Adding a label is handled by aqua-diagnostics-labels.yml, which dispatches this workflow
-    types: [opened, synchronize, reopened]
+    # 'labeled' is not a default activity type: without it, adding the
+    # "run tests" label to an open PR does not trigger this workflow.
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'PR number, set by the label router (empty for manual runs)'
-        required: false
-        default: ''
-        type: string
 
 permissions:
   contents: read
@@ -26,15 +21,22 @@ permissions:
 
 jobs:
   aqua-diagnostics-tests:
-    # Non-PR events (listed first, including label router dispatches) always run.
-    # On PR open/push: run if the PR is from Dependabot or has a test label (matched by prefix)
+    # Non-PR events (listed first) always run. On PRs:
+    #  - opened/synchronize/reopened: run if the PR is from Dependabot or has a test label
+    #  - labeled: run only if the label just added is a test label, so that adding
+    #    an unrelated label does not restart (and cancel) tests already running
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'push' ||
-      github.event.pull_request.user.login == 'dependabot[bot]' ||
-      contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|run tests') ||
-      contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|ready for review') ||
-      contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|ready to merge')
+      (github.event.action != 'labeled' && (
+        github.event.pull_request.user.login == 'dependabot[bot]' ||
+        contains(join(github.event.pull_request.labels.*.name, '|'), 'run tests') ||
+        contains(join(github.event.pull_request.labels.*.name, '|'), 'ready for review') ||
+        contains(join(github.event.pull_request.labels.*.name, '|'), 'ready to merge'))) ||
+      (github.event.action == 'labeled' && (
+        contains(github.event.label.name, 'run tests') ||
+        contains(github.event.label.name, 'ready for review') ||
+        contains(github.event.label.name, 'ready to merge')))
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-version: '3.14'

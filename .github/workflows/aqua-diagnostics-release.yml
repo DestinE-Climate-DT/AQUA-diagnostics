@@ -1,18 +1,12 @@
 name: AQUA-diagnostics release
 # Full OS (min/max) x Python matrix from environment.yml (released aqua-core), on the host runners.
-# Runs weekly, manually, and on PRs with the 'release' label (adding it dispatches this workflow through aqua-diagnostics-labels.yml).
-# When a scheduled or manual (not label-dispatched) run fails, an issue listing the broken tests is opened (or updated).
+# Runs weekly, manually, and on PRs whose label contains 'release' (e.g. 'release :sailboat:').
+# When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'PR number, set by the label router (empty for manual runs)'
-        required: false
-        default: ''
-        type: string
   schedule:
     - cron: "0 6 * * 1" # run every Monday at 6AM UTC, one hour after the aqua-core release tests
 
@@ -21,11 +15,16 @@ permissions:
 
 jobs:
   aqua-diagnostics-release-tests:
-    # Non-PR events (including label router dispatches) always run.
-    # On PR open/push: run if the PR has the 'release' label (matched by prefix: 'wait for core release' does not count)
+    # Non-PR events (listed first) always run. On PRs:
+    #  - opened/synchronize/reopened: run if the PR has the 'release' label
+    #  - labeled: run only if the label just added is 'release', so that adding
+    #    an unrelated label does not restart (and cancel) tests already running
     if: >-
       github.event_name != 'pull_request' ||
-      contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|release')
+      (github.event.action != 'labeled' &&
+        contains(join(github.event.pull_request.labels.*.name, '|'), 'release')) ||
+      (github.event.action == 'labeled' &&
+        contains(github.event.label.name, 'release'))
     strategy:
       fail-fast: false
       # Cap on the total number of jobs running at once (platform x Python), to leave runners free for other workflows
@@ -55,7 +54,7 @@ jobs:
 
   report-failure:
     needs: aqua-diagnostics-release-tests
-    if: ${{ always() && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.pr_number == '')) && needs.aqua-diagnostics-release-tests.result == 'failure' }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.aqua-diagnostics-release-tests.result == 'failure' }}
     permissions:
       contents: read
       actions: read
