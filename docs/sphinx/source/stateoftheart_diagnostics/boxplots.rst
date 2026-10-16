@@ -26,7 +26,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/boxplots`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-boxplots.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-boxplots.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/boxplots`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -90,8 +90,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/boxplots
-    python cli_boxplots.py --config <path_to_config_file>
+    python -m aqua.diagnostics.boxplots.cli_boxplots --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

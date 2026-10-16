@@ -25,7 +25,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command-line interface (CLI) scripts.
-* Template configuration files are available in the ``aqua/diagnostics/templates/diagnostics/config-ensemble_zonalmean.yaml`` directory.
+* Template configuration files are available in the ``aqua/diagnostics/templates/collections/config-ensemble_zonalmean.yaml`` directory.
 * Notebooks are available in the ``notebooks/diagnostics/ensemble`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -127,8 +127,7 @@ The diagnostic can be run from the command-line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ensemble
-    python cli_zonal_ensemble.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ensemble.cli_zonal_ensemble --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

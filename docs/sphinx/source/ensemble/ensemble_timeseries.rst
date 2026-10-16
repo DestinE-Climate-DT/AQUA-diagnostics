@@ -28,7 +28,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command-line interface (CLI) scripts.
-* Template configuration files are available in the ``aqua/diagnostics/templates/diagnostics/config-ensemble_timeseries.yaml`` directory.
+* Template configuration files are available in the ``aqua/diagnostics/templates/collections/config-ensemble_timeseries.yaml`` directory.
 * Notebooks are available in the ``notebooks/diagnostics/ensemble`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -130,15 +130,16 @@ CLI usage
 The diagnostic can be run from the command-line interface (CLI) using the following commands:
 
 For unified ensemble diagnostics:
+
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ensemble
-    python cli_ensemble.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ensemble.cli_ensemble --config <path_to_config_file>
 
 For exclusively running multi-model time series:
+
 .. code-block:: bash
 
-    python cli_multi_model_timeseries_ensemble.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ensemble.cli_multi_model_timeseries_ensemble --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

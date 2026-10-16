@@ -41,7 +41,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/timeseries`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-timeseries.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-timeseries.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/timeseries`` directory and contain examples of how to use the diagnostic.
 * A list of available regions is available in the ``aqua/diagnostics/config/definitions/regions.yaml`` file.
 
@@ -95,8 +95,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/timeseries
-    python cli_timeseries.py --config <path_to_config_file>
+    python -m aqua.diagnostics.timeseries.cli_timeseries --config <path_to_config_file>
 
 Three configuration files are provided and run when executing the aqua-analysis (see :ref:`aqua_analysis`).
 

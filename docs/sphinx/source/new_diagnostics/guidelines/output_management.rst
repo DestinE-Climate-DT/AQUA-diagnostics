@@ -42,7 +42,7 @@ The following example demonstrates how to initialize the ``OutputSaver`` class:
 
 .. code-block:: python
 
-    from aqua.diagnostics.core import OutputSaver
+    from aqua.diagnostics.base import OutputSaver
 
     # Initializing with the system-defined default catalog
     outputsaver = OutputSaver(diagnostic='dummy',
@@ -159,13 +159,13 @@ This example demonstrates saving multiple plot formats (e.g. PNG/PDF/SVG) with m
 Opening a PDF File and Displaying Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To open a PDF file and display its metadata:
+To display the metadata of a PDF file you can use ``pypdf``, which is installed with AQUA-diagnostics:
 
 .. code-block:: python
 
-    from aqua.core.util import open_image
+    from pypdf import PdfReader
 
-    open_image("/path/to/my/file/dummy.mean.climatedt-phase1.IFS-NEMO.historical-1990.obs.ERA5.era5.pdf")
+    PdfReader("/path/to/my/file/dummy.mean.climatedt-phase1.IFS-NEMO.historical-1990.obs.ERA5.era5.pdf").metadata
 
 Generating a Filename for Multimodel or Multireference Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
