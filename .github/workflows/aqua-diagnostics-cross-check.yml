@@ -1,0 +1,50 @@
+name: AQUA-diagnostics cross-check
+# Tests aqua-diagnostics against aqua-core main (or a given ref) instead of the released aqua-core,
+# to catch integration issues early, e.g. when a PR depends on unreleased aqua-core features.
+# Runs on PRs labelled 'cross-check' (then at every push) and manually with a chosen aqua-core ref:
+#   Actions > AQUA-diagnostics cross-check > Run workflow > aqua-core branch/tag/commit.
+# The scheduled check against aqua-core main is part of aqua-diagnostics-nightly.yml.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      aqua_core_ref:
+        description: 'aqua-core branch/tag/commit to test against'
+        required: false
+        default: 'main'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  aqua-diagnostics-cross-check-tests:
+    # Manual runs always run. On PRs:
+    #  - opened/synchronize/reopened: run if the PR has the 'cross-check' label
+    #  - labeled: run only if the label just added is 'cross-check', so that adding
+    #    an unrelated label does not restart (and cancel) tests already running
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.action != 'labeled' &&
+        contains(join(github.event.pull_request.labels.*.name, '|'), 'cross-check')) ||
+      (github.event.action == 'labeled' &&
+        contains(github.event.label.name, 'cross-check'))
+    uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
+    with:
+      python-version: '3.14'
+      pytest-markers: 'diagnostics'
+      enable-parallel: true
+      enable-coverage: true
+      install-mode: 'cross-check'
+      aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+      test-data-source: 'auto'
+    secrets:
+      AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
+      AQUA_DVC_PAT: ${{ secrets.AQUA_DVC_PAT }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      AQUA_DVC_PEM: ${{ secrets.AQUA_DVC_PEM }}
