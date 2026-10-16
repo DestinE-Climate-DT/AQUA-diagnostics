@@ -5,7 +5,7 @@ import calendar
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import to_list
+from aqua.core.util import DEFAULT_REALIZATION, to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -92,6 +92,7 @@ class Stratification(Diagnostic):
         climatology: str | list = "month",
         reader_kwargs: dict = {},
         mld: bool = False,
+        save_netcdf: bool = True,
     ):
         """Run the stratification diagnostic workflow.
 
@@ -113,6 +114,7 @@ class Stratification(Diagnostic):
                 Defaults to "month".
             reader_kwargs (dict, optional): Additional keyword arguments passed to the data reader.
             mld (bool, optional): If True, compute mixed layer depth (MLD) and include it in the output.
+            save_netcdf (bool, optional): Whether to save the processed data as netCDF files. Defaults to True.
 
         Raises:
             ValueError: If ``regions`` and ``climatology`` have different lengths, or if a
@@ -132,23 +134,13 @@ class Stratification(Diagnostic):
         self.data.attrs["startdate"] = f"{self.data.time[0].values.astype('datetime64[D]')}"
         self.data.attrs["enddate"] = f"{self.data.time[-1].values.astype('datetime64[D]')}"
 
-        regions_list = to_list(regions)
-        if not regions_list:
-            regions_list = [None]
-        clim_list = to_list(climatology)
-        if not clim_list:
-            clim_list = ["month"]
-        if len(clim_list) != len(regions_list):
-            raise ValueError(
-                f"regions ({len(regions_list)}) and climatology ({len(clim_list)}) must have the same length (paired 1:1)"
-            )
+        pairs = self._region_climatology_pairs(regions=regions, climatology=climatology)
 
         self.processed_data = {}
         self.logger.debug(
-            "Variables retrieved: %s, regions: %s, climatology: %s, dim_mean: %s",
+            "Variables retrieved: %s, (region, climatology) pairs: %s, dim_mean: %s",
             var,
-            regions_list,
-            clim_list,
+            pairs,
             dim_mean,
         )
 
@@ -160,7 +152,7 @@ class Stratification(Diagnostic):
 
         data_whole_region = self.data
         clim_cache = {}
-        for reg, clim in zip(regions_list, clim_list):
+        for reg, clim in pairs:
             self.logger.info(
                 "Processing region: %s, climatology: %s for diagnostic '%s'.",
                 reg if reg is not None else "global",
@@ -198,17 +190,87 @@ class Stratification(Diagnostic):
             self.logger.debug("Loading data in memory.")
             self.data.load()
             self.logger.debug("Loaded data in memory.")
-            self.processed_data[reg] = self.data
-            product = "mld" if mld else "stratification"
-            data_to_save = self.data["mld"] if mld else self.data
-            self.save_netcdf(
-                data_to_save,
+            self.processed_data[(reg, clim)] = self.data
+            if save_netcdf:
+                product = "mld" if mld else "stratification"
+                # MLD is saved as a Dataset too, so that the file keeps the dataset attributes
+                # (region, climatology, dates) read by the plots and by the date check of load.
+                data_to_save = self.data[["mld"]] if mld else self.data
+                self.save_netcdf(
+                    data_to_save,
+                    diagnostic_product=product,
+                    outputdir=outputdir,
+                    rebuild=rebuild,
+                    region=self.region,
+                    climatology=clim,
+                )
+                self.logger.info("%s diagnostic saved to netCDF file.", product)
+
+    def load(
+        self,
+        outputdir: str = ".",
+        regions: str | list = None,
+        climatology: str | list = "month",
+        mld: bool = False,
+        reader_kwargs: dict = {},
+    ):
+        """Populate the processed data from the netCDF files written by a previous run.
+
+        Args:
+            outputdir (str, optional): Directory where the data was saved. Defaults to ".".
+            regions (str, list, or None, optional): Region(s) given to run. None means global evaluation.
+            climatology (str or list, optional): Climatology period(s) given to run, paired 1:1 with
+                ``regions``. Defaults to "month", as in run.
+            mld (bool, optional): If True, load the MLD product instead of the stratification one.
+            reader_kwargs (dict, optional): The Reader keyword arguments of the run, to match its realization.
+
+        Raises:
+            ValueError: If ``regions`` and ``climatology`` have different lengths.
+
+        """
+        self.realization = reader_kwargs.get("realization", DEFAULT_REALIZATION)
+        product = "mld" if mld else "stratification"
+
+        for reg, clim in self._region_climatology_pairs(regions=regions, climatology=climatology):
+            # run names the files after the region long name, which is resolved here without any data access
+            region_name = self._set_region(region=reg)[0] if reg is not None else "global"
+            data = self.load_netcdf(
+                diagnostic=self.diagnostic_name,
                 diagnostic_product=product,
                 outputdir=outputdir,
-                rebuild=rebuild,
-                region=self.region,
+                # Same keys as save_netcdf, otherwise the file is not found
+                extra_keys={"climatology": clim, "region": region_name},
+                startdate=self.startdate,
+                enddate=self.enddate,
             )
-            self.logger.info("%s diagnostic saved to netCDF file.", product)
+            if data is not None:
+                self.processed_data[(reg, clim)] = data
+
+    def _region_climatology_pairs(self, regions: str | list = None, climatology: str | list = None):
+        """Pair the regions with their climatologies, 1:1.
+
+        Args:
+            regions (str, list, or None, optional): Region(s). None means global evaluation.
+            climatology (str, list, or None, optional): Climatology period(s). None means "month".
+
+        Returns:
+            list: The (region, climatology) pairs, which are also the keys of processed_data.
+
+        Raises:
+            ValueError: If ``regions`` and ``climatology`` have different lengths.
+
+        """
+        regions_list = to_list(regions)
+        if not regions_list:
+            regions_list = [None]
+        clim_list = to_list(climatology)
+        if not clim_list:
+            clim_list = ["month"]
+        if len(clim_list) != len(regions_list):
+            raise ValueError(
+                f"regions ({len(regions_list)}) and climatology ({len(clim_list)}) must have the same length (paired 1:1)"
+            )
+        return list(zip(regions_list, clim_list))
 
     def compute_stratification(self):
         """Compute the stratification by calculating the potential density.
@@ -303,6 +365,7 @@ class Stratification(Diagnostic):
         diagnostic: str = "ocean_circulation",
         diagnostic_product: str = "stratification",
         region: str = None,
+        climatology: str = None,
         outputdir: str = ".",
         rebuild: bool = True,
     ):
@@ -313,6 +376,7 @@ class Stratification(Diagnostic):
             diagnostic (str, optional): High-level diagnostic category. Defaults to "ocean_circulation".
             diagnostic_product (str, optional): Specific diagnostic product name. Defaults to "stratification".
             region (str, optional): Region name to include in metadata or filename.
+            climatology (str, optional): Climatology period to include in metadata or filename.
             outputdir (str, optional): Directory where the NetCDF file will be saved.
                 Defaults to the current directory.
             rebuild (bool, optional): If True, force rebuild of NetCDF file even if it exists. Defaults to True.
@@ -323,7 +387,7 @@ class Stratification(Diagnostic):
         """
         self.logger.info(
             f"Saving results to netCDF: diagnostic={diagnostic}, product={diagnostic_product}, "
-            f"outputdir={outputdir}, region={region}"
+            f"outputdir={outputdir}, region={region}, climatology={climatology}"
         )
         filepath = super().save_netcdf(
             data=data,
@@ -331,7 +395,10 @@ class Stratification(Diagnostic):
             diagnostic_product=diagnostic_product,
             outputdir=outputdir,
             rebuild=rebuild,
-            extra_keys={"region": region},
+            # The same region can be paired with more than one climatology, which then has to be part of
+            # the filename. It comes first, as the season and the frequency do in the other diagnostics.
+            # load builds the same keys.
+            extra_keys={"climatology": climatology, "region": region},
         )
         self.logger.info("NetCDF file saved successfully.")
         return filepath

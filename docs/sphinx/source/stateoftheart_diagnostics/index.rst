@@ -88,7 +88,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     * ``plot_only``: a boolean that skips the evaluation of the diagnostic, producing the plots from the NetCDF files
       already present in ``outputdir``. Default is ``false``. See :ref:`diagnostics-plot-only`.
     * ``dpi``: the resolution of the plots.
-    * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
+    .. * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
 .. code-block:: yaml
 
@@ -99,11 +99,6 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
       save_netcdf: true
       plot_only: false
       dpi: 300
-      create_catalog_entry: true
-
-.. note::
-
-  Not all the diagnostics support yet the ``create_catalog_entry`` keyword.
 
 .. _diagnostics-cli-arguments:
 
@@ -158,7 +153,7 @@ so that the plot classes are used in the same way. Results with no file on disk 
 ``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
 because they take part in the filenames.
 
-This is currently supported by :doc:`lat_lon_profiles`.
+This is currently supported by :doc:`lat_lon_profiles`, :doc:`ocean_trends` and :doc:`ocean_stratification`.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
