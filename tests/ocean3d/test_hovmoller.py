@@ -11,9 +11,14 @@ approx_rel = APPROX_REL * 10
 dpi = DPI
 
 # --- Constants ---
-# Sargasso Sea ('sss') is a regionmask region (frac_threshold 0.0) of the regions file.
+# Both fldmean selections are anchored: 'sss' is a box, 'ao' an IHO polygon.
 # thetao is in K: the FESOM data are no longer in degC since aqua-core #3176.
-EXPECTED_FULL = {"thetao": 295.2684740408682, "so": 36.577130895750535}
+EXPECTED_FULL = {
+    ("sss", "thetao"): 295.3586629652034,
+    ("sss", "so"): 36.57638045014168,
+    ("ao", "thetao"): 292.09862499785226,
+    ("ao", "so"): 35.4318428738888,
+}
 EXPECTED_DRIFT_TYPES = ["full", "anom_t0", "std_anom_t0"]
 PLOT_STEM = "oceandrift.{product}.ci.FESOM.hpz3.r1.sargasso_sea"
 EXPECTED_NTIME = 15  # crosses a year boundary, so the yearly split/concat is tested
@@ -73,9 +78,9 @@ def hovmoller_plot(hovmoller_result, hovmoller_config):
 # --- Tests ---
 
 
-def _by_drift_type(hov):
+def _by_drift_type(hov, region="sss"):
     """Index the processed datasets by drift type, so tests do not rely on list order."""
-    return {ds.attrs["AQUA_ocean_drift_type"]: ds for ds in hov.processed_data["sss"]}
+    return {ds.attrs["AQUA_ocean_drift_type"]: ds for ds in hov.processed_data[region]}
 
 
 def test_processed_data_types(hovmoller_result):
@@ -94,13 +99,13 @@ def test_multiple_regions_in_one_run(hovmoller_result):
         assert all(ds.sizes["time"] == EXPECTED_NTIME for ds in hov.processed_data[region])
 
 
-@pytest.mark.parametrize("var, expected", sorted(EXPECTED_FULL.items()))
-def test_full_values(hovmoller_result, var, expected):
+@pytest.mark.parametrize("region, var", EXPECTED_FULL)
+def test_full_values(hovmoller_result, region, var):
     """Anchor the untransformed field, the one value the derived checks build on."""
     hov, _ = hovmoller_result
-    full = _by_drift_type(hov)["full"]
+    full = _by_drift_type(hov, region)["full"]
     actual = full[var].isel({hov.vert_coord: 1, "time": 1}).values
-    assert actual == pytest.approx(expected, rel=approx_rel)
+    assert actual == pytest.approx(EXPECTED_FULL[region, var], rel=approx_rel)
 
 
 def test_anomaly_is_referenced_to_first_timestep(hovmoller_result):

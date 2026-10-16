@@ -194,4 +194,7 @@ def test_select_region_without_retrieve(region):
 
     assert result["region"] == expected["region"]
     assert result["data"].attrs["AQUA_region"] == expected["region"]
+    # The history is timestamped to the second: a polygon selection (e.g. 'io') can end in the next one
+    for res in (result, expected):
+        res["data"].attrs.pop("history")
     xr.testing.assert_identical(result["data"], expected["data"])

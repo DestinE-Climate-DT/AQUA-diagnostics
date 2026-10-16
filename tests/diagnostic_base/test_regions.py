@@ -57,20 +57,16 @@ def test_set_region_none_passes_through_limits():
     assert lat == [20, 30]
 
 
-def test_set_region_resolves_against_centralized_file():
-    diag = _make_diag()
-    name, lon, lat = diag._set_region(region="nh")
-    assert name == "North Midlatitudes"
-    assert lat == [30, 90]
-    assert lon == [-180, 180]
-
-
-def test_set_region_resolves_seaice_entry_too():
-    """Any diagnostic can pick any region — sea-ice geometries included."""
-    diag = _make_diag()
-    name, _, lat = diag._set_region(region="arctic")
-    assert name == "Arctic"
-    assert lat == [0, 90]
+@pytest.mark.parametrize(
+    "region, expected",
+    [
+        ("nh", ("North Midlatitudes", [-180, 180], [30, 90])),
+        ("arctic", ("Arctic", [0, 360], [0, 90])),  # any diagnostic can pick sea-ice regions too
+        ("io", ("Indian Ocean", None, None)),  # polygons (IHO) have no lon/lat limits
+    ],
+)
+def test_set_region_resolves_against_centralized_file(region, expected):
+    assert _make_diag()._set_region(region=region) == expected
 
 
 def test_set_region_unknown_name_raises_with_list():
