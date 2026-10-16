@@ -11,19 +11,10 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
-- Fix flaky `test_select_region_without_retrieve`: `history` holds a per-second timestamp, so it is ignored in the comparison (#491)
-- CI runs `pytest -m "aqua or diagnostics or ensemble"` (50 `aqua`-only tests were never run), `climatedt-phase1` catalog no longer set up, PyPI suite on host runners without container (#491)
-- `conda-relock`: `aqua-core[fdb]` pinned in `environment.yml` and passed as last `--file`, so conda-lock no longer drops aqua-core (listed in both `core` and `core-fdb` extras, hash-order dependent) from the lock (#491)
-- `pytest-timeout` added to the `tests` extra; CI applies an 800 s per-test timeout when the plugin is installed (#491)
-- `conda-relock` concurrency at job level, so adding another label together with `conda-lock` no longer cancels the relock (#491)
-- CI aligned with aqua-core: new `release` install mode (`environment-pypi.yml` + pip install of the checkout) used by the release matrix, `environment-pypi.yml` now holds only conda dependencies; 40 min test timeout; no coverage on Dependabot PRs and cross-check; GitHub token fallback and check; `pypi-test` push trigger; Dependabot weekly with groups and labels (#491)
-- CI labels matched by prefix; `wait for core release` label renamed `waiting for core`, so that it cannot start the release suite (#491)
-- CI testing strategy documented in `CONTRIBUTING.md`, PR template checkbox for the `cross-check` label (#494)
-- New `aqua-diagnostics-release.yml` (OS min/max x Python 3.12-3.14, weekly, `release` label) replaces the monthly `aqua-diagnostics-complete.yml`; `aqua-diagnostics-pypi.yml` runs on Ubuntu/macOS x Python 3.12-3.14 and reports failures (#493)
-- New `aqua-diagnostics-nightly.yml`: matrix released aqua-core / aqua-core main x Ubuntu (FDB container) / macOS, triggered nightly, manually, by the `nightly` label and Dependabot pip/conda PRs; failure issue via the aqua-core report. `aqua-diagnostics-cross-check.yml` stays as a single cross-check job on the `cross-check` label or manual run, without schedule (#492)
-- CI test runner takes a single `python-version` plus `platform` and `container-image` (callers own the matrix), new `environment` install mode, `cross-check` installs aqua-core on top of `environment.yml`, FDB setup removed (#491)
-- Drop support to Python 3.11, as in aqua-core; `aqua-diagnostics.yml` no longer runs weekly, `check-trigger` job replaced by a job condition as in aqua-core (on `labeled` events only the label just added counts); CI labels aligned with aqua-core (#495)
-- `conda-relock` workflow can be triggered on a PR by adding the `conda-lock` label: it relocks against the PR branch and opens a relock PR targeting it, as in aqua-core (#496)
+- Drop support to Python 3.11, as in aqua-core (#491)
+- New CI testing strategy aligned with aqua-core (see `CONTRIBUTING.md`): PR tests, nightly against released and `main` aqua-core on Ubuntu/macOS, release matrix (replaces the monthly tests), PyPI matrix, label-driven cross-check and relock, automatic failure issues; `environment-pypi.yml` holds only conda dependencies (#491)
+- `pytest-timeout` added to the `tests` extra; `aqua-core[fdb]` listed in `environment.yml` to keep it in the lock file (#491)
+- Fix flaky `test_select_region_without_retrieve` (#491)
 - Ocean3D: Hovmoller graphical improvements (#478)
 - Implementation of load netcdf and plot only in ocean drift CLI (#457)
 - CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
