@@ -10,6 +10,8 @@ from aqua.core.graphics import ConfigStyle, plot_timeseries
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
+from .util import add_row_label, set_year_ticks
+
 
 def plot_multi_timeseries(
     maps: list,
@@ -24,6 +26,7 @@ def plot_multi_timeseries(
     text: list[float] = None,
     title: str = None,
     titles: list[str] = None,
+    ylabels: list[str] = None,
     return_fig=True,
     loglevel="WARNING",
     **kwargs,
@@ -43,6 +46,8 @@ def plot_multi_timeseries(
         text (list, optional): List of text annotations for each subplot.
         title (str, optional): Title for the entire figure.
         titles (list of str, optional): List of titles for each subplot. If None, no titles will be set.
+        ylabels (list of str, optional): List of y-axis labels for each subplot, replacing the default
+            ones built from the data attributes. A None entry leaves the y-axis of that subplot unlabelled.
         return_fig (bool, optional): If True, return the matplotlib Figure object.
         loglevel (str, optional): Logging level for the function.
         **kwargs: Additional keyword arguments passed to the plotting function.
@@ -80,25 +85,15 @@ def plot_multi_timeseries(
                 loglevel=loglevel,
                 colors=line_plot_colours,
             )
-            ax.set_xticks(ax.get_xticks())
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
+            if ylabels is not None:
+                ax.set_ylabel(ylabels[k] or "")
+            set_year_ticks(ax)
 
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
 
             if text and text[k]:
-                logger.debug("Setting text position for %s", text[k])
-                ax.text(
-                    -0.3,
-                    0.5,
-                    text[k],
-                    fontsize=15,
-                    color="dimgray",
-                    rotation=90,
-                    transform=ax.transAxes,
-                    ha="center",
-                    va="center",
-                )
+                add_row_label(ax, text[k])
     # Adjust overall layout
     fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)
     fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
