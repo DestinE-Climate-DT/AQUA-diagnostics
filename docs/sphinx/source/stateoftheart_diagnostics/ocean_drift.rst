@@ -92,6 +92,18 @@ The basic structure of the analysis is the following:
     The diagnostic automatically processes data to generate all transformation types (full values, anomalies and standardized anomalies).
     Spatial averaging is performed over the specified dimensions before computing temporal transformations.
 
+Instead of calling ``run()``, the Hovmöller products of a previous run can be read back from their NetCDF files
+(see :ref:`diagnostics-plot-only`):
+
+.. code-block:: python
+
+    hov.load(outputdir="/path/to/previous/output", regions="io", anomaly_ref="t0")
+
+.. note::
+
+    The region and the anomaly reference take part in the filenames and must be given to ``load()``.
+    Each region is loaded only when all of its products are present (full values, anomalies and standardized anomalies).
+    If ``startdate`` or ``enddate`` is set, the products are loaded only if they were computed over the same period.
 
 CLI usage
 ---------

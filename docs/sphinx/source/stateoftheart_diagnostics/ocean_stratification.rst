@@ -105,7 +105,21 @@ The basic structure of the analysis is the following:
     )
     ps.plot_mld()
 
+Instead of calling ``run()``, the results of a previous run can be read back from their NetCDF files
+(see :ref:`diagnostics-plot-only`):
 
+.. code-block:: python
+
+    strat.load(outputdir="/path/to/previous/output", regions="ls", climatology="January")
+    ps = PlotStratification(data=strat.processed_data[("ls", "January")])
+
+.. note::
+
+    The regions and their climatologies take part in the filenames and must be given to ``load()``, paired as in ``run()``.
+    The results are stored in ``processed_data``, keyed by region and climatology.
+    The mixed layer depth is a separate product, loaded with ``mld=True`` under the same keys:
+    load it into its own ``Stratification`` instance, as the CLI does.
+    If ``startdate`` or ``enddate`` is set, the files are loaded only if they were computed over the same period.
 
 CLI usage
 ---------
