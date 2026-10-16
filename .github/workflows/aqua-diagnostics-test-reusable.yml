@@ -309,6 +309,12 @@ jobs:
       # ========================================
       # 10. RUN TESTS
       # ========================================
+      - name: Cache region polygons
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/regionmask/aqua
+          key: regionmask-iho-v3-0.02
+
       - name: Run tests (parallel with coverage)
         if: ${{ inputs.enable-parallel && inputs.enable-coverage }}
         run: |

@@ -28,7 +28,7 @@ class TestSeaIce:
         [
             # Valid cases without standard deviation
             ("extent", "arctic", 17.2719, "million km^2", "siconc", None, None, None),
-            ("extent", "weddell_sea", 4.5872, "million km^2", "siconc", None, None, None),
+            ("extent", "weddell_sea_ice", 4.5872, "million km^2", "siconc", None, None, None),
             ("volume", "arctic", 13.7552, "thousands km^3", "siconc", None, None, None),
             ("volume", "antarctic", 9.1140, "thousands km^3", "siconc", None, None, None),
             # Valid cases with standard deviation computation
