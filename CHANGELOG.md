@@ -11,6 +11,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- `conda-relock` runs conda-lock on Python 3.12: on Python 3.14 it silently dropped aqua-core from the lock (#491)
 - `pytest-timeout` added to the `tests` extra; CI applies a 600 s per-test timeout when the plugin is installed (#491)
 - `conda-relock` concurrency at job level, so adding another label together with `conda-lock` no longer cancels the relock (#491)
 - CI aligned with aqua-core: new `release` install mode (`environment-pypi.yml` + pip install of the checkout) used by the release matrix, `environment-pypi.yml` now holds only conda dependencies; 40 min test timeout; no coverage on Dependabot PRs and cross-check; GitHub token fallback and check; `pypi-test` push trigger; Dependabot weekly with groups and labels (#491)

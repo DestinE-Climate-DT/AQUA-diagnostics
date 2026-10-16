@@ -47,8 +47,10 @@ jobs:
       - uses: mamba-org/setup-micromamba@v3
         with:
           environment-name: relock-env
+          # conda-lock 4.0.3 running on Python 3.14 silently drops aqua-core (core/core-fdb extras) from the lock
+          # when requires-python is '>=3.12,<3.15'; running it on Python 3.12 resolves correctly
           create-args: >-
-            python
+            python=3.12
             conda-lock
           condarc: |
             channels:
