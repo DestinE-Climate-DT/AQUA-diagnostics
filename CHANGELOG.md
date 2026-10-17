@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
-- Tropical Cyclones: add `--config-fdb` / `--config_fdb` to override YAML `reader_kwargs.config_fdb` and forward Reader options to catalog-based orography reads (#503)
+- Tropical Cyclones: forward configured `reader_kwargs`, including `config_fdb`, to catalog-based orography reads (#505)
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
 Main changes:

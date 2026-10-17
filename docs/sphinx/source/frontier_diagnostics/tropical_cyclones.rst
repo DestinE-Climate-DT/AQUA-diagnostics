@@ -65,13 +65,14 @@ To override the configured FDB location for a run:
 .. code-block:: bash
 
    python -m tropical_cyclones.cli_tropical_cyclones \
-     --config config_tcs.yaml --config-fdb /path/to/another-fdb-config.yaml
+     --config config_tcs.yaml \
+     --reader_kwargs '{"config_fdb": "/path/to/another-fdb-config.yaml"}'
 
-``--config_fdb`` is an alias for ``--config-fdb``. The dedicated flag takes
-precedence over ``config_fdb`` in both the YAML configuration and
-``--reader_kwargs`` JSON, while preserving other Reader options such as chunks.
-When the flag is omitted, the YAML setting (or a ``--reader_kwargs`` override)
-is used; when none is supplied, the Reader uses its usual FDB configuration.
+``reader_kwargs`` contains additional keyword arguments passed to AQUA's
+``Reader``. The existing ``--reader_kwargs`` option accepts a JSON object and
+merges it into the first dataset's YAML ``reader_kwargs``. Command-line values
+override matching YAML values while preserving other settings such as chunks.
+If ``config_fdb`` is omitted from both, the Reader uses its usual FDB configuration.
 
 Output
 ------
