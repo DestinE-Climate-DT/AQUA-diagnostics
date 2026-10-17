@@ -37,43 +37,6 @@ Input variables
 * `10u`     (2m zonal wind, GRIB paramid 165)
 * `10v`     (2m meridional wind, GRIB paramid 166)
 
-Command line and FDB configuration
-----------------------------------
-
-Configure an FDB configuration file or directory in the first dataset's
-``reader_kwargs``. For example, in ``config_tcs.yaml``:
-
-.. code-block:: yaml
-
-   datasets:
-     - catalog: climatedt-o25.1
-       model: IFS-FESOM
-       exp: historical-1990
-       source: hourly-hpz10-atm2d
-       source2d: hourly-hpz10-atm2d
-       source3d: hourly-hpz10-atm3d
-       engine: z3fdb
-       reader_kwargs:
-         config_fdb: /path/to/config-z3fdb.yaml
-         chunks: {time: 6, level: 1}
-
-These Reader options are used for the 2D and 3D fields, optional full-resolution
-fields, and orography retrieved from the catalog.
-
-To override the configured FDB location for a run:
-
-.. code-block:: bash
-
-   python -m tropical_cyclones.cli_tropical_cyclones \
-     --config config_tcs.yaml \
-     --reader_kwargs '{"config_fdb": "/path/to/another-fdb-config.yaml"}'
-
-``reader_kwargs`` contains additional keyword arguments passed to AQUA's
-``Reader``. The existing ``--reader_kwargs`` option accepts a JSON object and
-merges it into the first dataset's YAML ``reader_kwargs``. Command-line values
-override matching YAML values while preserving other settings such as chunks.
-If ``config_fdb`` is omitted from both, the Reader uses its usual FDB configuration.
-
 Output
 ------
 
