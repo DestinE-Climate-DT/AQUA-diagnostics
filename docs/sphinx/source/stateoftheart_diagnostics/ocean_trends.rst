@@ -39,8 +39,8 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ocean_trends`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-trends.yaml``
-* Notebooks are available in the ``notebooks/diagnostics/trends`` directory and contain examples of how to use the diagnostic.
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-trends.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/ocean_trends`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
 ----------------------------
@@ -66,7 +66,7 @@ The basic structure of the analysis is the following:
 .. code-block:: python
 
 
-    from aqua.diagnostics import Trends, PlotTrends
+    from aqua.diagnostics.ocean_trends import Trends, PlotTrends
 
     trend = Trends(
         catalog='climatedt-phase1',
