@@ -70,8 +70,7 @@ Examples from the TCs class contained in the tropical_cyclones.py and its relate
 * "catalog_init": initializes the Reader object for retrieving the atmospheric data needed (i.e. the input and output vars);
 * "data_retrieve": retrieves each atmospheric dataset once through Reader and keeps it lazy.
   In streaming mode, subsequent calls select non-overlapping windows of ``streamstep`` days,
-  synchronize the 2D, 3D and optional full-resolution fields, and return False after the final window.
-  ``reset_stream=True`` restarts iteration without retrieving the datasets again;
+  synchronize the 2D, 3D and optional full-resolution fields, and return False after the final window;
 * "loop_streaming": processes the lazy windows with TCs node detection and stitching;
 * "readwrite_from_intake": regrids the atmospheric data, saves it to disk as a netCDF file, and updates the tempest_dictionary and tempest_filein attributes of the Detector object;
 * "run_detect_nodes: runs the tempest extremes DetectNodes command on the regridded atmospheric data specified by the tempest_dictionary and tempest_filein attributes, saves the output to disk, and updates the tempest_fileout attribute of the Detector object;
