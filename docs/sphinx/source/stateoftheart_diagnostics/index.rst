@@ -24,6 +24,7 @@ Currently implemented diagnostics are:
    ecmean
    timeseries
    ocean_stratification
+   trends
    ocean_trends
    ocean_drift
    seaice
@@ -154,6 +155,7 @@ so that the plot classes are used in the same way. Results with no file on disk 
 because they take part in the filenames.
 
 This is currently supported by the following diagnostics, whose pages describe the arguments their ``load()`` needs:
+See the individual diagnostic documentation for usage details.
 
 .. Keep the list in alphabetical order
 
@@ -161,6 +163,7 @@ This is currently supported by the following diagnostics, whose pages describe t
 * :doc:`ocean_drift`
 * :doc:`ocean_stratification`
 * :doc:`ocean_trends`
+* :doc:`trends`
 
 The other diagnostics ignore ``plot_only`` and always run the full evaluation.
 
@@ -208,6 +211,8 @@ Here you can find the minimum requirements for each diagnostic.
    * - Histogram
      - 12 months (1 year)
    * - Ocean Stratification
+     - 12 months (1 year)
+   * - Trends
      - 12 months (1 year)
    * - Ocean Trends
      - 12 months (1 year)
