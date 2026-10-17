@@ -85,7 +85,7 @@ class PlotTrends:
         return TitleBuilder(
             diagnostic="Trend",
             variable=long_name,
-            regions=[self.region] if self.region is not None else None,
+            regions=self.region,
             catalog=self.catalog,
             model=self.model,
             exp=self.exp,

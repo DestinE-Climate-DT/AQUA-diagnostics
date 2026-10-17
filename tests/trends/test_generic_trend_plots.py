@@ -43,6 +43,20 @@ def test_maps_write_per_variable_and_preserve_lazy_input(trend_map_data, tmp_pat
     assert trend_map_data.chunks
 
 
+def test_title_builder_receives_scalar_region(tmp_path, mocker):
+    """A regional title passes the region string through without list coercion."""
+    data = xr.Dataset(
+        {"tas": (("lat", "lon"), [[1.0]])},
+        coords={"lat": [0.0], "lon": [0.0]},
+        attrs={"AQUA_region": "Europe"},
+    )
+    title_builder = mocker.patch(f"{PLOT_MODULE}.TitleBuilder")
+    title_builder.return_value.generate.return_value = "title"
+
+    assert PlotTrends(data, outputdir=tmp_path).set_title("tas") == "title"
+    assert title_builder.call_args.kwargs["regions"] == "Europe"
+
+
 @pytest.mark.parametrize("invalid", ["missing_coordinates", "extra_dimension"])
 def test_plotter_rejects_non_horizontal_fields(trend_map_data, tmp_path, mocker, invalid):
     data = trend_map_data.drop_vars("lat") if invalid == "missing_coordinates" else trend_map_data.expand_dims(depth=[10, 100])
