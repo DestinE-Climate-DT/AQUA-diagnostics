@@ -89,7 +89,6 @@ def test_detect_each_timestep_once(tc_setup, start, end, step, expected_windows,
             for data, reader in fields:
                 assert data.indexes["time"].equals(tropical.data2d.indexes["time"])
                 assert data.chunks
-                assert data.aqua.instance is reader
                 assert data.attrs["AQUA_test_marker"] == "preserve me"
                 assert reader.retrieve.return_value.attrs["history"] in data.attrs["history"]
             tropical.detect_nodes_zoomin()

@@ -327,10 +327,10 @@ class TCs(DetectNodes, StitchNodes):
             return False
 
         if not self.streaming:
-            self.data2d = self._data2d.aqua.set_default(self.reader2d)
-            self.data3d = self._data3d.aqua.set_default(self.reader3d)
+            self.data2d = self._data2d
+            self.data3d = self._data3d
             if self.write_fullres:
-                self.fullres = self._fullres.aqua.set_default(self.reader_fullres)
+                self.fullres = self._fullres
             return True
 
         if reset_stream or not hasattr(self, "_stream"):
@@ -345,13 +345,13 @@ class TCs(DetectNodes, StitchNodes):
         times = window.time
         self.stream_startdate = window.indexes["time"][0]
         self.stream_enddate = window.indexes["time"][-1]
-        fields = [("data2d", self.reader2d), ("data3d", self.reader3d)]
+        fields = ["data2d", "data3d"]
         if self.write_fullres:
-            fields.append(("fullres", self.reader_fullres))
-        for name, reader in fields:
+            fields.append("fullres")
+        for name in fields:
             data = getattr(self, "_" + name).sel(time=times)
             log_history(data, "Selected Tropical Cyclones processing window")
-            setattr(self, name, data.aqua.set_default(reader))
+            setattr(self, name, data)
         return True
 
     def store_fullres_field(self, xfield, nodes):
