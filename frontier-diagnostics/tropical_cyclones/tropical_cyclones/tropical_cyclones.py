@@ -1,3 +1,11 @@
+"""Detect and track tropical cyclones using lazily retrieved atmospheric fields.
+
+Example:
+    tropical = TCs(tdict=config, streaming=True, stream_step="1D")
+    while tropical.data_retrieve():
+        tropical.detect_nodes_zoomin()
+"""
+
 import copy
 import os
 
@@ -6,11 +14,13 @@ import pandas as pd
 import xarray as xr
 
 from aqua import Reader
-from aqua.core.logger import log_configure
+from aqua.core.logger import log_configure, log_history
 
 from .detect_nodes import DetectNodes
 from .stitch_nodes import StitchNodes
 from .tools.tcs_utils import lonlatbox
+
+xr.set_options(keep_attrs=True)
 
 
 class TCs(DetectNodes, StitchNodes):
@@ -66,7 +76,7 @@ class TCs(DetectNodes, StitchNodes):
             startdate (str): The start date for processing the TCs diagnostic.
             enddate (str): The end date for processing the TCs diagnostic.
             engine (str): The engine to use for reading the data. Default is 'fdb'.
-            stream_step (int): The number of stream units to move forward in each step in streaming mode. Default is 1.
+            stream_step (int or str): Processing window in whole days, e.g. 1 or "1D". Default is 1.
             stream_unit (str): The unit of stream_step in streaming mode. Default is 'days'.
             stream_startdate (str): The start date for processing the TCs diagnostic in streaming mode.
             loglevel (str): The logging level for the TCs diagnostic. Default is 'INFO'.
@@ -132,10 +142,18 @@ class TCs(DetectNodes, StitchNodes):
         self.orog = None
 
         self.streaming = streaming
+        self.stream_step = stream_step
+        self.stream_units = stream_unit
+        self.stream_startdate = stream_startdate or self.startdate
+        self._initial_stream_startdate = self.stream_startdate
         if self.streaming:
-            self.stream_step = stream_step
-            self.stream_units = stream_unit
-            self.stream_startdate = stream_startdate
+            self._stream_step = (
+                pd.to_timedelta(stream_step)
+                if isinstance(stream_step, str)
+                else pd.to_timedelta(stream_step, unit=stream_unit)
+            )
+            if pd.isna(self._stream_step) or self._stream_step <= pd.Timedelta(0) or self._stream_step % pd.Timedelta(days=1):
+                raise ValueError("Stream step must be a positive whole number of days (e.g. '1D')")
 
         # create directory structure
         self.paths["tmpdir"] = os.path.join(self.paths["tmpdir"], self.model, self.exp)
@@ -149,9 +167,9 @@ class TCs(DetectNodes, StitchNodes):
 
     def loop_streaming(self, tdict):
         """
-        Wrapper for data retrieve, DetectNodes and StitchNodes.
-        Simulates streaming data processing by retrieving data in chunks
-        and performing TCs node detection and stitching looping over time steps.
+        Run DetectNodes and StitchNodes over lazy processing windows.
+
+        Atmospheric datasets are retrieved once and sliced for each window.
 
         Args:
             self: The current object instance.
@@ -161,34 +179,16 @@ class TCs(DetectNodes, StitchNodes):
             None
         """
 
-        # do this to remove the last letter from streamstep! e.g. tdict['stream']['streamstep']
-        # is defined as "10D" but we want only the value 10!
-        numbers = [int(i) for i in tdict["stream"]["streamstep"] if i.isdigit()]
-        streamstep_n = int("".join(map(str, numbers)))  # noqa: F841
-
-        # Check if the character after the number is 'D'
-        # if not expressed as "D", raise value error, since we need days for the time loop!
-        if tdict["stream"]["streamstep"][len(numbers)] != "D":
-            raise ValueError("Critical error! Stream step must be specified in days as 'D' in the config file!")
-
-        # retrieve the data and call detect nodes on the first chunk of data
-        self.data_retrieve()
-        self.detect_nodes_zoomin()
-
         # parameters for stitch nodes (to save tracks of selected variables in netcdf)
         n_days_stitch = tdict["stitch"]["n_days_freq"] + 2 * tdict["stitch"]["n_days_ext"]
-        last_run_stitch = self.stream_startdate
+        last_run_stitch = None
 
-        # loop to simulate streaming
-        # while len(np.unique(self.data2d.time.dt.day)) == streamstep_n:
         while self.data_retrieve():
+            if last_run_stitch is None:
+                last_run_stitch = self.stream_startdate
             self.logger.warning(
                 "Streaming from %s to %s", pd.to_datetime(self.stream_startdate), pd.to_datetime(self.stream_enddate)
             )
-
-            # retrieve data and call to Tempest DetectNodes
-            # self.data_retrieve()
-
             self.detect_nodes_zoomin()
 
             # add one hour since time ends at 23
@@ -243,8 +243,6 @@ class TCs(DetectNodes, StitchNodes):
             source=self.source2d,
             catalog=self.catalog,
             regrid=self.lowgrid,
-            streaming=self.streaming,
-            aggregation=self.stream_step,
             loglevel=self.loglevel,
             startdate=self.startdate,
             enddate=self.enddate,
@@ -257,8 +255,6 @@ class TCs(DetectNodes, StitchNodes):
             source=self.source3d,
             catalog=self.catalog,
             regrid=self.lowgrid,
-            streaming=self.streaming,
-            aggregation=self.stream_step,
             loglevel=self.loglevel,
             startdate=self.startdate,
             enddate=self.enddate,
@@ -273,8 +269,6 @@ class TCs(DetectNodes, StitchNodes):
                 source=self.source2d,
                 catalog=self.catalog,
                 regrid=self.highgrid,
-                streaming=self.streaming,
-                aggregation=self.stream_step,
                 loglevel=self.loglevel,
                 startdate=self.startdate,
                 enddate=self.enddate,
@@ -310,34 +304,56 @@ class TCs(DetectNodes, StitchNodes):
                 self.orog = self.orog.rename(rename_dict)
 
     def data_retrieve(self, reset_stream=False):
-        """
-        Retrieve the necessary 2D and 3D data for analysis.
+        """Retrieve fields once and select the next lazy processing window.
 
         Args:
-        - self: Reference to the current instance of the class.
-        - reset_stream (optional): Boolean flag indicating whether to reset the stream. Default is False.
+            reset_stream (bool, optional): Restart window iteration over the cached
+                datasets without retrieving them again. Defaults to False.
 
         Returns:
-            None
+            bool: True when data is available, False when the stream is exhausted
+                or either atmospheric dataset is missing or empty.
         """
-
-        # now retrieve 2d and 3d data needed
-
-        self.data2d = self.reader2d.retrieve(var=self.varlist2d)
-        self.data3d = self.reader3d.retrieve(var=self.varlist3d)
-        if self.data3d is not None:
-            self.data3d = self.data3d.sel(plev=[30000, 50000], method="nearest")
-
-        if self.data2d is not None and self.data3d is not None:
+        if not hasattr(self, "_data2d"):
+            self._data2d = self.reader2d.retrieve(var=self.varlist2d)
+            self._data3d = self.reader3d.retrieve(var=self.varlist3d)
+            if self._data3d is not None:
+                self._data3d = self._data3d.sel(plev=[30000, 50000], method="nearest")
             if self.write_fullres:
-                self.fullres = self.reader_fullres.retrieve(var=self.var2store)
+                self._fullres = self.reader_fullres.retrieve(var=self.var2store)
 
-            if self.streaming:
-                self.stream_enddate = self.data2d.time[-1].values
-                self.stream_startdate = self.data2d.time[0].values
-            return True
-        else:
+        if self._data2d is None or self._data3d is None:
             return False
+        if not self._data2d.sizes.get("time", 0) or not self._data3d.sizes.get("time", 0):
+            return False
+
+        if not self.streaming:
+            self.data2d = self._data2d
+            self.data3d = self._data3d
+            if self.write_fullres:
+                self.fullres = self._fullres
+            return True
+
+        if reset_stream or not hasattr(self, "_stream"):
+            data = self._data2d.sel(time=slice(self._initial_stream_startdate, self.enddate))
+            self._stream = iter(data.resample(time=self._stream_step, origin="start")) if data.sizes["time"] else iter(())
+
+        try:
+            _, window = next(self._stream)
+        except StopIteration:
+            return False
+
+        times = window.time
+        self.stream_startdate = window.indexes["time"][0]
+        self.stream_enddate = window.indexes["time"][-1]
+        fields = ["data2d", "data3d"]
+        if self.write_fullres:
+            fields.append("fullres")
+        for name in fields:
+            data = getattr(self, "_" + name).sel(time=times)
+            log_history(data, "Selected Tropical Cyclones processing window")
+            setattr(self, name, data)
+        return True
 
     def store_fullres_field(self, xfield, nodes):
         """

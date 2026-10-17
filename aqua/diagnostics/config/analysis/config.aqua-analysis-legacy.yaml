@@ -60,7 +60,8 @@ cli:
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
   stratification: "ocean_stratification/cli_ocean_stratification.py"
   timeseries: "timeseries/cli_timeseries.py"
-  trends: "ocean_trends/cli_ocean_trends.py"
+  trends: "trends/cli_trend.py"
+  ocean_trends: "ocean_trends/cli_ocean_trends.py"
 
 run:
     - ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
@@ -88,6 +89,8 @@ diagnostics:
                "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-era5.yaml"]
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley.yaml"
+    trends:
+      config: "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-trends.yaml"
 
   atmosphere3d:
     biases:
@@ -108,10 +111,12 @@ diagnostics:
       config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-esacci.yaml"
+    trends:
+      config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-trends.yaml"
 
 
   ocean3d-part1:
-    trends:
+    ocean_trends:
       config: "${AQUA_CONFIG}/collections/legacy/ocean3d/config-ocean3d-en4-trend-drift.yaml"  # these diagnostics need a different chunking
       outname: "ocean3d"
     drift:
@@ -161,3 +166,5 @@ diagnostics:
       config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
     lat_lon_profiles:
       config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-mswep.yaml"
+    trends:
+      config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-trends.yaml"
