@@ -68,8 +68,11 @@ Examples from the TCs class contained in the tropical_cyclones.py and its relate
 
 * "TCs": the tropical cyclones class;
 * "catalog_init": initializes the Reader object for retrieving the atmospheric data needed (i.e. the input and output vars);
-* "data_retrieve": retrieves atmospheric data from the Reader and stores them in data arrays. It includes the posibility of simulating the streaming of data. It updates the stream_startdate and stream_enddate attributes if streaming is set to True;
-* "loop_streaming": Wrapper for data retrieve, DetectNodes and StitchNodes. Simulates streaming data processing by retrieving data in chunks and performing TCs node detection and stitching looping over time steps;
+* "data_retrieve": retrieves each atmospheric dataset once through Reader and keeps it lazy.
+  In streaming mode, subsequent calls select non-overlapping windows of ``streamstep`` days,
+  synchronize the 2D, 3D and optional full-resolution fields, and return False after the final window.
+  ``reset_stream=True`` restarts iteration without retrieving the datasets again;
+* "loop_streaming": processes the lazy windows with TCs node detection and stitching;
 * "readwrite_from_intake": regrids the atmospheric data, saves it to disk as a netCDF file, and updates the tempest_dictionary and tempest_filein attributes of the Detector object;
 * "run_detect_nodes: runs the tempest extremes DetectNodes command on the regridded atmospheric data specified by the tempest_dictionary and tempest_filein attributes, saves the output to disk, and updates the tempest_fileout attribute of the Detector object;
 * "detect_nodes_zoomin": wrapper which calls the readwrite_from_intake, run_detect_nodes and store_detect_nodes methods in a time loop;
