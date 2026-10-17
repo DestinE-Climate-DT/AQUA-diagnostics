@@ -39,12 +39,21 @@ def parse_arguments(args):
         default=None,
         help="Override tmpdir from config (used for parallel monthly jobs).",
     )
+    parser.add_argument(
+        "--config-fdb",
+        "--config_fdb",
+        dest="config_fdb",
+        type=str,
+        default=None,
+        help="FDB configuration file or directory; overrides datasets[0].reader_kwargs.config_fdb from config.",
+    )
 
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the Tropical Cyclones diagnostic from command-line arguments."""
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     run_detect = not args.stitch_only
     run_stitch = not args.detect_only
@@ -60,7 +69,14 @@ if __name__ == "__main__":
 
     config = cli.config_dict
 
-    cli.logger.info(f"Running {TOOLNAME} diagnostic")
+    if args.config_fdb is not None:
+        dataset = config["datasets"][0]
+        reader_kwargs = dict(dataset.get("reader_kwargs") or {})
+        reader_kwargs["config_fdb"] = args.config_fdb
+        dataset["reader_kwargs"] = reader_kwargs
+        cli.logger.info("Overriding FDB configuration with: %s", args.config_fdb)
+
+    cli.logger.info("Running %s diagnostic", TOOLNAME)
     cli.logger.info("Mode → detect: %s | stitch: %s", run_detect, run_stitch)
 
     # override paths and dates from CLI args if provided
@@ -128,3 +144,7 @@ if __name__ == "__main__":
 
     cli.close_dask_cluster()
     cli.logger.info("Tropical Cyclones diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

@@ -292,6 +292,7 @@ class TCs(DetectNodes, StitchNodes):
                     regrid=self.lowgrid,
                     loglevel=self.loglevel,
                     engine=self.engine,
+                    **self.reader_kwargs,
                 )
                 self.orog = self.reader_oro.retrieve(var=self.var_oro).isel(time=0)
                 self.logger.debug("Orography retrieved from catalog source %s", self.source_oro)

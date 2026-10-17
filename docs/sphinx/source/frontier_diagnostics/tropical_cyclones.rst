@@ -37,6 +37,42 @@ Input variables
 * `10u`     (2m zonal wind, GRIB paramid 165)
 * `10v`     (2m meridional wind, GRIB paramid 166)
 
+Command line and FDB configuration
+----------------------------------
+
+Configure an FDB configuration file or directory in the first dataset's
+``reader_kwargs``. For example, in ``config_tcs.yaml``:
+
+.. code-block:: yaml
+
+   datasets:
+     - catalog: climatedt-o25.1
+       model: IFS-FESOM
+       exp: historical-1990
+       source: hourly-hpz10-atm2d
+       source2d: hourly-hpz10-atm2d
+       source3d: hourly-hpz10-atm3d
+       engine: z3fdb
+       reader_kwargs:
+         config_fdb: /path/to/config-z3fdb.yaml
+         chunks: {time: 6, level: 1}
+
+These Reader options are used for the 2D and 3D fields, optional full-resolution
+fields, and orography retrieved from the catalog.
+
+To override the configured FDB location for a run:
+
+.. code-block:: bash
+
+   python -m tropical_cyclones.cli_tropical_cyclones \
+     --config config_tcs.yaml --config-fdb /path/to/another-fdb-config.yaml
+
+``--config_fdb`` is an alias for ``--config-fdb``. The dedicated flag takes
+precedence over ``config_fdb`` in both the YAML configuration and
+``--reader_kwargs`` JSON, while preserving other Reader options such as chunks.
+When the flag is omitted, the YAML setting (or a ``--reader_kwargs`` override)
+is used; when none is supplied, the Reader uses its usual FDB configuration.
+
 Output
 ------
 
