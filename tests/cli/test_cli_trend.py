@@ -58,7 +58,7 @@ def test_regional_computation_and_cli_overrides(build_config, mock_cluster, mock
     instance.retrieve.assert_called_once_with(var=["tas"], reader_kwargs={"realization": "r2"})
     if dim_mean is None:
         instance.compute_trend.assert_called_once_with()
-        assert [call.kwargs["region"] for call in instance.select_region.call_args_list] == [None, "tropics"]
+        assert [call.kwargs["region"] for call in instance.select_region.call_args_list] == ["tropics"]
     else:
         assert [call.kwargs for call in instance.compute_trend.call_args_list] == [
             {"region": None, "dim_mean": "lon"},
@@ -85,6 +85,7 @@ def test_multiple_datasets_are_independent(build_config, mock_cluster, mock_tren
         instance.retrieve.assert_called_once_with(var=["tas"], reader_kwargs={})
         instance.compute_trend.assert_called_once_with()
         instance.save_netcdf.assert_called_once()
+        instance.select_region.assert_not_called()
 
 
 def test_plotting_without_saving_coefficients(build_config, mock_cluster, mock_trend):
@@ -206,7 +207,7 @@ def test_collection_uses_model_period_and_output_prefix(
     instance = trend_cls.return_value
     instance.retrieve.assert_called_once_with(var=variables, reader_kwargs={"chunks": {"time": 12}})
     instance.compute_trend.assert_called_once_with()
-    assert [call.kwargs["region"] for call in instance.select_region.call_args_list] == [None]
+    instance.select_region.assert_not_called()
     instance.save_netcdf.assert_called_once()
     assert plot_cls.call_args.kwargs["diagnostic_name"] == collection
     plot_cls.return_value.plot_trend.assert_called_once()

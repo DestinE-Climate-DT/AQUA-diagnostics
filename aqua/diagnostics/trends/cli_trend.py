@@ -104,7 +104,7 @@ def _process_dataset(cli, dataset, config):
         if cli.save_netcdf or (config.get("plot", True) and cli.save_format):
             coefficients = coefficients.compute()
         for region in regions:
-            regional = diagnostic.select_region(data=coefficients, region=region)["data"]
+            regional = coefficients if region is None else diagnostic.select_region(data=coefficients, region=region)["data"]
             _save_and_plot(cli, diagnostic, regional, config)
     else:
         # A dimensional mean depends on the region and must precede each fit.

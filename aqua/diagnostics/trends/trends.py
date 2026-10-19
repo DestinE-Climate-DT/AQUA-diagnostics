@@ -75,16 +75,16 @@ class Trends(Diagnostic):
         # Trend coefficients produced by the last run(), as an xr.Dataset with one variable each.
         self.trend_coef = None
 
-    def retrieve(self, var, reader_kwargs: dict = {}):
+    def retrieve(self, var, reader_kwargs: dict = None):
         """
         Retrieve the data for one or more variables.
 
         Args:
             var (str or list): Variable name(s) to retrieve.
-            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
+            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader. Defaults to None.
         """
         self.logger.info("Retrieving variable(s): %s", var)
-        super().retrieve(var=to_list(var), reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+        super().retrieve(var=to_list(var), reader_kwargs=reader_kwargs or {}, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
     def compute_trend(
         self,
@@ -215,7 +215,7 @@ class Trends(Diagnostic):
         dim_mean=None,
         outputdir: str = "./",
         rebuild: bool = True,
-        reader_kwargs: dict = {},
+        reader_kwargs: dict = None,
     ) -> xr.Dataset:
         """
         Run the full trend analysis workflow: retrieve, compute the trend and save it.
@@ -230,7 +230,7 @@ class Trends(Diagnostic):
                 before the trend is computed (e.g. ``'lon'`` for a zonal trend).
             outputdir (str, optional): Output directory. Defaults to './'.
             rebuild (bool, optional): Whether to overwrite existing output files. Defaults to True.
-            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader.
+            reader_kwargs (dict, optional): Extra keyword arguments forwarded to the Reader. Defaults to None.
 
         Returns:
             xr.Dataset: The trend coefficients, also stored in ``self.trend_coef``.
