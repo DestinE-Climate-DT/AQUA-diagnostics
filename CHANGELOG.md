@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
+- CI: `aqua-diagnostics.yml` tests are triggered only by the `run tests` label; `ready for review` and `ready to merge` no longer start them
 - Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
