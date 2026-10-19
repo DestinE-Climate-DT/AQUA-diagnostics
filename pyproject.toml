@@ -76,7 +76,7 @@ tests = [
 ]
 style = [
     "pre-commit",
-    "ruff==0.17.0"
+    "ruff==0.17.1"
 ]
 # minimal = [
 #     "aqua-diagnostics[core]"
