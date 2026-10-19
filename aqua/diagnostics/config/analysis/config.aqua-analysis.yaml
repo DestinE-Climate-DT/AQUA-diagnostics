@@ -22,7 +22,7 @@ job:
 
     # Run a check analysis to test the configuration and the presence of needed data
     # This also rebuild the area files, to avoid error with corrupted files
-    run_checker: true
+    run_setup_checker: true
 
     # Default output directory for the analysis. Can be overridden by the command line arguments
     outputdir: "./output"
@@ -49,6 +49,7 @@ cluster:  # options for dask cluster (this works well on lumi)
 
 # List of available CLI tools (diagnostics)
 cli:
+  # setup_checker: "cli_checker/cli_setup_check.py"  # specify path of the setup checker if you want
   biases: "biases/cli_biases.py"
   boxplots: "boxplots/cli_boxplots.py"
   drift: "ocean_drift/cli_ocean_drift.py"
