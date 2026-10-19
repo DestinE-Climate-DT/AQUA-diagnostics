@@ -1051,7 +1051,7 @@ def test_generate_realizations_path_without_realizations(mock_output_saver):
         file_dir="/tmp/output",
     )
 
-    assert result == ["/tmp/output/output.nc"]
+    assert result == ["/tmp/output/netcdf/output.nc"]
 
     mock_output_saver.assert_called_once()
     saver.generate_name.assert_called_once_with(
@@ -1075,13 +1075,13 @@ def test_generate_realizations_path_extra_keys_and_format(mock_output_saver):
         diagnostic_name="ensemble",
         diagnostic_product="maps",
         variable="tas",
-        file_dir="/tmp/output",
+        file_dir="/tmp/output/r1/ensemble",
         realization_list=["r1"],
         extra_keys={"region": "global"},
         file_format=".zarr",
     )
 
-    assert result == ["/tmp/output/output_r1.zarr"]
+    assert result == ["/tmp/output/r1/ensemble/zarr/output_r1.zarr"]
 
     saver.generate_name.assert_called_once_with(
         diagnostic_product="maps",
