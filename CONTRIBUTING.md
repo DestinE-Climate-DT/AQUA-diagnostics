@@ -44,7 +44,7 @@ If your Pull Request is adding some new dependencies, please make sure to state 
 
 ### Finalizing a Pull Request
 
-Adding the `run tests` label to the Pull Request will activate the CI tests at the next push.
+Adding the `run tests` label to the Pull Request will activate the CI tests immediately and at every following push.
 Adding the `ready to merge` label to the Pull Request will indicate that it is ready to be reviewed and hopefully merged in the opinion of the author.
 
 Before asking for a review, please make sure to:
@@ -68,7 +68,9 @@ Regular CI runs **aqua-diagnostics** against the local branch, building the Micr
 
 **How to run cross-check on a pull request**
 
-1. Add the `cross-check` label to the PR. After the `cross-check` label is added, the workflow runs automatically the cross-check tests when new commits are pushed.
+1. Add the `cross-check` label to the PR. The cross-check tests start immediately and run again at every following push.
+
+Cross-check also runs every night against aqua-core `main`.
 
 **Manual run (maintainers)**
 

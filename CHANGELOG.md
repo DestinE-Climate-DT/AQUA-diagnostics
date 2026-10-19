@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
-- CI: `aqua-diagnostics.yml` tests are triggered only by the `run tests` label; `ready for review` and `ready to merge` no longer start them
+- CI aligned with aqua-core: tests are triggered only by the `run tests` label (`ready for review` and `ready to merge` no longer start them); the `check-trigger` job is replaced by a job-level `if` matching labels by prefix and checking only the label just added on `labeled` events; cross-check now matches the `cross-check :crossed_swords:` label and its nightly schedule actually runs (#511)
 - Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
