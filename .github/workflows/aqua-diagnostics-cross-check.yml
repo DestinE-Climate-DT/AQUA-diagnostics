@@ -2,12 +2,13 @@ name: AQUA-diagnostics Cross-Check
 
 # Tests aqua-diagnostics against aqua-core (default: main) instead of PyPI release; to catch integration issues early.
 # USAGE:
-#   - Auto-trigger: Add 'cross-check' label to PR, then push
+#   - PR: add the 'cross-check' label (runs at once and on every following push)
+#   - Nightly: scheduled run against aqua-core main
 #   - Manual: Actions > Run workflow > enter aqua-core ref (branch/tag/SHA)
 
 on:
   pull_request:
-    types: [labeled, synchronize]
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
     inputs:
       aqua_core_ref:
@@ -24,28 +25,17 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Only run when "cross-check" label is present or manual trigger on workflow Action
-  check-trigger:
-    runs-on: ubuntu-latest
-    outputs:
-      should-run: ${{ steps.check.outputs.result }}
-    steps:
-      - name: Check if cross-check should run
-        id: check
-        run: |
-          SHOULD_RUN="false"
-
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'cross-check') }}" == "true" ]] || \
-             [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            SHOULD_RUN="true"
-          fi
-
-          echo "result=$SHOULD_RUN" >> $GITHUB_OUTPUT
-
-  # Call test-reusable workflow with cross-check mode
   cross-check-tests:
-    needs: check-trigger
-    if: needs.check-trigger.outputs.should-run == 'true'
+    # Non-PR events (listed first) always run. On PRs:
+    #  - opened/synchronize/reopened: run if the PR has the 'cross-check' label
+    #  - labeled: run only if the label just added is 'cross-check', so that adding
+    #    an unrelated label does not restart (and cancel) tests already running
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event.action != 'labeled' &&
+        contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|cross-check')) ||
+      (github.event.action == 'labeled' && startsWith(github.event.label.name, 'cross-check'))
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-versions: '["3.14"]'
