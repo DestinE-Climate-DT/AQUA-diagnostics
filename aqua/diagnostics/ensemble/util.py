@@ -15,6 +15,7 @@ from aqua import Reader
 from aqua.core.configurer import ConfigCatalog
 from aqua.core.exceptions import NoDataError
 from aqua.core.logger import log_configure
+from aqua.core.util import format_realization
 from aqua.diagnostics.base import OutputSaver
 
 
@@ -603,7 +604,7 @@ def generate_realizations_path(
     if realization_list:
         base_dir = Path(file_dir).parents[1]  # two levels up
         for r in realization_list:
-            input_file_path = os.path.join(base_dir, f"r{r}", diagnostic_name)
+            input_file_path = os.path.join(base_dir, format_realization(r), diagnostic_name)
             outputsaver = OutputSaver(
                 diagnostic=diagnostic_name,
                 catalog=out_catalog,
