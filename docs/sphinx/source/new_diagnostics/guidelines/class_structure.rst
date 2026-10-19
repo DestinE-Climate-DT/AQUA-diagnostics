@@ -60,7 +60,12 @@ Each diagnostic class must:
 - The computed results should be stored as class attributes.
 - Implement a ``save_netcdf()`` method to save the results in NetCDF format, if an expansion of the ``Diagnostic.save_netcdf()`` method is needed.
 - Implement a ``load()`` method that populates the same result attributes from the NetCDF files, mirroring ``save_netcdf()``.
-  The filename keys must be built by a single helper shared with ``save_netcdf()``, so that the two can never address different files.
+  The two must use the same ``diagnostic_product`` and filename keys. A mismatch goes unnoticed in a normal run, where ``load()``
+  finds nothing and the results in memory are plotted, and only shows up when plotting from previous results: cover it with a
+  round-trip test, which saves the results and reads them back with a new instance that never retrieved any data.
+  When building the keys takes some logic, put it in a single helper shared by the two methods.
+  Pass the ``startdate`` and ``enddate`` of the instance to ``load_netcdf()``, so that results computed over another period
+  are not loaded in place of the requested ones.
   Results with no file on disk should be left untouched, so that ``load()`` can be called both before and after ``run()``.
 
 Comparison and Plot Classes
