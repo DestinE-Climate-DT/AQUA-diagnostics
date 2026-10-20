@@ -2,6 +2,9 @@
 Utility functions for the ensemble class
 """
 
+# TODO: figure out a way to merge 'generate_realizations_path_single_model'
+#     and 'generate_realizations_path'
+
 import gc
 import os
 from collections import Counter
@@ -539,7 +542,7 @@ def extract_realizations_list(catalog, model, exp, source, loglevel="WARNING"):
     return
 
 
-def generate_realizations_path(
+def generate_realizations_path_single_model(
     catalog: str,
     model: str,
     exp: str,
@@ -585,7 +588,7 @@ def generate_realizations_path(
     Returns:
         list[str]: A list of full file paths correctly formatted for the diagnostic outputs.
     """
-    logger = log_configure(log_name="generate_realizations_path", log_level=loglevel)
+    logger = log_configure(log_name="generate_realizations_path_single_model", log_level=loglevel)
 
     is_ref = any(x is not None for x in (catalog_ref, model_ref, exp_ref))
     if is_ref:
@@ -630,6 +633,75 @@ def generate_realizations_path(
         )
         filename = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
         filenames.append(os.path.join(file_dir, file_format_dir, filename + file_format))
+
+    logger.debug(f"generated file names for realizations are {filenames}")
+    return filenames
+
+
+def generate_realizations_path(
+    catalog: str,
+    model: str,
+    exp: str,
+    diagnostic_name: str,
+    diagnostic_product: str,
+    variable: str,
+    file_dir: str,
+    realization_list: list[str] = None,
+    extra_keys=None,
+    file_format: str = ".nc",
+    loglevel="WARNING",
+):
+    """
+    Generate output file paths for specific diagnostic realizations.
+
+    Leverages the `OutputSaver` class to standardly generate filenames
+    and concatenates them with the specified output directory and file extension.
+
+    Args:
+        catalog (str): Name of the data catalog.
+        model (str): Name of the model.
+        exp (str): Name of the experiment.
+        diagnostic_name (str): The name of the diagnostic being run.
+        diagnostic_product (str): The specific product/output type of the diagnostic.
+        variable (str): The variable associated with the diagnostic.
+        file_dir (str): Base directory where the files will be saved.
+        realization_list (list[str], optional): List of ensemble realizations.
+            If None, generates a single path without realization info. Defaults to None.
+        extra_keys (dict, optional): Additional keys for the `OutputSaver` filename generation. Defaults to None.
+        file_format (str, optional): Extension for the output files. Defaults to ".nc".
+        loglevel (str, optional): Logging level. Defaults to "WARNING".
+
+    Returns:
+        list[str]: A list of full file paths correctly formatted for the diagnostic outputs.
+    """
+
+    # NOTE: This function is introduced in order to work with the 'multi-model' ensemble
+
+    logger = log_configure(log_name="generate_realizations_path", log_level=loglevel)
+    logger.info("Generating realization paths")
+
+    filenames = []
+    if realization_list:
+        for r in realization_list:
+            outputsaver = OutputSaver(
+                diagnostic=diagnostic_name,
+                catalog=catalog,
+                model=model,
+                exp=exp,
+                realization=r,
+                outputdir=file_dir,
+                loglevel=loglevel,
+            )
+            _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
+            path = file_dir + "/" + _path + file_format
+            filenames.append(path)
+    else:
+        outputsaver = OutputSaver(
+            diagnostic=diagnostic_name, catalog=catalog, model=model, exp=exp, outputdir=file_dir, loglevel=loglevel
+        )
+        _path = outputsaver.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys)
+        path = file_dir + "/" + _path + file_format
+        filenames.append(path)
 
     logger.debug(f"generated file names for realizations are {filenames}")
     return filenames

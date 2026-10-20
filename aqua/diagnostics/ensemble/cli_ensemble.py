@@ -36,7 +36,7 @@ from aqua.diagnostics.base import (
     TitleBuilder,
     template_parse_arguments,
 )
-from aqua.diagnostics.ensemble import extract_realizations_list, generate_realizations_path
+from aqua.diagnostics.ensemble import extract_realizations_list, generate_realizations_path_single_model
 
 # Default config filenames (resolved by load_diagnostic_config from the
 # package's config/collections/legacy/atmosphere2d/ directory)
@@ -223,7 +223,7 @@ def main(argv=None):
                         extra_dict = {"variable": variable, "freq": "monthly", "region": region}
                         mon_realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
                         cli.logger.info(f"realization list: {mon_realization_list}")
-                        mon_filenames = generate_realizations_path(
+                        mon_filenames = generate_realizations_path_single_model(
                             catalog=catalog,
                             model=model,
                             exp=exp,
@@ -264,7 +264,7 @@ def main(argv=None):
                         extra_dict = {"variable": variable, "freq": "annual", "region": region}
                         ann_realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
                         cli.logger.info(f"realization list: {ann_realization_list}")
-                        ann_filenames = generate_realizations_path(
+                        ann_filenames = generate_realizations_path_single_model(
                             catalog=catalog,
                             model=model,
                             exp=exp,
@@ -342,7 +342,7 @@ def main(argv=None):
                         # Monthly reference timeseries
                         if monthly:
                             extra_dict = {"variable": variable, "freq": "monthly", "region": region}
-                            mon_ref_filenames = generate_realizations_path(
+                            mon_ref_filenames = generate_realizations_path_single_model(
                                 catalog=catalog,
                                 model=model,
                                 exp=exp,
@@ -367,7 +367,7 @@ def main(argv=None):
                         # Annual reference timeseries
                         if annual:
                             extra_dict = {"variable": variable, "freq": "annual", "region": region}
-                            ann_ref_filenames = generate_realizations_path(
+                            ann_ref_filenames = generate_realizations_path_single_model(
                                 catalog=catalog,
                                 model=model,
                                 exp=exp,
@@ -444,7 +444,7 @@ def main(argv=None):
                 realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
                 cli.logger.info(f"Realization list: {realization_list}")
                 extra_dict = {"variable": variable}
-                filenames = generate_realizations_path(
+                filenames = generate_realizations_path_single_model(
                     catalog=catalog,
                     model=model,
                     exp=exp,
@@ -510,7 +510,7 @@ def main(argv=None):
                 dataset_std_ref = None
 
                 if has_ref:
-                    ref_filenames = generate_realizations_path(
+                    ref_filenames = generate_realizations_path_single_model(
                         catalog=catalog,
                         model=model,
                         exp=exp,
