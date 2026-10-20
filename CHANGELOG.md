@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 Unreleased in the current development version (target v0.26.0):
 - CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
-- CI aligned with aqua-core: the `check-trigger` job is replaced by a job-level `if` matching labels by prefix and checking only the label just added on `labeled` events; cross-check now matches the `cross-check :crossed_swords:` label and its nightly schedule actually runs (#PRNUM)
+- CI aligned with aqua-core: the `check-trigger` job is replaced by a job-level `if` matching labels by prefix and checking only the label just added on `labeled` events; cross-check now matches the `cross-check :crossed_swords:` label and its nightly schedule actually runs (#515)
 - Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
