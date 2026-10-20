@@ -1,6 +1,5 @@
 name: AQUA-diagnostics tests
-# This workflow uses pytest-xdist to run tests in parallel across 4 cores.
-# Runs on PRs labelled 'run tests', on Dependabot PRs, on push to main, weekly, or manually.
+# This workflow uses pytest-xdist to run tests in parallel across 4 cores
 
 on:
   push:
@@ -20,19 +19,37 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Run tests only when specific conditions are met
+  check-trigger:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.result }}
+    steps:
+      - name: Check if tests should run
+        id: check
+        run: |
+          # Run tests if:
+          # 1) PR has label "run tests"
+          # 2) Opened by Dependabot
+          # 3) Triggered manually (workflow_dispatch)
+          # 4) Triggered by schedule
+          # 5) Pushed to main branch
+          SHOULD_RUN="false"
+
+          if [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'run tests') }}" == "true" ]] || \
+             [[ "${{ github.event.pull_request.user.login }}" == "dependabot[bot]" ]] || \
+             [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || \
+             [[ "${{ github.event_name }}" == "schedule" ]] || \
+             [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            SHOULD_RUN="true"
+          fi
+
+          echo "result=$SHOULD_RUN" >> $GITHUB_OUTPUT
+
+  # Call the reusable workflow
   aqua-diagnostics-tests:
-    # Non-PR events (listed first) always run. On PRs:
-    #  - opened/synchronize/reopened: run if the PR is from Dependabot or has the 'run tests' label
-    #  - labeled: run only if the label just added is 'run tests', so that adding
-    #    an unrelated label does not restart (and cancel) tests already running
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'schedule' ||
-      github.event_name == 'push' ||
-      (github.event.action != 'labeled' && (
-        github.event.pull_request.user.login == 'dependabot[bot]' ||
-        contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|run tests'))) ||
-      (github.event.action == 'labeled' && startsWith(github.event.label.name, 'run tests'))
+    needs: check-trigger
+    if: needs.check-trigger.outputs.should-run == 'true'
     uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
     with:
       python-versions: '["3.14"]'
