@@ -276,6 +276,7 @@ class BaseMixin(Diagnostic):
                 exp=self.exp,
                 model_ref=self.ref_model,
                 exp_ref=self.ref_exp,
+                realization="ensemble",
                 outputdir=self.outputdir,
                 loglevel=self.loglevel,
             )
@@ -369,6 +370,7 @@ class BaseMixin(Diagnostic):
                 exp=self.exp,
                 model_ref=self.ref_model,
                 exp_ref=self.ref_exp,
+                realization="ensemble",
                 outputdir=self.outputdir,
                 loglevel=self.loglevel,
             )
