@@ -134,6 +134,13 @@ Additionally, the CLI can be run with the following optional arguments:
 - ``--outputdir``: Output directory for the plots.
 - ``--startdate``: Start date for the analysis.
 - ``--enddate``: End date for the analysis.
+- ``--climatology``: Compute and plot only the climatology of the dataset, without any reference.
+
+If the ``--climatology`` flag is set, or if the configuration file has no ``references`` block (or an empty one),
+the CLI runs in climatology-only mode: no reference is retrieved and climatology maps
+(annual, seasonal and vertical, according to the ``seasons`` and ``vertical`` options) are produced with ``PlotClimatology``.
+In this mode the bias-specific ``plot_params`` (``vmin``, ``vmax``, ``cmap``, ``vmin_v``, ``vmax_v``, statistics and significance options)
+are ignored and color ranges are set automatically, while ``projection`` and ``projection_params`` are still used.
 
 
 Configuration file structure
