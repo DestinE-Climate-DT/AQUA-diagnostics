@@ -201,7 +201,7 @@ def test_highresmip_references_cover_1950(kind_name):
     references = resolved["references"]
     for slot in ("radiation_toa", "radiation_surface", "sst", "precipitation", "siconc_nh", "siconc_sh"):
         assert references[slot] == references["atmosphere"], slot
-    for block in ("reference", "radiation", "timeseries"):
+    for block in ("period", "radiation", "timeseries"):
         assert resolved[block]["startdate"] == resolved[block]["std_startdate"] == "1950-01-01", block
 
 

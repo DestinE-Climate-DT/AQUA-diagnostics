@@ -23,8 +23,8 @@ references:
     model: '{{ references.atmosphere.model }}'
     exp: '{{ references.atmosphere.exp }}'
     source: '{{ references.atmosphere.source }}'
-    startdate: '{{ reference.startdate }}'
-    enddate: '{{ reference.enddate }}'
+    startdate: '{{ period.startdate }}'
+    enddate: '{{ period.enddate }}'
   # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
 {% if references.radiation_surface != references.atmosphere %}
   - catalog: '{{ references.radiation_surface.catalog }}'

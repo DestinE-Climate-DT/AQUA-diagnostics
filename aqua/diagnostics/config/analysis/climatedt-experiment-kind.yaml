@@ -10,7 +10,7 @@
 #         which are not regridded.
 # references: reference datasets used by the templates, one slot per role
 #             (catalog, model, exp, source), override single keys per kind
-# reference: date range for all analyses
+# period: main date range for all analyses
 # radiation: date range for radiation analyses
 # timeseries: date range for timeseries analyses
 #
@@ -32,7 +32,7 @@ default:
     sithick_nh: {catalog: obs, model: PSC, exp: PIOMAS, source: monthly}
     sithick_sh: {catalog: obs, model: PSC, exp: GIOMAS, source: monthly}
     precipitation: {catalog: obs, model: MSWEP, exp: v2.8, source: monthly}
-  reference:
+  period:
     startdate: "1990-01-01"
     enddate: "2014-12-31"
     std_startdate: "1990-01-01"
@@ -53,7 +53,7 @@ climatedt-hist-cmip6: {}
 
 # Historical runs with CMIP7 forcing: references extended to 2025
 climatedt-hist-cmip7:
-  reference:
+  period:
     enddate: "2025-12-31"
     std_enddate: "2025-12-31"
   radiation:
@@ -75,7 +75,7 @@ highresmip-hist-cmip6:
     precipitation: *era5
     siconc_nh: *era5
     siconc_sh: *era5
-  reference:
+  period:
     startdate: "1950-01-01"
     enddate: "2014-12-31"
     std_startdate: "1950-01-01"
@@ -93,7 +93,7 @@ highresmip-hist-cmip6:
 
 highresmip-hist-cmip7:
   references: *highresmip-references
-  reference:
+  period:
     startdate: "1950-01-01"
     enddate: "2025-12-31"
     std_startdate: "1950-01-01"
@@ -120,7 +120,7 @@ climatedt-projections-cmip6:
 
 # Projections with CMIP7 forcing: as CMIP6 projections, with references extended to 2025
 climatedt-projections-cmip7:
-  reference:
+  period:
     enddate: "2025-12-31"
     std_enddate: "2025-12-31"
   radiation:
@@ -137,7 +137,7 @@ storyline:
   references:
     siconc_nh: {exp: osi-saf-amsr}
     siconc_sh: {exp: osi-saf-amsr}
-  reference:
+  period:
     startdate: "2017-01-01"
     enddate: "2025-12-31"
     std_startdate: "2000-01-01"
