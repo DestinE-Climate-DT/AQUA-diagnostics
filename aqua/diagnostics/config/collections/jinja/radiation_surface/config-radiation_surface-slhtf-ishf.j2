@@ -19,10 +19,10 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: obs
-    model: 'ECMWF'
-    exp: 'era5'
-    source: 'monthly'
+  - catalog: {{ references.era5.catalog | tojson }}
+    model: {{ references.era5.model | tojson }}
+    exp: {{ references.era5.exp | tojson }}
+    source: {{ references.era5.source | tojson }}
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
     regrid: 'r100'

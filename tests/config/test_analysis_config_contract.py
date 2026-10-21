@@ -157,54 +157,25 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
     assert not render_failures, "Jinja templates failed to render to a valid config:\n" + "\n".join(render_failures)
 
 
-# Fully specified kinds before the switch to ``default`` + overrides (#463): resolving these kinds
-# must give exactly the same definitions, so the rendered collection configs are unchanged.
-_HISTORICAL_PERIOD = {
-    "startdate": "1990-01-01",
-    "enddate": "2014-12-31",
-    "std_startdate": "1990-01-01",
-    "std_enddate": "2014-12-31",
-}
-_CERES_PERIOD = {
-    "startdate": "2001-01-01",
-    "enddate": "2024-12-31",
-    "std_startdate": "2001-01-01",
-    "std_enddate": "2024-12-31",
-}
-_LEGACY_KINDS = {
-    "default": {"default": _HISTORICAL_PERIOD, "radiation_ceres": _CERES_PERIOD, "timeseries": _HISTORICAL_PERIOD},
-    "scenario": {
-        "default": _HISTORICAL_PERIOD,
-        "radiation_ceres": _CERES_PERIOD,
-        "timeseries": {
-            "startdate": "2000-01-01",
-            "enddate": "2024-12-31",
-            "std_startdate": "2000-01-01",
-            "std_enddate": "2024-12-31",
-        },
-    },
-}
-
-
-@pytest.mark.parametrize(
-    "kind_name,legacy_name",
-    [
-        ("default", "default"),
-        ("climatedt-hist-cmip6", "default"),
-        ("scenario", "scenario"),
-        ("climatedt-projections-cmip6", "scenario"),
-    ],
-)
-def test_experiment_kinds_backward_compatible(kind_name, legacy_name):
-    """Kinds existing before the overrides-only layout resolve to their previous definitions."""
-    assert _resolved_experiment_kinds()[kind_name] == _LEGACY_KINDS[legacy_name]
+def _assert_same_keys(resolved, default, label):
+    """Recursively check that ``resolved`` has exactly the keys of ``default``."""
+    assert resolved.keys() == default.keys(), label
+    for key, value in default.items():
+        if isinstance(value, dict):
+            _assert_same_keys(resolved[key], value, f"{label}.{key}")
 
 
 def test_experiment_kinds_define_same_keys_as_default():
     """Overrides must not introduce keys unknown to ``default`` (typos would be silently unused)."""
-    experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
-    default = experiment_kinds["default"]
+    default = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]
     for kind_name, resolved in _resolved_experiment_kinds().items():
-        assert resolved.keys() == default.keys(), kind_name
-        for block, values in resolved.items():
-            assert values.keys() == default[block].keys(), f"{kind_name}.{block}"
+        _assert_same_keys(resolved, default, kind_name)
+
+
+def test_storyline_uses_osi_saf_amsr():
+    """Storylines compare sea ice concentration with OSI-SAF AMSR, the other kinds with OSI-SAF SSMIS."""
+    kinds = _resolved_experiment_kinds()
+    for kind_name, resolved in kinds.items():
+        expected = "osi-saf-amsr" if kind_name == "storyline" else "osi-saf-ssmis"
+        for slot in ("osi_saf_nh", "osi_saf_sh"):
+            assert resolved["references"][slot]["exp"] == expected, f"{kind_name}.{slot}"

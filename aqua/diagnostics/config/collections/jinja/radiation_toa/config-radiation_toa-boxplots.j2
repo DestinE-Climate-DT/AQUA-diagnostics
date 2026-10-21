@@ -19,17 +19,17 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: obs
-    model: 'ECMWF'
-    exp: 'era5'
+  - catalog: {{ references.era5.catalog | tojson }}
+    model: {{ references.era5.model | tojson }}
+    exp: {{ references.era5.exp | tojson }}
     regrid: 'r100'
-    source: 'monthly'
+    source: {{ references.era5.source | tojson }}
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
-  - catalog: 'obs'
-    model: 'CERES'
-    exp: 'ebaf-toa421'
-    source: 'monthly'
+  - catalog: {{ references.ceres_toa.catalog | tojson }}
+    model: {{ references.ceres_toa.model | tojson }}
+    exp: {{ references.ceres_toa.exp | tojson }}
+    source: {{ references.ceres_toa.source | tojson }}
     regrid: 'r100'
     reader_kwargs: null
     startdate: '{{ radiation_ceres.startdate }}'

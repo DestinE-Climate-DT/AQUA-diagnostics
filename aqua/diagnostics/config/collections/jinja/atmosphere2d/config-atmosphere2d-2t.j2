@@ -16,10 +16,10 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: 'obs'
-    model: 'BERKELEY-EARTH'
-    exp: 'aqua-filled'
-    source: 'r100-monthly'
+  - catalog: {{ references.berkeley_earth.catalog | tojson }}
+    model: {{ references.berkeley_earth.model | tojson }}
+    exp: {{ references.berkeley_earth.exp | tojson }}
+    source: {{ references.berkeley_earth.source | tojson }}
     regrid: 'r100'
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'

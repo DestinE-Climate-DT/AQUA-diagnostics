@@ -20,10 +20,10 @@ datasets:
 references:
   # ---- Extent in NH ----
   - &ref_osi_nh
-    catalog: 'obs'             # mandatory
-    model: 'OSI-SAF'           # mandatory
-    exp: 'osi-saf-ssmis'        # mandatory
-    source: 'nh-monthly'       # mandatory
+    catalog: {{ references.osi_saf_nh.catalog | tojson }}  # mandatory
+    model: {{ references.osi_saf_nh.model | tojson }}  # mandatory
+    exp: {{ references.osi_saf_nh.exp | tojson }}  # mandatory
+    source: {{ references.osi_saf_nh.source | tojson }}  # mandatory
     regrid: 'r100'
     domain: "nh"
     startdate: '{{ default.startdate }}'
@@ -31,10 +31,10 @@ references:
 
   # ---- Extent in SH ----
   - &ref_osi_sh
-    catalog: 'obs'             # mandatory
-    model: 'OSI-SAF'           # mandatory
-    exp: 'osi-saf-ssmis'        # mandatory
-    source: 'sh-monthly'       # mandatory
+    catalog: {{ references.osi_saf_sh.catalog | tojson }}  # mandatory
+    model: {{ references.osi_saf_sh.model | tojson }}  # mandatory
+    exp: {{ references.osi_saf_sh.exp | tojson }}  # mandatory
+    source: {{ references.osi_saf_sh.source | tojson }}  # mandatory
     regrid: 'r100'
     domain: "sh"
     startdate: '{{ default.startdate }}'

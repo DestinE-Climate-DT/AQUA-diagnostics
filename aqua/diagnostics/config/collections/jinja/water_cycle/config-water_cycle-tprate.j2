@@ -16,10 +16,10 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: 'obs'
-    model: 'MSWEP'
-    exp: 'v2.8'
-    source: 'monthly'
+  - catalog: {{ references.mswep.catalog | tojson }}
+    model: {{ references.mswep.model | tojson }}
+    exp: {{ references.mswep.exp | tojson }}
+    source: {{ references.mswep.source | tojson }}
     regrid: 'r100'
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'

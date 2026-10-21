@@ -16,10 +16,10 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: 'obs'
-    model: 'ESA-CCI-L4'
-    exp: 'v3.0.1'
-    source: 'r100-monthly'
+  - catalog: {{ references.esa_cci_sst.catalog | tojson }}
+    model: {{ references.esa_cci_sst.model | tojson }}
+    exp: {{ references.esa_cci_sst.exp | tojson }}
+    source: {{ references.esa_cci_sst.source | tojson }}
     regrid: 'r100'
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
