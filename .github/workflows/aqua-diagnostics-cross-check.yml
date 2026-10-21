@@ -35,7 +35,7 @@ jobs:
         run: |
           SHOULD_RUN="false"
 
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'cross-check') }}" == "true" ]] || \
+          if [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'cross-check') }}" == "true" ]] || \
              [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             SHOULD_RUN="true"
           fi
