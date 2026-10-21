@@ -6,15 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
+- CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
+- Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
 Main changes:
 
 Complete list:
+- Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
+- Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
+- Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469, #507)
+- Ocean3D: Hovmoller graphical improvements (#478)
+- Implementation of load netcdf and plot only in ocean drift CLI (#457)
+- CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
+- Implementation of load netcdf and plot only in ocean trend CLI (#454)
+- `Diagnostic.select_region()` now works without a `retrieve()` (#454)
 - Deprecate the `create_catalog_entry` option in the diagnostics (#471)
 - Update to aqua-core v1.2.1 (#466)
 - Adopt new seldate() method for robust date selection (#403)
-- Ocean3D: Stratification refactor to improve performance (#462)
+- Ocean3D: Stratification refactor to improve performance (#462) and netCDF loading (#484)
 - Update the deprecated `ConfigPath` (#451)
 - Remove parenthesis and capitalise regions (#456)
 - OutputSaver: `load_netcdf` can take the `expect_netcdf` argument to log missing files as errors instead of info. It also use start and end dates to check need of eventually recomputing results. (#452)

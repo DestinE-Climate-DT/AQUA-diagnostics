@@ -39,5 +39,4 @@ jobs:
           delete-branch: true
           committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
           labels: |
-            conda-lock
-            run tests
+            run tests :runner:

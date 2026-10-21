@@ -93,7 +93,7 @@ class TestEnsembleZonal:
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
-        nc_mean = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.nc")
+        nc_mean = os.path.join(tmp_path_str, "netcdf", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.ensemble.{var}.mean.nc")
         assert os.path.exists(nc_mean)
 
     def test_statistics(self, ensemble_zonal_instance):
@@ -128,5 +128,5 @@ class TestEnsembleZonal:
         cat, mod, exp = conf["catalog_list"][0], conf["model_list"][0], conf["exp_list"][0]
         var = conf["var"]
 
-        png_mean = os.path.join(tmp_path_str, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.r1.{var}.mean.png")
+        png_mean = os.path.join(tmp_path_str, "png", f"ensemble.ensemblezonal.{cat}.{mod}.{exp}.ensemble.{var}.mean.png")
         assert os.path.exists(png_mean)
