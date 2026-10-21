@@ -103,29 +103,37 @@ def test_analysis_config_collection_files_exist():
 _STRICT_JINJA_ENV = Environment(undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
 
 
-# TODO(aqua-core #3266): mirror of the kind resolution in aqua-core ``Analysis.configure_experiment_kind``
-# (each kind deep-merged on top of ``default``). Replace with the production code once the pinned
-# aqua-core ships it.
-def _deep_merge(base, override):
-    """Recursively merge ``override`` on top of ``base`` without modifying the inputs."""
-    merged = dict(base)
-    for key, value in (override or {}).items():
-        if isinstance(value, dict) and isinstance(merged.get(key), dict):
-            merged[key] = _deep_merge(merged[key], value)
-        else:
-            merged[key] = value
-    return merged
+# Kind resolution: use the production code from aqua-core when available.
+# TODO(aqua-core #3266): drop the fallback mirror once the pinned aqua-core ships resolve_experiment_kind.
+try:
+    from aqua.core.analysis import resolve_experiment_kind
+except ImportError:
+
+    def _deep_merge(base, override):
+        """Recursively merge ``override`` on top of ``base`` without modifying the inputs."""
+        merged = dict(base)
+        for key, value in (override or {}).items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key] = _deep_merge(merged[key], value)
+            else:
+                merged[key] = value
+        return merged
+
+    def resolve_experiment_kind(kinds, kind):
+        """Mirror of ``aqua.core.analysis.resolve_experiment_kind`` for older aqua-core."""
+        if kind not in kinds:
+            raise KeyError(f"Experiment kind '{kind}' not found.")
+        resolved = _deep_merge(kinds["default"], kinds[kind])
+        if "kind" in resolved:
+            raise ValueError("'kind' is a reserved key in the experiment kind file.")
+        resolved["kind"] = kind
+        return resolved
 
 
 def _resolved_experiment_kinds():
-    """Load the experiment kind file and resolve every kind on top of ``default``."""
+    """Resolve every kind of the experiment kind file, as passed to the templates by ``aqua analysis``."""
     experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
-    return {name: _deep_merge(experiment_kinds["default"], kind) for name, kind in experiment_kinds.items()}
-
-
-def _template_definitions(kind_name, resolved):
-    """Values passed to the templates: the resolved kind plus its name as the reserved ``kind`` key."""
-    return {**resolved, "kind": kind_name}
+    return {name: resolve_experiment_kind(experiment_kinds, name) for name in experiment_kinds}
 
 
 def _render_template_strict(template_path, definitions):
@@ -152,7 +160,7 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
             label = f"{relative_template} [{kind_name}]"
             # Catch broadly: both UndefinedError and YAML parse errors are silent failures at runtime.
             try:
-                rendered = _render_template_strict(template, _template_definitions(kind_name, kind_definitions))
+                rendered = _render_template_strict(template, kind_definitions)
             except Exception as error:
                 render_failures.append(f"{label}: {type(error).__name__}: {error}")
                 continue
@@ -173,8 +181,8 @@ def _assert_same_keys(resolved, default, label):
 def test_experiment_kinds_define_same_keys_as_default():
     """Overrides must not introduce keys unknown to ``default`` (typos would be silently unused)."""
     default = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]
-    assert "kind" not in default, "'kind' is reserved for the kind name passed to the templates"
     for kind_name, resolved in _resolved_experiment_kinds().items():
+        assert resolved.pop("kind") == kind_name
         _assert_same_keys(resolved, default, kind_name)
 
 
@@ -202,7 +210,7 @@ def test_boxplots_skip_duplicate_reference(collection):
     """Boxplots list the satellite reference only when it differs from the atmosphere one (ERA5)."""
     template = JINJA_COLLECTIONS_DIR / collection / f"config-{collection}-boxplots.j2"
     for kind_name, resolved in _resolved_experiment_kinds().items():
-        references = _render_template_strict(template, _template_definitions(kind_name, resolved))["references"]
+        references = _render_template_strict(template, resolved)["references"]
         expected = 1 if kind_name.startswith("highresmip") else 2
         assert len(references) == expected, kind_name
         assert references[0]["exp"] == "era5", kind_name

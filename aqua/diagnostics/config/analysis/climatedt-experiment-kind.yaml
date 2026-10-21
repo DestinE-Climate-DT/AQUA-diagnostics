@@ -2,10 +2,10 @@
 #
 # "default" holds every definition used by the templates. Every other kind is deep-merged
 # on top of "default" by aqua-core, so it only lists the keys it overrides.
-# An unknown kind falls back to "default".
+# An unknown kind raises an error. The kind name is passed to the templates as "kind" (reserved).
 #
 # Blocks:
-# references: reference datasets used by the templates, one slot per dataset
+# references: reference datasets used by the templates, one slot per role
 #             (catalog, model, exp, source), override single keys per kind
 # reference: date range for all analyses
 # radiation: date range for radiation analyses
