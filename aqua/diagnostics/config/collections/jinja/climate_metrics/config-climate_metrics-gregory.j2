@@ -36,5 +36,13 @@ diagnostics:
     std_startdate: '{{ radiation.std_startdate }}'
     std_enddate: '{{ radiation.std_enddate }}'
     # Gregory needs 2 datasets and do not care about the references block above
-    t2m_ref: {{ references.temperature | tojson }}
-    net_toa_ref: {{ references.radiation_toa | tojson }}
+    t2m_ref:
+      catalog: '{{ references.temperature.catalog }}'
+      model: '{{ references.temperature.model }}'
+      exp: '{{ references.temperature.exp }}'
+      source: '{{ references.temperature.source }}'
+    net_toa_ref:
+      catalog: '{{ references.radiation_toa.catalog }}'
+      model: '{{ references.radiation_toa.model }}'
+      exp: '{{ references.radiation_toa.exp }}'
+      source: '{{ references.radiation_toa.source }}'
