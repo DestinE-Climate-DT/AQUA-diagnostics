@@ -15,8 +15,8 @@ references:
     exp: '{{ references.atmosphere.exp }}'
     source: '{{ references.atmosphere.source }}'
     regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '{{ reference.startdate }}'
+    enddate: '{{ reference.enddate }}'
 
 setup:
   loglevel: 'WARNING'

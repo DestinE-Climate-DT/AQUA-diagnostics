@@ -26,8 +26,8 @@ references:
     source: '{{ references.siconc_nh.source }}'  # mandatory
     regrid: 'r100'
     domain: "nh"
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '{{ reference.startdate }}'
+    enddate: '{{ reference.enddate }}'
 
   # ---- Extent in SH ----
   - &ref_osi_sh
@@ -37,8 +37,8 @@ references:
     source: '{{ references.siconc_sh.source }}'  # mandatory
     regrid: 'r100'
     domain: "sh"
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '{{ reference.startdate }}'
+    enddate: '{{ reference.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:

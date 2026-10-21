@@ -23,8 +23,8 @@ references:
     model: '{{ references.atmosphere.model }}'
     exp: '{{ references.atmosphere.exp }}'
     source: '{{ references.atmosphere.source }}'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '{{ reference.startdate }}'
+    enddate: '{{ reference.enddate }}'
     regrid: 'r100'
 
 output:
@@ -45,8 +45,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '{{ reference.std_startdate }}'
+        std_enddate: '{{ reference.std_enddate }}'
 
   biases:
     run: true

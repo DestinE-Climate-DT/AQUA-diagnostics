@@ -23,16 +23,16 @@ references:
     model: '{{ references.atmosphere.model }}'
     exp: '{{ references.atmosphere.exp }}'
     source: '{{ references.atmosphere.source }}'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '{{ reference.startdate }}'
+    enddate: '{{ reference.enddate }}'
   - catalog: '{{ references.radiation_surface.catalog }}'
     model: '{{ references.radiation_surface.model }}'
     exp: '{{ references.radiation_surface.exp }}'
     source: '{{ references.radiation_surface.source }}'
     regrid: 'r100'
     reader_kwargs: null
-    startdate: '{{ radiation_ceres.startdate }}'
-    enddate: '{{ radiation_ceres.enddate }}'
+    startdate: '{{ radiation.startdate }}'
+    enddate: '{{ radiation.enddate }}'
 
 output:
   outputdir: "./"

@@ -21,8 +21,8 @@ references:
     exp: '{{ references.sst.exp }}'
     source: '{{ references.sst.source }}'
     regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '{{ reference.startdate }}'
+    enddate: '{{ reference.enddate }}'
 
 setup:
   loglevel: 'WARNING'
@@ -79,8 +79,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '{{ reference.std_startdate }}'
+        std_enddate: '{{ reference.std_enddate }}'
       tos:
         regions: ['nh', 'sh']
 
@@ -95,8 +95,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '{{ reference.std_startdate }}'
+        std_enddate: '{{ reference.std_enddate }}'
     variables:
       - name: 'tos'
         regions: [null]  #

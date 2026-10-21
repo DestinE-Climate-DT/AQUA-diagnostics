@@ -15,8 +15,8 @@ references:
     exp: '{{ references.atmosphere.exp }}'
     source: '{{ references.atmosphere.source }}'
     regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '{{ reference.startdate }}'
+    enddate: '{{ reference.enddate }}'
 
 setup:
   loglevel: 'WARNING'
@@ -65,8 +65,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '{{ reference.std_startdate }}'
+        std_enddate: '{{ reference.std_enddate }}'
 
   timeseries:
     run: true
