@@ -25,6 +25,8 @@ references:
     source: '{{ references.atmosphere.source }}'
     startdate: '{{ reference.startdate }}'
     enddate: '{{ reference.enddate }}'
+  # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
+{% if references.radiation_surface != references.atmosphere %}
   - catalog: '{{ references.radiation_surface.catalog }}'
     model: '{{ references.radiation_surface.model }}'
     exp: '{{ references.radiation_surface.exp }}'
@@ -33,6 +35,7 @@ references:
     reader_kwargs: null
     startdate: '{{ radiation.startdate }}'
     enddate: '{{ radiation.enddate }}'
+{% endif %}
 
 output:
   outputdir: "./"

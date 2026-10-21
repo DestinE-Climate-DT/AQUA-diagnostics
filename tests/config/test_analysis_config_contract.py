@@ -123,6 +123,11 @@ def _resolved_experiment_kinds():
     return {name: _deep_merge(experiment_kinds["default"], kind) for name, kind in experiment_kinds.items()}
 
 
+def _template_definitions(kind_name, resolved):
+    """Values passed to the templates: the resolved kind plus its name as the reserved ``kind`` key."""
+    return {**resolved, "kind": kind_name}
+
+
 def _render_template_strict(template_path, definitions):
     """Render a jinja template with StrictUndefined and parse the result as YAML."""
     rendered = _STRICT_JINJA_ENV.from_string(template_path.read_text()).render(definitions)
@@ -147,7 +152,7 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
             label = f"{relative_template} [{kind_name}]"
             # Catch broadly: both UndefinedError and YAML parse errors are silent failures at runtime.
             try:
-                rendered = _render_template_strict(template, kind_definitions)
+                rendered = _render_template_strict(template, _template_definitions(kind_name, kind_definitions))
             except Exception as error:
                 render_failures.append(f"{label}: {type(error).__name__}: {error}")
                 continue
@@ -168,6 +173,7 @@ def _assert_same_keys(resolved, default, label):
 def test_experiment_kinds_define_same_keys_as_default():
     """Overrides must not introduce keys unknown to ``default`` (typos would be silently unused)."""
     default = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]
+    assert "kind" not in default, "'kind' is reserved for the kind name passed to the templates"
     for kind_name, resolved in _resolved_experiment_kinds().items():
         _assert_same_keys(resolved, default, kind_name)
 
@@ -189,3 +195,14 @@ def test_highresmip_references_cover_1950(kind_name):
         assert references[slot] == references["atmosphere"], slot
     for block in ("reference", "radiation", "timeseries"):
         assert resolved[block]["startdate"] == resolved[block]["std_startdate"] == "1950-01-01", block
+
+
+@pytest.mark.parametrize("collection", ["radiation_toa", "radiation_surface"])
+def test_boxplots_skip_duplicate_reference(collection):
+    """Boxplots list the satellite reference only when it differs from the atmosphere one (ERA5)."""
+    template = JINJA_COLLECTIONS_DIR / collection / f"config-{collection}-boxplots.j2"
+    for kind_name, resolved in _resolved_experiment_kinds().items():
+        references = _render_template_strict(template, _template_definitions(kind_name, resolved))["references"]
+        expected = 1 if kind_name.startswith("highresmip") else 2
+        assert len(references) == expected, kind_name
+        assert references[0]["exp"] == "era5", kind_name
