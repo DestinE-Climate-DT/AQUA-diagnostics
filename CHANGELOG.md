@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
+- Tropical Cyclones: forward configured `reader_kwargs`, including `config_fdb`, to catalog-based orography reads (#505)
 - CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
 - Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
