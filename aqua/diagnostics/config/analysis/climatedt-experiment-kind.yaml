@@ -17,7 +17,7 @@
 
 default:
   references:
-    era5: {catalog: obs, model: ECMWF, exp: era5, source: monthly}
+    era5: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
     berkeley_earth: {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}
     esa_cci_sst: {catalog: obs, model: ESA-CCI-L4, exp: v3.0.1, source: r100-monthly}
     en4: {catalog: obs, model: EN4, exp: v4.2.2, source: monthly-netcdf}
@@ -48,7 +48,7 @@ default:
 climatedt-hist-cmip6: {}
 
 # Historical runs with CMIP7 forcing: references extended to 2025
-climatedt-hist-cmip7: &hist-cmip7
+climatedt-hist-cmip7:
   default:
     enddate: "2025-12-31"
     std_enddate: "2025-12-31"
@@ -59,7 +59,51 @@ climatedt-hist-cmip7: &hist-cmip7
     enddate: "2025-12-31"
     std_enddate: "2025-12-31"
 
-highresmip-hist-cmip7: *hist-cmip7
+# HighResMIP historical runs start in 1950: references cover the whole run.
+# Satellite-era datasets (CERES, ESA-CCI, MSWEP, OSI-SAF) are replaced by ERA5 (1940-2025).
+# Berkeley Earth and EN4 cover the period; PIOMAS/GIOMAS (from 1979) have no alternative
+# and only cover the available years.
+highresmip-hist-cmip6:
+  references: &highresmip-references
+    ceres_toa: *era5
+    ceres_sfc: *era5
+    esa_cci_sst: *era5
+    mswep: *era5
+    osi_saf_nh: *era5
+    osi_saf_sh: *era5
+  default:
+    startdate: "1950-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2014-12-31"
+  radiation_ceres:
+    startdate: "1950-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2014-12-31"
+  timeseries:
+    startdate: "1950-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2014-12-31"
+
+highresmip-hist-cmip7:
+  references: *highresmip-references
+  default:
+    startdate: "1950-01-01"
+    enddate: "2025-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2025-12-31"
+  radiation_ceres:
+    startdate: "1950-01-01"
+    enddate: "2025-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2025-12-31"
+  timeseries:
+    startdate: "1950-01-01"
+    enddate: "2025-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2025-12-31"
 
 # Projections with CMIP6 forcing: maps compared to the historical period,
 # timeseries exploit all data available (25 years up to last obs available year)
