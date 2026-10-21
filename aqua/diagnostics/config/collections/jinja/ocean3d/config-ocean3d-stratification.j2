@@ -13,10 +13,10 @@ datasets:
     # enddate: 1990-12
 
 references:
-  - catalog: '{{ references.en4.catalog }}'
-    model: '{{ references.en4.model }}'
-    exp: '{{ references.en4.exp }}'
-    source: '{{ references.en4.source }}'
+  - catalog: '{{ references.ocean3d.catalog }}'
+    model: '{{ references.ocean3d.model }}'
+    exp: '{{ references.ocean3d.exp }}'
+    source: '{{ references.ocean3d.source }}'
     regrid: r100  # EN4 is on 1x1 grid different from r100
     reader_kwargs: {chunks: {"time": 1, "depth": 42}}  # it can be a dictionary with reader kwargs
     startdate: '{{ default.startdate }}'

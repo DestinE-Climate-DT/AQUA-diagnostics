@@ -36,5 +36,5 @@ diagnostics:
     std_startdate: '{{ radiation_ceres.std_startdate }}'
     std_enddate: '{{ radiation_ceres.std_enddate }}'
     # Gregory needs 2 datasets and do not care about the references block above
-    t2m_ref: {{ references.berkeley_earth | tojson }}
-    net_toa_ref: {{ references.ceres_toa | tojson }}
+    t2m_ref: {{ references.temperature | tojson }}
+    net_toa_ref: {{ references.radiation_toa | tojson }}

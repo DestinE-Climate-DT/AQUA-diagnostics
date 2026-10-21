@@ -19,16 +19,16 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.era5.catalog }}'
-    model: '{{ references.era5.model }}'
-    exp: '{{ references.era5.exp }}'
-    source: '{{ references.era5.source }}'
+  - catalog: '{{ references.atmosphere.catalog }}'
+    model: '{{ references.atmosphere.model }}'
+    exp: '{{ references.atmosphere.exp }}'
+    source: '{{ references.atmosphere.source }}'
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
-  - catalog: '{{ references.ceres_sfc.catalog }}'
-    model: '{{ references.ceres_sfc.model }}'
-    exp: '{{ references.ceres_sfc.exp }}'
-    source: '{{ references.ceres_sfc.source }}'
+  - catalog: '{{ references.radiation_surface.catalog }}'
+    model: '{{ references.radiation_surface.model }}'
+    exp: '{{ references.radiation_surface.exp }}'
+    source: '{{ references.radiation_surface.source }}'
     regrid: 'r100'
     reader_kwargs: null
     startdate: '{{ radiation_ceres.startdate }}'

@@ -20,10 +20,10 @@ datasets:
 references:
   # ---- Extent in NH ----
   - &ref_osi_nh
-    catalog: '{{ references.osi_saf_nh.catalog }}'  # mandatory
-    model: '{{ references.osi_saf_nh.model }}'  # mandatory
-    exp: '{{ references.osi_saf_nh.exp }}'  # mandatory
-    source: '{{ references.osi_saf_nh.source }}'  # mandatory
+    catalog: '{{ references.siconc_nh.catalog }}'  # mandatory
+    model: '{{ references.siconc_nh.model }}'  # mandatory
+    exp: '{{ references.siconc_nh.exp }}'  # mandatory
+    source: '{{ references.siconc_nh.source }}'  # mandatory
     regrid: 'r100'
     domain: "nh"
     startdate: '{{ default.startdate }}'
@@ -31,10 +31,10 @@ references:
 
   # ---- Extent in SH ----
   - &ref_osi_sh
-    catalog: '{{ references.osi_saf_sh.catalog }}'  # mandatory
-    model: '{{ references.osi_saf_sh.model }}'  # mandatory
-    exp: '{{ references.osi_saf_sh.exp }}'  # mandatory
-    source: '{{ references.osi_saf_sh.source }}'  # mandatory
+    catalog: '{{ references.siconc_sh.catalog }}'  # mandatory
+    model: '{{ references.siconc_sh.model }}'  # mandatory
+    exp: '{{ references.siconc_sh.exp }}'  # mandatory
+    source: '{{ references.siconc_sh.source }}'  # mandatory
     regrid: 'r100'
     domain: "sh"
     startdate: '{{ default.startdate }}'

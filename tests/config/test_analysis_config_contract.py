@@ -176,7 +176,7 @@ def test_sea_ice_concentration_reference_per_kind():
     """Storylines use OSI-SAF AMSR, HighResMIP ERA5 (back to 1950), the other kinds OSI-SAF SSMIS."""
     expected_exp = {"storyline": "osi-saf-amsr", "highresmip-hist-cmip6": "era5", "highresmip-hist-cmip7": "era5"}
     for kind_name, resolved in _resolved_experiment_kinds().items():
-        for slot in ("osi_saf_nh", "osi_saf_sh"):
+        for slot in ("siconc_nh", "siconc_sh"):
             assert resolved["references"][slot]["exp"] == expected_exp.get(kind_name, "osi-saf-ssmis"), f"{kind_name}.{slot}"
 
 
@@ -185,7 +185,7 @@ def test_highresmip_references_cover_1950(kind_name):
     """HighResMIP kinds start in 1950 and replace the satellite-era references with ERA5."""
     resolved = _resolved_experiment_kinds()[kind_name]
     references = resolved["references"]
-    for slot in ("ceres_toa", "ceres_sfc", "esa_cci_sst", "mswep", "osi_saf_nh", "osi_saf_sh"):
-        assert references[slot] == references["era5"], slot
+    for slot in ("radiation_toa", "radiation_surface", "sst", "precipitation", "siconc_nh", "siconc_sh"):
+        assert references[slot] == references["atmosphere"], slot
     for block in ("default", "radiation_ceres", "timeseries"):
         assert resolved[block]["startdate"] == resolved[block]["std_startdate"] == "1950-01-01", block

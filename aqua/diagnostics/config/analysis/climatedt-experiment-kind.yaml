@@ -17,17 +17,17 @@
 
 default:
   references:
-    era5: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
-    berkeley_earth: {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}
-    esa_cci_sst: {catalog: obs, model: ESA-CCI-L4, exp: v3.0.1, source: r100-monthly}
-    en4: {catalog: obs, model: EN4, exp: v4.2.2, source: monthly-netcdf}
-    ceres_toa: {catalog: obs, model: CERES, exp: ebaf-toa421, source: monthly}
-    ceres_sfc: {catalog: obs, model: CERES, exp: ebaf-sfc421, source: monthly}
-    osi_saf_nh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: nh-monthly}
-    osi_saf_sh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: sh-monthly}
-    piomas: {catalog: obs, model: PSC, exp: PIOMAS, source: monthly}
-    giomas: {catalog: obs, model: PSC, exp: GIOMAS, source: monthly}
-    mswep: {catalog: obs, model: MSWEP, exp: v2.8, source: monthly}
+    atmosphere: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
+    temperature: {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}
+    sst: {catalog: obs, model: ESA-CCI-L4, exp: v3.0.1, source: r100-monthly}
+    ocean3d: {catalog: obs, model: EN4, exp: v4.2.2, source: monthly-netcdf}
+    radiation_toa: {catalog: obs, model: CERES, exp: ebaf-toa421, source: monthly}
+    radiation_surface: {catalog: obs, model: CERES, exp: ebaf-sfc421, source: monthly}
+    siconc_nh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: nh-monthly}
+    siconc_sh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: sh-monthly}
+    sithick_nh: {catalog: obs, model: PSC, exp: PIOMAS, source: monthly}
+    sithick_sh: {catalog: obs, model: PSC, exp: GIOMAS, source: monthly}
+    precipitation: {catalog: obs, model: MSWEP, exp: v2.8, source: monthly}
   default:
     startdate: "1990-01-01"
     enddate: "2014-12-31"
@@ -65,12 +65,12 @@ climatedt-hist-cmip7:
 # and only cover the available years.
 highresmip-hist-cmip6:
   references: &highresmip-references
-    ceres_toa: *era5
-    ceres_sfc: *era5
-    esa_cci_sst: *era5
-    mswep: *era5
-    osi_saf_nh: *era5
-    osi_saf_sh: *era5
+    radiation_toa: *era5
+    radiation_surface: *era5
+    sst: *era5
+    precipitation: *era5
+    siconc_nh: *era5
+    siconc_sh: *era5
   default:
     startdate: "1950-01-01"
     enddate: "2014-12-31"
@@ -131,8 +131,8 @@ climatedt-projections-cmip7:
 # Storylines: recent period, OSI-SAF AMSR (2002-2025) sea ice concentration
 storyline:
   references:
-    osi_saf_nh: {exp: osi-saf-amsr}
-    osi_saf_sh: {exp: osi-saf-amsr}
+    siconc_nh: {exp: osi-saf-amsr}
+    siconc_sh: {exp: osi-saf-amsr}
   default:
     startdate: "2017-01-01"
     enddate: "2025-12-31"

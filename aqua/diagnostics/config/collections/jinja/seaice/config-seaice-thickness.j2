@@ -20,20 +20,20 @@ datasets:
 references:
   # ---- Volume in NH ----
   - &ref_psc_nh
-    catalog: '{{ references.piomas.catalog }}'
-    model: '{{ references.piomas.model }}'
-    exp: '{{ references.piomas.exp }}'
-    source: '{{ references.piomas.source }}'
+    catalog: '{{ references.sithick_nh.catalog }}'
+    model: '{{ references.sithick_nh.model }}'
+    exp: '{{ references.sithick_nh.exp }}'
+    source: '{{ references.sithick_nh.source }}'
     regrid: 'r100'
     domain: "nh"
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'
   # ---- Volume in SH ----
   - &ref_psc_sh
-    catalog: '{{ references.giomas.catalog }}'
-    model: '{{ references.giomas.model }}'
-    exp: '{{ references.giomas.exp }}'
-    source: '{{ references.giomas.source }}'
+    catalog: '{{ references.sithick_sh.catalog }}'
+    model: '{{ references.sithick_sh.model }}'
+    exp: '{{ references.sithick_sh.exp }}'
+    source: '{{ references.sithick_sh.source }}'
     regrid: 'r100'
     domain: "sh"
     startdate: '{{ default.startdate }}'
