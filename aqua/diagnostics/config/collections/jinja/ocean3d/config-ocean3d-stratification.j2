@@ -17,7 +17,7 @@ references:
     model: '{{ references.ocean3d.model }}'
     exp: '{{ references.ocean3d.exp }}'
     source: '{{ references.ocean3d.source }}'
-    regrid: r100  # EN4 is on 1x1 grid different from r100
+    regrid: '{{ regrid }}'  # EN4 is on 1x1 grid different from r100
     reader_kwargs: {chunks: {"time": 1, "depth": 42}}  # it can be a dictionary with reader kwargs
     startdate: '{{ reference.startdate }}'
     enddate: '{{ reference.enddate }}'

@@ -24,7 +24,7 @@ references:
     model: '{{ references.siconc_nh.model }}'  # mandatory
     exp: '{{ references.siconc_nh.exp }}'  # mandatory
     source: '{{ references.siconc_nh.source }}'  # mandatory
-    regrid: 'r100'
+    regrid: '{{ regrid }}'
     domain: "nh"
     startdate: '{{ reference.startdate }}'
     enddate: '{{ reference.enddate }}'
@@ -35,7 +35,7 @@ references:
     model: '{{ references.siconc_sh.model }}'  # mandatory
     exp: '{{ references.siconc_sh.exp }}'  # mandatory
     source: '{{ references.siconc_sh.source }}'  # mandatory
-    regrid: 'r100'
+    regrid: '{{ regrid }}'
     domain: "sh"
     startdate: '{{ reference.startdate }}'
     enddate: '{{ reference.enddate }}'

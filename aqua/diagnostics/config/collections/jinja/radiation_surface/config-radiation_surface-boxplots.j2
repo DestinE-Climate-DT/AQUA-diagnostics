@@ -31,7 +31,7 @@ references:
     model: '{{ references.radiation_surface.model }}'
     exp: '{{ references.radiation_surface.exp }}'
     source: '{{ references.radiation_surface.source }}'
-    regrid: 'r100'
+    regrid: '{{ regrid }}'
     reader_kwargs: null
     startdate: '{{ radiation.startdate }}'
     enddate: '{{ radiation.enddate }}'

@@ -4,7 +4,10 @@
 # on top of "default" by aqua-core, so it only lists the keys it overrides.
 # An unknown kind raises an error. The kind name is passed to the templates as "kind" (reserved).
 #
-# Blocks:
+# Keys and blocks:
+# regrid: target grid of the reference datasets (model datasets are regridded through the CLI).
+#         Not used by the ERA5 references of teleconnections and of the radiation_surface boxplots,
+#         which are not regridded.
 # references: reference datasets used by the templates, one slot per role
 #             (catalog, model, exp, source), override single keys per kind
 # reference: date range for all analyses
@@ -16,6 +19,7 @@
 # std_startdate, std_enddate: standard deviation for references to be used in the analysis
 
 default:
+  regrid: r100
   references:
     atmosphere: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
     temperature: {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}

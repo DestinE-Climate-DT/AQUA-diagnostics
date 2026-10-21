@@ -22,7 +22,7 @@ references:
   - catalog: '{{ references.atmosphere.catalog }}'
     model: '{{ references.atmosphere.model }}'
     exp: '{{ references.atmosphere.exp }}'
-    regrid: 'r100'
+    regrid: '{{ regrid }}'
     source: '{{ references.atmosphere.source }}'
     startdate: '{{ reference.startdate }}'
     enddate: '{{ reference.enddate }}'
@@ -32,7 +32,7 @@ references:
     model: '{{ references.radiation_toa.model }}'
     exp: '{{ references.radiation_toa.exp }}'
     source: '{{ references.radiation_toa.source }}'
-    regrid: 'r100'
+    regrid: '{{ regrid }}'
     reader_kwargs: null
     startdate: '{{ radiation.startdate }}'
     enddate: '{{ radiation.enddate }}'

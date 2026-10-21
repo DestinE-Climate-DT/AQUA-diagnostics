@@ -23,7 +23,7 @@ references:
     model: '{{ references.radiation_toa.model }}'
     exp: '{{ references.radiation_toa.exp }}'
     source: '{{ references.radiation_toa.source }}'
-    regrid: 'r100'
+    regrid: '{{ regrid }}'
     reader_kwargs: null
     startdate: '{{ radiation.startdate }}'
     enddate: '{{ radiation.enddate }}'
