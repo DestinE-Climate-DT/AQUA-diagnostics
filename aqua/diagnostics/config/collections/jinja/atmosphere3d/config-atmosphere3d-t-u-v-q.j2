@@ -10,10 +10,10 @@ datasets:
     enddate: null
 
 references:
-  - catalog: {{ references.era5.catalog | tojson }}
-    model: {{ references.era5.model | tojson }}
-    exp: {{ references.era5.exp | tojson }}
-    source: {{ references.era5.source | tojson }}
+  - catalog: '{{ references.era5.catalog }}'
+    model: '{{ references.era5.model }}'
+    exp: '{{ references.era5.exp }}'
+    source: '{{ references.era5.source }}'
     regrid: 'r100'
     startdate: '{{ default.startdate }}'
     enddate: '{{ default.enddate }}'

@@ -20,7 +20,7 @@ default:
     era5: {catalog: obs, model: ECMWF, exp: era5, source: monthly}
     berkeley_earth: {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}
     esa_cci_sst: {catalog: obs, model: ESA-CCI-L4, exp: v3.0.1, source: r100-monthly}
-    en4: {catalog: null, model: EN4, exp: v4.2.2, source: monthly-netcdf}
+    en4: {catalog: obs, model: EN4, exp: v4.2.2, source: monthly-netcdf}
     ceres_toa: {catalog: obs, model: CERES, exp: ebaf-toa421, source: monthly}
     ceres_sfc: {catalog: obs, model: CERES, exp: ebaf-sfc421, source: monthly}
     osi_saf_nh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: nh-monthly}
