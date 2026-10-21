@@ -38,6 +38,8 @@ def test_parse_arguments_cli_options():
     assert args.model == "IFS"
     assert args.nworkers == 4
     assert args.catalog is None
+    assert args.climatology is False
+    assert parse_arguments(["--climatology"]).climatology is True
 
     with pytest.raises(SystemExit):
         parse_arguments(["--help"])
@@ -174,3 +176,49 @@ class TestMainExecutionFlow:
         main(["--config", config_file, "--loglevel", "WARNING"])
 
         assert mock_gb_cls.call_args_list[0].kwargs["diagnostic"] == "my_custom_gb"
+
+
+class TestClimatologyOnly:
+    """Test main() in climatology-only mode (no reference or --climatology flag)."""
+
+    @pytest.fixture
+    def mocks(self, mocker):
+        """Patch Climatology, PlotBias and PlotClimatology. Data has a plev dimension."""
+        mock_gb_cls = mocker.patch(f"{CLI_MODULE}.Climatology")
+        mock_bias_cls = mocker.patch(f"{CLI_MODULE}.PlotBias")
+        mock_clim_cls = mocker.patch(f"{CLI_MODULE}.PlotClimatology")
+        mock_gb_cls.return_value.data = {"t": MagicMock(dims=("plev",))}
+        return mock_gb_cls, mock_bias_cls, mock_clim_cls
+
+    @pytest.mark.parametrize(
+        "references, extra_args",
+        [([], []), (None, ["--climatology"])],
+        ids=["no_references", "climatology_flag"],
+    )
+    def test_climatology_only(self, build_config, mock_cluster, mocks, references, extra_args):
+        """Only the dataset is processed and PlotClimatology is used instead of PlotBias."""
+        mock_gb_cls, mock_bias_cls, mock_clim_cls = mocks
+        config_file = build_config(
+            {
+                "biases": {
+                    **BASE_SET,
+                    "variables": ["t"],
+                    "params": {"default": {"plev": [85000, 20000], "seasons": True, "vertical": True}},
+                },
+            },
+            references=references,
+        )
+
+        main(["--config", config_file, "--loglevel", "WARNING", *extra_args])
+
+        mock_gb_cls.assert_called_once()
+        assert mock_gb_cls.call_args.kwargs["model"] == "TestModel"
+        assert mock_gb_cls.return_value.retrieve.call_count == 1
+        assert mock_gb_cls.return_value.compute_climatology.call_count == 1
+
+        mock_bias_cls.assert_not_called()
+        plot_clim = mock_clim_cls.return_value
+        assert plot_clim.plot_climatology.call_count == 2
+        assert [c.kwargs["plev"] for c in plot_clim.plot_climatology.call_args_list] == [85000, 20000]
+        assert plot_clim.plot_seasonal_climatology.call_count == 2
+        plot_clim.plot_vertical_climatology.assert_called_once()
