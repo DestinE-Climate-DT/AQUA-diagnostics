@@ -11,10 +11,7 @@ from tempfile import TemporaryDirectory
 
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml
-
-from .cli_base import DiagnosticCLI
-from .diagnostic import Diagnostic
-from .util import template_parse_arguments
+from aqua.diagnostics.base import Diagnostic, DiagnosticCLI, template_parse_arguments
 
 
 def parse_arguments(arguments):
