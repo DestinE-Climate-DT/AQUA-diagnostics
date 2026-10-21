@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.26.0):
 - CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
 - Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
+- Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` kept as alias); jinja collection templates renamed by variable/content instead of reference dataset (requires aqua-core with DestinE-Climate-DT/AQUA#3266) (#PRNUM)
 
 Main changes:
 

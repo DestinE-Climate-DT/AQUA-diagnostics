@@ -103,6 +103,26 @@ def test_analysis_config_collection_files_exist():
 _STRICT_JINJA_ENV = Environment(undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
 
 
+# TODO(aqua-core #3266): mirror of the kind resolution in aqua-core ``Analysis.configure_experiment_kind``
+# (each kind deep-merged on top of ``default``). Replace with the production code once the pinned
+# aqua-core ships it.
+def _deep_merge(base, override):
+    """Recursively merge ``override`` on top of ``base`` without modifying the inputs."""
+    merged = dict(base)
+    for key, value in (override or {}).items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _resolved_experiment_kinds():
+    """Load the experiment kind file and resolve every kind on top of ``default``."""
+    experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
+    return {name: _deep_merge(experiment_kinds["default"], kind) for name, kind in experiment_kinds.items()}
+
+
 def _render_template_strict(template_path, definitions):
     """Render a jinja template with StrictUndefined and parse the result as YAML."""
     rendered = _STRICT_JINJA_ENV.from_string(template_path.read_text()).render(definitions)
@@ -116,7 +136,7 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
     ``UndefinedError``, only logged, which silently skips the collection at runtime. Guards
     render-ability and YAML validity, not the rendered values.
     """
-    experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
+    experiment_kinds = _resolved_experiment_kinds()
     templates = sorted(JINJA_COLLECTIONS_DIR.glob("**/*.j2"))
     assert templates, f"No jinja templates found under {JINJA_COLLECTIONS_DIR}."
 
@@ -135,3 +155,56 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
                 render_failures.append(f"{label}: rendered to {type(rendered).__name__}, not a mapping")
 
     assert not render_failures, "Jinja templates failed to render to a valid config:\n" + "\n".join(render_failures)
+
+
+# Fully specified kinds before the switch to ``default`` + overrides (#463): resolving these kinds
+# must give exactly the same definitions, so the rendered collection configs are unchanged.
+_HISTORICAL_PERIOD = {
+    "startdate": "1990-01-01",
+    "enddate": "2014-12-31",
+    "std_startdate": "1990-01-01",
+    "std_enddate": "2014-12-31",
+}
+_CERES_PERIOD = {
+    "startdate": "2001-01-01",
+    "enddate": "2024-12-31",
+    "std_startdate": "2001-01-01",
+    "std_enddate": "2024-12-31",
+}
+_LEGACY_KINDS = {
+    "default": {"default": _HISTORICAL_PERIOD, "radiation_ceres": _CERES_PERIOD, "timeseries": _HISTORICAL_PERIOD},
+    "scenario": {
+        "default": _HISTORICAL_PERIOD,
+        "radiation_ceres": _CERES_PERIOD,
+        "timeseries": {
+            "startdate": "2000-01-01",
+            "enddate": "2024-12-31",
+            "std_startdate": "2000-01-01",
+            "std_enddate": "2024-12-31",
+        },
+    },
+}
+
+
+@pytest.mark.parametrize(
+    "kind_name,legacy_name",
+    [
+        ("default", "default"),
+        ("climatedt-hist-cmip6", "default"),
+        ("scenario", "scenario"),
+        ("climatedt-projections-cmip6", "scenario"),
+    ],
+)
+def test_experiment_kinds_backward_compatible(kind_name, legacy_name):
+    """Kinds existing before the overrides-only layout resolve to their previous definitions."""
+    assert _resolved_experiment_kinds()[kind_name] == _LEGACY_KINDS[legacy_name]
+
+
+def test_experiment_kinds_define_same_keys_as_default():
+    """Overrides must not introduce keys unknown to ``default`` (typos would be silently unused)."""
+    experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
+    default = experiment_kinds["default"]
+    for kind_name, resolved in _resolved_experiment_kinds().items():
+        assert resolved.keys() == default.keys(), kind_name
+        for block, values in resolved.items():
+            assert values.keys() == default[block].keys(), f"{kind_name}.{block}"

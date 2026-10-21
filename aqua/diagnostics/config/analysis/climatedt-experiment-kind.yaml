@@ -1,9 +1,15 @@
-# Default date for jinja templates for reference datasets:
-
-# default: default date range for all analyses
+# Experiment kinds for the jinja templates of the reference datasets (aqua analysis --kind).
+#
+# "default" holds every definition used by the templates. Every other kind is deep-merged
+# on top of "default" by aqua-core, so it only lists the keys it overrides.
+# An unknown kind falls back to "default".
+#
+# Blocks:
+# default: date range for all analyses
 # radiation_ceres: date range for ceres radiation analyses
 # timeseries: date range for timeseries analyses
-
+#
+# Keys:
 # startdate, enddate: values for the date range for references to be used in the analysis
 # std_startdate, std_enddate: standard deviation for references to be used in the analysis
 
@@ -23,35 +29,62 @@ default:
     enddate: "2014-12-31"
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
-scenario:
-  default: # default compare to historical period
-    startdate: "1990-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "1990-01-01"
-    std_enddate: "2014-12-31"
-  radiation_ceres: #same as default due to data availability
-    startdate: "2001-01-01"
-    enddate: "2024-12-31"
-    std_startdate: "2001-01-01"
-    std_enddate: "2024-12-31"
-  timeseries: # timeseries exploit all data available (25 years up to last obs avail year)
+
+# Historical runs with CMIP6 forcing: same as default
+climatedt-hist-cmip6: {}
+
+# Historical runs with CMIP7 forcing: references extended to 2025
+climatedt-hist-cmip7: &hist-cmip7
+  default:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  radiation_ceres:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  timeseries:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+
+highresmip-hist-cmip7: *hist-cmip7
+
+# Projections with CMIP6 forcing: maps compared to the historical period,
+# timeseries exploit all data available (25 years up to last obs available year)
+climatedt-projections-cmip6: &projections-cmip6
+  timeseries:
     startdate: "2000-01-01"
     enddate: "2024-12-31"
     std_startdate: "2000-01-01"
     std_enddate: "2024-12-31"
+
+# Backward compatible alias of climatedt-projections-cmip6
+scenario: *projections-cmip6
+
+# Projections with CMIP7 forcing: as CMIP6 projections, with references extended to 2025
+climatedt-projections-cmip7:
+  default:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  radiation_ceres:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  timeseries:
+    startdate: "2000-01-01"
+    enddate: "2025-12-31"
+    std_startdate: "2000-01-01"
+    std_enddate: "2025-12-31"
+
 storyline:
   default:
     startdate: "2017-01-01"
-    enddate: "2024-12-31"
+    enddate: "2025-12-31"
     std_startdate: "2000-01-01"
-    std_enddate: "2024-12-31"
+    std_enddate: "2025-12-31"
   radiation_ceres:
     startdate: "2017-01-01"
-    enddate: "2024-12-31"
-    std_startdate: "2001-01-01"
-    std_enddate: "2024-12-31"
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
   timeseries:
     startdate: "2017-01-01"
-    enddate: "2024-12-31"
+    enddate: "2025-12-31"
     std_startdate: "2000-01-01"
-    std_enddate: "2024-12-31"
+    std_enddate: "2025-12-31"
