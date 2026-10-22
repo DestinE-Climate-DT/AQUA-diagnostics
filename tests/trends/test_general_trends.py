@@ -27,7 +27,7 @@ def test_trends(tmp_path):
 
 @pytest.mark.diagnostics
 def test_trends_region_dim_mean():
-    """A trend averaged over a dimension must be restricted to the region, not fall back to the global domain."""
+    """A regional trend, with or without a dimensional mean, must not fall back to the global domain."""
     trend = Trends(catalog="ci", model="FESOM", exp="hpz3", source="monthly-3d", regrid="r100", loglevel=loglevel)
     trend.retrieve(var="thetao")
 
@@ -38,6 +38,11 @@ def test_trends_region_dim_mean():
     assert zonal_region.attrs["AQUA_dim_mean"] == "lon"
     assert "lon" not in zonal_region.dims
     assert float(zonal_global["thetao"].mean()) != pytest.approx(float(zonal_region["thetao"].mean()), rel=approx_rel)
+
+    # Without dim_mean the trend is pointwise, but the region must still restrict the domain
+    cells_global = int(trend.compute_trend()["thetao"].notnull().sum())
+    cells_region = int(trend.compute_trend(region="io")["thetao"].notnull().sum())
+    assert 0 < cells_region < cells_global
 
 
 @pytest.mark.diagnostics

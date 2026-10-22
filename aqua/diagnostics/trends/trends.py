@@ -116,6 +116,9 @@ class Trends(Diagnostic):
         if self.data is None:
             raise ValueError("No data available, run retrieve() first.")
 
+        region_object, region_sel, frac_threshold = self._resolve_regionmask_object(
+            region=region, regions_file_path=regions_file_path
+        )
         region, lon_limits, lat_limits = self._set_region(
             region=region,
             regions_file_path=regions_file_path,
@@ -129,10 +132,26 @@ class Trends(Diagnostic):
             # The mean has to be applied before the fit, and it takes care of the area
             # selection itself, so that it is weighted over the region only.
             self.logger.info("Averaging data over dimension(s): %s", dim_mean)
-            data = self.reader.fldmean(data, dims=to_list(dim_mean), lon_limits=lon_limits, lat_limits=lat_limits)
+            data = self.reader.fldmean(
+                data,
+                dims=to_list(dim_mean),
+                lon_limits=lon_limits,
+                lat_limits=lat_limits,
+                region=region_object,
+                region_sel=region_sel,
+                frac_threshold=frac_threshold,
+            )
         elif region is not None or lon_limits is not None or lat_limits is not None:
             self.logger.info("Applying area selection: %s", region if region is not None else "custom limits")
-            data = self.reader.select_area(data=data, lon=lon_limits, lat=lat_limits, drop=True)
+            data = self.reader.select_area(
+                data=data,
+                lon=lon_limits,
+                lat=lat_limits,
+                region=region_object,
+                region_sel=region_sel,
+                frac_threshold=frac_threshold,
+                drop=True,
+            )
 
         self.logger.info("Calculating linear trend")
         coeffs = Trender(loglevel=self.loglevel).coeffs(data, dim="time", skipna=True, normalize=False)
