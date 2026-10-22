@@ -24,11 +24,10 @@ sources:
 regions:
 
   # --- Land regions (IPCC AR6) ---
-  # All AR6 regions are used for Europe because they are not clipped to
-  # the coastline, so coastal cells and small islands (e.g. Ireland) are less likely to be lost.
+  # AR6 regions are not clipped to the coastline, so coastal cells and small islands (e.g. Ireland) are kept.
   europe:
     regionmask: ar6
-    regionmask_names: [N.Europe, West&Central-Europe, E.Europe, Mediterranean]
+    regionmask_names: [N.Europe, West&Central-Europe, Mediterranean]
     longname: Europe
 
   # --- Ocean basins and seas (IHO sea areas) ---
