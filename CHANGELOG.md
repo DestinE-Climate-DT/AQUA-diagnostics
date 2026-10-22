@@ -6,12 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
+- CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
+- Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
 Main changes:
 
 Complete list:
 - Regions: polygon-based regions with `regionmask`, from the IPCC AR6 regions (land and atmosphere) and the IHO sea areas (oceans and seas) (#287)
+- Setup checker: use absolute imports so it runs as a script from `aqua analysis` (#520)
+- Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
+- Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469, #507)
 - Ocean3D: Hovmoller graphical improvements (#478)
 - Implementation of load netcdf and plot only in ocean drift CLI (#457)
 - CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)

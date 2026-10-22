@@ -1,0 +1,23 @@
+# Generic 2D trend maps using the existing CI FESOM surface test data.
+# Requires test assets at the locations configured in the CI catalog machine.yaml.
+# Default ./AQUA_tests paths are relative to the working directory.
+# Run cli_trend.py with --config pointing to this file.
+datasets:
+  - catalog: ci
+    model: FESOM
+    exp: hpz3
+    source: monthly-2d
+    regrid: r100
+    reader_kwargs: {chunks: {"time": 12}}
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  trends:
+    run: true
+    var: ['siconc', 'sithick']
