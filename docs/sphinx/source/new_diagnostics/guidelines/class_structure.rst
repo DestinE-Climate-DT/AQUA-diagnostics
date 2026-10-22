@@ -180,7 +180,7 @@ and the IHO sea areas (`Marine Regions <https://www.marineregions.org/>`_) for o
 Regions with no equivalent in either standard are lon/lat boxes.
 Both polygon collections are listed in the ``sources`` section of ``regions.yaml``. If a copy is in the
 ``regions/`` folder next to ``regions.yaml``, it is read from there: the container build fills that folder
-from the official links.
+from the official links with ``fetch_region_sources`` (in ``aqua.diagnostics.base.region_sources``).
 Otherwise they are downloaded the first time they are used and cached, simplified, in the ``regionmask``
 cache directory.
 

@@ -1,12 +1,13 @@
 """Tests for the centralized region lookup in the ``Diagnostic`` base class."""
 
+import shutil
 from textwrap import dedent
 
 import geopandas as gpd
 import pytest
 import shapely
 
-from aqua.diagnostics.base import Diagnostic
+from aqua.diagnostics.base import Diagnostic, region_sources
 from tests.shared_constants import LOGLEVEL
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
@@ -125,3 +126,23 @@ def test_resolve_regionmask_object_reads_shipped_copy(tmp_path):
     region_object, region_sel, frac_threshold = _make_diag()._resolve_regionmask_object("mybox", regions_file_path=path)
     assert region_object.names == ["Box"]
     assert (region_sel, frac_threshold) == (["Box"], 0.0)
+
+
+# fetch_region_sources
+def test_fetch_region_sources_fills_regions_folder(tmp_path, monkeypatch):
+    """The container build step: every source is downloaded, simplified and stored in regions/ next to the regions file."""
+    (tmp_path / "shp").mkdir()
+    box = gpd.GeoDataFrame({"name": ["Box"]}, geometry=[shapely.box(0, 0, 10, 10)], crs="EPSG:4326")
+    box.to_file(tmp_path / "shp" / "box.shp")
+    zipped = shutil.make_archive(str(tmp_path / "box"), "zip", tmp_path / "shp")
+    monkeypatch.setattr(region_sources.pooch, "retrieve", lambda *args, **kwargs: zipped)  # no network
+    (tmp_path / "definitions").mkdir()
+    path = _write_yaml(
+        tmp_path / "definitions" / "regions.yaml",
+        """
+        sources:
+          fetchbox: {url: "https://invalid.invalid/box.zip", names: name, simplify: 0}
+    """,
+    )
+    region_sources.fetch_region_sources(path)
+    assert gpd.read_file(tmp_path / "definitions" / "regions" / "fetchbox_0.gpkg")["name"].tolist() == ["Box"]

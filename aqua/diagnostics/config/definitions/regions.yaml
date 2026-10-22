@@ -8,14 +8,15 @@
 #     centred on IHO land. Needs a regular lon/lat grid.
 
 # Polygon collections: read as <name>_<simplify>.gpkg from the regions/ folder next to this file (filled when the
-# container is built, otherwise downloaded once, simplified (degrees) and cached
+# container is built), otherwise downloaded once, simplified (degrees) and cached with regionmask's data.
+
 # with regionmask's data.
 sources:
-  ar6:  # IPCC AR6 reference regions v4
+  ar6:  # IPCC AR6 reference regions v4, Iturbide et al. (2020), doi:10.5194/essd-12-2959-2020. CC BY 4.0.
     url: "https://github.com/regionmask/regionmask/raw/v0.13.0/data/IPCC-WGI-reference-regions-v4.zip"
     names: Name
     simplify: 0
-  iho:  # IHO Sea Areas v3
+  iho:  # IHO Sea Areas v3, Flanders Marine Institute (2018), doi:10.14284/323. CC BY-NC-SA 4.0: not in this repository.
     url: "https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=MarineRegions:iho&outputFormat=SHAPE-ZIP&propertyName=name,the_geom"
     names: name
     simplify: 0.02
