@@ -313,7 +313,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/regionmask/aqua
-          key: regionmask-iho-v3-0.02
+          key: regionmask-${{ hashFiles('AQUA-diagnostics/aqua/diagnostics/base/region_sources.py') }}
 
       - name: Run tests (parallel with coverage)
         if: ${{ inputs.enable-parallel && inputs.enable-coverage }}
