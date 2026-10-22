@@ -176,10 +176,11 @@ class TestBiases:
         "region, expected_proj, zoomed",
         [
             ("ros", ccrs.PlateCarree(central_longitude=180), True),  # box across the dateline, lon 160-210
+            ("so", ccrs.Robinson(), False),  # circumpolar polygon, lon -179-180
         ],
     )
     def test_regional_bias_maps(self, climatology_instance, test_var, region, expected_proj, zoomed):
-        """Both bias maps zoom on a region crossing the dateline."""
+        """Both bias maps zoom on a region crossing the dateline, and keep the global map for a circumpolar one."""
         gb = climatology_instance
         var = test_var
         gb.compute_climatology(var=var, seasonal=True)

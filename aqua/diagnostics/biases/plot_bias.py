@@ -83,21 +83,12 @@ class PlotBias:
         )
 
     def _map_settings(self, data, proj, proj_params, extent, cyclic_lon):
-        """
-        Projection, extent and cyclic point of a bias map.
-
-        Regional data (AQUA_region attribute) are in plate carree by default, global data in robinson.
-        If the region spans less than 350 degrees of longitude, the map is zoomed on it, centred on 180
-        if the region crosses the dateline (lon in 0-360, e.g. the Pacific Ocean).
-
-        Returns:
-            tuple: (cartopy projection, extent, cyclic_lon)
-        """
+        """Projection, extent and cyclic point of a bias map: zoomed on the region for regional data, global otherwise."""
         lon_min, lon_max = float(data["lon"].min()), float(data["lon"].max())
         regional = data.attrs.get("AQUA_region") is not None and lon_max - lon_min < 350
 
         if proj is None:
-            proj = "plate_carree" if data.attrs.get("AQUA_region") is not None else "robinson"
+            proj = "plate_carree" if regional else "robinson"
 
         if regional:
             cyclic_lon = False
@@ -239,7 +230,8 @@ class PlotBias:
             var (str): Variable name.
             plev (float, optional): Pressure level.
             proj (str, optional): Desired projection for the map. If None, 'plate_carree' is used for
-                regional data (AQUA_region attribute present) and 'robinson' otherwise.
+                regional data (AQUA_region attribute present, less than 350 degrees of longitude)
+                and 'robinson' otherwise.
             proj_params (dict, optional): Additional arguments for the projection.
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
@@ -438,7 +430,8 @@ class PlotBias:
             var (str): Variable name.
             plev (float, optional): Pressure level.
             proj (str, optional): Desired projection for the map. If None, 'plate_carree' is used for
-                regional data (AQUA_region attribute present) and 'robinson' otherwise.
+                regional data (AQUA_region attribute present, less than 350 degrees of longitude)
+                and 'robinson' otherwise.
             proj_params (dict, optional): Additional arguments for the projection.
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
