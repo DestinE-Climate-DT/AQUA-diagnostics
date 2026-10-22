@@ -117,15 +117,18 @@ def test_resolve_regionmask_object_reads_shipped_copy(tmp_path):
         sources:
           box: {url: "https://invalid.invalid/box.zip", names: name, simplify: 0}
         regions:
-          mybox: {longname: My Box, regionmask: box, regionmask_names: [Box], frac_threshold: 0.0}
+          mybox: {longname: My Box, regionmask: box, regionmask_names: [Box]}
+          centres: {longname: Box, regionmask: box, frac_threshold: null}
     """,
     )
     (tmp_path / "regions").mkdir()
     box = gpd.GeoDataFrame({"name": ["Box"]}, geometry=[shapely.box(0, 0, 10, 10)], crs="EPSG:4326")
     box.to_file(tmp_path / "regions" / "box_0.gpkg")
-    region_object, region_sel, frac_threshold = _make_diag()._resolve_regionmask_object("mybox", regions_file_path=path)
+    diag = _make_diag()
+    region_object, region_sel, frac_threshold = diag._resolve_regionmask_object("mybox", regions_file_path=path)
     assert region_object.names == ["Box"]
-    assert (region_sel, frac_threshold) == (["Box"], 0.0)
+    assert (region_sel, frac_threshold) == (["Box"], 0.0)  # any touching cell by default
+    assert diag._resolve_regionmask_object("centres", regions_file_path=path)[1:] == ("Box", None)
 
 
 # fetch_region_sources

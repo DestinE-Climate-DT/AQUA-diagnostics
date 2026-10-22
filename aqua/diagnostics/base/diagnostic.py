@@ -557,7 +557,8 @@ class Diagnostic:
                 from, or None if the region is not regionmask-based.
             region_sel (str | list): The name(s) to pass as ``region_sel`` to
                 ``Reader.select_area``, or None if the region is not regionmask-based.
-            frac_threshold (float): The optional ``frac_threshold`` of the region, or None.
+            frac_threshold (float): The ``frac_threshold`` of the region (default 0.0, any touching cell;
+                None to select by cell centres), or None if the region is not regionmask-based.
         """
         if regions_file_path is None:
             regions_file_path = self._get_default_regions_file()
@@ -577,7 +578,7 @@ class Diagnostic:
         long_name = spec.get("longname", region)
         region_sel = spec.get("regionmask_names", long_name)
 
-        return region_object, region_sel, spec.get("frac_threshold")
+        return region_object, region_sel, spec.get("frac_threshold", 0.0)
 
     def select_region(self, data: xr.Dataset, region: str = None, regions_file_path: str = None, drop: bool = True, **kwargs):
         """
@@ -590,7 +591,7 @@ class Diagnostic:
                 regions file will be used.
             drop (bool): Whether to drop coordinates outside the selected region.
             **kwargs: Additional keyword arguments passed to the select_area reader method.
-                For regionmask-based regions, the optional ``frac_threshold`` key of the regions file
+                For regionmask-based regions, the ``frac_threshold`` of the regions file (default 0.0)
                 is passed as well, unless it is already given here.
 
         Returns:

@@ -3,8 +3,8 @@
 # oceans and seas; lon/lat boxes for everything else. Keys of a polygon region:
 #   - ``regionmask``: a source below or a regionmask.defined_regions object (e.g. srex)
 #   - ``regionmask_names``: sub-regions to merge (default: ``longname``)
-#   - ``frac_threshold``: also keep cells covered above this fraction (0.0 = any touching cell).
-#     Used for all IHO seas: coarse model grids (e.g. LRA r100) have many coastal ocean cells
+#   - ``frac_threshold``: also keep cells covered above this fraction (default 0.0 = any touching cell,
+#     null = cell centres only): coarse model grids (e.g. LRA r100) have many coastal ocean cells
 #     centred on IHO land. Needs a regular lon/lat grid.
 
 # Polygon collections: read as <name>_<simplify>.gpkg from the regions/ folder next to this file (filled when the
@@ -29,7 +29,6 @@ regions:
   europe:
     regionmask: ar6
     regionmask_names: [N.Europe, West&Central-Europe, E.Europe, Mediterranean]
-    frac_threshold: 0.0
     longname: Europe
 
   # --- Ocean basins and seas (IHO sea areas) ---
@@ -39,13 +38,11 @@ regions:
     regionmask: iho
     regionmask_names: [North Atlantic Ocean, South Atlantic Ocean]
     longname: Atlantic Ocean
-    frac_threshold: 0.0
   # With the seas east of Australia and New Guinea.
   po:
     regionmask: iho
     regionmask_names: [North Pacific Ocean, South Pacific Ocean, Coral Sea, Tasman Sea, Solomon Sea, Bismarck Sea]
     longname: Pacific Ocean
-    frac_threshold: 0.0
   # With its marginal seas, except the much warmer and saltier Red Sea and Persian Gulf.
   io:
     regionmask: iho
@@ -59,7 +56,6 @@ regions:
       - Gulf of Oman
       - Mozambique Channel
     longname: Indian Ocean
-    frac_threshold: 0.0
   # With its shelf seas, the Nordic Seas and Baffin Bay. Davis Strait, mostly south of 65°N, is left out.
   arc_o:
     regionmask: iho
@@ -78,68 +74,55 @@ regions:
       - Norwegian Sea
       - Baffin Bay
     longname: Arctic Ocean
-    frac_threshold: 0.0
   # South of 60°S: not in the IHO S-23 publication, added by Marine Regions.
   so:
     regionmask: iho
     regionmask_names: [Southern Ocean]
     longname: Southern Ocean
-    frac_threshold: 0.0
   ls:
     regionmask: iho
     regionmask_names: [Labrador Sea]
     longname: Labrador Sea
-    frac_threshold: 0.0
   lgs:
     regionmask: iho
     regionmask_names: [Labrador Sea, Greenland Sea, Norwegian Sea]
     longname: Labrador Gin Seas
-    frac_threshold: 0.0
   gs:
     regionmask: iho
     regionmask_names: [Greenland Sea, Norwegian Sea]
     longname: Gin Sea
-    frac_threshold: 0.0
   bs:
     regionmask: iho
     regionmask_names: [Bering Sea]
     longname: Bering Sea
-    frac_threshold: 0.0
   gom:
     regionmask: iho
     regionmask_names: [Gulf of Mexico]
     longname: Gulf of Mexico
-    frac_threshold: 0.0
   hb:
     regionmask: iho
     regionmask_names: [Hudson Bay]
     longname: Hudson Bay
-    frac_threshold: 0.0
   rs:
     regionmask: iho
     regionmask_names: [Red Sea]
     longname: Red Sea
-    frac_threshold: 0.0
   pg:
     regionmask: iho
     regionmask_names: [Persian Gulf]
     longname: Persian Gulf
-    frac_threshold: 0.0
   adr:
     regionmask: iho
     regionmask_names: [Adriatic Sea]
     longname: Adriatic Sea
-    frac_threshold: 0.0
   cs:
     regionmask: iho
     regionmask_names: [Caribbean Sea]
     longname: Caribbean Sea
-    frac_threshold: 0.0
   sj:
     regionmask: iho
     regionmask_names: [Japan Sea]
     longname: Sea of Japan
-    frac_threshold: 0.0
   # The Strait of Gibraltar is left out: it has no cells on coarse grids (e.g. r100),
   # which breaks the selection with frac_threshold.
   ms:
@@ -155,67 +138,54 @@ regions:
       - Adriatic Sea
       - Aegean Sea
     longname: Mediterranean Sea
-    frac_threshold: 0.0
   bks:
     regionmask: iho
     regionmask_names: [Black Sea]
     longname: Black Sea
-    frac_threshold: 0.0
   scs:
     regionmask: iho
     regionmask_names: [South China Sea]
     longname: South China Sea
-    frac_threshold: 0.0
   as:
     regionmask: iho
     regionmask_names: [Arabian Sea]
     longname: Arabian Sea
-    frac_threshold: 0.0
   cos:
     regionmask: iho
     regionmask_names: [Coral Sea]
     longname: Coral Sea
-    frac_threshold: 0.0
   ts:
     regionmask: iho
     regionmask_names: [Timor Sea]
     longname: Timor Sea
-    frac_threshold: 0.0
   goa:
     regionmask: iho
     regionmask_names: [Gulf of Alaska]
     longname: Gulf of Alaska
-    frac_threshold: 0.0
   ecs:
     regionmask: iho
     regionmask_names: [Eastern China Sea]
     longname: East China Sea
-    frac_threshold: 0.0
   oks:
     regionmask: iho
     regionmask_names: [Sea of Okhotsk]
     longname: Sea of Okhotsk
-    frac_threshold: 0.0
   ps:
     regionmask: iho
     regionmask_names: [Philippine Sea]
     longname: Philippine Sea
-    frac_threshold: 0.0
   ans:
     regionmask: iho
     regionmask_names: [Andaman or Burma Sea]
     longname: Andaman Sea
-    frac_threshold: 0.0
   jas:
     regionmask: iho
     regionmask_names: [Java Sea]
     longname: Java Sea
-    frac_threshold: 0.0
   bfs:
     regionmask: iho
     regionmask_names: [Beaufort Sea]
     longname: Beaufort Sea
-    frac_threshold: 0.0
 
   # --- Seas that are not IHO sea areas: boxes ---
   # The Irminger Sea is part of the North Atlantic Ocean, the Weddell and Ross Seas of the
