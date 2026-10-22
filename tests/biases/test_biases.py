@@ -173,27 +173,33 @@ class TestBiases:
         assert os.path.exists(png)
 
     @pytest.mark.parametrize(
-        "region, expected_proj, zoomed",
+        "region, expected_proj, zoomed, region_name",
         [
-            ("ros", ccrs.PlateCarree(central_longitude=180), True),  # box across the dateline, lon 160-210
-            ("so", ccrs.Robinson(), False),  # circumpolar polygon, lon -179-180
+            ("ros", ccrs.PlateCarree(central_longitude=180), True, "ross_sea"),  # box across the dateline, lon 160-210
+            ("so", ccrs.Robinson(), False, "southern_ocean"),  # circumpolar polygon, lon -179-180
         ],
     )
-    def test_regional_bias_maps(self, climatology_instance, test_var, region, expected_proj, zoomed):
-        """Both bias maps zoom on a region crossing the dateline, and keep the global map for a circumpolar one."""
+    def test_regional_bias_maps(self, climatology_instance, test_var, region, expected_proj, zoomed, region_name):
+        """Regional bias maps: zoomed across the dateline, global for circumpolar regions, named after the region."""
         gb = climatology_instance
         var = test_var
+        outdir = gb.outputdir
         gb.compute_climatology(var=var, seasonal=True)
         data = gb.select_region(data=gb.climatology, region=region)["data"]
         seasonal = gb.select_region(data=gb.seasonal_climatology, region=region)["data"]
 
-        plotgb = PlotBias(save_format=[], return_fig=True, loglevel=loglevel)
+        plotgb = PlotBias(save_format=["png"], dpi=DPI, outputdir=outdir, return_fig=True, loglevel=loglevel)
         _, ax = plotgb.plot_bias(data=data, data_ref=data * 0.99, var=var, plev=85000)
         fig = plotgb.plot_seasonal_bias(data=seasonal, data_ref=seasonal * 0.99, var=var, plev=85000)
 
         for axis in [ax] + [a for a in fig.axes if hasattr(a, "projection")]:
             assert axis.projection == expected_proj
             assert (np.ptp(axis.get_extent()[:2]) < 90) == zoomed
+
+        # The region in the filename keeps the global plots from being overwritten
+        for product in ("bias", "seasonal_bias"):
+            png = f"biases.{product}.ci.ERA5.era5-hpz3.r1.ERA5.era5-hpz3.{var}.85000.{region_name}.png"
+            assert os.path.exists(os.path.join(outdir, "png", png))
 
     def test_vertical_climatology(self, climatology_instance, plot_climatology_instance, test_var):
         gb = climatology_instance

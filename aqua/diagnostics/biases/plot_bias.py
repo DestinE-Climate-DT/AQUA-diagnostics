@@ -77,6 +77,9 @@ class PlotBias:
             extra_keys.update({"var": var})
         if plev is not None:
             extra_keys.update({"plev": plev})
+        # Regional plots must not overwrite the global ones
+        if data.attrs.get("AQUA_region") is not None:
+            extra_keys.update({"region": data.attrs["AQUA_region"]})
 
         outputsaver.save_figure(
             fig, diagnostic_product, extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save, dpi=self.dpi
