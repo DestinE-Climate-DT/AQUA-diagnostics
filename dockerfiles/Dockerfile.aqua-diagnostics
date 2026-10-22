@@ -87,3 +87,12 @@ WORKDIR /app/AQUA-diagnostics/
 
 ENV PATH "$MAMBA_ROOT_PREFIX/bin:$PATH"
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
+
+# Polygons of the regions file (its sources), fetched from their official links at every build and stored in
+# regions/ next to it, where the diagnostics look first
+RUN cd aqua/diagnostics/config/definitions && \
+    XDG_CACHE_HOME=/tmp/regions python -c "\
+from aqua.core.util import load_yaml; \
+from aqua.diagnostics.base.region_sources import load_region_source; \
+[load_region_source(name, **spec) for name, spec in load_yaml('regions.yaml')['sources'].items()]" && \
+    mkdir -p regions && mv /tmp/regions/regionmask/aqua/*.gpkg regions/ && rm -rf /tmp/regions

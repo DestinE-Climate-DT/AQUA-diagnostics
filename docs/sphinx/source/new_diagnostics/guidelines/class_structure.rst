@@ -176,12 +176,13 @@ The ``definitions/`` top-level folder contains shared lookup files used by all d
 any diagnostic can refer to a region by name (e.g. ``nh``, ``arctic``, ``io``) and the
 ``Diagnostic`` base class resolves it against this single file.
 Regions are polygons whenever possible: the IPCC AR6 reference regions for land and atmosphere
-(shipped with ``regionmask``) and the IHO sea areas for oceans and seas.
+and the IHO sea areas (`Marine Regions <https://www.marineregions.org/>`_) for oceans and seas.
 Regions with no equivalent in either standard are lon/lat boxes.
-The IHO sea areas are downloaded from `Marine Regions <https://www.marineregions.org/>`_ the first
-time they are used and cached, simplified, in the ``regionmask`` cache directory, as ``regionmask``
-does for its own data. On machines whose compute nodes have no internet access, run one diagnostic
-on a login node first, or point both to a shared cache with ``regionmask.set_options(cache_dir=...)``.
+Both polygon collections are listed in the ``sources`` section of ``regions.yaml``. If a copy is in the
+``regions/`` folder next to ``regions.yaml``, it is read from there: the container build fills that folder
+from the official links.
+Otherwise they are downloaded the first time they are used and cached, simplified, in the ``regionmask``
+cache directory.
 
 The ``tools/`` folder contains a subfolder for each diagnostic, which in turn may contain a
 ``definitions/`` folder with lookup files that are *specific to that diagnostic only* (e.g. custom

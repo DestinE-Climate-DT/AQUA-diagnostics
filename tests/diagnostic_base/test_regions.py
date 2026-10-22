@@ -2,12 +2,14 @@
 
 from textwrap import dedent
 
+import geopandas as gpd
 import pytest
+import shapely
 
 from aqua.diagnostics.base import Diagnostic
 from tests.shared_constants import LOGLEVEL
 
-pytestmark = [pytest.mark.aqua]
+pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
 
 def _make_diag():
@@ -103,3 +105,23 @@ def test_set_region_user_file_does_not_see_centralized_entries(tmp_path):
     diag = _make_diag()
     with pytest.raises(ValueError, match="not found"):
         diag._set_region(region="nh", regions_file_path=path)
+
+
+# _resolve_regionmask_object
+def test_resolve_regionmask_object_reads_shipped_copy(tmp_path):
+    """Polygons in regions/ next to the regions file (as in the container) are read without downloading."""
+    path = _write_yaml(
+        tmp_path / "user.yaml",
+        """
+        sources:
+          box: {url: "https://invalid.invalid/box.zip", names: name, simplify: 0}
+        regions:
+          mybox: {longname: My Box, regionmask: box, regionmask_names: [Box], frac_threshold: 0.0}
+    """,
+    )
+    (tmp_path / "regions").mkdir()
+    box = gpd.GeoDataFrame({"name": ["Box"]}, geometry=[shapely.box(0, 0, 10, 10)], crs="EPSG:4326")
+    box.to_file(tmp_path / "regions" / "box_0.gpkg")
+    region_object, region_sel, frac_threshold = _make_diag()._resolve_regionmask_object("mybox", regions_file_path=path)
+    assert region_object.names == ["Box"]
+    assert (region_sel, frac_threshold) == (["Box"], 0.0)

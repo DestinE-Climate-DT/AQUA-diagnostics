@@ -1,4 +1,4 @@
-"""Polygon collections not shipped with regionmask, listed in the ``sources`` of the regions file."""
+"""Polygon collections listed in the ``sources`` of the regions file."""
 
 import os
 from functools import cache
@@ -12,11 +12,19 @@ from filelock import SoftFileLock
 
 
 @cache
-def load_region_source(name: str, url: str, names: str, simplify: float) -> regionmask.Regions:
-    """Download a zipped shapefile once, simplify it and cache it next to the regionmask data."""
+def load_region_source(name: str, url: str, names: str, simplify: float, folder: str | None = None) -> regionmask.Regions:
+    """
+    Read the polygons from ``folder`` if a copy is there, otherwise download the
+    zipped shapefile once, simplify it and cache it next to the regionmask data.
+    """
+    filename = f"{name}_{simplify}.gpkg"
+    shipped = os.path.join(folder, filename) if folder else ""
+    if os.path.exists(shipped):
+        return regionmask.from_geopandas(gpd.read_file(shipped), names=names, name=name, overlap=False)
+
     cache_dir = os.path.join(regionmask.get_options()["cache_dir"] or pooch.os_cache("regionmask"), "aqua")
     os.makedirs(cache_dir, exist_ok=True)
-    cached = os.path.join(cache_dir, f"{name}_{simplify}.gpkg")
+    cached = os.path.join(cache_dir, filename)
     with SoftFileLock(cached + ".lock", timeout=900):  # parallel runs download it only once
         if not os.path.exists(cached):
             raw = pooch.retrieve(url, known_hash=None, fname=f"{name}.zip", path=cache_dir)

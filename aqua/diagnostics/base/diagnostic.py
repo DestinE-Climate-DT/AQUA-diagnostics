@@ -544,7 +544,8 @@ class Diagnostic:
         names, e.g. several regionmask sub-regions covering "Europe".
 
         The ``regionmask`` key names a collection of the ``sources`` section of the regions file
-        (downloaded and cached on first use) or a ``regionmask.defined_regions`` object (e.g. ``ar6.all``).
+        (read from the ``regions`` folder next to the regions file if there, as in the container,
+        otherwise downloaded and cached on first use) or a ``regionmask.defined_regions`` object (e.g. ``srex``).
 
         Args:
             region (str): The region key in the regions file.
@@ -568,7 +569,9 @@ class Diagnostic:
 
         sources = regions_content.get("sources") or {}
         if source in sources:
-            region_object = load_region_source(source, **sources[source])
+            # The container ships them in regions/ next to the regions file
+            folder = os.path.join(os.path.dirname(regions_file_path), "regions")
+            region_object = load_region_source(source, folder=folder, **sources[source])
         else:
             region_object = attrgetter(f"defined_regions.{source}")(regionmask)
         long_name = spec.get("longname", region)

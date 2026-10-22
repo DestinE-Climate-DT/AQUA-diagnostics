@@ -1,15 +1,21 @@
 # Centralized region definitions for all AQUA diagnostics (custom file: ``regions_file_path``).
 # Polygons where possible: IPCC AR6 regions for land and atmosphere, IHO sea areas for
 # oceans and seas; lon/lat boxes for everything else. Keys of a polygon region:
-#   - ``regionmask``: a source below or a regionmask.defined_regions object (e.g. ar6.all)
+#   - ``regionmask``: a source below or a regionmask.defined_regions object (e.g. srex)
 #   - ``regionmask_names``: sub-regions to merge (default: ``longname``)
 #   - ``frac_threshold``: also keep cells covered above this fraction (0.0 = any touching cell).
 #     Used for all IHO seas: coarse model grids (e.g. LRA r100) have many coastal ocean cells
 #     centred on IHO land. Needs a regular lon/lat grid.
 
-# Polygons not shipped with regionmask: downloaded once, simplified (degrees) and cached with regionmask's data.
+# Polygon collections: read as <name>_<simplify>.gpkg from the regions/ folder next to this file (filled when the
+# container is built, otherwise downloaded once, simplified (degrees) and cached
+# with regionmask's data.
 sources:
-  iho:  # IHO Sea Areas v3, Flanders Marine Institute (2018), doi:10.14284/323. CC BY-NC-SA 4.0: not redistributed.
+  ar6:  # IPCC AR6 reference regions v4
+    url: "https://github.com/regionmask/regionmask/raw/v0.13.0/data/IPCC-WGI-reference-regions-v4.zip"
+    names: Name
+    simplify: 0
+  iho:  # IHO Sea Areas v3
     url: "https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=MarineRegions:iho&outputFormat=SHAPE-ZIP&propertyName=name,the_geom"
     names: name
     simplify: 0.02
@@ -17,10 +23,10 @@ sources:
 regions:
 
   # --- Land regions (IPCC AR6) ---
-  # ar6.all (not ar6.land) is used for Europe because its polygons are not clipped to
+  # All AR6 regions are used for Europe because they are not clipped to
   # the coastline, so coastal cells and small islands (e.g. Ireland) are less likely to be lost.
   europe:
-    regionmask: ar6.all
+    regionmask: ar6
     regionmask_names: [N.Europe, West&Central-Europe, E.Europe, Mediterranean]
     frac_threshold: 0.0
     longname: Europe
