@@ -1,6 +1,9 @@
 """Polygon collections listed in the ``sources`` of the regions file."""
 
+import glob
 import os
+import shutil
+import tempfile
 from functools import cache
 
 import geopandas as gpd
@@ -9,6 +12,8 @@ import pooch
 import regionmask
 import shapely
 from filelock import SoftFileLock
+
+from aqua.core.util import load_yaml
 
 
 @cache
@@ -36,3 +41,14 @@ def load_region_source(name: str, url: str, names: str, simplify: float, folder:
             data.to_file(cached)
             os.remove(raw)
     return regionmask.from_geopandas(gpd.read_file(cached), names=names, name=name, overlap=False)
+
+
+def fetch_region_sources(regions_file: str):
+    """Download all the sources of a regions file into the regions/ folder next to it, as the container build does."""
+    folder = os.path.join(os.path.dirname(regions_file), "regions")
+    os.makedirs(folder, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp, regionmask.set_options(cache_dir=tmp):
+        for name, spec in load_yaml(regions_file)["sources"].items():
+            load_region_source(name, **spec)
+        for gpkg in glob.glob(os.path.join(tmp, "aqua", "*.gpkg")):
+            shutil.move(gpkg, os.path.join(folder, os.path.basename(gpkg)))
