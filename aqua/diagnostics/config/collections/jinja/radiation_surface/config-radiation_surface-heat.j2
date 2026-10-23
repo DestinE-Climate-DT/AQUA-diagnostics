@@ -19,13 +19,13 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: obs
-    model: 'ECMWF'
-    exp: 'era5'
-    source: 'monthly'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
-    regrid: 'r100'
+  - catalog: '{{ references.atmosphere.catalog }}'
+    model: '{{ references.atmosphere.model }}'
+    exp: '{{ references.atmosphere.exp }}'
+    source: '{{ references.atmosphere.source }}'
+    startdate: '{{ period.startdate }}'
+    enddate: '{{ period.enddate }}'
+    regrid: '{{ regrid }}'
 
 output:
   outputdir: "./"
@@ -45,8 +45,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '{{ period.std_startdate }}'
+        std_enddate: '{{ period.std_enddate }}'
 
   biases:
     run: true

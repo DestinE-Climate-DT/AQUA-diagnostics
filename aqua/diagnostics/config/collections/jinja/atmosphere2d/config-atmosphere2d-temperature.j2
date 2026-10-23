@@ -16,13 +16,13 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: 'obs'
-    model: 'MSWEP'
-    exp: 'v2.8'
-    source: 'monthly'
-    regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+  - catalog: '{{ references.temperature.catalog }}'
+    model: '{{ references.temperature.model }}'
+    exp: '{{ references.temperature.exp }}'
+    source: '{{ references.temperature.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.startdate }}'
+    enddate: '{{ period.enddate }}'
 
 setup:
   loglevel: 'WARNING'
@@ -37,32 +37,31 @@ output:
 diagnostics:
   biases:
     run: true
-    diagnostic_name: 'water_cycle'
-    variables: ['tprate']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     params:
       default:
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: false     # Vertical profile if variable 3d
-      tprate:
-        units: 'mm/day'
     plot_params:
       default:
         projection: 'robinson'
         projection_params: {}
         show_stats: true
         show_significance: true    # Enable significance stippling
-        significance_alpha: 0.05
-      tprate:
-        vmin: -5
-        vmax: 5
-        cmap: 'BrBG'
+        significance_alpha: 0.05  # 95% confidence level
+      2t:
+        vmin: -7
+        vmax: 7
+        cmap: 'RdBu_r'
 
   timeseries:
     run: true
-    diagnostic_name: 'water_cycle'
-    variables: ['tprate']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     center_time: true
+    extend: false
     params:
       default:
         hourly: False
@@ -71,40 +70,24 @@ diagnostics:
         annual: True
         std_startdate: '{{ timeseries.std_startdate }}'
         std_enddate: '{{ timeseries.std_enddate }}'
-      tprate:
+      2t:
         regions: ['nh', 'sh', 'europe']
 
   seasonalcycles:
     run: true
-    diagnostic_name: 'water_cycle'
-    variables: ['tprate']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     center_time: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
-      tprate:
+        std_startdate: '{{ period.std_startdate }}'
+        std_enddate: '{{ period.std_enddate }}'
+      2t:
         regions: ['nh', 'sh', 'europe']
-
-  histogram:
-    run: true
-    diagnostic_name: 'water_cycle'
-    variables: ['tprate']
-    center_time: true
-    bins: 50              # Override only if different from 100
-    density: true         # already default
-    ylogscale: true       # already default
-    params:
-      default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
-      tprate:
-        units: 'mm/day'
-        regions: [null, 'tropics']  # global and tropics; MUST be a list
 
   lat_lon_profiles:
     run: true
-    diagnostic_name: 'water_cycle'
+    diagnostic_name: 'atmosphere2d'
     mean_type: 'zonal'
     center_time: true
     exclude_incomplete: true
@@ -113,9 +96,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '{{ period.std_startdate }}'
+        std_enddate: '{{ period.std_enddate }}'
     variables:
-      - name: 'tprate'
-        units: 'mm/day'
+      - name: '2t'
         regions: [null, 'tropics']  # global and tropics

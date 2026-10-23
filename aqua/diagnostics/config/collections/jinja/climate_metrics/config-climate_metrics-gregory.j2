@@ -33,8 +33,16 @@ diagnostics:
     monthly: true
     annual: true
     std: true
-    std_startdate: '{{ radiation_ceres.std_startdate }}'
-    std_enddate: '{{ radiation_ceres.std_enddate }}'
+    std_startdate: '{{ radiation.std_startdate }}'
+    std_enddate: '{{ radiation.std_enddate }}'
     # Gregory needs 2 datasets and do not care about the references block above
-    t2m_ref: {'catalog': 'obs', 'model': 'BERKELEY-EARTH', 'exp': 'aqua-filled', 'source': 'r100-monthly'}
-    net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa421', 'source': 'monthly'}
+    t2m_ref:
+      catalog: '{{ references.temperature.catalog }}'
+      model: '{{ references.temperature.model }}'
+      exp: '{{ references.temperature.exp }}'
+      source: '{{ references.temperature.source }}'
+    net_toa_ref:
+      catalog: '{{ references.radiation_toa.catalog }}'
+      model: '{{ references.radiation_toa.model }}'
+      exp: '{{ references.radiation_toa.exp }}'
+      source: '{{ references.radiation_toa.source }}'
