@@ -13,9 +13,9 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Regions: polygon-based regions with `regionmask`, from the IPCC AR6 regions (land and atmosphere) and the IHO sea areas (oceans and seas) (#287)
 - Setup checker: use absolute imports so it runs as a script from `aqua analysis` (#520)
 - Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
-- Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469, #507)
 - Ocean3D: Hovmoller graphical improvements (#478)
 - Implementation of load netcdf and plot only in ocean drift CLI (#457)
