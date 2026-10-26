@@ -35,7 +35,7 @@ jobs:
         run: |
           SHOULD_RUN="false"
 
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'cross-check') }}" == "true" ]] || \
+          if [[ "${{ contains(toJSON(github.event.pull_request.labels.*.name), 'cross-check') }}" == "true" ]] || \
              [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             SHOULD_RUN="true"
           fi
@@ -54,7 +54,7 @@ jobs:
       enable-coverage: true
       fail-fast: false
       install-mode: 'cross-check'
-      aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+      aqua-core-ref: ${{ inputs.aqua_core_ref || 'kind-merge' }}  # TEMP: revert to 'main' before merge (needs AQUA#3266)
       test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}

@@ -1,19 +1,43 @@
-# Default date for jinja templates for reference datasets:
-
-# default: default date range for all analyses
-# radiation_ceres: date range for ceres radiation analyses
+# Experiment kinds for the jinja templates of the reference datasets (aqua analysis --kind).
+#
+# "default" holds every definition used by the templates. Every other kind is deep-merged
+# on top of "default" by aqua-core, so it only lists the keys it overrides.
+# An unknown kind raises an error. The kind name is passed to the templates as "kind" (reserved).
+#
+# Keys and blocks:
+# regrid: target grid of the reference datasets (model datasets are regridded through the CLI).
+#         Not used by the ERA5 references of teleconnections and of the radiation_surface boxplots,
+#         which are not regridded.
+# references: reference datasets used by the templates, one slot per role
+#             (catalog, model, exp, source), override single keys per kind
+# period: main date range for all analyses
+# radiation: date range for radiation analyses
 # timeseries: date range for timeseries analyses
-
+#
+# Keys:
 # startdate, enddate: values for the date range for references to be used in the analysis
 # std_startdate, std_enddate: standard deviation for references to be used in the analysis
 
 default:
-  default:
+  regrid: r100
+  references:
+    atmosphere: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
+    temperature: {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}
+    sst: {catalog: obs, model: ESA-CCI-L4, exp: v3.0.1, source: r100-monthly}
+    ocean3d: {catalog: obs, model: EN4, exp: v4.2.2, source: monthly-netcdf}
+    radiation_toa: {catalog: obs, model: CERES, exp: ebaf-toa421, source: monthly}
+    radiation_surface: {catalog: obs, model: CERES, exp: ebaf-sfc421, source: monthly}
+    siconc_nh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: nh-monthly}
+    siconc_sh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: sh-monthly}
+    sithick_nh: {catalog: obs, model: PSC, exp: PIOMAS, source: monthly}
+    sithick_sh: {catalog: obs, model: PSC, exp: GIOMAS, source: monthly}
+    precipitation: {catalog: obs, model: MSWEP, exp: v2.8, source: monthly}
+  period:
     startdate: "1990-01-01"
     enddate: "2014-12-31"
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
-  radiation_ceres:
+  radiation:
     startdate: "2001-01-01"
     enddate: "2024-12-31"
     std_startdate: "2001-01-01"
@@ -23,35 +47,107 @@ default:
     enddate: "2014-12-31"
     std_startdate: "1990-01-01"
     std_enddate: "2014-12-31"
-scenario:
-  default: # default compare to historical period
-    startdate: "1990-01-01"
+
+# Historical runs with CMIP6 forcing: same as default
+climatedt-hist-cmip6: {}
+
+# Historical runs with CMIP7 forcing: references extended to 2025
+climatedt-hist-cmip7:
+  period:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  radiation:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  timeseries:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+
+# HighResMIP historical runs start in 1950: references cover the whole run.
+# Satellite-era datasets (CERES, ESA-CCI, MSWEP, OSI-SAF) are replaced by ERA5 (1940-2025).
+# Berkeley Earth and EN4 cover the period; PIOMAS/GIOMAS (from 1979) have no alternative
+# and only cover the available years.
+highresmip-hist-cmip6:
+  references: &highresmip-references
+    radiation_toa: *era5
+    radiation_surface: *era5
+    sst: *era5
+    precipitation: *era5
+    siconc_nh: *era5
+    siconc_sh: *era5
+  period:
+    startdate: "1950-01-01"
     enddate: "2014-12-31"
-    std_startdate: "1990-01-01"
+    std_startdate: "1950-01-01"
     std_enddate: "2014-12-31"
-  radiation_ceres: #same as default due to data availability
-    startdate: "2001-01-01"
-    enddate: "2024-12-31"
-    std_startdate: "2001-01-01"
-    std_enddate: "2024-12-31"
-  timeseries: # timeseries exploit all data available (25 years up to last obs avail year)
+  radiation:
+    startdate: "1950-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2014-12-31"
+  timeseries:
+    startdate: "1950-01-01"
+    enddate: "2014-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2014-12-31"
+
+highresmip-hist-cmip7:
+  references: *highresmip-references
+  period:
+    startdate: "1950-01-01"
+    enddate: "2025-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2025-12-31"
+  radiation:
+    startdate: "1950-01-01"
+    enddate: "2025-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2025-12-31"
+  timeseries:
+    startdate: "1950-01-01"
+    enddate: "2025-12-31"
+    std_startdate: "1950-01-01"
+    std_enddate: "2025-12-31"
+
+# Projections with CMIP6 forcing: maps compared to the historical period,
+# timeseries exploit all data available (25 years up to last obs available year)
+climatedt-projections-cmip6:
+  timeseries:
     startdate: "2000-01-01"
     enddate: "2024-12-31"
     std_startdate: "2000-01-01"
     std_enddate: "2024-12-31"
-storyline:
-  default:
-    startdate: "2017-01-01"
-    enddate: "2024-12-31"
+
+# Projections with CMIP7 forcing: as CMIP6 projections, with references extended to 2025
+climatedt-projections-cmip7:
+  period:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  radiation:
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
+  timeseries:
+    startdate: "2000-01-01"
+    enddate: "2025-12-31"
     std_startdate: "2000-01-01"
-    std_enddate: "2024-12-31"
-  radiation_ceres:
+    std_enddate: "2025-12-31"
+
+# Storylines: recent period, OSI-SAF AMSR (2002-2025) sea ice concentration
+storyline:
+  references:
+    siconc_nh: {exp: osi-saf-amsr}
+    siconc_sh: {exp: osi-saf-amsr}
+  period:
     startdate: "2017-01-01"
-    enddate: "2024-12-31"
-    std_startdate: "2001-01-01"
-    std_enddate: "2024-12-31"
+    enddate: "2025-12-31"
+    std_startdate: "2000-01-01"
+    std_enddate: "2025-12-31"
+  radiation:
+    startdate: "2017-01-01"
+    enddate: "2025-12-31"
+    std_enddate: "2025-12-31"
   timeseries:
     startdate: "2017-01-01"
-    enddate: "2024-12-31"
+    enddate: "2025-12-31"
     std_startdate: "2000-01-01"
-    std_enddate: "2024-12-31"
+    std_enddate: "2025-12-31"

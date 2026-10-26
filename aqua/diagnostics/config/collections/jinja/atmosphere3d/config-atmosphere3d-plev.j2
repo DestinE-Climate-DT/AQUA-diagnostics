@@ -10,13 +10,13 @@ datasets:
     enddate: null
 
 references:
-  - catalog: 'obs'
-    model: 'ECMWF'
-    exp: 'era5'
-    source: 'monthly'
-    regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+  - catalog: '{{ references.atmosphere.catalog }}'
+    model: '{{ references.atmosphere.model }}'
+    exp: '{{ references.atmosphere.exp }}'
+    source: '{{ references.atmosphere.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.startdate }}'
+    enddate: '{{ period.enddate }}'
 
 setup:
   loglevel: 'WARNING'

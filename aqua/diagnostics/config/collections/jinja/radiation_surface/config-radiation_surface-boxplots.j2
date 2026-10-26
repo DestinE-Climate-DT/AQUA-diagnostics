@@ -19,20 +19,23 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: obs
-    model: 'ECMWF'
-    exp: 'era5'
-    source: 'monthly'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
-  - catalog: 'obs'
-    model: 'CERES'
-    exp: 'ebaf-sfc421'
-    source: 'monthly'
-    regrid: 'r100'
+  - catalog: '{{ references.atmosphere.catalog }}'
+    model: '{{ references.atmosphere.model }}'
+    exp: '{{ references.atmosphere.exp }}'
+    source: '{{ references.atmosphere.source }}'
+    startdate: '{{ period.startdate }}'
+    enddate: '{{ period.enddate }}'
+  # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
+{% if references.radiation_surface != references.atmosphere %}
+  - catalog: '{{ references.radiation_surface.catalog }}'
+    model: '{{ references.radiation_surface.model }}'
+    exp: '{{ references.radiation_surface.exp }}'
+    source: '{{ references.radiation_surface.source }}'
+    regrid: '{{ regrid }}'
     reader_kwargs: null
-    startdate: '{{ radiation_ceres.startdate }}'
-    enddate: '{{ radiation_ceres.enddate }}'
+    startdate: '{{ radiation.startdate }}'
+    enddate: '{{ radiation.enddate }}'
+{% endif %}
 
 output:
   outputdir: "./"
