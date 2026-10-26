@@ -1,3 +1,5 @@
+.. _diagnostic-class_structure:
+
 Core Diagnostic: ``Diagnostic``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -8,8 +10,13 @@ It provides essential functionalities such as:
 - A unified ``__init__`` method for consistent initialization. Extra argument for the ``__init__`` should be added only if strictly necessary.
 - Initialization of the ``Reader`` class for data access as ``self.reader`` attribute.
 - A standardized data retrieval method: ``retrieve()``. This method stores the retrieved data in the ``self.data`` attribute.
-  It also populates the ``self.catalog`` and ``self.realization`` attributes if empty by deducing them.
+  When ``std_startdate`` and ``std_enddate`` are provided, it also populates ``self.std_data`` with the corresponding slice.
+  Both windows are covered by a single ``Reader`` call, and requested dates outside the catalog's effective bounds are
+  automatically clipped (with a warning). It also populates the ``self.catalog`` and ``self.realization`` attributes if empty by deducing them.
 - Built-in saving function ``save_netcdf()`` for NetCDF output. This includes the possibility to generate a catalog entry to be used in further analyses.
+- A complementary reading function ``load_netcdf()``, which rebuilds the same filename as ``save_netcdf()`` and opens the file
+  if it exists, returning ``None`` otherwise. It does not require a ``retrieve()``, deducing ``self.catalog`` from the
+  model/exp/source triplet when needed, so that a run can produce the plots from the NetCDF files of a previous run.
 
 Diagnostic Classes
 ^^^^^^^^^^^^^^^^^^
@@ -38,6 +45,8 @@ using ``AQUA_`` as prefix of the metadata. Some metadata are added automatically
 - ``AQUA_exp``
 - ``AQUA_source``
 - ``AQUA_region`` when a region is selected
+- ``AQUA_startdate`` and ``AQUA_enddate``
+- ``AQUA_std_startdate`` and ``AQUA_std_enddate`` when the std window is set
 
 If multiple models (e.g. model and observational dataset) are needed, two different instances of the diagnostic should be created.
 
@@ -50,6 +59,14 @@ Each diagnostic class must:
 - Specific substep should be called ``evaluate_<substep>()``.
 - The computed results should be stored as class attributes.
 - Implement a ``save_netcdf()`` method to save the results in NetCDF format, if an expansion of the ``Diagnostic.save_netcdf()`` method is needed.
+- Implement a ``load()`` method that populates the same result attributes from the NetCDF files, mirroring ``save_netcdf()``.
+  The two must use the same ``diagnostic_product`` and filename keys. A mismatch goes unnoticed in a normal run, where ``load()``
+  finds nothing and the results in memory are plotted, and only shows up when plotting from previous results: cover it with a
+  round-trip test, which saves the results and reads them back with a new instance that never retrieved any data.
+  When building the keys takes some logic, put it in a single helper shared by the two methods.
+  Pass the ``startdate`` and ``enddate`` of the instance to ``load_netcdf()``, so that results computed over another period
+  are not loaded in place of the requested ones.
+  Results with no file on disk should be left untouched, so that ``load()`` can be called both before and after ``run()``.
 
 Comparison and Plot Classes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -105,10 +122,12 @@ Imagine for example to run the timeseries diagnostic in an analysis about precip
 This will allow the files to be named ``precipitation.timeseries.png`` instead of ``timeseries.timeseries.png``,
 which would be less informative.
 
+.. _aqua-console:
+
 Configuration Files and AQUA console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the section :ref:`aqua-install`, the tool to expose configuration files for the diagnostic or
+In the section :ref:`installation`, the tool to expose configuration files for the diagnostic or
 its CLI is described.
 This section provides more details on how to update the code if you want to expose a new configuration file or
 you are developing a new diagnostic.
@@ -121,11 +140,11 @@ Example ``diagnostic_config.py`` structure:
 .. code-block:: python
 
     diagnostic_config = {
-        'global_biases': [
+        'biases': [
         {
-            'config_file': 'config_global_biases.yaml',
-            'source_path': 'config/diagnostics/global_biases',
-            'target_path': 'diagnostics/global_biases/cli'
+            'config_file': 'config_biases.yaml',
+            'source_path': 'config/diagnostics/biases',
+            'target_path': 'diagnostics/biases/cli'
         },
         ]
     }
@@ -144,17 +163,24 @@ The folder structure should follow this pattern:
 .. code-block:: text
 
     $HOME/.aqua/
-        ├── diagnostics/
+        ├── definitions/
+        │   └── regions.yaml
+        ├── tools/
         │   ├── diagnostic_name/
         │   │   ├── definitions/
         │   │   │   └── definitions.yaml
         │   │   └── config_diagnostic_name.yaml
 
-The ``diagnostics/`` folder contains a subfolder for each diagnostic, which in turn may contain a
-``definitions/`` folder with possible files defining options for the diagnostic, such as available
-regions for the diagnostic or default variable names to be used.
-The file used to run the diagnostic are contained in the main diagnostic folder, and should be
-used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
+The ``definitions/`` top-level folder contains shared lookup files used by all diagnostics.
+``regions.yaml`` is the centralized registry of all available geographic regions:
+any diagnostic can refer to a region by name (e.g. ``nh``, ``arctic``, ``io``) and the
+``Diagnostic`` base class resolves it against this single file.
+
+The ``tools/`` folder contains a subfolder for each diagnostic, which in turn may contain a
+``definitions/`` folder with lookup files that are *specific to that diagnostic only* (e.g. custom
+index definitions for teleconnections).
+The configuration files used to run each diagnostic are contained in the main diagnostic folder and
+should be used by default when running the diagnostic individually or through the ``aqua-analysis`` CLI.
 
 .. note::
     After the implementation of the diagnostic in the aqua console, be sure that the configuration files are

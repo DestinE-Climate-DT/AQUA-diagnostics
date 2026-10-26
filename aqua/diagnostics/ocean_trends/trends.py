@@ -5,6 +5,7 @@ import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.reader import Trender
+from aqua.core.util import DEFAULT_REALIZATION
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
@@ -13,6 +14,8 @@ xr.set_options(keep_attrs=True)
 
 class Trends(Diagnostic):
     """Class to compute trends over time."""
+
+    MINIMUM_MONTHS_REQUIRED = 12
 
     def __init__(
         self,
@@ -40,6 +43,7 @@ class Trends(Diagnostic):
             diagnostic_name (str, optional): Name of the diagnostic for filenames. Defaults to "trends".
             vert_coord (str, optional): Name of the vertical dimension coordinate. Defaults to DEFAULT_OCEAN_VERT_COORD.
             loglevel (str, optional): Logging level. Default is "WARNING".
+
         """
         super().__init__(
             catalog=catalog,
@@ -57,6 +61,8 @@ class Trends(Diagnostic):
             vert_coord = DEFAULT_OCEAN_VERT_COORD
         self.vert_coord = vert_coord
 
+        self.trend_coef = None
+
     def run(
         self,
         outputdir: str = ".",
@@ -65,6 +71,7 @@ class Trends(Diagnostic):
         var: list = ["thetao", "so"],
         dim_mean: type = None,
         reader_kwargs: dict = {},
+        save_netcdf: bool = True,
     ):
         """Run the trend analysis workflow.
 
@@ -75,24 +82,71 @@ class Trends(Diagnostic):
             var (list, optional): List of variable names to analyze. Default is ['thetao', 'so'].
             dim_mean (str or list, optional): Dimension(s) over which to compute the mean. Default is None.
             reader_kwargs (dict, optional): Additional keyword arguments for the data reader. Default is {}.
+            save_netcdf (bool, optional): Whether to save the trend coefficients as a netcdf file. Default is True.
+
         """
         self.logger.info("Starting trend analysis workflow")
-        super().retrieve(var=var, reader_kwargs=reader_kwargs)
+        super().retrieve(var=var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         # self.data = self.data.chunk(chunks={"time": 12, "level": 1})  # this is needed to avoid a too large graph
 
         self.data, self.region = self.select_region(data=self.data, region=region, dim_mean=dim_mean)
-
         self.logger.info("Computing trend coefficients")
         self.trend_coef = self.compute_trend(data=self.data)
-        self.logger.info("Saving results to NetCDF")
-        self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
-        self.logger.info("Trend analysis workflow completed")
+        if save_netcdf:
+            self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
+
+    def load(
+        self,
+        diagnostic_product: str = "trend",
+        outputdir: str = ".",
+        region: str = None,
+        reader_kwargs: dict = {},
+    ):
+        """Populate the trend coefficients from the netcdf file written by a previous run.
+
+        A missing file leaves the result untouched, so that load can be called both before run,
+        to keep a previous result, and after it, or alone to plot without recomputing anything.
+        If startdate or enddate is set, a file computed over a different period is not loaded.
+
+        Args:
+            diagnostic_product (str, optional): Product type for filenames. Default is "trend".
+            outputdir (str, optional): Directory where the data was saved. Default is current directory.
+            region (str, optional): Geographical region given to run. Default is None, the global data.
+            reader_kwargs (dict, optional): The Reader keyword arguments of the run, to match its realization.
+
+        """
+        self.realization = reader_kwargs.get("realization", DEFAULT_REALIZATION)
+        # run names the file after the region long name, which is resolved here without any data access
+        self.region = self._set_region(region=region)[0] if region else "global"
+
+        data = self.load_netcdf(
+            diagnostic=self.diagnostic_name,
+            diagnostic_product=diagnostic_product,
+            outputdir=outputdir,
+            # Same keys as save_netcdf, otherwise the file is not found
+            extra_keys={"region": self.region},
+            startdate=self.startdate,
+            enddate=self.enddate,
+        )
+        if data is not None:
+            self.trend_coef = data
 
     def select_region(self, data, region=None, drop=True, dim_mean=None):
+        """Select a region and optionally compute mean over specified dimensions.
+
+        Args:
+            data (xr.Dataset): Input dataset.
+            region (str, optional): Geographical region to select.
+            drop (bool, optional): Whether to drop coordinates outside the region. Default is True.
+            dim_mean (str or list, optional): Dimension(s) over which to compute the mean.
+
+        Returns:
+            tuple: (data, region) - Processed data and region name.
+
+        """
         # If a region is specified, apply area selection to self.data
         if region:
-            self.logger.info(f"Selecting region: {region}.")
-            res_dict = super().select_region(data=data, region=region, diagnostic="ocean3d", drop=True)
+            res_dict = super().select_region(data=data, region=region, drop=True)
             lat_limits = res_dict["lat_limits"]
             lon_limits = res_dict["lon_limits"]
             data = res_dict["data"]
@@ -119,6 +173,7 @@ class Trends(Diagnostic):
 
         Returns:
             xr.DataArray: Adjusted trend values.
+
         """
         self.logger.debug("Adjusting trend for time frequency")
         time_frequency = y_array["time"].to_index().inferred_freq
@@ -161,24 +216,23 @@ class Trends(Diagnostic):
 
         Returns:
             xr.DataArray or xr.Dataset: Trend coefficients adjusted for time frequency.
+
         """
-        self.logger.info("Calculating linear trend")
         trend_init = Trender()
         trend_data = trend_init.coeffs(data, dim="time", skipna=True, normalize=True)
         trend_data = trend_data.sel(degree=1)
-        trend_data.attrs = data.attrs
         trend_dict = {}
         for var in data.data_vars:
             self.logger.debug("Adjusting trend for variable: %s", var)
             trend_data[var].attrs = data[var].attrs
             trend_dict[var] = self.adjust_trend_for_time_frequency(trend_data[var], data)
         trend_data = xr.Dataset(trend_dict)
+        trend_data.attrs = data.attrs
         trend_data.attrs["AQUA_region"] = self.region
-        self.logger.info("Trend value calculated")
+        trend_data.attrs["product"] = "Calculated trend coefficients"
 
         self.logger.debug("Loading trend data in memory")
         trend_data.load()
-        self.logger.debug("Loaded trend data in memory")
         return trend_data
 
     def save_netcdf(
@@ -195,6 +249,7 @@ class Trends(Diagnostic):
             region (str, optional): Geographical region for analysis.
             outputdir (str, optional): Directory to save output files. Default is current directory.
             rebuild (bool, optional): If True, rebuild existing files. Default is True.
+
         """
         self.logger.info("Saving trend coefficients to NetCDF file")
         super().save_netcdf(
@@ -203,6 +258,6 @@ class Trends(Diagnostic):
             outputdir=outputdir,
             rebuild=rebuild,
             data=self.trend_coef,
+            # load builds the same keys
             extra_keys={"region": self.region},
         )
-        self.logger.info("Trend coefficients saved to NetCDF file")

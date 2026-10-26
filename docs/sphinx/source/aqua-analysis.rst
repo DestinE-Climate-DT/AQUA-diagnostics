@@ -26,7 +26,7 @@ Inside each diagnostic folder, the output will be saved in a subfolder named wit
 
 The exact list of diagnostics to run and technical details of the analysis
 (such as the number of workers/thread/memory to use for the dask cluster) are specified in the configuration file ``config.aqua-analysis.yaml`` in the same folder.
-This file is available in the ``$AQUA/config/analysis`` folder and it is installed with AQUA (see :ref:`aqua-install`).
+This file is available in the ``$AQUA/config/analysis`` folder and it is installed with AQUA (see :ref:`installation`).
 
 Additional options
 ------------------
@@ -136,7 +136,7 @@ The job section contains the following keys:
 
 - ``max_threads``: the maximum number of diagnostics running in parallel. Leave it to 0 for no limit.
 - ``loglevel``: the log level to use for the cli and the diagnostics. Default is ``WARNING``.
-- ``run_checker``: a boolean flag to activate the checker diagnostic. Default is ``true``.
+- ``run_setup_checker``: a boolean flag to activate the setup checker diagnostic. Default is ``true``.
 - ``outputdir``: the output directory to use. Default is ``$AQUA/cli/aqua-analysis/output``.
 - ``catalog``: the catalog to use. Default is ``null``.
 - ``model``: the model to use. Default is ``IFS-NEMO``.

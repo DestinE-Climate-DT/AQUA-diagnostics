@@ -22,7 +22,7 @@ datasets:
 
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'r100-monthly'
     regrid: 'r100'
@@ -38,7 +38,6 @@ output:
   rebuild: true
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
-  create_catalog_entry: true
 
 diagnostics:
   histogram:

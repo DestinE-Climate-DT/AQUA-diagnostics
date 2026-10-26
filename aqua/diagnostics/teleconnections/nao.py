@@ -1,5 +1,6 @@
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
+from aqua.core.util import time_to_string
 from aqua.core.util.sci_util import lon_to_360
 
 from .base import BaseMixin
@@ -13,6 +14,8 @@ class NAO(BaseMixin):
     to calculate the NAO index.
     """
 
+    MINIMUM_MONTHS_REQUIRED = 24
+
     def __init__(
         self,
         catalog: str = None,
@@ -22,6 +25,7 @@ class NAO(BaseMixin):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
+        var: str = None,
         configdir: str = None,
         definition: str = "teleconnections-destine",
         loglevel: str = "WARNING",
@@ -37,8 +41,10 @@ class NAO(BaseMixin):
             regrid (str): Regrid method.
             startdate (str): Start date for data retrieval.
             enddate (str): End date for data retrieval.
-            configdir (str): Configuration directory. Default is the installation directory.
-            definition (str): definition filename. Default is 'teleconnections-destine'.
+            var (str): Variable to be used. If None, the variable will be determined by the definition.
+            configdir (str): The directory where the definition file is located.
+                             If None, the default directory will be used.
+            definition (str): The filename of the definition file. Default is 'teleconnections-destine'.
             loglevel (str): Logging level. Default is 'WARNING'.
         """
         super().__init__(
@@ -50,13 +56,12 @@ class NAO(BaseMixin):
             regrid=regrid,
             startdate=startdate,
             enddate=enddate,
+            var=var,
             configdir=configdir,
             definition=definition,
             loglevel=loglevel,
         )
         self.logger = log_configure(log_name="NAO", log_level=loglevel)
-
-        self.var = self.definition.get("field")
 
     def retrieve(self, reader_kwargs: dict = {}) -> None:
         """
@@ -67,7 +72,7 @@ class NAO(BaseMixin):
                                   Default is an empty dictionary.
         """
         # Assign self.data, self.reader, self.catalog
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=24)
+        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
 
         self.data = self.reader.timmean(self.data, freq="MS")
 
@@ -86,8 +91,6 @@ class NAO(BaseMixin):
             return
         if self.data is None:
             raise NotEnoughDataError("Data not retrieved")
-        if len(self.data[self.var].time) < 24:
-            raise NotEnoughDataError("Data have less than 24 months")
 
         lat1 = self.definition.get("lat1")
         lat2 = self.definition.get("lat2")
@@ -131,6 +134,12 @@ class NAO(BaseMixin):
 
         # Drop NaNs
         indx = indx.dropna(dim="time")
+
+        indx.attrs["long_name"] = f"{self.telecname} index"
+        indx.attrs["months_window"] = months_window
+
+        indx.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        indx.attrs["AQUA_enddate"] = time_to_string(self.enddate)
 
         self.logger.debug("Index evaluated")
 

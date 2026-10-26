@@ -4,12 +4,21 @@ import pandas as pd
 import xarray as xr
 
 from aqua import Reader
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigCatalog, ConfigLocator
 from aqua.core.exceptions import NotEnoughDataError
+from aqua.core.fldstat import AreaSelection
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, convert_units, load_yaml, pandas_freq_to_string, xarray_to_pandas_freq
+from aqua.core.util import (
+    DEFAULT_REALIZATION,
+    convert_units,
+    load_yaml,
+    pandas_freq_to_string,
+    time_to_string,
+    xarray_to_pandas_freq,
+)
 
 from .output_saver import OutputSaver
+from .time_util import round_enddate, round_startdate, start_end_dates
 
 
 class Diagnostic:
@@ -22,6 +31,8 @@ class Diagnostic:
         regrid: str | None = None,
         startdate: str | None = None,
         enddate: str | None = None,
+        std_startdate: str | None = None,
+        std_enddate: str | None = None,
         loglevel: str = "WARNING",
     ):
         """
@@ -35,10 +46,12 @@ class Diagnostic:
             source (str): The source to be used.
             catalog (str): The catalog to be used. If None, the catalog will be determined by the Reader.
             regrid (str | None): The target grid to be used for regridding. If None, no regridding will be done.
-            startdate (str | None): The start date of the data to be retrieved.
-                        If None, all available data will be retrieved.
-            enddate (str | None): The end date of the data to be retrieved.
-                           If None, all available data will be retrieved.
+            startdate (str | None): The start date of the plot/analysis period. If None, all available data will be used.
+            enddate (str | None): The end date of the plot/analysis period. If None, all available data will be used.
+            std_startdate (str | None): The start date of the standard deviation period.
+                If None, no std period is tracked at the Diagnostic level.
+            std_enddate (str | None): The end date of the standard deviation period.
+                If None, no std period is tracked at the Diagnostic level.
             loglevel (str): The log level to be used. Default is 'WARNING'.
         """
 
@@ -53,9 +66,14 @@ class Diagnostic:
         self.regrid = regrid
         self.startdate = startdate
         self.enddate = enddate
+        self.std_startdate = std_startdate
+        self.std_enddate = std_enddate
 
         # Data to be retrieved
         self.data = None
+        self.std_data = None
+        # Set by retrieve, stays None in a plot only run
+        self.reader = None
 
     def retrieve(self, var: str | None = None, reader_kwargs: dict = {}, months_required: int | None = None):
         """
@@ -67,17 +85,26 @@ class Diagnostic:
             months_required (int | None): The number of months of data required. If None, no check will be performed.
 
         Attributes:
-            self.data: The data retrieved from the model. If return_data is True, the data will be returned.
+            self.data: The data retrieved from the model.
+            self.std_data: The data retrieved for the standard deviation period.
             self.catalog: The catalog used to retrieve the data if no catalog was provided.
         """
-        self.data, self.reader, self.catalog = self._retrieve(
+        # Widest window covering both plot/analysis and std periods
+        start_retrieve, end_retrieve = start_end_dates(
+            startdate=self.startdate,
+            enddate=self.enddate,
+            start_std=self.std_startdate,
+            end_std=self.std_enddate,
+        )
+
+        data, self.reader, self.catalog = self._retrieve(
             model=self.model,
             exp=self.exp,
             source=self.source,
             var=var,
             catalog=self.catalog,
-            startdate=self.startdate,
-            enddate=self.enddate,
+            startdate=start_retrieve,
+            enddate=end_retrieve,
             regrid=self.regrid,
             reader_kwargs=reader_kwargs,
             months_required=months_required,
@@ -88,12 +115,67 @@ class Diagnostic:
 
         if self.regrid is not None:
             self.logger.info(f"Regridded data to {self.regrid} grid")
+
+        # Effective data bounds (what the catalog actually delivered)
+        eff_start = data.time.values[0]
+        eff_end = data.time.values[-1]
+
+        # Avoid clipping when the user specifies e.g. an end-of-month date.
+        freq = pandas_freq_to_string(xarray_to_pandas_freq(data))
+        if freq in ("monthly", "annual"):
+            start_bound = round_startdate(pd.Timestamp(eff_start), freq=freq)
+            end_bound = round_enddate(pd.Timestamp(eff_end), freq=freq)
+        else:
+            start_bound = pd.Timestamp(eff_start)
+            end_bound = pd.Timestamp(eff_end)
+
+        # Resolve user-requested dates against effective bounds
         if self.startdate is None:
-            self.startdate = self.data.time.values[0]
-            self.logger.debug(f"Start date: {self.startdate}")
+            self.startdate = eff_start
+        elif pd.Timestamp(self.startdate) < start_bound:
+            self.logger.warning(
+                "Requested startdate %s not available; using %s instead.",
+                time_to_string(self.startdate),
+                time_to_string(eff_start),
+            )
+            self.startdate = eff_start
+        self.logger.info(("Start date: %s "), time_to_string(self.startdate))
+
         if self.enddate is None:
-            self.enddate = self.data.time.values[-1]
-            self.logger.debug(f"End date: {self.enddate}")
+            self.enddate = eff_end
+        elif pd.Timestamp(self.enddate) > end_bound:
+            self.logger.warning(
+                "Requested enddate %s not available; using %s instead.",
+                time_to_string(self.enddate),
+                time_to_string(eff_end),
+            )
+            self.enddate = eff_end
+        self.logger.info(("End date: %s "), time_to_string(self.enddate))
+
+        if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < start_bound:
+            self.logger.warning(
+                "Requested std_startdate %s not available; using %s instead.",
+                time_to_string(self.std_startdate),
+                time_to_string(eff_start),
+            )
+            self.std_startdate = eff_start
+            self.logger.info(("Std start date: %s "), time_to_string(self.std_startdate))
+
+        if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > end_bound:
+            self.logger.warning(
+                "Requested std_enddate %s not available; using %s instead.",
+                time_to_string(self.std_enddate),
+                time_to_string(eff_end),
+            )
+            self.std_enddate = eff_end
+            self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
+
+        self.data = data.aqua.seldate(self.startdate, self.enddate)
+        if self.std_startdate is not None and self.std_enddate is not None:
+            self.std_data = data.aqua.seldate(self.std_startdate, self.std_enddate)
+
+        # Attach date attributes to the retrieved dataset
+        self._set_date_attrs()
 
     def save_netcdf(
         self,
@@ -102,8 +184,10 @@ class Diagnostic:
         diagnostic_product: str = None,
         outputdir: str = ".",
         rebuild: bool = True,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: dict = None,
+        extra_keys: dict = None,
         **kwargs,
     ):
         """
@@ -115,9 +199,9 @@ class Diagnostic:
             diagnostic_product (str): The diagnostic product.
             outputdir(str): The path to save the data. Default is '.'.
             rebuild (bool): If True, the netcdf file will be rebuilt. Default is True.
-            create_catalog_entry (bool): If True, a catalog entry will be created. Default is False.
             dict_catalog_entry (dict, optional): List of jinja and wildcard variables. Default is None.
                                                  Keys are 'jinjalist' and 'wildcardlist'.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
 
         Keyword Args:
             **kwargs: Additional keyword arguments to be passed to the OutputSaver.save_netcdf method.
@@ -125,7 +209,96 @@ class Diagnostic:
         if isinstance(data, xr.Dataset) is False and isinstance(data, xr.DataArray) is False:
             self.logger.error("Data to save as netcdf must be an xarray Dataset or DataArray")
 
-        outputsaver = OutputSaver(
+        # Fallback for a DataArray that lost its name, which netcdf cannot store: restore it from the
+        # metadata. If there is none to restore, the OutputSaver warns instead.
+        if isinstance(data, xr.DataArray) and data.name is None:
+            name = data.attrs.get("short_name") or data.attrs.get("standard_name")
+            if name is not None:
+                self.logger.warning(
+                    "Unnamed DataArray saved by %s, name restored as '%s' from its attributes: "
+                    "the diagnostic should name its data before saving",
+                    diagnostic,
+                    name,
+                )
+                data.name = name
+
+        outputsaver = self._outputsaver(diagnostic=diagnostic, outputdir=outputdir)
+
+        return outputsaver.save_netcdf(
+            dataset=data,
+            diagnostic_product=diagnostic_product,
+            rebuild=rebuild,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
+            dict_catalog_entry=dict_catalog_entry,
+            extra_keys=extra_keys,
+        )
+
+    def load_netcdf(
+        self,
+        diagnostic: str,
+        diagnostic_product: str = None,
+        outputdir: str = ".",
+        extra_keys: dict = None,
+        as_dataarray: bool = False,
+        startdate: str = None,
+        enddate: str = None,
+        expect_netcdf: bool = False,
+    ):
+        """
+        Load from a netcdf file previously written by save_netcdf.
+
+        Rebuilds the same filename from the identity of the dataset and opens the file if it is
+        there. It does not require a retrieve, which is what allows plot only runs.
+
+        Args:
+            diagnostic (str): The diagnostic name. Used to define the OutputSaver
+            diagnostic_product (str): The diagnostic product.
+            outputdir (str): The path where the data was saved. Default is '.'.
+                Used to define the OutputSaver.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
+                Must match the ones used when saving, otherwise the file will not be found.
+            as_dataarray (bool): If True, return a DataArray instead of a Dataset. Use it when the
+                                 data was saved as a DataArray. Default is False.
+            startdate (str): The start date of the data. Default is None.
+            enddate (str): The end date of the data. Default is None.
+            expect_netcdf (bool): If True, a missing file is logged as an error instead of info. Default is False.
+
+        Returns:
+            xarray Dataset, DataArray or None: The data read from disk, None if there is no file.
+        """
+        # The catalog takes part in the filename but is normally resolved by the Reader during
+        # retrieve, which a load only run never calls.
+        if self.catalog is None:
+            self._resolve_catalog()
+
+        outputsaver = self._outputsaver(diagnostic=diagnostic, outputdir=outputdir)
+
+        return outputsaver.load_netcdf(
+            diagnostic_product=diagnostic_product,
+            as_dataarray=as_dataarray,
+            startdate=startdate,
+            enddate=enddate,
+            extra_keys=extra_keys,
+            expect_netcdf=expect_netcdf,
+        )
+
+    def _outputsaver(self, diagnostic: str, outputdir: str = "."):
+        """
+        Build the OutputSaver describing this dataset.
+
+        Used by both save_netcdf and load_netcdf, so that the two always generate the same filenames.
+
+        Args:
+            diagnostic (str): The diagnostic name.
+            outputdir (str): The path where the data is saved. Default is '.'.
+
+        Returns:
+            OutputSaver: The output saver for this dataset.
+        """
+        # TODO: reuse a single OutputSaver once diagnostic, outputdir and realization can no longer change
+        # between calls. Until then, a cached one could silently address the wrong files.
+        return OutputSaver(
             diagnostic=diagnostic,
             catalog=self.catalog,
             model=self.model,
@@ -135,14 +308,32 @@ class Diagnostic:
             loglevel=self.loglevel,
         )
 
-        outputsaver.save_netcdf(
-            dataset=data,
-            diagnostic_product=diagnostic_product,
-            rebuild=rebuild,
-            create_catalog_entry=create_catalog_entry,
-            dict_catalog_entry=dict_catalog_entry,
-            **kwargs,
+    def _resolve_catalog(self):
+        """
+        Find the catalog holding the model/exp/source triplet, without retrieving any data.
+
+        The catalog takes part in the output filename but is normally filled in by the Reader during
+        retrieve. Browsing the installed catalogs is how a plot only run can rebuild the filenames.
+
+        Raises:
+            KeyError: If the triplet is not found in any installed catalog.
+        """
+        matched, failed = ConfigCatalog(loglevel=self.loglevel).browse_catalogs(
+            model=self.model, exp=self.exp, source=self.source
         )
+
+        if not matched:
+            for reason in failed.values():
+                self.logger.debug(reason)
+            raise KeyError(
+                f"Cannot find {self.model} {self.exp} {self.source} in any installed catalog. "
+                "Provide the catalog explicitly to build the output filenames."
+            )
+
+        if len(matched) > 1:
+            self.logger.warning("Triplet found in %s, using %s", matched, matched[0])
+        self.catalog = matched[0]
+        self.logger.debug("Resolved catalog: %s", self.catalog)
 
     def _retrieve(
         self,
@@ -187,31 +378,22 @@ class Diagnostic:
             catalog=catalog, model=model, exp=exp, source=source, regrid=regrid, loglevel=loglevel, **reader_kwargs
         )
 
-        data = reader.retrieve(var=var)
+        data = reader.retrieve(var=var, startdate=startdate, enddate=enddate)
 
         # If the data is empty, raise an error
         if not data:
             raise ValueError(f"No data found for {model} {exp} {source} with variable {var}")
 
-        # FIX: issues with some time selection for pandas using Timestamp.
-        # see https://github.com/pydata/xarray/issues/10975
-        start = pd.Timestamp(startdate) if startdate is not None else None
-        end = pd.Timestamp(enddate) if enddate is not None else None
-        data = data.sel(time=slice(start, end))
         if data.time.size == 0:
             raise ValueError(f"No data found for {model} {exp} {source} between {startdate} and {enddate}")
         self.logger.debug(f"Data selected between {data.time[0].values} and {data.time[-1].values}")
 
-        # If there is a month requirement we infer the data frequency,
-        # then we check how many months are available in the data
+        # If there is a month requirement we check how many months are available in the data
         # and finally raise an error if the requirement is not met.
         if months_required is not None:
-            timedelta = xarray_to_pandas_freq(data)
-            freq = pandas_freq_to_string(timedelta)
-            factor = {"hourly": 1 / (24 * 30), "daily": 1 / 30, "weekly": 1 / 4, "monthly": 1, "seasonal": 3, "annual": 12}
-            # We automatically raise an error if the frequency is not pandas compliant
-            months = len(data["time"]) * factor.get(freq, 0)
-
+            # Count unique (year, month) pairs present in the dataset
+            months = len(set(zip(data.time.dt.year.values, data.time.dt.month.values)))
+            self.logger.debug("Unique months in data: %d", months)
             if months < months_required:
                 raise NotEnoughDataError(
                     f"Not enough months of data found for {model} {exp} {source}, "
@@ -225,6 +407,20 @@ class Diagnostic:
             data = reader.regrid(data)
 
         return data, reader, catalog
+
+    def _set_date_attrs(self):
+        """
+        Set AQUA_* date attributes on a DataArray or Dataset using the resolved
+        self.startdate/self.enddate (and self.std_startdate/self.std_enddate
+        when set by the user).
+        Can be called by subclasses after converting self.data from Dataset to DataArray.
+        """
+        self.data.attrs["AQUA_startdate"] = time_to_string(self.startdate)
+        self.data.attrs["AQUA_enddate"] = time_to_string(self.enddate)
+        if self.std_startdate is not None:
+            self.std_data.attrs["AQUA_std_startdate"] = time_to_string(self.std_startdate)
+        if self.std_enddate is not None:
+            self.std_data.attrs["AQUA_std_enddate"] = time_to_string(self.std_enddate)
 
     def _check_data(self, data: xr.DataArray, var: str, units: str):
         """
@@ -250,21 +446,17 @@ class Diagnostic:
 
         return data
 
-    def _get_default_regions_file(self, diagnostic):
+    def _get_default_regions_file(self):
         """
-        Get the default path to the regions file for the given diagnostic.
-
-        Args:
-            diagnostic (str): The diagnostic name. Used for creating the diagnostic file paths.
+        Get the default path to the centralized regions file.
 
         Returns:
-            str: The path to the regions file.
+            str: The path to the regions file under ``<config>/definitions/regions.yaml``.
         """
-        regions_file = ConfigPath().get_config_dir()
-        regions_file = os.path.join(regions_file, "tools", diagnostic, "definitions", "regions.yaml")
+        regions_file = os.path.join(ConfigLocator().configdir, "definitions", "regions.yaml")
         if os.path.exists(regions_file):
             return regions_file
-        raise FileNotFoundError(f"Region file path not found at: {regions_file}")
+        raise FileNotFoundError(f"Regions file path not found at: {regions_file}")
 
     def _read_regions_file(self, regions_file: str):
         """
@@ -274,30 +466,29 @@ class Diagnostic:
             regions_file (str): The path to the regions file.
 
         Returns:
-            dict: A dictionary containing the regions and their properties form parsed YAML file.
+            dict: A dictionary containing the regions and their properties from the parsed YAML file.
         """
         return load_yaml(regions_file)
 
-    def _load_regions_from_file(self, diagnostic: str = None, regions_file_path: str = None) -> dict:
+    def _load_regions_from_file(self, regions_file_path: str = None) -> dict:
         """
         Retrieve the regions dictionary from the specified or default regions file.
 
         Args:
-            diagnostic (str): The diagnostic name.
             regions_file_path (str, optional): Path to a custom regions file.
-                If None, the default path for the diagnostic will be used.
+                If None, the centralized file under ``<config>/definitions/regions.yaml`` is used.
 
         Returns:
-            dict: A dictionary containing the regions and their properties.
+            dict: A dictionary mapping region name to its spec
+                (``{longname, lon_limits, lat_limits}``).
         """
         if regions_file_path is None:
-            regions_file_path = self._get_default_regions_file(diagnostic)
+            regions_file_path = self._get_default_regions_file()
 
-        return self._read_regions_file(regions_file_path)
+        return self._read_regions_file(regions_file_path).get("regions", {}) or {}
 
     def _set_region(
         self,
-        diagnostic: str,
         region: str = None,
         regions_file_path: str = None,
         lon_limits: list = None,
@@ -307,43 +498,42 @@ class Diagnostic:
         Set the region to be used.
 
         Args:
-            diagnostic (str): The diagnostic name. Used for creating the diagnostic file paths.
             region (str): The region to select. This will define the lon and lat limits.
-            regions_file_path (str): The path to the regions file. If None, the default regions file will be used.
+            regions_file_path (str): The path to the regions file. If None, the centralized
+                regions file will be used.
             lon_limits (list): The longitude limits to be used. Overridden by region.
             lat_limits (list): The latitude limits to be used. Overridden by region.
 
         Returns:
-            region (str): The region name to be used.
+            region (str): The region long name to be used (or None if no region was provided).
             lon_limits (list): The longitude limits to be used.
             lat_limits (list): The latitude limits to be used.
         """
-        if region is not None:
-            regions_file = self._load_regions_from_file(diagnostic, regions_file_path)
+        if region is None:
+            self.logger.info(
+                "No region provided, using lon_limits: %s, lat_limits: %s",
+                lon_limits,
+                lat_limits,
+            )
+            return None, lon_limits, lat_limits
 
-            if region in regions_file["regions"]:
-                lon_limits = regions_file["regions"][region].get("lon_limits", None)
-                lat_limits = regions_file["regions"][region].get("lat_limits", None)
-                region = regions_file["regions"][region].get("longname", region)
-                self.logger.info(f"Region {region} found, using lon: {lon_limits}, lat: {lat_limits}")
-            else:
-                self.logger.error(f"Region {region} not found")
-                raise ValueError(f"Region {region} not found")
-        else:
-            region = None
-            self.logger.info(f"No region provided, using lon_limits: {lon_limits}, lat_limits: {lat_limits}")
+        regions_dict = self._load_regions_from_file(regions_file_path=regions_file_path)
+        if region not in regions_dict:
+            raise ValueError(f"Region '{region}' not found")
+        spec = regions_dict[region]
+        long_name = spec.get("longname", region)
+        lon_limits = spec.get("lon_limits", lon_limits)
+        lat_limits = spec.get("lat_limits", lat_limits)
+        self.logger.info("Region %s found, using lon: %s, lat: %s", long_name, lon_limits, lat_limits)
+        return long_name, lon_limits, lat_limits
 
-        return region, lon_limits, lat_limits
-
-    def select_region(self, data: xr.Dataset, region: str = None, diagnostic: str = None, drop: bool = True, **kwargs):
+    def select_region(self, data: xr.Dataset, region: str = None, drop: bool = True, **kwargs):
         """
         Select a geographic region from the dataset. Used when selection is not on the self.data attribute.
 
         Args:
             data (xarray Dataset or DataArray): The dataset to select the region from.
-            region (str): The region to select.
-            lon_limits (list): The longitude limits to select.
-            lat_limits (list): The latitude limits to select.
+            region (str): The region to select from the centralized regions file.
             drop (bool): Whether to drop coordinates outside the selected region.
             **kwargs: Additional keyword arguments passed to the select_area reader method.
 
@@ -357,10 +547,13 @@ class Diagnostic:
         """
         original_name = data.name if isinstance(data, xr.DataArray) else None
 
-        if region is not None and diagnostic is not None:
-            region, lon_limits, lat_limits = self._set_region(region=region, diagnostic=diagnostic)
-            self.logger.info(f"Applying area selection for region: {region}")
-            data = self.reader.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
+        if region is not None:
+            region, lon_limits, lat_limits = self._set_region(region=region)
+            self.logger.info("Applying area selection for region: %s", region)
+            # The Reader only forwards to AreaSelection, which needs no grid information: use it
+            # directly when no retrieve was done, as in a run that plots from the netcdf files.
+            selector = self.reader if self.reader is not None else AreaSelection(loglevel=self.loglevel)
+            data = selector.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
             data.attrs["AQUA_region"] = region
 
             if original_name is not None:

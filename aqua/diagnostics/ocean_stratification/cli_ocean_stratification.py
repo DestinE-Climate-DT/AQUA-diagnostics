@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line interface for Ocean stratification diagnostic.
+"""Command-line interface for Ocean stratification diagnostic.
 
 This CLI allows to run the stratification, OceanStratification diagnostics.
 Details of the run are defined in a yaml configuration file for a
@@ -12,6 +11,7 @@ import sys
 
 from aqua.core.util import to_list
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.ocean_stratification import PlotMLD, PlotStratification
 from aqua.diagnostics.ocean_stratification.stratification import Stratification
 
@@ -21,14 +21,16 @@ def parse_arguments(args):
 
     Args:
         args (list): list of command-line arguments to parse.
+
     """
     parser = argparse.ArgumentParser(description="OceanStratification CLI")
     parser = template_parse_arguments(parser)
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the OceanStratification diagnostic CLI."""
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
         args,
@@ -59,108 +61,179 @@ if __name__ == "__main__":
             regions = to_list(stratification_config.get("regions", None))
             diagnostic_name = stratification_config.get("diagnostic_name", "ocean_stratification")
             climatologies = stratification_config.get("climatology", None)
-            vert_coord = stratification_config.get("vert_coord", None)
-            for region, climatology in zip(regions, climatologies):
-                logger.info(f"Processing region: {region}, climatology: {climatology}")
-                var = stratification_config.get("var", None)
-                # dim_mean = stratification_config.get("dim_mean", ["lat", "lon"])
-                dim_mean = ["lat", "lon"]
-                # Stratification instance
-                # Model data
-                model_stratification = Stratification(
-                    **dataset_args,
+            vert_coord = stratification_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
+            var = stratification_config.get("var", None)
+            # dim_mean = stratification_config.get("dim_mean", ["lat", "lon"])
+            dim_mean = ["lat", "lon"]
+            model_stratification = Stratification(
+                **dataset_args,
+                diagnostic_name=diagnostic_name,
+                vert_coord=vert_coord,
+                loglevel=cli.loglevel,
+            )
+            if not cli.plot_only:
+                model_stratification.run(
+                    regions=regions,
+                    var=var,
+                    dim_mean=dim_mean,
+                    mld=False,
+                    climatology=climatologies,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    rebuild=cli.rebuild,
+                    save_netcdf=cli.save_netcdf,
+                )
+            # Populate from the netcdf files, written just now or by a previous run. Results computed
+            # without saving them are already in memory, and older files must not replace them.
+            if cli.plot_only or cli.save_netcdf:
+                model_stratification.load(
+                    regions=regions,
+                    climatology=climatologies,
+                    mld=False,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                )
+            if "references" in config_dict:
+                logger.info("Processing reference data")
+                obs_stratification = Stratification(
+                    **reference_args,
                     diagnostic_name=diagnostic_name,
                     vert_coord=vert_coord,
                     loglevel=cli.loglevel,
                 )
-                model_stratification.run(
-                    region=region,
-                    var=var,
-                    dim_mean=dim_mean,
-                    mld=False,
-                    climatology=climatology,
-                    outputdir=cli.outputdir,
-                    reader_kwargs=cli.reader_kwargs,
-                    rebuild=cli.rebuild,
-                )
-                # Reference data
-                if "references" in config_dict:
-                    logger.info("Processing reference data")
-                    obs_stratification = Stratification(
-                        **reference_args,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        loglevel=cli.loglevel,
-                    )
+                if not cli.plot_only:
                     obs_stratification.run(
-                        region=region,
+                        regions=regions,
                         var=var,
                         dim_mean=dim_mean,
                         mld=False,
-                        climatology=climatology,
+                        climatology=climatologies,
                         outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
                         rebuild=cli.rebuild,
+                        save_netcdf=cli.save_netcdf,
                     )
-                else:
-                    obs_stratification = None
-                # Plotting Stratification
+                if cli.plot_only or cli.save_netcdf:
+                    obs_stratification.load(
+                        regions=regions,
+                        climatology=climatologies,
+                        mld=False,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                    )
+            else:
+                obs_stratification = None
+            if not model_stratification.processed_data:
+                reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                logger.warning("No stratification results found in %s%s, skipping the plots", cli.outputdir, reason)
+            for (region, climatology), model_data in model_stratification.processed_data.items():
+                obs_data = (
+                    obs_stratification.processed_data.get((region, climatology)) if obs_stratification is not None else None
+                )
+                if obs_stratification is not None and obs_data is None:
+                    logger.warning(
+                        "No reference stratification results for region %s, climatology %s: plotting without it",
+                        region,
+                        climatology,
+                    )
                 strat_plot = PlotStratification(
-                    data=model_stratification.data[["thetao", "so", "rho"]],
-                    obs=(obs_stratification.data[["thetao", "so", "rho"]] if obs_stratification is not None else None),
+                    data=model_data[["thetao", "so", "rho"]],
+                    obs=(obs_data[["thetao", "so", "rho"]] if obs_data is not None else None),
                     diagnostic_name=diagnostic_name,
                     vert_coord=vert_coord,
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
                 strat_plot.plot_stratification(save_format=cli.save_format, dpi=cli.dpi)
-                # Mixed Layer Depth instance
-                # Model data
-                model_stratification = Stratification(
-                    **dataset_args,
+
+    if "mld" in config_dict["diagnostics"]["ocean_stratification"]:
+        mld_config = config_dict["diagnostics"]["ocean_stratification"]["mld"]
+        logger.info(f"Stratification diagnostic is set to {mld_config['run']}")
+        if mld_config["run"]:
+            regions = to_list(mld_config.get("regions", None))
+            diagnostic_name = mld_config.get("diagnostic_name", "ocean_stratification")
+            climatologies = mld_config.get("climatology", None)
+            vert_coord = mld_config.get("vert_coord", None)
+            var = mld_config.get("var", None)
+            model_stratification = Stratification(
+                **dataset_args,
+                diagnostic_name=diagnostic_name,
+                vert_coord=vert_coord,
+                loglevel=cli.loglevel,
+            )
+            if not cli.plot_only:
+                model_stratification.run(
+                    regions=regions,
+                    var=var,
+                    mld=True,
+                    climatology=climatologies,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    rebuild=cli.rebuild,
+                    save_netcdf=cli.save_netcdf,
+                )
+            # Same logic as the stratification section above
+            if cli.plot_only or cli.save_netcdf:
+                model_stratification.load(
+                    regions=regions,
+                    climatology=climatologies,
+                    mld=True,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                )
+            if "references" in config_dict:
+                logger.info("Processing reference data")
+                obs_stratification = Stratification(
+                    **reference_args,
                     diagnostic_name=diagnostic_name,
                     vert_coord=vert_coord,
                     loglevel=cli.loglevel,
                 )
-                model_stratification.run(
-                    region=region,
-                    var=var,
-                    # dim_mean=dim_mean,
-                    mld=True,
-                    climatology=climatology,
-                    outputdir=cli.outputdir,
-                    reader_kwargs=cli.reader_kwargs,
-                    rebuild=cli.rebuild,
-                )
-                # Reference data
-                if "references" in config_dict:
-                    logger.info("Processing reference data")
-                    obs_stratification = Stratification(
-                        **reference_args,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        loglevel=cli.loglevel,
-                    )
+                if not cli.plot_only:
                     obs_stratification.run(
-                        region=region,
+                        regions=regions,
                         var=var,
-                        # dim_mean=dim_mean,
                         mld=True,
-                        climatology=climatology,
+                        climatology=climatologies,
                         outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
                         rebuild=cli.rebuild,
+                        save_netcdf=cli.save_netcdf,
                     )
-                else:
-                    obs_stratification = None
-                # Plotting MLD
+                if cli.plot_only or cli.save_netcdf:
+                    obs_stratification.load(
+                        regions=regions,
+                        climatology=climatologies,
+                        mld=True,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                    )
+            else:
+                obs_stratification = None
+            if not model_stratification.processed_data:
+                reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                logger.warning("No MLD results found in %s%s, skipping the plots", cli.outputdir, reason)
+            for (region, climatology), model_data in model_stratification.processed_data.items():
+                obs_data = (
+                    obs_stratification.processed_data.get((region, climatology)) if obs_stratification is not None else None
+                )
+                if obs_stratification is not None and obs_data is None:
+                    logger.warning(
+                        "No reference MLD results for region %s, climatology %s: plotting without it", region, climatology
+                    )
                 mld_plot = PlotMLD(
-                    data=model_stratification.data[["mld"]],
-                    obs=(obs_stratification.data[["mld"]] if obs_stratification is not None else None),
+                    data=model_data[["mld"]],
+                    obs=(obs_data[["mld"]] if obs_data is not None else None),
                     diagnostic_name=diagnostic_name,
                     outputdir=cli.outputdir,
                     loglevel=cli.loglevel,
                 )
-                mld_plot.plot_mld(save_format=cli.save_format, dpi=cli.dpi)
+                mld_plot.plot_mld(region=region, proj_name="Orthographic", save_format=cli.save_format, dpi=cli.dpi)
 
     cli.close_dask_cluster()
 
     logger.info("Ocean stratification diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

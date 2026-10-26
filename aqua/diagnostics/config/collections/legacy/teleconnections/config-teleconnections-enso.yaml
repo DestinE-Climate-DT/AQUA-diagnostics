@@ -1,0 +1,53 @@
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    freq: null # if the diagnostic supports it
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+  # Possible second/third/fourth datasets here, no present by default
+  # - catalog: 'obs'
+  #   model: 'ECMWF'
+  #   exp: 'era5'
+  #   source: 'monthly'
+  #   regrid: r100
+
+references:
+  - catalog: 'obs'
+    model: 'ECMWF'
+    exp: 'era5'
+    source: 'monthly'
+    regrid: null
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  teleconnections:
+    ENSO:
+      run: true
+      diagnostic_name: 'enso'
+      months_window: 3
+      seasons: ['annual']
+      statistics_var: ['tos', 'tprate']
+      plot_params:
+        default:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1
+          vmax_diff: 1
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2.5
+          vmax: 2.5
+          vmin_diff: -4
+          vmax_diff: 4
+          cmap: 'BrBG'
+          units: 'mm/day'

@@ -11,14 +11,14 @@ datasets:
     reader_kwargs: null # it can be a dictionary with reader kwargs
   # Possible second/third/fourth datasets here, no present by default
   # - catalog: 'obs'
-  #   model: 'ERA5'
+  #   model: 'ECMWF'
   #   exp: 'era5'
   #   source: 'monthly'
   #   regrid: r100
 
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
     regrid: null
@@ -27,7 +27,6 @@ output:
   outputdir: "./"
   rebuild: true
   save_format: ['png', 'pdf', 'svg']
-  create_catalog_entry: true
   dpi: 300
 
 diagnostics:

@@ -39,8 +39,8 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ocean_trends`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-trends.yaml``
-* Notebooks are available in the ``notebooks/diagnostics/trends`` directory and contain examples of how to use the diagnostic.
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-trends.yaml``
+* Notebooks are available in the ``notebooks/diagnostics/ocean_trends`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
 ----------------------------
@@ -66,7 +66,7 @@ The basic structure of the analysis is the following:
 .. code-block:: python
 
 
-    from aqua.diagnostics import Trends, PlotTrends
+    from aqua.diagnostics.ocean_trends import Trends, PlotTrends
 
     trend = Trends(
         catalog='climatedt-phase1',
@@ -107,6 +107,18 @@ The basic structure of the analysis is the following:
     * **1000 m** - Deep intermediate waters
     * **3000 m** - Deep waters
     * **5000 m** - Abyssal waters
+
+Instead of calling ``run()``, the trend coefficients of a previous run can be read back from its NetCDF file
+(see :ref:`diagnostics-plot-only`):
+
+.. code-block:: python
+
+    trend.load(outputdir="/path/to/previous/output", region="io")
+
+.. note::
+
+    The region, if one was used, takes part in the filename and must be given to ``load()``.
+    If ``startdate`` or ``enddate`` is set, the file is loaded only if it was computed over the same period.
 
 CLI usage
 ---------

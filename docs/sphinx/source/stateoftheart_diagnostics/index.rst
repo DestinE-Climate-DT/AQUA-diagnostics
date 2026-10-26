@@ -20,10 +20,11 @@ Currently implemented diagnostics are:
    :maxdepth: 1
 
    boxplots
-   global_biases
+   biases
    ecmean
    timeseries
    ocean_stratification
+   trends
    ocean_trends
    ocean_drift
    seaice
@@ -73,7 +74,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
 
     references:
       - catalog: obs
-        model: ERA5
+        model: ECMWF
         exp: era5
         source: monthly
         regrid: null
@@ -84,8 +85,11 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     * ``outputdir``: the output directory for the plots.
     * ``rebuild``: a boolean that enables the rebuilding of the plots.
     * ``save_format``: a list (or single string) that selects the image formats to save plots. Default is SAVE_FORMAT.
+    * ``save_netcdf``: a boolean that enables the writing of the NetCDF files of the diagnostic.
+    * ``plot_only``: a boolean that skips the evaluation of the diagnostic, producing the plots from the NetCDF files
+      already present in ``outputdir``. Default is ``false``. Supported only by some diagnostics, see :ref:`diagnostics-plot-only`.
     * ``dpi``: the resolution of the plots.
-    * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
+    .. * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
 .. code-block:: yaml
 
@@ -93,12 +97,9 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
       outputdir: "/path/to/output"
       rebuild: true
       save_format: ['png', 'svg'] # default is SAVE_FORMAT (['png', 'pdf', 'svg'])
+      save_netcdf: true
+      plot_only: false
       dpi: 300
-      create_catalog_entry: true
-
-.. note::
-
-  Not all the diagnostics support yet the ``create_catalog_entry`` keyword.
 
 .. _diagnostics-cli-arguments:
 
@@ -115,9 +116,56 @@ The following command line arguments are available for all the diagnostics:
 - ``--model``: Model to analyse. It can be defined in the config file.
 - ``--exp``: Experiment to analyse. It can be defined in the config file.
 - ``--source``: Source to analyse. It can be defined in the config file.
+- ``--realization``: Realization name. Merged into the first dataset's ``reader_kwargs``.
+- ``--regrid``: Target regrid resolution.
+- ``--startdate``: Start date (``YYYY-MM-DD``).
+- ``--enddate``: End date (``YYYY-MM-DD``).
 - ``--outputdir``: Output directory for the plots.
+- ``--reader_kwargs``: Additional Reader kwargs as a JSON object, merged into the first dataset's
+  ``reader_kwargs`` (CLI values take precedence over the config file on matching keys). For example:
 
+  .. code-block:: bash
+
+     --reader_kwargs '{"engine": "polytope", "chunks": {"time": 12}}'
+
+  Quote the entire object with single quotes in the shell and use double quotes for JSON keys and
+  strings. JSON preserves numbers, booleans (``true`` and ``false``), lists, nested objects and
+  ``null`` (Python ``None``). The selected Reader/backend determines which additional parameters
+  it supports.
+
+  ``catalog``, ``model``, ``exp``, ``source``, ``regrid``, ``startdate``, ``enddate``, ``loglevel``
+  and ``realization`` must be set with their dedicated CLI flags: they are rejected inside
+  ``--reader_kwargs`` to avoid conflicting settings. Invalid JSON or a value that is not an object
+  also produces a CLI error before retrieval. Individual diagnostics may reject additional keys
+  when they have their own dedicated flags for them (see their documentation).
+
+Only the first dataset in the ``datasets`` list is affected by these CLI overrides.
 If a diagnostic has extra arguments, these will be described in the individual diagnostic documentation.
+
+.. _diagnostics-plot-only:
+
+Plotting from previous results
+++++++++++++++++++++++++++++++
+
+Some diagnostics can produce their plots from the NetCDF files written by a previous run, without retrieving or computing anything.
+From the CLI, this is enabled by ``plot_only: true`` in the ``output`` block of the configuration file.
+From Python, the diagnostic class provides a ``load()`` method, which populates from the NetCDF files the same attributes as ``run()``,
+so that the plot classes are used in the same way. Results with no file on disk are left untouched.
+``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
+because they take part in the filenames.
+
+This is currently supported by the following diagnostics, whose pages describe the arguments their ``load()`` needs:
+See the individual diagnostic documentation for usage details.
+
+.. Keep the list in alphabetical order
+
+* :doc:`lat_lon_profiles`
+* :doc:`ocean_drift`
+* :doc:`ocean_stratification`
+* :doc:`ocean_trends`
+* :doc:`trends`
+
+The other diagnostics ignore ``plot_only`` and always run the full evaluation.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
@@ -149,26 +197,41 @@ Here you can find the minimum requirements for each diagnostic.
    * - Diagnostic
      - Minimum Data Required
    * - Global Biases
-     - 1 year of data
+     - 12 months (1 year)
    * - ecmean
-     - 1 year of data
+     - 12 months (1 year)
    * - Timeseries
-     - 2 months of data
-   * - Seasonal cycles
-     - 1 year of data
-   * - Ocean3d
-     - 1 year of data, 2 months for the timeseries
+     - 2 months
+   * - Seasonal Cycles
+     - 2 months
+   * - Gregory Plot
+     - 2 months
+   * - Lat-Lon Profiles
+     - 12 months (1 year)
+   * - Histogram
+     - 12 months (1 year)
+   * - Ocean Stratification
+     - 12 months (1 year)
+   * - Trends
+     - 12 months (1 year)
+   * - Ocean Trends
+     - 12 months (1 year)
+   * - Ocean Drift (Hovmoller)
+     - 2 months
    * - Radiation
-     - 1 year of data
+     - 2 months
    * - Seaice
-     - 1 year of data
+     - 1 month (12 months when computing seasonal cycle)
    * - Teleconnections
-     - 2 years of data
+     - 24 months (2 years)
 
 .. note::
-   Some diagnostics will technically run with less data, but the results may not be meaningful.
-   Some other will raise errors in the log files if the data is not enough.
+   All diagnostics enforce the minimum data requirement at retrieval time via a ``NotEnoughDataError``.
+   If the available data falls below the threshold, the diagnostic will not run and the error will be
+   reported in the log. Some diagnostics (e.g. Seasonal Cycles) may produce less meaningful results
+   at their minimum threshold — the value reflects the technical lower bound, not the recommended input size.
 
 .. note::
-  If you are a developer you can enforce the minimum data requirements by using the `months_required` argument in the `retrieve` and `_retrieve` methods
-  available in the diagnostic core.
+  If you are a developer you can enforce the minimum data requirements by using the ``months_required`` argument in the ``retrieve`` and ``_retrieve`` methods
+  available in the diagnostic core. The conventional way is to define a class-level constant ``MINIMUM_MONTHS_REQUIRED``
+  and pass it to the ``retrieve`` call.

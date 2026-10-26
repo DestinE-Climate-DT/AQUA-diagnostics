@@ -3,34 +3,30 @@ Utility functions for the CLI
 """
 
 import argparse
+import json
 import os
-import uuid
+from functools import partial, wraps
 
-import dask
-from dask.base import tokenize
+import xarray as xr
 from dask.distributed import Client, LocalCluster
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigLocator
+from aqua.core.data_model.coordidentifier import CoordIdentifier
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg, load_yaml
 
-# This creates a unique job token for this instance of the module
-# so that all dask keys generated during this run are unique
-_job_token = uuid.uuid4().hex
-_original_tokenize = tokenize
 
-
-def _unique_tokenize(*args, **kwargs):
-    """Tokenize function that includes job token for uniqueness."""
-    return _original_tokenize(_job_token, *args, **kwargs)
-
-
-def template_parse_arguments(parser: argparse.ArgumentParser):
+def template_parse_arguments(
+    parser: argparse.ArgumentParser,
+    extra_parser_options: set | None = None,
+) -> argparse.ArgumentParser:
     """
     Add the default arguments to the parser.
 
     Args:
         parser: argparse.ArgumentParser
+        extra_parser_options: Additional parser options to check for conflicts in reader_kwargs.
+                             Defaults to None.
 
     Returns:
         argparse.ArgumentParser
@@ -48,6 +44,17 @@ def template_parse_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("--outputdir", type=str, required=False, help="output directory")
     parser.add_argument("--startdate", type=str, required=False, help="start date (YYYY-MM-DD)")
     parser.add_argument("--enddate", type=str, required=False, help="end date (YYYY-MM-DD)")
+
+    # argparse's `type` callable only ever receives the raw string value, so we bind
+    # extra_parser_options via partial; `wraps` keeps a readable __name__ for error messages.
+    reader_kwargs_type = wraps(_parse_reader_kwargs)(partial(_parse_reader_kwargs, extra_parser_options=extra_parser_options))
+    parser.add_argument(
+        "--reader_kwargs",
+        type=reader_kwargs_type,
+        metavar="JSON",
+        help='additional Reader kwargs as a JSON object, e.g. \'{"engine": "polytope", "chunks": {"time": 12}}\'; '
+        "use dedicated flags for dataset selection, regrid, dates, loglevel, realization etc.",
+    )
 
     return parser
 
@@ -76,8 +83,7 @@ def open_cluster(nworkers, cluster, loglevel: str = "WARNING"):
             logger.info(f"Initializing private cluster {cluster.scheduler_address} with {nworkers} workers.")
             private_cluster = True
         else:
-            logger.info(f"Connecting to cluster {cluster} with client ID {_job_token}.")
-            dask.base.tokenize = _unique_tokenize
+            logger.info(f"Connecting to cluster {cluster}.")
 
         client = Client(cluster)
     else:
@@ -119,7 +125,8 @@ def get_diagnostic_configpath(diagnostic: str, folder="collections", loglevel="W
     Returns:
         str: path to the diagnostic configuration directory
     """
-    configdir = ConfigPath(loglevel=loglevel).configdir
+    logger = log_configure(log_name="get_diagnostic_configpath", log_level=loglevel)
+    configdir = ConfigLocator(logger=logger).configdir
     if folder == "templates":
         return os.path.join(configdir, folder, "collections")
     if folder in ["collections", "tools"]:
@@ -135,6 +142,7 @@ def load_diagnostic_config(
 
     Args:
         diagnostic (str): diagnostic name
+        default_config (str): default config file name. If not provided, it defaults to "config-{diagnostic}.yaml".
         config (str): config argument can modify the default configuration file.
         folder (str): folder name. Default is "collections". Can be "tools" or "templates" as well.
         loglevel (str): logging level. Default is 'WARNING'.
@@ -151,6 +159,76 @@ def load_diagnostic_config(
     filename = os.path.join(get_diagnostic_configpath(diagnostic, folder=folder, loglevel=loglevel), default_config)
 
     return load_yaml(filename)
+
+
+def load_var_config(
+    config_dict: dict,
+    var,
+    diagnostic: str,
+    prepend_global: bool = False,
+    collapse_freq_keys: tuple | None = None,
+) -> tuple:
+    """
+    Build the variable-specific configuration for a diagnostic CLI.
+    Merge precedence: params.default < params.<var_name> < inline dict.
+
+    Args:
+        config_dict (dict): full configuration dictionary.
+        var (str | dict): variable name, or inline dict (any keys the diagnostic expects, e.g. ``units``,
+            ``long_name``, ``regions``); the optional ``name`` key is the only one read here, to look up ``params.<name>``.
+        diagnostic (str): key under ``config_dict["diagnostics"]`` to read from.
+        prepend_global (bool): if True, always prepend ``None`` to the regions list (deduped), so the diagnostic
+            is also run on the full (global) domain in addition to any configured regions.
+        collapse_freq_keys (tuple | None): if set, pop these boolean flags and combine the True ones into a ``freq`` list.
+
+    Returns:
+        tuple: ``(var_config, regions)``; ``regions`` is always popped from ``var_config``.
+
+    Raises:
+        ValueError: if ``var`` is a string but the ``diagnostics.<diagnostic>`` block is missing or empty.
+    """
+    # Read the diagnostic-specific config block. Per-variable settings live
+    # under params.<var_name>; shared defaults under params.default.
+    diag_block = config_dict.get("diagnostics", {}).get(diagnostic, {}) or {}
+    params = diag_block.get("params", {}) or {}
+    default_params = params.get("default", {}) or {}
+
+    # Merge precedence: params.default < params.<var_name> < inline dict.
+    # Rightmost dict wins, so an inline override beats per-var which beats default.
+    if isinstance(var, dict):
+        var_name = var.get("name")
+        var_specific = (params.get(var_name, {}) or {}) if var_name else {}
+        var_config = {**default_params, **var_specific, **var}
+    else:
+        if not diag_block:
+            raise ValueError(
+                f"Cannot resolve config for variable '{var}': section 'diagnostics.{diagnostic}' is missing or empty."
+            )
+        var_name = var
+        var_specific = params.get(var_name, {}) or {}
+        var_config = {**default_params, **var_specific}
+        var_config.setdefault("name", var_name)
+
+    # Collapse boolean frequency flags (e.g. hourly/daily/monthly/annual) into a single `freq` list,
+    # because Timeseries.run() expects a list of active frequencies, not separate booleans.
+    if collapse_freq_keys:
+        freq = [key for key in collapse_freq_keys if var_config.get(key)]
+        for key in collapse_freq_keys:
+            # The flags are then popped so they do not propagate as stray kwargs downstream
+            var_config.pop(key, None)
+        var_config["freq"] = freq
+
+    # Regions are returned separately and not consumed as a kwarg by the diagnostic,
+    # so with prepend_global=True the global case (None) is always run first.
+    regions_in_config = var_config.pop("regions", None)
+    if prepend_global:
+        regions = [None]
+        if regions_in_config:
+            regions.extend(r for r in regions_in_config if r is not None)
+    else:
+        regions = list(regions_in_config) if regions_in_config else [None]
+
+    return var_config, regions
 
 
 def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "WARNING") -> dict:
@@ -173,6 +251,18 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     datasets[0]["model"] = get_arg(args, "model", datasets[0]["model"])
     datasets[0]["exp"] = get_arg(args, "exp", datasets[0]["exp"])
     datasets[0]["source"] = get_arg(args, "source", datasets[0]["source"])
+    # CLI dataset overrides apply only to the first configured dataset.
+    reader_kwargs_arg = get_arg(args, "reader_kwargs", None)
+    realization = get_arg(args, "realization", None)
+    if reader_kwargs_arg or realization:
+        reader_kwargs = dict(datasets[0].get("reader_kwargs") or {})
+        if reader_kwargs_arg:
+            logger.info("Merging --reader_kwargs into dataset reader_kwargs: %s", reader_kwargs_arg)
+            reader_kwargs.update(reader_kwargs_arg)
+        if realization:
+            logger.info("Realization option is set to: %s", realization)
+            reader_kwargs["realization"] = realization
+        datasets[0]["reader_kwargs"] = reader_kwargs
 
     config["output"]["outputdir"] = get_arg(args, "outputdir", config["output"]["outputdir"])
 
@@ -186,3 +276,52 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
             logger.debug(f"  - {ref['catalog']} {ref['model']} {ref['exp']} {ref['source']}")
 
     return config
+
+
+def find_vert_coord(ds: xr.Dataset | xr.DataArray) -> list[str]:
+    """
+    Identify the vertical coordinate name(s) based on coordinate units. Returns always a list.
+    The list will be empty if none found.
+    """
+    coords = CoordIdentifier(ds.coords).identify_coords()
+    full_vert_coord = [y["name"] for x, y in coords.items() if y is not None and x in ["isobaric", "depth", "height"]]
+    return full_vert_coord
+
+
+def _parse_reader_kwargs(value, extra_parser_options=None):
+    """
+    Parse a JSON object of Reader kwargs without overriding default parser options.
+
+    Args:
+        value (str): JSON string representing Reader kwargs.
+        extra_parser_options (set, optional): Additional parser options to check for conflicts. Defaults to None.
+
+    Returns:
+        dict: Parsed Reader kwargs.
+    """
+    reader_kwargs = json.loads(value)
+
+    if not isinstance(reader_kwargs, dict):
+        raise argparse.ArgumentTypeError("expected a JSON object")
+
+    # Some tool like the checker may have additional parser options that
+    # should not be overridden by reader_kwargs.
+    parser_options = {
+        "catalog",
+        "model",
+        "exp",
+        "source",
+        "regrid",
+        "startdate",
+        "enddate",
+        "loglevel",
+        "realization",
+    }
+    if extra_parser_options:
+        parser_options.update(extra_parser_options)
+
+    conflicts = parser_options.intersection(reader_kwargs)
+    if conflicts:
+        raise argparse.ArgumentTypeError("use dedicated CLI flags for: " + ", ".join(sorted(conflicts)))
+
+    return reader_kwargs

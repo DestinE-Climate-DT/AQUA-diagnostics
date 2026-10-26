@@ -10,6 +10,8 @@ xr.set_options(keep_attrs=True)
 class SeasonalCycles(BaseMixin):
     """SeasonalCycles class for retrieve and netcdf saving of a single experiment"""
 
+    MINIMUM_MONTHS_REQUIRED = 2
+
     def __init__(
         self,
         diagnostic_name: str = "seasonalcycles",
@@ -79,7 +81,8 @@ class SeasonalCycles(BaseMixin):
         outputdir: str = "./",
         rebuild: bool = True,
         reader_kwargs: dict = {},
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
     ):
         """
         Run all the steps necessary for the computation of the SeasonalCyles.
@@ -98,7 +101,6 @@ class SeasonalCycles(BaseMixin):
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data.
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         """
         self.logger.info("Running SeasonalCycles for %s", var)
         self.retrieve(
@@ -108,7 +110,14 @@ class SeasonalCycles(BaseMixin):
         # Notice that if you compute after, self.monthly will be the seasonal cycle
         # and the compute_std routine will fail
         if std:
-            self.compute_std(freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
+            if self.std_startdate is None or self.std_enddate is None:
+                self.logger.error(
+                    "Skipping std evaluation. Std start and end dates must be provided to compute the standard deviation."
+                )
+            else:
+                self.compute_std(
+                    freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd
+                )
 
         self.logger.info("Computing the seasonal cycles")
         self.compute(exclude_incomplete=exclude_incomplete, center_time=center_time, box_brd=box_brd)
@@ -118,7 +127,8 @@ class SeasonalCycles(BaseMixin):
             freq="monthly",
             outputdir=outputdir,
             rebuild=rebuild,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
         )
 
     def compute(self, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):

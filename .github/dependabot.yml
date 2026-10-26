@@ -5,7 +5,40 @@
 
 version: 2
 updates:
+  - package-ecosystem: "conda"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      day: "monday"           # You can pick any day
+      time: "06:00"
+    commit-message:
+      prefix: "[Dependabot-conda]"
+    labels:
+      - "dependabot :dependabot:"
+
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "monthly"
+      interval: "daily"
+      day: "monday"           # You can pick any day
+      time: "08:00"
+    commit-message:
+      prefix: "[Dependabot-pip]"
+    labels:
+      - "dependabot :dependabot:"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      # Check for updates to GitHub Actions every week
+      interval: "weekly"
+    labels:
+      - "dependabot :dependabot:"
+
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      # Check for updates to pre-commit hooks every week
+      interval: "weekly"
+    labels:
+      - "dependabot :dependabot:"

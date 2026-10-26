@@ -90,7 +90,7 @@ class BaseMixin(Diagnostic):
         if region is not None and lon_limits is not None and lat_limits is not None:
             # Set the region based on the region name or the lon and lat limits
             self.region, self.lon_limits, self.lat_limits = self._set_region(
-                region=region, diagnostic="sshVariability", lon_limits=lon_limits, lat_limits=lat_limits
+                region=region, lon_limits=lon_limits, lat_limits=lat_limits
             )
             self.logger.debug(f"Region: {self.region}, Lon limits: {self.lon_limits}, Lat limits: {self.lat_limits}")
 
@@ -154,7 +154,8 @@ class BaseMixin(Diagnostic):
         data,
         diagnostic_product: str = "sshVariability",
         freq: str = None,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: dict = {"jinjalist": ["freq", "realization", "region"], "wildcardlist": ["var"]},
     ):
         """
@@ -166,7 +167,6 @@ class BaseMixin(Diagnostic):
             freq (str): The frequency of the data. It is set to 'None' for this release of code.
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
             dict_catalog_entry (dict): A dictionary with catalog entry information.
                 Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
@@ -212,7 +212,8 @@ class BaseMixin(Diagnostic):
             outputdir=self.outputdir,
             rebuild=self.rebuild,
             extra_keys=extra_keys,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
         )
 

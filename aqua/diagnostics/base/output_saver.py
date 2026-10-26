@@ -10,17 +10,11 @@ from typing import Optional, Union
 import xarray as xr
 from matplotlib.figure import Figure
 
-from aqua.core.configurer import ConfigPath
-from aqua.core.lock import SafeFileLock
 from aqua.core.logger import log_configure, log_history
 from aqua.core.util import (
     create_folder,
-    dump_yaml,
     format_realization,
-    load_yaml,
-    replace_intake_vars,
-    replace_urlpath_jinja,
-    replace_urlpath_wildcard,
+    time_to_string,
     to_list,
     update_metadata,
 )
@@ -28,6 +22,14 @@ from aqua.core.util.string import clean_filename
 from aqua.diagnostics.base.metadata import add_figure_metadata
 
 from .defaults import SAVE_FORMAT
+
+# Name xarray gives to an unnamed DataArray when writing it to NetCDF.
+DATAARRAY_VARIABLE = "__xarray_dataarray_variable__"
+
+# Formats the OutputSaver can write. These are the allowed ones, while SAVE_FORMAT is the default selection.
+VECTORIAL_FORMAT = ["pdf", "svg"]
+FIGURE_FORMAT = VECTORIAL_FORMAT + ["png"]
+FILE_FORMAT = FIGURE_FORMAT + ["nc"]
 
 
 class OutputSaver:
@@ -203,19 +205,34 @@ class OutputSaver:
         self.logger.debug("Generated filename: %s", filename)
         return filename
 
+    def _build_filepath(self, diagnostic_product: str, file_format: str, extra_keys: Optional[dict] = None):
+        """
+        Build the path of an output file without touching the filesystem.
+
+        Args:
+            diagnostic_product (str): Product of the diagnostic analysis.
+            file_format (str): 'pdf', 'svg', 'png' or 'nc'.
+            extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
+
+        Returns:
+            str: The full path of the file.
+        """
+
+        if file_format not in FILE_FORMAT:
+            raise ValueError(f"file_format must be one of {FILE_FORMAT}, got '{file_format}'")
+
+        filename = self.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys) + f".{file_format}"
+        dir_format = "netcdf" if file_format == "nc" else file_format
+        return os.path.join(self.outputdir, dir_format, filename)
+
     def _core_save(self, diagnostic_product: str, file_format: str, extra_keys: Optional[dict] = None):
         """
         Core method to handle the common logic for saving files, including checking if the file exists.
         """
 
-        if file_format not in ["pdf", "svg", "png", "nc"]:
-            raise ValueError("file_format must be either 'pdf', 'svg', 'png' or 'nc'")
-
-        filename = self.generate_name(diagnostic_product=diagnostic_product, extra_keys=extra_keys) + f".{file_format}"
-        dir_format = "netcdf" if file_format == "nc" else file_format
-        folder = os.path.join(self.outputdir, dir_format)
-        create_folder(folder=str(folder), loglevel=self.loglevel)
-        return os.path.join(folder, filename)
+        filepath = self._build_filepath(diagnostic_product=diagnostic_product, file_format=file_format, extra_keys=extra_keys)
+        create_folder(folder=str(os.path.dirname(filepath)), loglevel=self.loglevel)
+        return filepath
 
     def save_netcdf(
         self,
@@ -224,7 +241,8 @@ class OutputSaver:
         rebuild: bool = True,
         extra_keys: Optional[dict] = None,
         metadata: Optional[dict] = None,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: Optional[dict] = None,
     ):
         """
@@ -236,7 +254,6 @@ class OutputSaver:
             rebuild (bool, optional): Whether to rebuild the output file if it already exists. Defaults to True.
             extra_keys (dict, optional): Dictionary of additional keys to include in the filename.
             metadata (dict, optional): Additional metadata to include in the NetCDF file.
-            create_catalog_entry (bool, optional): Whether to create a catalog entry for the NetCDF file. Defaults to False.
             dict_catalog_entry (dict, optional): List of jinja and wildcard variables. Default is none.
         """
 
@@ -245,6 +262,13 @@ class OutputSaver:
         if not rebuild and os.path.exists(filepath):
             self.logger.info("File already exists and rebuild=False, skipping: %s", filepath)
             return filepath
+
+        if isinstance(dataset, xr.DataArray) and dataset.name is None:
+            self.logger.warning(
+                "Saving an unnamed DataArray to %s, stored as %s: the diagnostic should name its data before saving",
+                filepath,
+                DATAARRAY_VARIABLE,
+            )
 
         metadata = self.create_metadata(diagnostic_product=diagnostic_product, extra_keys=extra_keys, metadata=metadata)
 
@@ -267,17 +291,111 @@ class OutputSaver:
 
         dataset.to_netcdf(filepath)
 
-        # create catalog entry for netcdf file
-        if create_catalog_entry:
-            self._create_catalog_entry(
-                metadata=metadata,
-                filepath=filepath,
-                jinjalist=dict_catalog_entry.get("jinjalist", None),
-                wildcardlist=dict_catalog_entry.get("wildcardlist", None),
-            )
+        # DEPRECATED
+        # # create catalog entry for netcdf file
+        # if create_catalog_entry:
+        #     self._create_catalog_entry(
+        #         metadata=metadata,
+        #         filepath=filepath,
+        #         jinjalist=dict_catalog_entry.get("jinjalist", None),
+        #         wildcardlist=dict_catalog_entry.get("wildcardlist", None),
+        #     )
 
         self.logger.info("Saved NetCDF: %s", filepath)
         return filepath
+
+    def load_netcdf(
+        self,
+        diagnostic_product: str,
+        extra_keys: Optional[dict] = None,
+        as_dataarray: bool = False,
+        startdate: Optional[str] = None,
+        enddate: Optional[str] = None,
+        expect_netcdf: bool = False,
+    ):
+        """
+        Load a NetCDF file previously written by save_netcdf.
+
+        The filename is built exactly as save_netcdf builds it. A missing file is not an error:
+        None is returned. The file is read eagerly and closed, so that it can then be overwritten.
+        If startdate or enddate is provided, the corresponding file metadata must exactly match
+        the requested date. If it does not, or the metadata is missing, None is returned.
+
+        Args:
+            diagnostic_product (str): Product of the diagnostic analysis.
+            extra_keys (dict, optional): Dictionary of additional keys included in the filename.
+                Must match the ones used when saving, otherwise the file will not be found.
+            as_dataarray (bool, optional): If True, return the single data variable of the file as a
+                DataArray, merging the dataset attributes into it. Use it when the data was saved as
+                a DataArray. Defaults to False, which returns the Dataset as it is on disk.
+            startdate (str, optional): Start date to match against the file's AQUA_startdate metadata.
+            enddate (str, optional): End date to match against the file's AQUA_enddate metadata.
+            expect_netcdf (bool, optional): If True a missing file is logged as an error instead of info.
+
+        Returns:
+            xr.Dataset, xr.DataArray or None: The data read from disk, None if the file does not exist.
+
+        Raises:
+            ValueError: If as_dataarray is True but the file does not hold exactly one data variable.
+        """
+        filepath = self._build_filepath(diagnostic_product=diagnostic_product, file_format="nc", extra_keys=extra_keys)
+        loginfo = self.logger.error if expect_netcdf else self.logger.info
+        logwarning = self.logger.error if expect_netcdf else self.logger.warning
+
+        if not os.path.exists(filepath):
+            loginfo("No NetCDF file to load at: %s", filepath)
+            return None
+
+        # Read eagerly and close: the caller is allowed to overwrite this same file afterwards.
+        with xr.open_dataset(filepath) as dataset:
+            data = dataset.load()
+
+        loginfo("Loaded NetCDF: %s", filepath)
+
+        # Compare only requested boundaries; date strings are normalized before comparison.
+        if startdate or enddate:
+            startdate = time_to_string(startdate) if startdate else None
+            enddate = time_to_string(enddate) if enddate else None
+            file_startdate = data.attrs.get("AQUA_startdate")
+            file_enddate = data.attrs.get("AQUA_enddate")
+
+            if startdate and (file_startdate is None or startdate != file_startdate):
+                logwarning(
+                    "Requested startdate %s does not match the file's startdate %s. Returning None.",
+                    startdate,
+                    file_startdate,
+                )
+                return None
+
+            if enddate and (file_enddate is None or enddate != file_enddate):
+                logwarning(
+                    "Requested enddate %s does not match the file's enddate %s. Returning None.",
+                    enddate,
+                    file_enddate,
+                )
+                return None
+
+        if not as_dataarray:
+            return data
+
+        if len(data.data_vars) != 1:
+            raise ValueError(
+                f"Cannot load {filepath} as a DataArray: expected a single data variable, found {list(data.data_vars)}"
+            )
+
+        name = list(data.data_vars)[0]
+        dataarray = data[name]
+        # A DataArray written to disk keeps everything as variable attributes and leaves the dataset
+        # ones empty, while a Dataset written by save_netcdf carries its metadata at dataset level.
+        # Merging the two makes the two cases indistinguishable on the way back, with the variable
+        # attributes winning since they are the more specific ones.
+        dataarray.attrs = {**data.attrs, **dataarray.attrs}
+        if dataarray.name == DATAARRAY_VARIABLE:
+            self.logger.warning(
+                "Loaded an unnamed DataArray from %s: the diagnostic should name its data before saving", filepath
+            )
+            dataarray.name = None
+        return dataarray
 
     def generate_folder(self, extension: str = "pdf"):
         """
@@ -371,14 +489,12 @@ class OutputSaver:
         """
         extensions = to_list(extension)
 
-        if not set(extensions).issubset(["pdf", "svg", "png"]):
-            raise ValueError(f"format must be 'png', 'pdf', or 'svg', got '{extensions}'")
-
-        vectorial_formats = ["pdf", "svg"]
+        if not set(extensions).issubset(FIGURE_FORMAT):
+            raise ValueError(f"format must be one of {FIGURE_FORMAT}, got '{extensions}'")
 
         for ext in extensions:
             ext = ext.lower().lstrip(".")
-            if ext in vectorial_formats:
+            if ext in VECTORIAL_FORMAT:
                 self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata)
             else:
                 self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, dpi)
@@ -423,80 +539,81 @@ class OutputSaver:
         self.logger.debug("Available metadata: %s", metadata)
         return metadata
 
-    def _create_catalog_entry(self, filepath, metadata, jinjalist=None, wildcardlist=None):
-        """
-        Creates an entry in the catalog
+    # def _create_catalog_entry(self, filepath, metadata, jinjalist=None, wildcardlist=None):
+    #     """
+    #     Creates an entry in the catalog
 
-        Args:
-            filepath (str): The file path where the data is stored.
-            metadata (dict): Metadata dictionary containing information about the diagnostic.
-            jinjalist (list, optional): List of Jinja variables to replace in the URL path.
-            wildcardlist (list, optional): List of wildcard variables to replace in the URL path.
+    #     Args:
+    #         filepath (str): The file path where the data is stored.
+    #         metadata (dict): Metadata dictionary containing information about the diagnostic.
+    #         jinjalist (list, optional): List of Jinja variables to replace in the URL path.
+    #         wildcardlist (list, optional): List of wildcard variables to replace in the URL path.
 
-        Returns:
-            dict: The updated catalog entry block.
-        """
-        self.logger.info("Creating catalog entry for %s", filepath)
-        configpath = ConfigPath(catalog=self.catalog)
-        configdir = configpath.configdir
-        # find the catalog of the experiment and load it
-        catalogfile = os.path.join(configdir, "catalogs", self.catalog, "catalog", self.model, self.exp + ".yaml")
+    #     Returns:
+    #         dict: The updated catalog entry block.
+    #     """
+    #     self.logger.info("Creating catalog entry for %s", filepath)
+    #     configdir = ConfigLocator(logger=self.logger).configdir
+    #     # find the catalog of the experiment and load it
+    #     catalogfile = os.path.join(configdir, "catalogs", self.catalog, "catalog", self.model, self.exp + ".yaml")
 
-        # The following block must be locked because else two diagnostics may attempt to modify the same file at the same time
+    #     # The following block must be locked because else two diagnostics may attempt
+    #     # to modify the same file at the same time
 
-        self.logger.debug("Locking catalog file %s", catalogfile)
-        with SafeFileLock(catalogfile + ".lock", loglevel=self.loglevel):
-            cat_file = load_yaml(catalogfile)
-            # Remove None values
-            urlpath = replace_intake_vars(catalog=self.catalog, path=filepath)
+    #     self.logger.debug("Locking catalog file %s", catalogfile)
+    #     with SafeFileLock(catalogfile + ".lock", loglevel=self.loglevel):
+    #         cat_file = load_yaml(catalogfile)
+    #         # Remove None values
+    #         urlpath = replace_intake_vars(catalog=self.catalog, path=filepath)
 
-            entry_name = f"aqua-{self.diagnostic}-{metadata.get('diagnostic_product')}"
-            if entry_name in cat_file["sources"]:
-                catblock = cat_file["sources"][entry_name]
-            else:
-                catblock = None
+    #         entry_name = f"aqua-{self.diagnostic}-{metadata.get('diagnostic_product')}"
+    #         if entry_name in cat_file["sources"]:
+    #             catblock = cat_file["sources"][entry_name]
+    #         else:
+    #             catblock = None
 
-            if catblock is None:
-                # if the entry is not there, define the block to be uploaded into the catalog
-                catblock = {
-                    "driver": "netcdf",
-                    "description": f"AQUA diagnostic {self.diagnostic} data for product {metadata.get('diagnostic_product')}",
-                    "args": {
-                        "urlpath": urlpath,
-                        "chunks": {},
-                    },
-                    "metadata": {
-                        "source_grid_name": False,
-                    },
-                }
-            else:
-                # if the entry is there, we just update the urlpath
-                catblock["args"]["urlpath"] = urlpath
+    #         if catblock is None:
+    #             # if the entry is not there, define the block to be uploaded into the catalog
+    #             catblock = {
+    #                 "driver": "netcdf",
+    #                 "description":
+    #                   f"AQUA diagnostic {self.diagnostic} data for product {metadata.get('diagnostic_product')}",
+    #                 "args": {
+    #                     "urlpath": urlpath,
+    #                     "chunks": {},
+    #                 },
+    #                 "metadata": {
+    #                     "source_grid_name": False,
+    #                 },
+    #             }
+    #         else:
+    #             # if the entry is there, we just update the urlpath
+    #             catblock["args"]["urlpath"] = urlpath
 
-                catblock["args"]["xarray_kwargs"] = {
-                    "decode_times": True,
-                }
-            # These variables are replaced from the url as {{ variable }}
-            if jinjalist:
-                for key in jinjalist:
-                    value = metadata.get(key)
-                    if value is not None:
-                        self.logger.debug("Replacing jinja variable %s with value %s in urlpath", key, value)
-                        catblock = replace_urlpath_jinja(catblock, value, key)
+    #             catblock["args"]["xarray_kwargs"] = {
+    #                 "decode_times": True,
+    #             }
+    #         # These variables are replaced from the url as {{ variable }}
+    #         if jinjalist:
+    #             for key in jinjalist:
+    #                 value = metadata.get(key)
+    #                 if value is not None:
+    #                     self.logger.debug("Replacing jinja variable %s with value %s in urlpath", key, value)
+    #                     catblock = replace_urlpath_jinja(catblock, value, key)
 
-            if wildcardlist:
-                for key in wildcardlist:
-                    value = metadata.get(key)
-                    if value is not None:
-                        self.logger.debug("Replacing wildcard variable %s with value %s in urlpath", key, value)
-                        catblock = replace_urlpath_wildcard(catblock, value)
+    #         if wildcardlist:
+    #             for key in wildcardlist:
+    #                 value = metadata.get(key)
+    #                 if value is not None:
+    #                     self.logger.debug("Replacing wildcard variable %s with value %s in urlpath", key, value)
+    #                     catblock = replace_urlpath_wildcard(catblock, value)
 
-            self.logger.info("Final urlpath: %s", catblock["args"]["urlpath"])
+    #         self.logger.info("Final urlpath: %s", catblock["args"]["urlpath"])
 
-            cat_file["sources"][entry_name] = catblock
+    #         cat_file["sources"][entry_name] = catblock
 
-            # dump the update file
-            dump_yaml(outfile=catalogfile, cfg=cat_file)
+    #         # dump the update file
+    #         dump_yaml(outfile=catalogfile, cfg=cat_file)
 
-        self.logger.debug("Releasing catalog file %s", catalogfile)
-        return catblock  # using this in the tests
+    #     self.logger.debug("Releasing catalog file %s", catalogfile)
+    #     return catblock  # using this in the tests

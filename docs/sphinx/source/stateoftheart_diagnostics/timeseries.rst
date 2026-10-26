@@ -43,7 +43,7 @@ File structure
 * The diagnostic is located in the ``aqua/diagnostics/timeseries`` directory, which contains both the source code and the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-timeseries.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/timeseries`` directory and contain examples of how to use the diagnostic.
-* A list of available regions is available in the ``aqua/diagnostics/config/tools/timeseries/definitions/regions.yaml`` file.
+* A list of available regions is available in the ``aqua/diagnostics/config/definitions/regions.yaml`` file.
 
 Input variables and datasets
 ----------------------------
@@ -121,7 +121,6 @@ Here we describe only the specific settings for the time series diagnostic.
         variables: ['2t', 'tprate']
         formulae: ['tnlwrf+tnswrf']
         center_time: true # center the time axis of the time series
-        extend: true # extend the time series with climatology if data is missing at the beginning or end
         exclude_incomplete: true # check if all chunks are complete present before computing the time average
         params:
           default:
