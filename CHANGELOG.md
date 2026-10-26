@@ -13,6 +13,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Move the aqua-web slurm submitter and DROP slurm helpers, with configs and templates core (#301)
 - Setup checker: use absolute imports so it runs as a script from `aqua analysis` (#520)
 - Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
@@ -60,7 +61,6 @@ Main changes:
 4. Specify min and max allowed versions for all dependencies
 
 Complete list:
-- Move aqua-web and DROP CLI tools, examples and job templates from AQUA-core (#301)
 - Ocean3D: corrected the drift plots along with adjustments in trends and stratification plots (#298)
 - Dependencies update (#368)
 - `reader_kwargs` centralization management of cli arguments (#264)

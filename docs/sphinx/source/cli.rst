@@ -52,10 +52,10 @@ The examples below use two placeholder paths. Replace them with the absolute
 paths to your local copies of the repositories:
 
 * ``/path/to/AQUA-diagnostics`` contains the submission scripts, job templates,
-  example configuration files and publishing tools.
+  and example configuration files.
 * ``/path/to/AQUA`` contains the core container launcher,
   ``cli/aqua-container/load-aqua-container.sh``, as well as the AQUA-core
-``aqua drop`` command used by the DROP submission wrapper.
+  ``aqua drop`` command used by the DROP submission wrapper.
 
 For aqua-web container jobs, set ``aquadir`` in ``config.aqua-web.yaml`` to
 the AQUA-core repository path. For DROP container jobs, set ``aquadir`` under the
@@ -63,15 +63,7 @@ the AQUA-core repository path. For DROP container jobs, set ``aquadir`` under th
 variable to that path. The DROP configuration setting takes priority over the
 environment variable.
 
-The publishing script is located at:
-``/path/to/AQUA-diagnostics/cli/aqua-web/push_analysis.sh``.
-The aqua-web submitter locates it in the same directory as
-``submit-aqua-web.py`` and passes its absolute path to the job template as
-``push_analysis_script``.
-
-The repository paths must be accessible from the compute nodes. For publishing
-jobs that run in a container, the diagnostics repository must also be accessible
-inside the container at the same absolute path.
+The repository paths must be accessible from the compute nodes.
 
 Submitting aqua-web jobs
 ------------------------
@@ -97,7 +89,12 @@ Preview the analysis and publishing jobs with:
 The ``--dry`` option prints the generated job scripts without submitting them.
 Remove ``--dry`` to submit the jobs to SLURM. The ``--push`` option requests
 a publishing job after the analysis jobs finish; omit it to run only the
-analyses.
+analyses. The analysis jobs run ``aqua analysis`` and the publishing job runs
+``aqua push``, both provided by the AQUA-core console; see the AQUA-core
+documentation of
+`aqua analysis <https://aqua.readthedocs.io/en/latest/aqua-analysis.html>`_ and
+`aqua push <https://aqua.readthedocs.io/en/latest/dashboard.html#aqua-push>`_
+for their options.
 
 By default, both job types run in the AQUA-diagnostics container. The supplied
 job templates select it by passing ``--diagnostics`` to the core container
@@ -105,8 +102,8 @@ launcher. Add ``--native`` to the submitter command to run the jobs in the
 active AQUA environment instead. See :ref:`container` for direct use of the
 launcher.
 
-Publishing also requires storage and repository credentials and the diagnostics
-grouping configuration. By default, ``push_analysis.sh`` reads
+Publishing also requires storage credentials and the diagnostics
+grouping configuration. By default, ``aqua push`` reads
 ``$AQUA_CONFIG/analysis/config.grouping.yaml`` when ``AQUA_CONFIG`` is set,
 or ``$HOME/.aqua/analysis/config.grouping.yaml`` otherwise.
 
@@ -129,9 +126,7 @@ Template filenames in the YAML configuration follow the same search order;
 they are not automatically resolved relative to the YAML file's directory.
 Use absolute template paths when storing custom templates elsewhere.
 
-Custom publishing templates should use ``{{ push_analysis_script }}`` for the
-publishing script path. Custom aqua-web container templates must pass
-``--diagnostics`` to the launcher.
+Custom aqua-web container templates must pass ``--diagnostics`` to the launcher.
 
 Submitting DROP jobs
 --------------------
