@@ -127,6 +127,6 @@ class VariabilityMap(BaseMixin):
             # Save STD as netcdf
             if self.save_netcdf:
                 self.logger.info(f"Output std netcdf file is saved at {self.outputdir}.")
-                self.netcdf_save(data=self.data_std, create_catalog_entry=True)
+                self.netcdf_save(data=self.data_std)  # create_catalog_entry=True
             else:
                 self.logger.info("Output in netcdf is not saved.")

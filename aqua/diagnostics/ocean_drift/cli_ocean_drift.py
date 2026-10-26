@@ -56,42 +56,58 @@ def main(argv=None):
             # if regions != [None]:
             #    regions.append(None)
 
-            for region in regions:
-                logger.info("Processing region: %s", region)
-                try:
-                    data_hovmoller = Hovmoller(
-                        **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
-                    )
+            anomaly_ref = "t0"
+            reader_kwargs = dataset.get("reader_kwargs") or {}
+
+            logger.info("Processing regions: %s", regions)
+            try:
+                data_hovmoller = Hovmoller(
+                    **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
+                )
+                if not cli.plot_only:
                     data_hovmoller.run(
-                        region=region,
+                        regions=regions,
                         var=var,
                         dim_mean=dim_mean,
-                        anomaly_ref="t0",
+                        anomaly_ref=anomaly_ref,
                         outputdir=cli.outputdir,
-                        reader_kwargs=dataset.get("reader_kwargs") or {},
+                        reader_kwargs=reader_kwargs,
                         rebuild=cli.rebuild,
-                    )
-                except Exception as e:
-                    logger.error("Error processing region %s: %s", region, e)
-                try:
-                    hov_plot = PlotHovmoller(
-                        diagnostic_name=diagnostic_name,
-                        data=data_hovmoller.processed_data_list,
-                        vert_coord=vert_coord,
-                        outputdir=cli.outputdir,
-                        loglevel=cli.loglevel,
+                        save_netcdf=cli.save_netcdf,
                     )
 
-                    save_format = getattr(cli, "save_format", None)
-                    if not save_format:
-                        logger.debug("No plot output requested, skipping plot generation for region %s", region)
-                        continue
-                    logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
+                # Populate from the netcdf files, written just now or by a previous run. Results computed
+                # without saving them are already in memory, and older files must not replace them.
+                if cli.plot_only or cli.save_netcdf:
+                    data_hovmoller.load(
+                        regions=regions, anomaly_ref=anomaly_ref, outputdir=cli.outputdir, reader_kwargs=reader_kwargs
+                    )
+            except Exception as e:
+                logger.error("Error processing regions %s: %s", regions, e)
+            else:
+                if not data_hovmoller.processed_data:
+                    reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                    logger.warning("No Hovmoller results found in %s%s, skipping the plots", cli.outputdir, reason)
+                for region, processed in data_hovmoller.processed_data.items():
+                    try:
+                        hov_plot = PlotHovmoller(
+                            diagnostic_name=diagnostic_name,
+                            data=processed,
+                            vert_coord=vert_coord,
+                            outputdir=cli.outputdir,
+                            loglevel=cli.loglevel,
+                        )
 
-                    hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
-                    hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
-                except Exception as e:
-                    logger.error("Error plotting region %s: %s", region, e)
+                        save_format = getattr(cli, "save_format", None)
+                        if not save_format:
+                            logger.debug("No plot output requested, skipping plot generation for region %s", region)
+                            continue
+                        logger.info("Saving Hovmoller plots for region %s with formats: %s", region, save_format)
+
+                        hov_plot.plot_hovmoller(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                        hov_plot.plot_timeseries(rebuild=cli.rebuild, save_format=save_format, dpi=cli.dpi)
+                    except Exception as e:
+                        logger.error("Error plotting region %s: %s", region, e)
 
     cli.close_dask_cluster()
 

@@ -13,7 +13,6 @@ output:
   rebuild: true
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
-  create_catalog_entry: false
 
 diagnostics:
   ecmean:

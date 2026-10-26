@@ -130,11 +130,11 @@ def test_load_diagnostic_config():
 def test_get_diagnostic_configpath(monkeypatch):
     """Path resolver handles collections/tools/templates and rejects invalid folder names."""
 
-    class _RepoConfigPath:
-        def __init__(self, loglevel=None):
+    class _RepoConfigLocator:
+        def __init__(self, logger=None):
             self.configdir = str(REAL_CONFIG_DIR)
 
-    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _RepoConfigPath)
+    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigLocator", _RepoConfigLocator)
 
     assert get_diagnostic_configpath("timeseries", folder="collections") == str(REAL_CONFIG_DIR / "collections" / "timeseries")
     assert get_diagnostic_configpath("timeseries", folder="tools") == str(REAL_CONFIG_DIR / "tools" / "timeseries")
@@ -142,6 +142,19 @@ def test_get_diagnostic_configpath(monkeypatch):
 
     with pytest.raises(ValueError, match="Invalid folder name"):
         get_diagnostic_configpath("timeseries", folder="invalid")
+
+
+def test_get_diagnostic_configpath_without_catalogs(tmp_path, monkeypatch):
+    """Diagnostic path resolution does not require catalog configuration."""
+    configdir = tmp_path / "config"
+    configdir.mkdir()
+    dump_yaml(
+        outfile=str(configdir / "config-aqua.yaml"),
+        cfg={"machine": "test-machine"},
+    )
+    monkeypatch.setenv("AQUA_CONFIG", str(configdir))
+
+    assert get_diagnostic_configpath("timeseries") == str(configdir / "collections" / "timeseries")
 
 
 def test_load_diagnostic_config_default_filename(monkeypatch):
@@ -345,6 +358,17 @@ def test_minimum_months_enough(mock_reader_class):
     diag = Diagnostic(model="M", exp="E", source="S")
     result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=12)
     assert len(result.time) == 12
+
+
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_enough_1month(mock_reader_class):
+    """No error when available months >= months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(1)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=1)
+    assert len(result.time) == 1
 
 
 def test_minimum_months_required_class_attribute():

@@ -63,8 +63,10 @@ class DiagnosticCLI:
         self.rebuild = None
         self.save_format = None
         self.save_netcdf = None
+        self.plot_only = None
         self.dpi = None
-        self.create_catalog_entry = None  # Default behavior; can be overridden in prepare()
+        # DEPRECATED
+        # self.create_catalog_entry = None  # Default behavior; can be overridden in prepare()
 
     def prepare(self, **overrides):
         """
@@ -136,8 +138,10 @@ class DiagnosticCLI:
         self.rebuild = output_config.get("rebuild", True)
         self.save_format = output_config.get("save_format", SAVE_FORMAT)
         self.save_netcdf = output_config.get("save_netcdf", True)
+        self.plot_only = output_config.get("plot_only", False)
         self.dpi = output_config.get("dpi", 300)
-        self.create_catalog_entry = output_config.get("create_catalog_entry", False)
+        # DEPRECATED
+        # self.create_catalog_entry = output_config.get("create_catalog_entry", False)
 
     def dataset_args(self, dataset):
         """

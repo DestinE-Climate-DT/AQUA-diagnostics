@@ -267,3 +267,27 @@ class TestMainExecutionFlow:
 
         for call in mock_llp_cls.call_args_list:
             assert call.kwargs["mean_type"] == "meridional"
+
+    @pytest.mark.parametrize(
+        "output, runs, saves, loads",
+        [
+            ({}, True, True, True),  # compute, save and plot from the files just written
+            ({"save_netcdf": False}, True, False, False),  # compute and plot from memory only
+            ({"plot_only": True}, False, None, True),  # no evaluation, plot from previous files
+        ],
+    )
+    def test_plot_only_and_save_netcdf(self, build_config, mock_cluster, mock_llp, output, runs, saves, loads):
+        """plot_only skips the evaluation, save_netcdf only decides whether the results are written."""
+        mock_llp_cls, mock_plot_cls = mock_llp
+        mock_llp_instance = mock_llp_cls.return_value
+        config_file = build_config({"lat_lon_profiles": BASE_LLP}, output_overrides=output)
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        # 1 dataset + 1 reference
+        assert mock_llp_instance.run.call_count == (2 if runs else 0)
+        for call in mock_llp_instance.run.call_args_list:
+            assert call.kwargs["save_netcdf"] is saves
+        # Loading unsaved results would replace them with older files on disk
+        assert mock_llp_instance.load.call_count == (2 if loads else 0)
+        assert mock_plot_cls.call_count == 2

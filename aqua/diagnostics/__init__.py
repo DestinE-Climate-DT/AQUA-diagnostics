@@ -8,15 +8,17 @@ from .lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
 from .histogram import Histogram, PlotHistogram
 from .biases import Climatology, PlotClimatology, PlotBias, StatBias
 from .boxplots import Boxplots, PlotBoxplots
-from .ensemble import EnsembleTimeseries, EnsembleLatLon, EnsembleZonal
-from .ensemble import PlotEnsembleTimeseries, PlotEnsembleLatLon, PlotEnsembleZonal
+from .ensemble import EnsembleTimeseries, EnsembleMaps, EnsembleZonal
+from .ensemble import PlotEnsembleTimeseries, PlotEnsembleMaps, PlotEnsembleZonal
 from .ensemble import reader_retrieve_and_merge, merge_from_data_files, extract_realizations
 from .ecmean import PerformanceIndices, GlobalMean
 from .seaice import SeaIce, PlotSeaIce, Plot2DSeaIce
 from .variability_map import VariabilityMap, PlotVariabilityMap
 from .ocean_drift import Hovmoller, PlotHovmoller
 from .ocean_stratification import Stratification, PlotStratification, PlotMLD
-from .ocean_trends import Trends, PlotTrends
+from .ocean_trends import PlotTrends as PlotOceanTrends
+from .ocean_trends import Trends as OceanTrends
+from .trends import Trends, PlotTrends
 
 
 DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections", "definitions"]
@@ -30,14 +32,14 @@ __all__ = ["__version__", "NAO", "ENSO", "MJO",
            "Histogram", "PlotHistogram",
            "Climatology", "PlotClimatology", "PlotBias", "StatBias",
            "reader_retrieve_and_merge", "merge_from_data_files",
-           "EnsembleTimeseries", "EnsembleLatLon", "EnsembleZonal",
-           "PlotEnsembleTimeseries", "PlotEnsembleLatLon", "PlotEnsembleZonal",
+           "EnsembleTimeseries", "EnsembleMaps", "EnsembleZonal",
+           "PlotEnsembleTimeseries", "PlotEnsembleMaps", "PlotEnsembleZonal",
            "PerformanceIndices", "GlobalMean",
            "SeaIce", "PlotSeaIce", "Plot2DSeaIce",
            "VariabilityMap", "PlotVariabilityMap",
            "Boxplots", "PlotBoxplots", "extract_realizations",
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
-           "Trends", "PlotTrends",
+           "Trends", "PlotTrends", "PlotOceanTrends", "OceanTrends",
            "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
 
 def get_install_dirs():

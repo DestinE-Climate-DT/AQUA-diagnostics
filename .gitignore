@@ -36,9 +36,9 @@ AQUA_tests_teleconnections*
 .env
 
 # coverage and vscode
-###.coverage
-###coverage.xml
-###coverage/
+.coverage
+coverage.xml
+coverage/
 .vscode/*
 
 # diagnostic specific

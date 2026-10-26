@@ -12,8 +12,12 @@ xr.set_options(keep_attrs=True)
 
 class EnsembleZonal(BaseMixin):
     """
-    A class to compute ensemble mean and standard deviation of the Zonal averages
-    Make sure that the dataset has correct lev-lat dimensions.
+    Compute mean and standard deviation of zonal average ensembles.
+
+    This class takes an ensemble dataset containing 2D zonal data (level-latitude)
+    and computes the mean and standard deviation across the specified ensemble
+    dimension. Ensure that the dataset has the correct spatial dimensions
+    (e.g., lev and lat) before computing statistics.
     """
 
     def __init__(
@@ -29,27 +33,20 @@ class EnsembleZonal(BaseMixin):
         loglevel="WARNING",
     ):
         """
+        Initialize the EnsembleZonal class.
+
         Args:
-            var (str): Variable name.
-            dataset: xarray Dataset composed of ensembles 2D Zonal data, i.e.,
-                     the individual Dataset (lev-lat) are concatenated along.
-                     a new dimension "ensemble". This ensemble name can be changed.
-            catalog_list (str): This variable defines the catalog list. The default is 'None'.
-                                    If None, the variable is assigned to 'None_catalog'. In case of Multi-catalogs,
-                                    the variable is assigned to 'multi-catalog'.
-            model_list (str): This variable defines the model list. The default is 'None'.
-                                    If None, the variable is assigned to 'None_model'. In case of Multi-Model,
-                                    the variable is assigned to 'multi-model'.
-            exp_list (str): This variable defines the exp list. The default is 'None'.
-                                    If None, the variable is assigned to 'None_exp'. In case of Multi-Exp,
-                                    the variable is assigned to 'multi-exp'.
-            source_list (str): This variable defines the source list. The default is 'None'.
-                                    If None, the variable is assigned to 'None_source'. In case of Multi-Source,
-                                    the variable is assigned to 'multi-source'.
-            ensemble_dimension_name="ensemble" (str): a default name given to the
-                     dimensions along with the individual Datasets were concatenated.
-            outputdir (str): String input for output path.
-            loglevel (str): Log level. Default is "WARNING".
+            var (str, optional): Variable name to compute statistics for. Defaults to None.
+            dataset (xr.Dataset, optional): Dataset of 2D (level-latitude) ensemble members,
+                concatenated along the ensemble dimension. Defaults to None.
+            catalog_list (list[str], optional): List of catalog names. Defaults to None.
+            model_list (list[str], optional): List of model names. Defaults to None.
+            exp_list (list[str], optional): List of experiment names. Defaults to None.
+            source_list (list[str], optional): List of source names. Defaults to None.
+            ensemble_dimension_name (str, optional): Name of the dimension along which individual
+                datasets are concatenated. Defaults to "ensemble".
+            outputdir (str, optional): Output directory path for saving files. Defaults to "./".
+            loglevel (str, optional): Logging level. Defaults to "WARNING".
         """
         self.loglevel = loglevel
         self.logger = log_configure(log_level=self.loglevel, log_name="Ensemble Zonal Averages")
@@ -73,11 +70,16 @@ class EnsembleZonal(BaseMixin):
 
     def run(self):
         """
-        A function to compute the mean and standard devivation of the input dataset
-        It is import to make sure that the dim along which the mean is compute is correct.
-        The default dim="ensemble".
-        """
+        Compute the mean and standard deviation of the input dataset.
 
+        It is important to ensure that the dimension along which the statistics
+        are computed (defined by `ensemble_dimension_name`, default: "ensemble")
+        matches the input data. Once computed, the mean and standard deviation
+        are automatically saved to NetCDF files.
+
+        Raises:
+            NoDataError: If no dataset was provided during initialization.
+        """
         self.logger.info("Compute function in EnsembleZonal")
 
         if self.dataset is not None:
