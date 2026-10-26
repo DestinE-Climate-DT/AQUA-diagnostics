@@ -58,7 +58,6 @@ class Submitter:
             loglevel = "debug"
 
         self.logger = log_configure(log_level=loglevel, log_name="aqua-web")
-        self.script_location = os.path.dirname(os.path.realpath(__file__))
 
         self.config, self.template, self.template_push = self.find_config_files(config, template, template_push)
 
@@ -147,7 +146,7 @@ class Submitter:
         else:
             jobname = definitions["analysis"].get("jobname", "aqua-web")
         # create identifier for each model-exp-source-var tuple
-        full_job_name = jobname + "_" + "_".join([catalog, model, exp, source])
+        full_job_name = jobname + "_" + "_".join([catalog, model, exp, realization, source])
         definitions["job_name"] = full_job_name
 
         definitions["partition"] = definitions["analysis"]["partition"]
@@ -209,8 +208,6 @@ class Submitter:
         yaml = YAML(typ="rt")
         with open(self.config, "r", encoding="utf-8") as file:
             definitions = yaml.load(file)
-        # The push script belongs to diagnostics; aquadir still locates the core container launcher.
-        definitions["push_analysis_script"] = os.path.join(self.script_location, "push_analysis.sh")
 
         username = definitions["username"]
         full_job_name = definitions.get("jobname", "aqua-web.push")
@@ -275,7 +272,8 @@ class Submitter:
         # Find the AQUA config directory
         configurer = ConfigContext()
 
-        search_paths = [configurer.get_config_dir(), ".", self.script_location]
+        script_location = os.path.dirname(os.path.abspath(__file__))
+        search_paths = [configurer.get_config_dir(), ".", script_location]
 
         # If the config file does not exists find it either in the AQUA config dir, the location of the script or here
         if not os.path.isfile(config):
