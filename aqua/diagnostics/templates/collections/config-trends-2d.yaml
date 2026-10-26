@@ -1,7 +1,7 @@
 # Generic 2D trend maps using the existing CI FESOM surface test data.
 # Requires test assets at the locations configured in the CI catalog machine.yaml.
 # Default ./AQUA_tests paths are relative to the working directory.
-# Run cli_trend.py with --config pointing to this file.
+# Run cli_trends.py with --config pointing to this file.
 datasets:
   - catalog: ci
     model: FESOM

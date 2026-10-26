@@ -13,6 +13,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Setup checker: use absolute imports so it runs as a script from `aqua analysis` (#520)
 - Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469, #507)
