@@ -9,7 +9,7 @@ channels:
   - nodefaults
 # please note that some of these dependencies are made explicit on purpose, but are not directly required by conda/mamba
 dependencies:
-  - aqua-core>=1.2.1,<1.3.0
+  - aqua-core>=1.2.2,<1.3.0
   # ecmean depends on esmpy binary, so we need to install it first
   - esmpy<=8.9.1
   - pip
