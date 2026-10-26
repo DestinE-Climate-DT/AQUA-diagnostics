@@ -16,7 +16,7 @@ If you open a pull request to close some issues, please reference the issue it s
 
 If you find a bug in the source code, you can help us by opening an issue in the AQUA-diagnostics repository.
 If you have a solution to it, you can submit a Pull Request with a fix.
-Please use the `bug` label for bug issues and the `fix` label for Pull Requests with a fix.
+Please use the **Bug report** issue template, which sets the `Bug` issue type, and the `fix :hammer_and_wrench:` label for Pull Requests with a fix.
 
 When describing the bug, please include as much information as possible. This includes:
 - short description of the bug
@@ -120,7 +120,7 @@ opens an issue labelled `ci-failure:<suite>` 🤡 listing the broken tests, or c
 ### Suggesting enhancements
 
 Enhancements of existing features or new features may be suggested by opening an issue in the AQUA-diagnostics repository.
-Please use the `improvements` label for existing features.
+Please use the **Feature request** issue template, which sets the `Feature` issue type.
 
 ### Writing tests
 
