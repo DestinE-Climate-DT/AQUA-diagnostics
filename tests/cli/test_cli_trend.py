@@ -10,9 +10,9 @@ from aqua.core.util import load_yaml
 from aqua.diagnostics.base import DiagnosticCLI
 from aqua.diagnostics.ocean_trends.cli_ocean_trends import main as ocean_main
 from aqua.diagnostics.trends import Trends
-from aqua.diagnostics.trends.cli_trend import main
+from aqua.diagnostics.trends.cli_trends import main
 
-CLI_MODULE = "aqua.diagnostics.trends.cli_trend"
+CLI_MODULE = "aqua.diagnostics.trends.cli_trends"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BASE_CONFIG = {"run": True, "var": ["tas"], "regions": [None, "tropics"], "plot": True}
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
