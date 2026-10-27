@@ -10,23 +10,23 @@ datasets:
     enddate: null
 
 references:
-  - catalog: '{{ references.atmosphere.catalog }}'
-    model: '{{ references.atmosphere.model }}'
-    exp: '{{ references.atmosphere.exp }}'
-    source: '{{ references.atmosphere.source }}'
+  - catalog: '{{ references.atmosphere3d_plev.catalog }}'
+    model: '{{ references.atmosphere3d_plev.model }}'
+    exp: '{{ references.atmosphere3d_plev.exp }}'
+    source: '{{ references.atmosphere3d_plev.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   biases:

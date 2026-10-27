@@ -6,47 +6,79 @@
 #
 # Keys and blocks:
 # regrid: target grid of the reference datasets (model datasets are regridded through the CLI).
-#         Not used by the ERA5 references of teleconnections and of the radiation_surface boxplots,
-#         which are not regridded.
-# references: reference datasets used by the templates, one slot per role
-#             (catalog, model, exp, source), override single keys per kind
-# period: main date range for all analyses
-# radiation: date range for radiation analyses
-# timeseries: date range for timeseries analyses
+# loglevel: log level of the diagnostics (setup.loglevel of the templates).
+# output: figure settings shared by all the templates (save_format, dpi, rebuild).
+# sources: every observational dataset available to the templates (catalog, model, exp, source),
+#          each with a YAML anchor. Not read by the templates: references point to these anchors.
+# references: one slot per template, named <collection>_<quantity> after the template file
+#             collections/jinja/<collection>/config-<collection>-<quantity>.j2.
+#             A kind swaps the dataset of a slot by pointing it to another source.
+# period: date ranges of the references
+#   default: main date range for all analyses
+#   radiation: date range for radiation analyses
+#   timeseries: date range for timeseries analyses
 #
-# Keys:
+# Date keys:
 # startdate, enddate: values for the date range for references to be used in the analysis
 # std_startdate, std_enddate: standard deviation for references to be used in the analysis
 
 default:
   regrid: r100
+  loglevel: WARNING
+  output:
+    save_format: [png, pdf, svg]
+    dpi: 300
+    rebuild: true
+  sources:
+    era5: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
+    berkeley_earth: &berkeley_earth {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}
+    esacci_sst: &esacci_sst {catalog: obs, model: ESA-CCI-L4, exp: v3.0.1, source: r100-monthly}
+    en4: &en4 {catalog: obs, model: EN4, exp: v4.2.2, source: monthly-netcdf}
+    ceres_toa: &ceres_toa {catalog: obs, model: CERES, exp: ebaf-toa421, source: monthly}
+    ceres_sfc: &ceres_sfc {catalog: obs, model: CERES, exp: ebaf-sfc421, source: monthly}
+    osisaf_ssmis_nh: &osisaf_ssmis_nh {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: nh-monthly}
+    osisaf_ssmis_sh: &osisaf_ssmis_sh {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: sh-monthly}
+    osisaf_amsr_nh: &osisaf_amsr_nh {catalog: obs, model: OSI-SAF, exp: osi-saf-amsr, source: nh-monthly}
+    osisaf_amsr_sh: &osisaf_amsr_sh {catalog: obs, model: OSI-SAF, exp: osi-saf-amsr, source: sh-monthly}
+    piomas: &piomas {catalog: obs, model: PSC, exp: PIOMAS, source: monthly}
+    giomas: &giomas {catalog: obs, model: PSC, exp: GIOMAS, source: monthly}
+    mswep: &mswep {catalog: obs, model: MSWEP, exp: v2.8, source: monthly}
   references:
-    atmosphere: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
-    temperature: {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}
-    sst: {catalog: obs, model: ESA-CCI-L4, exp: v3.0.1, source: r100-monthly}
-    ocean3d: {catalog: obs, model: EN4, exp: v4.2.2, source: monthly-netcdf}
-    radiation_toa: {catalog: obs, model: CERES, exp: ebaf-toa421, source: monthly}
-    radiation_surface: {catalog: obs, model: CERES, exp: ebaf-sfc421, source: monthly}
-    siconc_nh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: nh-monthly}
-    siconc_sh: {catalog: obs, model: OSI-SAF, exp: osi-saf-ssmis, source: sh-monthly}
-    sithick_nh: {catalog: obs, model: PSC, exp: PIOMAS, source: monthly}
-    sithick_sh: {catalog: obs, model: PSC, exp: GIOMAS, source: monthly}
-    precipitation: {catalog: obs, model: MSWEP, exp: v2.8, source: monthly}
+    atmosphere2d_surface: *era5                   # surface fields: biases, seasonal cycles, timeseries
+    atmosphere2d_temperature: *berkeley_earth     # 2m temperature
+    atmosphere3d_plev: *era5                      # pressure level biases
+    ocean2d_sst: *esacci_sst                      # sea surface temperature
+    ocean3d_stratification: *en4                  # stratification and mixed layer
+    radiation_toa_radiative: *ceres_toa           # TOA radiative fluxes
+    radiation_toa_boxplots: *era5                 # first boxplot reference, the second is radiation_toa_radiative
+    radiation_surface_radiative: *ceres_sfc       # surface radiative fluxes
+    radiation_surface_heat: *era5                 # surface heat fluxes
+    radiation_surface_boxplots: *era5             # first boxplot reference, the second is radiation_surface_radiative
+    seaice_concentration_nh: *osisaf_ssmis_nh     # sea ice extent and fraction
+    seaice_concentration_sh: *osisaf_ssmis_sh
+    seaice_thickness_nh: *piomas                  # sea ice volume and thickness
+    seaice_thickness_sh: *giomas
+    water_cycle_precipitation: *mswep             # precipitation
+    teleconnections_enso: *era5                   # ENSO index, regressions and correlations
+    teleconnections_nao: *era5                    # NAO index, regressions and correlations
+    climate_metrics_gregory_t2m: *berkeley_earth  # gregory plot, 2m temperature reference
+    climate_metrics_gregory_toa: *ceres_toa       # gregory plot, net TOA radiation reference
   period:
-    startdate: "1990-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "1990-01-01"
-    std_enddate: "2014-12-31"
-  radiation:
-    startdate: "2001-01-01"
-    enddate: "2024-12-31"
-    std_startdate: "2001-01-01"
-    std_enddate: "2024-12-31"
-  timeseries:
-    startdate: "1990-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "1990-01-01"
-    std_enddate: "2014-12-31"
+    default:
+      startdate: "1990-01-01"
+      enddate: "2014-12-31"
+      std_startdate: "1990-01-01"
+      std_enddate: "2014-12-31"
+    radiation:
+      startdate: "2001-01-01"
+      enddate: "2024-12-31"
+      std_startdate: "2001-01-01"
+      std_enddate: "2024-12-31"
+    timeseries:
+      startdate: "1990-01-01"
+      enddate: "2014-12-31"
+      std_startdate: "1990-01-01"
+      std_enddate: "2014-12-31"
 
 # Historical runs with CMIP6 forcing: same as default
 climatedt-hist-cmip6: {}
@@ -54,14 +86,15 @@ climatedt-hist-cmip6: {}
 # Historical runs with CMIP7 forcing: references extended to 2025
 climatedt-hist-cmip7:
   period:
-    enddate: "2025-12-31"
-    std_enddate: "2025-12-31"
-  radiation:
-    enddate: "2025-12-31"
-    std_enddate: "2025-12-31"
-  timeseries:
-    enddate: "2025-12-31"
-    std_enddate: "2025-12-31"
+    default:
+      enddate: "2025-12-31"
+      std_enddate: "2025-12-31"
+    radiation:
+      enddate: "2025-12-31"
+      std_enddate: "2025-12-31"
+    timeseries:
+      enddate: "2025-12-31"
+      std_enddate: "2025-12-31"
 
 # HighResMIP historical runs start in 1950: references cover the whole run.
 # Satellite-era datasets (CERES, ESA-CCI, MSWEP, OSI-SAF) are replaced by ERA5 (1940-2025).
@@ -69,85 +102,75 @@ climatedt-hist-cmip7:
 # and only cover the available years.
 highresmip-hist-cmip6:
   references: &highresmip-references
-    radiation_toa: *era5
-    radiation_surface: *era5
-    sst: *era5
-    precipitation: *era5
-    siconc_nh: *era5
-    siconc_sh: *era5
+    ocean2d_sst: *era5
+    radiation_toa_radiative: *era5
+    radiation_surface_radiative: *era5
+    seaice_concentration_nh: *era5
+    seaice_concentration_sh: *era5
+    water_cycle_precipitation: *era5
+    climate_metrics_gregory_toa: *era5
   period:
-    startdate: "1950-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "1950-01-01"
-    std_enddate: "2014-12-31"
-  radiation:
-    startdate: "1950-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "1950-01-01"
-    std_enddate: "2014-12-31"
-  timeseries:
-    startdate: "1950-01-01"
-    enddate: "2014-12-31"
-    std_startdate: "1950-01-01"
-    std_enddate: "2014-12-31"
+    default: &highresmip-cmip6-dates
+      startdate: "1950-01-01"
+      enddate: "2014-12-31"
+      std_startdate: "1950-01-01"
+      std_enddate: "2014-12-31"
+    radiation: *highresmip-cmip6-dates
+    timeseries: *highresmip-cmip6-dates
 
 highresmip-hist-cmip7:
   references: *highresmip-references
   period:
-    startdate: "1950-01-01"
-    enddate: "2025-12-31"
-    std_startdate: "1950-01-01"
-    std_enddate: "2025-12-31"
-  radiation:
-    startdate: "1950-01-01"
-    enddate: "2025-12-31"
-    std_startdate: "1950-01-01"
-    std_enddate: "2025-12-31"
-  timeseries:
-    startdate: "1950-01-01"
-    enddate: "2025-12-31"
-    std_startdate: "1950-01-01"
-    std_enddate: "2025-12-31"
+    default: &highresmip-cmip7-dates
+      startdate: "1950-01-01"
+      enddate: "2025-12-31"
+      std_startdate: "1950-01-01"
+      std_enddate: "2025-12-31"
+    radiation: *highresmip-cmip7-dates
+    timeseries: *highresmip-cmip7-dates
 
 # Projections with CMIP6 forcing: maps compared to the historical period,
 # timeseries exploit all data available (25 years up to last obs available year)
 climatedt-projections-cmip6:
-  timeseries:
-    startdate: "2000-01-01"
-    enddate: "2024-12-31"
-    std_startdate: "2000-01-01"
-    std_enddate: "2024-12-31"
+  period:
+    timeseries:
+      startdate: "2000-01-01"
+      enddate: "2024-12-31"
+      std_startdate: "2000-01-01"
+      std_enddate: "2024-12-31"
 
 # Projections with CMIP7 forcing: as CMIP6 projections, with references extended to 2025
 climatedt-projections-cmip7:
   period:
-    enddate: "2025-12-31"
-    std_enddate: "2025-12-31"
-  radiation:
-    enddate: "2025-12-31"
-    std_enddate: "2025-12-31"
-  timeseries:
-    startdate: "2000-01-01"
-    enddate: "2025-12-31"
-    std_startdate: "2000-01-01"
-    std_enddate: "2025-12-31"
+    default:
+      enddate: "2025-12-31"
+      std_enddate: "2025-12-31"
+    radiation:
+      enddate: "2025-12-31"
+      std_enddate: "2025-12-31"
+    timeseries:
+      startdate: "2000-01-01"
+      enddate: "2025-12-31"
+      std_startdate: "2000-01-01"
+      std_enddate: "2025-12-31"
 
 # Storylines: recent period, OSI-SAF AMSR (2002-2025) sea ice concentration
 storyline:
   references:
-    siconc_nh: {exp: osi-saf-amsr}
-    siconc_sh: {exp: osi-saf-amsr}
+    seaice_concentration_nh: *osisaf_amsr_nh
+    seaice_concentration_sh: *osisaf_amsr_sh
   period:
-    startdate: "2017-01-01"
-    enddate: "2025-12-31"
-    std_startdate: "2000-01-01"
-    std_enddate: "2025-12-31"
-  radiation:
-    startdate: "2017-01-01"
-    enddate: "2025-12-31"
-    std_enddate: "2025-12-31"
-  timeseries:
-    startdate: "2017-01-01"
-    enddate: "2025-12-31"
-    std_startdate: "2000-01-01"
-    std_enddate: "2025-12-31"
+    default:
+      startdate: "2017-01-01"
+      enddate: "2025-12-31"
+      std_startdate: "2000-01-01"
+      std_enddate: "2025-12-31"
+    radiation:
+      startdate: "2017-01-01"
+      enddate: "2025-12-31"
+      std_enddate: "2025-12-31"
+    timeseries:
+      startdate: "2017-01-01"
+      enddate: "2025-12-31"
+      std_startdate: "2000-01-01"
+      std_enddate: "2025-12-31"

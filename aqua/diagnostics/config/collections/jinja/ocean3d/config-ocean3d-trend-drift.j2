@@ -14,11 +14,11 @@ datasets:
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
   plot_only: false  # if true, plots are produced from the netcdf files already in outputdir
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   ocean_drift:

@@ -16,23 +16,23 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.sst.catalog }}'
-    model: '{{ references.sst.model }}'
-    exp: '{{ references.sst.exp }}'
-    source: '{{ references.sst.source }}'
+  - catalog: '{{ references.ocean2d_sst.catalog }}'
+    model: '{{ references.ocean2d_sst.model }}'
+    exp: '{{ references.ocean2d_sst.exp }}'
+    source: '{{ references.ocean2d_sst.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   biases:
@@ -67,8 +67,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ timeseries.std_startdate }}'
-        std_enddate: '{{ timeseries.std_enddate }}'
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'
       tos:
         regions: ['nh', 'sh']
 
@@ -79,8 +79,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
       tos:
         regions: ['nh', 'sh']
 
@@ -95,8 +95,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
     variables:
       - name: 'tos'
         regions: [null]  #

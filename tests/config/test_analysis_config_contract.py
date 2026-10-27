@@ -190,7 +190,7 @@ def test_sea_ice_concentration_reference_per_kind():
     """Storylines use OSI-SAF AMSR, HighResMIP ERA5 (back to 1950), the other kinds OSI-SAF SSMIS."""
     expected_exp = {"storyline": "osi-saf-amsr", "highresmip-hist-cmip6": "era5", "highresmip-hist-cmip7": "era5"}
     for kind_name, resolved in _resolved_experiment_kinds().items():
-        for slot in ("siconc_nh", "siconc_sh"):
+        for slot in ("seaice_concentration_nh", "seaice_concentration_sh"):
             assert resolved["references"][slot]["exp"] == expected_exp.get(kind_name, "osi-saf-ssmis"), f"{kind_name}.{slot}"
 
 
@@ -199,10 +199,36 @@ def test_highresmip_references_cover_1950(kind_name):
     """HighResMIP kinds start in 1950 and replace the satellite-era references with ERA5."""
     resolved = _resolved_experiment_kinds()[kind_name]
     references = resolved["references"]
-    for slot in ("radiation_toa", "radiation_surface", "sst", "precipitation", "siconc_nh", "siconc_sh"):
-        assert references[slot] == references["atmosphere"], slot
-    for block in ("period", "radiation", "timeseries"):
-        assert resolved[block]["startdate"] == resolved[block]["std_startdate"] == "1950-01-01", block
+    satellite_slots = (
+        "ocean2d_sst",
+        "radiation_toa_radiative",
+        "radiation_surface_radiative",
+        "seaice_concentration_nh",
+        "seaice_concentration_sh",
+        "water_cycle_precipitation",
+        "climate_metrics_gregory_toa",
+    )
+    for slot in satellite_slots:
+        assert references[slot] == resolved["sources"]["era5"], slot
+    for block in ("default", "radiation", "timeseries"):
+        dates = resolved["period"][block]
+        assert dates["startdate"] == dates["std_startdate"] == "1950-01-01", block
+
+
+def test_references_point_to_sources():
+    """Every reference slot of every kind must be one of the datasets listed in ``sources``."""
+    for kind_name, resolved in _resolved_experiment_kinds().items():
+        sources = list(resolved["sources"].values())
+        for slot, dataset in resolved["references"].items():
+            assert dataset in sources, f"{kind_name}.{slot}"
+
+
+def test_reference_slots_used_by_templates():
+    """Every reference slot must be read by at least one template (no stale slots)."""
+    template_text = "".join(template.read_text() for template in JINJA_COLLECTIONS_DIR.glob("**/*.j2"))
+    default = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]
+    unused = [slot for slot in default["references"] if f"references.{slot}." not in template_text]
+    assert not unused, f"Reference slots not used by any template: {unused}."
 
 
 @pytest.mark.parametrize("collection", ["radiation_toa", "radiation_surface"])

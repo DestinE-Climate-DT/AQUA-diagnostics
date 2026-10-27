@@ -10,23 +10,23 @@ datasets:
     enddate: null
 
 references:
-  - catalog: '{{ references.atmosphere.catalog }}'
-    model: '{{ references.atmosphere.model }}'
-    exp: '{{ references.atmosphere.exp }}'
-    source: '{{ references.atmosphere.source }}'
+  - catalog: '{{ references.atmosphere2d_surface.catalog }}'
+    model: '{{ references.atmosphere2d_surface.model }}'
+    exp: '{{ references.atmosphere2d_surface.exp }}'
+    source: '{{ references.atmosphere2d_surface.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   biases:
@@ -65,8 +65,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
 
   timeseries:
     run: true
@@ -79,5 +79,5 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ timeseries.std_startdate }}'
-        std_enddate: '{{ timeseries.std_enddate }}'
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'

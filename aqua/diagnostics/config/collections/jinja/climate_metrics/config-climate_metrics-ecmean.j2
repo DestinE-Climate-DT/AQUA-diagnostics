@@ -10,9 +10,9 @@ datasets:
 
 output:
   outputdir: 'output'
-  rebuild: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  rebuild: {{ output.rebuild }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   ecmean:

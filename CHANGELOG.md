@@ -9,11 +9,11 @@ Unreleased in the current development version (target v0.26.0):
 - CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
 - Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
-- Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed); reference datasets selected per kind through `references` slots named by role (storyline uses OSI-SAF AMSR; HighResMIP kinds start in 1950 with ERA5 replacing satellite-era references); date blocks renamed to `period`, `radiation`, `timeseries`; single `regrid` key for the reference datasets; jinja collection templates renamed by physical quantity instead of reference dataset (requires aqua-core with DestinE-Climate-DT/AQUA#3266) (#519)
 
 Main changes:
 
 Complete list:
+- Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed); observational datasets listed once in `sources` and selected per kind through `references` slots named after the template (`<collection>_<quantity>`) (storyline uses OSI-SAF AMSR; HighResMIP kinds start in 1950 with ERA5 replacing satellite-era references); date blocks nested as `period.default`, `period.radiation`, `period.timeseries`; single `regrid`, `loglevel` and `output` (save_format, dpi, rebuild) keys shared by all templates; teleconnections and surface radiation boxplots ERA5 references regridded to r100; jinja collection templates renamed by physical quantity instead of reference dataset (requires aqua-core with DestinE-Climate-DT/AQUA#3266) (#519)
 - Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469, #507)

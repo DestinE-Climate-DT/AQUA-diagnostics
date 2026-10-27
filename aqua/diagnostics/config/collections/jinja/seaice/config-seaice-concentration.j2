@@ -20,37 +20,37 @@ datasets:
 references:
   # ---- Extent in NH ----
   - &ref_osi_nh
-    catalog: '{{ references.siconc_nh.catalog }}'  # mandatory
-    model: '{{ references.siconc_nh.model }}'  # mandatory
-    exp: '{{ references.siconc_nh.exp }}'  # mandatory
-    source: '{{ references.siconc_nh.source }}'  # mandatory
+    catalog: '{{ references.seaice_concentration_nh.catalog }}'  # mandatory
+    model: '{{ references.seaice_concentration_nh.model }}'  # mandatory
+    exp: '{{ references.seaice_concentration_nh.exp }}'  # mandatory
+    source: '{{ references.seaice_concentration_nh.source }}'  # mandatory
     regrid: '{{ regrid }}'
     domain: "nh"
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
   # ---- Extent in SH ----
   - &ref_osi_sh
-    catalog: '{{ references.siconc_sh.catalog }}'  # mandatory
-    model: '{{ references.siconc_sh.model }}'  # mandatory
-    exp: '{{ references.siconc_sh.exp }}'  # mandatory
-    source: '{{ references.siconc_sh.source }}'  # mandatory
+    catalog: '{{ references.seaice_concentration_sh.catalog }}'  # mandatory
+    model: '{{ references.seaice_concentration_sh.model }}'  # mandatory
+    exp: '{{ references.seaice_concentration_sh.exp }}'  # mandatory
+    source: '{{ references.seaice_concentration_sh.source }}'  # mandatory
     regrid: '{{ regrid }}'
     domain: "sh"
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 # =======  Output Configuration  =======
 output:
   outputdir: "./" # mandatory
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true # mandatory
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 # =======  Diagnostics Configuration  =======
 diagnostics:
@@ -74,14 +74,14 @@ diagnostics:
     # -- OSI-SAF for "extent" in NH --
     - <<: *ref_osi_nh
       use_for_method: "extent"
-      startdate: '{{ timeseries.startdate }}'
-      enddate: '{{ timeseries.enddate }}'
+      startdate: '{{ period.timeseries.startdate }}'
+      enddate: '{{ period.timeseries.enddate }}'
 
     # -- OSI-SAF for "extent" in SH --
     - <<: *ref_osi_sh
       use_for_method: "extent"
-      startdate: '{{ timeseries.startdate }}'
-      enddate: '{{ timeseries.enddate }}'
+      startdate: '{{ period.timeseries.startdate }}'
+      enddate: '{{ period.timeseries.enddate }}'
 
   # =======  Config for seasonal cycle Sea Ice  =======
   # ===================================================

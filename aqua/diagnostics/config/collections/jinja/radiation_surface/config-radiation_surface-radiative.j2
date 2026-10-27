@@ -19,20 +19,20 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.radiation_surface.catalog }}'
-    model: '{{ references.radiation_surface.model }}'
-    exp: '{{ references.radiation_surface.exp }}'
-    source: '{{ references.radiation_surface.source }}'
+  - catalog: '{{ references.radiation_surface_radiative.catalog }}'
+    model: '{{ references.radiation_surface_radiative.model }}'
+    exp: '{{ references.radiation_surface_radiative.exp }}'
+    source: '{{ references.radiation_surface_radiative.source }}'
     regrid: '{{ regrid }}'
     reader_kwargs: null
-    startdate: '{{ radiation.startdate }}'
-    enddate: '{{ radiation.enddate }}'
+    startdate: '{{ period.radiation.startdate }}'
+    enddate: '{{ period.radiation.enddate }}'
 
 output:
   outputdir: "./"
-  rebuild: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  rebuild: {{ output.rebuild }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   timeseries:
@@ -46,8 +46,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ radiation.std_startdate }}'
-        std_enddate: '{{ radiation.std_enddate }}'
+        std_startdate: '{{ period.radiation.std_startdate }}'
+        std_enddate: '{{ period.radiation.std_enddate }}'
 
   biases:
     run: true

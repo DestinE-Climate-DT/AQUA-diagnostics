@@ -20,9 +20,9 @@ datasets:
 
 output:
   outputdir: "./"
-  rebuild: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  rebuild: {{ output.rebuild }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   gregory:
@@ -33,16 +33,16 @@ diagnostics:
     monthly: true
     annual: true
     std: true
-    std_startdate: '{{ radiation.std_startdate }}'
-    std_enddate: '{{ radiation.std_enddate }}'
+    std_startdate: '{{ period.radiation.std_startdate }}'
+    std_enddate: '{{ period.radiation.std_enddate }}'
     # Gregory needs 2 datasets and do not care about the references block above
     t2m_ref:
-      catalog: '{{ references.temperature.catalog }}'
-      model: '{{ references.temperature.model }}'
-      exp: '{{ references.temperature.exp }}'
-      source: '{{ references.temperature.source }}'
+      catalog: '{{ references.climate_metrics_gregory_t2m.catalog }}'
+      model: '{{ references.climate_metrics_gregory_t2m.model }}'
+      exp: '{{ references.climate_metrics_gregory_t2m.exp }}'
+      source: '{{ references.climate_metrics_gregory_t2m.source }}'
     net_toa_ref:
-      catalog: '{{ references.radiation_toa.catalog }}'
-      model: '{{ references.radiation_toa.model }}'
-      exp: '{{ references.radiation_toa.exp }}'
-      source: '{{ references.radiation_toa.source }}'
+      catalog: '{{ references.climate_metrics_gregory_toa.catalog }}'
+      model: '{{ references.climate_metrics_gregory_toa.model }}'
+      exp: '{{ references.climate_metrics_gregory_toa.exp }}'
+      source: '{{ references.climate_metrics_gregory_toa.source }}'

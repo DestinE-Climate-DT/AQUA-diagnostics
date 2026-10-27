@@ -16,23 +16,23 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.temperature.catalog }}'
-    model: '{{ references.temperature.model }}'
-    exp: '{{ references.temperature.exp }}'
-    source: '{{ references.temperature.source }}'
+  - catalog: '{{ references.atmosphere2d_temperature.catalog }}'
+    model: '{{ references.atmosphere2d_temperature.model }}'
+    exp: '{{ references.atmosphere2d_temperature.exp }}'
+    source: '{{ references.atmosphere2d_temperature.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   biases:
@@ -68,8 +68,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ timeseries.std_startdate }}'
-        std_enddate: '{{ timeseries.std_enddate }}'
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'
       2t:
         regions: ['nh', 'sh', 'europe']
 
@@ -80,8 +80,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
       2t:
         regions: ['nh', 'sh', 'europe']
 
@@ -96,8 +96,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
     variables:
       - name: '2t'
         regions: [null, 'tropics']  # global and tropics

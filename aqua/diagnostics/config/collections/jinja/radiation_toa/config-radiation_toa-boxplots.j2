@@ -19,30 +19,30 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.atmosphere.catalog }}'
-    model: '{{ references.atmosphere.model }}'
-    exp: '{{ references.atmosphere.exp }}'
+  - catalog: '{{ references.radiation_toa_boxplots.catalog }}'
+    model: '{{ references.radiation_toa_boxplots.model }}'
+    exp: '{{ references.radiation_toa_boxplots.exp }}'
     regrid: '{{ regrid }}'
-    source: '{{ references.atmosphere.source }}'
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    source: '{{ references.radiation_toa_boxplots.source }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
   # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
-{% if references.radiation_toa != references.atmosphere %}
-  - catalog: '{{ references.radiation_toa.catalog }}'
-    model: '{{ references.radiation_toa.model }}'
-    exp: '{{ references.radiation_toa.exp }}'
-    source: '{{ references.radiation_toa.source }}'
+{% if references.radiation_toa_radiative != references.radiation_toa_boxplots %}
+  - catalog: '{{ references.radiation_toa_radiative.catalog }}'
+    model: '{{ references.radiation_toa_radiative.model }}'
+    exp: '{{ references.radiation_toa_radiative.exp }}'
+    source: '{{ references.radiation_toa_radiative.source }}'
     regrid: '{{ regrid }}'
     reader_kwargs: null
-    startdate: '{{ radiation.startdate }}'
-    enddate: '{{ radiation.enddate }}'
+    startdate: '{{ period.radiation.startdate }}'
+    enddate: '{{ period.radiation.enddate }}'
 {% endif %}
 
 output:
   outputdir: "./"
-  rebuild: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  rebuild: {{ output.rebuild }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   boxplots:

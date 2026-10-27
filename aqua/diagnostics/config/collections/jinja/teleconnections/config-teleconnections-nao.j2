@@ -16,18 +16,18 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.atmosphere.catalog }}'
-    model: '{{ references.atmosphere.model }}'
-    exp: '{{ references.atmosphere.exp }}'
-    source: '{{ references.atmosphere.source }}'
-    regrid: null
+  - catalog: '{{ references.teleconnections_nao.catalog }}'
+    model: '{{ references.teleconnections_nao.model }}'
+    exp: '{{ references.teleconnections_nao.exp }}'
+    source: '{{ references.teleconnections_nao.source }}'
+    regrid: '{{ regrid }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   teleconnections:

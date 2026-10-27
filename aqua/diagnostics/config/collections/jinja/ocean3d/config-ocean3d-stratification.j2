@@ -13,22 +13,22 @@ datasets:
     # enddate: 1990-12
 
 references:
-  - catalog: '{{ references.ocean3d.catalog }}'
-    model: '{{ references.ocean3d.model }}'
-    exp: '{{ references.ocean3d.exp }}'
-    source: '{{ references.ocean3d.source }}'
+  - catalog: '{{ references.ocean3d_stratification.catalog }}'
+    model: '{{ references.ocean3d_stratification.model }}'
+    exp: '{{ references.ocean3d_stratification.exp }}'
+    source: '{{ references.ocean3d_stratification.source }}'
     regrid: '{{ regrid }}'  # EN4 is on 1x1 grid different from r100
     reader_kwargs: {chunks: {"time": 1, "depth": 42}}  # it can be a dictionary with reader kwargs
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
   plot_only: false  # if true, plots are produced from the netcdf files already in outputdir
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   ocean_stratification:

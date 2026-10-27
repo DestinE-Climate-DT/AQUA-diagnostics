@@ -16,23 +16,23 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.precipitation.catalog }}'
-    model: '{{ references.precipitation.model }}'
-    exp: '{{ references.precipitation.exp }}'
-    source: '{{ references.precipitation.source }}'
+  - catalog: '{{ references.water_cycle_precipitation.catalog }}'
+    model: '{{ references.water_cycle_precipitation.model }}'
+    exp: '{{ references.water_cycle_precipitation.exp }}'
+    source: '{{ references.water_cycle_precipitation.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   biases:
@@ -69,8 +69,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ timeseries.std_startdate }}'
-        std_enddate: '{{ timeseries.std_enddate }}'
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'
       tprate:
         regions: ['nh', 'sh', 'europe']
 
@@ -81,8 +81,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
       tprate:
         regions: ['nh', 'sh', 'europe']
 
@@ -96,8 +96,8 @@ diagnostics:
     ylogscale: true       # already default
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
       tprate:
         units: 'mm/day'
         regions: [null, 'tropics']  # global and tropics; MUST be a list
@@ -113,8 +113,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ period.std_startdate }}'
-        std_enddate: '{{ period.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
     variables:
       - name: 'tprate'
         units: 'mm/day'

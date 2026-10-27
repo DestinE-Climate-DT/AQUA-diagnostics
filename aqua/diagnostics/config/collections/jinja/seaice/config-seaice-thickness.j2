@@ -20,36 +20,36 @@ datasets:
 references:
   # ---- Volume in NH ----
   - &ref_psc_nh
-    catalog: '{{ references.sithick_nh.catalog }}'
-    model: '{{ references.sithick_nh.model }}'
-    exp: '{{ references.sithick_nh.exp }}'
-    source: '{{ references.sithick_nh.source }}'
+    catalog: '{{ references.seaice_thickness_nh.catalog }}'
+    model: '{{ references.seaice_thickness_nh.model }}'
+    exp: '{{ references.seaice_thickness_nh.exp }}'
+    source: '{{ references.seaice_thickness_nh.source }}'
     regrid: '{{ regrid }}'
     domain: "nh"
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
   # ---- Volume in SH ----
   - &ref_psc_sh
-    catalog: '{{ references.sithick_sh.catalog }}'
-    model: '{{ references.sithick_sh.model }}'
-    exp: '{{ references.sithick_sh.exp }}'
-    source: '{{ references.sithick_sh.source }}'
+    catalog: '{{ references.seaice_thickness_sh.catalog }}'
+    model: '{{ references.seaice_thickness_sh.model }}'
+    exp: '{{ references.seaice_thickness_sh.exp }}'
+    source: '{{ references.seaice_thickness_sh.source }}'
     regrid: '{{ regrid }}'
     domain: "sh"
-    startdate: '{{ period.startdate }}'
-    enddate: '{{ period.enddate }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 # =======  Output Configuration  =======
 output:
   outputdir: "./" # mandatory
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true # mandatory
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 # =======  Diagnostics Configuration  =======
 diagnostics:
@@ -73,14 +73,14 @@ diagnostics:
     # -- PSC for "volume" in NH --
     - <<: *ref_psc_nh
       use_for_method: "volume"
-      startdate: '{{ timeseries.startdate }}'
-      enddate: '{{ timeseries.enddate }}'
+      startdate: '{{ period.timeseries.startdate }}'
+      enddate: '{{ period.timeseries.enddate }}'
 
     # -- PSC for "volume" in SH --
     - <<: *ref_psc_sh
       use_for_method: "volume"
-      startdate: '{{ timeseries.startdate }}'
-      enddate: '{{ timeseries.enddate }}'
+      startdate: '{{ period.timeseries.startdate }}'
+      enddate: '{{ period.timeseries.enddate }}'
 
   # =======  Config for seasonal cycle Sea Ice  =======
   # ===================================================
