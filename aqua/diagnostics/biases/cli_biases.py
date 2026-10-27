@@ -5,7 +5,7 @@ import sys
 
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import to_list
-from aqua.diagnostics import Climatology, PlotBias
+from aqua.diagnostics import Climatology, PlotBias, PlotClimatology
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
 
 TOOLNAME = "Biases"
@@ -20,6 +20,13 @@ def parse_arguments(args):
     """
     parser = argparse.ArgumentParser(description=f"{TOOLNAME} CLI")
     parser = template_parse_arguments(parser)
+
+    # Add extra arguments
+    parser.add_argument(
+        "--climatology",
+        action="store_true",
+        help="compute and plot only the dataset climatology, without reference (default if no references are configured)",
+    )
     return parser.parse_args(args)
 
 
@@ -49,15 +56,17 @@ def main(argv=None):
             cli.logger.warning(
                 "Only the first entry in 'datasets' will be used.\nMultiple datasets are not supported by this diagnostic."
             )
-        if len(cli.config_dict["references"]) > 1:
+        # Climatology-only mode if requested or if no reference is available
+        climatology_only = args.climatology or not cli.config_dict.get("references")
+        if climatology_only:
+            cli.logger.info("Climatology-only mode: no reference will be used.")
+        elif len(cli.config_dict["references"]) > 1:
             cli.logger.warning(
                 "Only the first entry in 'references' will be used.\nMultiple references are not supported by this diagnostic."
             )
         diagnostic_name = tool_dict.get("diagnostic_name", TOOLNAME_KEY)
         dataset = cli.config_dict["datasets"][0]
-        reference = cli.config_dict["references"][0]
         dataset_args = cli.dataset_args(dataset)
-        reference_args = cli.reference_args(reference)
 
         variables = tool_dict.get("variables", [])
         formulae = tool_dict.get("formulae", [])
@@ -71,9 +80,19 @@ def main(argv=None):
         biases_dataset = Climatology(
             **dataset_args, diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
         )
-        biases_reference = Climatology(
-            **reference_args, diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
-        )
+        if climatology_only:
+            plot_clim = PlotClimatology(
+                diagnostic=diagnostic_name,
+                save_format=cli.save_format,
+                dpi=cli.dpi,
+                outputdir=cli.outputdir,
+                loglevel=cli.loglevel,
+            )
+        else:
+            reference = cli.config_dict["references"][0]
+            biases_reference = Climatology(
+                **cli.reference_args(reference), diagnostic=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
+            )
 
         all_vars = [(v, False) for v in variables] + [(f, True) for f in formulae]
 
@@ -100,14 +119,15 @@ def main(argv=None):
                     short_name=short_name,
                     reader_kwargs=dataset.get("reader_kwargs") or {},
                 )
-                biases_reference.retrieve(
-                    var=var,
-                    units=units,
-                    formula=is_formula,
-                    long_name=long_name,
-                    short_name=short_name,
-                    reader_kwargs=reference.get("reader_kwargs") or {},
-                )
+                if not climatology_only:
+                    biases_reference.retrieve(
+                        var=var,
+                        units=units,
+                        formula=is_formula,
+                        long_name=long_name,
+                        short_name=short_name,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                    )
             except (NoDataError, KeyError, ValueError) as e:
                 cli.logger.warning("Variable '%s' not found in dataset. Skipping. (%s)", var, e)
                 continue
@@ -127,7 +147,8 @@ def main(argv=None):
                 # create_catalog_entry=cli.create_catalog_entry,
                 areas=bool(show_stats),
             )
-            biases_reference.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, areas=bool(show_stats))
+            if not climatology_only:
+                biases_reference.compute_climatology(seasonal=seasons, seasons_stat=seasons_stat, areas=bool(show_stats))
 
             if short_name is not None:
                 var = short_name
@@ -147,6 +168,18 @@ def main(argv=None):
 
                 proj = plot_params.get("projection", "robinson")
                 proj_params = plot_params.get("projection_params", {})
+
+                # vmin/vmax/cmap in plot_params refer to biases, so climatology uses automatic ranges
+                if climatology_only:
+                    plot_clim.plot_climatology(
+                        data=biases_dataset.climatology, var=var, plev=p, proj=proj, proj_params=proj_params
+                    )
+                    if seasons:
+                        plot_clim.plot_seasonal_climatology(
+                            data=biases_dataset.seasonal_climatology, var=var, plev=p, proj=proj, proj_params=proj_params
+                        )
+                    continue
+
                 cmap = plot_params.get("cmap", "RdBu_r")
 
                 cli.logger.debug("Using projection: %s for variable: %s", proj, var)
@@ -196,11 +229,18 @@ def main(argv=None):
                     )
 
             if vertical and "plev" in biases_dataset.data.get(var, {}).dims:
-                cli.logger.debug("Plotting vertical bias for variable:  %s", var)
-                vmin_v, vmax_v = plot_params.get("vmin_v"), plot_params.get("vmax_v")
-                plot_biases.plot_vertical_bias(
-                    data=biases_dataset.climatology, data_ref=biases_reference.climatology, var=var, vmin=vmin_v, vmax=vmax_v
-                )
+                if climatology_only:
+                    plot_clim.plot_vertical_climatology(data=biases_dataset.climatology, var=var)
+                else:
+                    cli.logger.debug("Plotting vertical bias for variable:  %s", var)
+                    vmin_v, vmax_v = plot_params.get("vmin_v"), plot_params.get("vmax_v")
+                    plot_biases.plot_vertical_bias(
+                        data=biases_dataset.climatology,
+                        data_ref=biases_reference.climatology,
+                        var=var,
+                        vmin=vmin_v,
+                        vmax=vmax_v,
+                    )
 
     cli.close_dask_cluster()
 
