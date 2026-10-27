@@ -13,7 +13,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
-- Environment aligned with aqua-core 1.2.3: `aqua-core>=1.2.3`, `eccodes>=2.50.0,<2.51`, `smmregrid==0.2.0` replaces the `cdo` pin (CDO comes with smmregrid), `python-dateutil<3` for conda-lock (#524)
+- Environment aligned with aqua-core 1.2.3: `aqua-core>=1.2.3`, `eccodes>=2.50.0,<2.51`, `smmregrid==0.2.0` replaces the `cdo` pin (CDO comes with smmregrid), `python-dateutil<3` for conda-lock; CDO installed with Homebrew on macOS CI runners (#524)
 - Drop support to Python 3.11, as in aqua-core (#491)
 - New CI testing strategy aligned with aqua-core (see `CONTRIBUTING.md`): PR tests, nightly against released and `main` aqua-core on Ubuntu/macOS, release matrix (replaces the monthly tests), PyPI matrix, label-driven cross-check and relock, automatic failure issues; `environment-pypi.yml` holds only conda dependencies (#491)
 - `pytest-timeout` added to the `tests` extra; `aqua-core[fdb]` listed in `environment.yml` to keep it in the lock file (#491)
