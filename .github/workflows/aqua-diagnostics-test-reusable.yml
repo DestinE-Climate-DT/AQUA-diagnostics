@@ -3,16 +3,33 @@ name: AQUA-diagnostics Test Runner (Reusable)
 on:
   workflow_call:
     inputs:
-      python-versions:
-        description: 'JSON array of Python versions to test'
-        required: true
+      python-version:
+        description: 'Python version to test (the caller owns the platform x Python matrix)'
+        required: false
         type: string
-        default: '["3.14"]'
+        default: '3.14'
+      platform:
+        description: 'GitHub Actions runner label'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+      container-image:
+        description: 'Container image to use (empty string = selected host runner, e.g. on macOS)'
+        required: false
+        type: string
+        default: 'ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container'
       pytest-markers:
-        description: 'Pytest markers to run (e.g., "aqua or slow")'
+        description: 'Pytest markers to run (e.g., "aqua or diagnostics")'
         required: true
         type: string
         default: 'aqua or diagnostics or ensemble'
+      pytest-timeout-seconds:
+        description: >-
+          Per-test pytest timeout in seconds (temporarily 800 s: TestBiases::test_stat_biases takes up to ~600 s on loaded runners).
+          Applied only when pytest-timeout is installed (e.g. not in pypi mode before a release including it)
+        required: false
+        type: string
+        default: '800'
       enable-parallel:
         description: 'Enable pytest-xdist parallel execution'
         required: false
@@ -23,21 +40,16 @@ on:
         required: false
         type: boolean
         default: true
-      fail-fast:
-        description: 'Stop all jobs if one fails'
-        required: false
-        type: boolean
-        default: false
       install-mode:
-        description: 'Installation mode: "local", "pypi" (from PyPI), or "cross-check" (test against aqua-core branch)'
+        description: >-
+          Installation mode: "local" (conda-lock file, Linux only),
+          "environment" (environment.yml, released aqua-core),
+          "release" (environment-pypi.yml + pip install of the checkout: what a user gets when installing from source),
+          "pypi" (environment-pypi.yml + aqua-diagnostics from PyPI + its release tag),
+          "cross-check" (environment.yml + aqua-core from aqua-core-ref)
         required: false
         type: string
         default: 'local'
-      pr-number:
-        description: 'Pull Request number (empty for non-PR runs)'
-        required: false
-        type: string
-        default: ''
       aqua-core-ref:
         description: 'aqua-core branch/tag/commit-SHA for cross-check mode (default: main)'
         required: false
@@ -89,33 +101,28 @@ defaults:
 
 jobs:
   aqua_test:
-    runs-on: ubuntu-latest
+    # Keeps the name of the former Python matrix: 'aqua-diagnostics-tests / aqua_test (3.14)' is a required check
+    name: aqua_test (${{ inputs.python-version }})
+    runs-on: ${{ inputs.platform }}
     continue-on-error: false
 
     concurrency:
-      group: ${{ inputs.pr-number != '' && format('aqua-pr-{0}-py{1}', inputs.pr-number, matrix.python-version) || format('aqua-{0}-py{1}', github.run_id, matrix.python-version) }}
-      cancel-in-progress: ${{ inputs.pr-number != '' }}
+      # github.event is the caller's event: PR runs cancel superseded runs, other events never do
+      # github.workflow is the caller's name: suites running the same leg (e.g. nightly and cross-check) do not cancel each other
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}-${{ inputs.install-mode }}-${{ inputs.platform }}-py${{ inputs.python-version }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     container:
-      # To run FDB tests we need to use a Docker image with FDB installed.
-      image: ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container
+      # FDB container used as build environment on Linux (no FDB tests in aqua-diagnostics).
+      # Pass container-image: '' from the caller to use the selected host runner without a container.
+      image: ${{ inputs.container-image }}
       options: --user root
-
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
-
-    strategy:
-      fail-fast: ${{ inputs.fail-fast }}
-      matrix:
-        python-version: ${{ fromJson(inputs.python-versions) }}
 
     env:
       DEBIAN_FRONTEND: noninteractive
       GRID_DEFINITION_PATH: /tmp
-      FDB5_CONFIG_FILE: /app/etc/fdb/config.yaml
-      GITHUB_TOKEN: ${{ secrets.AQUA_GITHUB_PAT }}
+      GITHUB_TOKEN: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
+      ARTIFACT_SUFFIX: ${{ inputs.install-mode }}-${{ inputs.platform }}-py${{ inputs.python-version }}
 
     steps:
       # ========================================
@@ -133,7 +140,7 @@ jobs:
           repository: DestinE-Climate-DT/AQUA
           ref: ${{ inputs.aqua-core-ref }} # checkout aqua-core at specified ref
           path: AQUA
-          token: ${{ secrets.AQUA_GITHUB_PAT }}
+          token: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
 
       - name: Checkout shared AQUA CI actions
         uses: actions/checkout@v7
@@ -141,7 +148,7 @@ jobs:
           repository: DestinE-Climate-DT/AQUA
           ref: ${{ inputs.aqua-actions-ref }}
           path: aqua-ci
-          token: ${{ secrets.AQUA_GITHUB_PAT }}
+          token: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
           sparse-checkout: .github/actions
           sparse-checkout-cone-mode: false
 
@@ -150,7 +157,7 @@ jobs:
         with:
           repository: DestinE-Climate-DT/Climate-DT-catalog
           path: Climate-DT-catalog
-          token: ${{ secrets.AQUA_GITHUB_PAT }}
+          token: ${{ secrets.AQUA_GITHUB_PAT || github.token }}
 
       - name: Checkout DVC repo
         uses: actions/checkout@v7
@@ -163,61 +170,93 @@ jobs:
       # 2. INSTALL SYSTEM DEPENDENCIES
       # ========================================
       - name: Install GH Actions dependencies
+        if: ${{ runner.os == 'Linux' }}
         run: |
+          # Use sudo when not running as root (plain ubuntu runner)
+          SUDO=$([ "$(id -u)" = "0" ] && echo "" || echo "sudo")
           # Ubuntu dependencies (Git, curl, gpg...)
-          apt-get update && \
-            apt-get install -y \
+          $SUDO apt-get update && \
+            $SUDO apt-get install -y \
               curl \
               git \
+              jq \
               gpg
+
+      - name: Install GH Actions dependencies (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: brew install wget
+
+      - name: Check GitHub token
+        if: ${{ runner.os == 'Linux' }}
+        env:
+          PAT_SET: ${{ secrets.AQUA_GITHUB_PAT != '' }}
+        run: |
+          if [ "$PAT_SET" != "true" ]; then
+            echo "::warning::AQUA_GITHUB_PAT is empty (Dependabot/fork run or secret not passed): falling back to github.token"
+          fi
+          CODE=$(curl -s -o "$RUNNER_TEMP/rate.json" -w "%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/rate_limit)
+          if [ "$CODE" != "200" ]; then
+            echo "::error::GitHub token rejected (HTTP $CODE): PAT expired or lacking permissions?"
+            exit 1
+          fi
+          REMAINING=$(jq -r '.resources.core.remaining // empty' "$RUNNER_TEMP/rate.json")
+          USED=$(jq -r '.resources.core.used // empty' "$RUNNER_TEMP/rate.json")
+          echo "GitHub API core requests remaining: ${REMAINING:-unknown}"
+          echo "GitHub API core requests used: ${USED:-unknown}"
+          if [ -n "$REMAINING" ] && [ "$REMAINING" -lt 100 ]; then
+            echo "::warning::Only $REMAINING GitHub API requests left"
+          fi
 
       # ========================================
       # 3. SETUP PYTHON ENVIRONMENT
       # ========================================
-      - name: Set up Micromamba (local mode)
-        if: ${{ inputs.install-mode == 'local' }}
+      - name: Resolve environment for install mode
+        id: resolve
+        env:
+          MODE: ${{ inputs.install-mode }}
+        run: |
+          case "$MODE" in
+            local)
+              if [ "$RUNNER_OS" != "Linux" ]; then
+                echo "::error::install-mode 'local' uses a linux-64 lock file; use 'environment' on $RUNNER_OS"
+                exit 1
+              fi
+              ENV_FILE=AQUA-diagnostics/conda-linux-64.lock
+              ;;
+            environment|cross-check)
+              # pip resolves '-e .' against the cwd, so point it to the checkout explicitly
+              ENV_FILE="$RUNNER_TEMP/environment.yml"
+              sed "s#- -e \.#- -e ${GITHUB_WORKSPACE}/AQUA-diagnostics#" AQUA-diagnostics/environment.yml > "$ENV_FILE"
+              grep -q "${GITHUB_WORKSPACE}/AQUA-diagnostics" "$ENV_FILE" || { echo "::error::'-e .' not found in environment.yml"; exit 1; }
+              ;;
+            pypi|release)
+              ENV_FILE=AQUA-diagnostics/environment-pypi.yml
+              ;;
+            *)
+              echo "::error::Unknown install-mode '$MODE'"
+              exit 1
+              ;;
+          esac
+          echo "env-file=$ENV_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Micromamba
         uses: mamba-org/setup-micromamba@v3
         env:
           GITHUB_TOKEN: ''
         with:
           micromamba-version: 'latest'
-          environment-file: AQUA-diagnostics/conda-linux-64.lock
+          environment-file: ${{ steps.resolve.outputs.env-file }}
           environment-name: aqua-diagnostics
+          generate-run-shell: false
           cache-downloads: true
           cache-environment: false
+          post-cleanup: 'none'
           create-args: >-
-            python=${{ matrix.python-version }}
-
-      - name: Set up Micromamba (cross-check mode)
-        if: ${{ inputs.install-mode == 'cross-check' }}
-        uses: mamba-org/setup-micromamba@v3
-        env:
-          GITHUB_TOKEN: ''
-        with:
-          micromamba-version: 'latest'
-          environment-file: AQUA-diagnostics/environment-dev.yml
-          environment-name: aqua-cross-check
-          cache-downloads: true
-          cache-environment: false
-          create-args: >-
-            python=${{ matrix.python-version }}
-
-      - name: Set up Micromamba (PyPI mode)
-        if: ${{ inputs.install-mode == 'pypi' }}
-        uses: mamba-org/setup-micromamba@v3
-        env:
-          GITHUB_TOKEN: ''
-        with:
-          micromamba-version: 'latest'
-          environment-file: AQUA-diagnostics/environment-pypi.yml
-          environment-name: aqua
-          cache-downloads: true
-          cache-environment: false
-          create-args: >-
-            python=${{ matrix.python-version }}
+            python=${{ inputs.python-version }}
 
       # ========================================
-      # 4. INSTALL AQUA (local mode)
+      # 4. INSTALL AQUA-DIAGNOSTICS ON TOP OF THE ENVIRONMENT
       # ========================================
       - name: Install AQUA-diagnostics (local mode)
         if: ${{ inputs.install-mode == 'local' }}
@@ -226,9 +265,17 @@ jobs:
           sed -n 's/^# pip //p' conda-linux-64.lock |python -m pip install -r /dev/stdin
           python -m pip install --no-deps -e .
 
-      # ========================================
-      # 4. INSTALL AQUA (PyPI mode)
-      # ========================================
+      - name: Install aqua-core from the checked-out ref (cross-check mode)
+        if: ${{ inputs.install-mode == 'cross-check' }}
+        # Replaces the released aqua-core installed by environment.yml; pip adds any new aqua-core dependency
+        run: python -m pip install -e "${GITHUB_WORKSPACE}/AQUA[fdb]"
+
+      - name: Install local AQUA-diagnostics on top of environment-pypi.yml (release mode)
+        if: ${{ inputs.install-mode == 'release' }}
+        run: |
+          cd AQUA-diagnostics
+          python -m pip install -e ".[core,tests]"
+
       - name: Upgrade pip/setuptools/wheel
         if: ${{ inputs.install-mode == 'pypi' }}
         run: python -m pip install --upgrade pip setuptools wheel
@@ -261,45 +308,30 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       # ========================================
-      # 6. SETUP FDB
-      # ========================================
-      - name: Set up FDB
-        uses: ./aqua-ci/.github/actions/setup-fdb
-        with:
-          test-data-path: AQUA-diagnostics/AQUA_tests
-
-      # ========================================
-      # 7. SETUP AQUA-DIAGNOSTICS
+      # 6. SETUP AQUA-DIAGNOSTICS
       # ========================================
       - name: Set up AQUA-diagnostics configuration
         uses: ./aqua-ci/.github/actions/setup-aqua
         with:
           catalogs: |
-            climatedt-phase1
             ci
           polytope-key: ${{ secrets.POLYTOPE_KEY }}
 
       # ========================================
-      # 8. VERIFY INSTALLATIONS (cross-check mode)
+      # 7. VERIFY INSTALLATIONS AND SAVE ENVIRONMENT INFO
       # ========================================
       - name: Verify aqua-core and aqua-diagnostics versions
-        if: ${{ inputs.install-mode == 'cross-check' }}
+        env:
+          MODE: ${{ inputs.install-mode }}
+          CORE_REF: ${{ inputs.aqua-core-ref }}
         run: |
-          echo "=========================================="
-          echo "Cross-check: aqua-diagnostics vs aqua-core"
-          echo "aqua-core ref branch-tag-commitSHA: ${{ inputs.aqua-core-ref }}"
-          echo "=========================================="
-          echo ""
-          echo "aqua-core version:"
-          python -c "import aqua.core.version; print(aqua.core.version.__version__)"
-          echo ""
-          echo "aqua-diagnostics version:"
-          python -c "import aqua.diagnostics.version; print(aqua.diagnostics.version.__version__)"
-          echo ""
+          echo "install-mode: $MODE"
+          if [ "$MODE" = "cross-check" ]; then
+            echo "aqua-core ref branch-tag-commitSHA: $CORE_REF"
+          fi
+          python -c "import aqua.core.version; print('aqua-core version:', aqua.core.version.__version__)"
+          python -c "import aqua.diagnostics.version; print('aqua-diagnostics version:', aqua.diagnostics.version.__version__)"
 
-      # ========================================
-      # 9. SAVE ENVIRONMENT INFO
-      # ========================================
       - name: Save environment information
         run: |
           cd AQUA-diagnostics
@@ -307,72 +339,35 @@ jobs:
           pip freeze > pip_freeze.txt
 
       # ========================================
-      # 10. RUN TESTS
+      # 8. RUN TESTS
       # ========================================
-      - name: Run tests (parallel with coverage)
-        if: ${{ inputs.enable-parallel && inputs.enable-coverage }}
+      - name: Run tests
+        timeout-minutes: 40
+        env:
+          MARKERS: ${{ inputs.pytest-markers }}
+          PARALLEL: ${{ inputs.enable-parallel }}
+          COVERAGE: ${{ inputs.enable-coverage }}
+          PYTEST_TIMEOUT_SECONDS: ${{ inputs.pytest-timeout-seconds }}
         run: |
           cd AQUA-diagnostics
-          echo "=========================================="
-          echo "Running tests with pytest-xdist (4 cores) and coverage"
-          echo "Tests with xdist_group markers will run on dedicated workers"
-          echo "=========================================="
-
-          pytest -n 4 \
-            --dist loadgroup \
-            --max-worker-restart=3 \
-            --cov \
-            --junitxml=junit.xml \
-            -o junit_family=legacy \
-            -m "${{ inputs.pytest-markers }}" \
-            2>&1 | tee aqua_pytest.log
-
-      - name: Run tests (parallel without coverage)
-        if: ${{ inputs.enable-parallel && !inputs.enable-coverage }}
-        run: |
-          cd AQUA-diagnostics
-          echo "=========================================="
-          echo "Running tests with pytest-xdist (4 cores)"
-          echo "=========================================="
-
-          pytest -n 4 \
-            --dist loadgroup \
-            --max-worker-restart=3 \
-            --junitxml=junit.xml \
-            -o junit_family=legacy \
-            -m "${{ inputs.pytest-markers }}" \
-            2>&1 | tee aqua_pytest.log
-
-      - name: Run tests (sequential with coverage)
-        if: ${{ !inputs.enable-parallel && inputs.enable-coverage }}
-        run: |
-          cd AQUA-diagnostics
-          echo "=========================================="
-          echo "Running tests sequentially with coverage"
-          echo "=========================================="
-
-          pytest \
-            --cov \
-            --junitxml=junit.xml \
-            -o junit_family=legacy \
-            -m "${{ inputs.pytest-markers }}" \
-            2>&1 | tee aqua_pytest.log
-
-      - name: Run tests (sequential without coverage)
-        if: ${{ !inputs.enable-parallel && !inputs.enable-coverage }}
-        run: |
-          cd AQUA-diagnostics
-          echo "=========================================="
-          echo "Running tests sequentially"
-          echo "=========================================="
-
-          pytest \
-            --junitxml=junit.xml \
-            -o junit_family=legacy \
-            -m "${{ inputs.pytest-markers }}"
+          ARGS=(--junitxml=junit.xml -o junit_family=legacy -m "$MARKERS")
+          if python -c "import pytest_timeout" 2>/dev/null; then
+            ARGS+=(--timeout="$PYTEST_TIMEOUT_SECONDS")
+          else
+            echo "::warning::pytest-timeout not installed: running without per-test timeout"
+          fi
+          if [ "$PARALLEL" = "true" ]; then
+            # xdist_group markers run on dedicated workers
+            ARGS+=(-n 4 --dist loadgroup --max-worker-restart=3)
+          fi
+          if [ "$COVERAGE" = "true" ]; then
+            ARGS+=(--cov)
+          fi
+          echo "pytest ${ARGS[*]}"
+          pytest "${ARGS[@]}" 2>&1 | tee aqua_pytest.log
 
       # ========================================
-      # 11. COVERAGE REPORTS AND ARTIFACTS
+      # 9. COVERAGE REPORTS AND ARTIFACTS
       # ========================================
       - name: Collect pytest reports and upload artifacts
         if: ${{ !cancelled() }}
@@ -383,4 +378,4 @@ jobs:
           enable-coverage: ${{ inputs.enable-coverage }}
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
           codecov-name: codecov-aqua-diagnostics
-          artifact-name: aqua-test-artifacts-py${{ matrix.python-version }}
+          artifact-name: aqua-test-artifacts-${{ env.ARTIFACT_SUFFIX }}
