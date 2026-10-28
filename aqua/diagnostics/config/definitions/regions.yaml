@@ -193,3 +193,7 @@ regions:
     longname: Pacific Ocean
     lon_limits: [90, 160]
     lat_limits: [-90, 0]
+  agulhas:
+    longname: Agulhas
+    lon_limits: [5, 50]
+    lat_limits: [-50, -10]

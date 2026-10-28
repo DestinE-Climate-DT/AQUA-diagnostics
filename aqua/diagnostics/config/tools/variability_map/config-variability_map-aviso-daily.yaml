@@ -48,7 +48,7 @@ diagnostics:
         regrid_method: 'ycon'
       # sub region selection
       sub_region:
-        name: Agulhas
+        name: agulhas
         lon_limits: [5, 50]
         lat_limits: [-50, -10]
         projection: 'plate_carree'
