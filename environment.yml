@@ -27,6 +27,6 @@ dependencies:
   - pip:
     # pip install -e of AQUA itself
     - -e .[core-fdb,tests]
-    # explicit for conda-lock: with --filter-extras conda-lock drops aqua-core from the core-fdb extra,
-    # without it keeps only one of core/core-fdb, so pin it here (keep in sync with pyproject.toml)
+    # explicit for conda-lock: aqua-core is in both the core and core-fdb extras and conda-lock keeps
+    # only one of them (hash-order dependent), so pin it here (keep in sync with pyproject.toml)
     - aqua-core[fdb]>=1.2.3

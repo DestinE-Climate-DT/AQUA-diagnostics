@@ -56,10 +56,10 @@ jobs:
 
       - name: Relock
         shell: bash -l {0}
-        # --filter-extras: solve only the requested extras, as in aqua-core. aqua-core[fdb] comes from the
-        # explicit pin in environment.yml (conda-lock does not keep it from the core-fdb extra)
+        # --filter-extras: solve only the requested extras, as in aqua-core.
+        # pyproject.toml first: the last file wins, so the explicit aqua-core[fdb] in environment.yml overrides the core/core-fdb extras
         run: |
-          conda-lock lock --file environment.yml --file pyproject.toml -p linux-64 -k explicit -e tests -e core-fdb --filter-extras
+          conda-lock lock --file pyproject.toml --file environment.yml -p linux-64 -k explicit -e tests -e core-fdb --filter-extras
 
       - name: Open PR
         uses: peter-evans/create-pull-request@v8
