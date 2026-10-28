@@ -66,6 +66,7 @@ class PlotGregory(PlotBaseMixin):
         data_labels: list = None,
         ref_label: str = None,
         style: str = "aqua",
+        cmap: str = 'plasma_r',
     ):
         """
         Plot the data
@@ -76,6 +77,7 @@ class PlotGregory(PlotBaseMixin):
             data_labels: List of labels for the data. Default is None
             ref_label: Label for the reference data. Default is None
             style: Style of the plot. Default is 'aqua'
+            cmap: Colormap marking time evolution, with a colorbar. Default is 'plasma_r'.
         """
         ConfigStyle(style=style)
         ax_monthly = None
@@ -103,9 +105,9 @@ class PlotGregory(PlotBaseMixin):
             )
 
         if ax_monthly:
-            fig, ax_monthly = self.plot_monthly(fig, ax_monthly, data_labels=mon_label, ref_label=ref_label)
+            fig, ax_monthly = self.plot_monthly(fig, ax_monthly, data_labels=mon_label, ref_label=ref_label, cmap=cmap)
         if ax_annual:
-            fig, ax_annual = self.plot_annual(fig, ax_annual, data_labels=ann_label)
+            fig, ax_annual = self.plot_annual(fig, ax_annual, data_labels=ann_label, cmap=cmap)
 
         # We extract the handles and labels from each axis
         # since the labels are defined in the plotting function
@@ -190,7 +192,7 @@ class PlotGregory(PlotBaseMixin):
 
         return description
 
-    def plot_monthly(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, ref_label: str = None):
+    def plot_monthly(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, ref_label: str = None, cmap: str = None):
         """
         Plot the monthly data
 
@@ -199,6 +201,7 @@ class PlotGregory(PlotBaseMixin):
             ax: Axes object
             data_labels: List of labels for the data. Default is None
             ref_label: Label for the reference data. Default is None
+            cmap: Colormap marking time evolution, with a colorbar. Default is None (disabled)
 
         Returns:
             fig: Figure object
@@ -214,10 +217,11 @@ class PlotGregory(PlotBaseMixin):
             loglevel=self.loglevel,
             labels=data_labels,
             ref_label=ref_label,
+            cmap=cmap,
         )
         return fig, ax
 
-    def plot_annual(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None):
+    def plot_annual(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, cmap: str = None):
         """
         Plot the annual data
 
@@ -225,6 +229,7 @@ class PlotGregory(PlotBaseMixin):
             fig: Figure object
             ax: Axes object
             data_labels: List of labels for the data. Default is None
+            cmap: Colormap marking time evolution, with a colorbar. Default is None (disabled)
 
         Returns:
             fig: Figure object
@@ -241,6 +246,7 @@ class PlotGregory(PlotBaseMixin):
             ax=ax,
             loglevel=self.loglevel,
             labels=data_labels,
+            cmap=cmap,
         )
         return fig, ax
 
