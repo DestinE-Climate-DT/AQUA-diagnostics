@@ -13,6 +13,9 @@ class VariabilityMap(Diagnostic):
     Note: Variability means STD in this diagnostic
     """
 
+    # The STD along time needs at least two time steps to be defined
+    MINIMUM_MONTHS_REQUIRED = 2
+
     def __init__(
         self,
         catalog: str = None,
@@ -81,7 +84,7 @@ class VariabilityMap(Diagnostic):
         """
         Retrieve the data for the given variable as a DataArray, with units and names set.
         """
-        super().retrieve(var=self.var, reader_kwargs=self.reader_kwargs)
+        super().retrieve(var=self.var, reader_kwargs=self.reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
         self.data = self.data[self.var]
 
         if self.units is not None:
