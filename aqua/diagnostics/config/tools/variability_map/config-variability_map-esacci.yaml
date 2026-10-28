@@ -1,0 +1,55 @@
+# Standalone VariabilityMap configuration: sea surface temperature (TOS) variability against ESA-CCI.
+datasets:
+  - catalog: 'climatedt-o25.1'
+    model: 'IFS-FESOM'
+    exp: 'historical-1990'
+    source: 'lra-r100-monthly'
+    regrid: null
+    startdate: '1994-01-01'
+    enddate: '1994-12-31'
+    reader_kwargs: null # it can be a dictionary with reader kwargs (e.g. fix, realization)
+
+# This is the reference model against which other models are compared.
+references:
+  - catalog: 'obs'
+    model: 'ESA-CCI-L4'
+    exp: 'v3.0.1'
+    source: 'r100-monthly'
+    regrid: null
+    startdate: '1994-01-01'
+    enddate: '1994-12-31'
+    reader_kwargs: null
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  variabilitymap:
+    run: true
+    diagnostic_name: 'variability_map'
+    variables: ['tos']
+    plot_params:
+      default:
+        contour: true
+        projection: 'robinson'
+        projection_params: {}
+        vmin:
+        vmax:
+        cmap: 'RdBu_r'
+        tgt_grid_name: "r1440x721"
+        regrid_method: 'ycon'
+      # sub region selection
+      sub_region:
+        name: Agulhas
+        lon_limits: [5, 50]
+        lat_limits: [-50, -10]
+        projection: 'plate_carree'
+        contour: false
+        projection_params: {}
