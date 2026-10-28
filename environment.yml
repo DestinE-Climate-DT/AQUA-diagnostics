@@ -21,6 +21,10 @@ dependencies:
   - pip:
     # pip install -e of AQUA itself
     - -e .[core-fdb,tests]
-    # explicit for conda-lock: with --filter-extras conda-lock drops aqua-core from the core-fdb extra,
-    # without it keeps only one of core/core-fdb, so pin it here (keep in sync with pyproject.toml)
-    - aqua-core[fdb]>=1.2.3
+    # fdb extra of aqua-core, listed explicitly: aqua-core comes from conda-forge,
+    # so pip does not resolve aqua-core[fdb] (keep in sync with aqua-core pyproject.toml)
+    - pyfdb
+    - polytope-client
+    - gsv-interface>=2.18.0
+    - z3fdb==5.23.2.27; sys_platform == "linux"
+    - z3fdb>=5.23.2.27; sys_platform != "linux"
