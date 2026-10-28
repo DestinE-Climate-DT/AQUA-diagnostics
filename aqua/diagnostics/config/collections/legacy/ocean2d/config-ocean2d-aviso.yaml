@@ -1,26 +1,24 @@
-# Models for which sea surface height (SSH) variability is to be evaluated.
+# Sea surface height (SSH) variability of the ocean2d collection, on monthly data as in aqua analysis.
+# Standalone configurations (e.g. on daily data) are in config/tools/variability_map/
 datasets:
-  - catalog: 'climatedt-gen2'
-    model: 'IFS-NEMO-5km'
-    exp: 'baseline-hist'
-    source: 'daily-hpz7-o2d-zos'
-    regrid: 'r025'
-    zoom:
-    realization:
-    fix: True
-    reader_kwargs:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
 
-
-# This is the reference model against which other models are compared.
 references:
+  # TODO: a monthly AVISO source does not exist yet in the obs catalog (only 'daily-zarr')
   - catalog: 'obs'
     model: 'AVISO'
     exp: 'vDT2024'
-    source: 'daily-zarr'
-    regrid:
-    fix: True
-    # TODO:
-  #  #reader_kwargs: null #  it can be a dictionary with reader kwargs
+    source: 'monthly'
+    regrid: 'r100'
+    startdate: '1993-01-01'
+    enddate: '2024-12-31'
 
 setup:
   loglevel: 'WARNING'
@@ -37,27 +35,22 @@ diagnostics:
     run: true
     diagnostic_name: 'ocean2d'
     variables: ['zos']
-    params:
-      default:
-        startdate_data: '1994-01-01'
-        enddate_data: '1994-03-31'
-        startdate_ref: '1994-01-01'
-        enddate_ref: '1994-03-31'
     plot_params:
       default:
         contour: true
-        projection: 'robinson' # for 'robinson' must be 'true' and for 'plate_carree' it must be 'false'
+        projection: 'robinson'
         projection_params: {}
         vmin:
         vmax:
         cmap: 'RdBu_r'
-        tgt_grid_name: "r1440x721"
-        regrid_method: 'ycon'
+        # Dataset and reference are both on r100 already, no regridding for the plots
+        tgt_grid_name: null
+        regrid_method: null
       # sub region selection
-      sub_region :
+      sub_region:
         name: Agulhas
         lon_limits: [5, 50]
-        lat_limits: [-10, -50]
+        lat_limits: [-50, -10]
         projection: 'plate_carree'
         contour: false
         projection_params: {}
