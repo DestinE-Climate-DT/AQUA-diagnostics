@@ -12,7 +12,7 @@ Tag here relevant people to involve in the discussion:
 
 Please leave the checkboxes that apply to this pull request.
 If you find a missing checkbox, please add it to the list.
-Make sure to complete the checkboxes before applying the "ready to merge" label.
+Make sure to complete the checkboxes before applying the "ready for review" label.
 Please apply the "run tests" label if you want to trigger CI tests.
 
  - [ ] Tests are included if a new feature is included.
@@ -21,3 +21,4 @@ Please apply the "run tests" label if you want to trigger CI tests.
  - [ ] Changelog is updated.
  - [ ] Notebooks which requires changes are updated.
  - [ ] environment.yml and pyproject.toml are updated if needed, together with the lumi installation tool.
+ - [ ] If the change depends on unreleased aqua-core features, the `cross-check` label has been added and the cross-check tests pass.

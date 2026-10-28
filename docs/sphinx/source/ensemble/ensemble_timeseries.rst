@@ -178,6 +178,8 @@ The diagnostic produces the following outputs:
 
 Data outputs are saved as NetCDF files.
 
+Extra attention needs to be paid in case of single model ensemble analysis. In this case, the ``outputdir`` should be the path where the realization data exists. For example, if the realizations are in ``/work/IFS-NEMO/`` as ``r1``, ``r2`` and so on, the ``outputdir`` must be passed as ``/work/IFS-NEMO/ensemble/ensemble/``. Then the ensemble output directory will have an ``ensemble`` directory with all the ensemble output inside it.
+
 Observations
 ------------
 

@@ -81,7 +81,8 @@ class SeasonalCycles(BaseMixin):
         outputdir: str = "./",
         rebuild: bool = True,
         reader_kwargs: dict = {},
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
     ):
         """
         Run all the steps necessary for the computation of the SeasonalCyles.
@@ -100,7 +101,6 @@ class SeasonalCycles(BaseMixin):
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data.
             reader_kwargs (dict): Additional keyword arguments for the Reader. Default is an empty dictionary.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
         """
         self.logger.info("Running SeasonalCycles for %s", var)
         self.retrieve(
@@ -127,7 +127,8 @@ class SeasonalCycles(BaseMixin):
             freq="monthly",
             outputdir=outputdir,
             rebuild=rebuild,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
         )
 
     def compute(self, exclude_incomplete: bool = True, center_time: bool = True, box_brd: bool = True):
