@@ -107,7 +107,7 @@ class TestEnsembleTimeseries:
         var = conf["var"]
 
         nc_monthly = os.path.join(
-            tmp_path_str, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.mean.monthly.nc"
+            tmp_path_str, "netcdf", f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.ensemble.{var}.mean.monthly.nc"
         )
         assert os.path.exists(nc_monthly)
 
@@ -161,6 +161,6 @@ class TestEnsembleTimeseries:
         png_file = os.path.join(
             tmp_path_str,
             "png",
-            f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.r1.{var}.png",
+            f"ensemble.ensembletimeseries.{cat}.{mod}.{exp}.ensemble.{var}.png",
         )
         assert os.path.exists(png_file)

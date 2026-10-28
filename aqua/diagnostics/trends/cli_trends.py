@@ -2,7 +2,7 @@
 """Run the generic trend diagnostic from a YAML configuration.
 
 Example:
-    python -m aqua.diagnostics.trends.cli_trend --config config-trends-2d.yaml
+    python -m aqua.diagnostics.trends.cli_trends --config config-trends-2d.yaml
 
 The CLI reads only ``diagnostics.trends``. Its configuration may also contain
 ``ocean_trends`` for the separate ocean CLI. All variables share the configured

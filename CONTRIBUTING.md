@@ -44,7 +44,7 @@ If your Pull Request is adding some new dependencies, please make sure to state 
 
 ### Finalizing a Pull Request
 
-Adding the `run tests` label to the Pull Request will activate the CI tests at the next push.
+Adding the `run tests` label to the Pull Request will activate the CI tests at the next push (see [Testing and CI](#testing-and-ci) for the other labels).
 Adding the `ready to merge` label to the Pull Request will indicate that it is ready to be reviewed and hopefully merged in the opinion of the author.
 
 Before asking for a review, please make sure to:
@@ -57,22 +57,67 @@ Before asking for a review, please make sure to:
 
 Do not merge your Pull Request yourself, it will be merged by the AQUA-diagnostics team.
 
-### Cross-check tests
+### Testing and CI
 
-Regular CI runs **aqua-diagnostics** against the local branch, building the Micromamba environment which resolves aqua-core from PyPI. **Cross-check** uses `environment-dev.yml` and runs the same diagnostics test suite, but installs **aqua-core** from the [AQUA](https://github.com/DestinE-Climate-DT/AQUA) GitHub repository at a chosen reference (branch, tag, or commit SHA) instead of relying on the PyPI release. That helps to catch integration breaks between diagnostics and the current core codebase early.
+CI is organised in **suites**, as in [aqua-core](https://github.com/DestinE-Climate-DT/AQUA/blob/main/CONTRIBUTING.md#testing):
+each suite tests a different way of installing AQUA-diagnostics, so that a broken dependency, an aqua-core change or a
+packaging problem is caught by the suite that owns it, not by the PR tests. Tests are run with `pytest -m "aqua or diagnostics or ensemble"`.
 
-**When to use cross-check**
+| Workflow | Suite | When it runs | Platforms | Python | Install mode | Coverage |
+|---|---|---|---|---|---|---|
+| `aqua-diagnostics.yml` | PR tests | PR with `run tests` label, Dependabot PRs, push to `main`, manual | `ubuntu-latest` in FDB container | 3.14 | `local` | yes (not on Dependabot) |
+| `aqua-diagnostics-nightly.yml` | Nightly | every night (04:00 UTC), PR with `nightly` label, Dependabot pip/conda PRs, manual (with aqua-core ref) | `ubuntu-latest` in FDB container, `xcode-27` | 3.14 | `environment` and `cross-check` | no |
+| `aqua-diagnostics-cross-check.yml` | Cross-check | PR with `cross-check` label, manual (with aqua-core ref) | `ubuntu-latest` in FDB container | 3.14 | `cross-check` | no |
+| `aqua-diagnostics-release.yml` | Release | every Monday (06:00 UTC), PR with `release` label, manual | `ubuntu-22.04`, `ubuntu-26.04`, `macos-15`, `xcode-27` | 3.12, 3.13, 3.14 | `release` | no |
+| `aqua-diagnostics-pypi.yml` | PyPI | every Tuesday (04:00 UTC), push to `pypi-test`, manual | `ubuntu-latest`, `macos-latest` | 3.12, 3.13, 3.14 | `pypi` | no |
+| `aqua-diagnostics-conda.yml` | Conda | manual only (until aqua-diagnostics is on conda-forge) | `ubuntu-latest`, `macos-latest` | 3.12, 3.13, 3.14 | `conda` | no |
 
-- Your change depends on aqua-core behaviour or APIs that are not yet published to PyPI.
-- You want to confirm compatibility against `main` or another aqua-core branch before merge.
+The FDB container is only the build environment on Linux: AQUA-diagnostics has no FDB tests.
 
-**How to run cross-check on a pull request**
+The install modes are:
 
-1. Add the `cross-check` label to the PR. After the `cross-check` label is added, the workflow runs automatically the cross-check tests when new commits are pushed.
+- `local`: checkout + `conda-linux-64.lock`, i.e. the exact locked environment with the pinned aqua-core release. Linux only.
+- `environment`: checkout + `environment.yml`, unpinned, with the latest aqua-core release: catches breakages from new upstream releases.
+- `cross-check`: as `environment`, then aqua-core is installed from the [AQUA](https://github.com/DestinE-Climate-DT/AQUA)
+  repository at a chosen reference (default `main`): catches integration breaks with the current core codebase before the next aqua-core release.
+- `release`: `environment-pypi.yml` (conda dependencies only) + `pip install -e .[core,tests]` of the checkout: what a user gets when installing from source.
+- `pypi`: `environment-pypi.yml` + `aqua-diagnostics[core,tests]` from PyPI, tested against the matching release tag.
+- `conda`: `aqua-diagnostics` and the test dependencies from conda-forge, tested against the matching release tag.
 
-**Manual run (maintainers)**
+Comparing the two nightly modes separates aqua-core regressions (`cross-check` fails, `environment` passes) from dependency or diagnostics issues (both fail).
 
-In the GitHub UI: **Actions** → **AQUA-diagnostics Cross-Check** → **Run workflow**. You can set **aqua-core branch/tag/commit**; it defaults to `main`.
+**Labels**
+
+| Label | Effect |
+|---|---|
+| `run tests` 🏃 | run `aqua-diagnostics.yml` |
+| `nightly` 🌙 | run `aqua-diagnostics-nightly.yml` (use it when changing dependencies or platform-specific code) |
+| `cross-check` | run `aqua-diagnostics-cross-check.yml` against aqua-core `main` (use it when your change depends on aqua-core features not yet released) |
+| `release` ⛵ | run the full `aqua-diagnostics-release.yml` matrix (use it on release PRs) |
+| `conda-lock` 🐍 | regenerate the lock file against the PR branch |
+
+Once a label is set, the corresponding suite runs again at every push. Adding a label triggers a run only for the label
+just added: adding an unrelated label does not restart running tests. Labels are matched by prefix.
+
+> **Note:** every label added to a PR starts a run of each suite, skipped when the label is not the suite's own.
+> The PR checks panel shows only the most recent run of each workflow, so when several labels are added at once,
+> or a label is added after the tests ran, a suite may appear as *skipped* even though its real run is running or
+> has finished. The real results are in the **Actions** tab and still count for the PR status and the required check.
+> To refresh the panel, push a new commit: a push starts one run per suite, so the panel shows the real ones. To test against another aqua-core branch, tag or
+commit, run **Actions** → **AQUA-diagnostics cross-check** → **Run workflow** and set the aqua-core ref.
+
+**How the CI is built**
+
+All suites call `aqua-diagnostics-test-reusable.yml`, which runs one job (one platform, one Python, one install mode);
+callers only define the matrix and the inputs. Test data, AQUA configuration and reports use the composite actions of
+aqua-core (`setup-test-data`, `setup-aqua`, `pytest-reports`), checked out at `aqua-actions-ref` (default `main`).
+Each test has an 800 s timeout (`pytest-timeout`, input `pytest-timeout-seconds`) and the test step a 40 min timeout. Every job uploads an artifact `aqua-test-artifacts-<install-mode>-<platform>-py<version>`
+with `junit.xml`, `aqua_pytest.log`, `micromamba_list.txt` and `pip_freeze.txt`.
+`AQUA_GITHUB_PAT` is used for all GitHub access (fallback: `github.token`). To test changes to `aqua-diagnostics-pypi.yml`,
+push to a branch named `pypi-test`.
+
+When a scheduled or manual run of the Nightly, Release or PyPI suite fails, the aqua-core `report-failure-reusable.yml`
+opens an issue labelled `ci-failure:<suite>` 🤡 listing the broken tests, or comments on the open one.
 
 ### Suggesting enhancements
 
