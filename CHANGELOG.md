@@ -13,6 +13,10 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Drop support to Python 3.11, as in aqua-core (#491)
+- New CI testing strategy aligned with aqua-core (see `CONTRIBUTING.md`): PR tests, nightly against released and `main` aqua-core on Ubuntu/macOS, release matrix (replaces the monthly tests), PyPI matrix, label-driven cross-check and relock, automatic failure issues; `environment-pypi.yml` holds only conda dependencies (#491)
+- `pytest-timeout` added to the `tests` extra; `aqua-core[fdb]` listed in `environment.yml` to keep it in the lock file (#491)
+- Fix flaky `test_select_region_without_retrieve` (#491)
 - Setup checker: use absolute imports so it runs as a script from `aqua analysis` (#520)
 - Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
