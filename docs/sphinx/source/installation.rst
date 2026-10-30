@@ -29,11 +29,16 @@ This can be achieved with:
 
 .. code-block:: bash
 
-    mamba create -n aquarium -c conda-forge python=3.14 cdo eccodes esmpy
+    mamba create -n aquarium -c conda-forge python=3.14 aqua-core esmpy
     mamba activate aquarium
     pip install aqua-diagnostics[core]
 
 The same environment is available in the AQUA-diagnostics GitHub repository in the ``environment-pypi.yml`` file.
+
+.. warning::
+
+    CDO is not shipped with the conda-forge packages on MacOS: install it with Homebrew (``brew install cdo``)
+    before creating the environment. On Linux CDO is installed together with ``aqua-core`` (via ``smmregrid``).
 
 .. note::
 
