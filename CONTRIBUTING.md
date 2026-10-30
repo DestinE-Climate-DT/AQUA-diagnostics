@@ -80,7 +80,7 @@ The install modes are:
 - `environment`: checkout + `environment.yml`, unpinned, with the latest aqua-core release: catches breakages from new upstream releases.
 - `cross-check`: as `environment`, then aqua-core is installed from the [AQUA](https://github.com/DestinE-Climate-DT/AQUA)
   repository at a chosen reference (default `main`): catches integration breaks with the current core codebase before the next aqua-core release.
-- `release`: `environment-pypi.yml` (conda dependencies only) + `pip install -e .[core,tests]` of the checkout: what a user gets when installing from source.
+- `release`: `environment-pypi.yml` (aqua-core and conda dependencies from conda-forge) + `pip install -e .[core,tests]` of the checkout: what a user gets when installing from source.
 - `pypi`: `environment-pypi.yml` + `aqua-diagnostics[core,tests]` from PyPI, tested against the matching release tag.
 - `conda`: `aqua-diagnostics` and the test dependencies from conda-forge, tested against the matching release tag.
 
