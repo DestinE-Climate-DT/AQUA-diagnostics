@@ -528,9 +528,16 @@ class Diagnostic:
         if spec.get("regionmask") is None:
             lon_limits = spec.get("lon_limits", lon_limits)
             lat_limits = spec.get("lat_limits", lat_limits)
+            self.logger.info("Region %s found, using lon: %s, lat: %s", long_name, lon_limits, lat_limits)
         else:
             lon_limits = None
             lat_limits = None
+            self.logger.info(
+                "Region %s found, using the %s polygons: %s",
+                long_name,
+                spec["regionmask"],
+                spec.get("regionmask_names", long_name),
+            )
 
         return long_name, lon_limits, lat_limits
 
@@ -591,8 +598,6 @@ class Diagnostic:
                 regions file will be used.
             drop (bool): Whether to drop coordinates outside the selected region.
             **kwargs: Additional keyword arguments passed to the select_area reader method.
-                For regionmask-based regions, the ``frac_threshold`` of the regions file (default 0.0)
-                is passed as well, unless it is already given here.
 
         Returns:
             dict: A dictionary containing the modified dataset and region information.
@@ -616,12 +621,15 @@ class Diagnostic:
             # directly when no retrieve was done, as in a run that plots from the netcdf files.
             selector = self.reader if self.reader is not None else AreaSelection(loglevel=self.loglevel)
             if region_object is not None:
-                # Optional: select all cells touching the region instead of only the cell centers
-                if frac_threshold is not None:
-                    kwargs.setdefault("frac_threshold", frac_threshold)
-
                 self.logger.info("Using regionmask object: %s (region_sel=%s)", region_object, region_sel)
-                data = selector.select_area(data=data, region=region_object, region_sel=region_sel, drop=drop, **kwargs)
+                data = selector.select_area(
+                    data=data,
+                    region=region_object,
+                    region_sel=region_sel,
+                    frac_threshold=frac_threshold,
+                    drop=drop,
+                    **kwargs,
+                )
             elif lon_limits is not None and lat_limits is not None:
                 self.logger.info("Using custom lon/lat limits: %s, %s", lon_limits, lat_limits)
                 data = selector.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
