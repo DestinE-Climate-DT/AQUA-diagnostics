@@ -536,16 +536,17 @@ class Diagnostic:
 
     def _resolve_regionmask_object(self, region: str, regions_file_path: str = None):
         """
-        Resolve the regionmask objects needed to select a regionmask-based region, if any.
+        Get the arguments that ``Reader.select_area`` and ``Reader.fldmean`` need to select a polygon region.
 
-        By default the region long name doubles as the regionmask sub-region selector.
-        If the region is a regionmask-based region, the ``regionmask_names`` key in the regions file can be used instead to
-        select (and combine into a single mask) one or more sub-regions with different
-        names, e.g. several regionmask sub-regions covering "Europe".
+        A region is a polygon region when its entry in the regions file has a ``regionmask`` key,
+        otherwise it is a lon/lat box (see ``_set_region``). The entry of a polygon region can have:
 
-        The ``regionmask`` key names a collection of the ``sources`` section of the regions file
-        (read from the ``regions`` folder next to the regions file if there, as in the container,
-        otherwise downloaded and cached on first use) or a ``regionmask.defined_regions`` object (e.g. ``srex``).
+        - ``regionmask``: the polygon collection, either one of the ``sources`` of the regions file
+          (e.g. ``iho``) or a collection shipped with regionmask (e.g. ``srex``, i.e. ``regionmask.defined_regions.srex``).
+        - ``regionmask_names``: the polygons of the collection merged into the region (default: the ``longname``).
+        - ``frac_threshold``: a grid cell is selected if the region covers more than this fraction of it
+          (default: 0.0, every cell the region touches; null: only the cells whose centre is inside it).
+          Any value other than null needs a regular lon/lat grid.
 
         Args:
             region (str): The region key in the regions file.
@@ -553,27 +554,26 @@ class Diagnostic:
                 regions file will be used.
 
         Returns:
-            region_object (regionmask.Regions): The regionmask regions collection to select
-                from, or None if the region is not regionmask-based.
-            region_sel (str | list): The name(s) to pass as ``region_sel`` to
-                ``Reader.select_area``, or None if the region is not regionmask-based.
-            frac_threshold (float): The ``frac_threshold`` of the region (default 0.0, any touching cell;
-                None to select by cell centres), or None if the region is not regionmask-based.
+            region_object (regionmask.Regions): The polygon collection, or None for a lon/lat box.
+            region_sel (str | list): The name(s) of the polygons to select from it, or None for a lon/lat box.
+            frac_threshold (float): The ``frac_threshold`` of the region, or None for a lon/lat box.
         """
         if regions_file_path is None:
             regions_file_path = self._get_default_regions_file()
         regions_content = self._read_regions_file(regions_file_path)
         spec = (regions_content.get("regions") or {}).get(region, {})
         source = spec.get("regionmask")
-        if source is None:
+        if source is None:  # a lon/lat box, or a region not in the file
             return None, None, None
 
         sources = regions_content.get("sources") or {}
         if source in sources:
-            # The container ships them in regions/ next to the regions file
+            # A collection of the sources section: read from the regions/ folder
+            # next to the regions file, otherwise downloaded and cached on first use
             folder = os.path.join(os.path.dirname(regions_file_path), "regions")
             region_object = load_region_source(source, folder=folder, **sources[source])
         else:
+            # A collection shipped with regionmask: e.g. "ar6.all" is regionmask.defined_regions.ar6.all
             region_object = attrgetter(f"defined_regions.{source}")(regionmask)
         long_name = spec.get("longname", region)
         region_sel = spec.get("regionmask_names", long_name)
