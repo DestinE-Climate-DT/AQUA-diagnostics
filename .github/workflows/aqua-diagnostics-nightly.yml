@@ -1,0 +1,85 @@
+name: AQUA-diagnostics nightly
+# Builds the environment from environment.yml (no lock file) to catch dependency breakages, and tests
+# aqua-diagnostics both against the released aqua-core and against aqua-core main (cross-check),
+# to catch integration issues before the next aqua-core release.
+# Runs nightly, manually (optionally against a given aqua-core ref), on Dependabot pip/conda PRs,
+# and on PRs whose label starts with 'nightly'. A single cross-check on a PR is in aqua-diagnostics-cross-check.yml.
+# When the scheduled or manual run fails, an issue listing the broken tests is opened (or updated).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      aqua_core_ref:
+        description: 'aqua-core branch/tag/commit to cross-check against'
+        required: false
+        default: 'main'
+        type: string
+  schedule:
+    - cron: "0 4 * * *" # one hour after the aqua-core nightly
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  aqua-diagnostics-nightly-tests:
+    # Non-PR events (listed first) always run. On PRs:
+    #  - opened/synchronize/reopened: run if the PR is a Dependabot pip/conda bump or has the 'nightly' label
+    #  - labeled: run only if the label just added is 'nightly', so that adding
+    #    an unrelated label does not restart (and cancel) tests already running
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event.action != 'labeled' && (
+        startsWith(github.head_ref, 'dependabot/pip/') ||
+        startsWith(github.head_ref, 'dependabot/conda/') ||
+        contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|nightly'))) ||
+      (github.event.action == 'labeled' &&
+        startsWith(github.event.label.name, 'nightly'))
+    strategy:
+      fail-fast: false
+      matrix:
+        # 'environment' = released aqua-core, 'cross-check' = aqua-core main (or the requested ref)
+        install-mode: ['environment', 'cross-check']
+        os: ['ubuntu-latest', 'macos-latest']
+        include:
+          # The FDB container is the build environment on Linux (no FDB tests in aqua-diagnostics)
+          - os: ubuntu-latest
+            platform: ubuntu-latest
+            container: 'ghcr.io/destine-climate-dt/ubuntu26.04-fdb5.19.0-eccodes2.47.0-aqua:aqua-base-container'
+          - os: macos-latest
+            platform: xcode-27
+            container: ''
+    name: AQUA-diagnostics nightly (${{ matrix.os }}, ${{ matrix.install-mode }})
+    uses: ./.github/workflows/aqua-diagnostics-test-reusable.yml
+    with:
+      platform: ${{ matrix.platform }}
+      container-image: ${{ matrix.container }}
+      python-version: '3.14'
+      pytest-markers: 'aqua or diagnostics or ensemble'
+      enable-parallel: true
+      enable-coverage: false
+      install-mode: ${{ matrix.install-mode }}
+      aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+      test-data-source: 'auto'
+    secrets:
+      AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
+      AQUA_DVC_PAT: ${{ secrets.AQUA_DVC_PAT }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      POLYTOPE_KEY: ${{ secrets.POLYTOPE_KEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      AQUA_DVC_PEM: ${{ secrets.AQUA_DVC_PEM }}
+
+  report-failure:
+    needs: aqua-diagnostics-nightly-tests
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.aqua-diagnostics-nightly-tests.result == 'failure' }}
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    uses: DestinE-Climate-DT/AQUA/.github/workflows/report-failure-reusable.yml@main
+    with:
+      test-name: Nightly
