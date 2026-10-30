@@ -157,6 +157,7 @@ def main(argv=None):
                     else f"Processing variable: {var} at surface level"
                 )
 
+                # None: chosen by PlotBias, plate_carree zoomed on a region, robinson for global or circumpolar data
                 proj = plot_params.get("projection")
                 proj_params = plot_params.get("projection_params", {})
                 cmap = plot_params.get("cmap", "RdBu_r")
