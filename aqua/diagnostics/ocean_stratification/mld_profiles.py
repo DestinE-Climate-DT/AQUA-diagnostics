@@ -273,6 +273,6 @@ def plot_maps(
     # Add a super title
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 6, y=1.1)
+        fig.suptitle(title, y=1.1)
     if return_fig:
         return fig

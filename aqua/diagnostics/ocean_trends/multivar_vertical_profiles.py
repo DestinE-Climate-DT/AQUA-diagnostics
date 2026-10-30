@@ -126,12 +126,12 @@ def plot_multivars_vertical_profile(
         cax = divider.append_axes("right", size="5%", pad=0.15, axes_class=plt.Axes)
         cbar = fig.colorbar(mappable, cax=cax, orientation="vertical")
         if cbar_labels and i < len(cbar_labels):
-            cbar.set_label(cbar_labels[i], fontsize=12)
+            cbar.set_label(cbar_labels[i])
 
     # Add a super title
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 9, y=1.1)
+        fig.suptitle(title, y=1.1)
 
     if return_fig:
         return fig
