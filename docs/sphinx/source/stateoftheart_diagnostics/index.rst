@@ -24,6 +24,7 @@ Currently implemented diagnostics are:
    ecmean
    timeseries
    ocean_stratification
+   trends
    ocean_trends
    ocean_drift
    seaice
@@ -86,7 +87,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
     * ``save_format``: a list (or single string) that selects the image formats to save plots. Default is SAVE_FORMAT.
     * ``save_netcdf``: a boolean that enables the writing of the NetCDF files of the diagnostic.
     * ``plot_only``: a boolean that skips the evaluation of the diagnostic, producing the plots from the NetCDF files
-      already present in ``outputdir``. Default is ``false``. See :ref:`diagnostics-plot-only`.
+      already present in ``outputdir``. Default is ``false``. Supported only by some diagnostics, see :ref:`diagnostics-plot-only`.
     * ``dpi``: the resolution of the plots.
     .. * ``create_catalog_entry``: a boolean that enables the creation of a catalog entry.
 
@@ -153,7 +154,18 @@ so that the plot classes are used in the same way. Results with no file on disk 
 ``load()`` must be given the same arguments used to produce the files, such as the variable and the ``reader_kwargs``,
 because they take part in the filenames.
 
-This is currently supported by :doc:`lat_lon_profiles`, :doc:`ocean_trends` and :doc:`ocean_stratification`.
+This is currently supported by the following diagnostics, whose pages describe the arguments their ``load()`` needs:
+See the individual diagnostic documentation for usage details.
+
+.. Keep the list in alphabetical order
+
+* :doc:`lat_lon_profiles`
+* :doc:`ocean_drift`
+* :doc:`ocean_stratification`
+* :doc:`ocean_trends`
+* :doc:`trends`
+
+The other diagnostics ignore ``plot_only`` and always run the full evaluation.
 
 Running the monitoring diagnostics
 ++++++++++++++++++++++++++++++++++
@@ -199,6 +211,8 @@ Here you can find the minimum requirements for each diagnostic.
    * - Histogram
      - 12 months (1 year)
    * - Ocean Stratification
+     - 12 months (1 year)
+   * - Trends
      - 12 months (1 year)
    * - Ocean Trends
      - 12 months (1 year)

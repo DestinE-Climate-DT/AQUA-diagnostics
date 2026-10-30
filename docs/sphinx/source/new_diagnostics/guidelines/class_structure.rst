@@ -64,6 +64,8 @@ Each diagnostic class must:
   finds nothing and the results in memory are plotted, and only shows up when plotting from previous results: cover it with a
   round-trip test, which saves the results and reads them back with a new instance that never retrieved any data.
   When building the keys takes some logic, put it in a single helper shared by the two methods.
+  Pass the ``startdate`` and ``enddate`` of the instance to ``load_netcdf()``, so that results computed over another period
+  are not loaded in place of the requested ones.
   Results with no file on disk should be left untouched, so that ``load()`` can be called both before and after ``run()``.
 
 Comparison and Plot Classes
