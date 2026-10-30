@@ -19,9 +19,8 @@ def test_trends(tmp_path):
     trend.run(var=["thetao", "so"], region="go", outputdir=tmp_path)
 
     assert trend.trend_coef.attrs["AQUA_region"] == "Global Ocean"
-    assert trend.trend_coef["thetao"].isel(depth=1).mean("lat").mean("lon").values == pytest.approx(
-        -0.06603967, rel=approx_rel
-    )
+    # rel=1e-3: on macOS (arm64) the mean differs from Linux by ~1.3e-4
+    assert trend.trend_coef["thetao"].isel(depth=1).mean("lat").mean("lon").values == pytest.approx(-0.06603967, rel=1e-3)
     assert trend.trend_coef["so"].isel(depth=1).mean("lat").mean("lon").values == pytest.approx(0.02622599, rel=approx_rel)
 
 

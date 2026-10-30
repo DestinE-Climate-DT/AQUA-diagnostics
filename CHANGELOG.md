@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [Unreleased]
 
 Unreleased in the current development version (target v0.26.0):
+- Temporary pin `pytest<9.2` in the `tests` extra: pytest 9.2.0 breaks `--dist loadgroup` of pytest-xdist 3.8.0, so `xdist_group` tests run in parallel and DROP tests fail; remove once pytest-xdist >3.8.0 is released (pytest-dev/pytest-xdist#1386) (#534)
 - CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
+- CI: `aqua-diagnostics.yml` tests are triggered only by the `run tests` label; `ready for review` and `ready to merge` no longer start the tests (#511)
+- CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels
 - Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
 - Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
 
@@ -14,6 +17,7 @@ Main changes:
 
 Complete list:
 - Regions: polygon-based regions with `regionmask`, from the IPCC AR6 regions (land and atmosphere) and the IHO sea areas (oceans and seas) (#287)
+- Environment aligned with aqua-core 1.2.3: `aqua-core>=1.2.3`, `eccodes>=2.50.0,<2.51`, `smmregrid==0.2.0` replaces the `cdo` pin (CDO comes with smmregrid), `python-dateutil<3` for conda-lock; CDO installed with Homebrew on macOS CI runners; relock with `--filter-extras` as in aqua-core; new `conda` install mode and manual-only `aqua-diagnostics-conda.yml`; `test_trends` tolerance relaxed for macOS (#524)
 - Drop support to Python 3.11, as in aqua-core (#491)
 - New CI testing strategy aligned with aqua-core (see `CONTRIBUTING.md`): PR tests, nightly against released and `main` aqua-core on Ubuntu/macOS, release matrix (replaces the monthly tests), PyPI matrix, label-driven cross-check and relock, automatic failure issues; `environment-pypi.yml` holds only conda dependencies (#491)
 - `pytest-timeout` added to the `tests` extra; `aqua-core[fdb]` listed in `environment.yml` to keep it in the lock file (#491)

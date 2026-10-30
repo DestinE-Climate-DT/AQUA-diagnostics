@@ -46,6 +46,7 @@ on:
           "environment" (environment.yml, released aqua-core),
           "release" (environment-pypi.yml + pip install of the checkout: what a user gets when installing from source),
           "pypi" (environment-pypi.yml + aqua-diagnostics from PyPI + its release tag),
+          "conda" (aqua-diagnostics from conda-forge + its release tag),
           "cross-check" (environment.yml + aqua-core from aqua-core-ref)
         required: false
         type: string
@@ -184,7 +185,8 @@ jobs:
 
       - name: Install GH Actions dependencies (macOS)
         if: ${{ runner.os == 'macOS' }}
-        run: brew install wget
+        # CDO is not shipped with the conda-forge smmregrid package on macOS (as in aqua-core)
+        run: brew install wget cdo
 
       - name: Check GitHub token
         if: ${{ runner.os == 'Linux' }}
@@ -216,6 +218,7 @@ jobs:
         env:
           MODE: ${{ inputs.install-mode }}
         run: |
+          EXTRA_ARGS=""
           case "$MODE" in
             local)
               if [ "$RUNNER_OS" != "Linux" ]; then
@@ -233,12 +236,17 @@ jobs:
             pypi|release)
               ENV_FILE=AQUA-diagnostics/environment-pypi.yml
               ;;
+            conda)
+              ENV_FILE=""
+              EXTRA_ARGS="aqua-diagnostics dvc dvc-s3 python-cdo pytest pytest-cov pytest-mock pytest-xdist pytest-timeout coverage"
+              ;;
             *)
               echo "::error::Unknown install-mode '$MODE'"
               exit 1
               ;;
           esac
           echo "env-file=$ENV_FILE" >> "$GITHUB_OUTPUT"
+          echo "extra-args=$EXTRA_ARGS" >> "$GITHUB_OUTPUT"
 
       - name: Set up Micromamba
         uses: mamba-org/setup-micromamba@v3
@@ -254,6 +262,7 @@ jobs:
           post-cleanup: 'none'
           create-args: >-
             python=${{ inputs.python-version }}
+            ${{ steps.resolve.outputs.extra-args }}
 
       # ========================================
       # 4. INSTALL AQUA-DIAGNOSTICS ON TOP OF THE ENVIRONMENT
@@ -276,17 +285,12 @@ jobs:
           cd AQUA-diagnostics
           python -m pip install -e ".[core,tests]"
 
-      - name: Upgrade pip/setuptools/wheel
+      - name: Install aqua-diagnostics from PyPI (PyPI mode)
         if: ${{ inputs.install-mode == 'pypi' }}
-        run: python -m pip install --upgrade pip setuptools wheel
+        run: python -m pip install "aqua-diagnostics[core,tests]"
 
-      - name: Install aqua from PyPI with test dependencies
-        if: ${{ inputs.install-mode == 'pypi' }}
-        run: |
-          python -m pip install aqua-diagnostics[core,tests]
-
-      - name: Checkout the tag for PyPI mode
-        if: ${{ inputs.install-mode == 'pypi' }}
+      - name: Checkout the tag of the installed release (PyPI and conda mode)
+        if: ${{ inputs.install-mode == 'pypi' || inputs.install-mode == 'conda' }}
         run: |
           cd AQUA-diagnostics
           PYPI_VERSION=$(python -c "import importlib.metadata; print(importlib.metadata.version('aqua-diagnostics'))")
