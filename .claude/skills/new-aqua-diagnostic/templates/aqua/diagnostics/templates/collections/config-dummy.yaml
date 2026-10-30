@@ -1,0 +1,32 @@
+# Configuration file for the Dummy tool
+# It computes the annual mean of a variable averaged over a region, and plots it.
+
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  plot_only: false # redo the figures from the saved NetCDF files, without recomputing
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  dummy:
+    run: true                 # mandatory: switches the tool on or off
+    diagnostic_name: 'dummy'  # mandatory: prefix of every output file (the collection name in aqua analysis)
+    variables: ['2t']
+    params:                   # computation options
+      default:
+        regions: [null]       # null is the global domain; names come from definitions/regions.yaml
