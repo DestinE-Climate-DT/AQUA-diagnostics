@@ -485,8 +485,7 @@ class Diagnostic:
             dict: A dictionary mapping region name to its spec
                 (``{longname, lon_limits, lat_limits}``).
         """
-        if regions_file_path is None:
-            regions_file_path = self._get_default_regions_file()
+        regions_file_path = regions_file_path or self._get_default_regions_file()
 
         return self._read_regions_file(regions_file_path).get("regions", {}) or {}
 
@@ -565,8 +564,7 @@ class Diagnostic:
             region_sel (str | list): The name(s) of the polygons to select from it, or None for a lon/lat box.
             frac_threshold (float): The ``frac_threshold`` of the region, or None for a lon/lat box.
         """
-        if regions_file_path is None:
-            regions_file_path = self._get_default_regions_file()
+        regions_file_path = regions_file_path or self._get_default_regions_file()
         regions_content = self._read_regions_file(regions_file_path)
         spec = (regions_content.get("regions") or {}).get(region, {})
         source = spec.get("regionmask")
