@@ -175,14 +175,11 @@ The ``definitions/`` top-level folder contains shared lookup files used by all d
 ``regions.yaml`` is the centralized registry of all available geographic regions:
 any diagnostic can refer to a region by name (e.g. ``nh``, ``arctic``, ``io``) and the
 ``Diagnostic`` base class resolves it against this single file.
-Regions are polygons whenever possible: the IPCC AR6 reference regions for land and atmosphere
-and the IHO sea areas (`Marine Regions <https://www.marineregions.org/>`_) for oceans and seas.
-Regions with no equivalent in either standard are lon/lat boxes.
-Both polygon collections are listed in the ``sources`` section of ``regions.yaml``. If a copy is in the
-``regions/`` folder next to ``regions.yaml``, it is read from there: the container build fills that folder
-from the official links with ``fetch_region_sources`` (in ``aqua.diagnostics.base.region_sources``).
-Otherwise they are downloaded the first time they are used and cached, simplified, in the ``regionmask``
-cache directory.
+A region is either a lon/lat box or a polygon region (see :ref:`diagnostics-regions`).
+To cut the data on a region use ``select_region``. To average over a region, pass to ``Reader.fldmean``
+both the limits returned by ``_set_region`` and the arguments returned by ``_resolve_regionmask_object``
+(``region``, ``region_sel`` and ``frac_threshold``): the limits of a polygon region are ``None``,
+so with the limits alone the mean would silently be global.
 
 The ``tools/`` folder contains a subfolder for each diagnostic, which in turn may contain a
 ``definitions/`` folder with lookup files that are *specific to that diagnostic only* (e.g. custom

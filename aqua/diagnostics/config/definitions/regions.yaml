@@ -1,4 +1,5 @@
 # Centralized region definitions for all AQUA diagnostics (custom file: ``regions_file_path``).
+# Documentation: https://aqua-diagnostics.readthedocs.io/en/latest/stateoftheart_diagnostics/index.html#diagnostics-regions
 # Polygons where possible: IPCC AR6 regions for land and atmosphere, IHO sea areas for
 # oceans and seas; lon/lat boxes for everything else. Keys of a polygon region:
 #   - ``regionmask``: a source below or a regionmask.defined_regions object (e.g. srex)
