@@ -13,7 +13,7 @@ import regionmask
 import shapely
 from filelock import SoftFileLock
 
-from aqua.core.util import load_yaml
+from aqua.core.util import create_folder, load_yaml
 
 
 @cache
@@ -38,7 +38,7 @@ def load_region_source(name: str, url: str, names: str, simplify: float, folder:
         return regionmask.from_geopandas(gpd.read_file(shipped), names=names, name=name, overlap=False)
 
     cache_dir = os.path.join(regionmask.get_options()["cache_dir"] or pooch.os_cache("regionmask"), "aqua")
-    os.makedirs(cache_dir, exist_ok=True)
+    create_folder(cache_dir)
     cached = os.path.join(cache_dir, filename)
     # Checked before the lock, which cannot be created in a read-only cache
     if not os.path.exists(cached):
@@ -64,7 +64,7 @@ def fetch_region_sources(regions_file: str):
         regions_file (str): The path to the regions file.
     """
     folder = os.path.join(os.path.dirname(regions_file), "regions")
-    os.makedirs(folder, exist_ok=True)
+    create_folder(folder)
     with tempfile.TemporaryDirectory() as tmp, regionmask.set_options(cache_dir=tmp):
         for name, spec in load_yaml(regions_file)["sources"].items():
             _ = load_region_source(name, **spec)
