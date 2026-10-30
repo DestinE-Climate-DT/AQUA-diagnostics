@@ -345,6 +345,12 @@ jobs:
       # ========================================
       # 8. RUN TESTS
       # ========================================
+      - name: Cache region polygons
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/regionmask/aqua
+          key: regionmask-${{ hashFiles('AQUA-diagnostics/aqua/diagnostics/base/region_sources.py') }}
+
       - name: Run tests
         timeout-minutes: 40
         env:

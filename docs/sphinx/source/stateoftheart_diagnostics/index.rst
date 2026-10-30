@@ -101,6 +101,68 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
       plot_only: false
       dpi: 300
 
+.. _diagnostics-regions:
+
+Regions
++++++++
+
+The diagnostics that can work on a region refer to it by its key in the centralized regions file,
+``aqua/diagnostics/config/definitions/regions.yaml``, copied by ``aqua install`` in the ``definitions`` folder
+of the AQUA configuration folder (by default ``$HOME/.aqua/``).
+For example, ``regions: ['io', 'sss']`` in the configuration file of the ocean drift, or ``region: 'europe'`` in the one of the biases.
+
+Regions are polygons whenever possible: the `IPCC AR6 reference regions <https://doi.org/10.5194/essd-12-2959-2020>`_
+for land and atmosphere (e.g. ``europe``) and the `IHO sea areas <https://doi.org/10.14284/323>`_ for oceans and seas
+(e.g. ``io``, ``ao``, ``so``, ``arc_o``, ``ls``, ``ms``).
+The regions with no equivalent in either collection are lon/lat boxes.
+
+A lon/lat box gives the limits of the region, while a polygon region names a polygon collection and the polygons to merge:
+
+.. code-block:: yaml
+
+    regions:
+      nh:
+        longname: North Midlatitudes
+        lon_limits: [-180, 180]
+        lat_limits: [30, 90]
+      gs:
+        regionmask: iho
+        regionmask_names: [Greenland Sea, Norwegian Sea]
+        longname: Gin Sea
+
+* ``longname``: the name of the region in titles, logs and filenames (default: the key).
+* ``lon_limits``, ``lat_limits``: the limits of a lon/lat box.
+* ``regionmask``: the polygon collection of a polygon region, either one of the ``sources`` of the regions file (``ar6``, ``iho``)
+  or a collection shipped with `regionmask <https://regionmask.readthedocs.io>`_ (e.g. ``srex`` or ``ar6.ocean``).
+* ``regionmask_names``: the polygons of the collection merged into the region, with their names in the collection
+  (default: the ``longname``).
+* ``frac_threshold``: a grid cell is selected if the region covers more than this fraction of it.
+  The default, ``0.0``, keeps every cell the region touches: on coarse grids (e.g. the 1° LRA) many coastal ocean cells
+  have their centre on land, and they would be lost otherwise. ``null`` keeps only the cells whose centre is inside the region.
+  Any value other than ``null`` needs data on a regular lon/lat grid, such as the LRA or regridded data.
+
+The polygon collections are listed in the ``sources`` section of the regions file, with these keys:
+
+* ``url``: the official link to the zipped shapefile.
+* ``names``: the column of the shapefile with the polygon names.
+* ``simplify``: the tolerance, in degrees, used to simplify the polygons (``0`` for none).
+
+Each collection is read from ``<name>_<simplify>.gpkg`` (e.g. ``iho_0.02.gpkg``) in the ``regions`` folder next to the regions file,
+where the container build stores it.
+If it is not there, it is downloaded from ``url`` the first time it is used (for the IHO sea areas, about 100 MB in one or two minutes),
+simplified and cached in the ``aqua`` folder of the regionmask cache (by default ``$HOME/.cache/regionmask/aqua``).
+
+.. note::
+    On machines without internet access (e.g. MareNostrum 5) the container already has the polygons.
+    Otherwise, copy ``$HOME/.cache/regionmask/aqua`` from a machine where they were already used.
+
+The diagnostics with a ``regions_file_path`` option (e.g. the biases) can use another regions file with the same structure.
+A custom regions file with polygon regions needs its own ``sources`` section,
+and its polygons are looked for in the ``regions`` folder next to it.
+
+The AR6 regions (Iturbide et al., 2020) are distributed under the CC BY 4.0 licence
+and the IHO sea areas (Flanders Marine Institute, 2018) under the CC BY-NC-SA 4.0 licence.
+
 .. _diagnostics-cli-arguments:
 
 Diagnostics CLI arguments

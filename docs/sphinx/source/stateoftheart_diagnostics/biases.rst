@@ -150,6 +150,9 @@ Here we describe only the specific settings for the biases diagnostic.
     * ``diagnostic_name``: name of the diagnostic. ``biases`` by default, but can be changed when the biases CLI is invoked within another ``recipe`` diagnostic, as is currently done for ``Radiation``.
     * ``variables``: list of variables to analyse.
     * ``formulae``: list of formulae to compute new variables from existing ones (e.g., ``tnlwrf+tnswrf``).
+    * ``region``: region to analyse, as a key of the regions file (e.g., ``europe``, see :ref:`diagnostics-regions`).
+      It is applied to both the dataset and the reference. If ``null``, the whole globe is used.
+    * ``regions_file_path``: path to a custom regions file. If ``null``, the centralized regions file is used.
     * ``plev``: pressure levels to analyse for 3D variables.
     * ``seasons``: enable seasonal analysis.
     * ``seasons_stat``: statistic to use for seasonal climatology (e.g., "mean").
@@ -164,6 +167,8 @@ Here we describe only the specific settings for the biases diagnostic.
         diagnostic_name: 'biases'
         variables: ['tprate', '2t', 'msl', 'tnlwrf', 't', 'u', 'v', 'q', 'tos']
         formulae: ['tnlwrf+tnswrf']
+        region: null
+        regions_file_path: null
         params:
             default:
                 plev: [85000, 20000]
@@ -179,6 +184,8 @@ Here we describe only the specific settings for the biases diagnostic.
                 long_name: "Top net radiation"
 
 * ``plot_params``: defines colorbar palette and limits and projection parameters for each variable.
+* ``projection``: the projection of the maps. If ``null``, the Robinson projection is used for global maps
+  and the Plate Carrée projection, zoomed on the region, for regional maps (Robinson again for circumpolar regions).
 * ``show_stats`` enables the display of global bias statistics (mean bias and RMSE) on the global bias plot.
 * ``show_significance`` enables the display of stippling to indicate where the bias is statistically significant,
   based on a two-sample Welch t-test (``significance_alpha`` defines the confidence level, e.g., 0.05 for 95% confidence).
@@ -191,9 +198,9 @@ Refer to `AQUA/aqua/core/util/projections.py <https://github.com/DestinE-Climate
 
 .. code-block:: yaml
 
-plot_params:
+    plot_params:
         default:
-            projection: 'robinson'
+            projection: null
             projection_params: {}
             show_stats: true
             show_significance: true       # Enable significance stippling
@@ -220,6 +227,9 @@ The diagnostic produces four types of plots:
 * Global bias maps (model vs reference)
 * Seasonal climatology and bias maps
 * Vertical climatology and bias profiles (for 3D variables)
+
+If a ``region`` is set, climatologies and statistics are computed over the region only,
+and the bias maps are zoomed on it, with the region in their titles and filenames.
 
 Plots are saved in both PDF and PNG format.
 Data outputs are saved as NetCDF files.

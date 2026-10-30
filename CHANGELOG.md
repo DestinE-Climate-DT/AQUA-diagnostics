@@ -16,6 +16,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Regions: polygon-based regions with `regionmask`, from the IPCC AR6 regions (land and atmosphere) and the IHO sea areas (oceans and seas) (#287)
 - Environment: `environment.yml` and `environment-dev.yml` build on the aqua-core conda-forge package instead of listing its binaries; `environment-pypi.yml` takes aqua-core from conda-forge too, so the PyPI and release tests install only AQUA-diagnostics with pip (#532)
 - Environment aligned with aqua-core 1.2.3: `aqua-core>=1.2.3`, `eccodes>=2.50.0,<2.51`, `smmregrid==0.2.0` replaces the `cdo` pin (CDO comes with smmregrid), `python-dateutil<3` for conda-lock; CDO installed with Homebrew on macOS CI runners; relock with `--filter-extras` as in aqua-core; new `conda` install mode and manual-only `aqua-diagnostics-conda.yml`; `test_trends` tolerance relaxed for macOS (#524)
 - Drop support to Python 3.11, as in aqua-core (#491)
@@ -24,7 +25,6 @@ Complete list:
 - Fix flaky `test_select_region_without_retrieve` (#491)
 - Setup checker: use absolute imports so it runs as a script from `aqua analysis` (#520)
 - Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
-- Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469).
 - Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469, #507)
 - Ocean3D: Hovmoller graphical improvements (#478)
 - Implementation of load netcdf and plot only in ocean drift CLI (#457)
