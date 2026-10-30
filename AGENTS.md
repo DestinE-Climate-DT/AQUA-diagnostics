@@ -54,8 +54,10 @@ Three layers, kept separate (see `histogram/` for a compact reference):
      `NotEnoughDataError` when too short
    - Use `self.reader` methods (`select_area`, `fldmean`, `timmean`, ...) and `self._check_data()` for unit conversion
    - Regions by name via `self._set_region()` / `self.select_region()`: never hard-code lat/lon boxes
-   - Store results as attributes; carry plot metadata in `AQUA_*` attrs (`AQUA_catalog/model/exp/realization/region`);
-     after Dataset→DataArray, call `self._set_date_attrs()` again
+   - Store results as instance attributes; carry plot metadata in the existing `AQUA_*` attrs
+     (`AQUA_catalog/model/exp/realization/region`, dates); after Dataset→DataArray, call `self._set_date_attrs()` again
+   - **Never create a new attribute (instance or `AQUA_*`) unless strictly necessary**: there are already many, so reuse
+     an existing one first (list them with `grep -rhoE "AQUA_[a-zA-Z_]+" aqua/diagnostics | sort -u`)
    - `save_netcdf()` via `Diagnostic.save_netcdf`; `load()` must mirror it through one shared filename-key helper
      (this is what makes `output.plot_only` work)
 2. **Plot class** `PlotMyDiag` (not a `Diagnostic`): takes computed data for one or more models plus reference,
