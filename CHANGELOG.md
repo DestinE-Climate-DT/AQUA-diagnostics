@@ -16,6 +16,7 @@ Unreleased in the current development version (target v0.26.0):
 Main changes:
 
 Complete list:
+- Environment: `environment.yml` and `environment-dev.yml` build on the aqua-core conda-forge package instead of listing its binaries; `environment-pypi.yml` takes aqua-core from conda-forge too, so the PyPI and release tests install only AQUA-diagnostics with pip (#532)
 - Environment aligned with aqua-core 1.2.3: `aqua-core>=1.2.3`, `eccodes>=2.50.0,<2.51`, `smmregrid==0.2.0` replaces the `cdo` pin (CDO comes with smmregrid), `python-dateutil<3` for conda-lock; CDO installed with Homebrew on macOS CI runners; relock with `--filter-extras` as in aqua-core; new `conda` install mode and manual-only `aqua-diagnostics-conda.yml`; `test_trends` tolerance relaxed for macOS (#524)
 - Drop support to Python 3.11, as in aqua-core (#491)
 - New CI testing strategy aligned with aqua-core (see `CONTRIBUTING.md`): PR tests, nightly against released and `main` aqua-core on Ubuntu/macOS, release matrix (replaces the monthly tests), PyPI matrix, label-driven cross-check and relock, automatic failure issues; `environment-pypi.yml` holds only conda dependencies (#491)
