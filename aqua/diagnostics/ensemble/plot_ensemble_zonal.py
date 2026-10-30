@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.data_model import CoordIdentifier
+from aqua.core.graphics import ConfigStyle
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
@@ -177,6 +178,7 @@ class PlotEnsembleZonal(BaseMixin):
         # squeeze all other dimensions if present
         dataset = dataset.squeeze()
 
+        ConfigStyle(loglevel=self.loglevel)
         fig = plt.figure(figsize=figure_size)
         ax = fig.add_subplot(1, 1, 1)
         im = ax.contourf(
@@ -188,8 +190,8 @@ class PlotEnsembleZonal(BaseMixin):
             extend="both",
         )
         ax.set_ylim(ylim)
-        ax.set_ylabel(ylabel, fontsize=9)
-        ax.set_xlabel(xlabel, fontsize=9)
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel(xlabel)
         ax.set_facecolor("grey")
         ax.set_title(title)
         cbar = fig.colorbar(im, ax=ax, shrink=0.9, extend="both")

@@ -91,13 +91,13 @@ def plot_multi_vertical_lines(
                 loglevel=loglevel,
             )
             if titles:
-                ax.set_title(titles[i], fontsize=12)
+                ax.set_title(titles[i])
             if xtext:
                 ax.set_xlabel(xtext[i])
             if ytext:
                 ax.set_ylabel(ytext[i])
             if i == 0:  # only first column
-                ax.legend(fontsize=14)
+                ax.legend()
             else:
                 ax.legend().remove()
 
@@ -120,7 +120,7 @@ def plot_multi_vertical_lines(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 5, y=1.05)
+        fig.suptitle(title, y=1.05)
 
     if return_fig:
         return fig

@@ -171,7 +171,7 @@ class Plot2DSeaIce:
                     regions=reg_ref.attrs.get("AQUA_region"),
                     timeseason=f"Month: {int_month_name(month)}",
                 ).generate()
-                subfig.suptitle(title, fontsize=14, y=1.02)
+                subfig.suptitle(title, y=1.02)
 
                 # plot ref
                 setup = self._get_cmap(monref)
@@ -375,7 +375,7 @@ class Plot2DSeaIce:
                 ext_coords = self.extent_regions.get(region, None)
                 ax = apply_circular_window(ax, extent=ext_coords)
 
-            ax.set_title(f"Month: {int_month_name(month)}", fontsize=12)
+            ax.set_title(f"Month: {int_month_name(month)}")
 
         # Adjust the location of the subplots on the page to make room for the colorbar
         fig.subplots_adjust(bottom=0.25, top=0.8, left=0.15, right=0.85, wspace=0.03, hspace=0.5)
@@ -392,7 +392,7 @@ class Plot2DSeaIce:
             **{"shrink": 0.3, "pad": 0.07},
         )
 
-        fig.suptitle(f"{set_map_title(datarr)}", fontsize=13)
+        fig.suptitle(f"{set_map_title(datarr)}")
 
         description = (
             f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method', '')} climatology "
@@ -497,7 +497,7 @@ class Plot2DSeaIce:
         else:
             units = ""
 
-        cb.set_label(f"Sea-ice {data.attrs.get('AQUA_method', '')}{units}", fontsize=11)
+        cb.set_label(f"Sea-ice {data.attrs.get('AQUA_method', '')}{units}")
         return cb
 
     def _get_cmap(self, datarr):

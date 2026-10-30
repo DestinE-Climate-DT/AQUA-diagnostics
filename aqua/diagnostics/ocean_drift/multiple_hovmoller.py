@@ -107,8 +107,6 @@ def plot_multi_hovmoller(
             if i > 0:
                 # Same depth axis as the first column: its label would only crowd the colorbar on the left
                 ax.set_ylabel("")
-            if titles and titles[k]:
-                ax.title.set_fontsize(13)
             if text and text[k]:
                 add_row_label(ax, text[k])
             # Retrieve last plotted object for colorbar (QuadMesh or ContourSet)
@@ -137,7 +135,7 @@ def plot_multi_hovmoller(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10)
+        fig.suptitle(title)
 
     if return_fig:
         return fig

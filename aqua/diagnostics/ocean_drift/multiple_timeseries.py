@@ -89,9 +89,6 @@ def plot_multi_timeseries(
                 ax.set_ylabel(ylabels[k] or "")
             set_year_ticks(ax)
 
-            if titles and titles[k]:
-                ax.title.set_fontsize(13)
-
             if text and text[k]:
                 add_row_label(ax, text[k])
     # Adjust overall layout
@@ -100,7 +97,7 @@ def plot_multi_timeseries(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10)
+        fig.suptitle(title)
 
     if return_fig:
         return fig

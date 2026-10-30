@@ -207,12 +207,11 @@ def plot_maps(
             formatter = ticker.ScalarFormatter(useMathText=True)
             formatter.set_powerlimits((0, 0))  # always scientific notation
             cbar.ax.xaxis.set_major_formatter(formatter)
-            cbar.ax.xaxis.offsetText.set_fontsize(8)
         if titles and titles[i]:
-            ax.set_title(titles[i], fontsize=9)
+            ax.set_title(titles[i])
 
     if title:
-        plt.suptitle(title, fontsize=ncols * 7, y=0.95)
+        plt.suptitle(title, y=0.95)
 
     if return_fig:
         return fig
