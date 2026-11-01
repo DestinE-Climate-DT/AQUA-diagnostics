@@ -1,11 +1,13 @@
-# Models for which sea surface temperature (TOS) variability is to be evaluated.
+# Standalone VariabilityMap configuration: sea surface temperature (TOS) variability against ESA-CCI.
 datasets:
   - catalog: 'climatedt-o25.1'
     model: 'IFS-FESOM'
     exp: 'historical-1990'
     source: 'lra-r100-monthly'
     regrid: null
-    fix: True
+    startdate: '1994-01-01'
+    enddate: '1994-12-31'
+    reader_kwargs: null # it can be a dictionary with reader kwargs (e.g. fix, realization)
 
 # This is the reference model against which other models are compared.
 references:
@@ -14,7 +16,9 @@ references:
     exp: 'v3.0.1'
     source: 'r100-monthly'
     regrid: null
-    fix: True
+    startdate: '1994-01-01'
+    enddate: '1994-12-31'
+    reader_kwargs: null
 
 setup:
   loglevel: 'WARNING'
@@ -29,18 +33,12 @@ output:
 diagnostics:
   variabilitymap:
     run: true
-    diagnostic_name: 'ocean2d'
+    diagnostic_name: 'variability_map'
     variables: ['tos']
-    params:
-      default:
-        startdate_data: '1994-01-01'
-        enddate_data: '1994-03-31'
-        startdate_ref: '1994-01-01'
-        enddate_ref: '1994-03-31'
     plot_params:
       default:
         contour: true
-        projection: 'robinson' # for 'robinson' must be 'true' and for 'plate_carree' it must be 'false'
+        projection: 'robinson'
         projection_params: {}
         vmin:
         vmax:
@@ -48,10 +46,10 @@ diagnostics:
         tgt_grid_name: "r1440x721"
         regrid_method: 'ycon'
       # sub region selection
-      sub_region :
-        name: Agulhas
+      sub_region:
+        name: agulhas
         lon_limits: [5, 50]
-        lat_limits: [-10, -50]
+        lat_limits: [-50, -10]
         projection: 'plate_carree'
         contour: false
         projection_params: {}

@@ -15,10 +15,10 @@ No more environments than the regular AQUA-diagnostics ones (located in `./envir
 Refer to the AQUA-diagnostics documentation for more information.
 
 ## Configuration
-The CLI application requires a YAML configuration file. An example of which is available `AQUA-diagnostics/aqua/diagnostics/config/collections/legacy/ocean2d/config-ocean2d-aviso.yaml` to specify the settings.
+The CLI application requires a YAML configuration file. The `ocean2d` collection one (monthly `zos`) is `aqua/diagnostics/config/collections/legacy/ocean2d/config-ocean2d-aviso.yaml`, standalone examples (daily data, `tos`) are in `aqua/diagnostics/config/tools/variability_map/`.
 
 ## Usage
-1. A default configuration file `config-ocean2d-aviso.yaml` is available with the desired settings.
+1. Choose one of the configuration files above, or write your own.
 2. Run the application via CLI or the notebook available in `notebooks/diagnostics`.
 
 ## Note

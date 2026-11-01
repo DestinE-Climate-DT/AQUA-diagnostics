@@ -13,33 +13,23 @@ pytestmark = [
 
 
 @pytest.fixture
-def variability_map_instance(tmp_path):
+def variability_map_instance():
     """Create a fresh VariabilityMap instance for each test."""
-    outputdir = str(tmp_path)
-
-    return VariabilityMap(
+    vm = VariabilityMap(
         catalog="ci",
         model="ERA5",
         exp="era5-hpz3",
         source="monthly",
         regrid="r100",
-        outputdir=outputdir,
-        save_netcdf=True,
         var="2t",
     )
+    return vm
 
 
 @pytest.fixture
-def plot_variability_map_instance(variability_map_instance):
+def plot_variability_map_instance(tmp_path):
     """Create a PlotVariabilityMap instance."""
-    plotvm = PlotVariabilityMap(
-        outputdir=variability_map_instance.outputdir,
-    )
-    # Assign attributes directly to satisfy the OutputSaver
-    plotvm.catalog = variability_map_instance.catalog
-    plotvm.model = variability_map_instance.model
-    plotvm.exp = variability_map_instance.exp
-    return plotvm
+    return PlotVariabilityMap(outputdir=str(tmp_path))
 
 
 @pytest.fixture
@@ -48,12 +38,12 @@ def test_var():
 
 
 class TestVariabilityMap:
-    def test_variability_map(self, variability_map_instance):
+    def test_variability_map(self, variability_map_instance, tmp_path):
         """Test the variability map calculation."""
         vm = variability_map_instance
-        outdir = vm.outputdir
+        outdir = str(tmp_path)
 
-        vm.run()
+        vm.run(outputdir=str(tmp_path))
 
         assert isinstance(vm.data_std, xr.DataArray)
         assert vm.data_std.name == "2t"
@@ -73,7 +63,7 @@ class TestVariabilityMap:
         nc_files = glob.glob(os.path.join(outdir, "netcdf", "*.nc"))
         assert len(nc_files) > 0, "NetCDF file was not saved."
 
-    def test_variability_map_values(self, variability_map_instance):
+    def test_variability_map_values(self, variability_map_instance, tmp_path):
         """Test that the calculated standard deviation is correct."""
         vm = variability_map_instance
 
@@ -93,22 +83,29 @@ class TestVariabilityMap:
             skipna=True,
         ).compute()
 
-        vm.run()
+        vm.run(outputdir=str(tmp_path))
 
         xr.testing.assert_allclose(
             vm.data_std,
             expected,
         )
 
-    def test_variability_map_metadata(self, variability_map_instance):
+    def test_variability_map_metadata(self, variability_map_instance, tmp_path):
         """Test metadata of the variability map."""
         vm = variability_map_instance
 
-        vm.run()
+        vm.run(outputdir=str(tmp_path))
 
         assert vm.data_std.attrs.get("short_name") == "2t"
         assert "long_name" in vm.data_std.attrs
         assert "units" in vm.data_std.attrs
+
+    def test_units_conversion(self):
+        """Units given to the class are applied at retrieve."""
+        vm = VariabilityMap(catalog="ci", model="ERA5", exp="era5-hpz3", source="monthly", var="2t", units="degC")
+        vm.retrieve()
+        assert vm.data.attrs["units"] == "degC"
+        assert float(vm.data.max()) < 100
 
     def test_variables(self, test_var):
         """Test variable selection during retrieval."""
@@ -132,13 +129,14 @@ class TestPlotVariabilityMap:
         variability_map_instance,
         plot_variability_map_instance,
         test_var,
+        tmp_path,
     ):
         """Test the variability map plot."""
         vm = variability_map_instance
         plotvm = plot_variability_map_instance
-        outdir = vm.outputdir
+        outdir = str(tmp_path)
 
-        vm.run()
+        vm.run(outputdir=str(tmp_path))
 
         plotvm.plot(
             dataset_std=vm.data_std,
@@ -163,13 +161,14 @@ class TestPlotVariabilityMap:
         variability_map_instance,
         plot_variability_map_instance,
         test_var,
+        tmp_path,
     ):
         """Test the variability map plot with fixed limits."""
         vm = variability_map_instance
         plotvm = plot_variability_map_instance
-        outdir = vm.outputdir
+        outdir = str(tmp_path)
 
-        vm.run()
+        vm.run(outputdir=str(tmp_path))
 
         plotvm.plot(
             dataset_std=vm.data_std,
@@ -196,13 +195,14 @@ class TestPlotVariabilityMap:
         variability_map_instance,
         plot_variability_map_instance,
         test_var,
+        tmp_path,
     ):
         """Test the variability map difference plot."""
         vm = variability_map_instance
         plotvm = plot_variability_map_instance
-        outdir = vm.outputdir
+        outdir = str(tmp_path)
 
-        vm.run()
+        vm.run(outputdir=str(tmp_path))
 
         plotvm.plot_diff(
             dataset_std=vm.data_std,

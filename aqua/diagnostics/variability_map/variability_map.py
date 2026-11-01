@@ -1,42 +1,37 @@
-import gc
-
 import xarray as xr
 
-from .base import BaseMixin
+from aqua.core.logger import log_configure
+from aqua.diagnostics.base import Diagnostic
 
 xr.set_options(keep_attrs=True)
 
 
-class VariabilityMap(BaseMixin):
+class VariabilityMap(Diagnostic):
     """
     Variability Map Computation
 
     Note: Variability means STD in this diagnostic
     """
 
+    # The STD along time needs at least two time steps to be defined
+    MINIMUM_MONTHS_REQUIRED = 2
+
     def __init__(
         self,
-        diagnostic_name: str = "VariabilityMap",
         catalog: str = None,
         model: str = None,
         exp: str = None,
         source: str = None,
         startdate: str = None,
         enddate: str = None,
-        freq: str = None,
         region: str = None,
         regrid: str = None,
-        lon_limits: list[float] = None,
-        lat_limits: list[float] = None,
         var: str = None,
         long_name: str = None,
         short_name: str = None,
         units: str = None,
-        save_netcdf: bool = True,
-        rebuild: bool = True,
-        outputdir: str = "./",
-        reader_kwargs: dict = {},
-        fix: bool = True,
+        reader_kwargs: dict = None,
+        diagnostic_name: str = "variability_map",
         loglevel: str = "WARNING",
     ):
         """
@@ -45,33 +40,23 @@ class VariabilityMap(BaseMixin):
         This class is designed to load an xarray.Dataset and computes STD.
 
         Args:
-            diagnostic_name (str): Default is 'VariabilityMap'.
-            catalog (str): catalog. It is Mandatory, if 'save_netcdf=True'.
+            catalog (str): catalog. If None, determined by the Reader.
             model (str): Name of the data
             exp (str): Name of the experiment
-            source (str): the source. It is important to give these dates and input.
-                Otherwise the whole dataset is retrieved.
-            startdate (str): Start date.
-            enddate  (str): End date.
-            freq (str): Frequency of the data. TODO.
-            region (str): For subregion selection. Default is 'None'.
-                In case of sub-region STD computation, this variable is mandatory.
+            source (str): the source.
+            startdate (str): Start date. If None, all available data is used.
+            enddate  (str): End date. If None, all available data is used.
+            region (str): Region name from the regions file, used as metadata and in the filename. Default is 'None'.
             regrid (str): Regrid option for the data. NOTE: the regridding will be applied before computing the STD.
-            lon_limits (list[float]): list of lon limits. Default is 'None'.
-                If 'lon_limits' and 'lat_limits' are None, they are taken from region file in AQUA.
-            lat_limits (list[float]): list of lat limits. Default is 'None'.
             var (str): Variable name from data. Default is 'None'.
             long_name (str): If not given extracted from the data.
             short_name (str): If not given extracted from the data.
-            units (str): If not given extracted from the data.
-            save_netcdf (bool): Default is 'True'.
-            rebuild (bool): Recomputes and saves the netcdf. Default is "True".
-            outputdir (str): output directory. Default is './'
-            reader_kwargs (dict, optional): Additional keyword arguments for the Reader. Default is {}.
-            fix (bool, optional): If True, apply data fixes. Default is True.
+            units (str): If given, the data is converted to these units.
+            reader_kwargs (dict, optional): Additional keyword arguments for the Reader (e.g. fix, realization).
+            diagnostic_name (str): Name used for the output files, usually the collection name.
+                Default is 'variability_map'.
             loglevel (str): Default WARNING.
         """
-
         super().__init__(
             catalog=catalog,
             model=model,
@@ -79,54 +64,78 @@ class VariabilityMap(BaseMixin):
             source=source,
             startdate=startdate,
             enddate=enddate,
-            region=region,
             regrid=regrid,
-            lon_limits=lon_limits,
-            lat_limits=lat_limits,
-            reader_kwargs=reader_kwargs,
-            var=var,
-            long_name=long_name,
-            short_name=short_name,
-            units=units,
-            outputdir=outputdir,
-            rebuild=rebuild,
-            fix=fix,
             loglevel=loglevel,
         )
+        self.logger = log_configure(log_level=loglevel, log_name="VariabilityMap")
+        self.diagnostic_name = diagnostic_name
+        self.region, self.lon_limits, self.lat_limits = self._set_region(region=region)
 
-        self.save_netcdf = save_netcdf
-        self.freq = freq
-        # To be assigned inside after STD computation run()
+        self.var = var
+        self.long_name = long_name
+        self.short_name = short_name
+        self.units = units
+        self.reader_kwargs = reader_kwargs or {}
+
+        # To be assigned after STD computation in run()
         self.data_std = None
-        self.startdate = startdate
-        self.enddate = enddate
 
-    def run(self):
+    def retrieve(self):
         """
-        This function performs following three functions:
-        a) Retrieve data and regrid if given then
-        b) Compute STD
-        c) Save netcdf
+        Retrieve the data for the given variable as a DataArray, with units and names set.
         """
+        super().retrieve(var=self.var, reader_kwargs=self.reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
+        self.data = self.data[self.var]
 
-        super().retrieve()
-        if self.data is None and self.var is None:
-            self.logger.warning(f"Variable {self.var} not found in the data. Check the variable name and the data source.")
+        if self.units is not None:
+            self.data = self._check_data(data=self.data, var=self.var, units=self.units)
         else:
-            # Compute STD
-            self.data_std = self.data.std(dim="time", skipna=True).compute()
-            self.logger.info("Variability Map computation complete")
-            # Removing the reference and releasing the memory from the Object reference, which is no longer needed
-            del self.data
-            gc.collect()
+            self.units = self.data.attrs.get("units")
+        # long_name is always defined for the plot title and description
+        self.data.attrs["long_name"] = self.long_name or self.data.attrs.get("long_name", self.var)
+        # short_name is used as the name of the variable in plots and filenames
+        self.data.attrs["short_name"] = self.short_name or self.var
+        self.data.name = self.data.attrs["short_name"]
+        if self.region is not None:
+            self.data.attrs["AQUA_region"] = self.region
 
-            # Remove the non-serializable attribute
-            # in case of downloading data from Polytope this attribute was found
-            if "_earthkit" in self.data_std.attrs:
-                del self.data_std.attrs["_earthkit"]
-            # Save STD as netcdf
-            if self.save_netcdf:
-                self.logger.info(f"Output std netcdf file is saved at {self.outputdir}.")
-                self.netcdf_save(data=self.data_std)  # create_catalog_entry=True
-            else:
-                self.logger.info("Output in netcdf is not saved.")
+    def run(self, outputdir: str = "./", rebuild: bool = True, save_netcdf: bool = True):
+        """
+        Retrieve the data (regridded if requested), compute the STD along time and optionally save it.
+
+        Args:
+            outputdir (str): output directory. Default is './'.
+            rebuild (bool): If True, overwrite an existing netcdf. Default is True.
+            save_netcdf (bool): If True, save the STD map as netcdf. Default is True.
+        """
+        self.retrieve()
+        self.data_std = self.data.std(dim="time", skipna=True).compute()
+        self.logger.info("Variability Map computation complete")
+        # The time series is no longer needed, release it
+        self.data = None
+
+        if save_netcdf:
+            self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
+
+    def save_netcdf(self, outputdir: str = "./", rebuild: bool = True):
+        """
+        Save self.data_std to a netcdf file.
+
+        Args:
+            outputdir (str): output directory. Default is './'.
+            rebuild (bool): If True, overwrite an existing file. Default is True.
+        """
+        extra_keys = {
+            "var": self.data_std.name,
+            # A region key even in the global case, to have a stable filename
+            "region": self.region.replace(" ", "").lower() if self.region is not None else "global",
+        }
+        self.logger.info("Saving the variability map to netcdf in %s", outputdir)
+        super().save_netcdf(
+            data=self.data_std,
+            diagnostic=self.diagnostic_name,
+            diagnostic_product="variability_map",
+            outputdir=outputdir,
+            rebuild=rebuild,
+            extra_keys=extra_keys,
+        )
