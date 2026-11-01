@@ -88,6 +88,9 @@ class LatLonProfiles(Diagnostic):
             lon_limits=lon_limits,
             lat_limits=lat_limits,
         )
+        self.region_object, self.region_sel, self.frac_threshold = self._resolve_regionmask_object(
+            region=region, regions_file_path=regions_file_path
+        )
 
         # Initialize the possible results
         self.seasonal = None  # Seasonal means [DJF, MAM, JJA, SON]
@@ -197,7 +200,14 @@ class LatLonProfiles(Diagnostic):
             raise ValueError(f"Mean type {self.mean_type} not recognized for std computation.")
 
         data = self.reader.fldmean(
-            self.std_data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
+            self.std_data,
+            box_brd=box_brd,
+            lon_limits=self.lon_limits,
+            lat_limits=self.lat_limits,
+            region=self.region_object,
+            region_sel=self.region_sel,
+            frac_threshold=self.frac_threshold,
+            dims=dims,
         )
         monthly_data = self.reader.timmean(
             data, freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time
@@ -455,7 +465,14 @@ class LatLonProfiles(Diagnostic):
 
         if freq == "seasonal":
             data = self.reader.fldmean(
-                self.data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
+                self.data,
+                box_brd=box_brd,
+                lon_limits=self.lon_limits,
+                lat_limits=self.lat_limits,
+                region=self.region_object,
+                region_sel=self.region_sel,
+                frac_threshold=self.frac_threshold,
+                dims=dims,
             )
             monthly_data = self.reader.timmean(
                 data, freq="monthly", exclude_incomplete=exclude_incomplete, center_time=center_time
@@ -479,7 +496,14 @@ class LatLonProfiles(Diagnostic):
         elif freq == "longterm":
             data = self.reader.timmean(self.data, freq=None, exclude_incomplete=exclude_incomplete, center_time=center_time)
             data = self.reader.fldmean(
-                data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits, dims=dims
+                data,
+                box_brd=box_brd,
+                lon_limits=self.lon_limits,
+                lat_limits=self.lat_limits,
+                region=self.region_object,
+                region_sel=self.region_sel,
+                frac_threshold=self.frac_threshold,
+                dims=dims,
             )
 
             data.attrs["AQUA_startdate"] = time_to_string(self.startdate)
