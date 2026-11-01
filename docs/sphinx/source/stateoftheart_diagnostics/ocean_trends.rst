@@ -182,7 +182,8 @@ The diagnostic supports analysis over predefined ocean regions. Common regions i
 * ``po`` - Pacific Ocean
 * ``go`` - Global Ocean
 
-Additional regions can be defined in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``.
+The regions are defined in ``aqua/diagnostics/config/definitions/regions.yaml``, as IHO sea areas or lon/lat boxes:
+see :ref:`diagnostics-regions` for their definition and to add new ones.
 
 Output
 ------

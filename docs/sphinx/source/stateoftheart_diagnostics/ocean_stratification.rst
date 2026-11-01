@@ -38,7 +38,7 @@ File structure
 * The diagnostic is located in the ``aqua/diagnostics/ocean_stratification`` directory, which contains both the source code and the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-stratification.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/ocean_stratification`` directory and contain examples of how to use the diagnostic.
-* Regions definitions are available in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``
+* Regions definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml`` (see :ref:`diagnostics-regions`)
 
 
 Input variables and datasets
@@ -191,7 +191,8 @@ The diagnostic supports analysis over predefined ocean regions. Common regions i
 * ``ros`` - Ross Sea
 * ``global`` - Global ocean (default if no region specified)
 
-Additional regions can be defined in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``.
+The regions are defined in ``aqua/diagnostics/config/definitions/regions.yaml``, as IHO sea areas or lon/lat boxes:
+see :ref:`diagnostics-regions` for their definition and to add new ones.
 
 Output
 ------
