@@ -7,8 +7,12 @@ In this section we will provide a step-by-step guide to install the Python packa
 AQUA-diagnostics is developed and tested with Python 3.14 and it supports Python 3.12,<3.15.
 
 AQUA-diagnostics extends the AQUA-core package (https://github.com/DestinE-Climate-DT/AQUA), which provides
-the core functionalities required for running diagnostics. When you install AQUA-diagnostics, AQUA-core
-will be automatically installed as a dependency, giving you access to both packages.
+the core functionalities required for running diagnostics. In the Conda/Mamba installations below AQUA-core is installed
+from conda-forge, together with its binary dependencies, while the ``core`` extra of AQUA-diagnostics
+lets pip install it when it is missing, giving you access to both packages.
+
+Once the installation is completed, continue with :ref:`getting_started` to set up AQUA (``aqua install``, ``aqua add``)
+and run your first diagnostic.
 
 .. _installation-pip:
 
@@ -29,7 +33,7 @@ This can be achieved with:
 
 .. code-block:: bash
 
-    mamba create -n aquarium -c conda-forge python=3.14 smmregrid eccodes esmpy
+    mamba create -n aquarium -c conda-forge python=3.14 aqua-core esmpy
     mamba activate aquarium
     pip install aqua-diagnostics[core]
 
@@ -38,7 +42,10 @@ The same environment is available in the AQUA-diagnostics GitHub repository in t
 .. warning::
 
     CDO is not shipped with the conda-forge packages on MacOS: install it with Homebrew (``brew install cdo``)
-    before creating the environment. On Linux CDO is installed together with ``smmregrid``.
+    before creating the environment. On Linux CDO is installed together with ``aqua-core`` (via ``smmregrid``).
+
+Once the package is installed, set up AQUA with ``aqua install <machine>`` and ``aqua add <catalog>``
+as described in :ref:`getting_started`.
 
 .. note::
 
@@ -58,12 +65,19 @@ You can install them with the following command:
     pip install aqua-diagnostics[docs]
     pip install aqua-diagnostics[notebooks]
     pip install aqua-diagnostics[tests]
+    pip install aqua-diagnostics[style]
 
-Or to install all the extra dependencies:
+The ``core-fdb`` extra installs AQUA-core together with the dependencies needed to access ClimateDT data (FDB and Polytope):
 
 .. code-block:: bash
 
-    pip install aqua-diagnostics[all]
+    pip install aqua-diagnostics[core-fdb]
+
+Extras can be combined, for example to install AQUA-core and the dependencies to run the notebooks and the tests:
+
+.. code-block:: bash
+
+    pip install aqua-diagnostics[core,notebooks,tests]
 
 
 .. _installation-conda:
@@ -108,16 +122,12 @@ Finally, activate the environment:
 
 At this point, you should have successfully installed the AQUA-diagnostics package and its dependencies
 in the newly created aqua-diagnostics environment.
+Now set up AQUA with ``aqua install <machine>`` and ``aqua add <catalog>`` as described in :ref:`getting_started`.
 
 
 .. note::
 
-    By default, the environment file installs the cloned version of AQUA-diagnostics in editable mode with ``pip install -e .[all]``.
-
-.. note::
-
-    If you need to install AQUA-core in editable mode for development purposes, you must clone the
-    AQUA-core repository separately and install it in editable mode before installing AQUA-diagnostics.
+    By default, the environment file installs the cloned version of AQUA-diagnostics in editable mode with ``pip install -e .[core-fdb,tests]``.
 
 
 .. _installation-lumi:
@@ -125,6 +135,11 @@ in the newly created aqua-diagnostics environment.
 
 HPC Installation
 ----------------
+
+.. note::
+
+    On all the HPC systems, once the installation is completed remember to set up AQUA with
+    ``aqua install <machine>`` and ``aqua add <catalog>`` as described in :ref:`getting_started`.
 
 Installation on LUMI HPC
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -367,7 +382,7 @@ It is recommended to define an ``$AQUA_DIAGNOSTICS`` environment variable that p
 
 .. code-block:: bash
 
-    export AQUA_DIAGNOSTICS=/path/to/AQUA
+    export AQUA_DIAGNOSTICS=/path/to/AQUA-diagnostics
 
 Then run the the installation script:
 
