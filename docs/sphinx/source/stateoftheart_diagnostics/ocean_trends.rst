@@ -127,8 +127,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ocean_trends
-    python cli_ocean_trends.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ocean_trends.cli_ocean_trends --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

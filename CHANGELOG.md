@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- Major documentation update (#473)
 
 ## [v0.26.0]
 

@@ -40,7 +40,7 @@ Anything generic (not tied to one tool) belongs in aqua-core, not here.
 `aqua.plugins` entry point (`get_install_dirs()`). Repo edits are visible at runtime only with an editable install
 (`aqua install <machine> --diagnostics <repo-path>`, which symlinks); otherwise reinstall.
 
-Docs under `docs/sphinx/source/new_diagnostics/guidelines/` are partly outdated (e.g. `diagnostic_config.py`): trust the code.
+Docs under `docs/sphinx/source/new_diagnostics/guidelines/` may lag behind the code: trust the code.
 
 ---
 

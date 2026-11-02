@@ -36,7 +36,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/histogram/`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-histogram.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-histogram.yaml``
 * Region definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/histogram/`` directory and contain examples of how to use the diagnostic.
 
@@ -109,8 +109,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/histogram
-    python cli_histogram.py --config <path_to_config_file>
+    python -m aqua.diagnostics.histogram.cli_histogram --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
