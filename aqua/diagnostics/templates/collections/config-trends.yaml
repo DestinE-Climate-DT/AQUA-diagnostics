@@ -14,6 +14,7 @@ output:
   outputdir: "./"
   rebuild: true
   save_netcdf: true
+  plot_only: false  # if true, plots are produced from the netcdf files already in outputdir
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
 
@@ -26,3 +27,10 @@ diagnostics:
       var: ['thetao', 'so']
       regions: ['io', 'ao', 'so', 'arc_o', 'po', 'go']
       # dim_mean: ['lat']
+
+  trends:
+    run: true
+    diagnostic_name: 'trends'  # distinct from the ocean3d output prefix above
+    var: ['thetao', 'so']
+    regions: ['io', 'ao', 'so', 'arc_o', 'po', 'go']
+    plot: false  # Generic plotting currently supports horizontal 2D fields only.

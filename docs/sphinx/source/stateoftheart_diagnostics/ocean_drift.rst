@@ -37,9 +37,9 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ocean_drift`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-ocean_drift.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-drift.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/ocean_drift`` directory and contain examples of how to use the diagnostic.
-* Regions definitions are available in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``
+* Regions definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml`` (see :ref:`diagnostics-regions`)
 
 Input variables and datasets
 ----------------------------
@@ -92,6 +92,18 @@ The basic structure of the analysis is the following:
     The diagnostic automatically processes data to generate all transformation types (full values, anomalies and standardized anomalies).
     Spatial averaging is performed over the specified dimensions before computing temporal transformations.
 
+Instead of calling ``run()``, the Hovmöller products of a previous run can be read back from their NetCDF files
+(see :ref:`diagnostics-plot-only`):
+
+.. code-block:: python
+
+    hov.load(outputdir="/path/to/previous/output", regions="io", anomaly_ref="t0")
+
+.. note::
+
+    The region and the anomaly reference take part in the filenames and must be given to ``load()``.
+    Each region is loaded only when all of its products are present (full values, anomalies and standardized anomalies).
+    If ``startdate`` or ``enddate`` is set, the products are loaded only if they were computed over the same period.
 
 CLI usage
 ---------
@@ -100,8 +112,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ocean_drift
-    python cli_ocean_drift.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ocean_drift.cli_ocean_drift --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
@@ -155,9 +166,10 @@ The diagnostic supports analysis over predefined ocean regions. Common regions i
 * ``po`` - Pacific Ocean
 * ``arc_o`` - Arctic Ocean
 * ``go`` - Global Ocean
-* ``ss`` - Sargasso Sea
+* ``sss`` - Sargasso Sea
 
-Additional regions can be defined in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``.
+The regions are defined in ``aqua/diagnostics/config/definitions/regions.yaml``, as IHO sea areas or lon/lat boxes:
+see :ref:`diagnostics-regions` for their definition and to add new ones.
 
 Output
 ------

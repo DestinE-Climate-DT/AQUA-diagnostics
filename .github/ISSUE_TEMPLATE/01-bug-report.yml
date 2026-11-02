@@ -2,7 +2,7 @@
 
 name: "Bug Report"
 description: "File a bug report"
-labels: ["bug"]
+type: Bug
 body:
   - type: markdown
     attributes:
@@ -63,6 +63,7 @@ body:
       description: Which AQUA-diagnostic version are you using?
       options:
       - main
+      - v0.26.0
       - v0.25.1
       - v0.25.0
       - v0.24.1

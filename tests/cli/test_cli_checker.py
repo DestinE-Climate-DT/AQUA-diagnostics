@@ -1,6 +1,8 @@
 """Tests for the AQUA diagnostics setup checker CLI."""
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -10,9 +12,18 @@ import pytest
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml as write_yaml
 from aqua.core.util import load_yaml
-from aqua.diagnostics.checker.cli_checker import _checker_build_config, main, parse_arguments
+from aqua.diagnostics.base import cli_setup_checker
+from aqua.diagnostics.base.cli_setup_checker import _checker_build_config, main, parse_arguments
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
+
+
+def test_checker_runs_as_script():
+    """aqua-analysis launches the checker as a plain script, so it must not rely on relative imports."""
+    result = subprocess.run(
+        [sys.executable, cli_setup_checker.__file__, "--help"], capture_output=True, text=True, check=False
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_parse_arguments_uses_common_and_checker_options():
@@ -130,7 +141,7 @@ def test_main_forwards_typed_reader_kwargs(rebuild_flags, rebuild):
         "custom_parameter": [1, "r2", True, 1.5],
     }
     diagnostic = MagicMock()
-    with patch("aqua.diagnostics.checker.cli_checker.Diagnostic", return_value=diagnostic):
+    with patch("aqua.diagnostics.base.cli_setup_checker.Diagnostic", return_value=diagnostic):
         main(
             [
                 "--model",
@@ -164,8 +175,8 @@ def test_main_removes_temporary_config():
         write_yaml(outfile=outfile, cfg=cfg)
 
     with (
-        patch("aqua.diagnostics.checker.cli_checker.dump_yaml", side_effect=capture_config),
-        patch("aqua.diagnostics.checker.cli_checker.Diagnostic", return_value=MagicMock()),
+        patch("aqua.diagnostics.base.cli_setup_checker.dump_yaml", side_effect=capture_config),
+        patch("aqua.diagnostics.base.cli_setup_checker.Diagnostic", return_value=MagicMock()),
     ):
         main(["--model", "IFS", "--exp", "test-tco79", "--source", "short"])
 
@@ -185,7 +196,7 @@ def test_main_retrieves_with_diagnostic_and_writes_metadata(tmp_path):
     diagnostic.exp = "test-tco79"
     diagnostic.reader.backend.expcat = experiment_catalog
 
-    with patch("aqua.diagnostics.checker.cli_checker.Diagnostic", return_value=diagnostic) as diagnostic_class:
+    with patch("aqua.diagnostics.base.cli_setup_checker.Diagnostic", return_value=diagnostic) as diagnostic_class:
         main(
             [
                 "--catalog",
@@ -234,7 +245,7 @@ def test_main_uses_default_regrid_and_wraps_retrieval_errors():
     diagnostic.retrieve.side_effect = RuntimeError("catalog unavailable")
 
     with (
-        patch("aqua.diagnostics.checker.cli_checker.Diagnostic", return_value=diagnostic) as diagnostic_class,
+        patch("aqua.diagnostics.base.cli_setup_checker.Diagnostic", return_value=diagnostic) as diagnostic_class,
         pytest.raises(NoDataError, match="catalog unavailable"),
     ):
         main(

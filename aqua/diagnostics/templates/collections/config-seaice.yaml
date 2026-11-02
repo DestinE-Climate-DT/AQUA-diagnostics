@@ -66,7 +66,6 @@ output:
   save_netcdf: true # mandatory
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
-  create_catalog_entry: false
 
 # =======  Config for timeseries Sea Ice  =======
 # ===============================================

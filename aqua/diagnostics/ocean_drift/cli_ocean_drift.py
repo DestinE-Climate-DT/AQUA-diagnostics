@@ -56,23 +56,38 @@ def main(argv=None):
             # if regions != [None]:
             #    regions.append(None)
 
+            anomaly_ref = "t0"
+            reader_kwargs = dataset.get("reader_kwargs") or {}
+
             logger.info("Processing regions: %s", regions)
             try:
                 data_hovmoller = Hovmoller(
                     **dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel
                 )
-                data_hovmoller.run(
-                    regions=regions,
-                    var=var,
-                    dim_mean=dim_mean,
-                    anomaly_ref="t0",
-                    outputdir=cli.outputdir,
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
-                    rebuild=cli.rebuild,
-                )
+                if not cli.plot_only:
+                    data_hovmoller.run(
+                        regions=regions,
+                        var=var,
+                        dim_mean=dim_mean,
+                        anomaly_ref=anomaly_ref,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=reader_kwargs,
+                        rebuild=cli.rebuild,
+                        save_netcdf=cli.save_netcdf,
+                    )
+
+                # Populate from the netcdf files, written just now or by a previous run. Results computed
+                # without saving them are already in memory, and older files must not replace them.
+                if cli.plot_only or cli.save_netcdf:
+                    data_hovmoller.load(
+                        regions=regions, anomaly_ref=anomaly_ref, outputdir=cli.outputdir, reader_kwargs=reader_kwargs
+                    )
             except Exception as e:
                 logger.error("Error processing regions %s: %s", regions, e)
             else:
+                if not data_hovmoller.processed_data:
+                    reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                    logger.warning("No Hovmoller results found in %s%s, skipping the plots", cli.outputdir, reason)
                 for region, processed in data_hovmoller.processed_data.items():
                     try:
                         hov_plot = PlotHovmoller(

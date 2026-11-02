@@ -25,7 +25,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/ensemble`` directory, which contains both the source code and the command-line interface (CLI) scripts.
-* Template configuration files are available in the ``aqua/diagnostics/templates/diagnostics/config-ensemble_zonalmean.yaml`` directory.
+* Template configuration files are available in the ``aqua/diagnostics/templates/collections/config-ensemble_zonalmean.yaml`` directory.
 * Notebooks are available in the ``notebooks/diagnostics/ensemble`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -127,8 +127,7 @@ The diagnostic can be run from the command-line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ensemble
-    python cli_zonal_ensemble.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ensemble.cli_zonal_ensemble --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
@@ -153,6 +152,8 @@ The diagnostic produces the following outputs:
 * Contour plot of ensemble standard deviation as a function of latitude and depth/level
 
 Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``). Data outputs are saved as NetCDF files.
+
+Extra attention needs to be paid in case of single model ensemble analysis. In this case, the ``outputdir`` should be the path where the realization data exists. For example, if the realizations are in ``/work/IFS-NEMO/`` as ``r1``, ``r2`` and so on, the ``outputdir`` must be passed as ``/work/IFS-NEMO/ensemble/ensemble/``. Then the ensemble output directory will have an ``ensemble`` directory with all the ensemble output inside it.
 
 Configuration file structure
 ----------------------------

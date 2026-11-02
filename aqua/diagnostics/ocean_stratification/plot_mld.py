@@ -132,7 +132,7 @@ class PlotMLD:
             diagnostic_product=self.diagnostic_product,
             metadata={"description": self.description},
             rebuild=rebuild,
-            extra_keys={"region": self.region},
+            extra_keys={"climatology": self.clim_time, "region": self.region},
             format=save_format,
             dpi=dpi,
         )

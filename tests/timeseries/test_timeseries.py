@@ -3,7 +3,6 @@ import os
 import pytest
 import xarray as xr
 
-from aqua import Reader
 from aqua.diagnostics.timeseries import PlotTimeseries, Timeseries
 from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
 
@@ -71,23 +70,26 @@ class TestTimeseries:
             regrid=self.regrid,
         )
 
-        ts.run(var=self.var, freq=["monthly", "annual"], outputdir=tmp_path, std=True, create_catalog_entry=True)
+        ts.run(
+            var=self.var, freq=["monthly", "annual"], outputdir=tmp_path, std=True
+        )  # DEPRECATED: create_catalog_entry=True)
 
         assert ts.lon_limits == [-180, 180]
         assert ts.lat_limits == [-15, 15]
 
-        reader = Reader(
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            source=f"aqua-{self.diagnostic_name}-timeseries",
-            freq="monthly",
-            loglevel=loglevel,
-            areas=False,
-        )
-        data = reader.retrieve()[self.var]
+        # I cannot anymore open the source decause the create_catalog_entry is deprecated.
+        # reader = Reader(
+        #     catalog=self.catalog,
+        #     model=self.model,
+        #     exp=self.exp,
+        #     source=f"aqua-{self.diagnostic_name}-timeseries",
+        #     freq="monthly",
+        #     loglevel=loglevel,
+        #     areas=False,
+        # )
+        # data = reader.retrieve()[self.var]
         assert isinstance(ts.data, xr.DataArray)
-        assert data.values[0] == pytest.approx(60.145472982004186, rel=approx_rel)
+        assert ts.monthly.values[0] == pytest.approx(60.145472982004186, rel=approx_rel)
 
         filename = (
             f"{self.diagnostic_name}.timeseries.{self.catalog}.{self.model}.{self.exp}.r1.{self.var}.monthly.{self.region}.nc"

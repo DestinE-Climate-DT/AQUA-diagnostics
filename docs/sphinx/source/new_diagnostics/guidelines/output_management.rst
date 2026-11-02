@@ -42,7 +42,7 @@ The following example demonstrates how to initialize the ``OutputSaver`` class:
 
 .. code-block:: python
 
-    from aqua.diagnostics.core import OutputSaver
+    from aqua.diagnostics.base import OutputSaver
 
     # Initializing with the system-defined default catalog
     outputsaver = OutputSaver(diagnostic='dummy',
@@ -159,13 +159,13 @@ This example demonstrates saving multiple plot formats (e.g. PNG/PDF/SVG) with m
 Opening a PDF File and Displaying Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To open a PDF file and display its metadata:
+To display the metadata of a PDF file you can use ``pypdf``, which is installed with AQUA-diagnostics:
 
 .. code-block:: python
 
-    from aqua.core.util import open_image
+    from pypdf import PdfReader
 
-    open_image("/path/to/my/file/dummy.mean.climatedt-phase1.IFS-NEMO.historical-1990.obs.ERA5.era5.pdf")
+    PdfReader("/path/to/my/file/dummy.mean.climatedt-phase1.IFS-NEMO.historical-1990.obs.ERA5.era5.pdf").metadata
 
 Generating a Filename for Multimodel or Multireference Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -187,16 +187,16 @@ Complete information about the datasets is preserved in the output file's metada
     filename = outputsaver.generate_name(diagnostic_product='test')
     # Output: 'dummy.test.multimodel.obs.ERA5.era5'
 
-Creating a catalog entry
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. Creating a catalog entry
+.. ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``save_netcdf`` method allows for the creation of a catalog entry for the saved NetCDF file.
-This entry is created in the same experiment file of the input dataset.
+.. The ``save_netcdf`` method allows for the creation of a catalog entry for the saved NetCDF file.
+.. This entry is created in the same experiment file of the input dataset.
 
-In order to enable the catalog entry creation, the method should include as arguments:
+.. In order to enable the catalog entry creation, the method should include as arguments:
 
-- ``create_catalog_entry`` (*bool*, optional): Set as ``True`` to create a catalog entry for the saved NetCDF file.
-- ``dict_catalog_entry`` (*dict*, optional): A dictionary containing the catalog entry information.
-  The catalog can specify a ``jinjalist`` (by default ``['freq', 'stat', 'region', 'realization']``) and a ``wildcardlist`` (by default ``['var']``).
-  For each matching ``extra_keys``, the code will create an intake parameter for the first list and a wildcard for the second.
-  This allows for catalog entry which can access the relevant NetCDF files when used with the ``Reader``.
+.. - ``create_catalog_entry`` (*bool*, optional): Set as ``True`` to create a catalog entry for the saved NetCDF file.
+.. - ``dict_catalog_entry`` (*dict*, optional): A dictionary containing the catalog entry information.
+..   The catalog can specify a ``jinjalist`` (by default ``['freq', 'stat', 'region', 'realization']``) and a ``wildcardlist`` (by default ``['var']``).
+..   For each matching ``extra_keys``, the code will create an intake parameter for the first list and a wildcard for the second.
+..   This allows for catalog entry which can access the relevant NetCDF files when used with the ``Reader``.

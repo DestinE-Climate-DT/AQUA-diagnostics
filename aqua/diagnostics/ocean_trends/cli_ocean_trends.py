@@ -61,57 +61,68 @@ def main(argv=None):
             # Calculating Trend on whole dataset
 
             data_trends = Trends(**dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel)
-            data_trends.run(
-                # region=region,
-                var=var,
-                # dim_mean=dim_mean,
-                outputdir=outputdir,
-                rebuild=rebuild,
-                reader_kwargs=reader_kwargs,
-            )
+            if not cli.plot_only:
+                data_trends.run(
+                    # region=region,
+                    var=var,
+                    # dim_mean=dim_mean,
+                    outputdir=outputdir,
+                    rebuild=rebuild,
+                    reader_kwargs=reader_kwargs,
+                    save_netcdf=cli.save_netcdf,
+                )
 
-            for region in regions:
-                try:
-                    cli.logger.info("Processing region: %s", region)
-                    data_trends_region, region = data_trends.select_region(data=data_trends.trend_coef, region=region)
+            # Populate from the netcdf file, written just now or by a previous run. Results computed
+            # without saving them are already in memory, and an older file must not replace them.
+            if cli.plot_only or cli.save_netcdf:
+                data_trends.load(outputdir=outputdir, reader_kwargs=reader_kwargs)
 
-                    trends_plot = PlotTrends(
-                        data=data_trends_region,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        outputdir=outputdir,
-                        rebuild=rebuild,
-                        loglevel=cli.loglevel,
-                    )
+            if data_trends.trend_coef is None:
+                reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                cli.logger.warning("No trend results found in %s%s, skipping the plots", outputdir, reason)
+            else:
+                for region in regions:
+                    try:
+                        cli.logger.info("Processing region: %s", region)
+                        data_trends_region, region = data_trends.select_region(data=data_trends.trend_coef, region=region)
 
-                    trends_plot.plot_multilevel(
-                        levels=[10, 100, 500, 1000],
-                        cbar_limits={
-                            "thetao": {
-                                "vmin": -0.7,
-                                "vmax": 0.7,
+                        trends_plot = PlotTrends(
+                            data=data_trends_region,
+                            diagnostic_name=diagnostic_name,
+                            vert_coord=vert_coord,
+                            outputdir=outputdir,
+                            rebuild=rebuild,
+                            loglevel=cli.loglevel,
+                        )
+
+                        trends_plot.plot_multilevel(
+                            levels=[10, 100, 500, 1000],
+                            cbar_limits={
+                                "thetao": {
+                                    "vmin": -0.7,
+                                    "vmax": 0.7,
+                                },
+                                "so": {
+                                    "vmin": -0.12,
+                                    "vmax": 0.12,
+                                },
                             },
-                            "so": {
-                                "vmin": -0.12,
-                                "vmax": 0.12,
-                            },
-                        },
-                        sym=True,
-                        save_format=save_format,
-                        dpi=dpi,
-                    )
+                            sym=True,
+                            save_format=save_format,
+                            dpi=dpi,
+                        )
 
-                    zonal_trend_plot = PlotTrends(
-                        data=data_trends_region.mean("lon"),
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        outputdir=outputdir,
-                        rebuild=rebuild,
-                        loglevel=cli.loglevel,
-                    )
-                    zonal_trend_plot.plot_zonal(save_format=save_format, dpi=dpi)
-                except Exception as e:
-                    cli.logger.error("Error processing region %s: %s", region, e)
+                        zonal_trend_plot = PlotTrends(
+                            data=data_trends_region.mean("lon"),
+                            diagnostic_name=diagnostic_name,
+                            vert_coord=vert_coord,
+                            outputdir=outputdir,
+                            rebuild=rebuild,
+                            loglevel=cli.loglevel,
+                        )
+                        zonal_trend_plot.plot_zonal(save_format=save_format, dpi=dpi)
+                    except Exception as e:
+                        cli.logger.error("Error processing region %s: %s", region, e)
 
     cli.close_dask_cluster()
 

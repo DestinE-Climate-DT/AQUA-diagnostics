@@ -71,16 +71,28 @@ def main(argv=None):
                 vert_coord=vert_coord,
                 loglevel=cli.loglevel,
             )
-            model_stratification.run(
-                regions=regions,
-                var=var,
-                dim_mean=dim_mean,
-                mld=False,
-                climatology=climatologies,
-                outputdir=cli.outputdir,
-                reader_kwargs=dataset.get("reader_kwargs") or {},
-                rebuild=cli.rebuild,
-            )
+            if not cli.plot_only:
+                model_stratification.run(
+                    regions=regions,
+                    var=var,
+                    dim_mean=dim_mean,
+                    mld=False,
+                    climatology=climatologies,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    rebuild=cli.rebuild,
+                    save_netcdf=cli.save_netcdf,
+                )
+            # Populate from the netcdf files, written just now or by a previous run. Results computed
+            # without saving them are already in memory, and older files must not replace them.
+            if cli.plot_only or cli.save_netcdf:
+                model_stratification.load(
+                    regions=regions,
+                    climatology=climatologies,
+                    mld=False,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                )
             if "references" in config_dict:
                 logger.info("Processing reference data")
                 obs_stratification = Stratification(
@@ -89,20 +101,41 @@ def main(argv=None):
                     vert_coord=vert_coord,
                     loglevel=cli.loglevel,
                 )
-                obs_stratification.run(
-                    regions=regions,
-                    var=var,
-                    dim_mean=dim_mean,
-                    mld=False,
-                    climatology=climatologies,
-                    outputdir=cli.outputdir,
-                    reader_kwargs=reference.get("reader_kwargs") or {},
-                    rebuild=cli.rebuild,
-                )
+                if not cli.plot_only:
+                    obs_stratification.run(
+                        regions=regions,
+                        var=var,
+                        dim_mean=dim_mean,
+                        mld=False,
+                        climatology=climatologies,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                        rebuild=cli.rebuild,
+                        save_netcdf=cli.save_netcdf,
+                    )
+                if cli.plot_only or cli.save_netcdf:
+                    obs_stratification.load(
+                        regions=regions,
+                        climatology=climatologies,
+                        mld=False,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                    )
             else:
                 obs_stratification = None
-            for region, model_data in model_stratification.processed_data.items():
-                obs_data = obs_stratification.processed_data[region] if obs_stratification is not None else None
+            if not model_stratification.processed_data:
+                reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                logger.warning("No stratification results found in %s%s, skipping the plots", cli.outputdir, reason)
+            for (region, climatology), model_data in model_stratification.processed_data.items():
+                obs_data = (
+                    obs_stratification.processed_data.get((region, climatology)) if obs_stratification is not None else None
+                )
+                if obs_stratification is not None and obs_data is None:
+                    logger.warning(
+                        "No reference stratification results for region %s, climatology %s: plotting without it",
+                        region,
+                        climatology,
+                    )
                 strat_plot = PlotStratification(
                     data=model_data[["thetao", "so", "rho"]],
                     obs=(obs_data[["thetao", "so", "rho"]] if obs_data is not None else None),
@@ -128,15 +161,26 @@ def main(argv=None):
                 vert_coord=vert_coord,
                 loglevel=cli.loglevel,
             )
-            model_stratification.run(
-                regions=regions,
-                var=var,
-                mld=True,
-                climatology=climatologies,
-                outputdir=cli.outputdir,
-                reader_kwargs=dataset.get("reader_kwargs") or {},
-                rebuild=cli.rebuild,
-            )
+            if not cli.plot_only:
+                model_stratification.run(
+                    regions=regions,
+                    var=var,
+                    mld=True,
+                    climatology=climatologies,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                    rebuild=cli.rebuild,
+                    save_netcdf=cli.save_netcdf,
+                )
+            # Same logic as the stratification section above
+            if cli.plot_only or cli.save_netcdf:
+                model_stratification.load(
+                    regions=regions,
+                    climatology=climatologies,
+                    mld=True,
+                    outputdir=cli.outputdir,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                )
             if "references" in config_dict:
                 logger.info("Processing reference data")
                 obs_stratification = Stratification(
@@ -145,19 +189,38 @@ def main(argv=None):
                     vert_coord=vert_coord,
                     loglevel=cli.loglevel,
                 )
-                obs_stratification.run(
-                    regions=regions,
-                    var=var,
-                    mld=True,
-                    climatology=climatologies,
-                    outputdir=cli.outputdir,
-                    reader_kwargs=reference.get("reader_kwargs") or {},
-                    rebuild=cli.rebuild,
-                )
+                if not cli.plot_only:
+                    obs_stratification.run(
+                        regions=regions,
+                        var=var,
+                        mld=True,
+                        climatology=climatologies,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                        rebuild=cli.rebuild,
+                        save_netcdf=cli.save_netcdf,
+                    )
+                if cli.plot_only or cli.save_netcdf:
+                    obs_stratification.load(
+                        regions=regions,
+                        climatology=climatologies,
+                        mld=True,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                    )
             else:
                 obs_stratification = None
-            for region, model_data in model_stratification.processed_data.items():
-                obs_data = obs_stratification.processed_data[region] if obs_stratification is not None else None
+            if not model_stratification.processed_data:
+                reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                logger.warning("No MLD results found in %s%s, skipping the plots", cli.outputdir, reason)
+            for (region, climatology), model_data in model_stratification.processed_data.items():
+                obs_data = (
+                    obs_stratification.processed_data.get((region, climatology)) if obs_stratification is not None else None
+                )
+                if obs_stratification is not None and obs_data is None:
+                    logger.warning(
+                        "No reference MLD results for region %s, climatology %s: plotting without it", region, climatology
+                    )
                 mld_plot = PlotMLD(
                     data=model_data[["mld"]],
                     obs=(obs_data[["mld"]] if obs_data is not None else None),
