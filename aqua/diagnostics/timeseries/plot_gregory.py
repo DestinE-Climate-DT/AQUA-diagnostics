@@ -66,7 +66,7 @@ class PlotGregory(PlotBaseMixin):
         data_labels: list = None,
         ref_label: str = None,
         style: str = "aqua",
-        cmap: str = 'plasma_r',
+        cmap: str = "plasma_r",
     ):
         """
         Plot the data
