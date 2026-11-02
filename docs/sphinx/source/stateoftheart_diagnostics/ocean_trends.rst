@@ -40,7 +40,7 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/ocean_trends`` directory, which contains both the source code and the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/collections/config-trends.yaml``
-* Notebooks are available in the ``notebooks/diagnostics/trends`` directory and contain examples of how to use the diagnostic.
+* Notebooks are available in the ``notebooks/diagnostics/ocean_trends`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
 ----------------------------
@@ -66,7 +66,7 @@ The basic structure of the analysis is the following:
 .. code-block:: python
 
 
-    from aqua.diagnostics import Trends, PlotTrends
+    from aqua.diagnostics.ocean_trends import Trends, PlotTrends
 
     trend = Trends(
         catalog='climatedt-phase1',
@@ -181,7 +181,8 @@ The diagnostic supports analysis over predefined ocean regions. Common regions i
 * ``po`` - Pacific Ocean
 * ``go`` - Global Ocean
 
-Additional regions can be defined in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``.
+The regions are defined in ``aqua/diagnostics/config/definitions/regions.yaml``, as IHO sea areas or lon/lat boxes:
+see :ref:`diagnostics-regions` for their definition and to add new ones.
 
 Output
 ------

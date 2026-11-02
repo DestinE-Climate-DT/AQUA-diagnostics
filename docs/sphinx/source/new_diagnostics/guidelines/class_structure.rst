@@ -166,6 +166,11 @@ The ``definitions/`` folder contains shared lookup files used by all diagnostics
 ``regions.yaml`` is the centralized registry of all available geographic regions:
 any diagnostic can refer to a region by name (e.g. ``nh``, ``arctic``, ``io``) and the
 ``Diagnostic`` base class resolves it against this single file.
+A region is either a lon/lat box or a polygon region (see :ref:`diagnostics-regions`).
+To cut the data on a region use ``select_region``. To average over a region, pass to ``Reader.fldmean``
+both the limits returned by ``_set_region`` and the arguments returned by ``_resolve_regionmask_object``
+(``region``, ``region_sel`` and ``frac_threshold``): the limits of a polygon region are ``None``,
+so with the limits alone the mean would silently be global.
 
 The ``tools/`` folder contains a subfolder only for the diagnostics that need settings or lookup files
 *specific to that diagnostic* (e.g. custom index definitions for teleconnections).

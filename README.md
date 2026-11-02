@@ -27,7 +27,7 @@ This repository includes only the scientific tools configured as diagnostics to 
 
 ## Requirements
 
-- Python `>=3.11,<3.15`
+- Python `>=3.12,<3.15`
 - A working installation of [AQUA-core](https://github.com/DestinE-Climate-DT/AQUA)
 - A conda/mamba environment using packages from `conda-forge`
 

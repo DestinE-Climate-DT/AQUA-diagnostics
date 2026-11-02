@@ -12,6 +12,7 @@ from aqua.diagnostics.ensemble.util import (
     extract_realizations,
     extract_realizations_list,
     generate_realizations_path,
+    generate_realizations_path_single_model,
     merge_from_data_files,
     reader_retrieve_and_merge,
 )
@@ -89,8 +90,11 @@ def test_merge_from_data_files_timeseries(tmp_path):
     assert merged.sizes[ens_dim] == 2
     assert "time" in merged.dims
 
-    assert merged.time.values[0] >= np.datetime64("2000-03-01")
-    assert merged.time.values[-1] <= np.datetime64("2000-08-01")
+    np.testing.assert_array_equal(
+        merged.time.values,
+        pd.date_range("2000-03-01", "2000-08-01", freq="MS").values,
+    )
+    assert merged["ensemble"].values.tolist() == ["r1", "r2"]
 
     assert var in merged.data_vars
     assert "model" in merged.coords
@@ -209,6 +213,30 @@ def test_merge_from_data_files_variable_not_present(tmp_path):
 
 
 @pytest.mark.ensemble
+def test_merge_from_data_files_variable_filter(tmp_path):
+    """Only the requested variable should be kept when it is present."""
+    ds = xr.Dataset(
+        {
+            "tas": (("time",), np.ones(3)),
+            "psl": (("time",), np.ones(3) * 2),
+        },
+        coords={"time": pd.date_range("2000-01-01", periods=3)},
+    )
+
+    f = tmp_path / "data.nc"
+    ds.to_netcdf(f)
+
+    merged = merge_from_data_files(
+        variable="tas",
+        data_path_list=[str(f)],
+    )
+
+    assert list(merged.data_vars) == ["tas"]
+
+    merged.close()
+
+
+@pytest.mark.ensemble
 def test_merge_from_data_files_variable_none(tmp_path):
     """Test merging when no variable filter is requested."""
     ds = xr.Dataset(
@@ -287,9 +315,9 @@ def test_compute_statistics_no_model_coordinate():
 
     mean, std = compute_statistics(variable=var, ds=ds)
 
+    # xarray .std() uses ddof=0, like np.std
     np.testing.assert_allclose(mean.values, [3.0, 4.0])
-    np.testing.assert_allclose(std.values, np.std([1.0, 3.0, 5.0]))
-    np.testing.assert_allclose(std.values[1], np.std([2.0, 4.0, 6.0]))
+    np.testing.assert_allclose(std.values, [np.std([1.0, 3.0, 5.0]), np.std([2.0, 4.0, 6.0])])
 
 
 @pytest.mark.ensemble
@@ -333,8 +361,9 @@ def test_compute_statistics_multi_model_weighted():
     Test the weighted multi-model branch with non-identical values.
 
     ModelA has two realizations and ModelB has one. The implementation
-    assigns a weight proportional to the number of realizations to each
-    member, so ModelA receives twice the total weight of ModelB.
+    gives each member a weight equal to its model's realization count,
+    i.e. [2, 2, 1] -> normalized [0.4, 0.4, 0.2]. ModelA therefore carries
+    0.8 of the total weight and ModelB 0.2.
     """
     var = "tas"
 
@@ -366,6 +395,8 @@ def test_compute_statistics_multi_model_weighted():
 
     np.testing.assert_allclose(mean.values, [expected_mean])
     np.testing.assert_allclose(std.values, [expected_std])
+    assert mean.dims == ("time",)
+    assert std.dims == ("time",)
 
     assert "description" in mean.attrs
     assert "Weighted mean" in mean.attrs["description"]
@@ -538,12 +569,12 @@ def test_reader_retrieve_and_merge_spatial_selection(mock_reader):
         lat_limits=[-45, 45],
     )
 
+    # lon = [0, 120, 240, 360], lat = [-90, 0, 90] -> only (lon=120, lat=0) is inside
     assert result.sizes["lon"] == 1
     assert result.sizes["lat"] == 1
-    assert result.lon.values[0] >= 100
-    assert result.lon.values[0] <= 200
-    assert result.lat.values[0] >= -45
-    assert result.lat.values[0] <= 45
+    assert result.lon.values.tolist() == [120.0]
+    assert result.lat.values.tolist() == [0.0]
+
     result.close()
 
 
@@ -567,8 +598,10 @@ def test_reader_retrieve_and_merge_temporal_selection(mock_reader):
         enddate="2000-06-01",
     )
 
-    assert result.time.values[0] >= np.datetime64("2000-03-01")
-    assert result.time.values[-1] <= np.datetime64("2000-06-01")
+    np.testing.assert_array_equal(
+        result.time.values,
+        pd.date_range("2000-03-01", "2000-06-01", freq="MS").values,
+    )
 
     result.close()
 
@@ -679,8 +712,8 @@ def test_reader_retrieve_and_merge_filename_branch(mock_reader, tmp_path):
     """
     Test filename-based Reader retrieval.
 
-    The current implementation expects realizations to be iterable in
-    the filename branch, so provide one realization per filename.
+    In the filename branch ``realizations`` is a list zipped with
+    ``filenames``: one ensemble label per file.
     """
     data = make_timeseries_dataset()
 
@@ -734,7 +767,7 @@ def test_reader_retrieve_and_merge_reader_kwargs(mock_reader):
     mock_instance.retrieve.return_value = data
     mock_reader.return_value = mock_instance
 
-    reader_retrieve_and_merge(
+    result = reader_retrieve_and_merge(
         catalog_list=["catalog"],
         model_list=["ModelA"],
         exp_list=["exp"],
@@ -746,8 +779,8 @@ def test_reader_retrieve_and_merge_reader_kwargs(mock_reader):
     _, kwargs = mock_reader.call_args
 
     assert kwargs["foo"] == "bar"
+    assert kwargs["realization"] == "r1"
 
-    result = mock_instance.retrieve.return_value
     result.close()
 
 
@@ -1069,6 +1102,258 @@ def test_generate_realizations_path_extra_keys_and_format(mock_output_saver):
     )
 
 
+# ---------------------------------------------------------------------------
+# generate_realizations_path_single_model
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.OutputSaver")
+def test_generate_realizations_path_single_model_with_realizations(mock_output_saver):
+    """Generate one path per realization in sibling r<N> directories."""
+    saver1 = MagicMock()
+    saver2 = MagicMock()
+
+    saver1.generate_name.return_value = "output_r1"
+    saver2.generate_name.return_value = "output_r2"
+
+    mock_output_saver.side_effect = [saver1, saver2]
+
+    # file_dir is <base>/r<N>/<diagnostic>; the function goes two levels up to <base>
+    result = generate_realizations_path_single_model(
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        diagnostic_name="ensemble",
+        diagnostic_product="timeseries",
+        variable="tas",
+        file_dir="/tmp/output/r1/ensemble",
+        realization_list=["1", "2"],
+    )
+
+    assert result == [
+        "/tmp/output/r1/ensemble/netcdf/output_r1.nc",
+        "/tmp/output/r2/ensemble/netcdf/output_r2.nc",
+    ]
+
+    assert mock_output_saver.call_count == 2
+    mock_output_saver.assert_any_call(
+        diagnostic="ensemble",
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        realization="1",
+        outputdir="/tmp/output/r1/ensemble",
+        loglevel="WARNING",
+    )
+    mock_output_saver.assert_any_call(
+        diagnostic="ensemble",
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        realization="2",
+        outputdir="/tmp/output/r2/ensemble",
+        loglevel="WARNING",
+    )
+
+    saver1.generate_name.assert_called_once_with(
+        diagnostic_product="timeseries",
+        extra_keys=None,
+    )
+    saver2.generate_name.assert_called_once_with(
+        diagnostic_product="timeseries",
+        extra_keys=None,
+    )
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.OutputSaver")
+def test_generate_realizations_path_single_model_without_realizations(mock_output_saver):
+    """Without a realization list, the path is built directly inside file_dir."""
+    saver = MagicMock()
+    saver.generate_name.return_value = "output"
+    mock_output_saver.return_value = saver
+
+    result = generate_realizations_path_single_model(
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        diagnostic_name="ensemble",
+        diagnostic_product="maps",
+        variable="tas",
+        file_dir="/tmp/output",
+    )
+
+    assert result == ["/tmp/output/netcdf/output.nc"]
+
+    mock_output_saver.assert_called_once_with(
+        diagnostic="ensemble",
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        outputdir="/tmp/output",
+        loglevel="WARNING",
+    )
+    saver.generate_name.assert_called_once_with(
+        diagnostic_product="maps",
+        extra_keys=None,
+    )
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.OutputSaver")
+def test_generate_realizations_path_single_model_extra_keys_and_format(mock_output_saver):
+    """Custom extra keys and file format; an 'r'-prefixed realization is not prefixed twice."""
+    saver = MagicMock()
+    saver.generate_name.return_value = "output_r1"
+    mock_output_saver.return_value = saver
+
+    result = generate_realizations_path_single_model(
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        diagnostic_name="ensemble",
+        diagnostic_product="maps",
+        variable="tas",
+        file_dir="/tmp/output/r1/ensemble",
+        realization_list=["r1"],
+        extra_keys={"region": "global"},
+        file_format=".zarr",
+    )
+
+    assert result == ["/tmp/output/r1/ensemble/zarr/output_r1.zarr"]
+
+    _, kwargs = mock_output_saver.call_args
+    assert kwargs["realization"] == "r1"
+    assert kwargs["outputdir"] == "/tmp/output/r1/ensemble"
+
+    saver.generate_name.assert_called_once_with(
+        diagnostic_product="maps",
+        extra_keys={"region": "global"},
+    )
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.OutputSaver")
+def test_generate_realizations_path_single_model_uses_diagnostic_name(mock_output_saver):
+    """The per-realization directory is <base>/r<N>/<diagnostic_name>, not the basename of file_dir."""
+    saver = MagicMock()
+    saver.generate_name.return_value = "output"
+    mock_output_saver.return_value = saver
+
+    result = generate_realizations_path_single_model(
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        diagnostic_name="ensemble",
+        diagnostic_product="timeseries",
+        variable="tas",
+        file_dir="/tmp/output/r1/other_dir",
+        realization_list=[2],
+    )
+
+    assert result == ["/tmp/output/r2/ensemble/netcdf/output.nc"]
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.OutputSaver")
+def test_generate_realizations_path_single_model_reference(mock_output_saver):
+    """Reference mode: names come from the reference dataset, directories from each realization."""
+    saver = MagicMock()
+    saver.generate_name.return_value = "ref_output"
+    mock_output_saver.return_value = saver
+
+    result = generate_realizations_path_single_model(
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        diagnostic_name="ensemble",
+        diagnostic_product="timeseries",
+        variable="tas",
+        file_dir="/tmp/output/r1/ensemble",
+        realization_list=["1", "2"],
+        catalog_ref="obs_catalog",
+        model_ref="ERA5",
+        exp_ref="era5",
+        realization_ref="r1",
+    )
+
+    assert result == [
+        "/tmp/output/r1/ensemble/netcdf/ref_output.nc",
+        "/tmp/output/r2/ensemble/netcdf/ref_output.nc",
+    ]
+
+    assert mock_output_saver.call_count == 2
+    for outputdir in ("/tmp/output/r1/ensemble", "/tmp/output/r2/ensemble"):
+        mock_output_saver.assert_any_call(
+            diagnostic="ensemble",
+            catalog="obs_catalog",
+            model="ERA5",
+            exp="era5",
+            realization="r1",
+            outputdir=outputdir,
+            loglevel="WARNING",
+        )
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.OutputSaver")
+def test_generate_realizations_path_single_model_reference_without_realizations(mock_output_saver):
+    """Reference mode without a realization list builds one path inside file_dir."""
+    saver = MagicMock()
+    saver.generate_name.return_value = "ref_output"
+    mock_output_saver.return_value = saver
+
+    result = generate_realizations_path_single_model(
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        diagnostic_name="ensemble",
+        diagnostic_product="maps",
+        variable="tas",
+        file_dir="/tmp/output",
+        catalog_ref="obs_catalog",
+        model_ref="ERA5",
+        exp_ref="era5",
+    )
+
+    assert result == ["/tmp/output/netcdf/ref_output.nc"]
+    mock_output_saver.assert_called_once_with(
+        diagnostic="ensemble",
+        catalog="obs_catalog",
+        model="ERA5",
+        exp="era5",
+        outputdir="/tmp/output",
+        loglevel="WARNING",
+    )
+
+
+@pytest.mark.ensemble
+@patch("aqua.diagnostics.ensemble.util.OutputSaver")
+def test_generate_realizations_path_single_model_incomplete_reference(mock_output_saver):
+    """A partial reference triggers reference mode; missing fields are passed through as None."""
+    saver = MagicMock()
+    saver.generate_name.return_value = "ref_output"
+    mock_output_saver.return_value = saver
+
+    result = generate_realizations_path_single_model(
+        catalog="catalog",
+        model="ModelA",
+        exp="exp",
+        diagnostic_name="ensemble",
+        diagnostic_product="maps",
+        variable="tas",
+        file_dir="/tmp/output",
+        model_ref="ERA5",
+    )
+
+    assert result == ["/tmp/output/netcdf/ref_output.nc"]
+    _, kwargs = mock_output_saver.call_args
+    assert kwargs["catalog"] is None
+    assert kwargs["model"] == "ERA5"
+    assert kwargs["exp"] is None
+
+
 @pytest.mark.ensemble
 @patch("aqua.diagnostics.ensemble.util.Reader")
 def test_reader_retrieve_and_merge_filenames_spatial_temporal(mock_reader, tmp_path):
@@ -1090,7 +1375,7 @@ def test_reader_retrieve_and_merge_filenames_spatial_temporal(mock_reader, tmp_p
 
     result = reader_retrieve_and_merge(
         filenames=[filename],
-        realizations=[["r1"]],
+        realizations=["r1"],
         variable="tas",
         lon_limits=[100, 200],
         lat_limits=[-45, 45],
@@ -1099,6 +1384,7 @@ def test_reader_retrieve_and_merge_filenames_spatial_temporal(mock_reader, tmp_p
     )
 
     assert result is not None
+    assert result["ensemble"].values.tolist() == ["r1"]
     # Spatial subsetting check
     assert result.lon.values[0] >= 100
     assert result.lon.values[-1] <= 200
@@ -1126,7 +1412,7 @@ def test_reader_retrieve_and_merge_filenames_missing_dims(mock_reader, tmp_path)
 
     result = reader_retrieve_and_merge(
         filenames=[filename],
-        realizations=[["r1"]],
+        realizations=["r1"],
         variable="tas",
         lon_limits=[100, 200],
         lat_limits=[-45, 45],
@@ -1155,9 +1441,9 @@ def test_reader_retrieve_and_merge_filenames_reader_kwargs(mock_reader, tmp_path
     filename = str(tmp_path / "data.nc")
     kwargs_to_pass = {"engine": "netcdf4", "chunks": "auto"}
 
-    reader_retrieve_and_merge(
+    result = reader_retrieve_and_merge(
         filenames=[filename],
-        realizations=[["r1"]],
+        realizations=["r1"],
         variable="tas",
         reader_kwargs=kwargs_to_pass,
     )
@@ -1165,6 +1451,9 @@ def test_reader_retrieve_and_merge_filenames_reader_kwargs(mock_reader, tmp_path
     # Extract kwargs passed to the Reader constructor
     _, called_kwargs = mock_reader.call_args
     assert called_kwargs.get("reader_kwargs") == kwargs_to_pass
+    assert called_kwargs.get("path") == filename
+
+    result.close()
 
 
 @pytest.mark.ensemble
@@ -1180,7 +1469,7 @@ def test_reader_retrieve_and_merge_filenames_all_fail(mock_reader, tmp_path):
 
     result = reader_retrieve_and_merge(
         filenames=[filename],
-        realizations=[["r1"]],
+        realizations=["r1"],
         variable="tas",
     )
 
@@ -1250,8 +1539,8 @@ def test_reader_retrieve_and_merge_no_close_attr(mock_reader, mock_concat):
 @pytest.mark.ensemble
 def test_merge_from_data_files_partial_dates(tmp_path):
     """
-    Test the time slicing logic in merge_from_data_files when one date is missing.
-    Ensures the `if startdate is not None and enddate is not None:` branch evaluates to False safely.
+    Time slicing in merge_from_data_files only happens when BOTH dates are given.
+    With only startdate, the full time axis is returned unchanged.
     """
     var = "tas"
     time = pd.date_range("2000-01-01", periods=3)

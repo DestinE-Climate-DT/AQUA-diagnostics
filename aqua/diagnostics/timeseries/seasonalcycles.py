@@ -143,7 +143,15 @@ class SeasonalCycles(BaseMixin):
         data = self.data
 
         # Field and time average
-        data = self.reader.fldmean(data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits)
+        data = self.reader.fldmean(
+            data,
+            box_brd=box_brd,
+            lon_limits=self.lon_limits,
+            lat_limits=self.lat_limits,
+            region=self.region_object,
+            region_sel=self.region_sel,
+            frac_threshold=self.frac_threshold,
+        )
         data = self.reader.timmean(data, freq="MS", exclude_incomplete=exclude_incomplete, center_time=center_time)
 
         if self.region is not None:

@@ -1,19 +1,18 @@
 # this is the minimal environment file to install the dependencies of AQUA-diagnostics,
 # it is not meant to be used directly but is used by github actions
 # Create the environment:
-# mamba env create -f min-environment.yml
-# or if you really want to use conda
-# conda env create -f min-environment.yml
+# mamba env create -f environment-pypi.yml
+# then install AQUA-diagnostics with pip, e.g. pip install aqua-diagnostics[core]
+# (aqua-core is already installed from conda-forge, so pip installs only AQUA-diagnostics)
 
 name: aqua-diagnostics
 channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.11,<3.15
-  - cdo>=2.5.0,<2.6.1
-  - eccodes>=2.41.0,<2.50.0
+  # aqua-core from conda-forge brings python, smmregrid (and CDO on Linux), eccodes
+  # with the pins of the aqua-core release; on macOS install CDO with Homebrew (brew install cdo)
+  # keep the version in sync with pyproject.toml
+  - aqua-core>=1.2.3,<1.3.0
   - esmpy
   - pip
-  - pip:
-    - aqua-diagnostics[core-fdb,tests]
