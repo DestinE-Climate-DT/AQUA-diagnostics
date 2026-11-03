@@ -200,5 +200,7 @@ unreleased aqua-core, `nightly`, `release`, `conda-lock`) are described in `CONT
 - New dependencies only after discussion: Python packages in `pyproject.toml`; conda-only binaries in `environment.yml`,
   `environment-dev.yml` and `environment-pypi.yml` (built on the aqua-core conda-forge package: do not re-list its
   dependencies); then regenerate `conda-linux-64.lock` with the `conda-lock` PR label
+- PR titles start with the topic in square brackets: `[<Topic>] <short description>`, where the topic is the tool
+  or area touched (e.g. `[Diagnostic Base]`, `[Timeseries]`, `[CI/CD]`, `[Env]`)
 - Every PR adds a line under `## [Unreleased]` → "Complete list" in `CHANGELOG.md`: `- <Tool>: <change> (#PR)`
 - Behaviour or config changes also update the relevant `docs/sphinx/source/` page and notebook

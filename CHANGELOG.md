@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- Diagnostic base: simplify time bound selection in `retrieve` with a single `_select_period` method and `effective_bounds` in `time_util`; a std period with only one date no longer crashes, a period with no data raises `NotEnoughDataError` (#548)
 - Major documentation update (#473)
 
 ## [v0.26.0]
