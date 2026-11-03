@@ -16,29 +16,29 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: 'obs'
-    model: 'ESA-CCI-L4'
-    exp: 'v3.0.1'
-    source: 'r100-monthly'
-    regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+  - catalog: '{{ references.atmosphere2d_temperature.catalog }}'
+    model: '{{ references.atmosphere2d_temperature.model }}'
+    exp: '{{ references.atmosphere2d_temperature.exp }}'
+    source: '{{ references.atmosphere2d_temperature.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
 
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 output:
   outputdir: "./"
-  rebuild: true
+  rebuild: {{ output.rebuild }}
   save_netcdf: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   biases:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     params:
       default:
         seasons: true
@@ -50,43 +50,44 @@ diagnostics:
         projection_params: {}
         show_stats: true
         show_significance: true    # Enable significance stippling
-        significance_alpha: 0.05
-      tos:
-        vmin: -5
-        vmax: 5
+        significance_alpha: 0.05  # 95% confidence level
+      2t:
+        vmin: -7
+        vmax: 7
         cmap: 'RdBu_r'
 
   timeseries:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     center_time: true
+    extend: false
     params:
       default:
         hourly: False
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ timeseries.std_startdate }}'
-        std_enddate: '{{ timeseries.std_enddate }}'
-      tos:
-        regions: ['nh', 'sh']
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'
+      2t:
+        regions: ['nh', 'sh', 'europe']
 
   seasonalcycles:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     center_time: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
-      tos:
-        regions: ['nh', 'sh']
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
+      2t:
+        regions: ['nh', 'sh', 'europe']
 
   lat_lon_profiles:
     run: true
-    diagnostic_name: 'ocean2d'
+    diagnostic_name: 'atmosphere2d'
     mean_type: 'zonal'
     center_time: true
     exclude_incomplete: true
@@ -95,8 +96,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '{{ period.default.std_startdate }}'
+        std_enddate: '{{ period.default.std_enddate }}'
     variables:
-      - name: 'tos'
-        regions: [null]  #
+      - name: '2t'
+        regions: [null, 'tropics']  # global and tropics

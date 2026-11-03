@@ -85,19 +85,19 @@ run:
 diagnostics:
   atmosphere2d:
     biases:
-      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
-               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]
     timeseries:
-      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2",
-               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2"]
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]
     lat_lon_profiles:
-      config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-temperature.j2"
     trends:
       config: "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-trends.j2"
 
   atmosphere3d:
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/atmosphere3d/config-atmosphere3d-era5.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/atmosphere3d/config-atmosphere3d-plev.j2"
 
   climate_metrics:
     ecmean:
@@ -109,49 +109,49 @@ diagnostics:
 
   ocean2d:
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-sst.j2"
     timeseries:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-sst.j2"
     lat_lon_profiles:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-esacci.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-sst.j2"
     trends:
       config: "${AQUA_CONFIG}/collections/jinja/ocean2d/config-ocean2d-trends.j2"
 
   ocean3d-part1:
     ocean_trends:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-en4-trend-drift.j2"  # these diagnostics need a different chunking
+      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-trend-drift.j2"  # these diagnostics need a different chunking
       outname: "ocean3d"
     drift:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-en4-trend-drift.j2"  # these diagnostics need a different chunking
+      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-trend-drift.j2"  # these diagnostics need a different chunking
       outname: "ocean3d"
 
   ocean3d-part2:
     stratification:
-      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-en4-stratification.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/ocean3d/config-ocean3d-stratification.j2"
       outname: "ocean3d"
 
   radiation-toa:
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-ceres.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-radiative.j2"
     boxplots:
       config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-boxplots.j2"
     timeseries:
-      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-ceres.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/radiation_toa/config-radiation_toa-radiative.j2"
 
   radiation-surface:
     biases:
-      config: ["${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-ceres.j2",
-               "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-era5.j2"]
+      config: ["${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-radiative.j2",
+               "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-heat.j2"]
     boxplots:
       config: "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-boxplots.j2"
     timeseries:
-      config: ["${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-ceres.j2",
-               "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-era5.j2"]
+      config: ["${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-radiative.j2",
+               "${AQUA_CONFIG}/collections/jinja/radiation_surface/config-radiation_surface-heat.j2"]
 
   seaice:
     seaice:
-      config: ["${AQUA_CONFIG}/collections/jinja/seaice/config-seaice-osi.j2",
-               "${AQUA_CONFIG}/collections/jinja/seaice/config-seaice-psc.j2"]
+      config: ["${AQUA_CONFIG}/collections/jinja/seaice/config-seaice-concentration.j2",
+               "${AQUA_CONFIG}/collections/jinja/seaice/config-seaice-thickness.j2"]
 
   teleconnections:
     nao:
@@ -161,12 +161,12 @@ diagnostics:
 
   water_cycle:
     lat_lon_profiles:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-precipitation.j2"
     timeseries:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-precipitation.j2"
     biases:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-precipitation.j2"
     histogram:
-      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-mswep.j2"
+      config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-precipitation.j2"
     trends:
       config: "${AQUA_CONFIG}/collections/jinja/water_cycle/config-water_cycle-trends.j2"

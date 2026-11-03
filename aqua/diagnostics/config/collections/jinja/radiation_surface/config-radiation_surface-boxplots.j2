@@ -19,26 +19,30 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: obs
-    model: 'ECMWF'
-    exp: 'era5'
-    source: 'monthly'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
-  - catalog: 'obs'
-    model: 'CERES'
-    exp: 'ebaf-sfc421'
-    source: 'monthly'
-    regrid: 'r100'
+  - catalog: '{{ references.radiation_surface_boxplots.catalog }}'
+    model: '{{ references.radiation_surface_boxplots.model }}'
+    exp: '{{ references.radiation_surface_boxplots.exp }}'
+    source: '{{ references.radiation_surface_boxplots.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.default.startdate }}'
+    enddate: '{{ period.default.enddate }}'
+  # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
+{% if references.radiation_surface_radiative != references.radiation_surface_boxplots %}
+  - catalog: '{{ references.radiation_surface_radiative.catalog }}'
+    model: '{{ references.radiation_surface_radiative.model }}'
+    exp: '{{ references.radiation_surface_radiative.exp }}'
+    source: '{{ references.radiation_surface_radiative.source }}'
+    regrid: '{{ regrid }}'
     reader_kwargs: null
-    startdate: '{{ radiation_ceres.startdate }}'
-    enddate: '{{ radiation_ceres.enddate }}'
+    startdate: '{{ period.radiation.startdate }}'
+    enddate: '{{ period.radiation.enddate }}'
+{% endif %}
 
 output:
   outputdir: "./"
-  rebuild: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  rebuild: {{ output.rebuild }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   boxplots:
