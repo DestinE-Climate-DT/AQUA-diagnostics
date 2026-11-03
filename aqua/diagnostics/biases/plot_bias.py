@@ -4,7 +4,7 @@ import numpy as np
 from aqua.core.graphics import plot_maps, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
 
 from .stat_bias import StatBias
 from .util import handle_pressure_level
@@ -297,6 +297,7 @@ class PlotBias:
             cmap=self.cmap,
             extent=extent,
             cyclic_lon=cyclic_lon,
+            figsize=figure_size(0.77),
             loglevel=self.loglevel,
         )
         ax.set_xlabel("Longitude")
@@ -481,7 +482,7 @@ class PlotBias:
             "return_fig": True,
             "title": title,
             "titles": season_list,
-            "figsize": (10, 8),
+            "figsize": figure_size(0.8),
             "contour": True,
             "sym": sym,
             "cbar_label": cbar_label,
@@ -588,6 +589,7 @@ class PlotBias:
             nlevels=nlevels,
             title=title,
             return_fig=True,
+            figsize=figure_size(0.8),
             loglevel=self.loglevel,
         )
 

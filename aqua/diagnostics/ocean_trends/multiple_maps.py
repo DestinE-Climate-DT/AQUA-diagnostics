@@ -10,6 +10,7 @@ from aqua.core.graphics import ConfigStyle
 from aqua.core.graphics.single_map import plot_single_map
 from aqua.core.logger import log_configure
 from aqua.core.util import add_cyclic_lon, evaluate_colorbar_limits, generate_colorbar_ticks
+from aqua.diagnostics.base import figure_size
 
 
 def plot_maps(
@@ -99,7 +100,7 @@ def plot_maps(
     logger.debug("Loading maps")
     maps = [data_map.load(keep_attrs=True) for data_map in maps]
 
-    figsize = (ncols * 4.5, nrows * 2.5)
+    figsize = figure_size(0.56 * nrows / ncols)
     fig, axs = plt.subplots(
         nrows=nrows,
         ncols=ncols,

@@ -8,6 +8,7 @@ from aqua.core.graphics import plot_vertical_profile
 from aqua.core.graphics.styles import ConfigStyle
 from aqua.core.logger import log_configure
 from aqua.core.util import evaluate_colorbar_limits, plot_box
+from aqua.diagnostics.base import figure_size
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
@@ -76,7 +77,7 @@ def plot_multivars_vertical_profile(
     # try to make a square figure with a reasonable aspect ratio
     if not nrows and not ncols:
         nrows, ncols = plot_box(len(maps))
-    figsize = figsize if figsize is not None else (ncols * 6 + 1, nrows * 5 + 1)
+    figsize = figsize if figsize is not None else figure_size((nrows * 5 + 1) / (ncols * 6 + 1))
     logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)

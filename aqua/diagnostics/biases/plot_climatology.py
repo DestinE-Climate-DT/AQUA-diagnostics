@@ -1,7 +1,7 @@
 from aqua.core.graphics import plot_maps, plot_single_map, plot_vertical_profile
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
 
 from .util import handle_pressure_level
 
@@ -130,6 +130,7 @@ class PlotClimatology:
             vmin=vmin,
             vmax=vmax,
             proj=proj,
+            figsize=figure_size(0.77),
             loglevel=self.loglevel,
             cbar_label=cbar_label,
             cmap=self.cmap,
@@ -204,7 +205,7 @@ class PlotClimatology:
             "return_fig": True,
             "title": title,
             "titles": season_list,
-            "figsize": (10, 8),
+            "figsize": figure_size(0.8),
             "cbar_label": cbar_label,
             "cmap": self.cmap,
             "loglevel": self.loglevel,
@@ -295,6 +296,7 @@ class PlotClimatology:
             nlevels=nlevels,
             title=title,
             return_fig=True,
+            figsize=figure_size(0.8),
             loglevel=self.loglevel,
         )
 

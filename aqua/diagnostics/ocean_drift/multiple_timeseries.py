@@ -8,6 +8,7 @@ import xarray as xr
 
 from aqua.core.graphics import ConfigStyle, plot_timeseries
 from aqua.core.logger import log_configure
+from aqua.diagnostics.base import figure_size
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 from .util import add_row_label, set_year_ticks
@@ -62,7 +63,7 @@ def plot_multi_timeseries(
     if all(isinstance(data_map, xr.Dataset) for data_map in maps):
         nrows = len(maps)
         ncols = len(variables)
-        figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
+        figsize = figsize if figsize is not None else figure_size((nrows * 5 + 1) / (ncols * 6))
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)

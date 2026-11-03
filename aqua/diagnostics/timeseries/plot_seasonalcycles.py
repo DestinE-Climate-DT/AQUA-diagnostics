@@ -4,7 +4,7 @@ import xarray as xr
 
 from aqua.core.graphics import plot_seasonalcycle
 from aqua.core.util import get_realizations, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT
+from aqua.diagnostics.base import SAVE_FORMAT, figure_size
 
 from .base import PlotBaseMixin
 
@@ -182,6 +182,7 @@ class PlotSeasonalCycles(PlotBaseMixin):
             data_labels=data_labels,
             ref_label=ref_label,
             title=title,
+            figsize=figure_size(0.67),
             loglevel=self.loglevel,
         )
 

@@ -20,7 +20,7 @@ from aqua.core.util import (
     to_list,
     unit_to_latex,
 )
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
 
 from .util import _check_list_regions_type
 
@@ -157,7 +157,7 @@ class Plot2DSeaIce:
 
         for reg_mod in reg_models:
             nrows, ncols = len(self.months), 3
-            fig = plt.figure(figsize=(ncols * 5.1, nrows * 4.8))
+            fig = plt.figure(figsize=figure_size(0.94 * nrows / ncols))
             subfigs = fig.subfigures(nrows=nrows, ncols=1)
 
             for jmon, (month, subfig) in enumerate(zip(self.months, subfigs)):
@@ -343,7 +343,7 @@ class Plot2DSeaIce:
         self.logger.info(f"Processing {data_type} data: {datarr.name}")
 
         nrows, ncols = plot_box(num_plots=len(self.months))
-        fig = plt.figure(figsize=(ncols * 4.5, nrows * 4))
+        fig = plt.figure(figsize=figure_size(0.89 * nrows / ncols))
         fig.subplots_adjust(bottom=0.2, hspace=0.9)
 
         setup = self._get_cmap(datarr)

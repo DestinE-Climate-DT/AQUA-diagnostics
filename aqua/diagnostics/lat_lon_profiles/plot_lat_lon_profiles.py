@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
 from aqua.core.util import DEFAULT_REALIZATION, strlist_to_phrase, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
 
 
 class PlotLatLonProfiles:
@@ -506,7 +506,7 @@ class PlotLatLonProfiles:
 
         self.logger.debug(f"Plotting {len(seasonal_data_only)} seasons")
 
-        return plot_seasonal_lat_lon_profiles(
+        fig, axs = plot_seasonal_lat_lon_profiles(
             seasonal_data=seasonal_data_only,
             ref_data=seasonal_ref_only,
             ref_std_data=self.ref_std_data,
@@ -515,3 +515,6 @@ class PlotLatLonProfiles:
             style=style,
             loglevel=self.loglevel,
         )
+        # The core function has a fixed figsize of (12, 8): resize it, the constrained layout adapts on save
+        fig.set_size_inches(figure_size(0.67))
+        return fig, axs
