@@ -77,7 +77,8 @@ class PlotGregory(PlotBaseMixin):
             data_labels: List of labels for the data. Default is None
             ref_label: Label for the reference data. Default is None
             style: Style of the plot. Default is 'aqua'
-            cmap: Colormap marking time evolution, with a colorbar. Default is 'plasma_r'.
+            cmap: Colormap marking time evolution. Default is 'plasma_r'.
+                  Not used with more than one dataset, since they would share the same colours.
         """
         ConfigStyle(style=style)
         ax_monthly = None
@@ -103,6 +104,11 @@ class PlotGregory(PlotBaseMixin):
             raise ValueError(
                 "Not enough data to plot. At least one of monthly or annual data must have at least 2 data points."
             )
+
+        # The colormap is the same for every dataset, so with more than one dataset it is disabled
+        if cmap and self.len_data > 1:
+            self.logger.info("Time colormap disabled: %s datasets would share the same colours", self.len_data)
+            cmap = None
 
         if ax_monthly:
             fig, ax_monthly = self.plot_monthly(fig, ax_monthly, data_labels=mon_label, ref_label=ref_label, cmap=cmap)
@@ -201,7 +207,7 @@ class PlotGregory(PlotBaseMixin):
             ax: Axes object
             data_labels: List of labels for the data. Default is None
             ref_label: Label for the reference data. Default is None
-            cmap: Colormap marking time evolution, with a colorbar. Default is None (disabled)
+            cmap: Colormap marking time evolution. Default is None (disabled)
 
         Returns:
             fig: Figure object
@@ -229,7 +235,7 @@ class PlotGregory(PlotBaseMixin):
             fig: Figure object
             ax: Axes object
             data_labels: List of labels for the data. Default is None
-            cmap: Colormap marking time evolution, with a colorbar. Default is None (disabled)
+            cmap: Colormap marking time evolution. Default is None (disabled)
 
         Returns:
             fig: Figure object
