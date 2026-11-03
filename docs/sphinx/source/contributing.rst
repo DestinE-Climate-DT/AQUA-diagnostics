@@ -116,11 +116,13 @@ To run the tests in parallel, use the ``-n`` flag followed by the number of core
     pytest -n 4
 
 This will run the test suite using 4 parallel workers. You can adjust this number based on your available CPU cores.
-For more control over parallel execution, you can also use the ``--max-worker-restart`` option to automatically restart workers that fail:
+CI runs with ``--dist loadgroup --max-worker-restart=0``: if a worker crashes, the run stops at once and reports the crashed test.
+Avoid restarting crashed workers with ``--dist loadgroup``: pytest-xdist does not send the crashed worker's tests to the
+replacement worker, so the run hangs instead of failing.
 
 .. code-block:: bash
 
-    pytest -n 4 --max-worker-restart=3
+    pytest -n 4 --dist loadgroup --max-worker-restart=0
 
 .. note::
    Some tests in AQUA-diagnostics use the ``xdist_group`` marker to ensure they run on the same worker process.

@@ -31,7 +31,7 @@ There is one class for the analysis and one for the plotting:
 File structure
 --------------
 
-* The diagnostic and its CLI script, ``cli_trend.py``, are located in
+* The diagnostic and its CLI script, ``cli_trends.py``, are located in
   ``aqua/diagnostics/trends``.
 * A horizontal-map example is available at
   ``aqua/diagnostics/templates/collections/config-trends-2d.yaml``.
@@ -115,7 +115,7 @@ The diagnostic can be run from the command line:
 
 .. code-block:: bash
 
-    python -m aqua.diagnostics.trends.cli_trend --config config-trends.yaml
+    python -m aqua.diagnostics.trends.cli_trends --config config-trends.yaml
 
 The standard dataset, date, output and cluster arguments are described in
 :ref:`diagnostics-cli-arguments`. The CLI processes only the ``diagnostics.trends``

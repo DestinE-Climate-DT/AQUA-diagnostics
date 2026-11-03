@@ -14,7 +14,7 @@ job:
     max_threads: 0  # Set to the desired maximum number of threads, or leave it as 0 for no limit
     loglevel: "WARNING" # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-    run_checker: false  # ensemble runs post-process existing diagnostic output, no data-availability check needed
+    run_setup_checker: false  # ensemble runs post-process existing diagnostic output, no data-availability check needed
 
     outputdir: "./output"
 

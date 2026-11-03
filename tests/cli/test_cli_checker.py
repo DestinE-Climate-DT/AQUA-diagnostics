@@ -1,6 +1,8 @@
 """Tests for the AQUA diagnostics setup checker CLI."""
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -10,9 +12,18 @@ import pytest
 from aqua.core.exceptions import NoDataError
 from aqua.core.util import dump_yaml as write_yaml
 from aqua.core.util import load_yaml
+from aqua.diagnostics.base import cli_setup_checker
 from aqua.diagnostics.base.cli_setup_checker import _checker_build_config, main, parse_arguments
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
+
+
+def test_checker_runs_as_script():
+    """aqua-analysis launches the checker as a plain script, so it must not rely on relative imports."""
+    result = subprocess.run(
+        [sys.executable, cli_setup_checker.__file__, "--help"], capture_output=True, text=True, check=False
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_parse_arguments_uses_common_and_checker_options():

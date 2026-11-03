@@ -20,8 +20,10 @@ dpi = DPI
 # with both regions used here (Labrador Sea for the profiles, Arctic for the MLD map).
 # EXPECTED_MLD_MEAN is the flat average of the 2D MLD field, not the fldmean scalar the
 # dim_mean run used to produce: MLD is now taken from the map branch, as in production.
+# EXPECTED_RHO is averaged over the IHO Labrador Sea polygon ('ls', default frac_threshold 0.0),
+# which replaced the old lon/lat box: a different shape, hence a different value.
 EXPECTED_MLD_MEAN = 45.12769451
-EXPECTED_RHO = 26.82583261
+EXPECTED_RHO = 26.77830879
 # The climatology comes before the region in the filenames, lower cased as all the keys
 PLOT_STEM = "ocean_stratification.{product}.ci.FESOM.hpz3.r1.djf.{region}"
 NC_STEM = "stratification.{product}.ci.FESOM.hpz3.r1.djf.{region}"
