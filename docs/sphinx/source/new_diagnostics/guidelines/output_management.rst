@@ -156,6 +156,21 @@ This example demonstrates saving multiple plot formats (e.g. PNG/PDF/SVG) with m
     We suggest using the metadata field ``/Caption`` to store the plot description.
     This is currently used by the AQUA dashboard to generate plot descriptions.
 
+Figure Size
+^^^^^^^^^^^
+
+All figures share the same width, ``FIGURE_WIDTH``, taken from ``DEFAULT_FIGSIZE_HORIZONTAL`` in AQUA-core.
+Font sizes are fixed in points by the AQUA style, so with a common width the text looks equally large in every figure
+once they are shown at the same width, as the AQUA dashboard does.
+Instead of a hardcoded ``figsize``, use ``figure_size()`` and choose only the height, as a fraction of the width:
+
+.. code-block:: python
+
+    from aqua.diagnostics.base import figure_size
+
+    fig = plt.figure(figsize=figure_size(0.77))  # a single global map
+    fig = plt.figure(figsize=figure_size(0.56 * nrows / ncols))  # a grid of maps
+
 Opening a PDF File and Displaying Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
