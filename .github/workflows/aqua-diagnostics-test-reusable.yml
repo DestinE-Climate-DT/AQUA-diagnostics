@@ -367,8 +367,10 @@ jobs:
             echo "::warning::pytest-timeout not installed: running without per-test timeout"
           fi
           if [ "$PARALLEL" = "true" ]; then
-            # xdist_group markers run on dedicated workers
-            ARGS+=(-n 4 --dist loadgroup --max-worker-restart=3)
+            # xdist_group markers run on dedicated workers.
+            # No worker restart: with loadgroup, a replaced worker never gets the
+            # crashed worker's tests and the run hangs until the step timeout.
+            ARGS+=(-n 4 --dist loadgroup --max-worker-restart=0)
           fi
           if [ "$COVERAGE" = "true" ]; then
             ARGS+=(--cov)
