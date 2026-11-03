@@ -9,7 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
-- CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#PR)
+- CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
 - Major documentation update (#473)
 
 ## [v0.26.0]
