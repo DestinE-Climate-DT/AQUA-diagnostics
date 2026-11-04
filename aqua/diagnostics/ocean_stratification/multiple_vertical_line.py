@@ -71,6 +71,7 @@ def plot_multi_vertical_lines(
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
+    # wspace: room for the depth axis labels of the following panel (tight_layout is skipped with this gridspec)
     spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.1)
 
     for j in range(nrows):
