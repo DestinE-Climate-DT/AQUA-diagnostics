@@ -516,5 +516,6 @@ class PlotLatLonProfiles:
             loglevel=self.loglevel,
         )
         # The core function has a fixed figsize of (12, 8): resize it, the constrained layout adapts on save
+        # TODO: pass figsize instead, once aqua-core plot_seasonal_lat_lon_profiles accepts it
         fig.set_size_inches(figure_size(0.67))
         return fig, axs

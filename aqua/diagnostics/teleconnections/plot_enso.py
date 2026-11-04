@@ -138,9 +138,10 @@ class PlotENSO(PlotBaseMixin):
         maps, ref_maps, var_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # One panel per map, on the same grid plot_maps uses
+        # TODO: remove once the aqua-core plot_maps default figsize uses the common width
         n_maps = len(maps) if isinstance(maps, list) else len(ref_maps) if isinstance(ref_maps, list) else 1
         if n_maps == 1:
-            kwargs.setdefault("figsize", figure_size(0.77))
+            kwargs.setdefault("figsize", figure_size(0.8))
         else:
             nrows, ncols = plot_box(n_maps)
             kwargs.setdefault("figsize", figure_size((nrows * 5 + 1) / (ncols * 6)))
