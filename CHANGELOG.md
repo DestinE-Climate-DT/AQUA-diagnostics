@@ -9,6 +9,8 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
+- CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
 - Major documentation update (#473)
 
 ## [v0.26.0]
