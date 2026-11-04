@@ -197,7 +197,7 @@ class PlotTrends:
                 vmax=vmax,
                 sym=sym_value,
                 return_fig=True,
-                figsize=figure_size(0.77),
+                figsize=figure_size(0.8),
                 loglevel=self.loglevel,
             )
 

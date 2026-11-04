@@ -297,7 +297,7 @@ class PlotBias:
             cmap=self.cmap,
             extent=extent,
             cyclic_lon=cyclic_lon,
-            figsize=figure_size(0.77),
+            figsize=figure_size(0.8),
             loglevel=self.loglevel,
         )
         ax.set_xlabel("Longitude")

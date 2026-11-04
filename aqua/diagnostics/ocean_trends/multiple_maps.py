@@ -100,7 +100,7 @@ def plot_maps(
     logger.debug("Loading maps")
     maps = [data_map.load(keep_attrs=True) for data_map in maps]
 
-    figsize = figure_size(0.56 * nrows / ncols)
+    figsize = figure_size(0.55 * nrows / ncols)
     fig, axs = plt.subplots(
         nrows=nrows,
         ncols=ncols,

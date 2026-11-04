@@ -184,7 +184,7 @@ class PlotMJO:
             return_fig=True,
             vmin=vmin,
             vmax=vmax,
-            figsize=figure_size(1.63),
+            figsize=figure_size(1.6),
             loglevel=self.loglevel,
         )
 

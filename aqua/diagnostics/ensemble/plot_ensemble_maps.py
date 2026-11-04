@@ -202,7 +202,7 @@ class PlotEnsembleMaps(BaseMixin):
                 vmin=vmin,
                 vmax=vmax,
                 cmap=cmap,
-                figsize=figure_size(0.77),
+                figsize=figure_size(0.8),
                 loglevel=self.loglevel,
             )
             ax.set_xlabel("Longitude")
@@ -323,7 +323,7 @@ class PlotEnsembleMaps(BaseMixin):
             vmin_fill=vmin,
             vmax_fill=vmax,
             cmap=cmap,
-            figsize=figure_size(0.77),
+            figsize=figure_size(0.8),
             loglevel=self.loglevel,
         )
         ax.set_xlabel("Longitude")

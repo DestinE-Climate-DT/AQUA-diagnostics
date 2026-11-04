@@ -128,7 +128,7 @@ class PlotNAO(PlotBaseMixin):
         proj = NorthPolarStereo(central_longitude=-20.0)
         extent = [-180, 180, 10, 90]
 
-        fig = plt.figure(figsize=figure_size(0.77))
+        fig = plt.figure(figsize=figure_size(0.8))
         ax = fig.add_subplot(111, projection=proj)
 
         ax = apply_circular_window(ax, extent=extent)

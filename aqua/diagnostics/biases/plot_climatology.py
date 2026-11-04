@@ -130,7 +130,7 @@ class PlotClimatology:
             vmin=vmin,
             vmax=vmax,
             proj=proj,
-            figsize=figure_size(0.77),
+            figsize=figure_size(0.8),
             loglevel=self.loglevel,
             cbar_label=cbar_label,
             cmap=self.cmap,
