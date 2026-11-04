@@ -130,15 +130,16 @@ CLI usage
 The diagnostic can be run from the command line interface (CLI) using the following commands:
 
 For running unified diagnostics (Maps + Timeseries):
+
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ensemble
-    python cli_ensemble.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ensemble.cli_ensemble --config <path_to_config_file>
 
 For running exclusively multi-model ensemble maps:
+
 .. code-block:: bash
 
-    python cli_multi_model_maps_ensemble.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ensemble.cli_multi_model_maps_ensemble --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

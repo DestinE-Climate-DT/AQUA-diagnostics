@@ -173,8 +173,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA-diagnostics/aqua/diagnostics/variability_map
-    python cli_variability_map.py --config_file <path_to_config_file>
+    python -m aqua.diagnostics.variability.cli_variability_map --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
