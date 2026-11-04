@@ -9,16 +9,19 @@ By combining multiple simulations, whether from different models, parameter choi
 The **Ensemble** diagnostics offers a set of tools to compute and visualise basic ensemble statistics, such as the point-wise mean and standard deviation.
 These metrics help users examine both the typical response of the ensemble and the variability across its members, giving an indication of model agreement and the confidence that can be placed in the simulated fields.
 
-It supports ensemble analysis for 1D time series, 2D ``LatLon`` spatial maps, and 2D ``LevLat`` zonal sections, with the option to use weighted statistics for multi-model ensembles.
+It supports ensemble analysis for 1D time series, latitude profiles and seasonal cycles, 2D ``LatLon`` spatial maps (annual and seasonal climatologies, sea ice), and 2D ``LevLat`` zonal sections, with the option to use weighted statistics for multi-model ensembles.
 
 This section documents the Ensemble diagnostics available in AQUA-diagnostics.
 
 .. toctree::
    :maxdepth: 2
 
+   ensemble_analysis
    ensemble_timeseries
    ensemble_maps
+   ensemble_profiles
    ensemble_zonal
+   ensemble_seaice
 
 Detailed API
 ------------

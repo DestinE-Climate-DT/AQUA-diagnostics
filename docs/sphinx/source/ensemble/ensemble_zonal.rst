@@ -198,3 +198,28 @@ Authors and contributors
 
 This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
 Contributions are welcome — please open an issue or a pull request.
+
+Atmosphere 3D collection
+------------------------
+
+In ``aqua analysis ensemble``, the ``ensemble_atmosphere3d`` collection uses the ``zonal`` block of ``config-atmosphere3d-ensemble.yaml``:
+
+.. code-block:: yaml
+
+    zonal:
+      run: true
+      diagnostic_name: 'atmosphere3d'
+      variables: ['t', 'u', 'v', 'q']
+      plot_params:
+        default:
+          ylim: [100000, 100]
+          ylabel: 'Pressure (Pa)'
+
+The zonal mean of the ``annual_climatology`` output of each realization is computed first, then ``EnsembleZonal`` computes the statistics.
+Figures of the ensemble mean and standard deviation are produced and, if the reference is available, of the bias of the ensemble mean.
+
+.. figure:: figures/ensemble_zonal_t_bias.png
+   :align: center
+   :width: 80%
+
+   Difference between the ensemble mean zonal temperature of three IFS-NEMO members and ERA5.

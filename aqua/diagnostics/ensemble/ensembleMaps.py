@@ -17,7 +17,7 @@ class EnsembleMaps(BaseMixin):
     This class takes an ensemble dataset containing 2D map data (longitude-latitude)
     and computes the mean and standard deviation across the specified ensemble
     dimension. Ensure that the dataset has the correct spatial dimensions before
-    computing statistics.
+    computing statistics. Any other dimension (e.g. season) is preserved.
     """
 
     def __init__(
@@ -30,6 +30,8 @@ class EnsembleMaps(BaseMixin):
         source_list=None,
         ensemble_dimension_name="ensemble",
         description=None,
+        diagnostic_product="EnsembleMaps",
+        region=None,
         outputdir="./",
         loglevel="WARNING",
     ):
@@ -47,6 +49,9 @@ class EnsembleMaps(BaseMixin):
             ensemble_dimension_name (str, optional): Name of the dimension along which individual
                 datasets are concatenated. Defaults to "ensemble".
             description (str, optional): Description to include in the output NetCDF metadata. Defaults to None.
+            diagnostic_product (str, optional): Product name used in the output filenames. Use a different
+                value for each kind of map (e.g. annual and seasonal). Defaults to "EnsembleMaps".
+            region (str, optional): Region name, added to the output filenames. Defaults to None.
             outputdir (str, optional): Output directory path for saving files. Defaults to "./".
             loglevel (str, optional): Logging level. Defaults to "WARNING".
         """
@@ -61,11 +66,12 @@ class EnsembleMaps(BaseMixin):
         self.outputdir = outputdir
         self.description = description
         super().__init__(
-            diagnostic_product="EnsembleMaps",
+            diagnostic_product=diagnostic_product,
             catalog_list=catalog_list,
             model_list=model_list,
             exp_list=exp_list,
             source_list=source_list,
+            region=region,
             outputdir=self.outputdir,
         )
 

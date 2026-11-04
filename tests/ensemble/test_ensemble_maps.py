@@ -1,8 +1,9 @@
+import numpy as np
 import pytest
 import xarray as xr
 
 from aqua.diagnostics.ensemble.ensembleMaps import EnsembleMaps
-from aqua.diagnostics.ensemble.plot_ensemble_maps import PlotEnsembleMaps
+from aqua.diagnostics.ensemble.plot_ensemble_maps import SEASONS, PlotEnsembleMaps
 
 pytestmark = [pytest.mark.diagnostics, pytest.mark.ensemble]
 
@@ -114,3 +115,103 @@ class TestEnsembleMaps:
 
         assert fig_m is not None
         assert ax_m is not None
+
+
+@pytest.fixture
+def seasonal_dataset():
+    """Three-member ensemble of a small seasonal climatology, members differing by 1 K."""
+    lat = np.linspace(-85, 85, 18)
+    lon = np.linspace(0, 350, 36)
+    base = np.full((4, lat.size, lon.size), 280.0) + np.arange(4)[:, None, None]
+    data = np.stack([base + member for member in range(3)])
+    return xr.Dataset(
+        {"2t": (("ensemble", "season", "lat", "lon"), data, {"units": "K"})},
+        coords={"ensemble": ["r1", "r2", "r3"], "season": SEASONS, "lat": lat, "lon": lon},
+    )
+
+
+class TestEnsembleSeasonalMaps:
+    def _run(self, dataset, outputdir):
+        ens = EnsembleMaps(
+            var="2t",
+            dataset=dataset,
+            catalog_list="ci",
+            model_list="IFS",
+            exp_list="test",
+            source_list="short",
+            diagnostic_product="EnsembleSeasonalMaps",
+            outputdir=outputdir,
+        )
+        ens.run()
+        return ens
+
+    def test_statistics_keep_season(self, seasonal_dataset, tmp_path):
+        ens = self._run(seasonal_dataset, str(tmp_path))
+
+        assert ens.dataset_mean.dims == ("season", "lat", "lon")
+        assert ens.dataset_mean.sel(season="JJA").values == pytest.approx(283.0)
+        assert ens.dataset_std.values == pytest.approx(np.std([0, 1, 2]))
+
+    def test_output_does_not_overwrite_annual(self, seasonal_dataset, tmp_path):
+        self._run(seasonal_dataset, str(tmp_path))
+        EnsembleMaps(
+            var="2t",
+            dataset=seasonal_dataset.isel(season=0, drop=True),
+            catalog_list="ci",
+            model_list="IFS",
+            exp_list="test",
+            source_list="short",
+            outputdir=str(tmp_path),
+        ).run()
+
+        names = [path.name for path in tmp_path.rglob("*.nc")]
+        assert len(names) == 4
+        assert sum("ensembleseasonalmaps" in name for name in names) == 2
+
+    @pytest.mark.parametrize("with_reference", [False, True])
+    def test_plot_seasonal(self, seasonal_dataset, tmp_path, with_reference):
+        ens = self._run(seasonal_dataset, str(tmp_path))
+        reference = ens.dataset_mean - 1.0 if with_reference else None
+
+        plot = PlotEnsembleMaps(
+            diagnostic_product="EnsembleSeasonalMaps",
+            catalog_list="ci",
+            model_list="IFS",
+            exp_list="test",
+            source_list="short",
+            outputdir=str(tmp_path),
+        )
+        fig = plot.plot_seasonal(
+            var="2t",
+            dataset=ens.dataset_mean,
+            ref_dataset=reference,
+            data_name="ensemble_mean",
+            contour=False,
+            save_format="png",
+            dpi=50,
+        )
+
+        assert fig is not None
+        assert len(list(tmp_path.rglob("*.png"))) == 1
+
+    def test_plot_seasonal_without_data(self, tmp_path):
+        assert PlotEnsembleMaps(outputdir=str(tmp_path)).plot_seasonal(var="2t", dataset=None) is None
+
+    def test_plot_panels_of_another_dimension(self, seasonal_dataset, tmp_path):
+        monthly = seasonal_dataset.rename(season="month").assign_coords(month=[3, 6, 9, 12])
+        ens = self._run(monthly, str(tmp_path))
+
+        plot = PlotEnsembleMaps(outputdir=str(tmp_path))
+        fig = plot.plot_seasonal(
+            var="2t",
+            dataset=ens.dataset_mean,
+            dim="month",
+            panels=[3, 9],
+            titles=["March", "September"],
+            contour=False,
+            figsize=(10, 5),
+            save_format="png",
+            dpi=50,
+        )
+
+        assert {ax.get_title() for ax in fig.axes} >= {"March", "September"}

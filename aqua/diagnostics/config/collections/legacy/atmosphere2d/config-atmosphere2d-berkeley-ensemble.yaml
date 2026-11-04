@@ -36,7 +36,7 @@ diagnostics:
     #formulae: ['(10u^2+10v^2)^0.5'] #TODO: Formula implementation
     params:
       default:
-        #seasons: true #TODO: seasonal ensemble diagnostic
+        seasons: true # also process the seasonal climatology
         #seasons_stat: 'mean' # May become a list
         #vertical: false     # Vertical profile if variable 3d # this won't be used in the ensemble diagnostic
       (10u^2+10v^2)^0.5:
@@ -97,3 +97,19 @@ diagnostics:
         plot_ensemble_members: True
       2t:
         regions: ['global']
+
+  seasonalcycles:
+    run: true
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
+    params:
+      2t:
+        regions: ['global', 'europe', 'north_midlatitudes', 'south_midlatitudes']
+
+  lat_lon_profiles:
+    run: true
+    diagnostic_name: 'atmosphere2d'
+    mean_type: 'zonal'
+    variables:
+      - name: '2t'
+        regions: [null, 'tropics']  # global and tropics
