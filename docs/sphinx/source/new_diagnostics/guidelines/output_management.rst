@@ -168,8 +168,8 @@ Instead of a hardcoded ``figsize``, use ``figure_size()`` and choose only the he
 
     from aqua.diagnostics.base import figure_size
 
-    fig = plt.figure(figsize=figure_size(0.77))  # a single global map
-    fig = plt.figure(figsize=figure_size(0.56 * nrows / ncols))  # a grid of maps
+    fig = plt.figure(figsize=figure_size(0.8))  # a single global map
+    fig = plt.figure(figsize=figure_size(0.55 * nrows / ncols))  # a grid of maps
 
 Opening a PDF File and Displaying Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
