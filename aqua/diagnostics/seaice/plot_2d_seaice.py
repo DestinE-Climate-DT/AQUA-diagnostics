@@ -157,7 +157,8 @@ class Plot2DSeaIce:
 
         for reg_mod in reg_models:
             nrows, ncols = len(self.months), 3
-            fig = plt.figure(figsize=figure_size(0.94 * nrows / ncols))
+            # Constrained layout keeps titles, colorbars and gridline labels from overlapping
+            fig = plt.figure(figsize=figure_size(0.94 * nrows / ncols), layout="constrained")
             subfigs = fig.subfigures(nrows=nrows, ncols=1)
 
             for jmon, (month, subfig) in enumerate(zip(self.months, subfigs)):
@@ -171,7 +172,7 @@ class Plot2DSeaIce:
                     regions=reg_ref.attrs.get("AQUA_region"),
                     timeseason=f"Month: {int_month_name(month)}",
                 ).generate()
-                subfig.suptitle(title, y=1.02)
+                subfig.suptitle(title)
 
                 # plot ref
                 setup = self._get_cmap(monref)
