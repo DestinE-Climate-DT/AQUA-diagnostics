@@ -71,7 +71,7 @@ def plot_multi_vertical_lines(
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
-    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.2, hspace=0.1)
+    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.1)
 
     for j in range(nrows):
         for i, var in enumerate(variables):
