@@ -3,6 +3,8 @@
 Command-line interface for ensemble diagnostics.
 
 Runs EnsembleTimeseries and/or EnsembleMaps diagnostics for a single model.
+EnsembleMaps covers the annual climatology and, with ``seasons: true`` in the
+``biases`` params, the seasonal climatology.
 Each diagnostic reads its own original YAML configuration file:
 
 Which diagnostics run is controlled by the ``run`` flag inside each config's
@@ -42,6 +44,7 @@ from aqua.diagnostics.ensemble import extract_realizations_list, generate_realiz
 # package's config/collections/legacy/atmosphere2d/ directory)
 DEFAULT_CONFIG = "config-atmosphere2d-berkeley-ensemble.yaml"
 DEFAULT_DIAGNOSTIC_NAME = "atmosphere2d"
+SEASONAL_PRODUCT = "EnsembleSeasonalMaps"
 
 
 def parse_arguments(args):
@@ -128,6 +131,122 @@ def load_reference(cli, filenames, variable, region, fix, label, select_variable
         data = data.squeeze("ensemble", drop=True)
 
     return data
+
+
+def run_seasonal_maps(
+    cli, diag_config, variable, dataset_args, source, fixer, realization_list, ref_args, fixer_ref, save_format, dpi
+):
+    """
+    Compute and plot the ensemble statistics of the seasonal climatology of one variable.
+
+    Args:
+        cli (DiagnosticCLI): CLI object, used for logging, loglevel and outputdir.
+        diag_config (dict): The ``biases`` block of the configuration.
+        variable (str): Variable to process.
+        dataset_args (dict): The catalog, model and exp of the ensemble.
+        source (str): Source of the ensemble.
+        fixer (bool): Fixer flag for the ensemble.
+        realization_list (list[str]): Realizations of the ensemble.
+        ref_args (dict | None): Reference arguments for the path generation, None if there is no reference.
+        fixer_ref (bool): Fixer flag for the reference.
+        save_format (str | list[str]): Format(s) of the figures.
+        dpi (int): Resolution of the figures.
+    """
+    path_args = {
+        **dataset_args,
+        "realization_list": realization_list,
+        "diagnostic_name": diag_config.get("diagnostic_name", "biases"),
+        "diagnostic_product": "seasonal_climatology",
+        "variable": variable,
+        "file_dir": cli.outputdir,
+        "extra_keys": {"variable": variable},
+        "file_format": ".nc",
+        "loglevel": cli.loglevel,
+    }
+
+    dataset = reader_retrieve_and_merge(
+        filenames=generate_realizations_path_single_model(**path_args),
+        variable=variable,
+        realizations=realization_list,
+        fix=fixer,
+        loglevel=cli.loglevel,
+    )
+    if dataset is None:
+        cli.logger.warning("Unable to load the seasonal climatology for variable '%s'. Skipping it!", variable)
+        return
+
+    names = {"catalog_list": dataset_args["catalog"], "model_list": dataset_args["model"], "exp_list": dataset_args["exp"]}
+    ens_seasonal = EnsembleMaps(
+        var=variable,
+        dataset=dataset,
+        source_list=source,
+        diagnostic_product=SEASONAL_PRODUCT,
+        outputdir=cli.outputdir,
+        loglevel=cli.loglevel,
+        **names,
+    )
+    ens_seasonal.run()
+
+    dataset_ref = None
+    if ref_args:
+        ref_filenames = generate_realizations_path_single_model(**path_args, **ref_args)
+        dataset_ref = load_reference(
+            cli, ref_filenames, variable, None, fixer_ref, label="seasonal map", select_variable=False
+        )
+
+    ens_plot = PlotEnsembleMaps(
+        diagnostic_product=SEASONAL_PRODUCT,
+        source_list=source,
+        ref_catalog=ref_args["catalog_ref"] if dataset_ref is not None else None,
+        ref_model=ref_args["model_ref"] if dataset_ref is not None else None,
+        ref_exp=ref_args["exp_ref"] if dataset_ref is not None else None,
+        outputdir=cli.outputdir,
+        loglevel=cli.loglevel,
+        **names,
+    )
+
+    all_plot_params = diag_config.get("plot_params", {})
+    param_dict = all_plot_params.get(variable) or {}
+    plot_params = {**all_plot_params.get("default", {}), **param_dict}
+    common = {
+        "var": variable,
+        "save_format": save_format,
+        "dpi": dpi,
+        "proj": plot_params.get("projection", "robinson"),
+        "proj_params": plot_params.get("projection_params", {}),
+        "cbar_label": param_dict.get("cbar_label"),
+        "cmap": param_dict.get("cmap"),
+    }
+    model = dataset_args["model"]
+
+    ens_plot.plot_seasonal(
+        dataset=ens_seasonal.dataset_mean,
+        vmin=param_dict.get("vmin_ensemble"),
+        vmax=param_dict.get("vmax_ensemble"),
+        data_name="ensemble_mean",
+        title=TitleBuilder(diagnostic="Seasonal ensemble mean", variable=variable, model=model).generate(),
+        **common,
+    )
+    ens_plot.plot_seasonal(
+        dataset=ens_seasonal.dataset_std,
+        vmin=param_dict.get("vmin_std_ensemble"),
+        vmax=param_dict.get("vmax_std_ensemble"),
+        data_name="ensemble_std",
+        title=TitleBuilder(diagnostic="Seasonal ensemble STD", variable=variable, model=model).generate(),
+        **common,
+    )
+    if dataset_ref is not None:
+        ens_plot.plot_seasonal(
+            dataset=ens_seasonal.dataset_mean,
+            ref_dataset=dataset_ref,
+            vmin=param_dict.get("vmin"),
+            vmax=param_dict.get("vmax"),
+            data_name="ensemble_bias_mean",
+            title=TitleBuilder(diagnostic="Seasonal mean ensemble bias", variable=variable, model=model).generate(),
+            **common,
+        )
+
+    cli.logger.info("Seasonal ensemble maps finished for variable '%s'.", variable)
 
 
 def main(argv=None):
@@ -443,6 +562,29 @@ def main(argv=None):
 
                 realization_list = extract_realizations_list(catalog=catalog, model=model, exp=exp, source=source)
                 cli.logger.info(f"Realization list: {realization_list}")
+
+                if params.get("seasons", False):
+                    run_seasonal_maps(
+                        cli=cli,
+                        diag_config=gb_diag_config,
+                        variable=variable,
+                        dataset_args={"catalog": catalog, "model": model, "exp": exp},
+                        source=source,
+                        fixer=fixer,
+                        realization_list=realization_list,
+                        ref_args={
+                            "catalog_ref": catalog_ref,
+                            "model_ref": model_ref,
+                            "exp_ref": exp_ref,
+                            "realization_ref": "r1",  # TODO
+                        }
+                        if has_ref
+                        else None,
+                        fixer_ref=fixer_ref,
+                        save_format=save_format,
+                        dpi=dpi,
+                    )
+
                 extra_dict = {"variable": variable}
                 filenames = generate_realizations_path_single_model(
                     catalog=catalog,

@@ -11,6 +11,7 @@ The **EnsembleMaps** diagnostic provides tools to compute and visualize ensemble
 - Compute ensemble mean and standard deviation for 2D spatial maps.
 - Generate separate maps for ensemble mean and standard deviation.
 - Support multiple map projections and bias comparisons against reference datasets.
+- Support seasonal climatologies, with one panel per season (DJF, MAM, JJA, SON).
 
 Classes
 -------
@@ -215,3 +216,25 @@ Authors and contributors
 This diagnostic is maintained by Maqsood Mubarak Rajput (`@maqsoodrajput <https://github.com/maqsoodrajput>`_, `maqsoodmubarak.rajput@awi.de <mailto:maqsoodmubarak.rajput@awi.de>`_).
 Contributions are welcome — please open an issue or a pull request.
 For questions or suggestions, contact the AQUA team or the maintainer.
+
+Seasonal climatologies
+----------------------
+
+``EnsembleMaps`` keeps any dimension other than the ensemble one, so it also works on seasonal climatologies.
+Use a different ``diagnostic_product`` to avoid overwriting the annual output, and ``plot_seasonal()`` to plot the four seasons in one figure.
+If ``ref_dataset`` is given, each panel shows the difference from the reference.
+
+.. code-block:: python
+
+    ens_seasonal = EnsembleMaps(
+        var='2t',
+        dataset=ens_dataset,  # with a 'season' dimension
+        diagnostic_product='EnsembleSeasonalMaps',
+    )
+    ens_seasonal.run()
+
+    ens_plot = PlotEnsembleMaps(diagnostic_product='EnsembleSeasonalMaps')
+    ens_plot.plot_seasonal(var='2t', dataset=ens_seasonal.dataset_mean, data_name='ensemble_mean')
+
+In ``aqua analysis ensemble``, set ``seasons: true`` in the ``params.default`` section of the ``biases`` block.
+The diagnostic then reads the ``seasonal_climatology`` output of each realization.

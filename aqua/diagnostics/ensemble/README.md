@@ -14,6 +14,7 @@ The ensemble module computes mean and standard deviation of climate model data.
   - [Table of Contents](#table-of-contents)
   - [Installation Instructions](#installation-instructions)
   - [Data requirements](#data-requirements)
+  - [Seasonal climatologies](#seasonal-climatologies)
   - [Examples](#examples)
   - [Contributing](#contributing)
 
@@ -26,7 +27,14 @@ Refer to the AQUA documentation for more information.
 
 ## Data requirements
 
-The ensemble members with `1D`,`2D` in `lon-lat` or `lev-lat` dimensions needs merged along the default dimension `Ensembles` to create an `xarray.Dataset`. This `xarray.Dataset` is then given to the `ensemble` module.
+The ensemble members with `1D`,`2D` in `lon-lat` or `lev-lat` dimensions need to be merged along the default dimension `ensemble` to create an `xarray.Dataset`. This `xarray.Dataset` is then given to the `ensemble` module.
+
+## Seasonal climatologies
+
+`EnsembleMaps` keeps any dimension other than the ensemble one, so it also handles seasonal climatologies.
+Pass a separate `diagnostic_product` (e.g. `EnsembleSeasonalMaps`) so that the annual output is not overwritten, and use `PlotEnsembleMaps.plot_seasonal()` to plot DJF, MAM, JJA and SON in one figure.
+
+In `aqua analysis ensemble`, set `seasons: true` in the `params.default` section of the `biases` block. The diagnostic then reads the `seasonal_climatology` output of each realization and produces the ensemble mean, the ensemble STD and, if a reference is available, the bias of the ensemble mean.
 
 ## Examples
 

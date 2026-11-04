@@ -1,12 +1,14 @@
 import xarray as xr
 
-from aqua.core.graphics import plot_single_map, plot_single_map_diff
+from aqua.core.graphics import plot_maps, plot_single_map, plot_single_map_diff
 from aqua.core.util import get_projection
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
 xr.set_options(keep_attrs=True)
+
+SEASONS = ["DJF", "MAM", "JJA", "SON"]
 
 
 class PlotEnsembleMaps(BaseMixin):
@@ -329,3 +331,94 @@ class PlotEnsembleMaps(BaseMixin):
         self.logger.debug("Saving 2D ensemble bias map")
         self.save_figure(var=var, fig=fig, data_name=data_name, description=description, format=save_format, dpi=dpi)
         return fig, ax
+
+    def plot_seasonal(
+        self,
+        var: str = None,
+        dataset=None,
+        ref_dataset=None,
+        description=None,
+        dpi=300,
+        title=None,
+        save_format=SAVE_FORMAT,
+        vmin=None,
+        vmax=None,
+        proj="robinson",
+        proj_params={},
+        cyclic_lon=True,
+        contour=True,
+        cbar_label=None,
+        cmap=None,
+        data_name=None,
+    ):
+        """
+        Plot one map per season (DJF, MAM, JJA, SON) in a single figure.
+
+        If a reference is given, each panel shows the difference `dataset - ref_dataset`.
+
+        Args:
+            var (str): Variable name to plot.
+            dataset (xarray.DataArray or Dataset): Data with a `season` dimension.
+            ref_dataset (xarray.DataArray or Dataset, optional): Reference with a `season` dimension. Defaults to None.
+            description (str, optional): Description string for saving the plot. Defaults to None.
+            dpi (int, optional): Resolution for saved figures. Default is 300.
+            title (str, optional): Title for the figure. Auto-generated if None.
+            save_format (str or list, optional): Format(s) to save figures in (e.g. 'png', 'pdf', 'svg').
+                Default is SAVE_FORMAT.
+            vmin (float, optional): Minimum color scale limit. Auto-set if None.
+            vmax (float, optional): Maximum color scale limit. Auto-set if None.
+            proj (str, optional): Map projection name. Default is "robinson".
+            proj_params (dict, optional): Extra parameters for the projection. Defaults to {}.
+            cyclic_lon (bool, optional): Whether longitude is cyclic. Default is True.
+            contour (bool, optional): Plot filled contours instead of pcolormesh. Default is True.
+            cbar_label (str, optional): Label for the colorbar. Defaults to the variable name.
+            cmap (str or colormap, optional): Colormap to use. Defaults to "RdBu_r".
+            data_name (str, optional): File naming label to distinguish saved plots.
+
+        Returns:
+            matplotlib.figure.Figure or None: The figure, or None if there is no data to plot.
+        """
+        self.logger.info("Plotting the seasonal ensemble maps")
+        if dataset is None:
+            self.logger.warning("No data given to the seasonal ensemble plotting function")
+            return None
+
+        if isinstance(dataset, xr.Dataset):
+            dataset = dataset[var]
+        if isinstance(ref_dataset, xr.Dataset):
+            ref_dataset = ref_dataset[var]
+
+        dataset = dataset.load()
+        if bool(dataset.isnull().all()) or bool((dataset == 0).all()):
+            self.logger.warning("The map is empty (all NaN or all zero). Skipping seasonal maps for %s and %s", var, data_name)
+            return None
+
+        maps = [dataset.sel(season=season) for season in SEASONS]
+        if ref_dataset is not None:
+            ref_dataset = ref_dataset.load()
+            maps = [data - ref_dataset.sel(season=season) for data, season in zip(maps, SEASONS)]
+
+        if title is None:
+            title = TitleBuilder(diagnostic="Seasonal ensemble diagnostic", variable=var, model=self.model).generate()
+
+        fig = plot_maps(
+            maps=maps,
+            proj=get_projection(proj, **proj_params),
+            contour=contour,
+            cyclic_lon=cyclic_lon,
+            sym=ref_dataset is not None and (vmin is None or vmax is None),
+            vmin=vmin,
+            vmax=vmax,
+            return_fig=True,
+            title=title,
+            title_size=16,
+            titles=SEASONS,
+            titles_size=14,
+            figsize=(10, 8),
+            cbar_label=cbar_label or var,
+            cmap=cmap or "RdBu_r",
+            loglevel=self.loglevel,
+        )
+        self.logger.debug("Saving seasonal ensemble maps")
+        self.save_figure(var=var, fig=fig, data_name=data_name, description=description, format=save_format, dpi=dpi)
+        return fig
