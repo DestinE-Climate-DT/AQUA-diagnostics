@@ -178,6 +178,7 @@ class PlotEnsembleZonal(BaseMixin):
         # squeeze all other dimensions if present
         dataset = dataset.squeeze()
 
+        # Apply the AQUA style (fonts) before creating the figure: ConfigStyle calls plt.style.use on init
         ConfigStyle(loglevel=self.loglevel)
         fig = plt.figure(figsize=figure_size)
         ax = fig.add_subplot(1, 1, 1)
