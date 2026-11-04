@@ -30,6 +30,7 @@ KNOWN_DIAGNOSTIC_KEYS = {
     "teleconnections",
     "timeseries",
     "trends",
+    "zonal",
 }
 
 

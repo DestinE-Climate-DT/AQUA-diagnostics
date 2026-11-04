@@ -15,6 +15,7 @@ The ensemble module computes mean and standard deviation of climate model data.
   - [Installation Instructions](#installation-instructions)
   - [Data requirements](#data-requirements)
   - [Seasonal climatologies](#seasonal-climatologies)
+  - [Products of the ensemble analysis](#products-of-the-ensemble-analysis)
   - [Examples](#examples)
   - [Contributing](#contributing)
 
@@ -36,6 +37,21 @@ Pass a separate `diagnostic_product` (e.g. `EnsembleSeasonalMaps`) so that the a
 
 In `aqua analysis ensemble`, set `seasons: true` in the `params.default` section of the `biases` block. The diagnostic then reads the `seasonal_climatology` output of each realization and produces the ensemble mean, the ensemble STD and, if a reference is available, the bias of the ensemble mean.
 
+## Products of the ensemble analysis
+
+`aqua analysis ensemble` works on the output of each realization. Each block of the `diagnostics` section of a configuration file enables one product:
+
+| Block | Product | Classes |
+|---|---|---|
+| `timeseries` | Monthly and annual time series | `EnsembleTimeseries`, `PlotEnsembleTimeseries` |
+| `biases` | Annual and, with `seasons: true`, seasonal maps | `EnsembleMaps`, `PlotEnsembleMaps` |
+| `seasonalcycles` | Seasonal cycles | `EnsembleProfiles`, `PlotEnsembleProfiles` |
+| `lat_lon_profiles` | Longterm and seasonal latitude profiles | `EnsembleProfiles`, `PlotEnsembleProfiles` |
+| `zonal` | Zonal mean of 3D variables | `EnsembleZonal`, `PlotEnsembleZonal` |
+| `seaice_2d_bias` | Sea ice fraction and thickness maps of each hemisphere | `EnsembleMaps`, `PlotEnsembleMaps` |
+
+If a realization is missing, a warning names it and the statistics use the remaining ones. A product is skipped with less than two realizations.
+
 ## Examples
 
 The `notebooks` folder contains notebooks with examples of how to use the ensemble module and its main functions.
@@ -46,6 +62,10 @@ Please note that notebooks may load data from the DKRZ cluster, so they may not 
 - [Example of how to use the 2D Maps (lon-lat) ensemble of atmglobalmean](https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/ensemble/ensemble_global_2D.ipynb)
 
 - [Example of how to use the 2D Zonal (lev-lat) ensemble of temperature](https://github.com/DestinE-Climate-DT/AQUA/blob/main/notebooks/diagnostics/ensemble/ensemble_zonalaverage.ipynb)
+
+- [Example of how to use the ensemble of latitude profiles and seasonal cycles](https://github.com/DestinE-Climate-DT/AQUA-diagnostics/blob/main/notebooks/diagnostics/ensemble/ensemble_profiles.ipynb)
+
+- [Example of how to use the ensemble of sea ice maps](https://github.com/DestinE-Climate-DT/AQUA-diagnostics/blob/main/notebooks/diagnostics/ensemble/ensemble_seaice.ipynb)
 
 
 ## Contributing

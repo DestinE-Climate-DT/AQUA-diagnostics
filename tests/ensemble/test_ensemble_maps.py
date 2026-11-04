@@ -196,3 +196,22 @@ class TestEnsembleSeasonalMaps:
 
     def test_plot_seasonal_without_data(self, tmp_path):
         assert PlotEnsembleMaps(outputdir=str(tmp_path)).plot_seasonal(var="2t", dataset=None) is None
+
+    def test_plot_panels_of_another_dimension(self, seasonal_dataset, tmp_path):
+        monthly = seasonal_dataset.rename(season="month").assign_coords(month=[3, 6, 9, 12])
+        ens = self._run(monthly, str(tmp_path))
+
+        plot = PlotEnsembleMaps(outputdir=str(tmp_path))
+        fig = plot.plot_seasonal(
+            var="2t",
+            dataset=ens.dataset_mean,
+            dim="month",
+            panels=[3, 9],
+            titles=["March", "September"],
+            contour=False,
+            figsize=(10, 5),
+            save_format="png",
+            dpi=50,
+        )
+
+        assert {ax.get_title() for ax in fig.axes} >= {"March", "September"}

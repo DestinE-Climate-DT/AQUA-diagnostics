@@ -43,7 +43,7 @@ cli:
   #ensemble_zonal: "ensemble/cli_zonal_ensemble.py"
 
 run:
-    - ["ensemble_atmosphere2d"]
+    - ["ensemble_atmosphere2d", "ensemble_atmosphere3d", "ensemble_ocean2d", "ensemble_water_cycle", "ensemble_seaice"]
 
 # Each diagnostic can have the following options (all optional):
 #    config: the configuration file(s) for the diagnostic.
@@ -54,6 +54,15 @@ diagnostics:
   ensemble_atmosphere2d:
     ensemble:
       config: "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley-ensemble.yaml"
+  ensemble_atmosphere3d:
+    ensemble:
+      config: "${AQUA_CONFIG}/collections/legacy/atmosphere3d/config-atmosphere3d-ensemble.yaml"
   ensemble_ocean2d:
     ensemble:
       config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-ensemble.yaml"
+  ensemble_water_cycle:
+    ensemble:
+      config: "${AQUA_CONFIG}/collections/legacy/water_cycle/config-water_cycle-ensemble.yaml"
+  ensemble_seaice:
+    ensemble:
+      config: "${AQUA_CONFIG}/collections/legacy/seaice/config-seaice-ensemble.yaml"

@@ -97,3 +97,19 @@ diagnostics:
         plot_ensemble_members: True
       2t:
         regions: ['global']
+
+  seasonalcycles:
+    run: true
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
+    params:
+      2t:
+        regions: ['global', 'europe', 'north_midlatitudes', 'south_midlatitudes']
+
+  lat_lon_profiles:
+    run: true
+    diagnostic_name: 'atmosphere2d'
+    mean_type: 'zonal'
+    variables:
+      - name: '2t'
+        regions: [null, 'tropics']  # global and tropics

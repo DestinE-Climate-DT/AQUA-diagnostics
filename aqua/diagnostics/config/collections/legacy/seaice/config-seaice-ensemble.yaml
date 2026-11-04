@@ -1,0 +1,61 @@
+# Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  seaice_2d_bias:
+    run: true
+    diagnostic_name: 'seaice'
+    methods: ['fraction', 'thickness']
+    regions: ['arctic', 'antarctic']
+    # List of months to plot (e.g., [3, 9] for March and September)
+    months: [3, 9]
+    references:
+      fraction:
+        arctic: {catalog: 'obs', model: 'OSI-SAF', exp: 'osi-saf-ssmis', source: 'nh-monthly'}
+        antarctic: {catalog: 'obs', model: 'OSI-SAF', exp: 'osi-saf-ssmis', source: 'sh-monthly'}
+      thickness:
+        arctic: {catalog: 'obs', model: 'PSC', exp: 'PIOMAS', source: 'monthly'}
+        antarctic: {catalog: 'obs', model: 'PSC', exp: 'GIOMAS', source: 'monthly'}
+    plot_params:
+      arctic:
+        projection: 'nh_polar_stereo'
+        extent: [-180, 180, 50, 90]
+      antarctic:
+        projection: 'sh_polar_stereo'
+        extent: [-180, 180, -90, -50]
+      fraction:
+        vmin_ensemble: 0
+        vmax_ensemble: 1
+        vmax_std_ensemble: 0.2
+        vmin: -0.5
+        vmax: 0.5
+        cmap_ensemble: 'Blues_r'
+        cmap_std_ensemble: 'viridis'
+        cbar_label: 'Sea ice fraction'
+      thickness:
+        vmin_ensemble: 0
+        vmax_ensemble: 4
+        vmax_std_ensemble: 0.5
+        vmin: -2
+        vmax: 2
+        cmap_ensemble: 'Blues_r'
+        cmap_std_ensemble: 'viridis'
+        cbar_label: 'Sea ice thickness [m]'

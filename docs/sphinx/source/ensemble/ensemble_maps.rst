@@ -223,6 +223,7 @@ Seasonal climatologies
 ``EnsembleMaps`` keeps any dimension other than the ensemble one, so it also works on seasonal climatologies.
 Use a different ``diagnostic_product`` to avoid overwriting the annual output, and ``plot_seasonal()`` to plot the four seasons in one figure.
 If ``ref_dataset`` is given, each panel shows the difference from the reference.
+The ``dim`` and ``panels`` arguments select the panels from another dimension, as in :ref:`ensemble_seaice`.
 
 .. code-block:: python
 

@@ -350,16 +350,21 @@ class PlotEnsembleMaps(BaseMixin):
         cbar_label=None,
         cmap=None,
         data_name=None,
+        dim="season",
+        panels=None,
+        titles=None,
+        extent=None,
+        figsize=(10, 8),
     ):
         """
-        Plot one map per season (DJF, MAM, JJA, SON) in a single figure.
+        Plot one map per season (DJF, MAM, JJA, SON), or per value of another dimension, in a single figure.
 
         If a reference is given, each panel shows the difference `dataset - ref_dataset`.
 
         Args:
             var (str): Variable name to plot.
-            dataset (xarray.DataArray or Dataset): Data with a `season` dimension.
-            ref_dataset (xarray.DataArray or Dataset, optional): Reference with a `season` dimension. Defaults to None.
+            dataset (xarray.DataArray or Dataset): Data with the `dim` dimension.
+            ref_dataset (xarray.DataArray or Dataset, optional): Reference with the `dim` dimension. Defaults to None.
             description (str, optional): Description string for saving the plot. Defaults to None.
             dpi (int, optional): Resolution for saved figures. Default is 300.
             title (str, optional): Title for the figure. Auto-generated if None.
@@ -374,6 +379,11 @@ class PlotEnsembleMaps(BaseMixin):
             cbar_label (str, optional): Label for the colorbar. Defaults to the variable name.
             cmap (str or colormap, optional): Colormap to use. Defaults to "RdBu_r".
             data_name (str, optional): File naming label to distinguish saved plots.
+            dim (str, optional): Dimension to select the panels from. Default is "season".
+            panels (list, optional): Values of `dim` to plot. Defaults to the four seasons.
+            titles (list[str], optional): Panel titles. Defaults to `panels`.
+            extent (list, optional): Map extent [lon_min, lon_max, lat_min, lat_max]. Defaults to None.
+            figsize (tuple, optional): Figure size. Default is (10, 8).
 
         Returns:
             matplotlib.figure.Figure or None: The figure, or None if there is no data to plot.
@@ -393,10 +403,11 @@ class PlotEnsembleMaps(BaseMixin):
             self.logger.warning("The map is empty (all NaN or all zero). Skipping seasonal maps for %s and %s", var, data_name)
             return None
 
-        maps = [dataset.sel(season=season) for season in SEASONS]
+        panels = SEASONS if panels is None else panels
+        maps = [dataset.sel({dim: panel}) for panel in panels]
         if ref_dataset is not None:
             ref_dataset = ref_dataset.load()
-            maps = [data - ref_dataset.sel(season=season) for data, season in zip(maps, SEASONS)]
+            maps = [data - ref_dataset.sel({dim: panel}) for data, panel in zip(maps, panels)]
 
         if title is None:
             title = TitleBuilder(diagnostic="Seasonal ensemble diagnostic", variable=var, model=self.model).generate()
@@ -412,9 +423,10 @@ class PlotEnsembleMaps(BaseMixin):
             return_fig=True,
             title=title,
             title_size=16,
-            titles=SEASONS,
+            titles=titles or [str(panel) for panel in panels],
             titles_size=14,
-            figsize=(10, 8),
+            figsize=figsize,
+            extent=extent,
             cbar_label=cbar_label or var,
             cmap=cmap or "RdBu_r",
             loglevel=self.loglevel,

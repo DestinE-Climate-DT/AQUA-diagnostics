@@ -1,9 +1,11 @@
 # """Ensemble Module"""
 
 from .ensembleMaps import EnsembleMaps
+from .ensembleProfiles import EnsembleProfiles
 from .ensembleTimeseries import EnsembleTimeseries
 from .ensembleZonal import EnsembleZonal
 from .plot_ensemble_maps import PlotEnsembleMaps
+from .plot_ensemble_profiles import PlotEnsembleProfiles
 from .plot_ensemble_timeseries import PlotEnsembleTimeseries
 from .plot_ensemble_zonal import PlotEnsembleZonal
 from .util import merge_from_data_files, reader_retrieve_and_merge
@@ -12,9 +14,11 @@ from .util import extract_realizations, extract_realizations_list, generate_real
 __all__ = [
     "EnsembleTimeseries",
     "EnsembleMaps",
+    "EnsembleProfiles",
     "EnsembleZonal",
     "PlotEnsembleTimeseries",
     "PlotEnsembleMaps",
+    "PlotEnsembleProfiles",
     "PlotEnsembleZonal",
     "reader_retrieve_and_merge",
     "merge_from_data_files",

@@ -31,6 +31,7 @@ class EnsembleMaps(BaseMixin):
         ensemble_dimension_name="ensemble",
         description=None,
         diagnostic_product="EnsembleMaps",
+        region=None,
         outputdir="./",
         loglevel="WARNING",
     ):
@@ -50,6 +51,7 @@ class EnsembleMaps(BaseMixin):
             description (str, optional): Description to include in the output NetCDF metadata. Defaults to None.
             diagnostic_product (str, optional): Product name used in the output filenames. Use a different
                 value for each kind of map (e.g. annual and seasonal). Defaults to "EnsembleMaps".
+            region (str, optional): Region name, added to the output filenames. Defaults to None.
             outputdir (str, optional): Output directory path for saving files. Defaults to "./".
             loglevel (str, optional): Logging level. Defaults to "WARNING".
         """
@@ -69,6 +71,7 @@ class EnsembleMaps(BaseMixin):
             model_list=model_list,
             exp_list=exp_list,
             source_list=source_list,
+            region=region,
             outputdir=self.outputdir,
         )
 
