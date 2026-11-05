@@ -5,6 +5,12 @@ Data access, fixing, regridding, statistics and plotting primitives live in **aq
 [DestinE-Climate-DT/AQUA](https://github.com/DestinE-Climate-DT/AQUA), usually checked out as `../AQUA`).
 The core coding rules in its `AGENTS.md` apply here too; this file covers what is specific to diagnostics.
 
+**Creating or reviewing a tool**: use the `new-aqua-diagnostic` skill
+([`.claude/skills/new-aqua-diagnostic/SKILL.md`](.claude/skills/new-aqua-diagnostic/SKILL.md)). Agents that do not load skills
+read that file directly. It holds the procedure (open choices to settle with the user first, a tested skeleton to instantiate
+with `scripts/instantiate.sh`, references, collections, docs, checklist) on top of the rules below; the long-form rationale is in
+`DIAGNOSTIC_GUIDELINES.md`.
+
 **Before writing code**: reuse `aqua.core` (Reader methods, `EvaluateFormula`, `aqua.core.graphics`, statistics,
 Dask cluster management via `aqua.core.daskcluster.DaskCluster`), then `aqua.diagnostics.base`.
 Anything generic (not tied to one tool) belongs in aqua-core, not here.
