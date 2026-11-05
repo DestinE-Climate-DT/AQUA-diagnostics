@@ -1,3 +1,6 @@
+# Legacy configuration: config-atmosphere2d-temperature.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
 datasets:
   - catalog: null
@@ -17,12 +20,12 @@ datasets:
 
 references:
   - catalog: 'obs'
-    model: 'ESA-CCI-L4'
-    exp: 'v3.0.1'
+    model: 'BERKELEY-EARTH'
+    exp: 'aqua-filled'
     source: 'r100-monthly'
     regrid: 'r100'
-    startdate: "1990-01-01"
-    enddate: "2020-12-31"
+    startdate: '1990-01-01'
+    enddate: '2014-12-31'
 
 setup:
   loglevel: 'WARNING'
@@ -37,8 +40,8 @@ output:
 diagnostics:
   biases:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     params:
       default:
         seasons: true
@@ -50,43 +53,44 @@ diagnostics:
         projection_params: {}
         show_stats: true
         show_significance: true    # Enable significance stippling
-        significance_alpha: 0.05
-      tos:
-        vmin: -5
-        vmax: 5
+        significance_alpha: 0.05  # 95% confidence level
+      2t:
+        vmin: -7
+        vmax: 7
         cmap: 'RdBu_r'
 
   timeseries:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     center_time: true
+    extend: false
     params:
       default:
         hourly: False
         daily: False
         monthly: True
         annual: True
-        std_startdate: '19900101'
-        std_enddate: '20201231'
-      tos:
-        regions: ['nh', 'sh']
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
+      2t:
+        regions: ['nh', 'sh', 'europe']
 
   seasonalcycles:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'atmosphere2d'
+    variables: ['2t']
     center_time: true
     params:
       default:
-        std_startdate: '19900101'
-        std_enddate: '20201231'
-      tos:
-        regions: ['nh', 'sh']
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
+      2t:
+        regions: ['nh', 'sh', 'europe']
 
   lat_lon_profiles:
     run: true
-    diagnostic_name: 'ocean2d'
+    diagnostic_name: 'atmosphere2d'
     mean_type: 'zonal'
     center_time: true
     exclude_incomplete: true
@@ -95,8 +99,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '19900101'
-        std_enddate: '20201231'
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
     variables:
-      - name: 'tos'
-        regions: [null]  # global
+      - name: '2t'
+        regions: [null, 'tropics']  # global and tropics

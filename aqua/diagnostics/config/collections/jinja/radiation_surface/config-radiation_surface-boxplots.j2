@@ -26,7 +26,7 @@ references:
     regrid: '{{ regrid }}'
     startdate: '{{ period.standard.startdate }}'
     enddate: '{{ period.standard.enddate }}'
-  # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
+{# skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5) #}
 {% if references.radiation_surface_radiative != references.radiation_surface_boxplots %}
   - catalog: '{{ references.radiation_surface_radiative.catalog }}'
     model: '{{ references.radiation_surface_radiative.model }}'
@@ -41,6 +41,7 @@ references:
 output:
   outputdir: "./"
   rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
   save_format: {{ output.save_format }}
   dpi: {{ output.dpi }}
 

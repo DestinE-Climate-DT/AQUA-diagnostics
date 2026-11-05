@@ -36,6 +36,7 @@ setup:
 output:
   outputdir: "./"
   rebuild: true
+  save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
 

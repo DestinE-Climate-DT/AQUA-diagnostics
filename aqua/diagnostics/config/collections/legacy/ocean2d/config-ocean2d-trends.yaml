@@ -1,3 +1,6 @@
+# Legacy configuration: config-ocean2d-trends.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Model-only trend maps. The analysis wrapper supplies the dataset and analysis dates.
 datasets:
   - catalog: null

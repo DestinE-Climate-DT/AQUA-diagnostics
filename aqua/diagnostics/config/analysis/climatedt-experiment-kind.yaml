@@ -7,7 +7,8 @@
 # Keys and blocks:
 # regrid: target grid of the reference datasets (model datasets are regridded through the CLI).
 # loglevel: log level of the diagnostics (setup.loglevel of the templates).
-# output: figure settings shared by all the templates (save_format, dpi, rebuild).
+# output: output settings shared by all the templates (rebuild, save_netcdf, save_format, dpi).
+#         Only outputdir stays in the templates.
 # sources: every observational dataset available to the templates (catalog, model, exp, source),
 #          each with a YAML anchor. Not read by the templates: references point to these anchors.
 # references: one slot per template, named <collection>_<quantity> after the template file
@@ -33,6 +34,7 @@ default:
     save_format: [png, pdf, svg]
     dpi: 300
     rebuild: true
+    save_netcdf: true
   sources:
     era5: &era5 {catalog: obs, model: ECMWF, exp: era5, source: monthly}
     berkeley_earth: &berkeley_earth {catalog: obs, model: BERKELEY-EARTH, exp: aqua-filled, source: r100-monthly}

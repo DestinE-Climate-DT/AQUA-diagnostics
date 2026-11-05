@@ -15,6 +15,7 @@ DIAGNOSTICS_ROOT = REPO_ROOT / "aqua" / "diagnostics"
 ANALYSIS_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "config.aqua-analysis.yaml"
 EXPERIMENT_KIND_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "climatedt-experiment-kind.yaml"
 JINJA_COLLECTIONS_DIR = DIAGNOSTICS_ROOT / "config" / "collections" / "jinja"
+LEGACY_COLLECTIONS_DIR = DIAGNOSTICS_ROOT / "config" / "collections" / "legacy"
 
 
 def _load_analysis_config():
@@ -240,3 +241,35 @@ def test_boxplots_skip_duplicate_reference(collection):
         expected = 1 if kind_name.startswith("highresmip") else 2
         assert len(references) == expected, kind_name
         assert references[0]["exp"] == "era5", kind_name
+
+
+def test_legacy_collections_match_default_jinja_rendering():
+    """Every jinja template has a legacy file with the same name that is its rendering with the ``default`` kind.
+
+    Legacy files are the explicit version of the default jinja case: if this fails after changing a template
+    or the ``default`` kind, regenerate the legacy file by rendering the template with the ``default`` kind.
+    """
+    default_kind = _resolved_experiment_kinds()["default"]
+    mismatches = []
+    for template in sorted(JINJA_COLLECTIONS_DIR.glob("**/*.j2")):
+        legacy = LEGACY_COLLECTIONS_DIR / template.parent.name / f"{template.stem}.yaml"
+        if not legacy.is_file():
+            mismatches.append(f"{legacy.relative_to(DIAGNOSTICS_ROOT)}: missing")
+            continue
+        rendered = _STRICT_JINJA_ENV.from_string(template.read_text()).render(default_kind)
+        if YAML(typ="safe").load(legacy.read_text()) != YAML(typ="safe").load(rendered):
+            mismatches.append(f"{legacy.relative_to(DIAGNOSTICS_ROOT)}: differs from {template.name} rendered with 'default'")
+    assert not mismatches, "Legacy files out of sync with the jinja templates:\n" + "\n".join(mismatches)
+
+
+def test_output_settings_are_centralised():
+    """Every template reads the shared output settings from the kind, only ``outputdir`` is local."""
+    output_keys = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]["output"]
+    assert set(output_keys) == {"rebuild", "save_netcdf", "save_format", "dpi"}
+    missing = [
+        f"{template.name}: output.{key}"
+        for template in sorted(JINJA_COLLECTIONS_DIR.glob("**/*.j2"))
+        for key in output_keys
+        if f"output.{key}" not in template.read_text()
+    ]
+    assert not missing, f"Templates not reading the centralised output settings: {missing}"

@@ -26,7 +26,7 @@ references:
     source: '{{ references.radiation_toa_boxplots.source }}'
     startdate: '{{ period.standard.startdate }}'
     enddate: '{{ period.standard.enddate }}'
-  # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
+{# skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5) #}
 {% if references.radiation_toa_radiative != references.radiation_toa_boxplots %}
   - catalog: '{{ references.radiation_toa_radiative.catalog }}'
     model: '{{ references.radiation_toa_radiative.model }}'
@@ -41,6 +41,7 @@ references:
 output:
   outputdir: "./"
   rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
   save_format: {{ output.save_format }}
   dpi: {{ output.dpi }}
 

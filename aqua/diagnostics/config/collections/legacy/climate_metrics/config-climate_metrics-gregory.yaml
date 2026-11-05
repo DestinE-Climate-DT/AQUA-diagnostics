@@ -1,3 +1,6 @@
+# Legacy configuration: config-climate_metrics-gregory.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Template according to #1613
 # The first model in this block can be overridden
 # in the command line by using:
@@ -21,6 +24,7 @@ datasets:
 output:
   outputdir: "./"
   rebuild: true
+  save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
 
@@ -33,8 +37,16 @@ diagnostics:
     monthly: true
     annual: true
     std: true
-    std_startdate: '20010101'
-    std_enddate: '20241231'
+    std_startdate: '2001-01-01'
+    std_enddate: '2024-12-31'
     # Gregory needs 2 datasets and do not care about the references block above
-    t2m_ref: {'catalog': 'obs', 'model': 'BERKELEY-EARTH', 'exp': 'aqua-filled', 'source': 'r100-monthly'}
-    net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa421', 'source': 'monthly'}
+    t2m_ref:
+      catalog: 'obs'
+      model: 'BERKELEY-EARTH'
+      exp: 'aqua-filled'
+      source: 'r100-monthly'
+    net_toa_ref:
+      catalog: 'obs'
+      model: 'CERES'
+      exp: 'ebaf-toa421'
+      source: 'monthly'

@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
 ```bash
 python aqua/diagnostics/biases/cli_biases.py -l INFO --outputdir /tmp/out \
-  --config aqua/diagnostics/config/collections/legacy/atmosphere2d/config-atmosphere2d-era5.yaml \
+  --config aqua/diagnostics/config/collections/legacy/atmosphere2d/config-atmosphere2d-surface.yaml \
   --catalog <catalog> --model <model> --exp <exp> --source <source>
 ```
 

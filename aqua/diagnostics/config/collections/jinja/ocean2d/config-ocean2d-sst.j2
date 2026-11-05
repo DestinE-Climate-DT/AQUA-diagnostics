@@ -30,7 +30,7 @@ setup:
 output:
   outputdir: "./"
   rebuild: {{ output.rebuild }}
-  save_netcdf: true
+  save_netcdf: {{ output.save_netcdf }}
   save_format: {{ output.save_format }}
   dpi: {{ output.dpi }}
 
