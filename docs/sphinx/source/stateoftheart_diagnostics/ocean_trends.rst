@@ -127,8 +127,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ocean_trends
-    python cli_ocean_trends.py --config <path_to_config_file>
+    python -m aqua.diagnostics.ocean_trends.cli_ocean_trends --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
@@ -182,7 +181,8 @@ The diagnostic supports analysis over predefined ocean regions. Common regions i
 * ``po`` - Pacific Ocean
 * ``go`` - Global Ocean
 
-Additional regions can be defined in ``aqua/diagnostics/config/tools/ocean3d/definitions/regions.yaml``.
+The regions are defined in ``aqua/diagnostics/config/definitions/regions.yaml``, as IHO sea areas or lon/lat boxes:
+see :ref:`diagnostics-regions` for their definition and to add new ones.
 
 Output
 ------
