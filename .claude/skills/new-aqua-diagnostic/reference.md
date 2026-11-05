@@ -84,3 +84,32 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 `template_parse_arguments`, `load_diagnostic_config`, `merge_config_args`, `get_diagnostic_configpath`,
 `load_var_config`, `find_vert_coord`, `open_cluster/close_cluster`, `start_end_dates`,
 `round_startdate/round_enddate`, `SAVE_FORMAT`; `DEFAULT_OCEAN_VERT_COORD` in `base/defaults.py`.
+
+## Adding a tool to a collection: what to edit
+
+Example, `trends` in the `atmosphere2d` collection (`config/collections/`):
+
+```
+jinja/atmosphere2d/config-atmosphere2d-trends.j2       # run by aqua analysis, dates as '{{ default.startdate }}'
+legacy/atmosphere2d/config-atmosphere2d-trends.yaml    # same keys, fixed dates ('1990-01-01', '19900101')
+```
+
+The two files differ only in the dates: `'{{ default.startdate }}'`, `'{{ default.std_startdate }}'`,
+`'{{ <tool>.std_startdate }}'` in the `.j2` become literal dates in the `legacy` YAML. A `.j2` has the same top-level
+blocks as the standalone template (`datasets`, `references`, `setup`, `output`, `diagnostics`) and one block per
+tool of the collection, all with `diagnostic_name: '<collection>'`. In `config.aqua-analysis.yaml`:
+
+```yaml
+cli:
+  <name>: "<name>/cli_<name>.py"      # relative to aqua/diagnostics
+
+diagnostics:
+  atmosphere2d:                       # an existing collection, listed in one of the `run:` groups
+    <name>:
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"]   # one per reference
+      # optional: outname, nworkers, extra, nocluster
+```
+
+A tool without a reference needs one `.j2` only, and its `references` block stays out. The `legacy` and `jinja`
+sets are not generated from each other yet (guidelines, "What is not homogeneous yet", point 16): edit both.

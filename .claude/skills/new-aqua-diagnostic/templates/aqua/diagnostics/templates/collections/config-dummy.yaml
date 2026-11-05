@@ -11,6 +11,18 @@ datasets:
     startdate: null
     enddate: null
 
+# Optional: delete this block if the tool needs no reference. Only the first reference is used.
+# A reference keeps its own regrid and dates, the CLI options --regrid/--startdate/--enddate do not apply to it.
+references:
+  - catalog: 'obs'
+    model: 'ECMWF'
+    exp: 'era5'
+    source: 'r100-monthly'
+    regrid: 'r100'
+    reader_kwargs: null
+    startdate: null
+    enddate: null
+
 setup:
   loglevel: 'WARNING'
 

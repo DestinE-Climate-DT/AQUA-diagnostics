@@ -58,6 +58,17 @@ def test_save_load_round_trip(dummy_run):
     assert fresh.result.attrs["AQUA_model"] == diag.result.attrs["AQUA_model"]
 
 
+def test_plot_with_reference(dummy_run, tmp_path):
+    """A reference is a second instance: the plot names it in the caption and in the filename."""
+    diag, _ = dummy_run
+    ref = Dummy(**DATASET, diagnostic_name="dummy", loglevel=LOGLEVEL)
+    ref.run(var="tcc", save_netcdf=False)
+    plot = PlotDummy(data=diag.result, ref_data=ref.result, outputdir=str(tmp_path), loglevel=LOGLEVEL)
+    assert "compared with" in plot.set_description()
+    plot.plot(save_format="png", dpi=DPI)
+    assert_nonempty(next(tmp_path.rglob("*.png")))
+
+
 def test_load_checks_the_period(dummy_run):
     """With dates, only a file computed over that period is loaded: this is what plot-only runs ask for."""
     diag, outputdir = dummy_run

@@ -19,7 +19,7 @@ class PlotDummy:
     def __init__(
         self,
         data,
-        ref_data=None,
+        ref_data=None,  # REFERENCE
         diagnostic_name: str = "dummy",
         outputdir: str = ".",
         loglevel: str = "WARNING",
@@ -29,7 +29,8 @@ class PlotDummy:
 
         Args:
             data (xr.DataArray or list): The results of Dummy.run(), one per dataset.
-            ref_data (xr.DataArray, optional): The result for a reference dataset.
+            ref_data (xr.DataArray, optional): The result for a reference dataset. Drawn as a reference line
+                and named in the caption; its AQUA_* attributes are used like those of the data.
             diagnostic_name (str, optional): The name used for the output files. Default is 'dummy'.
             outputdir (str, optional): The output directory. Default is '.'.
             loglevel (str, optional): The log level. Default is 'WARNING'.
@@ -37,7 +38,7 @@ class PlotDummy:
         self.loglevel = loglevel
         self.logger = log_configure(log_level=loglevel, log_name="PlotDummy")
         self.data = to_list(data)
-        self.ref_data = ref_data
+        self.ref_data = ref_data  # REFERENCE
         self.diagnostic_name = diagnostic_name
         self.outputdir = outputdir
         self.get_data_info()
@@ -60,7 +61,7 @@ class PlotDummy:
         """Return one label per dataset."""
         return [f"{model} {exp}" for model, exp in zip(self.models, self.exps)]
 
-    def set_ref_label(self) -> str:
+    def set_ref_label(self) -> str:  # REFERENCE (the whole method)
         """Return the label of the reference, or None."""
         if self.ref_data is None:
             return None
@@ -87,17 +88,23 @@ class PlotDummy:
         description += f" for {strlist_to_phrase(self.set_data_labels())}"
         if self.startdate and self.enddate:
             description += f" from {time_to_string(self.startdate, '%Y')} to {time_to_string(self.enddate, '%Y')}"
-        if self.ref_data is not None:
-            description += f", compared with {self.set_ref_label()}"
+        if self.ref_data is not None:  # REFERENCE
+            description += f", compared with {self.set_ref_label()}"  # REFERENCE
+            ref_start, ref_end = (
+                self.ref_data.attrs.get("AQUA_startdate"),
+                self.ref_data.attrs.get("AQUA_enddate"),
+            )  # REFERENCE
+            if ref_start and ref_end:  # REFERENCE
+                description += f" ({time_to_string(ref_start, '%Y')}-{time_to_string(ref_end, '%Y')})"  # REFERENCE
         return description + "."
 
     def create_figure(self):
         """Draw the figure with the aqua-core graphics."""
         return plot_timeseries(
             annual_data=self.data,
-            ref_annual_data=self.ref_data,
+            ref_annual_data=self.ref_data,  # REFERENCE
             data_labels=self.set_data_labels(),
-            ref_label=self.set_ref_label(),
+            ref_label=self.set_ref_label(),  # REFERENCE
             title=self.set_title(),
             loglevel=self.loglevel,
         )
@@ -119,7 +126,7 @@ class PlotDummy:
             "exp": self.exps,
             "realization": OutputSaver.unpack_list(self.realizations),  # one value gives r1, a list gives [r1]
         }
-        if self.ref_data is not None:
+        if self.ref_data is not None:  # REFERENCE (the whole block)
             saver_kwargs.update(
                 catalog_ref=self.ref_data.attrs["AQUA_catalog"],
                 model_ref=self.ref_data.attrs["AQUA_model"],

@@ -29,23 +29,57 @@ Consequences, always:
 ## Workflow
 
 1. **Clarify** with the user, only what is not already clear: tool name (snake_case, e.g. `lat_lon_profiles`),
-   what is computed, inputs (variables, formulae, regions), whether a reference is needed, whether it must run in
-   `aqua analysis` (and in which collection), minimum data for a scientific reason.
-2. **Instantiate the skeleton** (never write the boilerplate by hand):
+   what is computed, inputs (variables, formulae, regions), **whether a reference is needed (see
+   [References](#references))**, whether it must run in `aqua analysis` (and in which collection), minimum data
+   for a scientific reason.
+2. **Instantiate the skeleton** (never write the boilerplate by hand), from the root of the repository:
    ```bash
-   .claude/skills/new-aqua-diagnostic/scripts/instantiate.sh <name> [ClassName]
+   <this skill's folder>/scripts/instantiate.sh <name> [ClassName]
    ```
-   It copies `templates/` into the repo, renaming `dummy`/`Dummy`/`DUMMY` and refusing to overwrite anything.
+   It copies `templates/` into the repo (code, config template, tests and the `.rst` page), renaming
+   `dummy`/`Dummy`/`DUMMY` and refusing to overwrite anything.
    Then run `ruff check --fix` on the new files (the rename can change import order).
    Do **not** touch `aqua/diagnostics/dummy/cli_dummy.py`: that empty stub is used by the config tests.
-3. **Replace the science** in `<name>.py` (`compute_result`), keep the structure. Adapt `plot_<name>.py`
-   (figure type, title, caption), the CLI loops if the tool needs other axes, the config template.
-4. **Wire it in** (checklist below): exports, `aqua analysis`, `KNOWN_DIAGNOSTIC_KEYS`, docs, notebook, CHANGELOG.
+3. **Apply the reference decision** to the skeleton, then **replace the science** in `<name>.py`
+   (`compute_result`), keeping the structure. Adapt `plot_<name>.py` (figure type, title, caption), the CLI loops if
+   the tool needs other axes, the config template.
+4. **Wire it in** (checklist below): exports, `aqua analysis` and [collections](#adding-the-tool-to-a-collection),
+   `KNOWN_DIAGNOSTIC_KEYS`, docs (fill the generated `.rst`, toctree, tables), notebook, CHANGELOG.
 5. **Run the tests** of the new tool and the config tests, in an environment with aqua-core and the `ci` catalog:
    `pytest tests/<name> tests/cli/test_cli_<name>.py tests/config -q`.
 
 For a review of an existing diagnostic, go through the checklist and the rules below, and report deviations
 instead of fixing them silently.
+
+## References
+
+A **reference** is an observational or reanalysis dataset (or another experiment) the dataset is compared with.
+Whether a tool needs one changes the plot class, the CLI and the config, so **settle it before writing them**:
+ask the user, unless the context already answers it (the request says "against ERA5", the method is a bias or an
+evaluation metric, a similar tool in the repo is described, the collection already has references).
+Do not guess in silence: when you infer it, say so in one line.
+
+| Case | Typical tools | What to do |
+|---|---|---|
+| **No reference** | indices, drift, stratification | Delete the lines marked `# REFERENCE` in the CLI and the plot class, the `references` block of the config template, the reference tests and the "reference" sentences of the `.rst`. |
+| **Optional reference** (skeleton default) | timeseries, lat_lon_profiles, histogram | Keep everything as it is: the reference is drawn when `references` is configured, the figure is made without it otherwise. |
+| **Required reference** | biases | As optional, but when `references` is empty or the reference has no data, log a warning and skip the variable instead of plotting; the plot class takes `ref_data` as mandatory and computes the difference. |
+
+How the skeleton handles a reference, which holds in every case:
+
+- A reference is **a second instance of the analysis class**, with its own `catalog/model/exp/source`; it is run and
+  saved exactly like the dataset, and loaded in plot-only runs. The analysis class does not know it is a reference.
+- The CLI builds it with `cli.reference_args(reference)` (the reference keeps its own `regrid`, `startdate`,
+  `enddate`: the CLI options do not override them) and its own `reader_kwargs`, and uses only the first entry of
+  `references` (warn if there are more).
+- A reference without data (`NoDataError`, `NotEnoughDataError`) must **not** cost the figure of the dataset:
+  warn and plot without it, unless the reference is required.
+- The plot class takes `ref_data` and reads the reference from its `AQUA_*` attributes, like the data. It names the
+  reference (and its period) in the caption; `OutputSaver` receives `catalog_ref/model_ref/exp_ref`, so the figure
+  filename carries the reference. For a comparison figure (bias, difference) pass the reference to `TitleBuilder`
+  (`ref_catalog/ref_model/ref_exp`, `comparison`) as well.
+- Dataset and reference must differ, otherwise their NetCDF files have the same name and overwrite each other.
+- `references` is a top-level block of the config, never inside the tool block.
 
 ## The three layers plus a config
 
@@ -155,14 +189,38 @@ Plugging into `aqua analysis` (`config/analysis/config.aqua-analysis.yaml`): add
 make sure the collection is in a `run:` group. Add the key to `KNOWN_DIAGNOSTIC_KEYS` in
 `tests/config/test_diagnostic_key_coverage.py`.
 
+### Adding the tool to a collection
+
+The standalone template (`templates/collections/config-<name>.yaml`) is only the starting point for a user.
+The tool becomes a *diagnostic* when a **collection** configures it, and a collection exists in two parallel sets
+of files that must stay aligned:
+
+- `config/collections/jinja/<collection>/config-<collection>-<ref>.j2`: what `aqua analysis` runs. Dates are Jinja
+  variables (`'{{ default.startdate }}'`, `'{{ <tool>.std_startdate }}'`) rendered per experiment kind.
+- `config/collections/legacy/<collection>/config-<collection>-<ref>.yaml`: the same file in plain YAML with fixed
+  dates, usable with `--config` outside `aqua analysis`.
+
+Do it only when the user asks for it, or when the tool is meant for a collection from the start (ask which one).
+Then: add a `<name>:` block to the files of that collection with the **same keys** as the template, `run: true`,
+`diagnostic_name` set to the **collection name**, and the variables, regions and plot options of the scientific
+purpose; keep `.j2` and `legacy` in step; register the tool in `config.aqua-analysis.yaml` with the list of `.j2`
+files (one per reference, as `biases` does in `atmosphere2d`). A `.j2` file configures one reference: a collection
+with two references (ERA5 and Berkeley Earth) has two files, and the tool lists both. The tests in `tests/config`
+check that every `.j2` renders for every experiment kind and that the keys are known. Details in
+[reference.md](reference.md).
+
 ## Tests, docs, notebook (guidelines §7)
 
 - `tests/<name>/test_<name>.py`: real `ci` catalog (pass `catalog="ci"`), `pytestmark = [pytest.mark.aqua,
   pytest.mark.diagnostics]`, constants from `tests/shared_constants.py`, `tmp_path` as `outputdir`, and the
   **save/load round trip** (also with dates). `tests/cli/test_cli_<name>.py`: everything mocked with the
   `build_config` and `mock_cluster` fixtures; patch classes at the CLI module path.
-- Docs: copy `docs/sphinx/source/stateoftheart_diagnostics/dummy.rst` to `<name>.rst`, add it to the toctree, the
-  minimum-data table and (if `load()` exists) the plot-only list of `index.rst`. CHANGELOG entry.
+- Docs: `instantiate.sh` already writes `docs/sphinx/source/stateoftheart_diagnostics/<name>.rst` from
+  `templates/docs/.../dummy.rst`, laid out like every page of that folder (description, classes, files, inputs,
+  Python and CLI usage, config, collections, output, observations, notebooks, references, authors, API). Fill it in
+  (the `..` comments guide the author; delete them), add it to the toctree, the minimum-data table and, if `load()`
+  exists, the plot-only list of `index.rst`. The page keeps the same section order on purpose, so the pages can be
+  updated and homogenised together later. CHANGELOG entry (`CHANGELOG.md`, `Unreleased`, with the PR number).
 - Notebook `notebooks/diagnostics/<name>/<name>.ipynb` with the Python API (analysis -> plot) on data available
   on a common machine.
 
@@ -194,8 +252,19 @@ plot-only runs reproduce the figures. Keep its shape, replace the science.
 | `aqua/diagnostics/dummy/plot_dummy.py` | plot class: attributes -> title/caption -> `plot_timeseries` -> `OutputSaver` |
 | `aqua/diagnostics/dummy/cli_dummy.py` | CLI: variable -> region loop, failure policy, plot-only |
 | `aqua/diagnostics/templates/collections/config-dummy.yaml` | standalone config template |
-| `tests/dummy/test_dummy.py` | result, region, minimum data, round trip, period check, plot |
-| `tests/cli/test_cli_dummy.py` | parsing, disabled, full pipeline, plot-only, failure skip |
+| `docs/sphinx/source/stateoftheart_diagnostics/dummy.rst` | the documentation page, to fill in |
+| `tests/dummy/test_dummy.py` | result, region, minimum data, round trip, period check, plot, plot with reference |
+| `tests/cli/test_cli_dummy.py` | parsing, disabled, full pipeline, with/without/missing reference, plot-only, failure skip |
 
-Known limits of the skeleton: one dataset and no reference in the CLI (the plot class already accepts one);
-no `formulae`; no `.j2` collection config, `aqua analysis` wiring, `.rst` page or notebook (steps 4 above).
+Lines that exist only for the reference carry the marker `# REFERENCE`. Known limits of the skeleton: one dataset
+and at most one reference in the CLI; no `formulae`; no `.j2`/legacy collection config, `aqua analysis` wiring or
+notebook (step 4).
+
+## Portability
+
+The content is plain Markdown plus a bash script: nothing in it depends on Claude. Only the *discovery* is
+tool-specific: `.claude/skills/<name>/SKILL.md` is read by Claude Code. The `SKILL.md` format (a `name` and a
+`description` in the frontmatter) follows the Agent Skills convention that other agents read from their own
+folders, and agents that do not read skills can be pointed at this file from their instruction file
+(`AGENTS.md`, `GEMINI.md`, Copilot or Cursor rules). Keep the body free of tool-specific syntax so it stays valid
+for all of them.

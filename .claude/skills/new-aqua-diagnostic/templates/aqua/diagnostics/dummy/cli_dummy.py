@@ -17,6 +17,40 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
+def process_dataset(cli, dataset_args, reader_kwargs, var, region, diagnostic_name):
+    """
+    Run (or just load, in plot-only mode) the analysis of one dataset or reference.
+
+    Args:
+        cli (DiagnosticCLI): The prepared CLI.
+        dataset_args (dict): From cli.dataset_args() for a model, cli.reference_args() for a reference.
+        reader_kwargs (dict): The Reader keyword arguments of the dataset.
+        var (str): The variable to analyse.
+        region (str or None): The region, None for the global domain.
+        diagnostic_name (str): The prefix of the output files.
+
+    Returns:
+        Dummy or None: The instance with its result, None if there is nothing to plot.
+    """
+    diag = Dummy(**dataset_args, region=region, diagnostic_name=diagnostic_name, loglevel=cli.loglevel)
+    try:
+        if not cli.plot_only:
+            diag.run(
+                var=var, reader_kwargs=reader_kwargs, outputdir=cli.outputdir, rebuild=cli.rebuild, save_netcdf=cli.save_netcdf
+            )
+        if cli.plot_only or cli.save_netcdf:
+            diag.load(var=var, outputdir=cli.outputdir, reader_kwargs=reader_kwargs)
+    except (NoDataError, NotEnoughDataError, KeyError, ValueError) as e:
+        cli.logger.warning(
+            "Skipping %s/%s for %s in region %s: %s", dataset_args["model"], dataset_args["exp"], var, region, e
+        )
+        return None
+    if diag.result is None:
+        cli.logger.warning("No results for %s in region %s", var, region)
+        return None
+    return diag
+
+
 def main(argv=None):
     """Run the Dummy tool for every variable and region of the configuration."""
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
@@ -28,34 +62,52 @@ def main(argv=None):
             cli.logger.info("Dummy is disabled, nothing to do")
             return
         diagnostic_name = tool_dict.get("diagnostic_name", TOOLNAME)
-        dataset = cli.config_dict["datasets"][0]
-        reader_kwargs = dataset.get("reader_kwargs") or {}
+
+        datasets = cli.config_dict["datasets"]
+        if len(datasets) > 1:
+            cli.logger.warning("Dummy supports one dataset, using only the first of %d", len(datasets))
+        dataset = datasets[0]
+
+        # REFERENCE (optional): drop this block, the `ref` lines below and the `references` block of the config
+        # if the tool needs no reference; raise instead of continuing if the tool cannot work without one.
+        references = cli.config_dict.get("references") or []
+        if len(references) > 1:
+            cli.logger.warning("Dummy supports one reference, using only the first of %d", len(references))
+        reference = references[0] if references else None
 
         for var in tool_dict.get("variables", []):
             var_config, regions = load_var_config(cli.config_dict, var, diagnostic=TOOLNAME)
             for region in regions:
-                diag = Dummy(
-                    **cli.dataset_args(dataset), region=region, diagnostic_name=diagnostic_name, loglevel=cli.loglevel
+                diag = process_dataset(
+                    cli,
+                    cli.dataset_args(dataset),
+                    dataset.get("reader_kwargs") or {},
+                    var_config["name"],
+                    region,
+                    diagnostic_name,
                 )
-                try:
-                    if not cli.plot_only:
-                        diag.run(
-                            var=var_config["name"],
-                            reader_kwargs=reader_kwargs,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                            save_netcdf=cli.save_netcdf,
-                        )
-                    if cli.plot_only or cli.save_netcdf:
-                        diag.load(var=var_config["name"], outputdir=cli.outputdir, reader_kwargs=reader_kwargs)
-                except (NoDataError, NotEnoughDataError, KeyError, ValueError) as e:
-                    cli.logger.warning("Skipping %s in region %s: %s", var, region, e)
+                if diag is None:
                     continue
-                if diag.result is None:
-                    cli.logger.warning("No results for %s in region %s, skipping the plot", var, region)
-                    continue
+
+                ref = None  # REFERENCE
+                if reference is not None:  # REFERENCE
+                    ref = process_dataset(  # REFERENCE
+                        cli,
+                        cli.reference_args(reference),
+                        reference.get("reader_kwargs") or {},
+                        var_config["name"],
+                        region,
+                        diagnostic_name,
+                    )
+                    if ref is None:  # REFERENCE
+                        cli.logger.warning("No reference available for %s, plotting without it", var)  # REFERENCE
+
                 PlotDummy(
-                    data=diag.result, diagnostic_name=diagnostic_name, outputdir=cli.outputdir, loglevel=cli.loglevel
+                    data=diag.result,
+                    ref_data=ref.result if ref is not None else None,  # REFERENCE
+                    diagnostic_name=diagnostic_name,
+                    outputdir=cli.outputdir,
+                    loglevel=cli.loglevel,
                 ).plot(save_format=cli.save_format, dpi=cli.dpi, rebuild=cli.rebuild)
     finally:
         cli.close_dask_cluster()
