@@ -27,19 +27,22 @@ class DiagnosticCLI:
         )
         cli.prepare()
         cli.open_dask_cluster()
-        try:
-            # Access prepared attributes
-            logger = cli.logger
-            config_dict = cli.config_dict
-            outputdir = cli.outputdir
-            ...
-            for var in variables:
-                try:
-                    ...
-                except Exception as e:
-                    cli.log_failure(e, "variable %s", var)
-        finally:
-            cli.close_dask_cluster()
+
+        # Access prepared attributes
+        logger = cli.logger
+        config_dict = cli.config_dict
+        outputdir = cli.outputdir
+        ...
+
+        # Each part that can fail on its own is skipped, without stopping the others
+        for var in variables:
+            try:
+                ...
+            except Exception as e:
+                cli.log_failure(e, "variable %s", var)
+
+        # At the end
+        cli.close_dask_cluster()
     """
 
     def __init__(self, args, diagnostic_name, default_config, log_name=None):
