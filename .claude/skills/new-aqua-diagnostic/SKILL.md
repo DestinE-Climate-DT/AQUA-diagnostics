@@ -10,7 +10,8 @@ not homogeneous yet, is [DIAGNOSTIC_GUIDELINES.md](../../../DIAGNOSTIC_GUIDELINE
 read the section named below when a rule here is not enough. API tables (`Diagnostic`, `OutputSaver`, aqua-core
 helpers, config folders) are in [reference.md](reference.md).
 
-**Where the code disagrees with the docs (Sphinx pages), follow the code.**
+**Where the code disagrees with the docs (Sphinx pages), follow the code.** The repository's `AGENTS.md` applies as
+well (logging, lazy data, Dask, tests markers, no new dependencies without discussion): this skill adds the procedure.
 
 ## 0. Tool vs diagnostic
 
@@ -26,12 +27,32 @@ Consequences, always:
 - Output files are named after the **collection** (`diagnostic_name`), not the tool, so choose
   `diagnostic_product` values that say which tool produced a file.
 
+## Open choices: settle them before starting
+
+Several decisions are the user's, and they change what is written. Before step 2 of the workflow, go through the
+list below, work out what the request and the repository already answer, and **ask the user for the rest in one
+message** (all questions together, with your proposed default for each). Do not ask what is already answered, and do
+not decide in silence: when you infer an answer, state it in one line so the user can correct it. Start only when
+the choices are settled. Come back to the user if one turns up later (a collection that turns out to need a
+second reference, a name that already exists).
+
+| Choice | What to settle | Default to propose |
+|---|---|---|
+| **Tool name** | snake_case folder/module name and the CamelCase class (`lat_lon_profiles` / `LatLonProfiles`); must not clash with an existing tool or exported class | derived from what the tool computes |
+| **What it computes** | the quantity, the variables (or formulae), the regions, the period, the figure type | ask: this has no default |
+| **References** | none, optional or required (see [References](#references)); which dataset; **whether it needs std dates** for an uncertainty estimate | optional, no std dates |
+| **Collection** | does it join an existing collection (which one, which references), start a new one, or stay standalone with only the template config? Edit `.j2` and `legacy` only if the user wants it | standalone, collection later |
+| **`aqua analysis`** | register it in `config.aqua-analysis.yaml`, the `run` group, `config.grouping.yaml` (dashboard section) | only if it joins a collection |
+| **Minimum data** | `MINIMUM_MONTHS_REQUIRED` and the scientific reason for it | the shortest period with a meaningful result |
+| **Plot-only** | support `load()` (yes, unless there is a reason not to) | yes |
+| **Scope of the deliverable** | code only, or also docs page, notebook, CHANGELOG (PR number) | code, tests, config template, docs page, CHANGELOG |
+| **Generic plot** | if the figure is not in `aqua.core.graphics`: write it in the tool as a generic function and flag it for the core | yes |
+
+Review mode (an existing diagnostic) needs none of this: report deviations and ask before fixing.
+
 ## Workflow
 
-1. **Clarify** with the user, only what is not already clear: tool name (snake_case, e.g. `lat_lon_profiles`),
-   what is computed, inputs (variables, formulae, regions), **whether a reference is needed (see
-   [References](#references))**, whether it must run in `aqua analysis` (and in which collection), minimum data
-   for a scientific reason.
+1. **Settle the open choices** with the user before touching any file (see the next section).
 2. **Instantiate the skeleton** (never write the boilerplate by hand), from the root of the repository:
    ```bash
    <this skill's folder>/scripts/instantiate.sh <name> [ClassName]
@@ -44,7 +65,8 @@ Consequences, always:
    (`compute_result`), keeping the structure. Adapt `plot_<name>.py` (figure type, title, caption), the CLI loops if
    the tool needs other axes, the config template.
 4. **Wire it in** (checklist below): exports, `aqua analysis` and [collections](#adding-the-tool-to-a-collection),
-   `KNOWN_DIAGNOSTIC_KEYS`, docs (fill the generated `.rst`, toctree, tables), notebook, CHANGELOG.
+   `config.grouping.yaml`, `KNOWN_DIAGNOSTIC_KEYS`, docs (fill the generated `.rst`, toctree, tables), notebook,
+   CHANGELOG.
 5. **Run the tests** of the new tool and the config tests, in an environment with aqua-core and the `ci` catalog:
    `pytest tests/<name> tests/cli/test_cli_<name>.py tests/config -q`.
 
@@ -79,6 +101,9 @@ How the skeleton handles a reference, which holds in every case:
   filename carries the reference. For a comparison figure (bias, difference) pass the reference to `TitleBuilder`
   (`ref_catalog/ref_model/ref_exp`, `comparison`) as well.
 - Dataset and reference must differ, otherwise their NetCDF files have the same name and overwrite each other.
+- A reference may also need **std dates** (`std_startdate`/`std_enddate`): when the tool computes a standard
+  deviation over a reference period to draw an uncertainty (shading, bands), the reference carries its own period,
+  not the dataset's. See [reference.md](reference.md#references-and-std-dates).
 - `references` is a top-level block of the config, never inside the tool block.
 
 ## The three layers plus a config
@@ -137,6 +162,8 @@ clashes, e.g. the ocean `Trends` are re-exported as `OceanTrends`).
 - Gotcha: `load_netcdf()` compares `startdate/enddate` with the **dataset-level** attributes, but a saved bare
   `DataArray` keeps them on the variable, so loading with dates returns `None`. The skeleton saves
   `result.to_dataset()` with the attributes copied to `ds.attrs`; keep that, and keep `test_load_checks_the_period`.
+- Do not create a new instance or `AQUA_*` attribute unless strictly needed: reuse an existing one first
+  (`grep -rhoE "AQUA_[a-zA-Z_]+" aqua/diagnostics | sort -u`), as `AGENTS.md` asks.
 - Mutable defaults: use `reader_kwargs: dict = None`, never `{}`.
 
 ## Plot class rules (guidelines §4)
@@ -187,7 +214,10 @@ never hard-code limits. Where files live: see [reference.md](reference.md).
 Plugging into `aqua analysis` (`config/analysis/config.aqua-analysis.yaml`): add the CLI under `cli:`
 (path relative to `aqua/diagnostics`), add it to a collection under `diagnostics:` with its `config:` (`.j2`),
 make sure the collection is in a `run:` group. Add the key to `KNOWN_DIAGNOSTIC_KEYS` in
-`tests/config/test_diagnostic_key_coverage.py`.
+`tests/config/test_diagnostic_key_coverage.py`, and map the new output prefixes in
+`config/analysis/config.grouping.yaml`: the dashboard sections are built from the `diagnostic_name`/`diagnostic_product`
+prefixes of the files, so a new tool in a collection needs an entry there (a section maps to patterns like
+`atmosphere2d.timeseries`, i.e. `<diagnostic_name>.<diagnostic_product>`).
 
 ### Adding the tool to a collection
 
@@ -220,7 +250,7 @@ check that every `.j2` renders for every experiment kind and that the keys are k
   Python and CLI usage, config, collections, output, observations, notebooks, references, authors, API). Fill it in
   (the `..` comments guide the author; delete them), add it to the toctree, the minimum-data table and, if `load()`
   exists, the plot-only list of `index.rst`. The page keeps the same section order on purpose, so the pages can be
-  updated and homogenised together later. CHANGELOG entry (`CHANGELOG.md`, `Unreleased`, with the PR number).
+  updated and homogenised together later. CHANGELOG entry: a line under `Unreleased` -> "Complete list" of `CHANGELOG.md`, `- <Tool>: <change> (#PR)`.
 - Notebook `notebooks/diagnostics/<name>/<name>.ipynb` with the Python API (analysis -> plot) on data available
   on a common machine.
 
@@ -234,7 +264,7 @@ check that every `.j2` renders for every experiment kind and that the keys are k
 - [ ] Plot class reads metadata from attributes, uses `TitleBuilder`, writes a description, saves with `OutputSaver`
 - [ ] CLI with `main(argv=None)`, `template_parse_arguments`, `DiagnosticCLI`, per-variable error handling, `plot_only`, cluster closed in `finally`
 - [ ] Template `templates/collections/config-<name>.yaml` (+ `.j2` collection config if it runs in `aqua analysis`)
-- [ ] Entry in `config.aqua-analysis.yaml` and in `KNOWN_DIAGNOSTIC_KEYS`
+- [ ] Entry in `config.aqua-analysis.yaml`, in `config.grouping.yaml` and in `KNOWN_DIAGNOSTIC_KEYS`
 - [ ] Diagnostic tests (with save/load round trip) and CLI tests
 - [ ] `.rst` page from `dummy.rst`, toctree, minimum-data table, plot-only list
 - [ ] Notebook in `notebooks/diagnostics/<name>/`

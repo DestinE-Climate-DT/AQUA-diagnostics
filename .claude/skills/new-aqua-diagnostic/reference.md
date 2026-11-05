@@ -113,3 +113,31 @@ diagnostics:
 
 A tool without a reference needs one `.j2` only, and its `references` block stays out. The `legacy` and `jinja`
 sets are not generated from each other yet (guidelines, "What is not homogeneous yet", point 16): edit both.
+
+## References and std dates
+
+A reference is not always just a second dataset to draw: when the tool shows an **uncertainty** (a shaded band, a
+significance test, a normalised difference), it needs the standard deviation of the reference, computed over a
+**reference period that is not the analysis period**. Such a reference therefore needs `std_startdate` and
+`std_enddate` as well as its `startdate`/`enddate`.
+
+- **Analysis class**: `Diagnostic.__init__` already takes `std_startdate`/`std_enddate`. `retrieve()` fetches the
+  window covering both periods with one call, fills `self.std_data` and sets `AQUA_std_startdate`/`AQUA_std_enddate`.
+  The tool computes the standard deviation from `self.std_data`, stores it as a result of its own (named, with the
+  `AQUA_*` attributes), saves it with its own `diagnostic_product` and loads it back in `load()`, like any other
+  result.
+- **CLI**: `cli.reference_args()` returns only catalog, model, exp, source, regrid and dates. Read the std dates
+  yourself, in this order of precedence: reference entry > `params.<var>` > `params.default`
+  (`ref.get("std_startdate") or var_config.get("std_startdate")`), and pass them to the constructor of the reference
+  instance. See `lat_lon_profiles/cli_lat_lon_profiles.py`.
+- **Config**: `std_startdate`/`std_enddate` are computation options, so they go in `params` (`default` or per
+  variable) or in the reference entry. In a `.j2` they are Jinja variables (`'{{ default.std_startdate }}'` or
+  `'{{ <tool>.std_startdate }}'`, defined in `config/analysis/climatedt-experiment-kind.yaml`), in the `legacy` YAML
+  literal dates. A new `<tool>.std_*` variable must exist for every experiment kind, or the rendering test fails.
+- **Plot class**: takes the standard deviation next to the reference (`ref_std_data`), reads its period from the
+  attributes, and says in the caption what the shading is (for example "shading: +/- 2 standard deviations of
+  ERA5 over 1990-2020").
+- **The dataset can have std dates too** (an anomaly or a normalisation relative to a base period), with the same
+  mechanism; ask the user which of the two the tool needs.
+- The skeleton has no std computation: add it only if the user asked for an uncertainty, and say so in the
+  decision recap.
