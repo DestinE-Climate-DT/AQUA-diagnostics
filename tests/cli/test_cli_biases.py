@@ -174,3 +174,30 @@ class TestMainExecutionFlow:
         main(["--config", config_file, "--loglevel", "WARNING"])
 
         assert mock_gb_cls.call_args_list[0].kwargs["diagnostic"] == "my_custom_gb"
+
+    def test_failing_variable_does_not_stop_the_next(self, build_config, mock_cluster, mock_gb):
+        """When a variable fails, the next one is still processed and plotted."""
+        mock_gb_cls, mock_plot_cls = mock_gb
+        mock_gb_cls.return_value.data = _mock_data("2t", "tprate")
+        # The dataset retrieve of 2t fails, then tprate (dataset and reference) succeeds
+        mock_gb_cls.return_value.retrieve.side_effect = [ValueError("No data found"), None, None]
+        config_file = build_config({"biases": {**BASE_SET, "variables": ["2t", "tprate"]}})
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        mock_plot_cls.return_value.plot_bias.assert_called_once()
+        assert mock_plot_cls.return_value.plot_bias.call_args.kwargs["var"] == "tprate"
+
+    def test_failing_pressure_level_does_not_stop_the_others(self, build_config, mock_cluster, mock_gb):
+        """When the plot of a pressure level fails, the other levels and the vertical plot are still produced."""
+        mock_gb_cls, mock_plot_cls = mock_gb
+        mock_gb_cls.return_value.data = {"q": MagicMock(dims=("plev",))}
+        mock_plot_cls.return_value.plot_bias.side_effect = [RuntimeError("boom"), None]
+        config_file = build_config(
+            {"biases": {**BASE_SET, "variables": ["q"], "params": {"default": {"plev": [85000, 50000], "vertical": True}}}}
+        )
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        assert [call.kwargs["plev"] for call in mock_plot_cls.return_value.plot_bias.call_args_list] == [85000, 50000]
+        mock_plot_cls.return_value.plot_vertical_bias.assert_called_once()
