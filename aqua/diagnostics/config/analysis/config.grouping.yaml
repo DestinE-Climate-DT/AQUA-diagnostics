@@ -15,6 +15,7 @@ diagnostics:
     Atmosphere 2D, Annual differences: [atmosphere2d.bias, "globalbiases.bias*[!0].png", "biases.bias*[!0].png", global_biases.total_bias_map, global_biases.seasonal_bias_map]
     Atmosphere 2D, Seasonal differences: [atmosphere2d.seasonal_bias, "globalbiases.seasonal_bias*[!0].png", "biases.seasonal_bias*[!0].png", Seasonal_Bias_Plot, atmglobalmean.seasonal_bias]
     Atmosphere 2D, Zonal profiles: [atmosphere2d.zonal_profile, atmosphere2d.seasonal_zonal_profile]
+    Atmosphere 2D, Trends: atmosphere2d.map_trend
 
     Atmosphere 3D, Vertical differences: [atmosphere3d.vertical_bias, global_biases.vertical_bias, biases.vertical_bias, atmglobalmean.vertical_bias, Vertical_biases]
     Atmosphere 3D, Annual differences: [atmosphere3d.bias, "globalbiases.bias*0.png", "biases.bias*0.png"]
@@ -26,6 +27,7 @@ diagnostics:
     Water cycle, Seasonal differences: water_cycle.seasonal_bias
     Water cycle, Zonal profiles: [water_cycle.zonal_profile,  water_cycle.seasonal_zonal_profile]
     Water cycle, Probability Density Function: water_cycle.pdf
+    Water cycle, Trends: water_cycle.map_trend
 
     Teleconnections, NAO: [teleconnections.nao, teleconnections.NAO, nao.]
     Teleconnections, ENSO: [teleconnections.enso, teleconnections.ENSO, enso.]
@@ -35,6 +37,7 @@ diagnostics:
     Ocean 2D, Annual differences: ocean2d.bias
     Ocean 2D, Seasonal differences: ocean2d.seasonal_bias
     Ocean 2D, Zonal profiles: [ocean2d.zonal_profile,  ocean2d.seasonal_zonal_profile]
+    Ocean 2D, Trends: ocean2d.map_trend
 
     Ocean 3D, Time series: [ocean3d.timeseries, monthly_time_series_, Ocean_time_series, ea_time_series, _time_series_arctic_ocean, _time_series_atlantic_ocean, _time_series_global_ocean, _time_series_indian_ocean, _time_series_pacific_ocean, _time_series_southern_ocean]
     Ocean 3D, Hovmöller plots: [ocean3d.hovmoller, _hovmoller_plot]

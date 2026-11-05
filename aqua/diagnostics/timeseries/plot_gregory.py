@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import ConfigStyle, plot_gregory_annual, plot_gregory_monthly
 from aqua.core.util import get_realizations, time_to_string, to_list
-from aqua.diagnostics.base import TitleBuilder, collapse_era5_duplicate
+from aqua.diagnostics.base import TitleBuilder
 
 from .base import PlotBaseMixin
 
@@ -66,6 +66,7 @@ class PlotGregory(PlotBaseMixin):
         data_labels: list = None,
         ref_label: str = None,
         style: str = "aqua",
+        cmap: str = "plasma_r",
     ):
         """
         Plot the data
@@ -76,6 +77,8 @@ class PlotGregory(PlotBaseMixin):
             data_labels: List of labels for the data. Default is None
             ref_label: Label for the reference data. Default is None
             style: Style of the plot. Default is 'aqua'
+            cmap: Colormap marking time evolution. Default is 'plasma_r'.
+                  Not used with more than one dataset, since they would share the same colours.
         """
         ConfigStyle(style=style)
         ax_monthly = None
@@ -102,10 +105,15 @@ class PlotGregory(PlotBaseMixin):
                 "Not enough data to plot. At least one of monthly or annual data must have at least 2 data points."
             )
 
+        # The colormap is the same for every dataset, so with more than one dataset it is disabled
+        if cmap and self.len_data > 1:
+            self.logger.info("Time colormap disabled: %s datasets would share the same colours", self.len_data)
+            cmap = None
+
         if ax_monthly:
-            fig, ax_monthly = self.plot_monthly(fig, ax_monthly, data_labels=mon_label, ref_label=ref_label)
+            fig, ax_monthly = self.plot_monthly(fig, ax_monthly, data_labels=mon_label, ref_label=ref_label, cmap=cmap)
         if ax_annual:
-            fig, ax_annual = self.plot_annual(fig, ax_annual, data_labels=ann_label)
+            fig, ax_annual = self.plot_annual(fig, ax_annual, data_labels=ann_label, cmap=cmap)
 
         # We extract the handles and labels from each axis
         # since the labels are defined in the plotting function
@@ -144,8 +152,7 @@ class PlotGregory(PlotBaseMixin):
         if None in (t2m_model, t2m_exp, toa_model, toa_exp):
             return None
 
-        ref_label = f"{t2m_model} {t2m_exp} {toa_model} {toa_exp}"
-        return collapse_era5_duplicate(ref_label)
+        return f"{t2m_model} {t2m_exp} {toa_model} {toa_exp}"
 
     def set_description(self):
         """Set the description for the plot"""
@@ -189,9 +196,9 @@ class PlotGregory(PlotBaseMixin):
                 "Annual model data and the reference ±1σ uncertainty bands around the climatological mean (shading)."
             )
 
-        return collapse_era5_duplicate(description)
+        return description
 
-    def plot_monthly(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, ref_label: str = None):
+    def plot_monthly(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, ref_label: str = None, cmap: str = None):
         """
         Plot the monthly data
 
@@ -200,6 +207,7 @@ class PlotGregory(PlotBaseMixin):
             ax: Axes object
             data_labels: List of labels for the data. Default is None
             ref_label: Label for the reference data. Default is None
+            cmap: Colormap marking time evolution. Default is None (disabled)
 
         Returns:
             fig: Figure object
@@ -215,10 +223,11 @@ class PlotGregory(PlotBaseMixin):
             loglevel=self.loglevel,
             labels=data_labels,
             ref_label=ref_label,
+            cmap=cmap,
         )
         return fig, ax
 
-    def plot_annual(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None):
+    def plot_annual(self, fig: plt.Figure, ax: plt.Axes, data_labels: list = None, cmap: str = None):
         """
         Plot the annual data
 
@@ -226,6 +235,7 @@ class PlotGregory(PlotBaseMixin):
             fig: Figure object
             ax: Axes object
             data_labels: List of labels for the data. Default is None
+            cmap: Colormap marking time evolution. Default is None (disabled)
 
         Returns:
             fig: Figure object
@@ -242,6 +252,7 @@ class PlotGregory(PlotBaseMixin):
             ax=ax,
             loglevel=self.loglevel,
             labels=data_labels,
+            cmap=cmap,
         )
         return fig, ax
 

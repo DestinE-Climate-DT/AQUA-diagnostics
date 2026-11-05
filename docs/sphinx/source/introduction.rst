@@ -85,6 +85,8 @@ This structured, modular design enables efficient implementation of new diagnost
 Although this standardization has not yet been fully extended to frontier diagnostics, it establishes a robust foundation for future enhancements.
 
 
+.. _running-diagnostics:
+
 Running Diagnostics
 --------------------
 
@@ -103,7 +105,7 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
    Configuration file templates for all available diagnostics are provided in `aqua/diagnostics/templates`, serving as starting points that users can customize according to their specific requirements.
    This approach ensures reproducibility, as the configuration file documents all analysis settings and can be version-controlled alongside results.
 
-3. **Level 3: Diagnostic collections via AQUA Analysis Wrapper**
+3. **Diagnostic collections via AQUA Analysis Wrapper (advanced):**
 
    For comprehensive model evaluation involving multiple diagnostics, AQUA provides the `aqua-analysis` wrapper, which orchestrates the execution of **diagnostic-collections**.
    Users construct a master configuration file that combines multiple diagnostics, defining which analyses to run and how they should be coordinated.
@@ -115,7 +117,25 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
    - Integrated result organization consolidating outputs from multiple diagnostics
 
 Examples of diagnostic-collections configuration files are provided in `aqua/diagnostics/config/collections`.
-The aqua-analysis functionality is fully documented at ref:`aqua_analysis`.
+The aqua-analysis functionality is fully documented at :ref:`aqua_analysis`.
+
+Community resources
+-------------------
+
+Additional examples and shared resources from the ClimateDT community are collected in the
+`climatedt-community-resources <https://github.com/DestinE-Climate-DT/climatedt-community-resources>`_
+repository.
+
+In particular, the
+`example_aqua <https://github.com/DestinE-Climate-DT/climatedt-community-resources/tree/main/example_aqua>`_
+folder provides a notebook demonstrating how to open and access ClimateDT data using AQUA.
+This is a useful starting point for new users who want to familiarise themselves with the
+AQUA ``Reader`` interface and the ClimateDT data catalog.
+
+.. seealso::
+
+   `ClimateDT external user guide <https://github.com/DestinE-Climate-DT/climatedt-external-user-guide>`_
+   for additional documentation on accessing ClimateDT data.
 
 
 Contributing

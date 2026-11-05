@@ -27,7 +27,6 @@ output:
   outputdir: "./"
   rebuild: true
   save_format: ['png', 'pdf', 'svg']
-  create_catalog_entry: true
   dpi: 300
 
 diagnostics:
@@ -77,7 +76,7 @@ diagnostics:
     std_enddate: '20201231'
     # Gregory needs 2 datasets and do not care about the references block above
     t2m_ref: {'catalog': 'obs', 'model': 'BERKELEY-EARTH', 'exp': 'aqua-filled', 'source': 'r100-monthly'}
-    net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa42', 'source': 'monthly'}
+    net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa421', 'source': 'monthly'}
   seasonalcycles:
     run: true
     diagnostic_name: 'atmosphere'

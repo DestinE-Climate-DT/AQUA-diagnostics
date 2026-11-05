@@ -30,7 +30,6 @@ output:
   save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
-  create_catalog_entry: true
 
 diagnostics:
   biases:

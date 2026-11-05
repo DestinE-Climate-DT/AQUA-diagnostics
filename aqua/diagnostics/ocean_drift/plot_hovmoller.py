@@ -13,6 +13,35 @@ from .multiple_timeseries import plot_multi_timeseries
 
 xr.set_options(keep_attrs=True)
 
+# Fixed color limits of the Hovmoller panels
+DEFAULT_CBAR_LIMITS = {
+    "thetao": {
+        "full": (270, 300),
+        "anom_t0": (-1, 1),
+        "anom_tmean": (-1, 1),
+        "std_anom_t0": (-5, 5),
+        "std_anom_tmean": (-3, 3),
+    },
+    "so": {
+        "full": (33, 37),
+        "anom_t0": (-0.2, 0.2),
+        "anom_tmean": (-0.2, 0.2),
+        "std_anom_t0": (-5, 5),
+        "std_anom_tmean": (-3, 3),
+    },
+}
+
+# Contour levels of the anomalies in physical units, as fractions of their color limit: the uneven
+# spacing shows the small deep anomalies next to the large ones of the surface
+LOG_LEVEL_FRACTIONS = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1)
+
+# Colormaps of the Hovmoller panels: sequential for the full values, diverging for the anomalies,
+# from the same color family for each variable
+FULL_CMAPS = {"thetao": "plasma", "so": "YlGnBu"}
+ANOMALY_CMAPS = {"thetao": "RdBu_r", "so": "BrBG"}
+DEFAULT_FULL_CMAP = "YlGnBu"
+DEFAULT_ANOMALY_CMAP = "PuOr_r"
+
 
 class PlotHovmoller:
     """Class for plotting Hovmoller diagrams and timeseries from AQUA ocean drift diagnostics.
@@ -70,10 +99,10 @@ class PlotHovmoller:
             loglevel=self.loglevel,
         )
 
-    def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
+    def plot_hovmoller(self, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300, cbar_limits: dict = None):
         """Plot the Hovmoller diagram for the given data.
 
-        This method sets the title, description, vmax, vmin, and texts for the plot.
+        This method sets the title, description, texts, color limits and colormaps for the plot.
         It then calls the `plot_multi_hovmoller` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -81,6 +110,8 @@ class PlotHovmoller:
             rebuild (bool): Whether to rebuild the output, default is True.
             save_format (str or list): List of formats to save the figure. Default is SAVE_FORMAT.
             dpi (int): Dots per inch for the saved figure. Default is 300.
+            cbar_limits (dict, optional): Color limits as {var: {drift_type: (vmin, vmax)}},
+                replacing the matching entries of DEFAULT_CBAR_LIMITS.
 
         Returns:
             None
@@ -91,9 +122,10 @@ class PlotHovmoller:
         self.set_description(
             content="Hovmöller plot of temperature (left column) and salinity (right column) of spatially averaged"
         )
-        self.set_data_type()
         self.set_texts()
-        self.set_vmax_vmin()
+        self.set_units_labels()
+        self.set_cbar_limits(cbar_limits)
+        self.set_cmaps()
         self.logger.debug("Plotting Hovmöller for variables: %s", self.vars)
         fig = plot_multi_hovmoller(
             maps=self.data,
@@ -101,9 +133,11 @@ class PlotHovmoller:
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
-            vmax=self.vmax,
             vmin=self.vmin,
+            vmax=self.vmax,
+            levels=self.cbar_levels,
             cmap=self.cmap,
+            cbar_labels=self.units_labels,
             text=self.texts,
         )
 
@@ -120,7 +154,7 @@ class PlotHovmoller:
     def plot_timeseries(self, levels: list = None, rebuild: bool = True, save_format: list = SAVE_FORMAT, dpi: int = 300):
         """Plot the timeseries for the given data.
 
-        This method sets the title, description, vmax, vmin, and texts for the plot.
+        This method sets the title, description, line colours and texts for the plot.
         It then calls the `plot_multi_timeseries` function to create the plot and
         saves it using the `OutputSaver`.
 
@@ -143,13 +177,12 @@ class PlotHovmoller:
             content="Time series of temperature (left column) and salinity (right column)"
             " at multiple depths, spatially averaged"
         )
-        self.set_data_type()
         self.set_texts()
-        self.set_vmax_vmin()
+        self.set_units_labels()
         self.set_line_plot_colours()
         self.logger.debug("Plotting Timeseries for variables: %s", self.vars)
         fig = plot_multi_timeseries(
-            maps=self.data,
+            maps=self.timeseries_data,
             levels=self.timeseries_labels,
             line_plot_colours=self.line_plot_colours,
             variables=self.vars,
@@ -157,9 +190,7 @@ class PlotHovmoller:
             loglevel=self.loglevel,
             title=self.suptitle,
             titles=self.title_list,
-            vmax=self.vmax,
-            vmin=self.vmin,
-            cmap=self.cmap,
+            ylabels=self.units_labels,
             text=self.texts,
         )
 
@@ -181,7 +212,7 @@ class PlotHovmoller:
         self.timeseries_labels = [f"{level} {level_unit}" for level in self.levels]
 
     def set_data_for_levels(self):
-        """Extract and set the data at the specified depth levels."""
+        """Extract the data at the specified depth levels, leaving the full profiles in self.data."""
         self.logger.debug("Setting data for levels: %s", self.levels)
         new_data_list = []
         for _, data in enumerate(self.data):
@@ -194,15 +225,15 @@ class PlotHovmoller:
                 else:
                     new_data = data.interp({self.vert_coord: level}, method="nearest")
                 new_data_level_list.append(new_data)
-            merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords="different")
+            merged_data = xr.concat(new_data_level_list, dim=self.vert_coord, coords="different", compat="equals")
             new_data_list.append(merged_data)
-        self.data = new_data_list
+        self.timeseries_data = new_data_list
 
     def set_line_plot_colours(self):
         """Set the color list for line plots based on the number of levels."""
         nlev = len(self.levels)
         cmap = plt.cm.plasma_r
-        self.line_plot_colours = [cmap(0.3 + 0.7 * i / (nlev - 1)) for i in range(nlev)]
+        self.line_plot_colours = [cmap(0.3 + 0.7 * i / max(nlev - 1, 1)) for i in range(nlev)]
 
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
@@ -217,10 +248,7 @@ class PlotHovmoller:
         for j in range(len(self.data)):
             for _, var in enumerate(self.vars):
                 if j == 0:
-                    units = self.data[j][var].attrs.get("units", "")
-                    units_latex = unit_to_latex(units) if units else ""
-                    long_name = self.data[j][var].attrs.get("long_name", var)
-                    title = f"{long_name} ({units_latex})"
+                    title = self.data[j][var].attrs.get("long_name", var)
                 else:
                     title = None
                 self.title_list.append(title)
@@ -237,42 +265,6 @@ class PlotHovmoller:
             " the second row shows the anomalies from the initial time,"
             " the third row shows the standardized anomalies from the initial time."
         )
-
-    def set_vmax_vmin(self):
-        """Set the vmax, vmin, and colormap for each subplot from the data type."""
-        self.logger.debug("Setting vmax and vmin")
-        hovmoller_plot_dic = {
-            "thetao": {
-                "full": {"vmax": 40, "vmin": 10},
-                "anom_t0": {"vmax": 6, "vmin": -6, "cbar": "coolwarm"},
-                "std_anom_t0": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
-                "anom_tmean": {"vmax": 6, "vmin": -6, "cbar": "coolwarm"},
-                "std_anom_tmean": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
-            },
-            "so": {
-                "full": {"vmax": 38, "vmin": 33, "cbar": "coolwarm"},
-                "anom_t0": {"vmax": 0.9, "vmin": -0.3, "cbar": "coolwarm"},
-                "std_anom_t0": {"vmax": 5, "vmin": -6, "cbar": "coolwarm"},
-                "anom_tmean": {"vmax": 5, "vmin": -5, "cbar": "coolwarm"},
-                "std_anom_tmean": {"vmax": 1, "vmin": -1, "cbar": "coolwarm"},
-            },
-        }
-        self.vmax = []
-        self.vmin = []
-        self.cmap = []
-        for type in self.data_type:
-            for var in self.vars:
-                self.vmax.append(hovmoller_plot_dic[var][type].get("vmax"))
-                self.vmin.append(hovmoller_plot_dic[var][type].get("vmin"))
-                self.cmap.append(hovmoller_plot_dic[var][type].get("cbar", "jet"))
-
-    def set_data_type(self):
-        """Set the data type list for each dataset based on its AQUA attributes."""
-        self.logger.debug("Setting data types")
-        self.data_type = []
-        for data in self.data:
-            type = data.attrs.get("AQUA_ocean_drift_type", "NA")
-            self.data_type.append(type)
 
     def set_texts(self):
         """Set the text annotations for each subplot panel based on drift type."""
@@ -294,6 +286,62 @@ class PlotHovmoller:
                 else:
                     self.texts.append(None)
         self.logger.debug("Texts set to: %s", self.texts)
+
+    def set_units_labels(self):
+        """Set the units label of each subplot panel, None for dimensionless data."""
+        self.units_labels = []
+        for data in self.data:
+            for var in self.vars:
+                units = data[var].attrs.get("units", "")
+                if units and str(units).strip() not in ("1", "dimensionless"):
+                    self.units_labels.append(unit_to_latex(units))
+                else:
+                    self.units_labels.append(None)
+        self.logger.debug("Units labels set to: %s", self.units_labels)
+
+    def set_cbar_limits(self, cbar_limits: dict = None):
+        """Set the fixed color limits of each subplot panel from its variable and drift type.
+
+        Panels without limits, in cbar_limits or in DEFAULT_CBAR_LIMITS, are scaled on their data.
+        The limits of the anomalies are always centered on zero, and the anomalies in physical
+        units get the uneven contour levels of LOG_LEVEL_FRACTIONS (None for the evenly spaced ones).
+
+        Args:
+            cbar_limits (dict, optional): Color limits as {var: {drift_type: (vmin, vmax)}},
+                replacing the matching entries of DEFAULT_CBAR_LIMITS.
+        """
+        cbar_limits = cbar_limits or {}
+        self.vmin = []
+        self.vmax = []
+        self.cbar_levels = []
+        for data in self.data:
+            drift_type = data.attrs.get("AQUA_ocean_drift_type")
+            for var in self.vars:
+                limits = cbar_limits.get(var, {}).get(drift_type) or DEFAULT_CBAR_LIMITS.get(var, {}).get(drift_type)
+                levels = None
+                if drift_type != "full":
+                    half = max(abs(limit) for limit in limits) if limits else float(abs(data[var]).max())
+                    limits = (-half, half)
+                    if drift_type.startswith("anom"):
+                        positive = [half * fraction for fraction in LOG_LEVEL_FRACTIONS]
+                        levels = [-level for level in reversed(positive)] + positive
+                vmin, vmax = limits if limits else (None, None)
+                self.vmin.append(vmin)
+                self.vmax.append(vmax)
+                self.cbar_levels.append(levels)
+        self.logger.debug("Color limits set to: vmin %s, vmax %s", self.vmin, self.vmax)
+
+    def set_cmaps(self):
+        """Set the colormap of each subplot panel: sequential for the full values, diverging for the anomalies."""
+        self.cmap = []
+        for data in self.data:
+            full = data.attrs.get("AQUA_ocean_drift_type") == "full"
+            for var in self.vars:
+                if full:
+                    self.cmap.append(FULL_CMAPS.get(var, DEFAULT_FULL_CMAP))
+                else:
+                    self.cmap.append(ANOMALY_CMAPS.get(var, DEFAULT_ANOMALY_CMAP))
+        self.logger.debug("Colormaps set to: %s", self.cmap)
 
     def save_plot(
         self,

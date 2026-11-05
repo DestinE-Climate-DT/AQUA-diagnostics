@@ -34,7 +34,6 @@ output:
   plot_only: false  # if true, plots are produced from the netcdf files already in outputdir
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
-  create_catalog_entry: true
 
 diagnostics:
   lat_lon_profiles:

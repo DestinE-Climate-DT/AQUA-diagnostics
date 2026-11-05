@@ -119,7 +119,7 @@ class PlotStratification:
             diagnostic_product=self.diagnostic_product,
             metadata={"description": self.description},
             rebuild=rebuild,
-            extra_keys={"region": self.region},
+            extra_keys={"climatology": self.clim_time, "region": self.region},
             format=save_format,
             dpi=dpi,
         )
@@ -153,7 +153,7 @@ class PlotStratification:
         """Set the legend labels for the model and observation lines."""
         self.data_label = self.model
         if self.obs:
-            self.obs_label = self.obs.attrs.get("model", "Observation")
+            self.obs_label = self.obs_model
 
     def set_data_list(self):
         """Populate the data and reference data lists for plotting."""
@@ -238,7 +238,7 @@ class PlotStratification:
         if self.obs:
             obs_startdate = self.obs.attrs.get("startdate", None)
             obs_enddate = self.obs.attrs.get("enddate", None)
-            self.description += f" with reference {self.obs.attrs['model']} {self.obs.attrs['exp']} (dashed)"
+            self.description += f" with reference {self.obs_model} {self.obs_exp} (dashed)"
             if obs_startdate and obs_enddate:
                 self.description += (
                     f" (from {time_to_string(obs_startdate, format='%Y-%m')} to {time_to_string(obs_enddate, format='%Y-%m')})"

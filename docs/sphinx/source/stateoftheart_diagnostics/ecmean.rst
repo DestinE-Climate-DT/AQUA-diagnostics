@@ -43,7 +43,7 @@ For detailed information on the code, please refer to the `official ECmean4 docu
 File structure
 --------------
 * The diagnostic is located in the ``aqua/diagnostics/ecmean`` directory, which contains the command line interface (CLI) script `cli_ecmean.py`.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-ecmean.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-ecmean.yaml``
 * The configuration file for ECmean4 specific settings (variables and regions) is located in ``aqua/diagnostics/config/tools/ecmean/ecmean_config_climatedt.yaml``.
 * The interface file to map AQUA variable names to ECmean4 standard names is located in ``aqua/diagnostics/config/tools/ecmean/interface/interface_AQUA_climatedt.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/ecmean`` directory and contain examples of how to use the diagnostic.
@@ -122,7 +122,8 @@ The general structure of the analysis is the following:
 
     import os
     from aqua import Reader
-    from aqua.util import load_yaml, ConfigPath
+    from aqua.core.configurer import ConfigContext
+    from aqua.core.util import load_yaml
     from aqua.diagnostics import PerformanceIndices
 
     models = ['IFS-NEMO', 'ICON']
@@ -130,9 +131,9 @@ The general structure of the analysis is the following:
     year1 = 1996
     year2 = 2000
 
-    Configurer = ConfigPath()
-    machine = Configurer.machine
-    ecmeandir = os.path.join(Configurer.configdir, 'diagnostics', 'ecmean')
+    context = ConfigContext()
+    machine = context.machine
+    ecmeandir = os.path.join(context.configdir, 'tools', 'ecmean')
     interface = os.path.join(ecmeandir, 'interface_AQUA_climatedt.yaml')
     config = os.path.join(ecmeandir, 'ecmean_config_climatedt.yaml')
     config = load_yaml(config)
@@ -142,7 +143,7 @@ The general structure of the analysis is the following:
     for model in models:
         reader = Reader(model=model, exp=exp, source="lra-r100-monthly", fix=False)
         data = reader.retrieve()
-        PerformanceIndices(exp, year1, year2, model=model, loglevel='info', xdataset=data, config=load_yaml(config))
+        PerformanceIndices(exp, year1, year2, model=model, loglevel='info', xdataset=data, config=config)
 
 Please refer also to the `official ECmean4 documentation <https://ecmean4.readthedocs.io/en/latest/>`_.
 
@@ -153,8 +154,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/ecmean
-    python cli_ecmean.py --config_file <path_to_config_file>
+    python -m aqua.diagnostics.ecmean.cli_ecmean --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

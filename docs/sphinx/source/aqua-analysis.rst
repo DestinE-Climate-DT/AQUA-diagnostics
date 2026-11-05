@@ -142,7 +142,7 @@ The job section contains the following keys:
 
 - ``max_threads``: the maximum number of diagnostics running in parallel. Leave it to 0 for no limit.
 - ``loglevel``: the log level to use for the cli and the diagnostics. Default is ``WARNING``.
-- ``run_checker``: a boolean flag to activate the checker diagnostic. Default is ``true``.
+- ``run_setup_checker``: a boolean flag to activate the setup checker diagnostic. Default is ``true``.
 - ``no_reference``: a boolean flag that, if ``true``, runs every diagnostic without any reference/observational
   dataset. Default is ``false``. Equivalent to the ``--no-reference`` command line argument, which takes
   precedence. Can also be overridden diagnostic-by-diagnostic with ``extra: "--no-reference"``.
