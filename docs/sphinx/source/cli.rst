@@ -11,7 +11,7 @@ The setup checker verifies that a dataset can be retrieved through AQUA's
 
 .. code-block:: bash
 
-   python -m aqua.diagnostics.checker.cli_checker \
+   python -m aqua.diagnostics.base.cli_setup_checker \
      --catalog CATALOG --model MODEL --exp EXP --source SOURCE \
      --realization r1
 

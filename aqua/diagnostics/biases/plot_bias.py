@@ -77,10 +77,32 @@ class PlotBias:
             extra_keys.update({"var": var})
         if plev is not None:
             extra_keys.update({"plev": plev})
+        # Regional plots must not overwrite the global ones
+        if data.attrs.get("AQUA_region") is not None:
+            extra_keys.update({"region": data.attrs["AQUA_region"]})
 
         outputsaver.save_figure(
             fig, diagnostic_product, extra_keys=extra_keys, metadata=metadata, extension=self.format_to_save, dpi=self.dpi
         )
+
+    def _map_settings(self, data, proj, proj_params, extent, cyclic_lon):
+        """Projection, extent and cyclic point of a bias map: zoomed on the region for regional data, global otherwise."""
+        lon_min, lon_max = float(data["lon"].min()), float(data["lon"].max())
+        regional = data.attrs.get("AQUA_region") is not None and lon_max - lon_min < 350
+
+        if proj is None:
+            proj = "plate_carree" if regional else "robinson"
+
+        if regional:
+            cyclic_lon = False
+            if extent is None:
+                lat_min, lat_max = float(data["lat"].min()), float(data["lat"].max())
+                pad = 2
+                extent = [lon_min - pad, lon_max + pad, max(lat_min - pad, -90), min(lat_max + pad, 90)]
+            if proj == "plate_carree" and lon_min < 180 <= lon_max:
+                proj_params = {**proj_params, "central_longitude": 180}
+
+        return get_projection(proj, **proj_params), extent, cyclic_lon
 
     def _compute_bias_significance(self, data_ts, data_ref_ts, var, plev, alpha):
         """
@@ -184,7 +206,7 @@ class PlotBias:
         data_ref,
         var,
         plev=None,
-        proj="robinson",
+        proj=None,
         proj_params={},
         vmin=None,
         vmax=None,
@@ -199,6 +221,8 @@ class PlotBias:
         stipple_size=0.8,
         target_spacing_deg=2,
         invert_stippling=False,
+        extent=None,
+        cyclic_lon=True,
     ):
         """
         Plots the bias map between two datasets.
@@ -208,7 +232,9 @@ class PlotBias:
             data_ref (xarray.Dataset): Reference dataset.
             var (str): Variable name.
             plev (float, optional): Pressure level.
-            proj (str, optional): Desired projection for the map.
+            proj (str, optional): Desired projection for the map. If None, 'plate_carree' is used for
+                regional data (AQUA_region attribute present, less than 350 degrees of longitude)
+                and 'robinson' otherwise.
             proj_params (dict, optional): Additional arguments for the projection.
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
@@ -224,6 +250,13 @@ class PlotBias:
             target_spacing_deg (float, optional): Desired approximate spacing in degrees
                                                   between plotted stipples when stipple_density is None. Default is 2.0.
             invert_stippling (bool, optional): If True, stipple where the bias is not significant. Default is False.
+            extent (list, optional): Map extent [lon_min, lon_max, lat_min, lat_max] in PlateCarree coordinates.
+                                    If None and the data has an AQUA_region attribute,
+                                    it is computed from the data limits with a 2 degree pad.
+            cyclic_lon (bool, optional): Whether to add a cyclic longitude point. Default is True.
+                                         It is set to False automatically for regional data (AQUA_region attribute present).
+
+
         """
         self.logger.info("Plotting biases")
 
@@ -234,12 +267,13 @@ class PlotBias:
 
         sym = vmin is None or vmax is None
 
-        proj = get_projection(proj, **proj_params)
+        proj, extent, cyclic_lon = self._map_settings(data, proj, proj_params, extent, cyclic_lon)
 
         extra_info = f"at {int(plev / 100)} hPa" if plev else None
         title = TitleBuilder(
             diagnostic="Difference",
             variable=data[var].attrs.get("long_name", var),
+            regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
@@ -262,6 +296,8 @@ class PlotBias:
             vmax_fill=vmax,
             cbar_label=cbar_label,
             cmap=self.cmap,
+            extent=extent,
+            cyclic_lon=cyclic_lon,
             loglevel=self.loglevel,
         )
         ax.set_xlabel("Longitude")
@@ -380,11 +416,13 @@ class PlotBias:
         data_ref,
         var,
         plev=None,
-        proj="robinson",
+        proj=None,
         proj_params={},
         vmin=None,
         vmax=None,
         cbar_label=None,
+        extent=None,
+        cyclic_lon=True,
     ):
         """
         Plots seasonal biases for each season (DJF, MAM, JJA, SON).
@@ -394,11 +432,18 @@ class PlotBias:
             data_ref (xarray.Dataset): Reference dataset.
             var (str): Variable name.
             plev (float, optional): Pressure level.
-            proj (str, optional): Desired projection for the map.
+            proj (str, optional): Desired projection for the map. If None, 'plate_carree' is used for
+                regional data (AQUA_region attribute present, less than 350 degrees of longitude)
+                and 'robinson' otherwise.
             proj_params (dict, optional): Additional arguments for the projection.
             vmin (float, optional): Minimum colorbar value.
             vmax (float, optional): Maximum colorbar value.
             cbar_label (str, optional): Label for the colorbar.
+            extent (list, optional): Map extent [lon_min, lon_max, lat_min, lat_max] in PlateCarree coordinates.
+                                    If None and the data has an AQUA_region attribute,
+                                    it is computed from the data limits with a 2 degree pad.
+            cyclic_lon (bool, optional): Whether to add a cyclic longitude point. Default is True.
+                                         It is set to False automatically for regional data (AQUA_region attribute present).
 
         Returns:
             matplotlib.figure.Figure: The resulting figure.
@@ -417,6 +462,7 @@ class PlotBias:
         title = TitleBuilder(
             diagnostic="Seasonal difference",
             variable=data[var].attrs.get("long_name", var),
+            regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",
@@ -426,9 +472,13 @@ class PlotBias:
             extra_info=extra_info,
         ).generate()
 
+        proj, extent, cyclic_lon = self._map_settings(data, proj, proj_params, extent, cyclic_lon)
+
         plot_kwargs = {
             "maps": [data[var].sel(season=season) - data_ref[var].sel(season=season) for season in season_list],
-            "proj": get_projection(proj, **proj_params),
+            "proj": proj,
+            "extent": extent,
+            "cyclic_lon": cyclic_lon,
             "return_fig": True,
             "title": title,
             "title_size": 16,
@@ -508,6 +558,7 @@ class PlotBias:
         title = TitleBuilder(
             diagnostic="Vertical difference",
             variable=data[var].attrs.get("long_name", var),
+            regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             comparison="\nrelative to ",

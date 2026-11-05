@@ -105,13 +105,17 @@ install_aqua_diagnostics() {
   log_message INFO "Modules have been loaded."
 
   SCRIPTDIR="${AQUA_DIAGNOSTICS}/cli/lumi-install"
-  cp ../../environment-dev.yml $SCRIPTDIR/environment_lumi.yml
+  cp "${AQUA_DIAGNOSTICS}/environment-dev.yml" "$SCRIPTDIR/environment_lumi.yml"
   sed -i.bak "s;- -e ../AQUA\[;- -e ${AQUA}\[;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with ${AQUA_DIAGNOSTICS}/../AQUA
   sed -i.bak "s;- -e .\[;- -e ${AQUA_DIAGNOSTICS}\[;" $SCRIPTDIR/environment_lumi.yml  # replace relative paths with $AQUA_DIAGNOSTICS
 
   # install AQUA-diagnostics framework
   conda-containerize new --prefix "${INSTALLATION_PATH}" "${SCRIPTDIR}/environment_lumi.yml"
   log_message INFO "AQUA-diagnostics framework has been installed."
+
+  # remove the generated environment files
+  rm -f "${SCRIPTDIR}/environment_lumi.yml" "${SCRIPTDIR}/environment_lumi.yml.bak"
+  log_message INFO "Temporary environment files removed from ${SCRIPTDIR}."
 
 }
 

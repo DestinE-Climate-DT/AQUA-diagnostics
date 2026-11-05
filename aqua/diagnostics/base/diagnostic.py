@@ -1,6 +1,8 @@
 import os
+from operator import attrgetter
 
 import pandas as pd
+import regionmask
 import xarray as xr
 
 from aqua import Reader
@@ -18,6 +20,7 @@ from aqua.core.util import (
 )
 
 from .output_saver import OutputSaver
+from .region_sources import load_region_source
 from .time_util import round_enddate, round_startdate, start_end_dates
 
 
@@ -482,8 +485,7 @@ class Diagnostic:
             dict: A dictionary mapping region name to its spec
                 (``{longname, lon_limits, lat_limits}``).
         """
-        if regions_file_path is None:
-            regions_file_path = self._get_default_regions_file()
+        regions_file_path = regions_file_path or self._get_default_regions_file()
 
         return self._read_regions_file(regions_file_path).get("regions", {}) or {}
 
@@ -506,8 +508,8 @@ class Diagnostic:
 
         Returns:
             region (str): The region long name to be used (or None if no region was provided).
-            lon_limits (list): The longitude limits to be used.
-            lat_limits (list): The latitude limits to be used.
+            lon_limits (list): The longitude limits to be used (None for a regionmask-based region).
+            lat_limits (list): The latitude limits to be used (None for a regionmask-based region).
         """
         if region is None:
             self.logger.info(
@@ -522,18 +524,76 @@ class Diagnostic:
             raise ValueError(f"Region '{region}' not found")
         spec = regions_dict[region]
         long_name = spec.get("longname", region)
-        lon_limits = spec.get("lon_limits", lon_limits)
-        lat_limits = spec.get("lat_limits", lat_limits)
-        self.logger.info("Region %s found, using lon: %s, lat: %s", long_name, lon_limits, lat_limits)
+        if spec.get("regionmask") is None:
+            lon_limits = spec.get("lon_limits", lon_limits)
+            lat_limits = spec.get("lat_limits", lat_limits)
+            self.logger.info("Region %s found, using lon: %s, lat: %s", long_name, lon_limits, lat_limits)
+        else:
+            lon_limits = None
+            lat_limits = None
+            self.logger.info(
+                "Region %s found, using the %s polygons: %s",
+                long_name,
+                spec["regionmask"],
+                spec.get("regionmask_names", long_name),
+            )
+
         return long_name, lon_limits, lat_limits
 
-    def select_region(self, data: xr.Dataset, region: str = None, drop: bool = True, **kwargs):
+    def _resolve_regionmask_object(self, region: str, regions_file_path: str = None):
+        """
+        Get the arguments that ``Reader.select_area`` and ``Reader.fldmean`` need to select a polygon region.
+
+        A region is a polygon region when its entry in the regions file has a ``regionmask`` key,
+        otherwise it is a lon/lat box (see ``_set_region``). The entry of a polygon region can have:
+
+        - ``regionmask``: the polygon collection, either one of the ``sources`` of the regions file
+          (e.g. ``iho``) or a collection shipped with regionmask (e.g. ``srex``, i.e. ``regionmask.defined_regions.srex``).
+        - ``regionmask_names``: the polygons of the collection merged into the region (default: the ``longname``).
+        - ``frac_threshold``: a grid cell is selected if the region covers more than this fraction of it
+          (default: 0.0, every cell the region touches; null: only the cells whose centre is inside it).
+          Any value other than null needs a regular lon/lat grid.
+
+        Args:
+            region (str): The region key in the regions file.
+            regions_file_path (str): The path to the regions file. If None, the centralized
+                regions file will be used.
+
+        Returns:
+            region_object (regionmask.Regions): The polygon collection, or None for a lon/lat box.
+            region_sel (str | list): The name(s) of the polygons to select from it, or None for a lon/lat box.
+            frac_threshold (float): The ``frac_threshold`` of the region, or None for a lon/lat box.
+        """
+        regions_file_path = regions_file_path or self._get_default_regions_file()
+        regions_content = self._read_regions_file(regions_file_path)
+        spec = (regions_content.get("regions") or {}).get(region, {})
+        source = spec.get("regionmask")
+        if source is None:  # a lon/lat box, or a region not in the file
+            return None, None, None
+
+        sources = regions_content.get("sources") or {}
+        if source in sources:
+            # A collection of the sources section: read from the regions/ folder
+            # next to the regions file, otherwise downloaded and cached on first use
+            folder = os.path.join(os.path.dirname(regions_file_path), "regions")
+            region_object = load_region_source(source, folder=folder, **sources[source])
+        else:
+            # A collection shipped with regionmask: e.g. "ar6.all" is regionmask.defined_regions.ar6.all
+            region_object = attrgetter(f"defined_regions.{source}")(regionmask)
+        long_name = spec.get("longname", region)
+        region_sel = spec.get("regionmask_names", long_name)
+
+        return region_object, region_sel, spec.get("frac_threshold", 0.0)
+
+    def select_region(self, data: xr.Dataset, region: str = None, regions_file_path: str = None, drop: bool = True, **kwargs):
         """
         Select a geographic region from the dataset. Used when selection is not on the self.data attribute.
 
         Args:
             data (xarray Dataset or DataArray): The dataset to select the region from.
             region (str): The region to select from the centralized regions file.
+            regions_file_path (str): The path to the regions file. If None, the centralized
+                regions file will be used.
             drop (bool): Whether to drop coordinates outside the selected region.
             **kwargs: Additional keyword arguments passed to the select_area reader method.
 
@@ -544,23 +604,48 @@ class Diagnostic:
                 - 'region': The name of the selected region.
                 - 'lon_limits': The longitude limits of the selected region.
                 - 'lat_limits': The latitude limits of the selected region.
+                - 'region_object': The regionmask regions collection used, if any.
         """
         original_name = data.name if isinstance(data, xr.DataArray) else None
 
         if region is not None:
-            region, lon_limits, lat_limits = self._set_region(region=region)
+            longname, lon_limits, lat_limits = self._set_region(region=region, regions_file_path=regions_file_path)
+            region_object, region_sel, frac_threshold = self._resolve_regionmask_object(
+                region=region, regions_file_path=regions_file_path
+            )
+
             self.logger.info("Applying area selection for region: %s", region)
             # The Reader only forwards to AreaSelection, which needs no grid information: use it
             # directly when no retrieve was done, as in a run that plots from the netcdf files.
             selector = self.reader if self.reader is not None else AreaSelection(loglevel=self.loglevel)
-            data = selector.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
-            data.attrs["AQUA_region"] = region
+            if region_object is not None:
+                self.logger.info("Using regionmask object: %s (region_sel=%s)", region_object, region_sel)
+                data = selector.select_area(
+                    data=data,
+                    region=region_object,
+                    region_sel=region_sel,
+                    frac_threshold=frac_threshold,
+                    drop=drop,
+                    **kwargs,
+                )
+            elif lon_limits is not None and lat_limits is not None:
+                self.logger.info("Using custom lon/lat limits: %s, %s", lon_limits, lat_limits)
+                data = selector.select_area(data=data, lat=lat_limits, lon=lon_limits, drop=drop, **kwargs)
+            else:
+                raise ValueError(f"Region '{region}' does not have valid lon/lat limits or a regionmask object.")
+            data.attrs["AQUA_region"] = longname
 
             if original_name is not None:
                 data.name = original_name
         else:
-            region, lon_limits, lat_limits = None, None, None
+            longname, lon_limits, lat_limits, region_object = None, None, None, None
             self.logger.warning("Since region name is not specified, processing whole region in the dataset")
 
-        res_dict = {"data": data, "region": region, "lon_limits": lon_limits, "lat_limits": lat_limits}
+        res_dict = {
+            "data": data,
+            "region": longname,
+            "lon_limits": lon_limits,
+            "lat_limits": lat_limits,
+            "region_object": region_object,
+        }
         return res_dict
