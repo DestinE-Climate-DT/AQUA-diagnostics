@@ -7,6 +7,7 @@ from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
 
 from .defaults import SAVE_FORMAT
+from .profiler import DiagnosticProfiler
 from .util import close_cluster, load_diagnostic_config, merge_config_args, open_cluster
 
 
@@ -55,6 +56,7 @@ class DiagnosticCLI:
         self.client = None
         self.cluster = None
         self.private_cluster = None
+        self.profiler = None
         self.config_dict = None
         self.regrid = None
         self.startdate = None
@@ -188,12 +190,34 @@ class DiagnosticCLI:
         self.client, self.cluster, self.private_cluster = open_cluster(
             nworkers=nworkers, cluster=cluster_arg, loglevel=self.loglevel
         )
+        self.start_profiler()
+        return self
+
+    def start_profiler(self):
+        """
+        Start the profiler measuring wall time, peak memory of this process and,
+        when a dask client is available, the memory of the dask workers.
+        Called by open_dask_cluster(); call it directly when the CLI does not use a cluster.
+
+        Returns:
+            self: For method chaining
+        """
+        self.profiler = DiagnosticProfiler(
+            name=self.diagnostic_name,
+            client=self.client,
+            private_cluster=bool(self.private_cluster),
+            loglevel=self.loglevel,
+            logger=self.logger,
+        )
+        self.profiler.start()
         return self
 
     def close_dask_cluster(self):
         """
-        Close the dask cluster if it was opened.
+        Close the dask cluster if it was opened and log the profiling summary.
         """
+        if self.profiler is not None:
+            self.profiler.stop()
         if self.client or self.cluster:
             close_cluster(
                 client=self.client, cluster=self.cluster, private_cluster=self.private_cluster, loglevel=self.loglevel
