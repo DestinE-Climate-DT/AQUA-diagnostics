@@ -210,7 +210,7 @@ def test_highresmip_references_cover_1950(kind_name):
     )
     for slot in satellite_slots:
         assert references[slot] == resolved["sources"]["era5"], slot
-    for block in ("default", "radiation", "timeseries"):
+    for block in ("standard", "radiation", "timeseries"):
         dates = resolved["period"][block]
         assert dates["startdate"] == dates["std_startdate"] == "1950-01-01", block
 

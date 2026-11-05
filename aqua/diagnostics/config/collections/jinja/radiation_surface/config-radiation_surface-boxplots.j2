@@ -24,8 +24,8 @@ references:
     exp: '{{ references.radiation_surface_boxplots.exp }}'
     source: '{{ references.radiation_surface_boxplots.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.default.startdate }}'
-    enddate: '{{ period.default.enddate }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
   # skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5)
 {% if references.radiation_surface_radiative != references.radiation_surface_boxplots %}
   - catalog: '{{ references.radiation_surface_radiative.catalog }}'

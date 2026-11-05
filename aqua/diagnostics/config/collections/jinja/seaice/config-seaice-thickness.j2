@@ -26,8 +26,8 @@ references:
     source: '{{ references.seaice_thickness_nh.source }}'
     regrid: '{{ regrid }}'
     domain: "nh"
-    startdate: '{{ period.default.startdate }}'
-    enddate: '{{ period.default.enddate }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
   # ---- Volume in SH ----
   - &ref_psc_sh
     catalog: '{{ references.seaice_thickness_sh.catalog }}'
@@ -36,8 +36,8 @@ references:
     source: '{{ references.seaice_thickness_sh.source }}'
     regrid: '{{ regrid }}'
     domain: "sh"
-    startdate: '{{ period.default.startdate }}'
-    enddate: '{{ period.default.enddate }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:

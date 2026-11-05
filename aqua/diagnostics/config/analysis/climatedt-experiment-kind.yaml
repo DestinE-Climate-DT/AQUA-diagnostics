@@ -13,10 +13,14 @@
 # references: one slot per template, named <collection>_<quantity> after the template file
 #             collections/jinja/<collection>/config-<collection>-<quantity>.j2.
 #             A kind swaps the dataset of a slot by pointing it to another source.
-# period: date ranges of the references
-#   default: main date range for all analyses
-#   radiation: date range for radiation analyses
+# period: date ranges of the references, read by the templates as period.<block>.<key>
+#   standard: standard date range, used by most analyses (biases, maps, sea ice, ...)
+#   radiation: date range of the radiation analyses against CERES (see the comment below)
 #   timeseries: date range for timeseries analyses
+#   The three blocks are independent: deep-merge only completes a kind from the "default" kind,
+#   it does not copy "standard" into "radiation" or "timeseries". A kind that changes the dates
+#   of all analyses must therefore override all the blocks (see the HighResMIP kinds, which share
+#   the dates through a YAML anchor).
 #
 # Date keys:
 # startdate, enddate: values for the date range for references to be used in the analysis
@@ -64,16 +68,21 @@ default:
     climate_metrics_gregory_t2m: *berkeley_earth  # gregory plot, 2m temperature reference
     climate_metrics_gregory_toa: *ceres_toa       # gregory plot, net TOA radiation reference
   period:
-    default:
+    standard:
       startdate: "1990-01-01"
       enddate: "2014-12-31"
       std_startdate: "1990-01-01"
       std_enddate: "2014-12-31"
+    # Separate block because CERES EBAF (the radiation reference) starts in March 2000:
+    # 2001 is the first full year, so the standard range (from 1990) cannot be used.
+    # Also used wherever CERES is a reference (boxplots, gregory plot).
     radiation:
       startdate: "2001-01-01"
       enddate: "2024-12-31"
       std_startdate: "2001-01-01"
       std_enddate: "2024-12-31"
+    # Separate block because timeseries are not tied to the climatological period of the maps:
+    # by default it matches "standard", but projections extend it to the latest available years.
     timeseries:
       startdate: "1990-01-01"
       enddate: "2014-12-31"
@@ -86,7 +95,7 @@ climatedt-hist-cmip6: {}
 # Historical runs with CMIP7 forcing: references extended to 2025
 climatedt-hist-cmip7:
   period:
-    default:
+    standard:
       enddate: "2025-12-31"
       std_enddate: "2025-12-31"
     radiation:
@@ -110,7 +119,7 @@ highresmip-hist-cmip6:
     water_cycle_precipitation: *era5
     climate_metrics_gregory_toa: *era5
   period:
-    default: &highresmip-cmip6-dates
+    standard: &highresmip-cmip6-dates
       startdate: "1950-01-01"
       enddate: "2014-12-31"
       std_startdate: "1950-01-01"
@@ -121,7 +130,7 @@ highresmip-hist-cmip6:
 highresmip-hist-cmip7:
   references: *highresmip-references
   period:
-    default: &highresmip-cmip7-dates
+    standard: &highresmip-cmip7-dates
       startdate: "1950-01-01"
       enddate: "2025-12-31"
       std_startdate: "1950-01-01"
@@ -142,7 +151,7 @@ climatedt-projections-cmip6:
 # Projections with CMIP7 forcing: as CMIP6 projections, with references extended to 2025
 climatedt-projections-cmip7:
   period:
-    default:
+    standard:
       enddate: "2025-12-31"
       std_enddate: "2025-12-31"
     radiation:
@@ -160,7 +169,7 @@ storyline:
     seaice_concentration_nh: *osisaf_amsr_nh
     seaice_concentration_sh: *osisaf_amsr_sh
   period:
-    default:
+    standard:
       startdate: "2017-01-01"
       enddate: "2025-12-31"
       std_startdate: "2000-01-01"

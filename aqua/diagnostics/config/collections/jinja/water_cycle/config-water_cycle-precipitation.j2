@@ -21,8 +21,8 @@ references:
     exp: '{{ references.water_cycle_precipitation.exp }}'
     source: '{{ references.water_cycle_precipitation.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.default.startdate }}'
-    enddate: '{{ period.default.enddate }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
 
 setup:
   loglevel: '{{ loglevel }}'
@@ -81,8 +81,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ period.default.std_startdate }}'
-        std_enddate: '{{ period.default.std_enddate }}'
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
       tprate:
         regions: ['nh', 'sh', 'europe']
 
@@ -96,8 +96,8 @@ diagnostics:
     ylogscale: true       # already default
     params:
       default:
-        std_startdate: '{{ period.default.std_startdate }}'
-        std_enddate: '{{ period.default.std_enddate }}'
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
       tprate:
         units: 'mm/day'
         regions: [null, 'tropics']  # global and tropics; MUST be a list
@@ -113,8 +113,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ period.default.std_startdate }}'
-        std_enddate: '{{ period.default.std_enddate }}'
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
     variables:
       - name: 'tprate'
         units: 'mm/day'

@@ -26,8 +26,8 @@ references:
     source: '{{ references.seaice_concentration_nh.source }}'  # mandatory
     regrid: '{{ regrid }}'
     domain: "nh"
-    startdate: '{{ period.default.startdate }}'
-    enddate: '{{ period.default.enddate }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
 
   # ---- Extent in SH ----
   - &ref_osi_sh
@@ -37,8 +37,8 @@ references:
     source: '{{ references.seaice_concentration_sh.source }}'  # mandatory
     regrid: '{{ regrid }}'
     domain: "sh"
-    startdate: '{{ period.default.startdate }}'
-    enddate: '{{ period.default.enddate }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:

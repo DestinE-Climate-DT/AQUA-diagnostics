@@ -21,8 +21,8 @@ references:
     exp: '{{ references.ocean2d_sst.exp }}'
     source: '{{ references.ocean2d_sst.source }}'
     regrid: '{{ regrid }}'
-    startdate: '{{ period.default.startdate }}'
-    enddate: '{{ period.default.enddate }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
 
 setup:
   loglevel: '{{ loglevel }}'
@@ -79,8 +79,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ period.default.std_startdate }}'
-        std_enddate: '{{ period.default.std_enddate }}'
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
       tos:
         regions: ['nh', 'sh']
 
@@ -95,8 +95,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ period.default.std_startdate }}'
-        std_enddate: '{{ period.default.std_enddate }}'
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
     variables:
       - name: 'tos'
         regions: [null]  #
