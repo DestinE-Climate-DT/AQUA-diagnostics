@@ -205,6 +205,33 @@ The following command line arguments are available for all the diagnostics:
 Only the first dataset in the ``datasets`` list is affected by these CLI overrides.
 If a diagnostic has extra arguments, these will be described in the individual diagnostic documentation.
 
+.. _diagnostics-profiling:
+
+Profiling line
+++++++++++++++
+
+Every CLI built on ``DiagnosticCLI`` logs, at INFO level and at the end of the run, one line with the
+wall time and the peak memory of the tool. The line has a fixed ``[profile]`` prefix so it can be found
+with ``grep`` in the log files written by ``aqua analysis``:
+
+.. code-block:: text
+
+   [profile] timeseries: wall=312.4s driver_peak_rss=4.2GiB cluster_peak_mem=18.3GiB (shared cluster, 32 workers)
+
+- ``wall``: wall time between the opening and the closing of the dask cluster, in seconds.
+- ``driver_peak_rss``: peak resident memory of the CLI process itself, from ``getrusage``. It is exact
+  for the tool, whatever else is running at the same time. When the tool runs without a dask cluster
+  (no ``--nworkers`` and no ``--cluster``), dask computes inside this process and this number is the
+  whole footprint of the tool.
+- ``cluster_peak_mem``: peak of the total memory of the dask workers, sampled once per second while the
+  tool runs. It is printed only when a dask client exists. With a ``shared cluster`` the workers also
+  hold the tasks of the other tools running on the same cluster, so this number is attributable to the
+  tool only when tools run one at a time (``aqua analysis --nmaxprocesses 1``). With a
+  ``private cluster`` (``--nworkers`` without ``--cluster``) the number belongs to the tool.
+
+A tool that raises before closing the cluster leaves no line. The line is produced by
+``aqua.diagnostics.base.DiagnosticProfiler``, which can also be used directly as a context manager.
+
 .. _diagnostics-plot-only:
 
 Plotting from previous results
