@@ -35,9 +35,11 @@ def test_ru_maxrss_bytes_platform_units():
 
 def test_profiler_without_client(caplog):
     """No client: wall time and driver RSS only, no cluster field in the line."""
-    logger = logging.getLogger("test-profiler")
+    profiler = DiagnosticProfiler(name="dummy", loglevel="INFO")
+    assert profiler.logger.name == "dummy profiler"
+    # the AQUA logger does not propagate to the root logger: swap in a plain one to capture the line
+    profiler.logger = logging.getLogger("test-profiler")
     with caplog.at_level(logging.INFO, logger="test-profiler"):
-        profiler = DiagnosticProfiler(name="dummy", logger=logger)
         profiler.start()
         result = profiler.stop()
 

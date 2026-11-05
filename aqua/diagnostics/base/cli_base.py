@@ -207,7 +207,6 @@ class DiagnosticCLI:
             client=self.client,
             private_cluster=bool(self.private_cluster),
             loglevel=self.loglevel,
-            logger=self.logger,
         )
         self.profiler.start()
         return self

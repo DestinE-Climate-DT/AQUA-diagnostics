@@ -61,18 +61,17 @@ class DiagnosticProfiler:
             When False, the sampled cluster memory also includes the tasks of
             other tools running on the same cluster.
         interval (float): sampling interval of the cluster memory, in seconds.
-        loglevel (str): logging level.
-        logger (logging.Logger, optional): logger used for the summary line.
-            Defaults to a logger named ``Profiler``.
+        loglevel (str): logging level. The summary line is logged at INFO level
+            by a logger named ``<name> profiler``.
     """
 
-    def __init__(self, name, client=None, private_cluster=False, interval=1.0, loglevel="WARNING", logger=None):
+    def __init__(self, name, client=None, private_cluster=False, interval=1.0, loglevel="WARNING"):
         self.name = name
         self.client = client
         self.private_cluster = private_cluster
         self.interval = interval
         self.loglevel = loglevel
-        self.logger = logger or log_configure(log_level=loglevel, log_name="Profiler")
+        self.logger = log_configure(log_level=loglevel, log_name=f"{name} profiler")
 
         self._t0 = None
         self._sampler = None
