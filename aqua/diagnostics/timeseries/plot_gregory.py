@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from aqua.core.graphics import ConfigStyle, plot_gregory_annual, plot_gregory_monthly
 from aqua.core.util import get_realizations, time_to_string, to_list
-from aqua.diagnostics.base import TitleBuilder
+from aqua.diagnostics.base import TitleBuilder, figure_size
 
 from .base import PlotBaseMixin
 
@@ -87,17 +87,17 @@ class PlotGregory(PlotBaseMixin):
         self.logger.debug(f"Requested plot freq: {freq}, has_monthly: {self.has_monthly}, has_annual: {self.has_annual}")
 
         if (self.has_monthly and "monthly" in freq) and (self.has_annual and "annual" in freq):
-            fig, (ax_monthly, ax_annual) = plt.subplots(1, 2, figsize=(12, 6))
+            fig, (ax_monthly, ax_annual) = plt.subplots(1, 2, figsize=figure_size(0.5))
             mon_label = data_labels
             ann_label = None
         # The exluding check is only on self and not the freq list,
         # because we may have the user wanting a plot, but not having enough data to plot it.
         elif self.has_monthly and "monthly" in freq and not self.has_annual:
-            fig, ax_monthly = plt.subplots(1, 1, figsize=(6, 6))
+            fig, ax_monthly = plt.subplots(1, 1, figsize=figure_size(1))
             mon_label = data_labels
             ann_label = None
         elif not self.has_monthly and (self.has_annual and "annual" in freq):
-            fig, ax_annual = plt.subplots(1, 1, figsize=(6, 6))
+            fig, ax_annual = plt.subplots(1, 1, figsize=figure_size(1))
             mon_label = None
             ann_label = data_labels
         else:

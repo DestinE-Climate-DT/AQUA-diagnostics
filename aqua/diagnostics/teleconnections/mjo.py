@@ -4,7 +4,7 @@ import xarray as xr
 
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, figure_size
 
 from .base import BaseMixin
 
@@ -184,6 +184,7 @@ class PlotMJO:
             return_fig=True,
             vmin=vmin,
             vmax=vmax,
+            figsize=figure_size(1.6),
             loglevel=self.loglevel,
         )
 

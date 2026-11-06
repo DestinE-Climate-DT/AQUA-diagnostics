@@ -5,6 +5,7 @@ import xarray as xr
 
 from aqua.core.graphics import ConfigStyle, plot_vertical_lines
 from aqua.core.logger import log_configure
+from aqua.diagnostics.base import figure_size
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
@@ -66,11 +67,12 @@ def plot_multi_vertical_lines(
     if all(isinstance(data_map, xr.Dataset) for data_map in data_list):
         # nrows = 1  # len(data_list)
         # ncols = len(variables)
-        figsize = figsize if figsize is not None else (ncols * 2, nrows * 3 + 1)
+        figsize = figsize if figsize is not None else figure_size((nrows * 3 + 1) / (ncols * 2))
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
-    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.2, hspace=0.1)
+    # wspace: room for the depth axis labels of the following panel (tight_layout is skipped with this gridspec)
+    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.1)
 
     for j in range(nrows):
         for i, var in enumerate(variables):
@@ -91,13 +93,13 @@ def plot_multi_vertical_lines(
                 loglevel=loglevel,
             )
             if titles:
-                ax.set_title(titles[i], fontsize=12)
+                ax.set_title(titles[i])
             if xtext:
                 ax.set_xlabel(xtext[i])
             if ytext:
                 ax.set_ylabel(ytext[i])
             if i == 0:  # only first column
-                ax.legend(fontsize=14)
+                ax.legend()
             else:
                 ax.legend().remove()
 
@@ -120,7 +122,7 @@ def plot_multi_vertical_lines(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 5, y=1.05)
+        fig.suptitle(title, y=1.05)
 
     if return_fig:
         return fig

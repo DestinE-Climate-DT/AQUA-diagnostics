@@ -3,7 +3,8 @@ import xarray as xr
 
 from aqua.core.graphics import indexes_plot, plot_maps, plot_maps_diff, plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import TitleBuilder
+from aqua.core.util import plot_box
+from aqua.diagnostics.base import TitleBuilder, figure_size
 
 from .base import PlotBaseMixin, _homogeneize_maps
 
@@ -59,7 +60,13 @@ class PlotENSO(PlotBaseMixin):
         ).generate()
 
         fig, axs = indexes_plot(
-            indexes=indexes, thresh=thresh, suptitle=title, ylabel="Niño 3.4 index", labels=labels, loglevel=self.loglevel
+            indexes=indexes,
+            thresh=thresh,
+            suptitle=title,
+            ylabel="Niño 3.4 index",
+            labels=labels,
+            figsize=figure_size(0.65 * len(indexes)),
+            loglevel=self.loglevel,
         )
 
         if isinstance(axs, plt.Axes):
@@ -129,6 +136,15 @@ class PlotENSO(PlotBaseMixin):
             vmax_diff = 1.0
 
         maps, ref_maps, var_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+
+        # One panel per map, on the same grid plot_maps uses
+        # TODO: remove once the aqua-core plot_maps default figsize uses the common width
+        n_maps = len(maps) if isinstance(maps, list) else len(ref_maps) if isinstance(ref_maps, list) else 1
+        if n_maps == 1:
+            kwargs.setdefault("figsize", figure_size(0.8))
+        else:
+            nrows, ncols = plot_box(n_maps)
+            kwargs.setdefault("figsize", figure_size((nrows * 5 + 1) / (ncols * 6)))
 
         # Case 1: no reference maps
         if maps is not None and ref_maps is None:

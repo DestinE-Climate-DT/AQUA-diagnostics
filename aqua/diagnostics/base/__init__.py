@@ -6,7 +6,8 @@ from .util import load_var_config, find_vert_coord
 from .output_saver import OutputSaver
 from .cli_base import DiagnosticCLI
 from .title import TitleBuilder
-from .defaults import SAVE_FORMAT
+from .defaults import SAVE_FORMAT, FIGURE_WIDTH
+from .graphics_util import figure_size
 
 __all__ = ['Diagnostic',
            'start_end_dates', 'round_startdate', 'round_enddate',
@@ -17,4 +18,4 @@ __all__ = ['Diagnostic',
            'DiagnosticCLI',
            'TitleBuilder',
            'find_vert_coord',
-           'SAVE_FORMAT']
+           'SAVE_FORMAT', 'FIGURE_WIDTH', 'figure_size']

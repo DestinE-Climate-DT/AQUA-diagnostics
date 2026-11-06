@@ -16,6 +16,7 @@ from aqua.core.util import (
     generate_colorbar_ticks,
     plot_box,
 )
+from aqua.diagnostics.base import figure_size
 
 
 def plot_maps(
@@ -94,7 +95,7 @@ def plot_maps(
     # Generate the figure
     if not nrows and not ncols:
         nrows, ncols = plot_box(len(maps))
-    figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
+    figsize = figsize if figsize is not None else figure_size((nrows * 5 + 1) / (ncols * 6))
     logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
@@ -273,6 +274,6 @@ def plot_maps(
     # Add a super title
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 6, y=1.1)
+        fig.suptitle(title, y=1.1)
     if return_fig:
         return fig
