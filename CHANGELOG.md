@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- Budget: new tool comparing the global means of two quantities (formulae, optionally the time derivative of the second) and their difference with an expected value, e.g. ocean heat and atmosphere energy budgets (#PR)
 - Skill: new `new-aqua-diagnostic` skill (`.claude/skills/new-aqua-diagnostic/`), the open choices to settle before starting and a tested skeleton tool (analysis class, plot class with optional reference, CLI, config template, tests, `.rst` page); `AGENTS.md` points to it (#527)
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
 - CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
