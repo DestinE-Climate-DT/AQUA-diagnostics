@@ -5,8 +5,6 @@ import xarray as xr
 
 from aqua.core.logger import log_configure
 
-xr.set_options(keep_attrs=True)
-
 
 def loop_seasonalcycle(
     data: xr.DataArray, startdate: str, enddate: str, freq: str, center_time: bool = False, loglevel="WARNING"

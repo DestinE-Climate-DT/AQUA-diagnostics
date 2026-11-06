@@ -1,12 +1,8 @@
 """Dummy tool: annual means of a field averaged over a region."""
 
-import xarray as xr
-
 from aqua.core.logger import log_configure
 from aqua.core.util import DEFAULT_REALIZATION
 from aqua.diagnostics.base import Diagnostic
-
-xr.set_options(keep_attrs=True)
 
 
 class Dummy(Diagnostic):

@@ -1,15 +1,11 @@
 import gc
 import sys
 
-import xarray as xr
-
 from .base import BaseMixin
 
 # import pandas as pd
 # from aqua.fldstat import AreaSelection
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
-
-xr.set_options(keep_attrs=True)
 
 
 class SshVariabilityCompute(BaseMixin):

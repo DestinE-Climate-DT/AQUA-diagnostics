@@ -13,8 +13,6 @@ from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .util import _check_list_regions_type, defaultdict_to_dict, extract_dates, extract_std_period_dates
 
-xr.set_options(keep_attrs=True)
-
 
 class PlotSeaIce:
     """

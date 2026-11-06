@@ -13,8 +13,6 @@ from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from .multiple_maps import plot_maps
 from .multivar_vertical_profiles import plot_multivars_vertical_profile
 
-xr.set_options(keep_attrs=True)
-
 
 class PlotTrends:
     """Class for plotting ocean trend diagnostics from xarray Datasets."""
