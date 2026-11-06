@@ -193,6 +193,7 @@ unreleased aqua-core, `nightly`, `release`, `conda-lock`) are described in `CONT
 
 ## Repository Conventions
 
+- Keep data lazy through the computation; materialise once at the end (plot/save), never inside per-variable loops
 - Never create a Dask cluster or client in tool classes: CLIs use `cli.open_dask_cluster()` /
   `cli.close_dask_cluster()`, which connect to the `--cluster` passed by `aqua analysis` or start a private one with `--nworkers`
 - Resolve diagnostics configuration with `ConfigLocator().configdir` or `get_diagnostic_configpath(tool, folder="tools")`
