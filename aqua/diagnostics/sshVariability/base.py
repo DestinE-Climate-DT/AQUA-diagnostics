@@ -1,12 +1,8 @@
 from typing import Union
 
-import xarray as xr
-
 # from aqua.core.util import pandas_freq_to_string
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver
-
-xr.set_options(keep_attrs=True)
 
 
 class BaseMixin(Diagnostic):

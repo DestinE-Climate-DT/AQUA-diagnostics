@@ -9,8 +9,6 @@ evaluate the concordance of the teleconnections with ERA5.
 import argparse
 import sys
 
-import xarray as xr
-
 from aqua import __version__ as aquaversion
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
@@ -20,8 +18,6 @@ from aqua.core.util import get_arg
 
 ## IMPORTANT: This is legacy code, the bootstrap CLI needs to be updated
 ##            if you want to use it with the new teleconnections classes.
-
-xr.set_options(keep_attrs=True)
 
 
 def parse_arguments(cli_args):

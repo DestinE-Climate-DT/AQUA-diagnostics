@@ -8,8 +8,6 @@ from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
-xr.set_options(keep_attrs=True)
-
 
 class BaseMixin(Diagnostic):
     def __init__(

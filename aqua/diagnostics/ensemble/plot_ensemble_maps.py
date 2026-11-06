@@ -6,8 +6,6 @@ from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
-xr.set_options(keep_attrs=True)
-
 
 class PlotEnsembleMaps(BaseMixin):
     """Class to plot the ensmeble 2D Maps lat-lon data"""
