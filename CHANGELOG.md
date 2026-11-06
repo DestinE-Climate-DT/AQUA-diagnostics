@@ -9,7 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
-- Overturning: new tool for the meridional overturning streamfunction (AMOC) from the northward velocity on regular and HEALPix grids, with the overturning index time series and the latitude-depth section; new `atlantic_moc` region (#PR)
+- Overturning: new tool for the meridional overturning streamfunction (AMOC) from the northward velocity on regular and HEALPix grids, with the overturning index time series and the latitude-depth section; new `atlantic_moc` region (#564)
 - Skill: new `new-aqua-diagnostic` skill (`.claude/skills/new-aqua-diagnostic/`), the open choices to settle before starting and a tested skeleton tool (analysis class, plot class with optional reference, CLI, config template, tests, `.rst` page); `AGENTS.md` points to it (#527)
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
 - CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
