@@ -27,6 +27,7 @@ Currently implemented diagnostics are:
    trends
    ocean_trends
    ocean_drift
+   overturning
    seaice
    teleconnections
    lat_lon_profiles
@@ -226,6 +227,7 @@ See the individual diagnostic documentation for usage details.
 * :doc:`ocean_drift`
 * :doc:`ocean_stratification`
 * :doc:`ocean_trends`
+* :doc:`overturning`
 * :doc:`trends`
 
 The other diagnostics ignore ``plot_only`` and always run the full evaluation.
@@ -281,6 +283,8 @@ Here you can find the minimum requirements for each diagnostic.
      - 12 months (1 year)
    * - Ocean Drift (Hovmoller)
      - 2 months
+   * - Overturning
+     - 12 months (1 year)
    * - Radiation
      - 2 months
    * - Seaice
