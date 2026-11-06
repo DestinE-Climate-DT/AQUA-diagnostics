@@ -1,0 +1,57 @@
+# Configuration file for the Overturning tool
+# It computes the meridional overturning streamfunction of an ocean basin from the northward velocity (von),
+# psi(lat, depth) = int_z^0 int v dx dz' in Sv, and an index: the maximum of psi below min_depth at given latitudes.
+# Plots: the time series of the index at each latitude and the time-mean latitude-depth section.
+# Grids: regular lon/lat or HEALPix only (iso-latitude rows). Native ocean grids need `regrid`.
+
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null    # a 3D ocean source with von, e.g. monthly-hpz7-o3d
+    regrid: null    # e.g. r100 for a native ocean grid
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+# Optional: a dataset with the meridional velocity, analysed like the model (only the first is used).
+# A reference keeps its own regrid and dates, the CLI options --regrid/--startdate/--enddate do not apply to it.
+# references:
+#   - catalog: 'obs'
+#     model: null
+#     exp: null
+#     source: null
+#     regrid: null
+#     reader_kwargs: null
+#     startdate: null
+#     enddate: null
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  plot_only: false # redo the figures from the saved NetCDF files, without recomputing
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  overturning:
+    run: true                 # mandatory: switches the tool on or off
+    diagnostic_name: 'overturning'  # mandatory: prefix of every output file (the collection name in aqua analysis)
+    variables: ['von']        # northward sea water velocity
+    params:                   # computation options
+      default:
+        regions: ['atlantic_moc']   # basins from definitions/regions.yaml; null is the global ocean
+        latitudes: [26.5, 45.0]     # latitudes of the index (26.5N: RAPID array)
+        min_depth: 500              # m, index = max of psi below this depth (excludes the Ekman cell)
+        lat_range: [-34, 70]        # southern and northern limits of the section
+        mass_correction: false      # true: remove the net transport across each section (psi = 0 at the bottom)
+        vert_coord: 'depth'         # vertical coordinate, m positive down
+    plot_params:
+      default:
+        vmin: -20                   # Sv
+        vmax: 20
+        nlevels: 21                 # 2 Sv contours

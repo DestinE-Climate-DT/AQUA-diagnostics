@@ -19,6 +19,7 @@ from .ocean_stratification import Stratification, PlotStratification, PlotMLD
 from .ocean_trends import PlotTrends as PlotOceanTrends
 from .ocean_trends import Trends as OceanTrends
 from .trends import Trends, PlotTrends
+from .overturning import Overturning, PlotOverturning
 
 
 DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections", "definitions"]
@@ -40,6 +41,7 @@ __all__ = ["__version__", "NAO", "ENSO", "MJO",
            "Boxplots", "PlotBoxplots", "extract_realizations",
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
            "Trends", "PlotTrends", "PlotOceanTrends", "OceanTrends",
+           "Overturning", "PlotOverturning",
            "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
 
 def get_install_dirs():

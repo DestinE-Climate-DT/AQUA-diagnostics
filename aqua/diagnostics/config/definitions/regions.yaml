@@ -36,6 +36,25 @@ regions:
     regionmask: iho
     regionmask_names: [North Atlantic Ocean, South Atlantic Ocean]
     longname: Atlantic Ocean
+  # Basin of the Atlantic overturning (overturning tool): the Atlantic with the marginal seas that carry its
+  # boundary currents (Florida Current, Labrador Sea), without the Mediterranean and the Nordic Seas/Arctic.
+  # Cell centres only (frac_threshold null), so that it works on HEALPix grids as well.
+  atlantic_moc:
+    regionmask: iho
+    regionmask_names:
+      - North Atlantic Ocean
+      - South Atlantic Ocean
+      - Gulf of Mexico
+      - Caribbean Sea
+      - Labrador Sea
+      - Gulf of St. Lawrence
+      - Bay of Biscay
+      - Celtic Sea
+      - English Channel
+      - North Sea
+      - Gulf of Guinea
+    frac_threshold: null
+    longname: Atlantic MOC basin
   # With the seas east of Australia and New Guinea.
   po:
     regionmask: iho
