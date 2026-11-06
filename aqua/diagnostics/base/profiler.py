@@ -1,9 +1,13 @@
 """
 Lightweight profiler for diagnostic CLIs.
 
-Records wall time, the peak resident memory of the current process and,
-when a dask client is given, the peak memory of the dask workers sampled
-while the profiler is running. One summary line is logged at the end.
+Records wall time, CPU time and maximum memory of the current process and,
+when a dask client is given, the maximum memory of the dask workers sampled
+while the profiler is running, together with the memory limit of the cluster.
+One summary line is logged at the end by a logger named ``Profiler``, e.g.::
+
+    walltime=312.4s cputime=95.1s max_memory=4.2GiB cluster_max_memory=18.3GiB/99.2GiB (shared cluster, 32 workers)
+    walltime=312.4s cputime=290.0s max_memory=4.2GiB (no dask cluster: all computation in this process)
 """
 
 import platform
@@ -12,10 +16,12 @@ import time
 
 from aqua.core.logger import log_configure
 
+SAMPLER_LABEL = "profiler"
 
-def _ru_maxrss_bytes() -> int:
+
+def _max_memory_bytes() -> int:
     """
-    Peak resident set size of the current process in bytes.
+    Maximum resident memory of the current process in bytes.
 
     ``ru_maxrss`` is reported in bytes on macOS and in KiB on Linux.
     """
@@ -23,6 +29,12 @@ def _ru_maxrss_bytes() -> int:
     if platform.system() == "Darwin":
         return int(maxrss)
     return int(maxrss) * 1024
+
+
+def _cpu_seconds() -> float:
+    """User plus system CPU time of the current process, in seconds."""
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    return usage.ru_utime + usage.ru_stime
 
 
 def format_bytes(nbytes) -> str:
@@ -39,48 +51,47 @@ def format_bytes(nbytes) -> str:
 
 class DiagnosticProfiler:
     """
-    Measure wall time and peak memory of a diagnostic run.
+    Measure wall time, CPU time and maximum memory of a diagnostic run.
 
     Usage::
 
-        profiler = DiagnosticProfiler(name="timeseries", client=client, private_cluster=False)
+        profiler = DiagnosticProfiler(client=client, private_cluster=False, loglevel="INFO")
         profiler.start()
         ...
-        profiler.stop()  # logs one "[profile] ..." line
+        profiler.stop()  # logs one line through the "Profiler" logger
 
     or as a context manager::
 
-        with DiagnosticProfiler(name="timeseries") as profiler:
+        with DiagnosticProfiler(loglevel="INFO") as profiler:
             ...
 
     Args:
-        name (str): name of the diagnostic, used in the log line.
         client (dask.distributed.Client, optional): dask client. When given, the
             cluster-wide worker memory is sampled while the profiler runs.
         private_cluster (bool): whether the cluster belongs to this process only.
             When False, the sampled cluster memory also includes the tasks of
             other tools running on the same cluster.
         interval (float): sampling interval of the cluster memory, in seconds.
-        loglevel (str): logging level. The summary line is logged at INFO level
-            by a logger named ``<name> profiler``.
+        loglevel (str): logging level. The summary line is logged at INFO level.
     """
 
-    def __init__(self, name, client=None, private_cluster=False, interval=1.0, loglevel="WARNING"):
-        self.name = name
+    def __init__(self, client=None, private_cluster=False, interval=1.0, loglevel="WARNING"):
         self.client = client
         self.private_cluster = private_cluster
         self.interval = interval
         self.loglevel = loglevel
-        self.logger = log_configure(log_level=loglevel, log_name=f"{name} profiler")
+        self.logger = log_configure(log_level=loglevel, log_name="Profiler")
 
         self._t0 = None
+        self._cpu0 = None
         self._sampler = None
         self._sampler_ctx = None
         self.result = None
 
     def start(self):
-        """Start the timer and, if a client is available, the cluster memory sampler."""
+        """Start the timers and, if a client is available, the cluster memory sampler."""
         self._t0 = time.perf_counter()
+        self._cpu0 = _cpu_seconds()
         self.result = None
         if self.client is not None:
             self._start_sampler()
@@ -92,14 +103,16 @@ class DiagnosticProfiler:
             self.logger.warning("Profiler stopped without being started, nothing to report.")
             return None
 
-        wall = time.perf_counter() - self._t0
-        cluster_peak, nworkers = self._stop_sampler()
+        walltime = time.perf_counter() - self._t0
+        cputime = _cpu_seconds() - self._cpu0
+        cluster_max, cluster_limit, nworkers = self._stop_sampler()
 
         self.result = {
-            "name": self.name,
-            "wall_seconds": wall,
-            "driver_peak_rss_bytes": _ru_maxrss_bytes(),
-            "cluster_peak_bytes": cluster_peak,
+            "walltime_seconds": walltime,
+            "cputime_seconds": cputime,
+            "max_memory_bytes": _max_memory_bytes(),
+            "cluster_max_memory_bytes": cluster_max,
+            "cluster_memory_limit_bytes": cluster_limit,
             "nworkers": nworkers,
             "private_cluster": self.private_cluster if self.client is not None else None,
         }
@@ -108,18 +121,23 @@ class DiagnosticProfiler:
         return self.result
 
     def summary_line(self) -> str:
-        """One-line summary of the last result, with a fixed ``[profile]`` prefix."""
+        """One-line summary of the last result."""
         if self.result is None:
-            return f"[profile] {self.name}: no result"
+            return "no result"
         res = self.result
         line = (
-            f"[profile] {res['name']}: wall={res['wall_seconds']:.1f}s "
-            f"driver_peak_rss={format_bytes(res['driver_peak_rss_bytes'])}"
+            f"walltime={res['walltime_seconds']:.1f}s cputime={res['cputime_seconds']:.1f}s "
+            f"max_memory={format_bytes(res['max_memory_bytes'])}"
         )
-        if res["cluster_peak_bytes"] is not None:
-            kind = "private cluster" if res["private_cluster"] else "shared cluster"
-            line += f" cluster_peak_mem={format_bytes(res['cluster_peak_bytes'])} ({kind}, {res['nworkers']} workers)"
-        return line
+        if self.client is None:
+            return line + " (no dask cluster: all computation in this process)"
+        if res["cluster_max_memory_bytes"] is None:
+            return line + " (dask cluster memory not available)"
+        cluster = format_bytes(res["cluster_max_memory_bytes"])
+        if res["cluster_memory_limit_bytes"]:
+            cluster += f"/{format_bytes(res['cluster_memory_limit_bytes'])}"
+        kind = "private cluster" if res["private_cluster"] else "shared cluster"
+        return line + f" cluster_max_memory={cluster} ({kind}, {res['nworkers']} workers)"
 
     def _start_sampler(self):
         """Start the dask MemorySampler on the client, ignoring any failure."""
@@ -127,7 +145,7 @@ class DiagnosticProfiler:
             from distributed.diagnostics import MemorySampler
 
             self._sampler = MemorySampler()
-            self._sampler_ctx = self._sampler.sample(self.name, client=self.client, interval=self.interval)
+            self._sampler_ctx = self._sampler.sample(SAMPLER_LABEL, client=self.client, interval=self.interval)
             self._sampler_ctx.__enter__()
         except Exception as e:  # pylint: disable=broad-except
             self.logger.debug("Cluster memory sampling not available: %s", e)
@@ -135,18 +153,25 @@ class DiagnosticProfiler:
             self._sampler_ctx = None
 
     def _stop_sampler(self):
-        """Stop the sampler and return (peak bytes, number of workers), or (None, None)."""
+        """
+        Stop the sampler.
+
+        Returns:
+            tuple: (maximum cluster memory, total worker memory limit, number of workers), memory in bytes,
+            or (None, None, None) if sampling was not available.
+        """
         if self._sampler_ctx is None:
-            return None, None
+            return None, None, None
         try:
             self._sampler_ctx.__exit__(None, None, None)
-            samples = self._sampler.samples.get(self.name, [])
-            peak = max((nbytes for _, nbytes in samples), default=0)
-            nworkers = len(self.client.scheduler_info().get("workers", {}))
-            return int(peak), nworkers
+            samples = self._sampler.samples.get(SAMPLER_LABEL, [])
+            cluster_max = max((nbytes for _, nbytes in samples), default=0)
+            workers = self.client.scheduler_info(n_workers=-1).get("workers", {})
+            limit = sum(int(w.get("memory_limit") or 0) for w in workers.values())
+            return int(cluster_max), limit or None, len(workers)
         except Exception as e:  # pylint: disable=broad-except
             self.logger.debug("Cluster memory sampling failed: %s", e)
-            return None, None
+            return None, None, None
         finally:
             self._sampler = None
             self._sampler_ctx = None

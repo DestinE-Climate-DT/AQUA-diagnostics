@@ -1,14 +1,15 @@
 """Tests for the DiagnosticProfiler helper."""
 
 import logging
-import platform
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from aqua.diagnostics.base.profiler import DiagnosticProfiler, _ru_maxrss_bytes, format_bytes
+from aqua.diagnostics.base.profiler import DiagnosticProfiler, _cpu_seconds, _max_memory_bytes, format_bytes
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
+
+GIB = 1024**3
 
 
 def test_format_bytes():
@@ -16,93 +17,108 @@ def test_format_bytes():
     assert format_bytes(None) == "n/a"
     assert format_bytes(512) == "512B"
     assert format_bytes(2048) == "2.0KiB"
-    assert format_bytes(4.2 * 1024**3) == "4.2GiB"
+    assert format_bytes(4.2 * GIB) == "4.2GiB"
 
 
-def test_ru_maxrss_bytes_platform_units():
+def test_max_memory_platform_units():
     """ru_maxrss is bytes on macOS and KiB on Linux: both end up in bytes."""
     with patch("aqua.diagnostics.base.profiler.resource.getrusage") as mock_rusage:
         mock_rusage.return_value.ru_maxrss = 1000
         with patch("aqua.diagnostics.base.profiler.platform.system", return_value="Darwin"):
-            assert _ru_maxrss_bytes() == 1000
+            assert _max_memory_bytes() == 1000
         with patch("aqua.diagnostics.base.profiler.platform.system", return_value="Linux"):
-            assert _ru_maxrss_bytes() == 1000 * 1024
-
-    # the real value of this process is positive and plausible on the running platform
-    assert _ru_maxrss_bytes() > 0
-    assert platform.system() in ("Darwin", "Linux", "Windows")
+            assert _max_memory_bytes() == 1000 * 1024
+    assert _max_memory_bytes() > 0
+    assert _cpu_seconds() > 0
 
 
 def test_profiler_without_client(caplog):
-    """No client: wall time and driver RSS only, no cluster field in the line."""
-    profiler = DiagnosticProfiler(name="dummy", loglevel="INFO")
-    assert profiler.logger.name == "dummy profiler"
+    """No client: no cluster field, and the line says all computation ran in this process."""
+    profiler = DiagnosticProfiler(loglevel="INFO")
+    assert profiler.logger.name == "Profiler"
     # the AQUA logger does not propagate to the root logger: swap in a plain one to capture the line
     profiler.logger = logging.getLogger("test-profiler")
     with caplog.at_level(logging.INFO, logger="test-profiler"):
         profiler.start()
+        sum(i * i for i in range(200_000))  # burn a little CPU
         result = profiler.stop()
 
-    assert result["name"] == "dummy"
-    assert result["wall_seconds"] > 0
-    assert result["driver_peak_rss_bytes"] > 0
-    assert result["cluster_peak_bytes"] is None
+    assert result["walltime_seconds"] > 0
+    assert result["cputime_seconds"] >= 0
+    assert result["max_memory_bytes"] > 0
+    assert result["cluster_max_memory_bytes"] is None
     assert result["nworkers"] is None
     assert result["private_cluster"] is None
 
     line = profiler.summary_line()
-    assert line.startswith("[profile] dummy: wall=")
-    assert "driver_peak_rss=" in line
-    assert "cluster_peak_mem" not in line
+    assert line.startswith("walltime=")
+    assert " cputime=" in line and " max_memory=" in line
+    assert "cluster_max_memory" not in line
+    assert line.endswith("(no dask cluster: all computation in this process)")
     assert line in caplog.text
 
 
 def test_profiler_context_manager():
     """The context manager starts and stops the profiler."""
-    with DiagnosticProfiler(name="dummy") as profiler:
+    with DiagnosticProfiler() as profiler:
         assert profiler.result is None
-    assert profiler.result["wall_seconds"] > 0
+    assert profiler.result["walltime_seconds"] > 0
 
 
 def test_profiler_stop_without_start():
     """Stopping a profiler that never started returns None and does not raise."""
-    profiler = DiagnosticProfiler(name="dummy")
+    profiler = DiagnosticProfiler()
     assert profiler.stop() is None
-    assert profiler.summary_line() == "[profile] dummy: no result"
+    assert profiler.summary_line() == "no result"
+
+
+def _mock_client(limits):
+    client = MagicMock()
+    client.scheduler_info.return_value = {"workers": {f"w{i}": {"memory_limit": lim} for i, lim in enumerate(limits)}}
+    return client
 
 
 @pytest.mark.parametrize("private_cluster, tag", [(False, "shared cluster"), (True, "private cluster")])
 def test_profiler_with_mocked_client(private_cluster, tag):
-    """With a client the cluster peak is taken from the MemorySampler samples."""
-    client = MagicMock()
-    client.scheduler_info.return_value = {"workers": {"w1": {}, "w2": {}, "w3": {}}}
-
+    """With a client the cluster maximum comes from the MemorySampler, the limit from the workers."""
+    client = _mock_client([4 * GIB, 4 * GIB, 4 * GIB])
     sampler = MagicMock()
-    sampler.samples = {"timeseries": [(0.0, 1024**3), (1.0, 3 * 1024**3), (2.0, 2 * 1024**3)]}
+    sampler.samples = {"profiler": [(0.0, 1 * GIB), (1.0, 3 * GIB), (2.0, 2 * GIB)]}
 
     with patch("distributed.diagnostics.MemorySampler", return_value=sampler):
-        profiler = DiagnosticProfiler(name="timeseries", client=client, private_cluster=private_cluster)
+        profiler = DiagnosticProfiler(client=client, private_cluster=private_cluster)
         profiler.start()
         result = profiler.stop()
 
-    sampler.sample.assert_called_once_with("timeseries", client=client, interval=1.0)
-    assert result["cluster_peak_bytes"] == 3 * 1024**3
+    sampler.sample.assert_called_once_with("profiler", client=client, interval=1.0)
+    client.scheduler_info.assert_called_once_with(n_workers=-1)
+    assert result["cluster_max_memory_bytes"] == 3 * GIB
+    assert result["cluster_memory_limit_bytes"] == 12 * GIB
     assert result["nworkers"] == 3
     assert result["private_cluster"] is private_cluster
+    assert f"cluster_max_memory=3.0GiB/12.0GiB ({tag}, 3 workers)" in profiler.summary_line()
 
-    line = profiler.summary_line()
-    assert "cluster_peak_mem=3.0GiB" in line
-    assert f"({tag}, 3 workers)" in line
+
+def test_profiler_without_memory_limit():
+    """Workers without a memory limit: the limit is left out of the line."""
+    client = _mock_client([0, None])
+    sampler = MagicMock()
+    sampler.samples = {"profiler": [(0.0, 1 * GIB)]}
+    with patch("distributed.diagnostics.MemorySampler", return_value=sampler):
+        profiler = DiagnosticProfiler(client=client)
+        profiler.start()
+        profiler.stop()
+    assert "cluster_max_memory=1.0GiB (shared cluster, 2 workers)" in profiler.summary_line()
 
 
 def test_profiler_sampler_failure_is_not_fatal():
-    """A sampler that cannot start leaves the driver numbers intact."""
+    """A sampler that cannot start leaves the process numbers intact and says so."""
     client = MagicMock()
     with patch("distributed.diagnostics.MemorySampler", side_effect=RuntimeError("no scheduler")):
-        profiler = DiagnosticProfiler(name="timeseries", client=client)
+        profiler = DiagnosticProfiler(client=client)
         profiler.start()
         result = profiler.stop()
 
-    assert result["driver_peak_rss_bytes"] > 0
-    assert result["cluster_peak_bytes"] is None
-    assert "cluster_peak_mem" not in profiler.summary_line()
+    assert result["max_memory_bytes"] > 0
+    assert result["cluster_max_memory_bytes"] is None
+    assert profiler.summary_line().endswith("(dask cluster memory not available)")

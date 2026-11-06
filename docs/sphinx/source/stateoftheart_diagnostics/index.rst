@@ -210,27 +210,31 @@ If a diagnostic has extra arguments, these will be described in the individual d
 Profiling line
 ++++++++++++++
 
-Every CLI built on ``DiagnosticCLI`` logs, at INFO level and at the end of the run, one line with the
-wall time and the peak memory of the tool. The line has a fixed ``[profile]`` prefix so it can be found
+Every CLI built on ``DiagnosticCLI`` logs at the end of its run, at INFO level and through a logger named
+``Profiler``, one line with the wall time, the CPU time and the maximum memory of the tool, so it can be found
 with ``grep`` in the log files written by ``aqua analysis``:
 
 .. code-block:: text
 
-   [profile] timeseries: wall=312.4s driver_peak_rss=4.2GiB cluster_peak_mem=18.3GiB (shared cluster, 32 workers)
+   ... :: Profiler :: INFO -> walltime=312.4s cputime=95.1s max_memory=4.2GiB cluster_max_memory=18.3GiB/99.2GiB (shared cluster, 32 workers)
+   ... :: Profiler :: INFO -> walltime=312.4s cputime=290.0s max_memory=4.2GiB (no dask cluster: all computation in this process)
 
-- ``wall``: wall time between the opening and the closing of the dask cluster, in seconds.
-- ``driver_peak_rss``: peak resident memory of the CLI process itself, from ``getrusage``. It is exact
-  for the tool, whatever else is running at the same time. When the tool runs without a dask cluster
-  (no ``--nworkers`` and no ``--cluster``), dask computes inside this process and this number is the
-  whole footprint of the tool.
-- ``cluster_peak_mem``: peak of the total memory of the dask workers, sampled once per second while the
-  tool runs. It is printed only when a dask client exists. With a ``shared cluster`` the workers also
-  hold the tasks of the other tools running on the same cluster, so this number is attributable to the
-  tool only when tools run one at a time (``aqua analysis --nmaxprocesses 1``). With a
-  ``private cluster`` (``--nworkers`` without ``--cluster``) the number belongs to the tool.
+- ``walltime``: time between the opening and the closing of the dask cluster, in seconds.
+- ``cputime``: CPU time (user plus system) used by the CLI process in the same interval. Well below ``walltime``,
+  the tool waits for the dask workers or for I/O; above ``walltime``, several threads compute in the process.
+- ``max_memory``: maximum memory of the CLI process itself. It is exact for the tool, whatever else runs at the
+  same time. Without a dask cluster (no ``--nworkers`` and no ``--cluster``) dask computes inside this process,
+  so this number is the whole footprint of the tool, as the line states.
+- ``cluster_max_memory``: maximum of the total memory of the dask workers, sampled once per second while the
+  tool runs, followed by the sum of the memory limits of the workers. A value close to the limit means that
+  the workers spill to disk or risk being killed. With a ``shared cluster`` the workers also hold the tasks of
+  the other tools running on the same cluster, so this number belongs to the tool only when tools run one at a
+  time (``aqua analysis --nmaxprocesses 1``). With a ``private cluster`` (``--nworkers`` without ``--cluster``)
+  it belongs to the tool.
 
-A tool that raises before closing the cluster leaves no line. The line is produced by
-``aqua.diagnostics.base.DiagnosticProfiler``, which can also be used directly as a context manager.
+The line follows ``--loglevel``: it is not shown at ``WARNING``. A tool that raises before closing the cluster
+leaves no line. The line is produced by ``aqua.diagnostics.base.DiagnosticProfiler``, which can also be used
+directly as a context manager.
 
 .. _diagnostics-plot-only:
 

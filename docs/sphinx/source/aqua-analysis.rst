@@ -115,17 +115,18 @@ so that the script can be used in a batch job or in a workflow. These override c
 Profiling the diagnostics
 -------------------------
 
-Each diagnostic logs its wall time and peak memory in its own log file ``<outputdir>/<collection>-<tool>.log``,
-in a line starting with ``[profile]`` (see :ref:`diagnostics-profiling`). To find out which tool
-consumes the most memory, run the analysis in one of these two ways and collect the lines with
-``grep -h '\[profile\]' <outputdir>/*.log``.
+Each diagnostic logs its wall time, CPU time and maximum memory in its own log file
+``<outputdir>/<collection>-<tool>.log``, through a logger named ``Profiler`` (see :ref:`diagnostics-profiling`).
+The analysis report collects them in a table. To find out which tool consumes the most memory, run the analysis
+in one of these two ways, with ``-l INFO`` (the default), and read the report or collect the lines with
+``grep -H ':: Profiler ::' <outputdir>/*.log``.
 
 - ``aqua analysis --serial``: no dask cluster is started and no ``--cluster`` or ``--nworkers`` is passed
-  to the tools, so dask computes inside each tool process and ``driver_peak_rss`` is the whole footprint
+  to the tools, so dask computes inside each tool process and ``max_memory`` is the whole footprint
   of the tool. This is the simplest way to rank the tools, but it is not the production setup: there is no
   memory limit per worker and no spilling to disk.
 - ``aqua analysis --nmaxprocesses 1``: the shared cluster is used as in production, but the tools run one at
-  a time, so ``cluster_peak_mem`` belongs to the tool that was running. Use it to tune the ``memory_limit``
+  a time, so ``cluster_max_memory`` belongs to the tool that was running. Use it to tune the ``memory_limit``
   of the workers or to find which tool makes them spill. The whole analysis becomes sequential.
 
 Configuration file

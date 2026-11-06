@@ -203,7 +203,6 @@ class DiagnosticCLI:
             self: For method chaining
         """
         self.profiler = DiagnosticProfiler(
-            name=self.diagnostic_name,
             client=self.client,
             private_cluster=bool(self.private_cluster),
             loglevel=self.loglevel,
