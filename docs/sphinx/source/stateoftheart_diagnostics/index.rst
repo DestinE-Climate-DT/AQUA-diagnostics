@@ -21,13 +21,13 @@ Currently implemented diagnostics are:
 
    boxplots
    biases
+   budget
    ecmean
    timeseries
    ocean_stratification
    trends
    ocean_trends
    ocean_drift
-   ocean_heat_budget
    seaice
    teleconnections
    lat_lon_profiles
@@ -223,9 +223,9 @@ See the individual diagnostic documentation for usage details.
 
 .. Keep the list in alphabetical order
 
+* :doc:`budget`
 * :doc:`lat_lon_profiles`
 * :doc:`ocean_drift`
-* :doc:`ocean_heat_budget`
 * :doc:`ocean_stratification`
 * :doc:`ocean_trends`
 * :doc:`trends`
@@ -283,7 +283,7 @@ Here you can find the minimum requirements for each diagnostic.
      - 12 months (1 year)
    * - Ocean Drift (Hovmoller)
      - 2 months
-   * - Ocean Heat Budget
+   * - Budget
      - 12 months (1 year)
    * - Radiation
      - 2 months

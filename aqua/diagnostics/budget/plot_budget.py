@@ -1,47 +1,54 @@
-"""Plot class of the OceanHeatBudget tool."""
+"""Plot class of the Budget tool."""
 
 import matplotlib.pyplot as plt
 
 from aqua.core.graphics import plot_timeseries
 from aqua.core.logger import log_configure
-from aqua.core.util import DEFAULT_REALIZATION, time_to_string
+from aqua.core.util import DEFAULT_REALIZATION, time_to_string, unit_to_latex
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
-class PlotOceanHeatBudget:
+class PlotBudget:
     """
-    Plot the result of an OceanHeatBudget instance: the budget terms and their difference.
+    Plot the result of a Budget instance: the two quantities together, then their difference.
 
     One dataset only: extend to lists of results if a multi-model comparison is needed (shortcut).
-    The class never touches a Reader: everything it needs (dataset, period, names) is read from the
-    attributes of the result, so a result can be plotted again from its NetCDF file.
+    The class never touches a Reader: dataset, period and names are read from the attributes of the result,
+    so a result can be plotted again from its NetCDF file.
     """
 
     def __init__(
         self,
         data,
-        diagnostic_name: str = "ocean_heat_budget",
+        name: str,
+        expected: float = 0.0,
+        diagnostic_name: str = "budget",
         outputdir: str = ".",
         loglevel: str = "WARNING",
     ):
         """
-        Initialize the PlotOceanHeatBudget class.
+        Initialize the PlotBudget class.
 
         Args:
-            data (xr.Dataset): The result of OceanHeatBudget.run(), with 'net_surface_flux' and 'hc_tendency'.
-            diagnostic_name (str, optional): The name used for the output files. Default is 'ocean_heat_budget'.
+            data (xr.Dataset): The result of Budget.run(), with the 'first' and 'second' quantities.
+            name (str): The name of the budget, used in the filenames (as in Budget.run()).
+            expected (float, optional): The expected value of first minus second: 0 for a closed budget,
+                another value e.g. for the radiation imbalance of a warming climate. Default is 0.
+            diagnostic_name (str, optional): The name used for the output files. Default is 'budget'.
             outputdir (str, optional): The output directory. Default is '.'.
             loglevel (str, optional): The log level. Default is 'WARNING'.
         """
         self.loglevel = loglevel
-        self.logger = log_configure(log_level=loglevel, log_name="PlotOceanHeatBudget")
+        self.logger = log_configure(log_level=loglevel, log_name="PlotBudget")
         self.data = data
+        self.name = name
+        self.expected = expected
         self.diagnostic_name = diagnostic_name
         self.outputdir = outputdir
         self.get_data_info()
 
     def get_data_info(self):
-        """Read catalog, model, exp, realization, dates and names from the AQUA_* attributes."""
+        """Read catalog, model, exp, realization, dates and the two quantities from the result."""
         attrs = self.data.attrs
         self.catalog = attrs["AQUA_catalog"]
         self.model = attrs["AQUA_model"]
@@ -49,17 +56,17 @@ class PlotOceanHeatBudget:
         self.realization = attrs.get("AQUA_realization", DEFAULT_REALIZATION)
         self.startdate = attrs.get("AQUA_startdate")
         self.enddate = attrs.get("AQUA_enddate")
-        self.flux = self.data["net_surface_flux"]
-        self.tendency = self.data["hc_tendency"]
-        self.difference = (self.flux - self.tendency).assign_attrs(
-            long_name="Net surface heat flux minus heat content tendency", units=self.flux.attrs.get("units")
-        )
+        self.first = self.data["first"]
+        self.second = self.data["second"]
+        self.units = self.first.attrs.get("units", "")
+        self.difference = (self.first - self.second).assign_attrs(long_name="Difference", units=self.units)
+        self.mean_difference = float(self.difference.mean())
 
     def set_data_labels(self) -> list:
-        """Return the labels of the two budget terms."""
-        return [self.flux.attrs["long_name"], self.tendency.attrs["long_name"]]
+        """Return the labels of the two quantities."""
+        return [self.first.attrs["long_name"], self.second.attrs["long_name"]]
 
-    def set_title(self, diagnostic: str = "Ocean heat budget") -> str:
+    def set_title(self, diagnostic: str = "Budget") -> str:
         """Return the title of a figure, built with TitleBuilder."""
         return TitleBuilder(
             diagnostic=diagnostic,
@@ -72,41 +79,45 @@ class PlotOceanHeatBudget:
 
     def set_description(self, difference: bool = False) -> str:
         """Return the caption of a figure: what is shown, for which dataset and period."""
-        flux, tendency = self.set_data_labels()
+        first, second = self.set_data_labels()
         if difference:
-            description = f"Global ocean mean of the difference between the {flux.lower()} and the {tendency.lower()}"
+            description = f"Global mean of the {first} minus the {second}"
         else:
-            description = f"Global ocean mean of the {flux.lower()} and the {tendency.lower()}"
+            description = f"Global mean of the {first} and of the {second}"
         description += f" for {self.model} {self.exp}"
         if self.startdate and self.enddate:
             description += f" from {time_to_string(self.startdate, '%Y')} to {time_to_string(self.enddate, '%Y')}"
-        description += ". Fluxes are positive downward, i.e. into the ocean."
+        description += "."
         if difference:
-            description += " The dashed line is the mean of the difference over the period."
+            description += (
+                f" The dashed line is the mean difference over the period ({self.mean_difference:.2f} {self.units}),"
+                f" the dotted line the expected value ({self.expected:g} {self.units})."
+            )
         return description
 
     def create_budget_figure(self):
-        """Draw the two budget terms with the aqua-core timeseries graphics."""
+        """Draw the two quantities with the aqua-core timeseries graphics."""
         fig, ax = plot_timeseries(
-            monthly_data=[self.flux, self.tendency],
+            monthly_data=[self.first, self.second],
             data_labels=self.set_data_labels(),
             title=self.set_title(),
             loglevel=self.loglevel,
         )
-        ax.set_ylabel(r"Heat flux [W m$^{-2}$]")  # the automatic label would be the one of the last curve only
+        ax.set_ylabel(f"[{unit_to_latex(self.units)}]")  # the automatic label would be the one of the last curve only
         return fig, ax
 
     def create_difference_figure(self):
-        """Draw the difference between the two budget terms and its mean."""
+        """Draw the difference between the two quantities, its mean and its expected value."""
         fig, ax = plot_timeseries(
             monthly_data=self.difference,
-            data_labels=[self.difference.attrs["long_name"]],
-            title=self.set_title("Ocean heat budget difference"),
+            data_labels=["Difference"],
+            title=self.set_title("Budget difference"),
             legend=False,
             loglevel=self.loglevel,
         )
-        ax.set_ylabel(r"Heat flux difference [W m$^{-2}$]")
-        ax.axhline(float(self.difference.mean()), color="r", linestyle="--", label="mean difference")
+        ax.set_ylabel(f"Difference [{unit_to_latex(self.units)}]")
+        ax.axhline(self.mean_difference, color="r", linestyle="--", label=f"mean difference ({self.mean_difference:.2f})")
+        ax.axhline(self.expected, color="k", linestyle=":", label=f"expected ({self.expected:g})")
         ax.legend()
         return fig, ax
 
@@ -136,6 +147,7 @@ class PlotOceanHeatBudget:
         saver.save_figure(
             fig,
             diagnostic_product=diagnostic_product,
+            extra_keys={"budget": self.name},
             metadata={"description": description},
             extension=save_format,
             dpi=dpi,
