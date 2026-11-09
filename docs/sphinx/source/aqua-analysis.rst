@@ -115,7 +115,7 @@ so that the script can be used in a batch job or in a workflow. These override c
 Profiling the diagnostics
 -------------------------
 
-Each diagnostic logs its wall time, CPU time and maximum memory in its own log file
+Each diagnostic logs its wall time, CPU time, maximum memory and dask graph size in its own log file
 ``<outputdir>/<collection>-<tool>.log``, through a logger named ``Profiler`` (see :ref:`diagnostics-profiling`).
 The analysis report collects them in a table. To find out which tool consumes the most memory, run the analysis
 in one of these two ways, with ``-l INFO`` (the default), and read the report or collect the lines with

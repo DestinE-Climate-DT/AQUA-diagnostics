@@ -122,3 +122,67 @@ def test_profiler_sampler_failure_is_not_fatal():
     assert result["max_memory_bytes"] > 0
     assert result["cluster_max_memory_bytes"] is None
     assert profiler.summary_line().endswith("(dask cluster memory not available)")
+
+
+def test_local_graphs_are_counted():
+    """Without a client the graphs run by the local dask scheduler are counted."""
+    import dask.array as da
+
+    profiler = DiagnosticProfiler()
+    profiler.start()
+    da.ones((100, 100), chunks=10).sum().compute()
+    da.ones((100, 100), chunks=50).sum().compute()
+    result = profiler.stop()
+
+    assert result["dask_graphs"] == 2
+    assert result["dask_tasks"] > result["max_graph_tasks"] > 0
+    assert f"dask_graphs=2 dask_tasks={result['dask_tasks']} " in profiler.summary_line()
+
+    # the callback is unregistered at stop: later computations are not counted
+    da.ones(10, chunks=5).sum().compute()
+    assert profiler.result["dask_graphs"] == 2
+
+
+def test_graph_sizes_from_scheduler():
+    """With a client the graph sizes come from the scheduler plugin, which is removed at stop."""
+    client = _mock_client([4 * GIB])
+    client.run_on_scheduler.return_value = [10, 30]
+    profiler = DiagnosticProfiler(client=client)
+    profiler.start()
+    result = profiler.stop()
+
+    client.register_plugin.assert_called_once()
+    assert (result["dask_graphs"], result["dask_tasks"], result["max_graph_tasks"]) == (2, 40, 30)
+    assert "dask_graphs=2 dask_tasks=40 max_graph_tasks=30" in profiler.summary_line()
+
+
+def test_graph_plugin_failure_is_not_fatal():
+    """A scheduler that refuses the plugin leaves the graph numbers out."""
+    client = _mock_client([4 * GIB])
+    client.register_plugin.side_effect = RuntimeError("no pickle")
+    profiler = DiagnosticProfiler(client=client)
+    profiler.start()
+    result = profiler.stop()
+
+    assert result["dask_graphs"] is None
+    assert " dask_graphs=n/a " in profiler.summary_line()
+    client.run_on_scheduler.assert_not_called()
+
+
+def test_graph_plugin_on_real_cluster():
+    """End to end on an in-process cluster: only the graphs of this client are counted."""
+    import dask.array as da
+    from distributed import Client, LocalCluster
+
+    with LocalCluster(n_workers=1, threads_per_worker=1, processes=False, dashboard_address=None) as cluster:
+        with Client(cluster) as client, Client(cluster) as other:
+            profiler = DiagnosticProfiler(client=client, private_cluster=True)
+            profiler.start()
+            client.compute(da.ones((100, 100), chunks=10).sum()).result()
+            other.compute(da.ones((100, 100), chunks=20).sum()).result()
+            result = profiler.stop()
+            plugins = client.run_on_scheduler(lambda dask_scheduler: list(dask_scheduler.plugins))
+
+    assert result["dask_graphs"] == 1
+    assert result["dask_tasks"] == result["max_graph_tasks"] > 0
+    assert not any(p.startswith("aqua-profiler-") for p in plugins)

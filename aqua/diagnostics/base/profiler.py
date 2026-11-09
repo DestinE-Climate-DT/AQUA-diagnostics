@@ -1,18 +1,23 @@
 """
 Lightweight profiler for diagnostic CLIs.
 
-Records wall time, CPU time and maximum memory of the current process and,
-when a dask client is given, the maximum memory of the dask workers sampled
-while the profiler is running, together with the memory limit of the cluster.
-One summary line is logged at the end by a logger named ``Profiler``, e.g.::
+Records wall time, CPU time and maximum memory of the current process, the size of the
+dask graphs computed by the tool and, when a dask client is given, the maximum memory of
+the dask workers sampled while the profiler is running, together with the memory limit
+of the cluster. One summary line is logged at the end by a logger named ``Profiler``, e.g.::
 
-    walltime=312.4s cputime=95.1s max_memory=4.2GiB cluster_max_memory=18.3GiB/99.2GiB (shared cluster, 32 workers)
-    walltime=312.4s cputime=290.0s max_memory=4.2GiB (no dask cluster: all computation in this process)
+    walltime=312.4s cputime=95.1s max_memory=4.2GiB dask_graphs=87 dask_tasks=123456 max_graph_tasks=4321 \
+cluster_max_memory=18.3GiB/99.2GiB (shared cluster, 32 workers)
+    walltime=312.4s cputime=290.0s max_memory=4.2GiB dask_graphs=87 dask_tasks=123456 max_graph_tasks=4321 \
+(no dask cluster: all computation in this process)
 """
 
 import platform
 import resource
 import time
+import uuid
+
+from dask.callbacks import Callback
 
 from aqua.core.logger import log_configure
 
@@ -49,9 +54,40 @@ def format_bytes(nbytes) -> str:
     return f"{value:.1f}TiB"
 
 
+class _LocalGraphCounter(Callback):
+    """Count the graphs and tasks run by the local dask schedulers (threads, processes, sync) of this process."""
+
+    def __init__(self):
+        super().__init__()
+        self.sizes = []
+
+    def _start(self, dsk):
+        self.sizes.append(len(dsk))
+
+
+def _make_graph_plugin(client_id):
+    """
+    Scheduler plugin recording the number of new tasks of every graph submitted by one client.
+
+    The class is defined here so that it is pickled by value: the scheduler does not need to import aqua.
+    Filtering by client keeps the numbers of this tool only, also on a shared cluster.
+    """
+    from distributed.diagnostics.plugin import SchedulerPlugin
+
+    class GraphSizePlugin(SchedulerPlugin):
+        def __init__(self):
+            self.sizes = []
+
+        def update_graph(self, scheduler, *, client, tasks, **kwargs):
+            if client == client_id:
+                self.sizes.append(len(tasks))
+
+    return GraphSizePlugin()
+
+
 class DiagnosticProfiler:
     """
-    Measure wall time, CPU time and maximum memory of a diagnostic run.
+    Measure wall time, CPU time, maximum memory and dask graph size of a diagnostic run.
 
     Usage::
 
@@ -67,7 +103,8 @@ class DiagnosticProfiler:
 
     Args:
         client (dask.distributed.Client, optional): dask client. When given, the
-            cluster-wide worker memory is sampled while the profiler runs.
+            cluster-wide worker memory is sampled while the profiler runs and the
+            graphs submitted by this client are counted on the scheduler.
         private_cluster (bool): whether the cluster belongs to this process only.
             When False, the sampled cluster memory also includes the tasks of
             other tools running on the same cluster.
@@ -86,15 +123,20 @@ class DiagnosticProfiler:
         self._cpu0 = None
         self._sampler = None
         self._sampler_ctx = None
+        self._local_graphs = None
+        self._plugin_name = None
         self.result = None
 
     def start(self):
-        """Start the timers and, if a client is available, the cluster memory sampler."""
+        """Start the timers, the graph counters and, if a client is available, the cluster memory sampler."""
         self._t0 = time.perf_counter()
         self._cpu0 = _cpu_seconds()
         self.result = None
+        self._local_graphs = _LocalGraphCounter()
+        self._local_graphs.register()
         if self.client is not None:
             self._start_sampler()
+            self._start_graph_plugin()
         return self
 
     def stop(self):
@@ -106,11 +148,15 @@ class DiagnosticProfiler:
         walltime = time.perf_counter() - self._t0
         cputime = _cpu_seconds() - self._cpu0
         cluster_max, cluster_limit, nworkers = self._stop_sampler()
+        graph_sizes = self._stop_graph_counters()
 
         self.result = {
             "walltime_seconds": walltime,
             "cputime_seconds": cputime,
             "max_memory_bytes": _max_memory_bytes(),
+            "dask_graphs": len(graph_sizes) if graph_sizes is not None else None,
+            "dask_tasks": sum(graph_sizes) if graph_sizes is not None else None,
+            "max_graph_tasks": max(graph_sizes, default=0) if graph_sizes is not None else None,
             "cluster_max_memory_bytes": cluster_max,
             "cluster_memory_limit_bytes": cluster_limit,
             "nworkers": nworkers,
@@ -129,6 +175,12 @@ class DiagnosticProfiler:
             f"walltime={res['walltime_seconds']:.1f}s cputime={res['cputime_seconds']:.1f}s "
             f"max_memory={format_bytes(res['max_memory_bytes'])}"
         )
+        if res["dask_graphs"] is None:
+            line += " dask_graphs=n/a"
+        else:
+            line += (
+                f" dask_graphs={res['dask_graphs']} dask_tasks={res['dask_tasks']} max_graph_tasks={res['max_graph_tasks']}"
+            )
         if self.client is None:
             return line + " (no dask cluster: all computation in this process)"
         if res["cluster_max_memory_bytes"] is None:
@@ -175,6 +227,47 @@ class DiagnosticProfiler:
         finally:
             self._sampler = None
             self._sampler_ctx = None
+
+    def _start_graph_plugin(self):
+        """Register the graph size plugin on the scheduler, ignoring any failure."""
+        name = f"aqua-profiler-{uuid.uuid4().hex}"
+        try:
+            self.client.register_plugin(_make_graph_plugin(self.client.id), name=name)
+            self._plugin_name = name
+        except Exception as e:  # pylint: disable=broad-except
+            self.logger.debug("Dask graph counting on the scheduler not available: %s", e)
+            self._plugin_name = None
+
+    def _stop_graph_counters(self):
+        """
+        Stop the local and scheduler graph counters.
+
+        Returns:
+            list: number of tasks of every graph computed, or None if the scheduler
+            counter was needed (client given) but not available.
+        """
+        sizes = []
+        if self._local_graphs is not None:
+            self._local_graphs.unregister()
+            sizes = list(self._local_graphs.sizes)
+            self._local_graphs = None
+        if self.client is None:
+            return sizes
+        if self._plugin_name is None:
+            return None
+        name, self._plugin_name = self._plugin_name, None
+
+        # local function, pickled by value: the scheduler does not need to import aqua
+        def pop_plugin_sizes(dask_scheduler):
+            plugin = dask_scheduler.plugins.get(name)
+            dask_scheduler.remove_plugin(name=name)
+            return plugin.sizes if plugin is not None else []
+
+        try:
+            return sizes + list(self.client.run_on_scheduler(pop_plugin_sizes))
+        except Exception as e:  # pylint: disable=broad-except
+            self.logger.debug("Dask graph counting on the scheduler failed: %s", e)
+            return None
 
     def __enter__(self):
         return self.start()
