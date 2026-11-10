@@ -182,7 +182,16 @@ class PlotBoxplots:
                             if v.startswith("-"):
                                 anom_val = -anom_val
 
-                            ax.text(x, anom_val, f"{abs_val:.2f}", ha="center", va="bottom", color="black")
+                            ax.text(
+                                x,
+                                anom_val,
+                                f"{abs_val:.2f}",
+                                ha="center",
+                                va="bottom",
+                                color="black",
+                                fontsize="small",
+                                fontweight="bold",
+                            )
 
         if self.format_to_save:
             self._save_figure(fig=fig, data=data, data_ref=data_ref, var=var)

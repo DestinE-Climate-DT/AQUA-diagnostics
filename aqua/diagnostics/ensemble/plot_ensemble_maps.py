@@ -2,7 +2,7 @@ import xarray as xr
 
 from aqua.core.graphics import plot_single_map, plot_single_map_diff
 from aqua.core.util import get_projection
-from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder, figure_size
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 from .base import BaseMixin
 
@@ -202,7 +202,6 @@ class PlotEnsembleMaps(BaseMixin):
                 vmin=vmin,
                 vmax=vmax,
                 cmap=cmap,
-                figsize=figure_size(0.8),
                 loglevel=self.loglevel,
             )
             ax.set_xlabel("Longitude")
@@ -323,7 +322,6 @@ class PlotEnsembleMaps(BaseMixin):
             vmin_fill=vmin,
             vmax_fill=vmax,
             cmap=cmap,
-            figsize=figure_size(0.8),
             loglevel=self.loglevel,
         )
         ax.set_xlabel("Longitude")
