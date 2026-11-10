@@ -8,7 +8,7 @@ from aqua.core.graphics import plot_single_map
 from aqua.core.util import get_projection
 
 # from aqua.core.util.graphics import isnpixok
-from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder, figure_size
+from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 
 # import matplotlib.pyplot as plt
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
@@ -52,7 +52,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         startdate=None,
         enddate=None,
         plot_options={},
-        figsize: tuple = figure_size(0.8),
+        figsize: tuple = None,
         ax_pos: tuple = (1, 1, 1),
         vmin=None,
         vmax=None,
@@ -271,7 +271,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         exp_ref=None,
         startdate_ref=None,
         enddate_ref=None,
-        figsize: tuple = figure_size(0.8),
+        figsize: tuple = None,
         ax_pos: tuple = (1, 1, 1),
         plot_options={},
         vmin_diff=None,

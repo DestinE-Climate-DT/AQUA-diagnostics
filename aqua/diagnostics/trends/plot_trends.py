@@ -8,7 +8,7 @@ import xarray as xr
 from aqua.core.graphics import plot_single_map
 from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, time_to_string, to_list, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
 class PlotTrends:
@@ -197,7 +197,6 @@ class PlotTrends:
                 vmax=vmax,
                 sym=sym_value,
                 return_fig=True,
-                figsize=figure_size(0.8),
                 loglevel=self.loglevel,
             )
 
