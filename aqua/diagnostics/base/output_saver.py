@@ -4,12 +4,16 @@ in various formats (netcdf, pdf, png) for basic
 AQUA diagnostics.
 """
 
+import math
 import os
 from typing import Optional, Union
 
 import xarray as xr
+from matplotlib import rcParams
 from matplotlib.figure import Figure
+from matplotlib.transforms import Bbox
 
+from aqua.core.default import DEFAULT_FIGURE_WIDTH
 from aqua.core.logger import log_configure, log_history
 from aqua.core.util import (
     create_folder,
@@ -429,6 +433,7 @@ class OutputSaver:
         extra_keys: Optional[dict] = None,
         metadata: Optional[dict] = None,
         dpi: Optional[int] = None,
+        bbox_inches: Union[str, Bbox] = "tight",
     ):
         """
         Internal method to save a Matplotlib figure in a single format with common logic for PDF, SVG and PNG.
@@ -441,6 +446,7 @@ class OutputSaver:
             extra_keys (dict): Extra keys for filename generation.
             metadata (dict): Metadata to embed.
             dpi (int): DPI setting for raster formats like PNG.
+            bbox_inches (str or Bbox): Region of the figure to save, passed to savefig. Default is 'tight'.
         """
 
         filepath = self._core_save(diagnostic_product=diagnostic_product, file_format=file_format, extra_keys=extra_keys)
@@ -449,7 +455,7 @@ class OutputSaver:
             self.logger.info("File already exists and rebuild=False, skipping: %s", filepath)
             return filepath
 
-        save_kwargs = {"format": file_format, "bbox_inches": "tight"}
+        save_kwargs = {"format": file_format, "bbox_inches": bbox_inches}
         if file_format == "png" and dpi is not None:
             save_kwargs["dpi"] = dpi
 
@@ -492,12 +498,35 @@ class OutputSaver:
         if not set(extensions).issubset(FIGURE_FORMAT):
             raise ValueError(f"format must be one of {FIGURE_FORMAT}, got '{extensions}'")
 
+        # Figures with the common width are saved exactly that wide; any other figure is cropped as before
+        if math.isclose(fig.get_figwidth(), DEFAULT_FIGURE_WIDTH, abs_tol=0.01):
+            bbox = self._fixed_width_bbox(fig, diagnostic_product)
+        else:
+            bbox = "tight"
         for ext in extensions:
             ext = ext.lower().lstrip(".")
             if ext in VECTORIAL_FORMAT:
-                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata)
+                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, bbox_inches=bbox)
             else:
-                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, dpi)
+                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, dpi, bbox_inches=bbox)
+
+    def _fixed_width_bbox(self, fig: Figure, diagnostic_product: str = None) -> Bbox:
+        """
+        Region of the figure to save (inches): cropped to the content vertically, as bbox_inches='tight',
+        but always as wide as the figure, so that text looks equally large in all figures shown at the same width.
+        Content sticking out of the figure sides is still saved, making the image wider (with a warning).
+        """
+        fig.draw_without_rendering()  # run the layout engine, if any, before measuring the content
+        content = fig.get_tightbbox()
+        pad = rcParams["savefig.pad_inches"]
+        width = fig.get_figwidth()
+        x0 = 0 if content.x0 >= 0 else content.x0 - pad
+        x1 = width if content.x1 <= width else content.x1 + pad
+        if x0 < 0 or x1 > width:
+            excess = x1 - x0 - width
+            message = "%s: figure content exceeds the figure width by %.2f in, image saved wider"
+            self.logger.warning(message, diagnostic_product, excess)
+        return Bbox([[x0, content.y0 - pad], [x1, content.y1 + pad]])
 
     def create_metadata(
         self, diagnostic_product: str, extra_keys: Optional[dict] = None, metadata: Optional[dict] = None
