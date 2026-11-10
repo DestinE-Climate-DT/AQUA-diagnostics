@@ -512,21 +512,17 @@ class OutputSaver:
 
     def _fixed_width_bbox(self, fig: Figure, diagnostic_product: str = None) -> Bbox:
         """
-        Region of the figure to save (inches): cropped to the content vertically, as bbox_inches='tight',
-        but always as wide as the figure, so that text looks equally large in all figures shown at the same width.
+        Region to save, in inches: cropped to the content vertically, as bbox_inches='tight', but as wide as the figure.
         Content sticking out of the figure sides is still saved, making the image wider (with a warning).
         """
-        fig.draw_without_rendering()  # run the layout engine, if any, before measuring the content
+        fig.draw_without_rendering()  # apply the layout engine before measuring the content
         content = fig.get_tightbbox()
-        pad = rcParams["savefig.pad_inches"]
         width = fig.get_figwidth()
-        x0 = 0 if content.x0 >= 0 else content.x0 - pad
-        x1 = width if content.x1 <= width else content.x1 + pad
-        if x0 < 0 or x1 > width:
-            excess = x1 - x0 - width
-            message = "%s: figure content exceeds the figure width by %.2f in, image saved wider"
-            self.logger.warning(message, diagnostic_product, excess)
-        return Bbox([[x0, content.y0 - pad], [x1, content.y1 + pad]])
+        pad = rcParams["savefig.pad_inches"]
+        x0, x1 = min(0, content.x0), max(width, content.x1)
+        if x1 - x0 > width:
+            self.logger.warning("%s: content exceeds the figure width by %.2f in", diagnostic_product, x1 - x0 - width)
+        return Bbox.from_extents(x0, content.y0 - pad, x1, content.y1 + pad)
 
     def create_metadata(
         self, diagnostic_product: str, extra_keys: Optional[dict] = None, metadata: Optional[dict] = None
