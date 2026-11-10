@@ -4,7 +4,7 @@ import numpy as np
 from aqua.core.graphics import plot_maps, plot_single_map_diff, plot_vertical_profile_diff
 from aqua.core.logger import log_configure
 from aqua.core.util import get_projection, get_realizations, time_to_string, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .stat_bias import StatBias
 from .util import handle_pressure_level
@@ -276,7 +276,7 @@ class PlotBias:
             regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
-            comparison="\nrelative to ",
+            comparison="\nrelative to",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
@@ -297,7 +297,6 @@ class PlotBias:
             cmap=self.cmap,
             extent=extent,
             cyclic_lon=cyclic_lon,
-            figsize=figure_size(0.8),
             loglevel=self.loglevel,
         )
         ax.set_xlabel("Longitude")
@@ -311,6 +310,14 @@ class PlotBias:
             f"and differences against {data_ref.AQUA_model} (from {time_to_string(data_ref.AQUA_startdate, format='%Y-%m')} "
             f"to {time_to_string(data_ref.AQUA_enddate, format='%Y-%m')}, shading)."
         )
+
+        # Common format of the text boxes in the bottom corners of the map (significance on the right, statistics on the left)
+        box_kwargs = {
+            "transform": ax.transAxes,
+            "va": "bottom",
+            "fontsize": "small",
+            "bbox": {"facecolor": "white", "alpha": 0.7, "edgecolor": "none"},
+        }
 
         # Add significance stippling if requested
         if show_significance and data_timeseries is not None:
@@ -344,11 +351,8 @@ class PlotBias:
                 0.99,
                 0.01,
                 f"Stippling: p < {significance_alpha}\nWelch t-test, N = {n_samples}\nSignificant points: {pct_sig:.1f}%",
-                transform=ax.transAxes,
                 ha="right",
-                va="bottom",
-                fontsize=9,
-                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none"),
+                **box_kwargs,
             )
 
             sig_description = (
@@ -372,18 +376,7 @@ class PlotBias:
             stats_text = f"Mean: {mean_bias:{'.2g'}}" + (f" {units}" if units else "")
             stats_text += f"\nRMSE: {rmse:{'.2g'}}" + (f" {units}" if units else "")
 
-            x, y, ha, va = (0.02, 0.87, "left", "center")
-            # Add text to figure
-            fig.text(
-                x,
-                y,
-                stats_text,
-                fontsize=12,
-                ha=ha,
-                va=va,
-                transform=fig.transFigure,
-                bbox=dict(boxstyle="round", facecolor="white", alpha=0.8, edgecolor="black"),
-            )
+            ax.text(0.01, 0.01, stats_text, ha="left", **box_kwargs)
 
             self.logger.info(f"Added statistics to plot: Mean={mean_bias:.2g}, RMSE={rmse:.2g}")
 
@@ -465,12 +458,11 @@ class PlotBias:
             regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
-            comparison="\nrelative to ",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
             extra_info=extra_info,
-        ).generate()
+        ).generate(max_chars=90, split_on=["for"])  # a single break before "for": two lines within the figure width
 
         proj, extent, cyclic_lon = self._map_settings(data, proj, proj_params, extent, cyclic_lon)
 
@@ -482,7 +474,6 @@ class PlotBias:
             "return_fig": True,
             "title": title,
             "titles": season_list,
-            "figsize": figure_size(0.8),
             "contour": True,
             "sym": sym,
             "cbar_label": cbar_label,
@@ -559,7 +550,7 @@ class PlotBias:
             regions=data.attrs.get("AQUA_region"),
             model=data.AQUA_model,
             exp=data.AQUA_exp,
-            comparison="\nrelative to ",
+            comparison="\nrelative to",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
             timeseason="climatology ",
@@ -589,7 +580,6 @@ class PlotBias:
             nlevels=nlevels,
             title=title,
             return_fig=True,
-            figsize=figure_size(0.8),
             loglevel=self.loglevel,
         )
 
