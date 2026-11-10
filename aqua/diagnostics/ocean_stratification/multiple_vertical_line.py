@@ -5,7 +5,7 @@ import xarray as xr
 
 from aqua.core.graphics import ConfigStyle, plot_vertical_lines
 from aqua.core.logger import log_configure
-from aqua.diagnostics.base import figure_size
+from aqua.core.util import grid_figure_size
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
@@ -67,7 +67,7 @@ def plot_multi_vertical_lines(
     if all(isinstance(data_map, xr.Dataset) for data_map in data_list):
         # nrows = 1  # len(data_list)
         # ncols = len(variables)
-        figsize = figsize if figsize is not None else figure_size((nrows * 3 + 1) / (ncols * 2))
+        figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols, panel_ratio=1.5, title_ratio=0.5)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
@@ -109,7 +109,7 @@ def plot_multi_vertical_lines(
                     -0.3,
                     0.33,
                     text[k],
-                    fontsize=15,
+                    fontsize="large",
                     color="dimgray",
                     rotation=90,
                     transform=ax.transAxes,
@@ -117,7 +117,7 @@ def plot_multi_vertical_lines(
                 )
 
     # Adjust overall layout
-    fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)
+    fig.subplots_adjust(bottom=0.1, top=0.9, left=0.08, right=0.95)
     fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
 
     if title:

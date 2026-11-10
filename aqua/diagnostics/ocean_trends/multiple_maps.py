@@ -9,8 +9,7 @@ from matplotlib import ticker
 from aqua.core.graphics import ConfigStyle
 from aqua.core.graphics.single_map import plot_single_map
 from aqua.core.logger import log_configure
-from aqua.core.util import add_cyclic_lon, evaluate_colorbar_limits, generate_colorbar_ticks
-from aqua.diagnostics.base import figure_size
+from aqua.core.util import add_cyclic_lon, evaluate_colorbar_limits, generate_colorbar_ticks, grid_figure_size
 
 
 def plot_maps(
@@ -100,13 +99,14 @@ def plot_maps(
     logger.debug("Loading maps")
     maps = [data_map.load(keep_attrs=True) for data_map in maps]
 
-    figsize = figure_size(0.55 * nrows / ncols)
+    figsize = grid_figure_size(nrows, ncols, panel_ratio=0.55, title_ratio=0)
     fig, axs = plt.subplots(
         nrows=nrows,
         ncols=ncols,
         figsize=figsize,
         subplot_kw={"projection": ccrs.PlateCarree()},
     )
+    fig.subplots_adjust(left=0.15, right=0.97)  # use the figure width (left: room for the row labels)
     axs = axs.flatten()
 
     for i in range(len(maps)):
@@ -177,7 +177,7 @@ def plot_maps(
             gl.left_labels = True
 
         if ytext:
-            ax.text(-0.3, 0.33, ytext[i], fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
+            ax.text(-0.3, 0.33, ytext[i], fontsize="large", color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
         if row == nrows - 1:
             if ax.collections:
                 mappable = ax.collections[-1]

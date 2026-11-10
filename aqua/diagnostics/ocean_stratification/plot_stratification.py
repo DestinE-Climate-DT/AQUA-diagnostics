@@ -6,8 +6,8 @@ from typing import Union
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label, get_realizations, time_to_string, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
+from aqua.core.util import cbar_get_label, get_realizations, grid_figure_size, time_to_string, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 from .multiple_vertical_line import plot_multi_vertical_lines
@@ -107,7 +107,7 @@ class PlotStratification:
             obs_label=self.obs_label if self.obs else None,
             title=self.suptitle,
             titles=self.title_list,
-            figsize=figure_size(1.25 * self.nrows / self.ncols),
+            figsize=grid_figure_size(self.nrows, self.ncols, panel_ratio=1.25, title_ratio=0),
             xtext=self.xtext,
             ytext=self.ytext,
             return_fig=True,
