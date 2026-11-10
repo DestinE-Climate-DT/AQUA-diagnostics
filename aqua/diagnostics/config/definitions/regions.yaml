@@ -4,9 +4,9 @@
 # oceans and seas; lon/lat boxes for everything else. Keys of a polygon region:
 #   - ``regionmask``: a source below or a regionmask.defined_regions object (e.g. srex)
 #   - ``regionmask_names``: sub-regions to merge (default: ``longname``)
-#   - ``frac_threshold``: also keep cells covered above this fraction (default 0.0 = any touching cell,
-#     null = cell centres only): coarse model grids (e.g. LRA r100) have many coastal ocean cells
-#     centred on IHO land. Needs a regular lon/lat grid.
+#   - ``frac_threshold``: default null = cell centres only, avoiding approximate fractional masks.
+#     Numeric values select cells covered above this fraction (0.0 = any nonzero sampled coverage)
+#     and need a regular lon/lat grid. Set 0.0 explicitly to retain coastal ocean cells centred on IHO land.
 
 # Polygon collections: read as <name>_<simplify>.gpkg from the regions/ folder next to this file (filled when the
 # container is built), otherwise downloaded once, simplified (degrees) and cached with regionmask's data.

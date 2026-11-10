@@ -138,9 +138,12 @@ A lon/lat box gives the limits of the region, while a polygon region names a pol
 * ``regionmask_names``: the polygons of the collection merged into the region, with their names in the collection
   (default: the ``longname``).
 * ``frac_threshold``: a grid cell is selected if the region covers more than this fraction of it.
-  The default, ``0.0``, keeps every cell the region touches: on coarse grids (e.g. the 1° LRA) many coastal ocean cells
-  have their centre on land, and they would be lost otherwise. ``null`` keeps only the cells whose centre is inside the region.
-  Any value other than ``null`` needs data on a regular lon/lat grid, such as the LRA or regridded data.
+  The default, ``null``, keeps only cells whose centre is inside the region and avoids constructing expensive approximate
+  fractional masks. Set ``0.0`` explicitly to select every cell with nonzero sampled coverage, preserving the previous
+  default. This can retain coastal ocean cells whose centres lie on land, particularly on coarse grids (e.g. the 1° LRA).
+  Numeric thresholds need data on a regular lon/lat grid, such as the LRA or regridded data.
+  Changing between these rules can change regional results at boundary cells; fractional selection does not scale
+  cell-area weights by coverage.
 
 The polygon collections are listed in the ``sources`` section of the regions file, with these keys:
 
