@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 
 from aqua.core.graphics import ConfigStyle, plot_gregory_annual, plot_gregory_monthly
-from aqua.core.util import get_realizations, time_to_string, to_list
-from aqua.diagnostics.base import TitleBuilder, figure_size
+from aqua.core.util import figure_size, get_realizations, time_to_string, to_list
+from aqua.diagnostics.base import TitleBuilder
 
 from .base import PlotBaseMixin
 
@@ -131,8 +131,8 @@ class PlotGregory(PlotBaseMixin):
         # Create a single legend at the bottom
         fig.legend(handles_common, labels_common, loc="lower center", ncol=2)
 
-        # Adjust layout to make space
-        fig.subplots_adjust(bottom=0.2)
+        # Adjust layout to make space (wspace also keeps the panels narrow enough to have few x ticks)
+        fig.subplots_adjust(left=0.08, right=0.97, bottom=0.24, top=0.84, wspace=0.4)
 
         if title:
             fig.suptitle(title)
