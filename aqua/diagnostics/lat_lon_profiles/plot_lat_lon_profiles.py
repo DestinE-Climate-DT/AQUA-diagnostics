@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from aqua.core.graphics import plot_lat_lon_profiles, plot_seasonal_lat_lon_profiles
 from aqua.core.logger import log_configure
 from aqua.core.util import DEFAULT_REALIZATION, strlist_to_phrase, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder, figure_size
+from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 
 class PlotLatLonProfiles:
@@ -183,7 +183,7 @@ class PlotLatLonProfiles:
         """
         if self.data_type == "seasonal":
             # For seasonal plots, delegate to the specialized seasonal method
-            return self.plot_seasonal_lines(data_labels=data_labels, title=title)
+            return self.plot_seasonal_lines(data_labels=data_labels, ref_label=ref_label, title=title)
 
         data_to_plot = self.data
         ref_to_plot = self.ref_data
@@ -464,7 +464,7 @@ class PlotLatLonProfiles:
         description = self.set_description()
         title = self.set_title()
 
-        fig, _ = self.plot_seasonal_lines(data_labels=data_labels, title=title, style=style)
+        fig, _ = self.plot_seasonal_lines(data_labels=data_labels, ref_label=self.set_ref_label(), title=title, style=style)
 
         self.save_plot(
             fig,
@@ -483,13 +483,14 @@ class PlotLatLonProfiles:
 
         self.logger.info("PlotLatLonProfiles completed successfully")
 
-    def plot_seasonal_lines(self, data_labels=None, title=None, style=None):
+    def plot_seasonal_lines(self, data_labels=None, ref_label=None, title=None, style=None):
         """
         Plot seasonal means using plot_seasonal_lat_lon_profiles.
         Creates a 4-panel plot with DJF, MAM, JJA, SON only.
 
         Args:
             data_labels (list): List of data labels.
+            ref_label (str): Label for the reference data in the legend.
             title (str): Title of the plot.
             style (str): Plotting style. Default is the AQUA style
 
@@ -506,16 +507,13 @@ class PlotLatLonProfiles:
 
         self.logger.debug(f"Plotting {len(seasonal_data_only)} seasons")
 
-        fig, axs = plot_seasonal_lat_lon_profiles(
+        return plot_seasonal_lat_lon_profiles(
             seasonal_data=seasonal_data_only,
             ref_data=seasonal_ref_only,
             ref_std_data=self.ref_std_data,
             data_labels=data_labels,
+            ref_label=ref_label,
             title=title,
             style=style,
             loglevel=self.loglevel,
         )
-        # The core function has a fixed figsize of (12, 8): resize it, the constrained layout adapts on save
-        # TODO: pass figsize instead, once aqua-core plot_seasonal_lat_lon_profiles accepts it
-        fig.set_size_inches(figure_size(0.67))
-        return fig, axs
