@@ -225,19 +225,23 @@ The standalone template (`templates/collections/config-<name>.yaml`) is only the
 The tool becomes a *diagnostic* when a **collection** configures it, and a collection exists in two parallel sets
 of files that must stay aligned:
 
-- `config/collections/jinja/<collection>/config-<collection>-<ref>.j2`: what `aqua analysis` runs. Dates are Jinja
-  variables (`'{{ default.startdate }}'`, `'{{ <tool>.std_startdate }}'`) rendered per experiment kind.
-- `config/collections/legacy/<collection>/config-<collection>-<ref>.yaml`: the same file in plain YAML with fixed
-  dates, usable with `--config` outside `aqua analysis`.
+- `config/collections/jinja/<collection>/config-<collection>-<quantity>.j2`: what `aqua analysis` runs. The values
+  that depend on the experiment kind are Jinja variables read from
+  `config/analysis/climatedt-experiment-kind.yaml`: the reference dataset of the file
+  (`'{{ references.<collection>_<quantity>.model }}'`, ...), the dates (`'{{ period.standard.startdate }}'`,
+  `'{{ period.timeseries.std_enddate }}'`, ...), `'{{ regrid }}'`, `'{{ loglevel }}'` and the `output` settings.
+- `config/collections/legacy/<collection>/config-<collection>-<quantity>.yaml`: the same file rendered with the
+  `default` kind, all values written out, usable with `--config` outside `aqua analysis`.
 
-Do it only when the user asks for it, or when the tool is meant for a collection from the start (ask which one).
-Then: add a `<name>:` block to the files of that collection with the **same keys** as the template, `run: true`,
-`diagnostic_name` set to the **collection name**, and the variables, regions and plot options of the scientific
-purpose; keep `.j2` and `legacy` in step; register the tool in `config.aqua-analysis.yaml` with the list of `.j2`
-files (one per reference, as `biases` does in `atmosphere2d`). A `.j2` file configures one reference: a collection
-with two references (ERA5 and Berkeley Earth) has two files, and the tool lists both. The tests in `tests/config`
-check that every `.j2` renders for every experiment kind and that the keys are known. Details in
-[reference.md](reference.md).
+Files are named by the **physical quantity** checked (`config-atmosphere2d-surface`, `config-ocean2d-sst`), not by
+the reference dataset. Do it only when the user asks for it, or when the tool is meant for a collection from the
+start (ask which one). Then: add a `<name>:` block to the files of that collection with the **same keys** as the
+template, `run: true`, `diagnostic_name` set to the **collection name**, and the variables, regions and plot options
+of the scientific purpose; make the same change in the `.j2` and in the `legacy` file; register the tool in
+`config.aqua-analysis.yaml` with the list of `.j2` files it reads (as `biases` does in `atmosphere2d`). The tests in
+`tests/config` check that every `.j2` renders for every experiment kind, that the keys are known and that every
+legacy file equals its `.j2` rendered with `default`. The full procedure (kind file, new collections, naming of files
+and reference slots) is in `docs/sphinx/source/analysis_collections.rst`; details in [reference.md](reference.md).
 
 ## Tests, docs, notebook (guidelines §7)
 
