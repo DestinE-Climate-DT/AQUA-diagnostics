@@ -10,6 +10,12 @@ Main changes:
 
 Complete list:
 - Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed); observational datasets listed once in `sources` and selected per kind through `references` slots named after the template (`<collection>_<quantity>`) (storyline uses OSI-SAF AMSR; HighResMIP kinds start in 1950 with ERA5 replacing satellite-era references); date blocks nested as `period.standard`, `period.radiation`, `period.timeseries`; single `regrid`, `loglevel` and `output` (rebuild, save_netcdf, save_format, dpi) keys shared by all templates; legacy collection files renamed like the jinja ones and made equal to the default jinja rendering (checked by a test); teleconnections and surface radiation boxplots ERA5 references regridded to r100; jinja collection templates renamed by physical quantity instead of reference dataset (requires aqua-core with DestinE-Climate-DT/AQUA#3266); new documentation page on kind, jinja and legacy collections (#519)
+- DiagnosticCLI: a `Profiler` logger reports wall time, CPU time, maximum memory and dask graph size of each tool, and the memory of the dask cluster when used, at the end of the run (#558)
+- CI: the labeled run that Dependabot starts when opening its PR also runs the tests, so a skipped run no longer hides the passed required check and blocks the PR (#573)
+- CI: the AQUA-diagnostics tests workflow also runs on `merge_group` events, so its required check reports in the merge queue.
+- Agents: split instructions into a small `AGENTS.md` entry point reading AQUA's shared `AGENTS.common.md` directly from GitHub and local diagnostics-specific `AGENTS.repo.md`; AQUA common rules take precedence and stricter materialisation timing remains local to diagnostics (#562).
+- Skill: new `new-aqua-diagnostic` skill (`.claude/skills/new-aqua-diagnostic/`), the open choices to settle before starting and a tested skeleton tool (analysis class, plot class with optional reference, CLI, config template, tests, `.rst` page); `AGENTS.md` points to it (#527)
+- Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
 - CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
 - Major documentation update (#473)
 
