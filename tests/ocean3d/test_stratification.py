@@ -16,7 +16,7 @@ dpi = DPI
 # --- Constants ---
 # Expected values valid with aqua-core >=1.0.0a6, which renames the FESOM/NEMO
 # vertical coordinate 'level' -> 'depth' (CoordIdentifier NEMO-layers rule).
-# They refer to the DJF climatology, the season config-ocean3d-en4-stratification pairs
+# They refer to the DJF climatology, the season config-ocean3d-stratification pairs
 # with both regions used here (Labrador Sea for the profiles, Arctic for the MLD map).
 # EXPECTED_MLD_MEAN is the flat average of the 2D MLD field, not the fldmean scalar the
 # dim_mean run used to produce: MLD is now taken from the map branch, as in production.

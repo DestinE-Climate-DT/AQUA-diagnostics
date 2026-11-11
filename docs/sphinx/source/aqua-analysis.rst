@@ -64,6 +64,12 @@ so that the script can be used in a batch job or in a workflow. These override c
     The target grid to use for regridding the data.
     If not specified, the default is ``null``, which means no regridding will be applied.
 
+.. option:: -k <kind>, --kind <kind>
+
+    The experiment kind used to fill the jinja templates of the diagnostics configuration
+    (e.g. ``climatedt-hist-cmip6``, ``highresmip-hist-cmip7``). If not specified, the ``default`` kind is used.
+    See :ref:`analysis_collections`, and :ref:`analysis_collections_which_kind` for the kind of each Climate DT experiment.
+
 .. option:: --realization <realization>
 
     The realization to use. If not specified or set to ``None``,
@@ -163,6 +169,8 @@ The job section contains the following keys:
 - ``script_path_base``: the base path for the diagnostic scripts. Default is ``${AQUA}/diagnostics``, but it is going to be updated.
 - ``startdate``: the start date to limit the time range for the analysis. Default is ``null``.
 - ``enddate``: the end date to limit the time range for the analysis. Default is ``null``.
+- ``experiment_kind``: the path of the experiment kind file used to render the jinja collection templates.
+  If not set, no templating is performed (legacy mode). See :ref:`analysis_collections`.
 
 .. note::
 
@@ -197,7 +205,8 @@ The diagnostics are specified as a dictionary with the following keys:
 
 - ``nworkers``: the number of workers to use for this diagnostic.
 - ``script_path``: the relative path to the diagnostic script with respect to ``script_path_base``.
-- ``config``: the configuration file for the diagnostic.
+- ``config``: the configuration file (or list of files) for the diagnostic, a jinja template or a legacy file
+  (see :ref:`analysis_collections`).
 - ``nocluster``: a boolean flag to disable the use of the global dask cluster for this diagnostic (used by ECmean)
 - ``source_oce``: a boolean flag to pass the additional ocean source to the diagnostic (currently only ECmean). Defaults to False.
 - ``extra``: a string with extra arguments to pass to the diagnostic script.

@@ -1,3 +1,6 @@
+# Legacy configuration: config-water_cycle-precipitation.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
 datasets:
   - catalog: null
@@ -17,12 +20,12 @@ datasets:
 
 references:
   - catalog: 'obs'
-    model: 'ESA-CCI-L4'
-    exp: 'v3.0.1'
-    source: 'r100-monthly'
+    model: 'MSWEP'
+    exp: 'v2.8'
+    source: 'monthly'
     regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '1990-01-01'
+    enddate: '2014-12-31'
 
 setup:
   loglevel: 'WARNING'
@@ -37,13 +40,15 @@ output:
 diagnostics:
   biases:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
     params:
       default:
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: false     # Vertical profile if variable 3d
+      tprate:
+        units: 'mm/day'
     plot_params:
       default:
         projection: 'robinson'
@@ -51,15 +56,15 @@ diagnostics:
         show_stats: true
         show_significance: true    # Enable significance stippling
         significance_alpha: 0.05
-      tos:
+      tprate:
         vmin: -5
         vmax: 5
-        cmap: 'RdBu_r'
+        cmap: 'BrBG'
 
   timeseries:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
     center_time: true
     params:
       default:
@@ -67,26 +72,42 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ timeseries.std_startdate }}'
-        std_enddate: '{{ timeseries.std_enddate }}'
-      tos:
-        regions: ['nh', 'sh']
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
+      tprate:
+        regions: ['nh', 'sh', 'europe']
 
   seasonalcycles:
     run: true
-    diagnostic_name: 'ocean2d'
-    variables: ['tos']
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
     center_time: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
-      tos:
-        regions: ['nh', 'sh']
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
+      tprate:
+        regions: ['nh', 'sh', 'europe']
+
+  histogram:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
+    center_time: true
+    bins: 50              # Override only if different from 100
+    density: true         # already default
+    ylogscale: true       # already default
+    params:
+      default:
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
+      tprate:
+        units: 'mm/day'
+        regions: [null, 'tropics']  # global and tropics; MUST be a list
 
   lat_lon_profiles:
     run: true
-    diagnostic_name: 'ocean2d'
+    diagnostic_name: 'water_cycle'
     mean_type: 'zonal'
     center_time: true
     exclude_incomplete: true
@@ -95,8 +116,9 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
     variables:
-      - name: 'tos'
-        regions: [null]  #
+      - name: 'tprate'
+        units: 'mm/day'
+        regions: [null, 'tropics']  # global and tropics

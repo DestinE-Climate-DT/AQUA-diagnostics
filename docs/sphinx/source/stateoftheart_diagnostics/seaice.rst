@@ -151,7 +151,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 Additionally, the CLI can be run with the following optional arguments:
 
-- ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/diagnostics/seaice/config_seaice-osi.yaml`` and ``config_seaice-psc.yaml``.
+- ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/collections/legacy/seaice/config-seaice-concentration.yaml`` and ``config-seaice-thickness.yaml``.
 - ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
 - ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
 - ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
@@ -210,7 +210,7 @@ The reference datasets are defined using YAML anchors (``&ref_osi_nh``) and can 
 
 **Diagnostic Blocks:**
 
-Each diagnostic block in ``config-seaice-osi.yaml``:
+Each diagnostic block in ``config-seaice-concentration.yaml``:
 
 - ``seaice_timeseries``
 - ``seaice_seasonal_cycle``

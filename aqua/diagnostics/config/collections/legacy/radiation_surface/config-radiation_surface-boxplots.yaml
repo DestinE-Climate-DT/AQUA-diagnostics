@@ -1,3 +1,6 @@
+# Legacy configuration: config-radiation_surface-boxplots.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Template according to #1613
 # The first model in this block can be overridden
 # in the command line by using:
@@ -19,24 +22,26 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: obs
+  - catalog: 'obs'
     model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
+    regrid: 'r100'
     startdate: '1990-01-01'
-    enddate: '2020-12-31'
+    enddate: '2014-12-31'
   - catalog: 'obs'
     model: 'CERES'
     exp: 'ebaf-sfc421'
     source: 'monthly'
     regrid: 'r100'
     reader_kwargs: null
-    startdate: '2000-01-01'
-    enddate: '2020-12-31'
+    startdate: '2001-01-01'
+    enddate: '2024-12-31'
 
 output:
   outputdir: "./"
   rebuild: true
+  save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
 

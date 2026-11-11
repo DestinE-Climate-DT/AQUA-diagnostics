@@ -20,37 +20,37 @@ datasets:
 references:
   # ---- Extent in NH ----
   - &ref_osi_nh
-    catalog: 'obs'             # mandatory
-    model: 'OSI-SAF'           # mandatory
-    exp: 'osi-saf-ssmis'        # mandatory
-    source: 'nh-monthly'       # mandatory
-    regrid: 'r100'
+    catalog: '{{ references.seaice_concentration_nh.catalog }}'  # mandatory
+    model: '{{ references.seaice_concentration_nh.model }}'  # mandatory
+    exp: '{{ references.seaice_concentration_nh.exp }}'  # mandatory
+    source: '{{ references.seaice_concentration_nh.source }}'  # mandatory
+    regrid: '{{ regrid }}'
     domain: "nh"
-    startdate: '1990-01-01'
-    enddate: '2020-12-31'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
 
   # ---- Extent in SH ----
   - &ref_osi_sh
-    catalog: 'obs'             # mandatory
-    model: 'OSI-SAF'           # mandatory
-    exp: 'osi-saf-ssmis'        # mandatory
-    source: 'sh-monthly'       # mandatory
-    regrid: 'r100'
+    catalog: '{{ references.seaice_concentration_sh.catalog }}'  # mandatory
+    model: '{{ references.seaice_concentration_sh.model }}'  # mandatory
+    exp: '{{ references.seaice_concentration_sh.exp }}'  # mandatory
+    source: '{{ references.seaice_concentration_sh.source }}'  # mandatory
+    regrid: '{{ regrid }}'
     domain: "sh"
-    startdate: '1990-01-01'
-    enddate: '2020-12-31'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
 
 # =======  Setup Configuration  =======
 setup:
-  loglevel: 'WARNING'
+  loglevel: '{{ loglevel }}'
 
 # =======  Output Configuration  =======
 output:
   outputdir: "./" # mandatory
-  rebuild: true
-  save_netcdf: true # mandatory
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }} # mandatory
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 # =======  Diagnostics Configuration  =======
 diagnostics:
@@ -60,7 +60,7 @@ diagnostics:
     run: true
     # List of methods to plot.
     methods: ["extent"]
-    # List of regions to plot. The default regions are defined in config/definitions/regions.yaml
+    # List of regions to plot. The default regions are defined in config/diagnostics/seaice
     regions: ['arctic','antarctic']
     calc_ref_std: true
     ref_std_freq: 'monthly' # set to 'monthly' 'annual'
@@ -68,14 +68,20 @@ diagnostics:
       extent: 'siconc'
 
     # ====  Update Datasets and reference entries  ====
+    # timeseries uses the timeseries-specific window (climatedt-experiment-kind.yaml),
+    # overriding the anchor's default window
     references:
     # -- OSI-SAF for "extent" in NH --
     - <<: *ref_osi_nh
       use_for_method: "extent"
+      startdate: '{{ period.timeseries.startdate }}'
+      enddate: '{{ period.timeseries.enddate }}'
 
     # -- OSI-SAF for "extent" in SH --
     - <<: *ref_osi_sh
       use_for_method: "extent"
+      startdate: '{{ period.timeseries.startdate }}'
+      enddate: '{{ period.timeseries.enddate }}'
 
   # =======  Config for seasonal cycle Sea Ice  =======
   # ===================================================

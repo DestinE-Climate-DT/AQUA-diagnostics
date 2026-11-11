@@ -160,10 +160,13 @@ A tool becomes part of a diagnostic when a **collection** configures it for a sc
 are defined in ``aqua/diagnostics/config/collections/`` and run by ``aqua analysis``
 (see :ref:`aqua_analysis`):
 
-* ``jinja/<collection>/config-<collection>-<reference>.j2``: the configurations actually run by ``aqua analysis``.
-  The dates are written as Jinja variables (``{{ default.startdate }}``) and rendered for each experiment kind.
-* ``legacy/<collection>/config-<collection>-<reference>.yaml``: the plain YAML version of the same file, with
-  fixed dates, that can be used with ``--config`` outside ``aqua analysis``.
+* ``jinja/<collection>/config-<collection>-<quantity>.j2``: the configurations actually run by ``aqua analysis``.
+  The reference datasets and the dates are written as Jinja variables (``{{ period.standard.startdate }}``)
+  and rendered for each experiment kind.
+* ``legacy/<collection>/config-<collection>-<quantity>.yaml``: the same file rendered with the ``default`` kind,
+  that can be used with ``--config`` outside ``aqua analysis``.
+
+See :ref:`analysis_collections` for the kind file and the naming of the files.
 
 To add this tool to a collection, add a ``dummy`` block to the files of that collection (same keys as above,
 with ``diagnostic_name`` set to the collection name) and register the tool under the collection in
