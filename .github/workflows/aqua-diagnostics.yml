@@ -1,6 +1,6 @@
 name: AQUA-diagnostics tests
 # Lean feature tests: ubuntu-latest, Python 3.14, FDB container (build environment only), conda-lock environment.
-# Runs on PRs labelled 'run tests', on Dependabot PRs, on push to main, or manually.
+# Runs on PRs labelled 'run tests', on Dependabot PRs, in the merge queue, on push to main, or manually.
 # 'aqua-diagnostics-tests / aqua_test (3.14)' is a required check, so it must run (not be skipped) on every Dependabot PR.
 # Dependency bumps are tested against environment.yml in aqua-diagnostics-nightly.yml, release checks live in aqua-diagnostics-release.yml.
 # This workflow uses pytest-xdist to run tests in parallel across 4 cores
@@ -13,6 +13,7 @@ on:
     # 'labeled' is not a default activity type: without it, adding the
     # "run tests" label to an open PR does not trigger this workflow.
     types: [opened, synchronize, reopened, labeled]
+  merge_group:
   workflow_dispatch:
 
 permissions:
@@ -20,13 +21,14 @@ permissions:
 
 jobs:
   aqua-diagnostics-tests:
-    # Non-PR events (listed first) always run. On PRs:
+    # Non-PR events (listed first, merge queue included) always run. On PRs:
     #  - opened/synchronize/reopened: run if the PR is from Dependabot or has the 'run tests' label
     #  - labeled: run only if the label just added is 'run tests', so that adding
     #    an unrelated label does not restart (and cancel) tests already running
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'push' ||
+      github.event_name == 'merge_group' ||
       (github.event.action != 'labeled' && (
         github.event.pull_request.user.login == 'dependabot[bot]' ||
         contains(format('|{0}', join(github.event.pull_request.labels.*.name, '|')), '|run tests'))) ||
