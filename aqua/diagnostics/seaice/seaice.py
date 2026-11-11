@@ -1,66 +1,77 @@
-"""Seaice doc"""
+"""Sea ice diagnostic: regional extent and volume series, fraction and thickness climatologies.
+
+Example:
+    seaice = SeaIce(model="IFS-NEMO", exp="historical-1990", source="lra-r100-monthly", regions=["arctic", "antarctic"])
+    seaice.run(method="extent")
+    seaice.monthly  # xr.Dataset with one variable per region: sea_ice_extent_arctic, sea_ice_extent_antarctic
+"""
 
 import xarray as xr
 
-from aqua.core.exceptions import NoDataError
-from aqua.core.fldstat import FldStat
 from aqua.core.logger import log_configure, log_history
-from aqua.core.util import merge_attrs, time_to_string, to_list
+from aqua.core.util import DEFAULT_REALIZATION, merge_attrs, time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic
-from aqua.diagnostics.seaice.util import ensure_istype
 
 xr.set_options(keep_attrs=True)
+
+# method -> default variable and units of the result
+METHODS = {
+    "extent": {"var": "siconc", "units": "million km^2"},
+    "volume": {"var": "sithick", "units": "thousands km^3"},
+    "fraction": {"var": "siconc", "units": "1"},
+    "thickness": {"var": "sithick", "units": "m"},
+}
+# methods integrated over each region; the others are monthly climatology maps
+INTEGRATED = ("extent", "volume")
 
 
 class SeaIce(Diagnostic):
     """
-    Sea ice diagnostic class for computing and analyzing sea ice metrics.
+    Sea ice metrics of one dataset over a list of regions.
 
-    This class provides methods to compute sea ice extent (million km²), volume (thousand km³),
-    fraction (dimensionless, 1) and thickness (m) over specified regions (e.g., Arctic, Antarctic).
-    It supports both time series (integrated), with options for computing standard deviations,
-    seasonal cycles, and 2D monthly climatologies.
+    ``run()`` computes one method at a time. Extent (million km^2) and volume (thousands km^3) are integrated over
+    each region: as a time series, optionally with its annual means, or as a seasonal cycle, both optionally with the
+    standard deviation needed to draw an uncertainty band. Fraction (1) and thickness (m) are monthly climatology maps.
+    Every result is a Dataset with one variable per region, named ``sea_ice_<method>_<region>``.
 
     Args:
-        model   (str): The model name.
-        exp     (str): The experiment name.
-        source  (str): The data source.
-        catalog (str, optional): The catalog name.
-        regrid  (str, optional): The regrid option.
-        startdate (str, optional): The start date for the data (format: "YYYY-MM-DD").
-        enddate   (str, optional): The end date for the data (format: "YYYY-MM-DD").
-        std_startdate (str, optional): Start date for standard deviation.
-        std_enddate   (str, optional): End date for standard deviation.
-        threshold (float, optional): Threshold for sea ice concentration over extent (default: 0.15; 15% conc).
-        regions     (list, optional): A list of regions to analyze. Default: ['arctic', 'antarctic'].
-        regions_file (str, optional): Path to YAML file defining regions definition file.
-        outputdir (str, optional): The output directory (default: './').
-        regions_definition (dict): The loaded regions definition from the YAML file.
-        loglevel     (str, optional): The logging level. Defaults to 'WARNING'.
+        model (str): The model name.
+        exp (str): The experiment name.
+        source (str): The data source.
+        catalog (str, optional): The catalog name. If None, it is determined by the Reader.
+        regrid (str, optional): The target grid for regridding. If None, no regridding is done.
+        startdate (str, optional): The start date of the analysis. If None, all data are used.
+        enddate (str, optional): The end date of the analysis. If None, all data are used.
+        std_startdate (str, optional): The start date of the standard deviation period.
+        std_enddate (str, optional): The end date of the standard deviation period.
+            If both are None, the standard deviation is computed over the analysis period.
+        regions (str or list, optional): Region names of the regions file. Default is ['arctic', 'antarctic'].
+        threshold (float, optional): Sea ice concentration above which a cell counts for the extent. Default is 0.15.
+        regions_file (str, optional): Path of a custom regions file. If None, the centralized one is used.
+        diagnostic_name (str, optional): The name used for the output files. Default is 'seaice'.
+        loglevel (str, optional): The log level. Default is 'WARNING'.
     """
 
+    # One month already gives a point of the series or a map: run() asks for 12 for the seasonal cycle
     MINIMUM_MONTHS_REQUIRED = 1
-    # 12 if seasonal cycle is requested (specified below), otherwise 1 month is enough
 
     def __init__(
         self,
         model: str,
         exp: str,
         source: str,
-        catalog=None,
-        regrid=None,
-        startdate=None,
-        enddate=None,
-        std_startdate=None,
-        std_enddate=None,
-        threshold=0.15,
-        regions=["arctic", "antarctic"],
-        regions_file=None,
-        outputdir: str = "./",
+        catalog: str = None,
+        regrid: str = None,
+        startdate: str = None,
+        enddate: str = None,
+        std_startdate: str = None,
+        std_enddate: str = None,
+        regions: list = None,
+        threshold: float = 0.15,
+        regions_file: str = None,
+        diagnostic_name: str = "seaice",
         loglevel: str = "WARNING",
     ):
-
-        self.outputdir = outputdir
         super().__init__(
             model=model,
             exp=exp,
@@ -74,543 +85,290 @@ class SeaIce(Diagnostic):
             loglevel=loglevel,
         )
         self.logger = log_configure(loglevel, "SeaIce")
-
-        # check region file and defined regions
-        self.load_regions(regions_file=regions_file, regions=regions)
-
+        self.diagnostic_name = diagnostic_name
         self.threshold = threshold
+        if (std_startdate is None) != (std_enddate is None):
+            raise ValueError("std_startdate and std_enddate must be given together")
+        # retrieve() replaces startdate/enddate with the available ones: the requested ones identify the files
+        self._requested_dates = (startdate, enddate)
 
-    def load_regions(self, regions_file=None, regions=None):
-        """
-        Loads region definitions from the centralized regions YAML and sets the selected regions.
-
-        Args:
-            regions_file (str): Full path to a custom region file. If None, the centralized
-                file is used.
-            regions (str or list of str): A region or list of region names to load. If empty
-                or None, falls back to ``["arctic", "antarctic"]``.
-        """
-        region_definitions = self._load_regions_from_file(regions_file_path=regions_file)
-        self.regions_definition = region_definitions
-
-        selected_regions = to_list(regions)
-
-        if not selected_regions:
-            selected_regions = ["arctic", "antarctic"]
-            self.logger.warning(
-                "No regions specified. Falling back to default sea-ice regions: %s",
-                selected_regions,
-            )
-
-        invalid_regions = [reg for reg in selected_regions if reg not in region_definitions]
-
-        if invalid_regions:
-            invalid_regions_str = ", ".join(str(i) for i in invalid_regions)
-            source = regions_file or "centralized regions file"
+        self.regions_file = regions_file
+        self.regions_definition = self._load_regions_from_file(regions_file_path=regions_file)
+        self.regions = to_list(regions)
+        if not self.regions:
+            self.regions = ["arctic", "antarctic"]
+            self.logger.warning("No regions specified. Falling back to default sea-ice regions: %s", self.regions)
+        invalid = [region for region in self.regions if region not in self.regions_definition]
+        if invalid:
             raise ValueError(
-                f"Invalid region name(s): [{invalid_regions_str}]. "
-                f"Please check regions names are lower case or the region file at: '{source}'."
+                f"Invalid region name(s): {invalid}. Please check regions names are lower case "
+                f"or the region file at: '{regions_file or 'centralized regions file'}'."
             )
 
-        self.regions = selected_regions
+        self.method = None
+        self.var = None
+        self._reset_results()
 
-    def compute_seaice(self, method: str = "extent", var: str = None, *args, **kwargs):
-        """
-        Execute the seaice diagnostic based on the specified method.
+    def _reset_results(self):
+        """Forget the results of a previous run."""
+        self.monthly = None
+        self.annual = None
+        self.seasonalcycle = None
+        self.climatology = None
+        self.std_monthly = None
+        self.std_annual = None
 
-        Args:
-            var (str): The variable to be used for computation. Default is 'sithick' or 'siconc'.
-            method (str): The method to compute sea ice metrics. Options are 'extent' or 'volume'.
-
-        Kwargs:
-            - threshold (float): The threshold value for which sea ice fraction is considered. Default is 0.15.
-            - reader_kwargs (dict, optional): Additional keyword arguments to pass to the Reader.
-
-        Returns:
-            xr.DataArray or xr.Dataset: The computed sea ice metric. A Dataset is returned if multiple regions are requested.
-        """
-        default_method_vars = {"extent": "siconc", "volume": "sithick", "fraction": "siconc", "thickness": "sithick"}
-
-        valid_methods = list(default_method_vars)
-
-        if method not in valid_methods:
-            raise ValueError(f"Invalid method '{method}'. Please choose from: {valid_methods}")
-
+    def _set_method(self, method: str, var: str = None):
+        """Check the method and set it with its variable."""
+        if method not in METHODS:
+            raise ValueError(f"Invalid method '{method}'. Please choose from: {list(METHODS)}")
         self.method = method
-        self.var = var or default_method_vars.get(method)
+        self.var = var or METHODS[method]["var"]
 
-        if not self.var:
-            raise ValueError(f"Variable must be specified for method '{method}'")
-
-        if self.method in ["fraction", "thickness"]:
-            return self._compute_2d_bymethod(*args, **kwargs)
-        else:
-            return self._compute_ts_bymethod(*args, **kwargs)
-
-    def _compute_ts_bymethod(
+    def run(
         self,
-        calc_std_freq: str = None,
-        get_seasonal_cycle: bool = False,
-        ts_monthly: bool = False,
-        ts_monthly_std: bool = False,
-        ts_annual: bool = False,
-        ts_annual_std: bool = False,
-        reader_kwargs: dict = {},
-    ):
-        """
-        Compute sea ice result by integrating data over specified regions.
-
-        If a standard deviation calculation frequency (`calc_std_freq`) is provided, also
-        the std deviation of the result is computed.
-        The seasonal cycle (monthly climatology) can be computed on values and std.
-
-        Args:
-            calc_std_freq (str, optional):
-                The frequency for computing the standard deviation of sea ice result across
-                time (i.e., 'monthly', 'annual') after the integration in space.
-                If None, standard deviation is not computed. Default is None.
-            get_seasonal_cycle (bool, optional):
-                If True, the output result (and standard deviation if computed) is converted into a
-                seasonal cycle i.e. a monthly climatology. Defaults to False.
-
-        Returns:
-            xr.Dataset or Tuple[xr.Dataset, xr.Dataset]:
-                - If `calc_std_freq` is None, returns a dataset containing the integrated sea ice result.
-                - If `calc_std_freq` is provided, returns a tuple containing:
-                    1. `self.result` (xr.Dataset): The computed sea ice result.
-                    2. `self.result_std` (xr.Dataset): The std deviation of sea ice result with specified frequency.
-        Notes:
-            - Standard deviation is computed across all years if `calc_std_freq` is provided.
-        """
-        months_required = 12 if get_seasonal_cycle else self.MINIMUM_MONTHS_REQUIRED
-        # retrieve data with Diagnostic method
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=months_required)
-
-        # get the sea ice masked by method
-        masked_data = self._mask_data_bymethod()
-        masked_std_data = self._mask_data_bymethod(data=self.std_data) if self.std_data is not None else None
-
-        self.monthly = ts_monthly
-        self.annual = ts_annual
-        self.monthly_std = ts_monthly_std if ts_monthly else False
-        self.annual_std = ts_annual_std if ts_annual else False
-
-        # make a list to store the result DataArrays for each region
-        regional_results = []
-        # make a list to store the standard deviation of result DataArrays for each region across all years
-        regional_results_std = [] if calc_std_freq else None
-
-        for region in self.regions:
-            # integrate the seaice masked data masked_data over the regional spatial dimension to compute sea ice result
-            seaice_result = self.integrate_seaice(masked_data, region)
-
-            # make a deepcopy to compute seasonal cycle to avoid losing time coord
-            original_si_result = seaice_result.copy(deep=True)
-
-            log_history(seaice_result, f"Method used for seaice computation: {self.method}")
-
-            if get_seasonal_cycle:
-                seaice_result = self._compute_seasonal_cycle(seaice_result)
-                log_history(seaice_result, "Data converted to seasonal means, grouped by month")
-
-            seaice_result = self.add_seaice_attrs(seaice_result, region, self.startdate, self.enddate)
-
-            regional_results.append(seaice_result)
-
-            # compute standard deviation if frequency is provided
-            if calc_std_freq is not None:
-                std_input = (
-                    self.integrate_seaice(masked_std_data, region) if masked_std_data is not None else original_si_result
-                )
-                seaice_std_result = self._calc_time_stat(std_input, stat="std", freq=calc_std_freq)
-                log_history(seaice_std_result, f"Method used for standard deviation seaice computation: {self.method}")
-
-                if masked_std_data is not None:
-                    std_period_start, std_period_end = self.std_startdate, self.std_enddate
-                else:
-                    std_period_start, std_period_end = self.startdate, self.enddate
-
-                # update attributes and history
-                seaice_std_result = self.add_seaice_attrs(
-                    seaice_std_result,
-                    region,
-                    std_period_start,
-                    std_period_end,
-                    std_flag=True,
-                )
-                self.logger.debug("Attributes updated")
-
-                regional_results_std.append(seaice_std_result)
-
-        # combine the result DataArrays into one Dataset and keep only the attributes common
-        self.result = xr.merge(regional_results, combine_attrs="drop_conflicts")
-        # propagate catalog/model/exp metadata at Dataset level for downstream plotting utilities
-        self.result.attrs.update({"AQUA_catalog": self.catalog, "AQUA_model": self.model, "AQUA_exp": self.exp})
-
-        # merge the standard deviation DataArrays if computed
-        self.result_std = xr.merge(regional_results_std, combine_attrs="drop_conflicts") if calc_std_freq else None
-        if self.result_std is not None:
-            self.result_std.attrs.update({"AQUA_catalog": self.catalog, "AQUA_model": self.model, "AQUA_exp": self.exp})
-
-        self.logger.debug("Loading data in memory")
-        self.result.load()
-        if calc_std_freq:
-            self.result_std.load()
-        self.logger.debug("Loaded data in memory")
-
-        # return a tuple if standard deviation was computed, otherwise just the result
-        return (self.result, self.result_std) if calc_std_freq else self.result
-
-    def _compute_2d_bymethod(self, reader_kwargs: dict = {}, **kwargs):
-        """
-        This method computes 2D sea ice climatology for each region.
-
-        Args:
-            reader_kwargs (dict, optional): Extra keyword arguments passed to the data reader.
-            **kwargs: Additional keyword arguments.
-                - stat (str): The statistic to compute ('mean' or 'std'). Default is 'mean'.
-                - freq (str): The frequency for grouping the data ('monthly' or 'annual'). Default is 'monthly'.
-        Returns:
-            xr.Dataset: A dataset containing the computed 2D sea ice climatologies for all requested regions.
-        """
-        stat = kwargs.get("stat", "mean")
-        freq = kwargs.get("freq", "monthly")
-
-        super().retrieve(var=self.var, reader_kwargs=reader_kwargs, months_required=self.MINIMUM_MONTHS_REQUIRED)
-        original_masked_data = self._mask_data_bymethod()
-
-        regional_2d_results = []
-
-        for region in self.regions:
-            masked_data = original_masked_data.copy(deep=True)
-
-            # get the area cells and coordinates for the masked data
-            # areacello, space_coord = self.get_area_cells_and_coords(masked_data)
-            # areacello = self.select_region_area_cell(areacello, region)
-
-            masked_data_region = self.select_region(masked_data, region=region).get("data")
-
-            if self.method in ["fraction", "thickness"]:
-                seaice_2d_result = self._calc_time_stat(masked_data_region, stat=stat, freq=freq)
-            else:
-                raise ValueError(f"Method '{self.method}' is not supported for 2D computation.")
-
-            seaice_2d_result = self.add_seaice_attrs(seaice_2d_result, region, self.startdate, self.enddate)
-
-            regional_2d_results.append(seaice_2d_result)
-
-        # combine the result DataArrays into one Dataset and keep only the attributes common
-        self.result = xr.merge(regional_2d_results, combine_attrs="drop_conflicts")
-        self.result.attrs.update({"AQUA_catalog": self.catalog, "AQUA_model": self.model, "AQUA_exp": self.exp})
-
-        self.logger.debug("Loading data in memory")
-        self.result.load()
-        self.logger.debug("Loaded data in memory")
-
-        return self.result
-
-    def _mask_data_bymethod(self, data: xr.Dataset | None = None):
-        """
-        Mask the data based on the specified method.
-
-        The case with sea ice 'extent' is calculated by applying a threshold to the sea ice concentration variable
-        and summing the masked data over the regional spatial dimension.
-
-        Returns:
-            method_masked_data (xr.DataArray): The masked data based on the specified method.
-        """
-        target_data = self.data if data is None else data
-
-        if target_data is None:
-            self.logger.error(f"Variable {self.var} not found in dataset {self.model}, {self.exp}, {self.source}")
-            raise NoDataError("Variable not found in dataset")
-
-        self.logger.debug(f"Masking data for {self.var} with method {self.method}")
-
-        if self.method == "extent":
-            method_masked_data = target_data[self.var].where(
-                (target_data[self.var] > self.threshold) & (target_data[self.var] < 1.0)
-            )
-        elif self.method == "volume":
-            method_masked_data = target_data[self.var].where((target_data[self.var] > 0) & (target_data[self.var] < 99.0))
-        else:
-            method_masked_data = target_data[self.var].copy(deep=True)
-
-        if method_masked_data is None:
-            self.logger.error(
-                f"Something wrong occurred: masked data is None. Check. "
-                f"Also check if var exist in: {self.model}, {self.exp}, {self.source}."
-            )
-            raise NoDataError("Variable not found")
-
-        return method_masked_data
-
-    def get_area_cells_and_coords(self, masked_data: xr.DataArray):
-        """
-        Get areacello and space coordinates
-
-        Args:
-            masked_data (xr.DataArray): The masked data to be checked if it is regridded or not
-
-        Returns:
-            xr.DataArray: The area grid cells (m^2).
-        """
-        if "AQUA_regridded" in masked_data.attrs:
-            self.logger.debug("Data has been regridded, using target grid area & coords")
-            areacello = self.reader.tgt_grid_area
-            space_coord = self.reader.tgt_space_coord
-        else:
-            self.logger.debug("Data has not been regridded, using source grid area & coords")
-            areacello = self.reader.src_grid_area
-            space_coord = self.reader.src_space_coord
-
-        if areacello is None:
-            areacello = self.reader.grid_area
-            space_coord = self.reader.space_coord
-
-        # get xr.DataArray with info on grid area that must be reinitialised for each region.
-        if len(areacello.data_vars) > 1:
-            self.logger.warning("Dataset 'areacello' has more than one variable. Searching for 'cell_area'")
-            areacello = areacello["cell_area"]
-        else:
-            var_name = list(areacello.data_vars)[0]
-            areacello = areacello[var_name]
-
-        return areacello, space_coord
-
-    def select_region_area_cell(self, areacello: xr.DataArray, region: str, drop: bool = True):
-        """
-        Select the area cells for a specific region based on the region definition.
-
-        Args:
-            areacello (xr.DataArray): The area cells DataArray.
-            region (str): The region for which to select the area cells.
-
-        Returns:
-            xr.DataArray: The area cells DataArray filtered by the region coordinates.
-        """
-        self.logger.debug(f"Selecting area cells for region: {region}")
-
-        if region not in self.regions_definition:
-            raise ValueError(f"Region '{region}' not found in regions definition.")
-
-        if areacello is not None:
-            ensure_istype(areacello, xr.DataArray, logger=self.logger)
-        else:
-            raise NoDataError("Area cells (areacello) is None. Cannot select region area cells.")
-
-        # make area selection flexible to lon values from -180 to 180 or from 0 to 360
-        try:
-            lonmin = round(areacello.lon.min().values / 180) * 180
-            lonmax = round(areacello.lon.max().values / 180) * 180
-        except Exception as e:
-            self.logger.error(f"An error occurred: {e}")
-
-        # regional selection with lat-lon: use default dict to set dynamic lon bounds found above, and set lat from -90 to 90
-        res_dict = self.select_region(
-            areacello,
-            region=region,
-            drop=drop,
-            default_coords={"lon_min": lonmin, "lon_max": lonmax, "lat_min": -90, "lat_max": 90},
-        )
-        areacello = res_dict["data"]
-
-        return areacello
-
-    def integrate_seaice(self, masked_data, region: str):
-        """
-        Integrate the masked data over the spatial dimension to compute sea ice metrics.
-        If method is extent / volume, divide by 1e12 to convert to million km^2 / thousand km^3.
-
-        Args:
-            masked_data (xr.DataArray): The masked data to be integrated.
-            region (str): The region for which the sea ice metric is computed.
-
-        Returns:
-            xr.DataArray: The computed sea ice metric.
-        """
-        areacello, space_coord = self.get_area_cells_and_coords(masked_data)
-        areacello = self.select_region_area_cell(areacello, region)
-
-        masked_data_region = self.select_region(masked_data, region=region).get("data")
-
-        self.logger.info(f"Computing sea ice {self.method} for {region}")
-
-        if "AQUA_regridded" in masked_data.attrs:
-            grid_name = self.reader.tgt_grid_name
-        else:
-            grid_name = self.reader.src_grid_name
-
-        si_fldstat = FldStat(area=areacello, horizontal_dims=space_coord, grid_name=grid_name, loglevel=self.loglevel)
-
-        if self.method == "extent":
-            # compute sea ice extent: exclude areas with no sea ice and sum over the spatial dimension;
-            # divide by 1e12 to convert to million km^2
-            seaice_integrated = si_fldstat.fldstat(masked_data_region.notnull(), stat="areasum", dims=space_coord) / 1e12
-        if self.method == "volume":
-            # compute sea ice volume: exclude areas with no sea ice;
-            # divide by 1e12 to convert to thousand km^3
-            seaice_integrated = si_fldstat.fldstat(masked_data_region, stat="integral", dims=space_coord) / 1e12
-
-            merge_attrs(seaice_integrated.attrs, masked_data.attrs)
-            merge_attrs(seaice_integrated.attrs, areacello.attrs, overwrite=True)
-
-        # ensure masked_data attrs are present
-        merge_attrs(seaice_integrated.attrs, masked_data_region.attrs)
-
-        # Add domain-specific sea ice attributes. This overwrites standard_name, long_name, units.
-        seaice_integrated = self.add_seaice_attrs(seaice_integrated, region)
-
-        return seaice_integrated
-
-    def _calc_time_stat(self, computed_data: xr.DataArray, freq: str = "monthly", stat: str = "std"):
-        """
-        Compute the standard deviation or mean of the data grouped by a specified time frequency (`monthly` or `annual`).
-
-        Args:
-            computed_data (xarray.DataArray):
-                The input data on which the standard deviation will be computed.
-            freq (str, optional): The time frequency for grouping before computing the time statistic:
-                - 'monthly' (computes std per month)
-                - 'annual'  (computes std per year)
-            stat (str, optional):
-                The statistic to compute. Must be one of ('std', 'mean'). Default is 'std'.
-
-        Returns:
-            xarray.DataArray: A DataArray containing the computed time statistic.
-        """
-        if freq not in ["monthly", "annual"]:
-            self.logger.warning(f"Frequency str: '{freq}' not recognized. Set to 'monthly' by default.")
-            freq = "monthly"
-
-        if stat not in ["std", "mean"]:
-            self.logger.warning(f"Statistic '{stat}' not recognized. Set to 'mean' by default.")
-            stat = "mean"
-
-        freq_dict = {"monthly": "time.month", "annual": "time.year"}
-
-        ensure_istype(computed_data, xr.DataArray, logger=self.logger)
-
-        self.logger.debug(f"Computing '{stat}' for '{freq}' frequency")
-
-        if "time" not in computed_data.dims:
-            raise ValueError(f"Cannot compute '{stat}' as 'time' dimension not present in data.")
-
-        # select time, if None, the whole time will be taken in one or both boundaries
-        # computed_data = computed_data.sel(time=slice(self.startdate, self.enddate))
-
-        if stat == "std":
-            return computed_data.groupby(freq_dict[freq]).std("time")
-        else:
-            return computed_data.groupby(freq_dict[freq]).mean("time")
-
-    def _compute_seasonal_cycle(self, monthly_data):
-        """
-        Converts monthly data into a seasonal cycle by grouping over calendar months
-        and computing the mean across the time dimension.
-
-        Args:
-            monthly_data (xarray.DataArray or list of xarray.DataArray):
-                Monthly time series data to be converted to seasonal cycles.
-                If a list is provided, the operation is applied to each item in the list.
-
-        Returns:
-            xarray.DataArray or list of xarray.DataArray:
-                The seasonal cycle(s), where each output DataArray has dimensions
-                grouped by calendar month and averaged over time. Returns
-                `None` if input is `None`.
-        """
-        if monthly_data is None:
-            return None
-
-        def _group_bymonth(arr):
-            if "time" not in arr.coords:
-                raise KeyError("Cannot compute seasonal cycle as 'time' coordinate is missing.")
-            return arr.groupby("time.month").mean("time")
-
-        return [_group_bymonth(da) for da in monthly_data] if isinstance(monthly_data, list) else _group_bymonth(monthly_data)
-
-    def add_seaice_attrs(
-        self, da_seaice_computed: xr.DataArray, region: str, startdate: str = None, enddate: str = None, std_flag=False
-    ):
-        """
-        Adds metadata attributes to a computed sea ice DataArray. This function assigns descriptive attributes
-        to an xr.DataArray representing computed sea ice (extent or volume) for a specific region and time period.
-
-        Args:
-            da_seaice_computed (xr.DataArray): The computed sea ice data to which attributes will be added.
-            region (str): The geographical region over which sea ice data is computed.
-            startdate (str, optional): The start date of the data (format "%Y-%m"). Default to None.
-            enddate (str, optional): The end date of the data (format "%Y-%m"). Default to None.
-            std_flag (bool, optional): If True, add the std computation as ``AQUA_std_startdate`` and
-                ``AQUA_std_enddate``. Defaults to False.
-
-        Returns:
-            xr.DataArray
-        """
-        ensure_istype(da_seaice_computed, xr.DataArray, logger=self.logger)
-
-        # set attributes: 'method','unit'
-        units_dict = {"extent": "million km^2", "volume": "thousands km^3", "fraction": "1", "thickness": "m"}
-
-        if self.method not in units_dict:
-            raise NoDataError("Variable not found in dataset")
-        else:
-            da_seaice_computed.attrs["units"] = units_dict.get(self.method)
-
-        da_seaice_computed.attrs["long_name"] = (
-            f"{'Std ' if std_flag else ''}Sea ice {self.method} "
-            f"{'integrated ' if self.method in ['extent', 'volume'] else ''}"
-            f"over {da_seaice_computed.attrs['AQUA_region']}"
-        )
-        da_seaice_computed.attrs["standard_name"] = f"{region}_{'std_' if std_flag else ''}sea_ice_{self.method}"
-        da_seaice_computed.attrs["AQUA_method"] = f"{self.method}"
-
-        if std_flag:
-            if startdate is not None:
-                da_seaice_computed.attrs["AQUA_std_startdate"] = f"{time_to_string(startdate, format='%Y-%m')}"
-            if enddate is not None:
-                da_seaice_computed.attrs["AQUA_std_enddate"] = f"{time_to_string(enddate, format='%Y-%m')}"
-        else:
-            if startdate is not None:
-                da_seaice_computed.attrs["AQUA_startdate"] = f"{time_to_string(startdate, format='%Y-%m')}"
-            if enddate is not None:
-                da_seaice_computed.attrs["AQUA_enddate"] = f"{time_to_string(enddate, format='%Y-%m')}"
-        da_seaice_computed.name = f"{'std_' if std_flag else ''}sea_ice_{self.method}_{region}"
-
-        time_coord = da_seaice_computed.coords.get("time", None)
-        if time_coord is not None:
-            time_coord.attrs["long_name"] = "Time"
-            time_coord.attrs.setdefault("standard_name", "time")
-
-        return da_seaice_computed
-
-    def save_netcdf(
-        self,
-        seaice_data,
-        diagnostic: str,
-        diagnostic_product: str = None,
+        method: str = "extent",
+        var: str = None,
+        seasonal_cycle: bool = False,
+        annual: bool = False,
+        std: bool = False,
+        reader_kwargs: dict = None,
+        outputdir: str = ".",
         rebuild: bool = True,
-        output_file: str = None,
-        **kwargs,
+        save_netcdf: bool = True,
     ):
         """
-        Save the computed sea ice data to a NetCDF file.
+        Retrieve the data, compute the sea ice metric and optionally save it.
+
+        Extent and volume fill ``monthly`` (and ``annual``), or ``seasonalcycle`` if requested, plus ``std_monthly``
+        (and ``std_annual``) with ``std``. Fraction and thickness fill ``climatology`` and ignore the other options.
 
         Args:
-            seaice_data (xr.DataArray or xr.Dataset): The computed sea ice metric data.
-            diagnostic (str): The diagnostic name. It is expected 'SeaIce' for this class.
-            diagnostic_product (str, optional): The diagnostic product. Can be used for namig the file more freely.
-            rebuild (bool, optional): If True, rebuild (overwrite) the NetCDF file. Default is True.
-            output_file (str, optional): The output file name.
-            **kwargs: Additional keyword arguments for saving the data.
+            method (str): One of 'extent', 'volume', 'fraction', 'thickness'. Default is 'extent'.
+            var (str, optional): The variable to use. Default is 'siconc' for extent and fraction,
+                'sithick' for volume and thickness.
+            seasonal_cycle (bool, optional): Compute the seasonal cycle instead of the time series. Default is False.
+            annual (bool, optional): Also compute the annual means of the time series, on complete years only.
+                Default is False.
+            std (bool, optional): Also compute the standard deviation, by calendar month (and of the annual means
+                with ``annual``). Default is False.
+            reader_kwargs (dict, optional): Additional keyword arguments for the Reader.
+            outputdir (str, optional): The output directory. Default is '.'.
+            rebuild (bool, optional): If True, overwrite existing files. Default is True.
+            save_netcdf (bool, optional): If True, save the results to NetCDF. Default is True.
+
+        Raises:
+            ValueError: If the method is not valid.
+            NotEnoughDataError: If less than 12 months are available for the seasonal cycle.
         """
-        # Use parent method to handle saving, including metadata
-        super().save_netcdf(
-            seaice_data,
-            diagnostic=diagnostic,
-            diagnostic_product=diagnostic_product,
-            outputdir=self.outputdir,
-            rebuild=rebuild,
-            **kwargs,
-        )
+        self._set_method(method, var)
+        self._reset_results()
+        months_required = 12 if seasonal_cycle else self.MINIMUM_MONTHS_REQUIRED
+        self.retrieve(var=self.var, reader_kwargs=reader_kwargs or {}, months_required=months_required)
+
+        if self.method not in INTEGRATED:
+            self.compute_climatology()
+        else:
+            self.compute_timeseries(annual=annual and not seasonal_cycle)
+            if std:
+                self.compute_std(annual=annual and not seasonal_cycle)
+            if seasonal_cycle:
+                self.compute_seasonalcycle()
+        if save_netcdf:
+            self.save_netcdf(outputdir=outputdir, rebuild=rebuild)
+
+    def compute_timeseries(self, annual: bool = False):
+        """
+        Integrate the sea ice over each region and store the series in self.monthly (and self.annual).
+
+        Args:
+            annual (bool, optional): Also compute the annual means of complete years. Default is False.
+        """
+        # shortcut: the series keeps the frequency of the source, which is monthly;
+        # resample here with reader.timmean when daily sources are supported
+        series = self._integrate(self.data)
+        self.monthly = self._dataset(series)
+        if annual:
+            self.annual = self._dataset(self._annual_means(series))
+
+    def compute_seasonalcycle(self):
+        """Average self.monthly by calendar month and store the cycle in self.seasonalcycle."""
+        cycle = [da.groupby("time.month").mean("time") for da in self.monthly.data_vars.values()]
+        self.seasonalcycle = self._dataset([log_history(da, "Seasonal cycle: mean by calendar month") for da in cycle])
+
+    def compute_std(self, annual: bool = False):
+        """
+        Compute the standard deviation of the integrated series and store it in self.std_monthly (and self.std_annual).
+
+        It covers the std period if std dates were given, the analysis period otherwise.
+
+        Args:
+            annual (bool, optional): Also compute the standard deviation of the annual means. Default is False.
+        """
+        if self.std_data is not None:
+            series = self._integrate(self.std_data)
+        else:
+            series = list(self.monthly.data_vars.values())
+        self.std_monthly = self._dataset([da.groupby("time.month").std("time") for da in series], std=True)
+        if annual:
+            yearly = self._annual_means(series)
+            if yearly is not None and yearly[0].time.size < 2:
+                self.logger.warning("Only one complete year: the standard deviation of the annual means is zero")
+            self.std_annual = self._dataset([da.std("time") for da in yearly] if yearly else None, std=True)
+
+    def compute_climatology(self):
+        """Compute the monthly climatology map over each region and store it in self.climatology."""
+        data = self.data[self.var]
+        maps = [
+            self.select_region(data, region=region, regions_file_path=self.regions_file)["data"]
+            .groupby("time.month")
+            .mean("time")
+            for region in self.regions
+        ]
+        self.climatology = self._dataset(maps)
+
+    def _integrate(self, data: xr.Dataset):
+        """Mask the sea ice and integrate it over each region: one series in memory per region of self.regions."""
+        var = data[self.var]
+        if self.method == "extent":
+            masked = var.where((var > self.threshold) & (var <= 1.0))  # above 1 only fill values are found
+        else:
+            masked = var.where((var > 0) & (var < 99.0))
+
+        series = []
+        for region in self.regions:
+            self.logger.info("Computing sea ice %s for %s", self.method, region)
+            # Select before notnull(): a selection inside fldarea would count the cells outside the region.
+            # to_180=False keeps the longitudes aligned with the cell areas of the Reader.
+            selected = self.select_region(
+                masked, region=region, regions_file_path=self.regions_file, drop=False, to_180=False
+            )["data"]
+            if self.method == "extent":
+                integral = self.reader.fldarea(selected.notnull()) / 1e12  # m^2 -> million km^2
+            else:
+                integral = self.reader.fldintg(selected) / 1e12  # m^3 -> thousands km^3
+            # fldarea returns the attributes of the cell areas: bring back the provenance of the data
+            merge_attrs(integral.attrs, selected.attrs)
+            series.append(log_history(integral, f"Sea ice {self.method} integrated over {region}").rename(region))
+        # one computation for all the regions: the series are small and reused by the annual means and the std
+        return list(xr.merge(series).load().data_vars.values())
+
+    def _annual_means(self, series: list):
+        """Annual means of the complete years of each series, None if there is no complete year."""
+        # with a single time step the Reader skips the completeness check
+        if series[0].time.size > 1:
+            yearly = [self.reader.timmean(da, freq="annual", exclude_incomplete=True, center_time=True) for da in series]
+            if yearly[0].time.size > 0:
+                return yearly
+        self.logger.warning("No complete year of data: annual means are not computed")
+        return None
+
+    def _dataset(self, arrays: list, std: bool = False):
+        """Name and describe the result of each region, then merge them into one Dataset loaded in memory."""
+        if arrays is None:
+            return None
+        if std and self.std_data is not None:
+            dates = {"AQUA_std_startdate": self.std_startdate, "AQUA_std_enddate": self.std_enddate}
+        elif std:
+            dates = {"AQUA_std_startdate": self.startdate, "AQUA_std_enddate": self.enddate}
+        else:
+            dates = {"AQUA_startdate": self.startdate, "AQUA_enddate": self.enddate}
+        prefix = "std_" if std else ""
+
+        for region, da in zip(self.regions, arrays):
+            da.name = f"{prefix}sea_ice_{self.method}_{region}"
+            for key in ("AQUA_startdate", "AQUA_enddate"):
+                da.attrs.pop(key, None)
+            da.attrs.update({key: time_to_string(date) for key, date in dates.items()})
+            da.attrs["units"] = METHODS[self.method]["units"]
+            da.attrs["long_name"] = (
+                f"{'Std ' if std else ''}Sea ice {self.method} "
+                f"{'integrated ' if self.method in INTEGRATED else ''}over {da.attrs['AQUA_region']}"
+            )
+            da.attrs["standard_name"] = f"{region}_{prefix}sea_ice_{self.method}"
+            da.attrs["AQUA_method"] = self.method
+            if "time" in da.coords:
+                da["time"].attrs["long_name"] = "Time"
+                da["time"].attrs.setdefault("standard_name", "time")
+
+        # the maps of different regions do not share the latitudes: keep them all
+        dataset = xr.merge(arrays, join="outer", combine_attrs="drop_conflicts")
+        dataset.attrs.update({"AQUA_catalog": self.catalog, "AQUA_model": self.model, "AQUA_exp": self.exp})
+        # the history of each region differs and is dropped by the merge: the dataset has its own
+        dataset = log_history(dataset, f"Sea ice {self.method} computed by the SeaIce diagnostic")
+        # load() looks for the requested period, which differs from the available one when retrieve() clipped it
+        for key, date in zip(("AQUA_startdate", "AQUA_enddate"), self._requested_dates):
+            if date is not None:
+                dataset.attrs[key] = time_to_string(date)
+        return dataset.load()
+
+    def _products(self, seasonal_cycle: bool) -> dict:
+        """NetCDF product of each result attribute, for the kind of run."""
+        if self.method not in INTEGRATED:
+            return {"climatology": "bias"}
+        if seasonal_cycle:
+            return {"seasonalcycle": "seasonalcycle", "std_monthly": "seasonalcycle_std"}
+        return {
+            "monthly": "timeseries",
+            "annual": "timeseries_annual",
+            "std_monthly": "timeseries_std",
+            "std_annual": "timeseries_annual_std",
+        }
+
+    def _extra_keys(self) -> dict:
+        """Filename keys of the results, shared by save_netcdf and load so that both address the same files."""
+        return {"method": self.method, "source": self.source, "regions_domain": "_".join(self.regions)}
+
+    def save_netcdf(self, outputdir: str = ".", rebuild: bool = True):
+        """
+        Save the results of the last run to NetCDF, one file per result.
+
+        Args:
+            outputdir (str, optional): The output directory. Default is '.'.
+            rebuild (bool, optional): If True, overwrite existing files. Default is True.
+        """
+        for attribute, product in self._products(self.seasonalcycle is not None).items():
+            data = getattr(self, attribute)
+            if data is not None:
+                super().save_netcdf(
+                    data=data,
+                    diagnostic=self.diagnostic_name,
+                    diagnostic_product=product,
+                    outputdir=outputdir,
+                    rebuild=rebuild,
+                    extra_keys=self._extra_keys(),
+                )
+
+    def load(
+        self,
+        method: str = "extent",
+        seasonal_cycle: bool = False,
+        outputdir: str = ".",
+        reader_kwargs: dict = None,
+    ):
+        """
+        Populate the results from the NetCDF files written by a previous run.
+
+        A missing file, or one computed over a different period, leaves its result untouched.
+
+        Args:
+            method (str): The method that was computed. Default is 'extent'.
+            seasonal_cycle (bool, optional): True if the run computed the seasonal cycle. Default is False.
+            outputdir (str, optional): The directory where the data was saved. Default is '.'.
+            reader_kwargs (dict, optional): The Reader keyword arguments of the run, to match its realization.
+        """
+        self._set_method(method)
+        self.realization = (reader_kwargs or {}).get("realization", DEFAULT_REALIZATION)
+        for attribute, product in self._products(seasonal_cycle).items():
+            # shortcut: only the analysis period is checked, not the std one;
+            # add it when the CLI plots from files
+            data = self.load_netcdf(
+                diagnostic=self.diagnostic_name,
+                diagnostic_product=product,
+                outputdir=outputdir,
+                extra_keys=self._extra_keys(),
+                startdate=self._requested_dates[0],
+                enddate=self._requested_dates[1],
+            )
+            if data is not None:
+                setattr(self, attribute, data)

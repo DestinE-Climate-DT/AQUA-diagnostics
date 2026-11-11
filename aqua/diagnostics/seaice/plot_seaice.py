@@ -1,6 +1,10 @@
-"""PlotSeaIce doc"""
+"""Plot the regional sea ice extent or volume computed by SeaIce, as time series or seasonal cycles.
 
-from collections import defaultdict
+Example:
+    plot = PlotSeaIce(monthly_models=seaice.monthly, monthly_ref=ref.monthly, monthly_std_ref=ref.std_monthly)
+    plot.plot_seaice(plot_type="timeseries")
+"""
+
 from typing import Union
 
 import matplotlib.pyplot as plt
@@ -11,41 +15,33 @@ from aqua.core.logger import log_configure
 from aqua.core.util import get_realizations, strlist_to_phrase, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
-from .util import _check_list_regions_type, defaultdict_to_dict, extract_dates, extract_std_period_dates
+from .util import _check_list_regions_type, extract_dates, extract_std_period_dates
 
 xr.set_options(keep_attrs=True)
 
 
 class PlotSeaIce:
     """
-    A class for processing and visualizing timeseries of integrated sea ice extent or volume.
-    It is designed to work with AQUA-computed outputs (from the `SeaIce` diagnostic)
-    repacking them into a unified format for easy comparison, labeling, and plotting.
+    Plot the integrated sea ice extent or volume of one or more models against reference data.
+
+    Every input is a result of ``SeaIce`` (a Dataset with one variable per region) or a list of them, all for the
+    same method. The figure has one panel per region; models, method, regions and periods are read from the
+    ``AQUA_*`` attributes of the data.
 
     Args:
-        monthly_models (xr.Dataset | list[xr.Dataset] | None, optional):
-            Monthly model datasets to be processed. Defaults to None.
-        annual_models (xr.Dataset | list[xr.Dataset] | None, optional):
-            Annual model datasets to be processed. Defaults to None.
-        monthly_ref (xr.Dataset | list[xr.Dataset] | None, optional):
-            Monthly reference datasets for comparison. Defaults to None.
-        annual_ref (xr.Dataset | list[xr.Dataset] | None, optional):
-            Annual reference datasets for comparison. Defaults to None.
-        monthly_std_ref (str, optional): Monthly standard deviation reference dataset identifier. Defaults to None.
-        annual_std_ref (str, optional): Annual standard deviation reference dataset identifier. Defaults to None.
-        model (str, optional): Name of the model associated with the dataset. Defaults to None.
-        exp (str, optional): Experiment name related to the dataset. Defaults to None.
-        source (str, optional): Source of the dataset. Defaults to None.
-        catalog (str, optional): Catalog name of the dataset. Defaults to None.
-        regions_to_plot (list, optional):
-            List of region names to be plotted (e.g., ['arctic', 'antarctic']).
-            If None, all available regions are plotted. Defaults to None.
-        outputdir (str, optional): Directory to save output plots. Defaults to './'.
-        rebuild (bool, optional): Whether to rebuild (overwrite) figure outputs if they already exist. Defaults to True.
-        (overwrite) figure outputs if exists. (list, optional):
-            List of keys to include in the output filenames. If None, all keys are included. Defaults to None.
-        dpi (int, optional): Resolution of saved figures (dots per inch). Defaults to 300.
-        loglevel (str, optional): Logging level for debugging and information messages. Defaults to 'WARNING'.
+        monthly_models (xr.Dataset | list[xr.Dataset], optional): Monthly series, or seasonal cycles, of the models.
+        annual_models (xr.Dataset | list[xr.Dataset], optional): Annual means of the models.
+        monthly_ref (xr.Dataset | list[xr.Dataset], optional): Monthly series, or seasonal cycles, of the references.
+        annual_ref (xr.Dataset | list[xr.Dataset], optional): Annual means of the references.
+        monthly_std_ref (xr.Dataset | list[xr.Dataset], optional): Standard deviation of the references by month.
+        annual_std_ref (xr.Dataset | list[xr.Dataset], optional): Standard deviation of the annual reference means.
+        regions_to_plot (list, optional): Region long names to plot (e.g. ['Arctic', 'Antarctic']).
+            If None, all the regions of the data are plotted.
+        diagnostic_name (str, optional): The name used for the output files. Default is 'seaice'.
+        outputdir (str, optional): Directory to save output plots. Default is './'.
+        rebuild (bool, optional): Whether to overwrite existing figures. Default is True.
+        dpi (int, optional): Resolution of saved figures. Default is 300.
+        loglevel (str, optional): Logging level. Default is 'WARNING'.
     """
 
     def __init__(
@@ -54,501 +50,187 @@ class PlotSeaIce:
         annual_models=None,
         monthly_ref=None,
         annual_ref=None,
-        monthly_std_ref: str = None,
-        annual_std_ref: str = None,
-        model: str = None,
-        exp: str = None,
-        source: str = None,
-        catalog: str = None,
-        regions_to_plot: list = ["Arctic", "Antarctic"],  # this is a list of strings with the region names to plot
+        monthly_std_ref=None,
+        annual_std_ref=None,
+        regions_to_plot: list = None,
+        diagnostic_name: str = "seaice",
         outputdir="./",
         rebuild=True,
-        filename_keys=None,  # List of keys to keep in the filename. Default is None, which includes all keys.
         dpi=300,
         loglevel="WARNING",
     ):
-
-        # logging setup
         self.loglevel = loglevel
         self.logger = log_configure(log_level=self.loglevel, log_name="PlotSeaIce")
 
-        self.model = model
-        self.exp = exp
-        self.source = source
-        self.catalog = catalog
+        # kind of data -> list of Datasets; the None entries of a list (a missing dataset) are skipped
+        inputs = {
+            "monthly_models": monthly_models,
+            "annual_models": annual_models,
+            "monthly_ref": monthly_ref,
+            "annual_ref": annual_ref,
+            "monthly_std_ref": monthly_std_ref,
+            "annual_std_ref": annual_std_ref,
+        }
+        self.data = {kind: [ds for ds in to_list(value) if ds is not None] for kind, value in inputs.items()}
 
-        # If not explicitly provided, get catalog/model/exp from first monthly model dataset
-        datasets = self._check_as_datasets_list(monthly_models) or []
-        first_ds = next((ds for ds in datasets if ds is not None), None)
-        if isinstance(first_ds, xr.Dataset):
-            attrs = first_ds.attrs
-            if self.catalog is None:
-                self.catalog = attrs.get("AQUA_catalog")
-            if self.model is None:
-                self.model = attrs.get("AQUA_model")
-            if self.exp is None:
-                self.exp = attrs.get("AQUA_exp")
+        if regions_to_plot is not None:
+            regions_to_plot = _check_list_regions_type(regions_to_plot, logger=self.logger)
+        self.regions_to_plot = regions_to_plot
 
-        self.realizations = get_realizations(monthly_models)  # TO BE UPDATED when also annual analysis will be implemented
-
-        self.regions_to_plot = _check_list_regions_type(regions_to_plot, logger=self.logger)
-
-        # define and check data types
-        self.repacked_dict = self.repack_datasetlists(
-            monthly_models=monthly_models,
-            annual_models=annual_models,
-            monthly_ref=monthly_ref,
-            annual_ref=annual_ref,
-            monthly_std_ref=monthly_std_ref,
-            annual_std_ref=annual_std_ref,
-        )
-        # Output & saving settings
+        self.diagnostic_name = diagnostic_name
         self.outputdir = outputdir
         self.rebuild = rebuild
         self.dpi = dpi
 
-    def _check_as_datasets_list(self, datain) -> list[xr.Dataset | None]:
-        """Check that the input (`datain`) is either:
-            - A single `xarray.Dataset` (which is converted into a list).
-            - A list of `xarray.Dataset` objects (which may contain None values).
-            - `None` (which is returned as is).
-        Args:
-            datain (xr.Dataset | list[xr.Dataset] | None): The input dataset(s) to check.
+    def _region_data(self, kind: str, region: str):
+        """Variables of a region among the datasets of one kind, None if there are none."""
+        data = [da for ds in self.data[kind] for da in ds.data_vars.values() if da.attrs["AQUA_region"] == region]
+        return data or None
+
+    @staticmethod
+    def _label(data: xr.DataArray) -> str:
+        """Legend label of a dataset: model and experiment."""
+        return " ".join(str(data.attrs[key]) for key in ("AQUA_model", "AQUA_exp") if key in data.attrs)
+
+    def set_description(self, plot_type: str, method: str, regions: list) -> str:
         """
-        if datain is None:
-            return datain
-        elif isinstance(datain, xr.Dataset):
-            return [datain]
-        elif isinstance(datain, list):
-            if not all((ds is None or isinstance(ds, xr.Dataset)) for ds in datain):
-                raise ValueError("All elements of the list must be xarray.Dataset instances or None.")
-            return datain
+        Build the caption of the figure from the attributes of the data.
+
+        Args:
+            plot_type (str): 'timeseries' or 'seasonalcycle'.
+            method (str): The sea ice method plotted.
+            regions (list): The regions plotted.
+
+        Returns:
+            str: The caption.
+        """
+        kind = "Seasonal cycle of " if plot_type == "seasonalcycle" else "Time series of "
+        regions_str = f"{strlist_to_phrase(regions)} region{'s' if len(regions) != 1 else ''} "
+
+        # models and std cover the same period in every region: read it from the last one
+        models = self._region_data("monthly_models", regions[-1]) or []
+        models_str = strlist_to_phrase([f"{self._label(da)} (from {' to '.join(extract_dates(da))})" for da in models])
+
+        # one reference per region: the same dataset is mentioned once
+        refs = []
+        for region in regions:
+            for da in self._region_data("monthly_ref", region) or []:
+                ref = f"{self._label(da)} (from {' to '.join(extract_dates(da))})".strip()
+                if ref not in refs:
+                    refs.append(ref)
+        if not refs:
+            refs_str = ""
+        elif len(refs) == 1:
+            refs_str = f" {refs[0]} is used as a reference."
+        elif len(refs) == 2:
+            refs_str = f" {refs[0]} and {refs[1]} are used as reference data for the respective regions."
         else:
-            raise ValueError(f"Invalid type: {type(datain)}. Expected xr.Dataset, list of xr.Dataset, or None.")
+            refs_str = f" {strlist_to_phrase(refs, oxford_comma=True)} are used as references."
 
-    def _get_region_name_in_datarray(self, da: xr.DataArray) -> str:
-        """
-        Get the region variable from the dataset or derive it from the variable name.
+        std = self._region_data("monthly_std_ref", regions[-1])
+        std_str = ""
+        if std:
+            std_str = f" Shaded areas represent ±2σ uncertainty bands (from {' to '.join(extract_std_period_dates(std[0]))})."
 
-        Args:
-            da (xr.DataArray): The data array to get the region name from.
-
-        Returns:
-            str: The region name.
-        """
-        if da is None:
-            self.logger.error("DataArray is None. Cannot determine region without a valid DataArray.")
-            raise KeyError("DataArray is None. Cannot determine region without a valid DataArray.")
-
-        region = da.attrs.get("AQUA_region")
-
-        # check if 'region' exists as an attribute of da
-        if region:
-            return region
-        else:
-            self.logger.warning("Region name attr not found. Try to get this from last part of xr.dataVariable name")
-            var_name = da.name if da.name is not None else ""
-
-            if var_name:
-                region_from_name = var_name.split("_")[-1].capitalize()
-                return region_from_name
-            else:
-                errmsg = (
-                    f"Dataset {da.attrs.get('name', 'Unnamed Dataset')} has no 'region' attribute "
-                    f"and region could not be derived from the variable name."
-                )
-                self.logger.error(errmsg)
-                raise KeyError(errmsg)
-
-    def repack_datasetlists(self, **kwargs) -> dict:
-        """
-        Repack input datasets into a nested dictionary organized by method and region.
-
-        The output dictionary is structured as::
-
-            { method: { region: { str_data: [list of data arrays] }}}
-
-        where:
-
-        - 'method' is extracted from the dataset attributes (defaulting to "Unknown").
-        - 'region' is determined by self._get_region(dataset, data_var).
-        - 'str_data' is the keyword with the data in input, and each value is a
-          list of data arrays corresponding to that keyword.
-
-        Args:
-            **kwargs (dict): Keyword arguments, where each str_data is linked to
-                the kwargs in plot_timeseries() and each value is a list of xr.Dataset objects.
-
-        Returns:
-            dict: A nested dict containing the repacked data arrays.
-        """
-        # initialize repacked_defdict as a nested defaultdict with following structure:
-        # method -> region -> str_data -> list of data arrays (can be of size one)
-        repacked_defdict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-
-        for str_data, dataset_list in kwargs.items():
-            # normalize the input to a list of datasets (or None)
-            dataset_list = self._check_as_datasets_list(dataset_list)
-
-            # if the list is None, skip to the next str_data
-            if dataset_list is None:
-                continue
-
-            for dataset in dataset_list:
-                if dataset is None:
-                    self.logger.warning("Warning: Found dataset as None in dataset_list during repacking data, skipping...")
-                    continue
-
-                method = dataset.attrs.get("AQUA_method", "Unknown")
-
-                # process each data variable in the dataset
-                for var_name, data_array in dataset.data_vars.items():
-                    data_array.name = data_array.name or var_name
-
-                    # validate the region for the current data variable
-                    region = self._get_region_name_in_datarray(data_array)
-
-                    if self.regions_to_plot and (region not in self.regions_to_plot):
-                        # if region is not in regions_to_plot, record as None
-                        continue
-                    else:
-                        # in the nested defaultdicts an empty list is configured by default, thus directly append
-                        repacked_defdict[method][region][str_data].append(data_array)
-
-        # convert the nested defaultdicts to plain dictionaries recursively
-        repacked_dict = defaultdict_to_dict(repacked_defdict)
-
-        self.logger.info("Sea ice data repacked")
-        return repacked_dict
-
-    def _gen_str_from_attributes(self, datain: xr.DataArray | None) -> str:
-        """
-        Generate a string from the attributes of the input data.
-
-        Args:
-            datain (xr.DataArray): The data array to generate a string from.
-
-        Returns:
-            str: The string generated from the attributes of the input data.
-        """
-        if datain is None:
-            return None
-
-        required_attrs = ["AQUA_model", "AQUA_exp"]
-        missing_attrs = [attr for attr in required_attrs if attr not in datain.attrs]
-
-        if missing_attrs:
-            self.logger.warning(f"These dataset global attrs is missing: {', '.join(missing_attrs)}.")
-
-        # join the strs to make label
-        return " ".join(str(datain.attrs[attr]) for attr in required_attrs if attr in datain.attrs)
-
-    def _gen_labelname(self, datain: xr.DataArray | list[xr.DataArray] | None) -> str | list[str] | None:
-        """Extract 'model', 'exp', 'source', and 'catalog' from attributes in input data and
-           generate a label or list of labels for each xr.dataArray to be used in the legend plot.
-
-        Args:
-            datain (xr.DataArray | list[xr.DataArray] | None):
-                - A single xr.DataArray: Generates a label from its attributes.
-                - A list of xr.DataArray: Generates a list of labels for each data array.
-                - None: Returns None.
-
-        Returns:
-            str | list[str] | None:
-                - A single string if datain is a single xarray.DataArray.
-                - A list of strings if datain is a list of xarray.DataArray objects.
-                - None if datain is None.
-        """
-        if datain is None:
-            return None
-        if isinstance(datain, xr.DataArray):
-            return self._gen_str_from_attributes(datain)
-        if isinstance(datain, list) and all(isinstance(da, xr.DataArray) for da in datain):
-            return [self._gen_str_from_attributes(da) for da in datain]
-
-    def _getdata_fromdict(self, data_dict: dict, dkey: str) -> xr.DataArray | list[xr.DataArray] | None:
-        """Retrieves data from a dictionary and returns either None, a single DataArray or a list of them
-
-        Args:
-            data_dict (dict): Dictionary containing the data (list of xr.DataArray or single xr.DataArray or None)
-            dkey (str): The key to retrieve data from data_dict
-
-        Returns:
-            - A single xr.DataArray if the list contains only one element (reference data case)
-            - A list of xr.DataArray if multiple elements are found (model data case)
-            - `None` if the key is missing or the value is not a valid list of xr.DataArray
-        """
-        values = data_dict.get(dkey, None)
-
-        if isinstance(values, xr.DataArray):
-            return values
-
-        if isinstance(values, list):
-            valid_values = [v for v in values if v is not None]
-
-            if not valid_values:
-                self.logger.error(f"No valid DataArrays found for key: {dkey}")
-                return None
-
-            if all(isinstance(v, xr.DataArray) for v in valid_values):
-                return valid_values[0] if len(valid_values) == 1 else valid_values
-
-            self.logger.error(f"Some elements in {dkey} are not DataArrays")
-
-        self.logger.info(f"Returning 'None' for key: {dkey}")
-        return None
-
-    def _update_description(self, method, region, data_dict):
-        """
-        Create the caption description from attributes returning the updated string
-
-        Args:
-            method (str): The method used to compute the data.
-            region (str): The region to plot.
-            data_dict (dict): The data dictionary.
-        """
-        # initialise string if _description doesn't exist
-        if not hasattr(self, "_description"):
-            self._description = ""
-
-        # generate dynamic string for regions
-        if not hasattr(self, "regions"):
-            self.regions = []
-        if region not in self.regions:
-            self.regions.append(region)
-
-        regions_phrase = strlist_to_phrase(self.regions)
-        self.region_str = f"{regions_phrase} region{'s' if len(self.regions) != 1 else ''} "
-
-        # generate dynamic string for model data
-        if hasattr(self, "data_labels") and self.data_labels:
-            # remove duplicates while keeping order
-            unique_labels = list(dict.fromkeys(self.data_labels))
-
-            # extract model data from current dictionary
-            model_data_dict = self._getdata_fromdict(data_dict, "monthly_models")
-
-            # Build per-model date string
-            model_startdate_list = []
-            if isinstance(model_data_dict, xr.DataArray):
-                stdate, endate = extract_dates(model_data_dict)
-                model_startdate_list = [f"{label} (from {stdate} to {endate})" for label in unique_labels]
-            elif isinstance(model_data_dict, list):
-                for model_data in model_data_dict:
-                    stdate, endate = extract_dates(model_data)
-                    model_startdate_list.extend([f"{label} (from {stdate} to {endate})" for label in unique_labels])
-
-            # build the model data string
-            self.model_labels_str = f"{strlist_to_phrase(model_startdate_list)} "
-        else:
-            self.model_labels_str = ""
-
-        # generate dynamic string for reference data
-        monthly_ref_data = self._getdata_fromdict(data_dict, "monthly_ref")
-        if monthly_ref_data is not None:
-            if not hasattr(self, "ref_label_list"):
-                self.ref_label_list = []
-
-            if isinstance(monthly_ref_data, xr.DataArray):
-                label = self._gen_labelname(monthly_ref_data)
-                stdate, endate = extract_dates(monthly_ref_data)
-                ref_detail = f"{label} (from {stdate} to {endate})" if label else f"(from {stdate} to {endate})"
-                if ref_detail not in self.ref_label_list:
-                    self.ref_label_list.append(ref_detail)
-            elif isinstance(monthly_ref_data, list):
-                for ref_da in monthly_ref_data:
-                    label = self._gen_labelname(ref_da)
-                    stdate, endate = extract_dates(ref_da)
-                    ref_detail = f"{label} (from {stdate} to {endate})" if label else f"(from {stdate} to {endate})"
-                    if ref_detail not in self.ref_label_list:
-                        self.ref_label_list.append(ref_detail)
-
-            # check ref list
-            if len(self.ref_label_list) == 1:
-                self.ref_label_str = f" {self.ref_label_list[0]} is used as a reference."
-            elif len(self.ref_label_list) == 2:
-                self.ref_label_str = (
-                    f" {self.ref_label_list[0]} and {self.ref_label_list[1]} "
-                    f"are used as reference data for the respective regions."
-                )
-            else:
-                ref_labels_str = ", ".join(self.ref_label_list[:-1]) + f", and {self.ref_label_list[-1]}"
-                self.ref_label_str = f" {ref_labels_str} are used as references."
-        else:
-            self.ref_label_str = ""
-
-        # generate string for reference std data
-        if hasattr(self, "std_label") and self.std_label:
-            sdtdata = self._getdata_fromdict(data_dict, "monthly_std_ref")
-            std_sdate, std_edate = extract_std_period_dates(sdtdata[0])
-            self.std_label_str = f" Shaded areas represent ±2σ uncertainty bands (from {std_sdate} to {std_edate})."
-        else:
-            self.std_label_str = ""
-
-        # generate plot type name
-        if hasattr(self, "plot_type") and self.plot_type:
-            if self.plot_type == "seasonalcycle":
-                pl_type = "Seasonal cycle of "
-            elif self.plot_type == "timeseries":
-                pl_type = "Time series of "
-            else:
-                pl_type = ""
-
-        # finally build the string caption (dynamically)
-        self._description = ("{}sea ice {} integrated over {}for {}{}{}").format(
-            pl_type, method, self.region_str, self.model_labels_str, self.ref_label_str, self.std_label_str
-        )
-
-    def regions_type_plotter(self, region_dict, style, **kwargs):
-        """
-        Loops over each region in region_dict and plots data either as a timeseries or a seasonal cycle
-        depending on plot_type attribute.
-
-        Args:
-            region_dict (dict): Dictionary of regions and their associated data.
-            style (str): Graphic style of the plot.
-            **kwargs (dict): Additional keyword arguments passed on to the underlying plotting function.
-
-        Returns:
-            (fig, axes) : tuple. The figure and axes objects.
-        """
-        ConfigStyle(style=style, loglevel=self.loglevel)
-
-        self.num_regions = len(region_dict)
-
-        fig_height = 6 if self.plot_type == "seasonalcycle" else 10
-
-        fig, axes = plt.subplots(nrows=self.num_regions, ncols=1, figsize=(fig_height, 4 * self.num_regions), squeeze=False)
-        axes = axes.flatten()
-
-        self.logger.debug("Start looping over sea ice regions")
-
-        for region_idx, (ax, (region, data_dict)) in enumerate(zip(axes, region_dict.items())):
-            self.logger.info(f"Processing {self.plot_type} for region: {region}")
-
-            monthly_models = self._getdata_fromdict(data_dict, "monthly_models")
-            annual_models = self._getdata_fromdict(data_dict, "annual_models")
-            monthly_ref = self._getdata_fromdict(data_dict, "monthly_ref")
-            annual_ref = self._getdata_fromdict(data_dict, "annual_ref")
-            monthly_std = self._getdata_fromdict(data_dict, "monthly_std_ref")
-            annual_std = self._getdata_fromdict(data_dict, "annual_std_ref")
-
-            # create labels
-            if monthly_models is not None:
-                self.data_labels = [self._gen_labelname(da) for da in monthly_models]
-            else:
-                self.data_labels = None
-            self.ref_label = self._gen_labelname(monthly_ref)
-            self.std_label = self._gen_labelname(monthly_std)
-
-            # call the appropriate plotting function
-            if self.plot_type == "timeseries":
-                fig, ax = plot_timeseries(
-                    monthly_data=monthly_models,
-                    annual_data=annual_models,
-                    ref_monthly_data=monthly_ref,
-                    ref_annual_data=annual_ref,
-                    std_monthly_data=monthly_std,
-                    std_annual_data=annual_std,
-                    data_labels=self.data_labels,
-                    ref_label=self.ref_label,
-                    style=style,
-                    fig=fig,
-                    ax=ax,
-                    **kwargs,
-                )
-
-            elif self.plot_type == "seasonalcycle":
-                fig, ax = plot_seasonalcycle(
-                    data=monthly_models,
-                    ref_data=monthly_ref,
-                    std_data=monthly_std,
-                    data_labels=self.data_labels,
-                    ref_label=self.ref_label,
-                    style=style,
-                    fig=fig,
-                    ax=ax,
-                    **kwargs,
-                )
-            else:
-                raise ValueError(f"Unknown plot_type function name: {self.plot_type}")
-
-            self._update_description(self.method, region, data_dict)
-
-            title = TitleBuilder(diagnostic=f"Sea ice {self.method}", regions=region).generate()
-            ax.set_title(title)
-
-        return fig, axes
+        return f"{kind}sea ice {method} integrated over {regions_str}for {models_str} {refs_str}{std_str}"
 
     def plot_seaice(
-        self, plot_type: str = "timeseries", save_format: Union[str, list] = SAVE_FORMAT, style: str = None, **kwargs
+        self,
+        plot_type: str = "timeseries",
+        save_format: Union[str, list] = SAVE_FORMAT,
+        style: str = None,
+        show: bool = False,
+        **kwargs,
     ):
         """
-        Plot sea ice data for each region, either as timeseries or seasonal cycle.
+        Plot the sea ice data of each region, either as time series or as seasonal cycle, and save the figure.
 
         Args:
-            plot_type (str, optional): Type of plot to generate.
-                Options are `'timeseries'` or `'seasonalcycle'`. Default is `'timeseries'`.
+            plot_type (str, optional): 'timeseries' or 'seasonalcycle'. Default is 'timeseries'.
             save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
-            style (str, optional): Override the plotting style. Default to None (which will get
-                the style from config file or fallback to'aqua').
-            **kwargs: Additional keyword arguments passed to the region-specific plotting function.
+            style (str, optional): Plotting style. Default is the one of the configuration file.
+            show (bool, optional): If True, display the figure instead of closing it. Default is False.
+            **kwargs: Additional keyword arguments passed to the plotting function.
+
+        Raises:
+            ValueError: If the plot type is not valid.
         """
-        self.plot_type = plot_type
-        self.logger.info(f"Plotting sea ice {self.plot_type}")
+        if plot_type not in ("timeseries", "seasonalcycle"):
+            raise ValueError("Invalid plot_type. Allowed plots are: ['timeseries', 'seasonalcycle']")
 
-        valid_type_plots = ["timeseries", "seasonalcycle"]
+        models = self.data["monthly_models"]
+        # regions in order of appearance in the data
+        arrays = [da for datasets in self.data.values() for ds in datasets for da in ds.data_vars.values()]
+        regions = list(dict.fromkeys(da.attrs["AQUA_region"] for da in arrays))
+        if self.regions_to_plot:
+            regions = [region for region in regions if region in self.regions_to_plot]
+        if not models or not regions:
+            self.logger.warning("No model data for the requested regions: nothing to plot")
+            return
+        method = models[0].attrs.get("AQUA_method", "Unknown")
+        self.logger.info("Plotting sea ice %s %s for %s", method, plot_type, regions)
 
-        if self.plot_type not in valid_type_plots:
-            raise ValueError(f"Invalid plot_type. Allowed plots are: {valid_type_plots}")
+        ConfigStyle(style=style, loglevel=self.loglevel)
+        width = 6 if plot_type == "seasonalcycle" else 10
+        fig, axes = plt.subplots(nrows=len(regions), ncols=1, figsize=(width, 4 * len(regions)), squeeze=False)
 
-        for method, region_dict in self.repacked_dict.items():
-            self.method = method
-            self.logger.info(f"Processing method: {self.method}")
+        for ax, region in zip(axes.flatten(), regions):
+            data = self._region_data("monthly_models", region)
+            ref = self._region_data("monthly_ref", region)
+            std = self._region_data("monthly_std_ref", region)
+            data_labels = [self._label(da) for da in data] if data else None
 
-            # plot per-region using loop on the same fig
-            fig, axes = self.regions_type_plotter(region_dict, style, **kwargs)
+            if plot_type == "timeseries":
+                plot_timeseries(
+                    monthly_data=data,
+                    annual_data=self._region_data("annual_models", region),
+                    ref_monthly_data=ref,
+                    ref_annual_data=self._region_data("annual_ref", region),
+                    std_monthly_data=std,
+                    std_annual_data=self._region_data("annual_std_ref", region),
+                    data_labels=data_labels,
+                    ref_label=[self._label(da) for da in ref] if ref else None,
+                    style=style,
+                    fig=fig,
+                    ax=ax,
+                    **kwargs,
+                )
+            else:
+                # plot_seasonalcycle draws one reference
+                plot_seasonalcycle(
+                    data=data,
+                    ref_data=ref[0] if ref else None,
+                    std_data=std[0] if std else None,
+                    data_labels=data_labels,
+                    ref_label=self._label(ref[0]) if ref else None,
+                    style=style,
+                    fig=fig,
+                    ax=ax,
+                    **kwargs,
+                )
+            ax.set_title(TitleBuilder(diagnostic=f"Sea ice {method}", regions=region).generate())
 
-            plt.tight_layout()
-            self.logger.info(f"Plotting of all regions for method '{self.method}' completed")
+        plt.tight_layout()
 
-            metadata = {"Description": self._description}
-            self.logger.debug(f"Description: {self._description}")
-
-            self.save_fig(fig, save_format, metadata=metadata, region_dict=region_dict)
-
-    def save_fig(self, fig, save_format: Union[str, list] = SAVE_FORMAT, metadata: dict = None, region_dict: dict = None):
-        """
-        Save a matplotlib figure in the specified format(s) with associated metadata.
-
-        Args:
-            fig (matplotlib.figure.Figure): The figure object to be saved.
-            save_format (str or list, optional): Format(s) to save the figure. Default is SAVE_FORMAT.
-            metadata (dict, optional): Metadata such as description to be saved. Defaults to None.
-            region_dict (dict, optional): Dictionary of regions plotted. Used to generate output filename. Defaults to None.
-        """
         if save_format:
-            self.logger.debug("Saving figure as format(s): %s", ", ".join(to_list(save_format)))
             outputsaver = OutputSaver(
-                diagnostic="seaice",
-                catalog=self.catalog,
-                model=self.model,
-                exp=self.exp,
-                loglevel=self.loglevel,
+                diagnostic=self.diagnostic_name,
+                catalog=[ds.attrs.get("AQUA_catalog") for ds in models],
+                model=[ds.attrs.get("AQUA_model") for ds in models],
+                exp=[ds.attrs.get("AQUA_exp") for ds in models],
+                realization=get_realizations(models),
                 outputdir=self.outputdir,
-                realization=self.realizations,
+                loglevel=self.loglevel,
             )
-
-            diagnostic_product = self.plot_type
-
-            extra_keys = {"method": self.method, "region": "_".join(region_dict.keys())}
-
             outputsaver.save_figure(
                 fig=fig,
-                diagnostic_product=diagnostic_product,
-                metadata=metadata,
+                diagnostic_product=plot_type,
+                extra_keys={"method": method, "region": "_".join(regions)},
+                metadata={"Description": self.set_description(plot_type, method, regions)},
                 rebuild=self.rebuild,
-                extra_keys=extra_keys,
                 extension=save_format,
                 dpi=self.dpi,
             )
+        if show:
+            plt.show()
+        plt.close(fig)
