@@ -40,12 +40,17 @@ dependencies = [
     "dask",
     "distributed",
     "ecmean>=0.2.2",
+    "filelock",
+    "geopandas",
     "matplotlib",
     "numpy",
     "pandas",
     "pillow",
+    "pooch",
     "pypdf",
+    "regionmask",
     "scipy",
+    "shapely>=2.1",
     "xarray"
 ]
 
@@ -76,7 +81,7 @@ tests = [
 ]
 style = [
     "pre-commit",
-    "ruff==0.17.2"
+    "ruff==0.17.3"
 ]
 # minimal = [
 #     "aqua-diagnostics[core]"

@@ -28,6 +28,9 @@ dist/
 *.pdf
 *.svg
 
+# polygons of the regions file
+aqua/diagnostics/config/definitions/regions/
+
 # tests
 AQUA_tests/
 AQUA_testsv*

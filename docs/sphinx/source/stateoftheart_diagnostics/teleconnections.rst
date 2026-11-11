@@ -113,8 +113,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/teleconnections
-    python cli_teleconnections.py --config <path_to_config_file>
+    python -m aqua.diagnostics.teleconnections.cli_teleconnections --config <path_to_config_file>
 
 Three configuration files are provided and run when executing the aqua-analysis (see :ref:`aqua_analysis`).
 Two configuration files are for atmospheric and oceanic teleconnections.
