@@ -1,249 +1,171 @@
-import glob
+"""Tests of Plot2DSeaIce on the sea ice climatologies of the FESOM test data (1991-1994, regridded to r100)."""
+
 import os
 
+import cartopy.crs as ccrs
 import numpy as np
 import pytest
 import xarray as xr
 
 from aqua.diagnostics import Plot2DSeaIce, SeaIce
-from tests.shared_constants import APPROX_REL, DPI, LOGLEVEL
-
-approx_rel = APPROX_REL
-loglevel = LOGLEVEL
+from aqua.diagnostics.base import OutputSaver
+from tests.shared_constants import DPI, LOGLEVEL
 
 # pytestmark groups tests that run sequentially on the same worker to avoid conflicts
 # These tests use setup_class with shared resources (data fetching, tmp files)
 pytestmark = [pytest.mark.diagnostics, pytest.mark.xdist_group(name="diagnostic_setup_class")]
 
+PERIOD = "(from 1991-01 to 1994-12)"
+
+
+def climatology(regions, method, offset=0.0, model=None):
+    """Climatology of the test dataset; with an offset and another model name it stands for a reference."""
+    seaice = SeaIce(
+        catalog="ci",
+        model="FESOM",
+        exp="hpz3",
+        source="monthly-2d",
+        regions=regions,
+        startdate="1991-01-01",
+        enddate="2000-01-01",
+        regrid="r100",
+        loglevel=LOGLEVEL,
+    )
+    seaice.run(method=method, save_netcdf=False)
+    result = seaice.climatology + offset
+    for name in result.data_vars:
+        result[name].attrs["AQUA_model"] = model or "FESOM"
+    return result
+
 
 class TestPlot2DSeaIce:
     @classmethod
     def setup_class(cls):
-        cls.catalog = "ci"
-        cls.model = "FESOM"
-        cls.exp = "hpz3"
-        cls.source = "monthly-2d"
-        cls.regions = ["arctic", "antarctic"]
-        cls.loglevel = "warning"
-        cls.startdate = "1991-01-01"
-        cls.enddate = "2000-01-01"
-        cls.regrid = "r100"
+        # the model has both regions in one dataset, the references one hemisphere each, as in the CLI
+        cls.frac_model = climatology(["arctic", "antarctic"], "fraction")
+        cls.frac_ref = [climatology([region], "fraction", 0.1, "OBS") for region in ("arctic", "antarctic")]
+        cls.thick_model = climatology(["arctic", "antarctic"], "thickness")
+        cls.thick_ref_arctic = climatology(["arctic"], "thickness", 0.5, "OBS")
 
-        # Initialize sea ice objects
-        cls.seaice = SeaIce(
-            catalog=cls.catalog,
-            model=cls.model,
-            exp=cls.exp,
-            source=cls.source,
-            startdate=cls.startdate,
-            enddate=cls.enddate,
-            regions=cls.regions,
-            regrid=cls.regrid,
-            loglevel=cls.loglevel,
+    @pytest.fixture
+    def saved(self, monkeypatch):
+        """The calls to OutputSaver.save_figure, captured instead of writing files."""
+        calls = []
+
+        def fake_save_figure(self, fig, diagnostic_product, **kwargs):
+            calls.append({"saver": self, "fig": fig, "diagnostic_product": diagnostic_product, **kwargs})
+
+        monkeypatch.setattr(OutputSaver, "save_figure", fake_save_figure)
+        return calls
+
+    def test_fraction_bias_figures(self, saved):
+        """One figure per region: a row of reference, model and difference maps for each month."""
+        p2d = Plot2DSeaIce(ref=self.frac_ref, models=self.frac_model, dpi=DPI)
+        assert p2d.regions_to_plot == ["Arctic", "Antarctic"]
+        p2d.plot_2d_seaice(method="fraction", months=[3, 9], plot_ref_contour=True, save_format=["png"])
+
+        assert [call["extra_keys"] for call in saved] == [
+            {"method": "fraction", "region": "Arctic"},
+            {"method": "fraction", "region": "Antarctic"},
+        ]
+        arctic, antarctic = saved
+        assert arctic["diagnostic_product"] == "bias"
+        assert (arctic["saver"].model, arctic["saver"].model_ref, arctic["saver"].exp_ref) == ("FESOM", "OBS", "hpz3")
+        assert arctic["metadata"]["Description"] == (
+            "Climatology and differences against the reference dataset for sea ice fraction in the Arctic region. "
+            f"Model data is FESOM, experiment hpz3 {PERIOD}. Reference dataset is OBS, experiment hpz3 {PERIOD}. "
+            "The red contour line represents where the sea ice fraction is equal to 0.2."
         )
 
-        cls.frac_model = cls.seaice.compute_seaice(method="fraction", var="siconc")
-        cls.thick_model_ds = cls.seaice.compute_seaice(method="thickness", var="siconc")
+        fig = arctic["fig"]
+        assert [sub.get_suptitle() for sub in fig.subfigs] == [
+            "Sea ice fraction in Arctic Month: March",
+            "Sea ice fraction in Arctic Month: September",
+        ]
+        maps = [ax for ax in fig.axes if hasattr(ax, "projection")]
+        assert [ax.get_title() for ax in maps[:3]] == [" OBS hpz3", " FESOM hpz3", " FESOM -  OBS"]
+        assert len(maps) == 6 and len(fig.axes) == 12  # every map has its colorbar
+        # each figure looks at the pole of its region: the model alone, which holds both, would not tell which
+        assert maps[0].projection.proj4_params["lat_0"] == pytest.approx(89.5)
+        assert antarctic["fig"].axes[0].projection.proj4_params["lat_0"] == pytest.approx(-89.5)
 
-        # Use FESOM data as reference but add a small constant to avoid skipping the bias plot
-        # this should be changed in the future with proper data (e.g. ORAS5)
-        cls.frac_ref_arctic = cls.frac_model.copy()
-        cls.frac_ref_antarctic = cls.frac_model.copy()
+    def test_thickness_bias_skips_region_without_reference(self, saved):
+        """Thickness maps are drawn for the Arctic only when the Antarctic has no reference."""
+        p2d = Plot2DSeaIce(ref=self.thick_ref_arctic, models=self.thick_model, dpi=DPI)
+        p2d.plot_2d_seaice(method="thickness", months=[3], save_format="png")
 
-        # Add constant bias to create difference for plotting
-        bias_constant_fraction = 0.1
-        bias_constant_thickness = 0.5
+        assert [call["extra_keys"]["region"] for call in saved] == ["Arctic"]
+        fig = saved[0]["fig"]
+        assert "contour" not in saved[0]["metadata"]["Description"]
+        colorbars = [ax for ax in fig.axes if not hasattr(ax, "projection")]
+        assert [ax.get_ylabel() for ax in colorbars] == ["Sea-ice thickness [m]"] * 3
 
-        # For fraction data - add bias to each data variable in the dataset
-        for var_name in cls.frac_ref_arctic.data_vars:
-            cls.frac_ref_arctic[var_name] = cls.frac_ref_arctic[var_name] + bias_constant_fraction
-        for var_name in cls.frac_ref_antarctic.data_vars:
-            cls.frac_ref_antarctic[var_name] = cls.frac_ref_antarctic[var_name] + bias_constant_fraction
-
-        # For thickness data - add bias to each data variable in the dataset
-        cls.thick_ref_arctic = cls.thick_model_ds.copy()
-        cls.thick_ref_antarctic = cls.thick_model_ds.copy()
-
-        for var_name in cls.thick_ref_arctic.data_vars:
-            cls.thick_ref_arctic[var_name] = cls.thick_ref_arctic[var_name] + bias_constant_thickness
-        for var_name in cls.thick_ref_antarctic.data_vars:
-            cls.thick_ref_antarctic[var_name] = cls.thick_ref_antarctic[var_name] + bias_constant_thickness
-
-        cls.p2d = Plot2DSeaIce(loglevel=loglevel, dpi=DPI)
-
-        cls.projkw = {"projname": "orthographic", "projpars": {"central_longitude": 0.0, "central_latitude": "max_lat_signed"}}
-
-        cls.projkw_extent = {
-            "projpars": {"central_longitude": 0.0, "central_latitude": "max_lat_signed"},
-            "extent_regions": {"Arctic": [-180, 180, 50, 90], "Antarctic": [-180, 180, -50, -90]},
-            "projname": "azimuthal_equidistant",
-        }
-
-    def test_handle_data_rejects_invalid_types(self):
-        with pytest.raises(TypeError):
-            self.p2d._handle_data("string")
-
-        with pytest.raises(TypeError):
-            self.p2d._handle_data(123)
-
-    def test_handle_data_accepts_dataset_or_dataarray(self):
-        out = self.p2d._handle_data(self.frac_model)
-        assert isinstance(out, list)
-        assert out and isinstance(out[0], xr.DataArray)
-
-    def test_mask_ice_at_mid_lats_fraction(self):
-        """Test masking helper for fraction method."""
-        lat = xr.DataArray(np.linspace(-90, 90, 181), dims="lat")
-        lon = xr.DataArray(np.linspace(0, 359, 360), dims="lon")
-        data = xr.DataArray(
-            np.random.rand(181, 360),
-            coords={"lat": lat, "lon": lon},
-            dims=("lat", "lon"),
-            attrs={"AQUA_method": "fraction", "AQUA_region": "arctic"},
+    def test_azimuthal_view_is_cut_to_the_hemisphere_of_the_region(self, saved, monkeypatch):
+        """The circular window must follow the pole of the region plotted, not always the Arctic one."""
+        windows = []
+        monkeypatch.setattr(
+            "aqua.diagnostics.seaice.plot_2d_seaice.apply_circular_window",
+            lambda ax, extent: windows.append(extent),
         )
-        self.p2d.method = "fraction"
-        masked = self.p2d._mask_ice_at_mid_lats(data)
+        p2d = Plot2DSeaIce(ref=self.frac_ref, models=self.frac_model, regions_to_plot=["Antarctic"], dpi=DPI)
+        p2d.plot_2d_seaice(method="fraction", months=[9], projection="azimuthal_equidistant", save_format="png")
 
-        # For fraction, mid-latitudes are overwritten with zeros (no NaNs)
-        mids = masked.where((lat >= -45) & (lat <= 40), drop=True)
-        assert not mids.isnull().any()
-
-    def test_mask_ice_at_mid_lats_thickness(self):
-        """Test masking helper for thickness method."""
-        lat = xr.DataArray(np.linspace(-90, 90, 181), dims="lat")
-        lon = xr.DataArray(np.linspace(0, 359, 360), dims="lon")
-        data = xr.DataArray(
-            np.random.rand(181, 360),
-            coords={"lat": lat, "lon": lon},
-            dims=("lat", "lon"),
-            attrs={"AQUA_method": "thickness", "AQUA_region": "arctic"},
-        )
-        self.p2d.method = "thickness"
-        masked = self.p2d._mask_ice_at_mid_lats(data)
-
-        # Mid-latitudes and tiny thickness values should be turned to NaN
-        assert masked.sel(lat=0.0, method="nearest").isnull().all()
-
-    def test_plot_fraction_var(self):
-        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic], models=self.frac_model, dpi=DPI)
-
-        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, plot_ref_contour=True, save_format=[])
-
-    def test_plot_fraction_bias(self):
-        p2d = Plot2DSeaIce(ref=[self.frac_ref_antarctic, self.frac_ref_arctic], models=self.frac_model, dpi=DPI)
-
-        p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent, plot_ref_contour=True, save_format=[])
-
-    def test_plot_thickness_var(self):
-        p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic], models=self.thick_model_ds, dpi=DPI)
-
-        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, plot_ref_contour=True, save_format=[])
-
-    def test_plot_thickness_bias(self):
-        p2d = Plot2DSeaIce(ref=[self.thick_ref_antarctic, self.thick_ref_arctic], models=self.thick_model_ds, dpi=DPI)
-
-        p2d.plot_2d_seaice(plot_type="bias", projkw=self.projkw_extent, plot_ref_contour=True, save_format=[])
-
-    def test_bad_months_raise_value_error(self):
-        p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
-        with pytest.raises(ValueError):
-            p2d.plot_2d_seaice(months=[0], projkw=self.projkw, save_format=[])
-
-    def test_bad_months_raise_type_error(self):
-        p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
-        with pytest.raises(TypeError):
-            p2d.plot_2d_seaice(months=["Feb"], projkw=self.projkw, save_format=[])
-
-    def test_detect_common_regions_auto_detection(self):
-        """Test automatic region detection without specifying regions_to_plot."""
-        p2d = Plot2DSeaIce(
-            ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
-            models=self.frac_model,
-            regions_to_plot=None,  # This triggers _detect_common_regions
-            loglevel=loglevel,
-            dpi=DPI,
-        )
-
-        assert p2d.regions_to_plot is not None
-        assert len(p2d.regions_to_plot) > 0
-
-        # Should detect both arctic and antarctic regions
-        assert "arctic" in p2d.regions_to_plot or "Arctic" in p2d.regions_to_plot
-        assert "antarctic" in p2d.regions_to_plot or "Antarctic" in p2d.regions_to_plot
-
-    def test_get_cmap_fraction(self):
-        """Test colormap generation for fraction method."""
-        p2d = Plot2DSeaIce(models=self.frac_model, loglevel=loglevel, dpi=DPI)
-        p2d.method = "fraction"
-
-        # Get a sample data array
-        sample_data = self.frac_model[0] if isinstance(self.frac_model, list) else self.frac_model
-        cmap_dict = p2d._get_cmap(sample_data)
-
-        assert "colormap" in cmap_dict
-        assert cmap_dict["norm"] is None  # fraction uses default normalization
-        assert cmap_dict["boundaries"] is None
-
-    def test_get_cmap_thickness(self):
-        """Test colormap generation for thickness method."""
-        p2d = Plot2DSeaIce(models=self.frac_model, loglevel=loglevel, dpi=DPI)
-        p2d.method = "thickness"
-
-        # Get a sample data array
-        sample_data = self.frac_model[0] if isinstance(self.frac_model, list) else self.frac_model
-        cmap_dict = p2d._get_cmap(sample_data)
-
-        assert "colormap" in cmap_dict
-        assert cmap_dict["norm"] is not None  # thickness uses BoundaryNorm
-        assert cmap_dict["boundaries"] is not None
-        assert len(cmap_dict["boundaries"]) > 0
-
-    def test_set_projpars_function_registry(self):
-        """Test projection parameter processing with function registry."""
-        p2d = Plot2DSeaIce(models=self.frac_model, loglevel=loglevel)
-
-        # Set up test data with known lat values
-        test_data = self.frac_model[0] if isinstance(self.frac_model, list) else self.frac_model
-
-        p2d.projpars = {"central_longitude": 0.0, "central_latitude": "max_lat_signed"}
-
-        # Mock the data to have known lat values
-        p2d.reg_ref = [test_data]
-
-        result = p2d._set_projpars()
-
-        assert "central_latitude" in result
-        assert isinstance(result["central_latitude"], (int, float))
-
-        # Test with invalid function name
-        p2d.projpars = {"central_latitude": "invalid_function_name"}
-
-        result = p2d._set_projpars()
-        assert "central_latitude" not in result  # Invalid function should be skipped
-
-    def test_bad_plot_type_raises(self):
-        p2d = Plot2DSeaIce(models=self.frac_model, dpi=DPI)
-        with pytest.raises(ValueError):
-            p2d.plot_2d_seaice(plot_type="invalid_plot_type", projkw=self.projkw, save_format=[])
-
-    def test_bad_method_raises(self):
-        p2d = Plot2DSeaIce(models=self.frac_model)
-        with pytest.raises(ValueError):
-            p2d.plot_2d_seaice(method="invalid_method", projkw=self.projkw, save_format=[])
+        assert isinstance(saved[0]["fig"].axes[0].projection, ccrs.AzimuthalEquidistant)
+        assert windows and all(extent == [-180, 180, -50, -90] for extent in windows)
 
     def test_plot_saves_outputs(self, tmp_path):
+        """The file is named after model and reference, method and region."""
         p2d = Plot2DSeaIce(
-            ref=[self.frac_ref_antarctic, self.frac_ref_arctic],
-            models=self.frac_model,
-            outputdir=str(tmp_path),
-            loglevel="INFO",
-            dpi=DPI,
+            ref=self.frac_ref, models=self.frac_model, regions_to_plot=["Arctic"], outputdir=str(tmp_path), dpi=DPI
         )
+        p2d.plot_2d_seaice(method="fraction", months=[3], save_format=["png", "pdf"])
 
-        p2d.plot_2d_seaice(plot_type="var", projkw=self.projkw, save_format=["png", "pdf"], months=[3])
+        name = "seaice.bias.ci.FESOM.hpz3.r1.OBS.hpz3.fraction.arctic"
+        assert os.path.isfile(tmp_path / "png" / f"{name}.png")
+        assert os.path.isfile(tmp_path / "pdf" / f"{name}.pdf")
 
-        png_files = glob.glob(os.path.join(str(tmp_path), "**/*.png"), recursive=True)
-        pdf_files = glob.glob(os.path.join(str(tmp_path), "**/*.pdf"), recursive=True)
+    def test_invalid_input_data_raises(self):
+        """Only Datasets and DataArrays can be plotted."""
+        with pytest.raises(TypeError, match="Unsupported type"):
+            Plot2DSeaIce(models="string")
+        with pytest.raises(TypeError, match="Unsupported type"):
+            Plot2DSeaIce(models=[self.frac_model, 123])
 
-        assert len(png_files) > 0, "No PNG file saved."
-        assert len(pdf_files) > 0, "No PDF file saved."
+    def test_bad_months_raise(self):
+        """Months are integers from 1 to 12."""
+        p2d = Plot2DSeaIce(ref=self.frac_ref, models=self.frac_model, dpi=DPI)
+        with pytest.raises(ValueError, match="Invalid month value"):
+            p2d.plot_2d_seaice(months=[0], save_format=[])
+        with pytest.raises(TypeError):
+            p2d.plot_2d_seaice(months=["Feb"], save_format=[])
+
+    def test_bad_method_raises(self):
+        """Only fraction and thickness have maps."""
+        p2d = Plot2DSeaIce(ref=self.frac_ref, models=self.frac_model)
+        with pytest.raises(ValueError, match="Unsupported method"):
+            p2d.plot_2d_seaice(method="extent", save_format=[])
+
+    def test_missing_reference_raises(self):
+        """The difference maps cannot be drawn without a reference."""
+        with pytest.raises(ValueError, match="Missing models or reference data"):
+            Plot2DSeaIce(models=self.frac_model).plot_2d_seaice(method="fraction", save_format=[])
+
+    def test_removed_arguments_raise(self):
+        """The arguments of the previous interface are not silently swallowed by the map options."""
+        p2d = Plot2DSeaIce(ref=self.frac_ref, models=self.frac_model)
+        with pytest.raises(TypeError, match="plot_type"):
+            p2d.plot_2d_seaice(plot_type="var", save_format=[])
+        with pytest.raises(TypeError, match="projkw"):
+            p2d.plot_2d_seaice(projkw={"projname": "orthographic"}, save_format=[])
+
+    @pytest.mark.parametrize(("method", "expected"), [("fraction", [0.0, 0.0, 0.5]), ("thickness", [np.nan, np.nan, 0.5])])
+    def test_mask_ice_at_mid_lats(self, method, expected):
+        """Mid latitudes are filled with zero fraction, or left without thickness, whatever the data say there."""
+        data = xr.DataArray(
+            [[np.nan], [0.3], [0.5]],
+            coords={"lat": [-30.0, 20.0, 80.0], "lon": [0.0]},
+            dims=("lat", "lon"),
+        )
+        p2d = Plot2DSeaIce(loglevel=LOGLEVEL)
+        p2d.method = method
+        np.testing.assert_array_equal(p2d._mask_ice_at_mid_lats(data).values[:, 0], expected)
