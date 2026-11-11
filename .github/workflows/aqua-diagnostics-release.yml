@@ -55,7 +55,7 @@ jobs:
 
   report-failure:
     needs: aqua-diagnostics-release-tests
-    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.aqua-diagnostics-release-tests.result == 'failure' }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && (needs.aqua-diagnostics-release-tests.result == 'failure' || needs.aqua-diagnostics-release-tests.result == 'success') }}
     permissions:
       contents: read
       actions: read
@@ -63,3 +63,4 @@ jobs:
     uses: DestinE-Climate-DT/AQUA/.github/workflows/report-failure-reusable.yml@main
     with:
       test-name: Release
+      result: ${{ needs.aqua-diagnostics-release-tests.result }}
