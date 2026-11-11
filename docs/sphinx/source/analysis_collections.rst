@@ -97,6 +97,53 @@ The kind name is also passed to the jinja files as ``kind``. This name is reserv
     The HighResMIP kinds do this with a YAML anchor shared by the three blocks.
     Lists (e.g. ``output.save_format``) are replaced as a whole, not merged.
 
+.. _analysis_collections_which_kind:
+
+Which kind to use for each Climate DT experiment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Choose the kind from the type of experiment and from the CMIP generation of its forcing:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30 40
+
+   * - Experiment
+     - Kind
+     - Reference datasets and period
+   * - Historical, CMIP6 forcing
+     - ``climatedt-hist-cmip6``
+     - Default references, 1990-2014 (radiation 2001-2024)
+   * - Historical, CMIP7 forcing
+     - ``climatedt-hist-cmip7``
+     - Default references, 1990-2025 (radiation 2001-2025)
+   * - Control (fixed forcing)
+     - ``default``
+     - Default references, 1990-2014 (radiation 2001-2024)
+   * - Projection (SSP), CMIP6 forcing
+     - ``climatedt-projections-cmip6``
+     - Maps as historical CMIP6; timeseries 2000-2024
+   * - Projection (SSP), CMIP7 forcing
+     - ``climatedt-projections-cmip7``
+     - Maps 1990-2025; timeseries 2000-2025
+   * - HighResMIP historical (from 1950), CMIP6 forcing
+     - ``highresmip-hist-cmip6``
+     - 1950-2014; satellite-era references replaced by ERA5
+   * - HighResMIP historical (from 1950), CMIP7 forcing
+     - ``highresmip-hist-cmip7``
+     - 1950-2025; satellite-era references replaced by ERA5
+   * - Storyline (nudged hist, cont and warmer-world runs)
+     - ``storyline``
+     - 2017-2025, OSI-SAF AMSR sea ice
+
+The kind is passed with ``aqua analysis --kind <kind>`` (see :ref:`aqua_analysis`) or, for the dashboard runs,
+in the ``kind`` column of the experiment list file of aqua-core (``cli/aqua-web/aqua-web.experiment.list``).
+``default`` is used when no kind is given.
+A kind that is not in the file (e.g. a typo, or the removed ``scenario``) stops the analysis with an error
+listing the available kinds, instead of silently running with the wrong reference period.
+For an experiment that does not fit any row, ask the AQUA team before adding a new kind to the file.
+When a kind is added or changed in ``climatedt-experiment-kind.yaml``, update this table too.
+
 Jinja files
 ^^^^^^^^^^^
 

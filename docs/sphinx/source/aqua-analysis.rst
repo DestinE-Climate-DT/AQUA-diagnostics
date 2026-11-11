@@ -68,7 +68,7 @@ so that the script can be used in a batch job or in a workflow. These override c
 
     The experiment kind used to fill the jinja templates of the diagnostics configuration
     (e.g. ``climatedt-hist-cmip6``, ``highresmip-hist-cmip7``). If not specified, the ``default`` kind is used.
-    See :ref:`analysis_collections`.
+    See :ref:`analysis_collections`, and :ref:`analysis_collections_which_kind` for the kind of each Climate DT experiment.
 
 .. option:: --realization <realization>
 
