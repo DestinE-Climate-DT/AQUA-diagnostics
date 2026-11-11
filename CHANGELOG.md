@@ -10,6 +10,7 @@ Main changes:
 
 Complete list:
 - Remove module-level `xr.set_options(keep_attrs=True)` calls from tools and the `new-aqua-diagnostic` skeleton, which silently changed xarray's global state on import; xarray already keeps attrs by default (#566).
+- CI: the AQUA-diagnostics tests workflow also runs on `merge_group` events, so its required check reports in the merge queue.
 - Agents: split instructions into a small `AGENTS.md` entry point reading AQUA's shared `AGENTS.common.md` directly from GitHub and local diagnostics-specific `AGENTS.repo.md`; AQUA common rules take precedence and stricter materialisation timing remains local to diagnostics (#562).
 - Skill: new `new-aqua-diagnostic` skill (`.claude/skills/new-aqua-diagnostic/`), the open choices to settle before starting and a tested skeleton tool (analysis class, plot class with optional reference, CLI, config template, tests, `.rst` page); `AGENTS.md` points to it (#527)
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
