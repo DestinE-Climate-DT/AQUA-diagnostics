@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- CI: the labeled run that Dependabot starts when opening its PR also runs the tests, so a skipped run no longer hides the passed required check and blocks the PR (#573)
 - Agents: split instructions into a small `AGENTS.md` entry point reading AQUA's shared `AGENTS.common.md` directly from GitHub and local diagnostics-specific `AGENTS.repo.md`; AQUA common rules take precedence and stricter materialisation timing remains local to diagnostics (#562).
 - Skill: new `new-aqua-diagnostic` skill (`.claude/skills/new-aqua-diagnostic/`), the open choices to settle before starting and a tested skeleton tool (analysis class, plot class with optional reference, CLI, config template, tests, `.rst` page); `AGENTS.md` points to it (#527)
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
