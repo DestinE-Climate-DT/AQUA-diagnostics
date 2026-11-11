@@ -2,7 +2,6 @@
 
 import os
 
-import cartopy.crs as ccrs
 import numpy as np
 import pytest
 import xarray as xr
@@ -100,18 +99,17 @@ class TestPlot2DSeaIce:
         colorbars = [ax for ax in fig.axes if not hasattr(ax, "projection")]
         assert [ax.get_ylabel() for ax in colorbars] == ["Sea-ice thickness [m]"] * 3
 
-    def test_azimuthal_view_is_cut_to_the_hemisphere_of_the_region(self, saved, monkeypatch):
-        """The circular window must follow the pole of the region plotted, not always the Arctic one."""
-        windows = []
-        monkeypatch.setattr(
-            "aqua.diagnostics.seaice.plot_2d_seaice.apply_circular_window",
-            lambda ax, extent: windows.append(extent),
-        )
-        p2d = Plot2DSeaIce(ref=self.frac_ref, models=self.frac_model, regions_to_plot=["Antarctic"], dpi=DPI)
-        p2d.plot_2d_seaice(method="fraction", months=[9], projection="azimuthal_equidistant", save_format="png")
+    @pytest.mark.parametrize(("region", "pole"), [("Arctic", 90), ("Antarctic", -90)])
+    def test_azimuthal_view_is_a_disc_around_the_pole(self, saved, region, pole):
+        """The maps are centred on the pole of the region and reach 50 degrees of latitude in its hemisphere."""
+        p2d = Plot2DSeaIce(ref=self.frac_ref, models=self.frac_model, regions_to_plot=[region], dpi=DPI)
+        p2d.plot_2d_seaice(method="fraction", months=[3], projection="azimuthal_equidistant", save_format="png")
 
-        assert isinstance(saved[0]["fig"].axes[0].projection, ccrs.AzimuthalEquidistant)
-        assert windows and all(extent == [-180, 180, -50, -90] for extent in windows)
+        ax = saved[0]["fig"].axes[0]
+        assert ax.projection.proj4_params["lat_0"] == pole
+        # 40 degrees of meridian (about 111.3 km each) on both sides of the pole: a centre off the pole
+        # collapsed the Arctic maps to a line, the window of the other hemisphere would be 3.5 times wider
+        assert np.diff(ax.get_xlim())[0] == pytest.approx(2 * 40 * 111.3e3, rel=0.01)
 
     def test_plot_saves_outputs(self, tmp_path):
         """The file is named after model and reference, method and region."""

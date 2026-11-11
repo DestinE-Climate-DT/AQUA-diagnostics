@@ -162,6 +162,9 @@ class Plot2DSeaIce:
         # centred on the last latitude of the reference towards its pole: the model, merged with
         # the regions of the other hemisphere, covers both
         central_latitude = max(ref["lat"].values, key=abs)
+        if projection == "azimuthal_equidistant":
+            # the circular window needs the exact pole: around 89.5 degrees the Arctic extent collapses to a line
+            central_latitude = 90.0 if central_latitude > 0 else -90.0
         proj = get_projection(projection, central_longitude=0.0, central_latitude=central_latitude)
         fig = plt.figure(figsize=(3 * 5.1, len(self.months) * 4.8))
         subfigs = fig.subfigures(nrows=len(self.months), ncols=1, squeeze=False).flatten()
