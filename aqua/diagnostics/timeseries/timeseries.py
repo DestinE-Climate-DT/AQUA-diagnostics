@@ -1,12 +1,8 @@
 """Timeseries class for retrieve and netcdf saving of a single experiment"""
 
-import xarray as xr
-
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, to_list
 
 from .base import BaseMixin
-
-xr.set_options(keep_attrs=True)
 
 
 class Timeseries(BaseMixin):

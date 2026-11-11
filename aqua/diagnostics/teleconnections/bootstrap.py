@@ -7,8 +7,6 @@ import xarray as xr
 
 from aqua.core.logger import log_configure
 
-xr.set_options(keep_attrs=True)
-
 
 def bootstrap_teleconnections(
     telec_model,

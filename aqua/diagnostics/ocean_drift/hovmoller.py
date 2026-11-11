@@ -10,8 +10,6 @@ from aqua.core.util import DEFAULT_REALIZATION, to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
-xr.set_options(keep_attrs=True)
-
 
 class Hovmoller(Diagnostic):
     """A class for generating Hovmoller diagrams from ocean model data.

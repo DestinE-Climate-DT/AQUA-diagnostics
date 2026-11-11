@@ -9,8 +9,6 @@ from aqua.diagnostics.base import Diagnostic
 
 from .util import handle_pressure_level
 
-xr.set_options(keep_attrs=True)
-
 
 class Climatology(Diagnostic):
     """
