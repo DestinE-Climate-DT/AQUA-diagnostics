@@ -88,7 +88,7 @@ def main(argv=None):
     region = None
 
     # Single reference
-    if "references" in cli.config_dict:
+    if cli.config_dict.get("references"):
         ref = cli.config_dict.get("references")
         first_ref = ref[0]
         catalog_ref = get_arg(args, "catalog", first_ref["catalog"])

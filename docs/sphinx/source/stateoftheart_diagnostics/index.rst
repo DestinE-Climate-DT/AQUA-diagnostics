@@ -70,6 +70,7 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
 
 * ``references``: a list of reference datasets to use for the analysis.
   Some diagnostics may not work with multiple references, it is better to specify it in the documentation and in the configuration file.
+  It can be left empty, or ignored altogether with ``setup.no_reference``, to run without any reference dataset.
 
 .. code-block:: yaml
 
@@ -80,6 +81,20 @@ See :ref:`configuration-file-guidelines` for an example of diagnostic specific b
         source: monthly
         regrid: null
         reader_kwargs: null # it can be a dictionary with reader kwargs
+
+* ``setup``: a block for general settings. It contains:
+
+    * ``loglevel``: the logging level, overridden by ``--loglevel``.
+    * ``no_reference``: a boolean that, if ``true``, makes the diagnostic ignore any configured reference
+      dataset, as if ``references`` were empty. Default is ``false``. Useful when no observational data is
+      available, or when comparing against it has no scientific meaning. Can also be set with the shared
+      ``--no-reference`` CLI argument, which takes precedence. See :ref:`diagnostics-cli-arguments`.
+
+.. code-block:: yaml
+
+    setup:
+      loglevel: WARNING
+      no_reference: false
 
 * ``output``: a block describing the details of the output. It contains:
 
@@ -184,6 +199,8 @@ The following command line arguments are available for all the diagnostics:
 - ``--startdate``: Start date (``YYYY-MM-DD``).
 - ``--enddate``: End date (``YYYY-MM-DD``).
 - ``--outputdir``: Output directory for the plots.
+- ``--no-reference``: Ignore any reference/observational dataset, even if configured. Default is ``false``.
+  Equivalent to setting ``setup.no_reference: true`` in the config file.
 - ``--reader_kwargs``: Additional Reader kwargs as a JSON object, merged into the first dataset's
   ``reader_kwargs`` (CLI values take precedence over the config file on matching keys). For example:
 
