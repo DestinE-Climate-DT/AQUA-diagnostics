@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- CI: the Conda, PyPI, nightly and release workflows call the aqua-core failure report also on success and pass the test result, so a passing scheduled run closes the open failure issue of that suite (#574)
 - DiagnosticCLI: a `Profiler` logger reports wall time, CPU time, maximum memory and dask graph size of each tool, and the memory of the dask cluster when used, at the end of the run (#558)
 - CI: the labeled run that Dependabot starts when opening its PR also runs the tests, so a skipped run no longer hides the passed required check and blocks the PR (#573)
 - CI: the AQUA-diagnostics tests workflow also runs on `merge_group` events, so its required check reports in the merge queue.
