@@ -1,9 +1,4 @@
-"""Plot maps of the sea ice fraction or thickness climatology computed by SeaIce against a reference.
-
-Example:
-    plot = Plot2DSeaIce(models=seaice.climatology, ref=[ref_nh.climatology, ref_sh.climatology])
-    plot.plot_2d_seaice(method="fraction", months=[3, 9], plot_ref_contour=True)
-"""
+"""Plot maps of the sea ice fraction or thickness climatology computed by SeaIce against a reference"""
 
 import cartopy.crs as ccrs
 import matplotlib.colors as mcolors
@@ -123,6 +118,7 @@ class Plot2DSeaIce:
         self.method = method
         if not self.models or not self.ref:
             raise ValueError("Missing models or reference data")
+            
         # before the first figure exists: the maps set the style only when they are drawn,
         # after titles and frames of the first row have taken the matplotlib defaults
         ConfigStyle(style=kwargs.get("style"), loglevel=self.loglevel)
@@ -134,6 +130,7 @@ class Plot2DSeaIce:
                 self.logger.error("Both model and reference data are needed for the maps. Skipping %s", region)
                 continue
             self.logger.info("Plotting region: %s", region)
+
             for model in models:
                 fig, description = self._plot_bias_map(ref[0], model, projection, plot_ref_contour, **kwargs)
                 self._save_plots(
@@ -198,6 +195,7 @@ class Plot2DSeaIce:
                     **kwargs,
                 )
                 self._add_colorbar(fig, data, ax=ax, norm=setup["norm"], boundaries=setup["boundaries"], **cbar_kwargs)
+
                 if plot_ref_contour and ax is axs[1]:
                     # before the title: xarray gives the axis a title of its own
                     self._plot_reference_contour(ax, ref.sel(month=month), **kwargs)

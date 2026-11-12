@@ -1,9 +1,4 @@
-"""Plot the regional sea ice extent or volume computed by SeaIce, as time series or seasonal cycles.
-
-Example:
-    plot = PlotSeaIce(monthly_models=seaice.monthly, monthly_ref=ref.monthly, monthly_std_ref=ref.std_monthly)
-    plot.plot_seaice(plot_type="timeseries")
-"""
+"""Plot the regional sea ice extent or volume computed by SeaIce, as time series or seasonal cycles"""
 
 from typing import Union
 
@@ -62,7 +57,7 @@ class PlotSeaIce:
         self.loglevel = loglevel
         self.logger = log_configure(log_level=self.loglevel, log_name="PlotSeaIce")
 
-        # kind of data -> list of Datasets; the None entries of a list (a missing dataset) are skipped
+        # input_name of data (is a list of Datasets); the None entries of a list (a missing dataset) are skipped
         inputs = {
             "monthly_models": monthly_models,
             "annual_models": annual_models,
@@ -71,7 +66,7 @@ class PlotSeaIce:
             "monthly_std_ref": monthly_std_ref,
             "annual_std_ref": annual_std_ref,
         }
-        self.data = {kind: [ds for ds in to_list(value) if ds is not None] for kind, value in inputs.items()}
+        self.data = {input_name: [ds for ds in to_list(value) if ds is not None] for input_name, value in inputs.items()}
 
         if regions_to_plot is not None:
             regions_to_plot = _check_list_regions_type(regions_to_plot, logger=self.logger)
@@ -82,9 +77,9 @@ class PlotSeaIce:
         self.rebuild = rebuild
         self.dpi = dpi
 
-    def _region_data(self, kind: str, region: str):
-        """Variables of a region among the datasets of one kind, None if there are none."""
-        data = [da for ds in self.data[kind] for da in ds.data_vars.values() if da.attrs["AQUA_region"] == region]
+    def _region_data(self, input_name: str, region: str):
+        """Variables of a region among the datasets of one input_name, None if there are none."""
+        data = [da for ds in self.data[input_name] for da in ds.data_vars.values() if da.attrs["AQUA_region"] == region]
         return data or None
 
     @staticmethod
@@ -104,7 +99,7 @@ class PlotSeaIce:
         Returns:
             str: The caption.
         """
-        kind = "Seasonal cycle of " if plot_type == "seasonalcycle" else "Time series of "
+        input_name = "Seasonal cycle of " if plot_type == "seasonalcycle" else "Time series of "
         regions_str = f"{strlist_to_phrase(regions)} region{'s' if len(regions) != 1 else ''} "
 
         # models and std cover the same period in every region: read it from the last one
@@ -132,7 +127,7 @@ class PlotSeaIce:
         if std:
             std_str = f" Shaded areas represent ±2σ uncertainty bands (from {' to '.join(extract_std_period_dates(std[0]))})."
 
-        return f"{kind}sea ice {method} integrated over {regions_str}for {models_str} {refs_str}{std_str}"
+        return f"{input_name}sea ice {method} integrated over {regions_str}for {models_str} {refs_str}{std_str}"
 
     def plot_seaice(
         self,

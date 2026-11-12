@@ -1,10 +1,4 @@
-"""Sea ice diagnostic: regional extent and volume series, fraction and thickness climatologies.
-
-Example:
-    seaice = SeaIce(model="IFS-NEMO", exp="historical-1990", source="lra-r100-monthly", regions=["arctic", "antarctic"])
-    seaice.run(method="extent")
-    seaice.monthly  # xr.Dataset with one variable per region: sea_ice_extent_arctic, sea_ice_extent_antarctic
-"""
+"""Sea ice diagnostic: regional extent and volume timeseries, fraction and thickness climatologies"""
 
 import xarray as xr
 
@@ -14,15 +8,15 @@ from aqua.diagnostics.base import Diagnostic
 
 xr.set_options(keep_attrs=True)
 
-# method -> default variable and units of the result
-METHODS = {
+# each method give the default variable and units of the result
+METHOD_SETTINGS = {
     "extent": {"var": "siconc", "units": "million km^2"},
     "volume": {"var": "sithick", "units": "thousands km^3"},
     "fraction": {"var": "siconc", "units": "1"},
     "thickness": {"var": "sithick", "units": "m"},
 }
-# methods integrated over each region; the others are monthly climatology maps
-INTEGRATED = ("extent", "volume")
+# methods that integrate over the region returning a number per timestep, the others return a map 
+INTEGRATION = ("extent", "volume")
 
 
 class SeaIce(Diagnostic):
@@ -120,10 +114,10 @@ class SeaIce(Diagnostic):
 
     def _set_method(self, method: str, var: str = None):
         """Check the method and set it with its variable."""
-        if method not in METHODS:
-            raise ValueError(f"Invalid method '{method}'. Please choose from: {list(METHODS)}")
+        if method not in METHOD_SETTINGS:
+            raise ValueError(f"Invalid method '{method}'. Please choose from: {list(METHOD_SETTINGS)}")
         self.method = method
-        self.var = var or METHODS[method]["var"]
+        self.var = var or METHOD_SETTINGS[method]["var"]
 
     def run(
         self,
@@ -166,7 +160,7 @@ class SeaIce(Diagnostic):
         months_required = 12 if seasonal_cycle else self.MINIMUM_MONTHS_REQUIRED
         self.retrieve(var=self.var, reader_kwargs=reader_kwargs or {}, months_required=months_required)
 
-        if self.method not in INTEGRATED:
+        if self.method not in INTEGRATION:
             self.compute_climatology()
         else:
             self.compute_timeseries(annual=annual and not seasonal_cycle)
@@ -280,10 +274,10 @@ class SeaIce(Diagnostic):
             for key in ("AQUA_startdate", "AQUA_enddate"):
                 da.attrs.pop(key, None)
             da.attrs.update({key: time_to_string(date) for key, date in dates.items()})
-            da.attrs["units"] = METHODS[self.method]["units"]
+            da.attrs["units"] = METHOD_SETTINGS[self.method]["units"]
             da.attrs["long_name"] = (
                 f"{'Std ' if std else ''}Sea ice {self.method} "
-                f"{'integrated ' if self.method in INTEGRATED else ''}over {da.attrs['AQUA_region']}"
+                f"{'integrated ' if self.method in INTEGRATION else ''}over {da.attrs['AQUA_region']}"
             )
             da.attrs["standard_name"] = f"{region}_{prefix}sea_ice_{self.method}"
             da.attrs["AQUA_method"] = self.method
@@ -304,7 +298,7 @@ class SeaIce(Diagnostic):
 
     def _products(self, seasonal_cycle: bool) -> dict:
         """NetCDF product of each result attribute, for the kind of run."""
-        if self.method not in INTEGRATED:
+        if self.method not in INTEGRATION:
             return {"climatology": "bias"}
         if seasonal_cycle:
             return {"seasonalcycle": "seasonalcycle", "std_monthly": "seasonalcycle_std"}
