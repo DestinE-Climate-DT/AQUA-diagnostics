@@ -15,7 +15,7 @@ METHOD_SETTINGS = {
     "fraction": {"var": "siconc", "units": "1"},
     "thickness": {"var": "sithick", "units": "m"},
 }
-# methods that integrate over the region returning a number per timestep, the others return a map 
+# methods that integrate over the region returning a number per timestep, the others return a map
 INTEGRATION = ("extent", "volume")
 
 

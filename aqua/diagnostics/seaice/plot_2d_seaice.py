@@ -118,7 +118,7 @@ class Plot2DSeaIce:
         self.method = method
         if not self.models or not self.ref:
             raise ValueError("Missing models or reference data")
-            
+
         # before the first figure exists: the maps set the style only when they are drawn,
         # after titles and frames of the first row have taken the matplotlib defaults
         ConfigStyle(style=kwargs.get("style"), loglevel=self.loglevel)
