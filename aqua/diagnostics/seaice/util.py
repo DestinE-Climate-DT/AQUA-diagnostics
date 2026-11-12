@@ -1,13 +1,6 @@
 """Utility for the sea ice plotting module"""
 
-from collections import defaultdict
-
-
-def defaultdict_to_dict(d):
-    """Recursively converts a defaultdict to a normal dict."""
-    if isinstance(d, defaultdict):
-        return {k: defaultdict_to_dict(v) for k, v in d.items()}
-    return d
+import pandas as pd
 
 
 def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains=None):
@@ -53,38 +46,15 @@ def filter_region_list(regions_dict, regions_list, domain, logger, valid_domains
     return filtered_regions
 
 
-def ensure_istype(obj, expected_types, logger=None):
-    """Ensure an object is of the expected type(s), otherwise raise ValueError.
-
-    Args:
-        obj: The object to check.
-        expected_types: A type or tuple of types to check against.
-        logger (optional): Logger for reporting the error, if provided.
-    """
-    if isinstance(expected_types, tuple):
-        expected_names_type = ", ".join(t.__name__ for t in expected_types)
-    else:
-        expected_names_type = expected_types.__name__
-
-    if not isinstance(obj, expected_types):
-        raise ValueError(f"Expected type {expected_names_type}, but got {type(obj).__name__}.")
-
-
 def _fmt_time_attr(data, attr_name):
-    """Format a single date-like attribute for captions."""
-    dt = data.attrs.get(attr_name, f"No {attr_name} found")
-    if hasattr(dt, "strftime"):
-        return dt.strftime("%Y-%m")
-    if isinstance(dt, str) and "T" in dt:
-        return dt.split("T")[0]
-    return dt
+    """Format a single date attribute as YYYY-MM for captions."""
+    date = data.attrs.get(attr_name)
+    return pd.Timestamp(date).strftime("%Y-%m") if date is not None else f"No {attr_name} found"
 
 
 def extract_dates(data):
     """
-    Extracts start and end dates from data attributes.
-    If the date is a datetime object, it is formatted as 'YYYY-MM'.
-    If the date is a string, it is returned as is.
+    Extracts start and end dates from data attributes, formatted as 'YYYY-MM'.
 
     Args:
         data (xr.DataArray | xr.Dataset): Input object holding the `AQUA_startdate` / `AQUA_enddate` attributes.
@@ -100,7 +70,7 @@ def extract_std_period_dates(data):
     Extract the time span from ``AQUA_std_startdate`` and ``AQUA_std_enddate``.
 
     Args:
-        data (xr.DataArray | xr.Dataset): Object with std-dates (see ``add_seaice_attrs(..., std_flag=True)``).
+        data (xr.DataArray | xr.Dataset): Standard deviation computed by ``SeaIce``.
 
     Returns:
         tuple[str, str]: `(start_date, end_date)` formatted as `YYYY-MM`.

@@ -13,7 +13,7 @@ import sys
 
 from aqua.core.util import get_arg
 from aqua.diagnostics import Plot2DSeaIce, PlotSeaIce, SeaIce
-from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, load_var_config, template_parse_arguments
 from aqua.diagnostics.seaice.util import filter_region_list
 
 
@@ -37,6 +37,72 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
+def run_seaice(cli, tool, method, **run_kwargs):
+    """
+    Run SeaIce on the datasets and on the references of one method of a tool block.
+
+    A reference is used for the methods listed in its ``methods`` (all of them if missing) and for the regions of
+    its ``domain`` ('nh' or 'sh', all of them if missing).
+
+    Args:
+        cli (DiagnosticCLI): The prepared CLI.
+        tool (str): The key of the tool block in the configuration.
+        method (str): The sea ice method to compute.
+        **run_kwargs: Additional keyword arguments for SeaIce.run().
+
+    Returns:
+        tuple: The SeaIce instances of the datasets and those of the references, with their results.
+    """
+    config = cli.config_dict
+    params, regions = load_var_config(config, method, diagnostic=tool)
+    regions = [region for region in regions if region is not None]  # [None] when no regions are configured
+    common = {"diagnostic_name": config["diagnostics"][tool].get("diagnostic_name", "seaice"), "loglevel": cli.loglevel}
+    run_kwargs = {
+        "method": method,
+        "var": params.get("var"),
+        "annual": params.get("annual", False),
+        "outputdir": cli.outputdir,
+        "rebuild": cli.rebuild,
+        "save_netcdf": cli.save_netcdf,
+        **run_kwargs,
+    }
+
+    models = []
+    for dataset in config["datasets"]:
+        seaice = SeaIce(**cli.dataset_args(dataset), regions=regions, **common)
+        seaice.run(reader_kwargs=dataset.get("reader_kwargs") or {}, **run_kwargs)
+        models.append(seaice)
+
+    refs = []
+    for reference in config.get("references") or []:
+        if method not in reference.get("methods", [method]):
+            cli.logger.info("Skipping reference %s %s: not meant for %s", reference["model"], reference["exp"], method)
+            continue
+        ref_regions = models[0].regions
+        if reference.get("domain"):
+            ref_regions = filter_region_list(
+                {"regions": models[0].regions_definition}, ref_regions, reference["domain"], cli.logger
+            )
+        if not ref_regions:
+            cli.logger.info("Skipping reference %s %s: no region in its domain", reference["model"], reference["exp"])
+            continue
+        reference_args = cli.reference_args(reference)
+        # a tool can set its own analysis window for the references
+        reference_args["startdate"] = params.get("ref_startdate") or reference_args["startdate"]
+        reference_args["enddate"] = params.get("ref_enddate") or reference_args["enddate"]
+        seaice = SeaIce(
+            **reference_args,
+            std_startdate=reference.get("std_startdate") or params.get("std_startdate"),
+            std_enddate=reference.get("std_enddate") or params.get("std_enddate"),
+            regions=ref_regions,
+            **common,
+        )
+        seaice.run(reader_kwargs=reference.get("reader_kwargs") or {}, std=params.get("std", False), **run_kwargs)
+        refs.append(seaice)
+
+    return models, refs
+
+
 def main(argv=None):
     """Run the SeaIce diagnostic CLI.
 
@@ -54,409 +120,67 @@ def main(argv=None):
     # Diagnostic-specific options
     projection = get_arg(args, "proj", "orthographic")
 
-    # Load region definitions from the centralized regions file. The downstream
-    # helpers (filter_region_list, plotting) expect the ``{"regions": {name: spec}}`` shape.
-    regions_dict = {"regions": SeaIce(model="", exp="", source="")._load_regions_from_file()}
+    diagnostics = cli.config_dict["diagnostics"]
 
-    regrid = get_arg(args, "regrid", None)  # noqa: F841
+    # ============= Sea Ice diagnostic - Timeseries and Seasonal Cycle ============
+    # =============================================================================
+    for tool, plot_type in (("seaice_timeseries", "timeseries"), ("seaice_seasonal_cycle", "seasonalcycle")):
+        tool_dict = diagnostics.get(tool) or {}
+        if not tool_dict.get("run", False):
+            continue
+        cli.logger.info("Executing Sea ice %s diagnostic for loaded config_dict.", plot_type)
+        cycle = plot_type == "seasonalcycle"
 
-    # Use the top-level datasets
-    datasets = cli.config_dict["datasets"]
+        for method in tool_dict["methods"]:
+            cli.logger.info("Method: %s", method)
+            models, refs = run_seaice(cli, tool, method, seasonal_cycle=cycle)
 
-    # ============= Sea Ice diagnostic - Timeseries diagnostic ============
-    # =====================================================================
-    if "seaice_timeseries" in cli.config_dict["diagnostics"] and cli.config_dict["diagnostics"]["seaice_timeseries"]["run"]:
-        # Initialise dict to store data to plot
-        plot_ts_seaice = {}
-
-        conf_dict_ts = cli.config_dict["diagnostics"]["seaice_timeseries"]
-        cli.logger.info("Executing Sea ice timeseries diagnostic for loaded config_dict.")
-
-        # Initialize a list of len from the number of datasets
-        for method in conf_dict_ts["methods"]:
-            cli.logger.info(f"Method: {method}")
-
-            # Get info
-            regions = conf_dict_ts["regions"]
-
-            # Initialise monthly_models with the number of datasets
-            monthly_mod = [None] * len(datasets)
-
-            for i, dataset in enumerate(datasets):
-                # Get the variable name for this method from the diagnostic configuration
-                varname = conf_dict_ts["varname"][method]
-                dataset_args = cli.dataset_args(dataset)
-
-                # Integrate by method the model data and store them in a list.
-                seaice = SeaIce(**dataset_args, regions=regions, outputdir=cli.outputdir, loglevel=cli.loglevel)
-
-                monthly_mod[i] = seaice.compute_seaice(
-                    method=method,
-                    var=varname,
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
-                )
-
-                seaice.save_netcdf(
-                    monthly_mod[i],
-                    "seaice",
-                    diagnostic_product="timeseries",
-                    extra_keys={"method": method, "source": dataset["source"], "regions_domain": "_".join(regions)},
-                )
-
-                # Update the dict
-                plot_ts_seaice["monthly_models"] = monthly_mod
-
-            # Initialize a list of len from the number of references
-            if "references" in conf_dict_ts:
-                references = conf_dict_ts["references"]
-
-                # Initialise monthly_refs with the number of refs (also for std)
-                if conf_dict_ts["calc_ref_std"]:
-                    calc_std_freq = conf_dict_ts.get("ref_std_freq", None)
-                    monthly_std_ref = [None] * len(references)
-
-                monthly_ref = [None] * len(references)
-
-                for i, reference in enumerate(references):
-                    use_for_method = reference.get("use_for_method", None)
-                    if use_for_method is not None and use_for_method != method:
-                        cli.logger.info(
-                            f"Skipping ref data {reference['model']}, {reference['exp']}, "
-                            f"{reference['source']} as it is not meant to operate for method: '{method}'"
-                        )
-                        continue
-
-                    domain_ref = reference.get("domain", None)
-
-                    # Filter the region from the domain information
-                    regs_indomain = filter_region_list(regions_dict, regions, domain_ref, cli.logger)
-
-                    # Get reference args and override specific fields
-                    reference_args = cli.reference_args(reference)
-                    reference_args["regions"] = regs_indomain
-
-                    # Integrate by method the reference data and store them in a list
-                    seaice_ref = SeaIce(**reference_args, outputdir=cli.outputdir, loglevel=cli.loglevel)
-
-                    if conf_dict_ts["calc_ref_std"]:
-                        monthly_ref[i], monthly_std_ref[i] = seaice_ref.compute_seaice(
-                            method=method,
-                            var=varname,
-                            calc_std_freq=calc_std_freq,
-                            reader_kwargs=reference.get("reader_kwargs") or {},
-                        )
-
-                        seaice_ref.save_netcdf(
-                            monthly_std_ref[i],
-                            "seaice",
-                            diagnostic_product="timeseries_std",
-                            extra_keys={
-                                "method": method,
-                                "source": reference["source"],
-                                "regions_domain": "_".join(regs_indomain),
-                            },
-                        )
-                    else:
-                        monthly_ref[i] = seaice_ref.compute_seaice(
-                            method=method,
-                            var=varname,
-                            reader_kwargs=reference.get("reader_kwargs") or {},
-                        )
-
-                    seaice_ref.save_netcdf(
-                        monthly_ref[i],
-                        "seaice",
-                        diagnostic_product="timeseries",
-                        extra_keys={
-                            "method": method,
-                            "source": reference["source"],
-                            "regions_domain": "_".join(regs_indomain),
-                        },
-                    )
-
-                # Update the dict
-                plot_ts_seaice["monthly_ref"] = monthly_ref
-                plot_ts_seaice["monthly_std_ref"] = monthly_std_ref if monthly_std_ref else None
-
-            cli.logger.info("Plotting Timeseries")
-
-            # Start plotting
             psi = PlotSeaIce(
-                catalog=datasets[0]["model"],
-                model=datasets[0]["model"],
-                exp=datasets[0]["exp"],
-                source=datasets[0]["source"],
-                loglevel=cli.loglevel,
+                monthly_models=[m.seasonalcycle if cycle else m.monthly for m in models],
+                annual_models=[m.annual for m in models],
+                monthly_ref=[r.seasonalcycle if cycle else r.monthly for r in refs],
+                annual_ref=[r.annual for r in refs],
+                monthly_std_ref=[r.std_monthly for r in refs],
+                annual_std_ref=[r.std_annual for r in refs],
+                diagnostic_name=tool_dict.get("diagnostic_name", "seaice"),
                 outputdir=cli.outputdir,
                 rebuild=cli.rebuild,
-                **plot_ts_seaice,
-            )
-
-            psi.plot_seaice(plot_type="timeseries", save_format=cli.save_format)
-
-    # ================ Sea Ice diagnostic - Seasonal Cycle ================
-    # =====================================================================
-    if (
-        "seaice_seasonal_cycle" in cli.config_dict["diagnostics"]
-        and cli.config_dict["diagnostics"]["seaice_seasonal_cycle"]["run"]
-    ):
-        # Initialise dict to store data to plot
-        plot_ts_seaice = {}
-
-        conf_dict_ts = cli.config_dict["diagnostics"]["seaice_seasonal_cycle"]
-        cli.logger.info("Executing Sea ice seasonal cycle diagnostic for loaded config_dict.")
-
-        # Initialize a list of len from the number of datasets
-        for method in conf_dict_ts["methods"]:
-            cli.logger.info(f"Method: {method}")
-
-            # Get info
-            regions = conf_dict_ts["regions"]
-
-            # Initialise monthly_models with the number of datasets
-            monthly_mod = [None] * len(datasets)
-
-            for i, dataset in enumerate(datasets):
-                # Get the variable name for this method from the diagnostic configuration
-                varname = conf_dict_ts["varname"][method]
-                dataset_args = cli.dataset_args(dataset)
-                dataset_args["regions"] = regions
-
-                # Integrate by method the model data and store them in a list.
-                seaice = SeaIce(**dataset_args, outputdir=cli.outputdir, loglevel=cli.loglevel)
-
-                monthly_mod[i] = seaice.compute_seaice(
-                    method=method,
-                    var=varname,
-                    get_seasonal_cycle=True,
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
-                )
-
-                seaice.save_netcdf(
-                    monthly_mod[i],
-                    "seaice",
-                    diagnostic_product="seasonalcycle",
-                    extra_keys={"method": method, "source": dataset["source"], "regions_domain": "_".join(regions)},
-                )
-
-            # Update the dict
-            plot_ts_seaice["monthly_models"] = monthly_mod
-
-            # Initialize a list of len from the number of references
-            if "references" in conf_dict_ts:
-                references = conf_dict_ts["references"]
-
-                # Initialise monthly_refs with the number of refs (also for std)
-                if conf_dict_ts["calc_ref_std"]:
-                    calc_std_freq = conf_dict_ts.get("ref_std_freq", None)
-                    monthly_std_ref = [None] * len(references)
-
-                monthly_ref = [None] * len(references)
-
-                for i, reference in enumerate(references):
-                    use_for_method = reference.get("use_for_method", None)
-                    if use_for_method is not None and use_for_method != method:
-                        cli.logger.info(
-                            f"Skipping ref data {reference['model']}, {reference['exp']}, "
-                            f"{reference['source']} as it is not meant to operate for method: '{method}'"
-                        )
-                        continue
-
-                    domain_ref = reference.get("domain", None)
-
-                    # Filter the region from the domain information
-                    regs_indomain = filter_region_list(regions_dict, regions, domain_ref, cli.logger)
-
-                    # Get reference args and override specific fields
-                    reference_args = cli.reference_args(reference)
-                    reference_args["regions"] = regs_indomain
-
-                    # Integrate by method the reference data and store them in a list.
-                    seaice_ref = SeaIce(**reference_args, outputdir=cli.outputdir, loglevel=cli.loglevel)
-
-                    if conf_dict_ts["calc_ref_std"]:
-                        monthly_ref[i], monthly_std_ref[i] = seaice_ref.compute_seaice(
-                            method=method,
-                            var=varname,
-                            calc_std_freq=calc_std_freq,
-                            get_seasonal_cycle=True,
-                            reader_kwargs=reference.get("reader_kwargs") or {},
-                        )
-                        seaice_ref.save_netcdf(
-                            monthly_std_ref[i],
-                            "seaice",
-                            diagnostic_product="seasonalcycle_std",
-                            extra_keys={
-                                "method": method,
-                                "source": reference["source"],
-                                "regions_domain": "_".join(regs_indomain),
-                            },
-                        )
-                    else:
-                        monthly_ref[i] = seaice_ref.compute_seaice(
-                            method=method,
-                            var=varname,
-                            get_seasonal_cycle=True,
-                            reader_kwargs=reference.get("reader_kwargs") or {},
-                        )
-
-                    seaice_ref.save_netcdf(
-                        monthly_ref[i],
-                        "seaice",
-                        diagnostic_product="seasonalcycle",
-                        extra_keys={
-                            "method": method,
-                            "source": reference["source"],
-                            "regions_domain": "_".join(regs_indomain),
-                        },
-                    )
-
-                # Update the dict
-                plot_ts_seaice["monthly_ref"] = monthly_ref
-                plot_ts_seaice["monthly_std_ref"] = monthly_std_ref if monthly_std_ref else None
-
-            cli.logger.info("Plotting Seasonal Cycle")
-
-            # Start plotting
-            psi = PlotSeaIce(
-                catalog=datasets[0]["model"],
-                model=datasets[0]["model"],
-                exp=datasets[0]["exp"],
-                source=datasets[0]["source"],
+                dpi=cli.dpi,
                 loglevel=cli.loglevel,
-                outputdir=cli.outputdir,
-                rebuild=cli.rebuild,
-                **plot_ts_seaice,
             )
-
-            psi.plot_seaice(plot_type="seasonalcycle", save_format=cli.save_format)
+            psi.plot_seaice(plot_type=plot_type, save_format=cli.save_format)
 
     # ================ Sea Ice diagnostic - 2D Bias Maps ================
     # ===================================================================
-    if "seaice_2d_bias" in cli.config_dict["diagnostics"] and cli.config_dict["diagnostics"]["seaice_2d_bias"]["run"]:
-        conf_dict_2d = cli.config_dict["diagnostics"]["seaice_2d_bias"]
+    tool = "seaice_2d_bias"
+    tool_dict = diagnostics.get(tool) or {}
+    if tool_dict.get("run", False):
         cli.logger.info("Executing Sea ice 2D bias diagnostic for loaded config_dict.")
-
-        # Get info
-        regions = conf_dict_2d["regions"]
-        months = conf_dict_2d.get("months", [3, 9])
+        plot_params = (tool_dict.get("plot_params") or {}).get("default") or {}
 
         # Loop over the methods (fraction and thickness)
-        for method in conf_dict_2d["methods"]:
-            cli.logger.info(f"Method: {method}")
+        for method in tool_dict["methods"]:
+            cli.logger.info("Method: %s", method)
+            models, refs = run_seaice(cli, tool, method)
+            if not refs:
+                cli.logger.warning("No reference for sea ice %s: the difference maps need one, skipping", method)
+                continue
 
-            # Initialise dict to store data to plot
-            plot_bias_seaice = {}
-
-            # Initialise monthly_models with the number of datasets
-            clims_mod = [None] * len(datasets)
-
-            for i, dataset in enumerate(datasets):
-                # Get the variable name for this method from the diagnostic configuration
-                varname = conf_dict_2d["varname"][method]
-                dataset_args = cli.dataset_args(dataset)
-                dataset_args["regions"] = regions
-
-                # Compute 2D sea ice data for the model
-                seaice = SeaIce(**dataset_args, outputdir=cli.outputdir, loglevel=cli.loglevel)
-
-                # Compute 2D data for each region
-                clims_mod[i] = seaice.compute_seaice(
-                    method=method,
-                    var=varname,
-                    stat="mean",
-                    freq="monthly",
-                    reader_kwargs=dataset.get("reader_kwargs") or {},
-                )
-
-                seaice.save_netcdf(
-                    clims_mod[i],
-                    "seaice",
-                    diagnostic_product="bias",
-                    extra_keys={
-                        "method": method,
-                        "source": dataset["source"],
-                        "exp": dataset["exp"],
-                        "regions_domain": "_".join(regions),
-                    },
-                )
-
-            plot_bias_seaice["models"] = clims_mod
-
-            # Initialize a list of len from the number of references
-            if "references" in conf_dict_2d:
-                references = conf_dict_2d["references"]
-
-                clims_ref = [None] * len(references)
-
-                for i, reference in enumerate(references):
-                    use_for_method = reference.get("use_for_method", None)
-
-                    if use_for_method is not None and use_for_method != method:
-                        cli.logger.info(
-                            f"Skipping ref data {reference['model']}, {reference['exp']}, "
-                            f"{reference['source']} as it is not meant to operate for method: '{method}'"
-                        )
-                        continue
-
-                    domain_ref = reference.get("domain", None)
-
-                    # Filter the regions from the domain information
-                    regs_indomain = filter_region_list(regions_dict, regions, domain_ref, cli.logger)
-
-                    # Get reference args and override specific fields
-                    reference_args = cli.reference_args(reference)
-                    reference_args["regions"] = regs_indomain
-
-                    # Get by method the reference data and store them in a list.
-                    seaice_ref = SeaIce(**reference_args, outputdir=cli.outputdir, loglevel=cli.loglevel)
-
-                    clims_ref[i] = seaice_ref.compute_seaice(
-                        method=method,
-                        var=varname,
-                        stat="mean",
-                        freq="monthly",
-                        reader_kwargs=reference.get("reader_kwargs") or {},
-                    )
-
-                    seaice_ref.save_netcdf(
-                        clims_ref[i],
-                        "seaice",
-                        diagnostic_product="bias",
-                        extra_keys={
-                            "method": method,
-                            "source": reference["source"],
-                            "exp": reference["exp"],
-                            "regions_domain": "_".join(regs_indomain),
-                        },
-                    )
-
-                plot_bias_seaice["ref"] = clims_ref
-
-            cli.logger.info(f"Plotting 2D Bias Maps for method: {method}")
-
-            projkw = conf_dict_2d["projections"][projection]
-
-            longregs_indomain = [regions_dict["regions"][reg]["longname"] for reg in regions]
-
-            # Start plotting
             psi = Plot2DSeaIce(
-                ref=plot_bias_seaice.get("ref"),
-                models=plot_bias_seaice.get("models"),
-                regions_to_plot=longregs_indomain,
+                ref=[r.climatology for r in refs],
+                models=[m.climatology for m in models],
+                diagnostic_name=tool_dict.get("diagnostic_name", "seaice"),
                 outputdir=cli.outputdir,
                 rebuild=cli.rebuild,
-                loglevel=cli.config_dict["setup"]["loglevel"],
-            )
-
-            psi.plot_2d_seaice(
-                plot_type="bias",
-                months=months,
-                method=method,
-                projkw=projkw,
-                plot_ref_contour=True if method == "fraction" else False,
-                save_format=cli.save_format,
                 dpi=cli.dpi,
+                loglevel=cli.loglevel,
+            )
+            psi.plot_2d_seaice(
+                method=method,
+                months=plot_params.get("months", [3, 9]),
+                projection=projection,
+                plot_ref_contour=method == "fraction",
+                save_format=cli.save_format,
             )
 
     cli.close_dask_cluster()

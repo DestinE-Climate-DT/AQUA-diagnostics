@@ -11,10 +11,10 @@ It supports analysis of sea ice extent, volume, fraction, and thickness.
 
 SeaIce provides tools to plot:
 
-- Time series of sea ice extent and volume
-- Seasonal cycles with optional uncertainty bands
-- 2D climatology maps of sea ice fraction and thickness
-- Bias maps between models and reference datasets
+- Time series of sea ice extent and volume, optionally with their annual means
+- Seasonal cycles of sea ice extent and volume
+- Uncertainty bands of the reference datasets (two standard deviations) on both
+- Maps of the sea ice fraction and thickness climatology of a model, of a reference dataset and of their difference
 
 Time series and seasonal cycles can be computed over a specific region of the Northern or Southern Hemisphere.
 Default regions are the Arctic and the Antarctic regions, but it is possible to select other regions and custom regions
@@ -30,29 +30,34 @@ Classes
 
 There is one class for the analysis and two for the plotting:
 
-* **SeaIce**: performs all core computations for sea ice metrics — ``extent``, ``volume``, ``fraction``, and ``thickness`` metrics — for a single model or reference dataset.
-  It manages data loading, regional masking, spatial integration, and statistical processing.
-  It supports time series analysis and seasonal cycle computation with optional standard deviation calculations.
+* **SeaIce**: computes the sea ice metrics of a single model or reference dataset over a list of regions.
+  ``run()`` retrieves the data and computes one ``method`` at a time, storing each result as an attribute:
+  a ``xarray.Dataset`` with one variable per region, named ``sea_ice_<method>_<region>``.
 
-  - **Time-series methods** (compute integrated values over user-defined regions):
+  - **Integrated methods** (one value per time step and region):
 
-    - ``extent``: computes the area of ocean grid cells with a configurable sea-ice concentration ``threshold`` (default: 15%).
-    - ``volume``: computes the integrated sea-ice thickness across each region.
+    - ``extent``: area of the grid cells with a sea-ice concentration above ``threshold`` (default: 15%), in million km².
+    - ``volume``: integral of the sea-ice thickness over the region, in thousands km³.
 
-  - **2D spatial methods** (compute monthly climatological maps):
+    They fill ``monthly`` (the time series) and, on request, ``annual`` (annual means of the complete years),
+    ``seasonalcycle`` (mean by calendar month, instead of the time series), ``std_monthly`` and ``std_annual``
+    (standard deviation by calendar month and of the annual means). The standard deviation covers the period
+    between ``std_startdate`` and ``std_enddate`` if they are given, the analysis period otherwise.
 
-    - ``fraction``: returns monthly mean maps of sea-ice concentration (0-1).
-    - ``thickness``: returns monthly mean maps of sea-ice thickness (in meters).
+  - **Map methods** (monthly climatology maps, in ``climatology``):
 
-* **PlotSeaIce**: generates time-series and seasonal-cycle visualizations.
-  It can receive a ``xarray.DataArray``, a ``xarray.Dataset``, or a list of ``xarray.Dataset`` objects containing sea-ice diagnostics from multiple models and a reference dataset, enabling direct comparisons.
+    - ``fraction``: sea-ice concentration (0-1).
+    - ``thickness``: sea-ice thickness (in meters).
 
-* **Plot2DSeaIce**: produces visualizations for 2D spatial climatologies and corresponding biases across all months.
-  It supports the same data formats as PlotSeaIce, allowing side-by-side evaluation of multiple models against observations or a chosen reference.
+  ``save_netcdf()`` writes the results of the last run and ``load()`` reads them back in a new instance, without
+  retrieving any data.
 
-.. note::
+* **PlotSeaIce**: draws the time series or the seasonal cycles of one or more models, with reference datasets
+  and their uncertainty bands, in one panel per region. It takes the results of ``SeaIce`` as they are
+  (a ``xarray.Dataset`` or a list of them) and reads models, regions and periods from their attributes.
 
-    The ``extent`` and ``volume`` methods produce time series data, while ``fraction`` and ``thickness`` methods produce 2D spatial maps.
+* **Plot2DSeaIce**: draws, for each region, the maps of a reference dataset, of a model and of their difference,
+  one row per month. It takes the ``climatology`` of ``SeaIce`` for the models and for the references.
 
 File structure
 --------------
@@ -88,15 +93,22 @@ The basic structure of the analysis is the following:
 
     from aqua.diagnostics import SeaIce, PlotSeaIce
 
-    # Compute sea ice extent (time series calculation)
-    si = SeaIce(model='IFS-NEMO', exp='historical-1990', source='lra-r100-monthly', loglevel="DEBUG")
-    result = si.compute_seaice(method='extent', var='siconc')
+    # Sea ice extent of the model over the default regions (Arctic and Antarctic)
+    si = SeaIce(model='IFS-NEMO', exp='historical-1990', source='lra-r100-monthly')
+    si.run(method='extent')
+
+    # Reference with the standard deviation by calendar month: one dataset per hemisphere
+    ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis', source='nh-monthly',
+                    regrid='r100', regions='arctic')
+    ref_nh.run(method='extent', std=True)
 
     # Plot time series
-        psi = PlotSeaIce(monthly_models=result,
-                     catalog=si.catalog, model='IFS-NEMO', exp='historical-1990',
-                     source='lra-r100-monthly', loglevel='DEBUG'loglevel='DEBUG')
+    psi = PlotSeaIce(monthly_models=si.monthly, monthly_ref=ref_nh.monthly, monthly_std_ref=ref_nh.std_monthly)
     psi.plot_seaice(plot_type='timeseries', save_format=['png', 'pdf'])
+
+``run(method='extent', annual=True)`` also fills ``si.annual``, to be passed as ``annual_models`` (``annual_ref`` and
+``annual_std_ref`` for a reference), while ``run(method='extent', seasonal_cycle=True)`` fills ``si.seasonalcycle``,
+to be plotted with ``plot_type='seasonalcycle'``.
 
 **2D Spatial**
 
@@ -104,41 +116,28 @@ The basic structure of the analysis is the following:
 
     from aqua.diagnostics import SeaIce, Plot2DSeaIce
 
-    # Compute sea ice fraction (2D maps calculation)
-    si = SeaIce(model='IFS-NEMO', exp='historical-1990', source='lra-r100-monthly', loglevel="DEBUG")
-    result = si.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
+    # Monthly climatology of the sea ice fraction of the model
+    si = SeaIce(model='IFS-NEMO', exp='historical-1990', source='lra-r100-monthly')
+    si.run(method='fraction')
 
-    # Compute reference data
-    # For Arctic region:
-    si_ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis',
-                       source='nh-monthly', regrid='r100',
-                       regions=['arctic'],
-                       loglevel="DEBUG")
-    ref_nh = si_ref_nh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
+    # Reference data, one dataset per hemisphere
+    ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis', source='nh-monthly',
+                    regrid='r100', regions='arctic')
+    ref_nh.run(method='fraction')
+    ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis', source='sh-monthly',
+                    regrid='r100', regions='antarctic')
+    ref_sh.run(method='fraction')
 
-    # For Antarctic region:
-    si_ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis',
-                       source='sh-monthly', regrid='r100',
-                       regions=['antarctic'],
-                       loglevel="DEBUG")
-    ref_sh = si_ref_sh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
-
-    ref = [ref_nh, ref_sh]  # or just ref_nh to plot only Arctic region for example
-
-    # Plot 2D maps
-    psi_2d = Plot2DSeaIce(models=result, ref=ref, loglevel='DEBUG')
-    psi_2d.plot_2d_seaice(plot_type='var', method='fraction', months=[3,9],
-                          projkw={'projname': 'orthographic',
-                                  'projpars': {'central_longitude': 0.0,
-                                               'central_latitude': 'max_lat_signed'}
-                                  }
-                          save_format=['png', 'pdf']) # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
+    # Plot reference, model and difference maps for March and September
+    psi_2d = Plot2DSeaIce(models=si.climatology, ref=[ref_nh.climatology, ref_sh.climatology])
+    psi_2d.plot_2d_seaice(method='fraction', months=[3, 9], projection='orthographic',
+                          plot_ref_contour=True,
+                          save_format=['png', 'pdf'])  # optional; default is SAVE_FORMAT (['png', 'pdf', 'svg'])
 
 .. note::
 
-   Start/end dates, reference datasets, and regional subsets may be specified in the configuration.
-   If not specified otherwise, plots will be saved using ``SAVE_FORMAT`` (PNG, PDF, and SVG)
-   in the current working directory.
+   If not specified otherwise, the results are saved as NetCDF files and the plots using ``SAVE_FORMAT``
+   (PNG, PDF, and SVG) in the current working directory. Both follow the ``outputdir`` argument.
 
 CLI usage
 ---------
@@ -151,7 +150,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 Additionally, the CLI can be run with the following optional arguments:
 
-- ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/diagnostics/seaice/config_seaice-osi.yaml`` and ``config_seaice-psc.yaml``.
+- ``--config``, ``-c``: Path to the configuration file, e.g. ``aqua/diagnostics/config/collections/legacy/seaice/config-seaice-osi.yaml`` or ``config-seaice-psc.yaml``.
 - ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
 - ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
 - ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
@@ -190,100 +189,93 @@ The sea ice configuration file is organized into several main sections:
 .. code-block:: yaml
 
     references:
-      # ---- Extent in NH ----
-      - &ref_osi_nh
-        catalog: 'obs'             # mandatory
+      - catalog: 'obs'             # mandatory
         model: 'OSI-SAF'           # mandatory
-        exp: 'osi-saf-ssmis'        # mandatory
+        exp: 'osi-saf-ssmis'       # mandatory
         source: 'nh-monthly'       # mandatory
         regrid: 'r100'
-        domain: "nh"
+        domain: 'nh'
+        methods: ['extent', 'fraction']
+        startdate: '1991-01-01'
+        enddate: '2000-12-31'
 
-The reference datasets are defined using YAML anchors (``&ref_osi_nh``) and can be reused across different diagnostic blocks. Each reference dataset specifies:
+The references are listed once and used by all the tools. Besides the usual keys, each reference can have:
 
-- ``catalog``: Data catalog identifier
-- ``model``: Reference model name (e.g., OSI-SAF, PSC)
-- ``exp``: Experiment identifier
-- ``source``: Data source specification
-- ``regrid``: Regridding target resolution
-- ``domain``: Geographic domain (nh=Northern Hemisphere, sh=Southern Hemisphere)
+- ``domain``: the hemisphere covered by the dataset (``nh`` or ``sh``): the reference is compared with the regions
+  of that hemisphere only. Without it, the reference is used for all the regions.
+- ``methods``: the sea ice methods the reference is used for. Without it, the reference is used for all the methods:
+  this is the case of the collection files, which hold one family of references each (``config-seaice-osi``
+  for ``extent`` and ``fraction``, ``config-seaice-psc`` for ``volume`` and ``thickness``).
+- ``std_startdate``, ``std_enddate``: the period of the standard deviation (see below).
 
 **Diagnostic Blocks:**
 
-Each diagnostic block in ``config-seaice-osi.yaml``:
-
-- ``seaice_timeseries``
-- ``seaice_seasonal_cycle``
-- ``seaice_2d_bias``
-
-contains the following parameters such as:
+There are three tool blocks, ``seaice_timeseries``, ``seaice_seasonal_cycle`` and ``seaice_2d_bias``,
+with the same layout:
 
 .. code-block:: yaml
 
     seaice_timeseries:
       run: true
-      methods: ["extent", "volume"]   # Methods to compute
-      regions: ['arctic','antarctic'] # Regions to analyze
-      startdate: '1991-01-01'         # Analysis start date
-      enddate: '2000-01-01'           # Analysis end date
-      calc_ref_std: true              # Calculate reference standard deviation
-      ref_std_freq: 'monthly'         # Standard deviation frequency
-      varname:                        # Variable mapping for each method
-        extent: 'siconc'
-        volume: 'sithick'
-        fraction: 'siconc'
-        thickness: 'sithick'
+      diagnostic_name: 'seaice'       # prefix of the output files
+      methods: ['extent', 'volume']   # Methods to compute
+      params:
+        default:
+          regions: ['arctic', 'antarctic']  # Regions to analyze
+          std: true                         # +/- 2 std band around the references
+          annual: false                     # also plot the annual means (seaice_timeseries only)
 
-**Method-specific variable mapping:**
+- ``methods``: ``extent`` and ``volume`` for ``seaice_timeseries`` and ``seaice_seasonal_cycle``,
+  ``fraction`` and ``thickness`` for ``seaice_2d_bias``.
+- ``params.default``: options of the computation for all the methods; ``params.<method>`` overrides them for one method.
 
-- ``extent`` and ``fraction``: Use ``siconc`` as variable name (sea ice concentration)
-- ``volume`` and ``thickness``: Use ``sithick`` as variable name (sea ice thickness)
-
-**Reference dataset assignment:**
-
-Each diagnostic block includes a ``references`` section that assigns specific reference datasets to methods:
-
-.. code-block:: yaml
-
-    references:
-      - <<: *ref_osi_nh
-        use_for_method: "extent"    # Use this reference for extent analysis
-        varname: "siconc"
-      - <<: *ref_psc_nh
-        use_for_method: "volume"    # Use this reference for volume analysis
-        varname: "sithick"
+  - ``regions``: names from the regions file (see :ref:`diagnostics-regions`).
+  - ``std``: compute the standard deviation of the references by calendar month and draw it as a band of two
+    standard deviations. It covers ``std_startdate`` - ``std_enddate``, given here or in the reference entry,
+    or the analysis period of the reference if they are missing.
+  - ``annual``: also compute and plot the annual means of models and references (and their standard deviation with
+    ``std``). Only complete years are used: with less than one, the annual means are skipped with a warning.
+  - ``ref_startdate``, ``ref_enddate``: analysis period of the references for this tool, when it differs from
+    the one of the reference entry.
+  - ``var``: variable to use, by default ``siconc`` for ``extent`` and ``fraction``, ``sithick`` for ``volume``
+    and ``thickness``. It is usually set for one method, e.g. ``params.volume.var``.
 
 **2D Bias Configuration:**
-The ``seaice_2d_bias`` block includes additional parameters for spatial analysis:
+The ``seaice_2d_bias`` block also has the months to plot:
 
 .. code-block:: yaml
 
     seaice_2d_bias:
-      months: [3, 9]                # Months to plot (March and September)
-      projections:                  # Map projection options
-        orthographic:
-          projname: "orthographic"
-          projpars:
-            central_longitude: 0.0
-            central_latitude: "max_lat_signed"
-        extent_regions:             # Geographic extent for each region
-          Arctic: [-180, 180, 50, 90]
-          Antarctic: [-180, 180, -50, -90]
+      run: true
+      diagnostic_name: 'seaice'
+      methods: ['fraction', 'thickness']
+      params:
+        default:
+          regions: ['arctic', 'antarctic']
+      plot_params:
+        default:
+          months: [3, 9]                # Months to plot (March and September)
 
-``projections`` can be tuned to the user according to the section 'Projections and custom maps' in AQUA graphic tools documentation.
+The maps are centred on the pole of each region. The projection is chosen with the ``--proj`` option of the CLI:
+``orthographic`` (default) or ``azimuthal_equidistant``, which cuts the map to a circle poleward of 50 degrees.
 
 Output
 ------
 
-The diagnostic produces four types of outputs:
+The diagnostic produces three types of figures:
 
 * Time series plots of sea ice extent and volume for specified regions
 * Seasonal cycle plots with optional standard deviation bands
-* 2D climatology maps of sea ice fraction and thickness
-* Bias maps showing spatial differences between model and reference data
+* Maps of sea ice fraction and thickness of the reference, of the model and of their difference
 
-Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``).
-Data outputs are saved as NetCDF files.
+Plots are saved in PDF, PNG, and SVG format by default (see ``SAVE_FORMAT``) and named
+``seaice.<product>.<catalog>.<model>.<exp>.<realization>.<method>.<regions>``, with ``timeseries``, ``seasonalcycle``
+or ``bias`` as product; the maps also have the model and the experiment of the reference before the method.
+
+The results of every dataset and reference are saved as NetCDF files named
+``seaice.<product>.<catalog>.<model>.<exp>.<realization>.<method>.<source>.<regions>.nc``, where the product is
+``timeseries``, ``timeseries_annual``, ``seasonalcycle`` or ``bias`` (the climatology maps), followed by ``_std``
+for the standard deviations.
 
 Observations
 ------------
@@ -317,12 +309,12 @@ All plots can be reproduced using the notebooks in the ``notebooks`` directory o
 .. figure:: figures/seaice_2d_fraction_Arctic_3-9.png
    :width: 100%
 
-   2D sea ice fraction maps for the Arctic region (March and September).
+   Sea ice fraction maps for the Arctic region (March and September).
 
 .. figure:: figures/seaice_2d_thickness_Antarctic_3-9.png
    :width: 100%
 
-   2D sea ice thickness maps for the Antarctic region (March and September).
+   Sea ice thickness maps for the Antarctic region (March and September).
 
 Available demo notebooks
 ------------------------
