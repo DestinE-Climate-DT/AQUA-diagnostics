@@ -63,7 +63,7 @@ def plot_multi_timeseries(
     if all(isinstance(data_map, xr.Dataset) for data_map in maps):
         nrows = len(maps)
         ncols = len(variables)
-        figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols)
+        figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols, panel_ratio=0.9)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)

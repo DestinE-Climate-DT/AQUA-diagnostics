@@ -99,7 +99,7 @@ def plot_maps(
     logger.debug("Loading maps")
     maps = [data_map.load(keep_attrs=True) for data_map in maps]
 
-    figsize = grid_figure_size(nrows, ncols, panel_ratio=0.55, title_ratio=0)
+    figsize = grid_figure_size(nrows, ncols, panel_ratio=0.55)
     fig, axs = plt.subplots(
         nrows=nrows,
         ncols=ncols,

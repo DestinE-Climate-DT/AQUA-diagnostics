@@ -159,7 +159,7 @@ class Plot2DSeaIce:
         for reg_mod in reg_models:
             nrows, ncols = len(self.months), 3
             # Constrained layout keeps titles, colorbars and gridline labels from overlapping
-            fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.9, title_ratio=0), layout="constrained")
+            fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.9), layout="constrained")
             subfigs = fig.subfigures(nrows=nrows, ncols=1)
 
             for jmon, (month, subfig) in enumerate(zip(self.months, subfigs)):
@@ -345,7 +345,7 @@ class Plot2DSeaIce:
         self.logger.info(f"Processing {data_type} data: {datarr.name}")
 
         nrows, ncols = plot_box(num_plots=len(self.months))
-        fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.9, title_ratio=0))
+        fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.9))
         fig.subplots_adjust(bottom=0.2, hspace=0.9)
 
         setup = self._get_cmap(datarr)

@@ -76,7 +76,7 @@ def plot_multivars_vertical_profile(
     # try to make a square figure with a reasonable aspect ratio
     if not nrows and not ncols:
         nrows, ncols = plot_box(len(maps))
-    figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols)
+    figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols, panel_ratio=1)
     logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)

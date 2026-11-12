@@ -418,7 +418,7 @@ class PlotSeaIce:
 
         # Height of each region's panel, as a fraction of the figure width
         panel_ratio = 0.67 if self.plot_type == "seasonalcycle" else 0.4
-        figsize = grid_figure_size(self.num_regions, 1, panel_ratio=panel_ratio, title_ratio=0)
+        figsize = grid_figure_size(self.num_regions, 1, panel_ratio=panel_ratio)
 
         fig, axes = plt.subplots(nrows=self.num_regions, ncols=1, figsize=figsize, squeeze=False)
         axes = axes.flatten()

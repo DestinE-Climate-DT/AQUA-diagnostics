@@ -107,7 +107,7 @@ class PlotStratification:
             obs_label=self.obs_label if self.obs else None,
             title=self.suptitle,
             titles=self.title_list,
-            figsize=grid_figure_size(self.nrows, self.ncols, panel_ratio=1.25, title_ratio=0),
+            figsize=grid_figure_size(self.nrows, self.ncols, panel_ratio=1.25),
             xtext=self.xtext,
             ytext=self.ytext,
             return_fig=True,

@@ -174,7 +174,7 @@ as a fraction of the width:
     from aqua.core.util import figure_size, grid_figure_size
 
     fig = plt.figure(figsize=figure_size(0.5), layout="constrained")  # a single panel
-    fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.55, title_ratio=0))  # a grid of maps
+    fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.55))  # a grid of maps
 
 ``OutputSaver.save_figure`` saves a figure created with the common width exactly ``DEFAULT_FIGURE_WIDTH`` wide:
 the image is cropped to the content only vertically, so keep the content within the figure sides

@@ -140,7 +140,7 @@ class PlotMLD:
     def set_figsize(self):
         """Set the figure size based on the number of rows and columns."""
         # 1.3: the round polar maps are limited by the height, a taller figure lets them fill the column width
-        self.figsize = grid_figure_size(self.nrows, self.ncols, panel_ratio=1.3, title_ratio=0)
+        self.figsize = grid_figure_size(self.nrows, self.ncols, panel_ratio=1.3)
 
     def set_nrowcol(self):
         """Set the number of rows and columns for the subplot grid."""
