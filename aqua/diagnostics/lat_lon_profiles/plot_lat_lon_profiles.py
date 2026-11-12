@@ -197,6 +197,7 @@ class PlotLatLonProfiles:
             ref_label=ref_label,
             title=title,
             style=style,
+            legend_fontsize="medium",  # single-panel figure: larger legend than in panels of a grid
             loglevel=self.loglevel,
         )
 
