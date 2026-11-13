@@ -156,6 +156,32 @@ This example demonstrates saving multiple plot formats (e.g. PNG/PDF/SVG) with m
     We suggest using the metadata field ``/Caption`` to store the plot description.
     This is currently used by the AQUA dashboard to generate plot descriptions.
 
+Figure Size
+^^^^^^^^^^^
+
+All figures share the same width, ``DEFAULT_FIGURE_WIDTH`` in ``aqua.core.default``.
+Font sizes are fixed in points by the AQUA style, so with a common width the text looks equally large in every figure
+once they are shown at the same width, as the AQUA dashboard does.
+
+The plotting functions of AQUA-core already create their figures with the common width and a height suited to
+each kind of plot (e.g. maps, timeseries, seasonal cycles), with margins fitted to the labels by a layout engine:
+do not pass ``figsize`` to them unless a different shape is really needed.
+When a diagnostic builds its own figure, use the helpers of ``aqua.core.util`` and choose only the height,
+as a fraction of the width:
+
+.. code-block:: python
+
+    from aqua.core.util import figure_size, grid_figure_size
+
+    fig = plt.figure(figsize=figure_size(0.5), layout="constrained")  # a single panel
+    fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.55))  # a grid of maps
+
+``OutputSaver.save_figure`` saves a figure created with the common width exactly ``DEFAULT_FIGURE_WIDTH`` wide:
+the image is cropped to the content only vertically, so keep the content within the figure sides
+(e.g. with a layout engine or suitable ``subplots_adjust`` margins).
+If something sticks out, the image is saved wider and a warning is logged.
+Figures with any other width are cropped to their content, as with ``bbox_inches="tight"``.
+
 Opening a PDF File and Displaying Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -127,7 +127,6 @@ class PlotClimatology:
             data[var],
             return_fig=True,
             title=title,
-            title_size=16,
             vmin=vmin,
             vmax=vmax,
             proj=proj,
@@ -197,17 +196,14 @@ class PlotClimatology:
             model=data.AQUA_model,
             exp=data.AQUA_exp,
             extra_info=extra_info,
-        ).generate()
+        ).generate(max_chars=80)  # the suptitle must fit the figure width
 
         plot_kwargs = {
             "maps": [data[var].sel(season=season) for season in season_list],
             "proj": get_projection(proj, **proj_params),
             "return_fig": True,
             "title": title,
-            "title_size": 16,
             "titles": season_list,
-            "titles_size": 14,
-            "figsize": (10, 8),
             "cbar_label": cbar_label,
             "cmap": self.cmap,
             "loglevel": self.loglevel,
@@ -297,7 +293,6 @@ class PlotClimatology:
             cmap=self.cmap,
             nlevels=nlevels,
             title=title,
-            title_size=16,
             return_fig=True,
             loglevel=self.loglevel,
         )

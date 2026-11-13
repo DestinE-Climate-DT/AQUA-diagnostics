@@ -4,7 +4,7 @@ from cartopy.crs import NorthPolarStereo
 
 from aqua.core.graphics import indexes_plot, plot_single_map, plot_single_map_diff
 from aqua.core.logger import log_configure
-from aqua.core.util import apply_circular_window
+from aqua.core.util import apply_circular_window, figure_size
 from aqua.diagnostics.base import TitleBuilder
 
 from .base import PlotBaseMixin, _homogeneize_maps
@@ -54,7 +54,12 @@ class PlotNAO(PlotBaseMixin):
         ).generate()
 
         fig, axs = indexes_plot(
-            indexes=indexes, thresh=thresh, suptitle=title, ylabel="NAO index", labels=labels, loglevel=self.loglevel
+            indexes=indexes,
+            thresh=thresh,
+            suptitle=title,
+            ylabel="NAO index",
+            labels=labels,
+            loglevel=self.loglevel,
         )
 
         return fig, axs
@@ -122,7 +127,8 @@ class PlotNAO(PlotBaseMixin):
         proj = NorthPolarStereo(central_longitude=-20.0)
         extent = [-180, 180, 10, 90]
 
-        fig = plt.figure(figsize=(11, 8.5))
+        # The round polar map is limited by the height: 1.1 lets it fill the figure width
+        fig = plt.figure(figsize=figure_size(1.1), layout="compressed")
         ax = fig.add_subplot(111, projection=proj)
 
         ax = apply_circular_window(ax, extent=extent)

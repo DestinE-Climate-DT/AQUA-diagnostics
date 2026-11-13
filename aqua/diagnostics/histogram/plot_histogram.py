@@ -263,6 +263,7 @@ class PlotHistogram:
             smooth=smooth,
             smooth_window=smooth_window,
             labelsize=labelsize,
+            legend_fontsize="medium",  # single-panel figure: larger legend than in panels of a grid
             loglevel=self.loglevel,
         )
 

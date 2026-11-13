@@ -220,6 +220,7 @@ class PlotEnsembleTimeseries(BaseMixin):
             ens_label=model_str,
             figsize=figure_size,
             title=title,
+            legend_fontsize="medium",  # single-panel figure: larger legend than in panels of a grid
             loglevel=self.loglevel,
         )
         # Loop over if need to plot the ensemble members

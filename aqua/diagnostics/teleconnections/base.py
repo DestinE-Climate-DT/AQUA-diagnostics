@@ -422,7 +422,7 @@ class PlotBaseMixin:
             ref_model=ref_model,
             ref_exp=ref_exp,
             timeseason=f"({season})" if season else None,
-        ).generate()
+        ).generate(max_chars=70)
 
     def set_map_description(self, maps=None, ref_maps=None, statistic: str = None, telecname: str = None):
         """

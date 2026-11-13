@@ -223,6 +223,7 @@ class PlotTimeseries(PlotBaseMixin):
             data_labels=data_labels,
             ref_label=ref_label,
             title=title,
+            legend_fontsize="medium",  # single-panel figure: larger legend than in panels of a grid
             loglevel=self.loglevel,
         )
         return fig, ax

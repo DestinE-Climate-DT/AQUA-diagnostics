@@ -7,7 +7,7 @@ import cartopy.crs as ccrs
 import xarray as xr
 
 from aqua.core.logger import log_configure
-from aqua.core.util import cbar_get_label, get_realizations, time_to_string
+from aqua.core.util import cbar_get_label, get_realizations, grid_figure_size, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .mld_profiles import plot_maps
@@ -139,7 +139,8 @@ class PlotMLD:
 
     def set_figsize(self):
         """Set the figure size based on the number of rows and columns."""
-        self.figsize = (3.5 * self.ncols, 3.5 * self.nrows)
+        # 1.3: the round polar maps are limited by the height, a taller figure lets them fill the column width
+        self.figsize = grid_figure_size(self.nrows, self.ncols, panel_ratio=1.3)
 
     def set_nrowcol(self):
         """Set the number of rows and columns for the subplot grid."""
