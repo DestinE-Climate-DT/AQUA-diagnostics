@@ -2,6 +2,7 @@
 Base class for diagnostic CLI to centralize common operations.
 """
 
+from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
@@ -9,6 +10,9 @@ from aqua.core.version import __version__ as aqua_version
 from .defaults import SAVE_FORMAT
 from .profiler import DiagnosticProfiler
 from .util import close_cluster, load_diagnostic_config, merge_config_args, open_cluster
+
+# Data availability problems: skipped with a warning, their message is enough to understand them
+EXPECTED_ERRORS = (NoDataError, NotEnoughDataError)
 
 
 class DiagnosticCLI:
@@ -30,6 +34,13 @@ class DiagnosticCLI:
         config_dict = cli.config_dict
         outputdir = cli.outputdir
         ...
+
+        # Each part that can fail on its own is skipped, without stopping the others
+        for var in variables:
+            try:
+                ...
+            except Exception as e:
+                cli.log_failure(e, "variable %s", var)
 
         # At the end
         cli.close_dask_cluster()
@@ -176,6 +187,23 @@ class DiagnosticCLI:
             "startdate": reference.get("startdate"),
             "enddate": reference.get("enddate"),
         }
+
+    def log_failure(self, error, msg, *args):
+        """
+        Log an exception caught by the CLI, which then skips that part of the diagnostic and goes on.
+
+        Expected data availability problems (``NoDataError``, ``NotEnoughDataError``) are logged as a warning,
+        any other exception as an error with its traceback, so that the log shows where it was raised.
+
+        Args:
+            error (Exception): The caught exception.
+            msg (str): What is skipped, %-style, e.g. ``"variable %s in region %s"``.
+            *args: The arguments of ``msg``.
+        """
+        if isinstance(error, EXPECTED_ERRORS):
+            self.logger.warning("Skipping " + msg + ": %s: %s", *args, type(error).__name__, error)
+        else:
+            self.logger.error("Skipping " + msg + ": %s: %s", *args, type(error).__name__, error, exc_info=error)
 
     def open_dask_cluster(self):
         """
