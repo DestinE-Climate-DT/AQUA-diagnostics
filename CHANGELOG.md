@@ -18,6 +18,7 @@ Complete list:
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
 - CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
 - Major documentation update (#473)
+- Tropical Cyclones: forward configured `reader_kwargs`, including `config_fdb`, to catalog-based orography reads (#505)
 
 ## [v0.26.0]
 
