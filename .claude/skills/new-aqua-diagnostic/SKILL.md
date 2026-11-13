@@ -163,7 +163,7 @@ clashes, e.g. the ocean `Trends` are re-exported as `OceanTrends`).
   `DataArray` keeps them on the variable, so loading with dates returns `None`. The skeleton saves
   `result.to_dataset()` with the attributes copied to `ds.attrs`; keep that, and keep `test_load_checks_the_period`.
 - Do not create a new instance or `AQUA_*` attribute unless strictly needed: reuse an existing one first
-  (`grep -rhoE "AQUA_[a-zA-Z_]+" aqua/diagnostics | sort -u`), as `AGENTS.md` asks.
+  (`grep -rhoE "AQUA_[a-zA-Z_]+" aqua/diagnostics | sort -u`).
 - Mutable defaults: use `reader_kwargs: dict = None`, never `{}`.
 
 ## Plot class rules (guidelines §4)
