@@ -67,10 +67,8 @@ def test_file_name(data, ref_data, expected):
     assert plot.outputsaver.generate_name("prod") == expected
 
 
-def test_outputsaver_follows_the_datasets(plot):
+def test_get_data_info_builds_the_outputsaver_again(plot):
     saver = plot.outputsaver
-    assert plot.outputsaver is saver
-
     plot.get_data_info(result(model="ICON"))
     assert plot.outputsaver is not saver
     assert plot.outputsaver.model == "ICON"

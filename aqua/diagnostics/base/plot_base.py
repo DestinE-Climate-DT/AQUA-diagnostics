@@ -16,8 +16,7 @@ from .title import TitleBuilder
 
 class PlotBase:
     """
-    Base class for the plot classes of the diagnostics, the plotting counterpart of :class:`Diagnostic`.
-
+    Base class for the plot classes of the diagnostics.
     It holds what every plot class does around its figure: read from the ``AQUA_*`` attributes which
     datasets produced the results, fill a :class:`TitleBuilder` and save through one :class:`OutputSaver`.
     The results, the figure and its description are left to the subclass.
@@ -57,7 +56,7 @@ class PlotBase:
         self.ref_catalogs, self.ref_models, self.ref_exps = [], [], []
         self.ref_startdates, self.ref_enddates = [], []
         self.region = None
-        self._outputsaver = None
+        self.outputsaver = None
 
     @staticmethod
     def _get_attrs(data: Union[xr.DataArray, xr.Dataset]) -> dict:
@@ -68,10 +67,10 @@ class PlotBase:
 
     def get_data_info(self, data, ref_data=None):
         """
-        Read from the ``AQUA_*`` attributes which datasets, region and period the results refer to.
+        Read datasets, region and period from the ``AQUA_*`` attributes and build the OutputSaver.
 
-        The results are not stored. One entry per dataset is kept, so a single result gives one-element lists.
-        The region is the one of the first result.
+        One list entry per dataset; the region is the one of the first result.
+        Subclasses needing more metadata extend this method through ``super()``.
 
         Args:
             data (xr.DataArray, xr.Dataset or list): The results to plot, one per dataset.
@@ -93,27 +92,19 @@ class PlotBase:
         self.ref_startdates = [a.get("AQUA_startdate") for a in ref_attrs]
         self.ref_enddates = [a.get("AQUA_enddate") for a in ref_attrs]
 
-        # The OutputSaver depends on the datasets: it is built again at the next use
-        self._outputsaver = None
-
-    @property
-    def outputsaver(self) -> OutputSaver:
-        """The OutputSaver of all the plotted datasets and references, built at the first use."""
-        if self._outputsaver is None:
-            self._outputsaver = OutputSaver(
-                diagnostic=self.diagnostic_name,
-                catalog=self.catalogs,
-                model=self.models,
-                exp=self.exps,
-                # A single realization is passed as a value: a one-element list would give ['r1'] in the file name
-                realization=OutputSaver.unpack_list(self.realizations),
-                catalog_ref=self.ref_catalogs,
-                model_ref=self.ref_models,
-                exp_ref=self.ref_exps,
-                outputdir=self.outputdir,
-                loglevel=self.loglevel,
-            )
-        return self._outputsaver
+        self.outputsaver = OutputSaver(
+            diagnostic=self.diagnostic_name,
+            catalog=self.catalogs,
+            model=self.models,
+            exp=self.exps,
+            # A single realization is passed as a value: a one-element list would give ['r1'] in the file name
+            realization=OutputSaver.unpack_list(self.realizations),
+            catalog_ref=self.ref_catalogs,
+            model_ref=self.ref_models,
+            exp_ref=self.ref_exps,
+            outputdir=self.outputdir,
+            loglevel=self.loglevel,
+        )
 
     def set_title(self, max_chars: Optional[int] = None, split_on: Optional[list] = None, **kwargs) -> str:
         """
