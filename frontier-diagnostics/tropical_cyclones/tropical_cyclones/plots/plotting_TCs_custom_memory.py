@@ -106,23 +106,14 @@ from matplotlib.colors import (
 # CATEGORY HELPERS
 # ===============================================================================
  
+# Limiti superiori SLP (hPa) per le Cat 0..5: categoria k se pmin <= limite[k]
+# Tabella 1 di Bourdin et al. (2024), da Klotzbach et al. (2020); Cat 0 da Bourdin et al. (2022)
+_SLP_UPPER_LIMITS_HPA = [1005, 990, 975, 960, 945, 925]
+
 def category_from_slp_pa(slp_pa):
-    """TC intensity category [SLP-based] in Pascals (0=TD/TS, 1-5=Cat1-5)."""
-    slp_hpa = slp_pa / 100.0
-    if slp_hpa >= 1005:
-        return 0
-    elif slp_hpa >= 990:
-        return 1
-    elif slp_hpa >= 975:
-        return 2
-    elif slp_hpa >= 960:
-        return 3
-    elif slp_hpa >= 945:
-        return 4
-    elif slp_hpa >= 925:
-        return 5       
-    else:
-        return 5 
+    """Categoria 0-5 dalla SLP in Pa. Sopra 1005 hPa -> 0 (non classificata, accorpata alla Cat 0)."""
+    n = int(np.sum(slp_pa / 100.0 <= np.array(_SLP_UPPER_LIMITS_HPA))) - 1
+    return max(n, 0) 
 
  
  
@@ -159,8 +150,8 @@ def _peak_category(storm_data, method='slp'):
 # ===============================================================================
  
 _CAT_NAMES_SLP = [
-    'TD (≥1005 hPa)', 'Cat 1 (990–1004 hPa)', 'Cat 2 (975–989 hPa)',
-    'Cat 3 (960–974 hPa)', 'Cat 4 (945–959 hPa)', 'Cat 5 (<945 hPa)'
+    'Cat 0 (990–1005 hPa)', 'Cat 1 (975–990 hPa)', 'Cat 2 (960–975 hPa)',
+    'Cat 3 (945–960 hPa)',  'Cat 4 (925–945 hPa)', 'Cat 5 (≤925 hPa)'
 ]
  
 _CAT_NAMES_SSHS = [
@@ -527,8 +518,9 @@ def plot_trajectories_colored(data_or_file, tdict, color_by='category',
     method_label = 'wind-based (IBTrACS)' if cat_method == 'sshs' else 'SLP-based'
     cbar.set_label(f'TC intensity Category [{method_label}]', fontsize=12)
     cbar.set_ticks([0, 1, 2, 3, 4, 5])
-    cbar.set_ticklabels(['TD/TS', 'Cat 1', 'Cat 2', 'Cat 3', 'Cat 4', 'Cat 5'])
-
+    cbar.set_ticklabels(['TD/TS' if cat_method == 'sshs' else 'Cat 0',
+                     'Cat 1', 'Cat 2', 'Cat 3', 'Cat 4', 'Cat 5'])
+    
     # ── title ─────────────────────────────────────────────────────────────────
     if single_cat:
         title = (f"TC Tracks – {names[category]}  [{method_label}]\n"
