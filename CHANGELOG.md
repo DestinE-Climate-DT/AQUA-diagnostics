@@ -9,7 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
-- Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments
+- Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments (#579)
 - CI: the Conda, PyPI, nightly and release workflows call the aqua-core failure report also on success and pass the test result, so a passing scheduled run closes the open failure issue of that suite (#574)
 - DiagnosticCLI: a `Profiler` logger reports wall time, CPU time, maximum memory and dask graph size of each tool, and the memory of the dask cluster when used, at the end of the run (#558)
 - CI: the labeled run that Dependabot starts when opening its PR also runs the tests, so a skipped run no longer hides the passed required check and blocks the PR (#573)
