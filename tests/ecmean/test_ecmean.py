@@ -1,6 +1,7 @@
 """Tests for ecmean diagnostics"""
 
 import os
+from math import isfinite
 
 import pytest
 
@@ -73,7 +74,7 @@ def test_performance_indices(common_setup):
 
 @pytest.mark.diagnostics
 def test_global_mean(common_setup):
-    """Test GlobalMean diagnostic."""
+    """Reject silent NaN results when ECmean cannot parse AQUA's 2t variable."""
     setup = common_setup
     gm = GlobalMean(
         setup["exp"],
@@ -88,6 +89,8 @@ def test_global_mean(common_setup):
     )
     gm.prepare()
     gm.run()
+    # Focus on tas to check that ECmean works with AQUA's 2t variable name.
+    assert isfinite(gm.varmean["tas"]["ALL"]["Global"]), "ECmean failed to compute tas from AQUA's 2t variable"
     outputsaver = OutputSaver(
         diagnostic="ecmean",
         catalog=setup["catalog"],
