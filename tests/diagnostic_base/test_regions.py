@@ -1,9 +1,11 @@
 """Tests for the centralized region lookup in the ``Diagnostic`` base class."""
 
+import os
 import shutil
 from textwrap import dedent
 
 import geopandas as gpd
+import numpy as np
 import pytest
 import shapely
 import xarray as xr
@@ -107,6 +109,26 @@ def test_set_region_user_file_does_not_see_centralized_entries(tmp_path):
     diag = _make_diag()
     with pytest.raises(ValueError, match="not found"):
         diag._set_region(region="nh", regions_file_path=path)
+
+
+@pytest.mark.parametrize("lon", [[-11, -10, -9, 39, 40, 41], [349, 350, 351, 39, 40, 41]])
+def test_select_europe_keeps_boundary_centres(lon):
+    """Europe includes boundary centres in both longitude conventions without polygon masks."""
+    regions_file = os.path.join(
+        os.path.dirname(__file__), "..", "..", "aqua", "diagnostics", "config", "definitions", "regions.yaml"
+    )
+    data = xr.DataArray(
+        np.arange(36).reshape(6, 6),
+        dims=("lat", "lon"),
+        coords={"lat": [29.5, 30, 30.5, 72.5, 72.6, 73.5], "lon": lon},
+        name="2t",
+    )
+    result = _make_diag().select_region(data, region="europe", regions_file_path=regions_file)
+    expected = data.isel(lat=slice(1, 5), lon=slice(1, 5)).assign_coords(lon=[-10, -9, 39, 40])
+    xr.testing.assert_equal(result["data"], expected)
+    assert result["region_object"] is None
+    assert result["data"].attrs["AQUA_region"] == "Europe"
+    assert "Area selection:" in result["data"].attrs["history"]
 
 
 # _resolve_regionmask_object

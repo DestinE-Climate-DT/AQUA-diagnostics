@@ -112,20 +112,21 @@ The diagnostics that can work on a region refer to it by its key in the centrali
 of the AQUA configuration folder (by default ``$HOME/.aqua/``).
 For example, ``regions: ['io', 'sss']`` in the configuration file of the ocean drift, or ``region: 'europe'`` in the one of the biases.
 
-Regions are polygons whenever possible: the `IPCC AR6 reference regions <https://doi.org/10.5194/essd-12-2959-2020>`_
-for land and atmosphere (e.g. ``europe``) and the `IHO sea areas <https://doi.org/10.14284/323>`_ for oceans and seas
+Oceans and seas use polygons from the `IHO sea areas <https://doi.org/10.14284/323>`_
 (e.g. ``io``, ``ao``, ``so``, ``arc_o``, ``ls``, ``ms``).
-The regions with no equivalent in either collection are lon/lat boxes.
+Europe, latitude bands and regions without a polygon equivalent use lon/lat boxes.
+Europe spans 10°W–40°E and 30°N–72.6°N. Its coordinate limits include cell centres on the boundary,
+retaining the centres at 10°W without constructing polygon masks.
 
 A lon/lat box gives the limits of the region, while a polygon region names a polygon collection and the polygons to merge:
 
 .. code-block:: yaml
 
     regions:
-      nh:
-        longname: North Midlatitudes
-        lon_limits: [-180, 180]
-        lat_limits: [30, 90]
+      europe:
+        longname: Europe
+        lon_limits: [-10, 40]
+        lat_limits: [30, 72.6]
       gs:
         regionmask: iho
         regionmask_names: [Greenland Sea, Norwegian Sea]
