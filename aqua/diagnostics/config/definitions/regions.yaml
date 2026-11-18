@@ -1,12 +1,12 @@
 # Centralized region definitions for all AQUA diagnostics (custom file: ``regions_file_path``).
 # Documentation: https://aqua-diagnostics.readthedocs.io/en/latest/stateoftheart_diagnostics/index.html#diagnostics-regions
-# Polygons where possible: IPCC AR6 regions for land and atmosphere, IHO sea areas for
-# oceans and seas; lon/lat boxes for everything else. Keys of a polygon region:
+# IHO polygons for oceans and seas; lon/lat boxes for Europe, latitude bands and regions
+# without a polygon equivalent. Keys of a polygon region:
 #   - ``regionmask``: a source below or a regionmask.defined_regions object (e.g. srex)
 #   - ``regionmask_names``: sub-regions to merge (default: ``longname``)
-#   - ``frac_threshold``: also keep cells covered above this fraction (default 0.0 = any touching cell,
-#     null = cell centres only): coarse model grids (e.g. LRA r100) have many coastal ocean cells
-#     centred on IHO land. Needs a regular lon/lat grid.
+#   - ``frac_threshold``: default null = cell centres only, avoiding approximate fractional masks.
+#     Numeric values select cells covered above this fraction (0.0 = any nonzero sampled coverage)
+#     and need a regular lon/lat grid. Set 0.0 explicitly to retain coastal ocean cells centred on IHO land.
 
 # Polygon collections: read as <name>_<simplify>.gpkg from the regions/ folder next to this file (filled when the
 # container is built), otherwise downloaded once, simplified (degrees) and cached with regionmask's data.
@@ -22,12 +22,12 @@ sources:
 
 regions:
 
-  # --- Land regions (IPCC AR6) ---
-  # AR6 regions are not clipped to the coastline, so coastal cells and small islands (e.g. Ireland) are kept.
+  # --- Europe ---
+  # Using lonlat limits instead of a polygon mask to retain centres at 10°W (Ireland coast)
   europe:
-    regionmask: ar6
-    regionmask_names: [N.Europe, West&Central-Europe, Mediterranean]
     longname: Europe
+    lon_limits: [-10, 40]
+    lat_limits: [30, 72.6]
 
   # --- Ocean basins and seas (IHO sea areas) ---
   # Each IHO ocean excludes its marginal seas, which are separate sea areas.
