@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- Projects: install as the `diagnostics` project (plugin contract v2 of aqua-core 1.3): tool files are read from `tools/<project>`, analysis configs use `${AQUA_PROJECT}`, CLIs without `--config` read their template from `templates/collections`
 - Regions: default to cell-centre selection (`frac_threshold: null`) to avoid expensive approximate fractional masks; retain numeric thresholds as explicit overrides. Define Europe as an inclusive lon/lat box (10°W–40°E, 30°N–72.6°N) to retain its western boundary cells without polygon masks (#569).
 - CI: the Conda, PyPI, nightly and release workflows call the aqua-core failure report also on success and pass the test result, so a passing scheduled run closes the open failure issue of that suite (#574)
 - DiagnosticCLI: a `Profiler` logger reports wall time, CPU time, maximum memory and dask graph size of each tool, and the memory of the dask cluster when used, at the end of the run (#558)

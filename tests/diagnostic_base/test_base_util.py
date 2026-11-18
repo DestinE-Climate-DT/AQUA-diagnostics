@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 from pathlib import Path
 from unittest.mock import patch
 
@@ -9,6 +10,7 @@ import pytest
 import xarray as xr
 
 from aqua.core.exceptions import NotEnoughDataError
+from aqua.core.logger import log_configure
 from aqua.core.util import dump_yaml
 from aqua.diagnostics import get_install_dirs
 from aqua.diagnostics.base import (
@@ -24,12 +26,14 @@ from aqua.diagnostics.base import (
     template_parse_arguments,
 )
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles
+from aqua.diagnostics.teleconnections.base import BaseMixin
 from tests.shared_constants import LOGLEVEL
 
 loglevel = LOGLEVEL
 
 pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
-REAL_CONFIG_DIR = Path(__file__).resolve().parents[2] / "aqua" / "diagnostics" / "config"
+REPO_DIAGNOSTICS_DIR = Path(__file__).resolve().parents[2] / "aqua" / "diagnostics"
+REAL_CONFIG_DIR = REPO_DIAGNOSTICS_DIR / "config"
 
 
 def test_template_parse_arguments():
@@ -127,56 +131,104 @@ def test_load_diagnostic_config():
     assert "gregory" in ts_dict["diagnostics"]
 
 
-def test_get_diagnostic_configpath(monkeypatch):
-    """Path resolver handles collections/tools/templates and rejects invalid folder names."""
+@pytest.fixture
+def aqua_configdir(tmp_path, monkeypatch):
+    """Return a factory of AQUA config folders with or without the ``project`` key (pre-project layout)."""
+    monkeypatch.delenv("AQUA_PROJECT", raising=False)
 
-    class _RepoConfigLocator:
-        def __init__(self, logger=None):
-            self.configdir = str(REAL_CONFIG_DIR)
+    def _make(project):
+        configdir = tmp_path / "aqua"
+        cfg = {"machine": "test-machine"}
+        if project:
+            cfg["project"] = project
+        tools = configdir / "tools" / project if project else configdir / "tools"
+        (tools / "teleconnections").mkdir(parents=True)
+        (configdir / "templates" / "collections").mkdir(parents=True)
+        dump_yaml(outfile=str(configdir / "config-aqua.yaml"), cfg=cfg)
+        monkeypatch.setenv("AQUA_CONFIG", str(configdir))
+        return configdir, tools
 
-    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigLocator", _RepoConfigLocator)
+    return _make
 
-    assert get_diagnostic_configpath("timeseries", folder="collections") == str(REAL_CONFIG_DIR / "collections" / "timeseries")
-    assert get_diagnostic_configpath("timeseries", folder="tools") == str(REAL_CONFIG_DIR / "tools" / "timeseries")
-    assert get_diagnostic_configpath("timeseries", folder="templates") == str(REAL_CONFIG_DIR / "templates" / "collections")
+
+@pytest.mark.parametrize("project", ["diagnostics", None], ids=["project", "pre-project"])
+def test_get_diagnostic_configpath(aqua_configdir, project):
+    """Tools are looked up in the active project folder, templates in the flat templates folder."""
+    configdir, tools = aqua_configdir(project)
+
+    assert get_diagnostic_configpath("teleconnections", folder="tools") == str(tools / "teleconnections")
+    assert get_diagnostic_configpath("timeseries") == str(configdir / "templates" / "collections")
 
     with pytest.raises(ValueError, match="Invalid folder name"):
-        get_diagnostic_configpath("timeseries", folder="invalid")
+        get_diagnostic_configpath("timeseries", folder="collections")
 
 
-def test_get_diagnostic_configpath_without_catalogs(tmp_path, monkeypatch):
-    """Diagnostic path resolution does not require catalog configuration."""
-    configdir = tmp_path / "config"
-    configdir.mkdir()
-    dump_yaml(
-        outfile=str(configdir / "config-aqua.yaml"),
-        cfg={"machine": "test-machine"},
-    )
-    monkeypatch.setenv("AQUA_CONFIG", str(configdir))
+def test_get_diagnostic_configpath_env_project(aqua_configdir, monkeypatch):
+    """AQUA_PROJECT (exported by aqua analysis) selects the tools folder of another project."""
+    configdir, _ = aqua_configdir("diagnostics")
+    monkeypatch.setenv("AQUA_PROJECT", "other")
 
-    assert get_diagnostic_configpath("timeseries") == str(configdir / "collections" / "timeseries")
+    with pytest.raises(FileNotFoundError, match="other"):
+        get_diagnostic_configpath("teleconnections", folder="tools")
+
+    (configdir / "tools" / "other").mkdir()
+    expected = configdir / "tools" / "other" / "teleconnections"
+    assert get_diagnostic_configpath("teleconnections", folder="tools") == str(expected)
 
 
-def test_load_diagnostic_config_default_filename(monkeypatch):
-    """When no explicit config/default_config is provided, config-{diagnostic}.yaml is used."""
-    calls = {}
+@pytest.mark.parametrize("project", ["diagnostics", None], ids=["project", "pre-project"])
+def test_teleconnections_definition_from_tools(aqua_configdir, project):
+    """Teleconnections read their default definitions from the tools folder of the active project."""
+    _, tools = aqua_configdir(project)
+    (tools / "teleconnections" / "definitions").mkdir()
+    dump_yaml(outfile=str(tools / "teleconnections" / "definitions" / "test.yaml"), cfg={"NAO": {"ok": True}})
+    mixin = BaseMixin.__new__(BaseMixin)
+    mixin.logger = log_configure(log_level=loglevel, log_name="test")
 
-    def _fake_get_path(diagnostic, folder="collections", loglevel="WARNING"):
-        calls["path_args"] = (diagnostic, folder, loglevel)
-        return "/tmp/aqua-config/collections/timeseries"
+    assert mixin.load_definition(definition="test", telecname="NAO") == {"ok": True}
 
-    def _fake_load_yaml(path):
-        calls["loaded_path"] = path
-        return {"ok": True}
 
-    monkeypatch.setattr("aqua.diagnostics.base.util.get_diagnostic_configpath", _fake_get_path)
-    monkeypatch.setattr("aqua.diagnostics.base.util.load_yaml", _fake_load_yaml)
+@pytest.mark.parametrize(
+    "default_config, expected",
+    [(None, "config-timeseries.yaml"), ("config-biases.yaml", "config-biases.yaml")],
+)
+def test_load_diagnostic_config_default(aqua_configdir, default_config, expected):
+    """Without --config, the default file is read from templates/collections."""
+    configdir, _ = aqua_configdir("diagnostics")
+    dump_yaml(outfile=str(configdir / "templates" / "collections" / expected), cfg={"ok": expected})
 
-    out = load_diagnostic_config("timeseries", config=None, default_config=None, folder="collections", loglevel="DEBUG")
+    out = load_diagnostic_config("timeseries", config=None, default_config=default_config, loglevel=loglevel)
 
-    assert out == {"ok": True}
-    assert calls["path_args"] == ("timeseries", "collections", "DEBUG")
-    assert calls["loaded_path"] == "/tmp/aqua-config/collections/timeseries/config-timeseries.yaml"
+    assert out == {"ok": expected}
+
+
+@pytest.mark.parametrize(
+    "cli_module",
+    [
+        "biases.cli_biases",
+        "boxplots.cli_boxplots",
+        "ensemble.cli_multi_model_maps_ensemble",
+        "ensemble.cli_multi_model_timeseries_ensemble",
+        "ensemble.cli_zonal_ensemble",
+        "histogram.cli_histogram",
+        "lat_lon_profiles.cli_lat_lon_profiles",
+        "ocean_drift.cli_ocean_drift",
+        "ocean_stratification.cli_ocean_stratification",
+        "ocean_trends.cli_ocean_trends",
+        "seaice.cli_seaice",
+        "teleconnections.cli_teleconnections",
+        "timeseries.cli_timeseries",
+        "trends.cli_trends",
+    ],
+)
+def test_cli_default_config_has_template(cli_module):
+    """The default_config of each CLI exists in templates/collections, where it is read without --config."""
+    source = (REPO_DIAGNOSTICS_DIR / cli_module.replace(".", os.sep)).with_suffix(".py").read_text()
+    templates = {path.name for path in (REPO_DIAGNOSTICS_DIR / "templates" / "collections").glob("*.yaml")}
+
+    names = set(re.findall(r'"(config[-_][\w.-]+\.yaml)"', source))
+    assert names, f"No default config found in {cli_module}"
+    assert names <= templates, f"{cli_module}: {sorted(names - templates)} not in templates/collections"
 
 
 def test_merge_config_args():
@@ -380,9 +432,14 @@ def test_minimum_months_required_class_attribute():
 
 
 def test_get_install_dirs():
-    """Test that get_install_dirs returns a list of directories."""
-    dirs = get_install_dirs()
-    assert isinstance(dirs, dict)
-    # Check it is not empty and contains expected keys
-    assert "config" in dirs
-    assert "templates" in dirs
+    """get_install_dirs follows the plugin contract version 2 of aqua-core."""
+    assert get_install_dirs() == {
+        "contract": 2,
+        "config": ["analysis", "collections", "tools"],
+        "flat": ["definitions"],
+        "templates": ["collections"],
+        "files": [],
+    }
+    for key in ("config", "flat"):
+        for folder in get_install_dirs()[key]:
+            assert (REAL_CONFIG_DIR / folder).is_dir()

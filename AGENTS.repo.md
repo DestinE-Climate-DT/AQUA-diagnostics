@@ -46,7 +46,9 @@ Anything generic (not tied to one tool) belongs in aqua-core, not here.
 | `notebooks/diagnostics/<tool>/`, `docs/sphinx/source/` | Usage examples and per-tool documentation |
 
 `config/` and `templates/` are installed into `$AQUA_CONFIG` (default `~/.aqua`) by `aqua install <machine>` through the
-`aqua.plugins` entry point (`get_install_dirs()`). Repo edits are visible at runtime only with an editable install
+`aqua.plugins` entry point (`get_install_dirs()`, plugin contract v2): `analysis`, `collections` and `tools` go to the
+`diagnostics` project subfolder (`~/.aqua/tools/diagnostics/<tool>`), `definitions` and templates stay flat.
+Analysis configs refer to them as `${AQUA_CONFIG}/collections/${AQUA_PROJECT}/...`. Repo edits are visible at runtime only with an editable install
 (`aqua install <machine> --diagnostics <repo-path>`, which symlinks); otherwise reinstall.
 
 ---
@@ -100,7 +102,7 @@ if __name__ == "__main__":
 - CLI flags override **only `datasets[0]`**; `cli.dataset_args()` applies CLI regrid/dates, `cli.reference_args()` never does
 - Per-variable settings: `load_var_config()` with precedence `params.default < params.<var> < inline dict`
 - `--reader_kwargs` takes JSON and rejects keys that have a dedicated flag
-- Always pass `--config`: the `default_config` fallback points to `$AQUA_CONFIG/collections/<tool>/`, which no longer exists
+- Without `--config` the CLI reads `default_config` from `$AQUA_CONFIG/templates/collections/`: keep it equal to the tool's template name
 - `.j2` files contain unrendered `{{ ... }}` dates: for standalone runs use the `legacy/` YAML or a custom config
 
 ```bash

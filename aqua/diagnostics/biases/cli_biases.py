@@ -34,7 +34,7 @@ def main(argv=None):
     cli = DiagnosticCLI(
         args,
         diagnostic_name=TOOLNAME_KEY,
-        default_config="config_biases.yaml",
+        default_config="config-biases.yaml",
     )
     cli.prepare()
     cli.open_dask_cluster()

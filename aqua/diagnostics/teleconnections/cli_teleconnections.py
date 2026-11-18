@@ -37,7 +37,7 @@ def main(argv=None):
     cli = DiagnosticCLI(
         args,
         diagnostic_name="teleconnections",
-        default_config="config_teleconnections.yaml",
+        default_config="config-teleconnections.yaml",
         log_name="Teleconnections CLI",
     ).prepare()
     cli.open_dask_cluster()

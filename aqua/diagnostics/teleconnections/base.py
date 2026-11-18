@@ -3,10 +3,9 @@ from typing import Union
 
 import xarray as xr
 
-from aqua.core.configurer import ConfigLocator
 from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
-from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
+from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder, get_diagnostic_configpath
 
 xr.set_options(keep_attrs=True)
 
@@ -174,10 +173,9 @@ class BaseMixin(Diagnostic):
         # Add yaml to definition if not present
         if not definition.endswith(".yaml"):
             definition = f"{definition}.yaml"
-        # If configdir is not provided, use the default configdir from Locator
+        # If configdir is not provided, use the definitions shipped in the tools folder of the active project
         if not configdir:
-            configdir = ConfigLocator().configdir
-            configdir = os.path.join(configdir, "tools", "teleconnections", "definitions")
+            configdir = os.path.join(get_diagnostic_configpath("teleconnections", folder="tools"), "definitions")
 
         definition_file = os.path.join(configdir, definition)
         self.logger.debug(f"Loading definition file: {definition_file}")
