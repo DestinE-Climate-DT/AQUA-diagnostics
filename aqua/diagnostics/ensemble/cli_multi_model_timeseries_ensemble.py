@@ -27,7 +27,7 @@ from aqua.diagnostics.ensemble import (
     generate_realizations_path,
 )
 
-DEFAULT_CONFIG = "config_multi_model_timeseries_ensemble.yaml"
+DEFAULT_CONFIG = "config-ensemble_timeseries.yaml"
 
 
 def parse_arguments(args):

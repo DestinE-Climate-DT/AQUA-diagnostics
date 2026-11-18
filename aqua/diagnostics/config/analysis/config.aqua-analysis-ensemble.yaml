@@ -9,6 +9,7 @@
 # Variables $AQUA_CORE, $AQUA_DIAGNOSTICS, $AQUA_CONFIG and $OUTPUT can be used to refer to
 # the directory of the AQUA-core module, the directory of the AQUA-diagnostics module,
 # the config directory (i.e. .aqua) and the output directory respectively.
+# $AQUA_PROJECT is the active project (e.g. diagnostics), the subfolder of analysis and collections.
 
 job:
     max_threads: 0  # Set to the desired maximum number of threads, or leave it as 0 for no limit
@@ -53,7 +54,7 @@ run:
 diagnostics:
   ensemble_atmosphere2d:
     ensemble:
-      config: "${AQUA_CONFIG}/collections/legacy/atmosphere2d/config-atmosphere2d-berkeley-ensemble.yaml"
+      config: "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/legacy/atmosphere2d/config-atmosphere2d-berkeley-ensemble.yaml"
   ensemble_ocean2d:
     ensemble:
-      config: "${AQUA_CONFIG}/collections/legacy/ocean2d/config-ocean2d-ensemble.yaml"
+      config: "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/legacy/ocean2d/config-ocean2d-ensemble.yaml"

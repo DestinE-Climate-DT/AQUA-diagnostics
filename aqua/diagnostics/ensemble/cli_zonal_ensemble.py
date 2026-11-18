@@ -54,7 +54,7 @@ def main(argv=None):
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
-    cli = DiagnosticCLI(args, diagnostic_name="EnsembleZonal", default_config="config_zonalmean_ensemble.yaml")
+    cli = DiagnosticCLI(args, diagnostic_name="EnsembleZonal", default_config="config-ensemble_zonalmean.yaml")
 
     # Preparing Dask cluster
     cli.prepare()

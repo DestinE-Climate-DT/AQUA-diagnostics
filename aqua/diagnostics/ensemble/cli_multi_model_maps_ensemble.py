@@ -28,7 +28,7 @@ from aqua.diagnostics.ensemble import (
     generate_realizations_path,
 )
 
-DEFAULT_CONFIG = "config_multi_model_maps_ensemble.yaml"
+DEFAULT_CONFIG = "config-ensemble_latlon.yaml"
 
 
 def parse_arguments(args):

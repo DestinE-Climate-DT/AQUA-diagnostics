@@ -47,11 +47,11 @@ All tools of a collection share the output folder: that is why `diagnostic_name`
 | Folder in the repo | Installed as | Used for |
 |---|---|---|
 | `templates/collections/config-<name>.yaml` | `$AQUA_CONFIG/templates/collections/` | Standalone template, the starting point for a user. |
-| `config/collections/jinja/<collection>/*.j2` | `$AQUA_CONFIG/collections/jinja/` | Configs run by `aqua analysis`, rendered with the dates of the experiment kind (`{{ default.startdate }}`, `{{ timeseries.std_startdate }}`) from `config/analysis/climatedt-experiment-kind.yaml`. One file can configure several tools of a collection against one reference. |
-| `config/collections/legacy/<collection>/*.yaml` | `$AQUA_CONFIG/collections/legacy/` | Plain-YAML versions without Jinja. |
-| `config/tools/<name>/` | `$AQUA_CONFIG/tools/<name>/` | Lookup files of one tool. |
+| `config/collections/jinja/<collection>/*.j2` | `$AQUA_CONFIG/collections/diagnostics/jinja/` | Configs run by `aqua analysis`, rendered with the dates of the experiment kind (`{{ default.startdate }}`, `{{ timeseries.std_startdate }}`) from `config/analysis/climatedt-experiment-kind.yaml`. One file can configure several tools of a collection against one reference. |
+| `config/collections/legacy/<collection>/*.yaml` | `$AQUA_CONFIG/collections/diagnostics/legacy/` | Plain-YAML versions without Jinja. |
+| `config/tools/<name>/` | `$AQUA_CONFIG/tools/diagnostics/<name>/` | Lookup files of one tool. |
 | `config/definitions/regions.yaml` | `$AQUA_CONFIG/definitions/` | Shared region registry. |
-| `config/analysis/` | `$AQUA_CONFIG/analysis/` | `aqua analysis` orchestration. |
+| `config/analysis/` | `$AQUA_CONFIG/analysis/diagnostics/` | `aqua analysis` orchestration. |
 
 Helpers: `get_diagnostic_configpath(diagnostic, folder=...)`, `load_diagnostic_config(...)`. `.j2` files are only
 rendered by `aqua analysis`: a standalone run with a `.j2` keeps the literal `'{{ default.startdate }}'`.
@@ -106,8 +106,8 @@ cli:
 diagnostics:
   atmosphere2d:                       # an existing collection, listed in one of the `run:` groups
     <name>:
-      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2",
-               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"]   # one per reference
+      config: ["${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/atmosphere2d/config-atmosphere2d-era5.j2",
+               "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"]   # one per reference
       # optional: outname, nworkers, extra, nocluster
 ```
 

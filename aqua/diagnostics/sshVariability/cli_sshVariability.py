@@ -54,6 +54,7 @@ if __name__ == "__main__":
         diagnostic="sshVariability",
         config=args.config,
         default_config="config_ssh.yaml",
+        folder="tools",
         loglevel=loglevel,
     )
     config_dict = merge_config_args(config=config_dict, args=args, loglevel=loglevel)
