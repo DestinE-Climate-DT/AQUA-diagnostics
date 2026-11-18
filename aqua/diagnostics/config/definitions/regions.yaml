@@ -23,7 +23,7 @@ sources:
 regions:
 
   # --- Europe ---
-  # Inclusive coordinate limits retain centres at 10°W without constructing polygon masks.
+  # Using lonlat limits instead of a polygon mask to retain centres at 10°W (Ireland coast)
   europe:
     longname: Europe
     lon_limits: [-10, 40]
