@@ -94,8 +94,8 @@ How the skeleton handles a reference, which holds in every case:
 - The CLI builds it with `cli.reference_args(reference)` (the reference keeps its own `regrid`, `startdate`,
   `enddate`: the CLI options do not override them) and its own `reader_kwargs`, and uses only the first entry of
   `references` (warn if there are more).
-- A reference without data (`NoDataError`, `NotEnoughDataError`) must **not** cost the figure of the dataset:
-  warn and plot without it, unless the reference is required.
+- A failing reference (no data, not enough data, or any other error) must **not** cost the figure of the dataset:
+  log it with `cli.log_failure` and plot without it, unless the reference is required.
 - The plot class takes `ref_data` and reads the reference from its `AQUA_*` attributes, like the data. It names the
   reference (and its period) in the caption; `OutputSaver` receives `catalog_ref/model_ref/exp_ref`, so the figure
   filename carries the reference. For a comparison figure (bias, difference) pass the reference to `TitleBuilder`
@@ -196,8 +196,11 @@ clashes, e.g. the ocean `Trends` are re-exported as `OceanTrends`).
 - Honour `diagnostics.<key>.run` (exit cleanly when false or missing) and `diagnostic_name`.
 - Per-variable settings with `load_var_config(config_dict, var, diagnostic=<key>)`
   (`params.default` < `params.<var>` < inline; regions default to `[None]`).
-- Failure policy: catch `NoDataError, NotEnoughDataError, KeyError, ValueError` **per variable/region**, warn and
-  continue, so one missing variable does not kill a collection run.
+- Failure policy: wrap **each unit that can fail on its own** (variable, region, dataset, reference, sub-diagnostic)
+  in `try/except Exception` and report it with `cli.log_failure(e, "variable %s in region %s", var, region)`, then
+  continue, so one missing variable does not kill a collection run. `log_failure` logs `NoDataError` and
+  `NotEnoughDataError` as a warning, anything else as an error with its traceback (collected by the `aqua analysis`
+  report). A failing dataset is skipped and the other datasets are plotted.
 - Plot-only: `if not cli.plot_only: run`, `if cli.plot_only or cli.save_netcdf: load`, plot only if results exist.
 - No science in the CLI.
 - Contract with `aqua analysis`: the CLI is launched with the whole `template_parse_arguments` set, must work with
@@ -262,7 +265,7 @@ check that every `.j2` renders for every experiment kind and that the keys are k
 - [ ] Results named, in memory, with `AQUA_*` provenance attributes
 - [ ] `save_netcdf()` and `load()` share one `_extra_keys` helper; `load()` passes `startdate`/`enddate`
 - [ ] Plot class reads metadata from attributes, uses `TitleBuilder`, writes a description, saves with `OutputSaver`
-- [ ] CLI with `main(argv=None)`, `template_parse_arguments`, `DiagnosticCLI`, per-variable error handling, `plot_only`, cluster closed in `finally`
+- [ ] CLI with `main(argv=None)`, `template_parse_arguments`, `DiagnosticCLI`, `cli.log_failure` per variable/region/dataset, `plot_only`, cluster closed in `finally`
 - [ ] Template `templates/collections/config-<name>.yaml` (+ `.j2` collection config if it runs in `aqua analysis`)
 - [ ] Entry in `config.aqua-analysis.yaml`, in `config.grouping.yaml` and in `KNOWN_DIAGNOSTIC_KEYS`
 - [ ] Diagnostic tests (with save/load round trip) and CLI tests

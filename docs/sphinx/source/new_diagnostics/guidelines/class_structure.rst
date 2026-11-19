@@ -89,6 +89,23 @@ Command-Line Interface (CLI)
 A CLI is available to streamline the execution of diagnostics and comparisons.
 It should have a minimal mandatory set of arguments and be able to parse additional arguments if necessary (See :ref:`diagnostics-cli-arguments`).
 
+A failure in one part of the diagnostic must not stop the rest of the run, which in ``aqua analysis`` shares its Dask cluster
+with the other diagnostics. Every unit that can fail on its own (a variable, a region, a dataset, a reference, a sub-diagnostic)
+is therefore wrapped in its own ``try``/``except`` block, which reports the failure with the ``log_failure`` method of ``DiagnosticCLI``
+and moves on to the next unit:
+
+.. code-block:: python
+
+    for region in regions:
+        try:
+            ...
+        except Exception as e:
+            cli.log_failure(e, "variable %s in region %s", var, region)
+
+Missing or insufficient data (``NoDataError``, ``NotEnoughDataError``) are logged as a warning, any other exception as an
+error together with its traceback, so that the log shows where the problem was raised.
+A failing dataset is skipped and the other datasets are still plotted, a failing reference is left out of the plot.
+
 .. _configuration-file-guidelines:
 
 Configuration file

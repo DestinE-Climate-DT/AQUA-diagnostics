@@ -1,10 +1,14 @@
 """Tests for DiagnosticCLI base class."""
 
+import io
+import logging
 import os
 from types import SimpleNamespace
 
 import pytest
 
+from aqua.core.exceptions import NoDataError, NotEnoughDataError
+from aqua.core.logger import CustomLogColors
 from aqua.core.util import dump_yaml
 from aqua.diagnostics.base.cli_base import DiagnosticCLI
 
@@ -371,3 +375,34 @@ class TestDiagnosticCLI:
         assert first_dataset["model"] == "OverrideModel"
         assert first_dataset["exp"] == "override-exp"
         assert first_dataset["source"] == "override-source"
+
+    @pytest.mark.parametrize(
+        "error, level, traceback",
+        [
+            (NoDataError("no data"), "WARNING", False),
+            (NotEnoughDataError("too short"), "WARNING", False),
+            (ValueError("boom"), "ERROR", True),
+            (KeyError("boom"), "ERROR", True),
+        ],
+    )
+    def test_log_failure(self, mock_args, error, level, traceback):
+        """Expected data errors are warnings without traceback, any other exception an error with its traceback."""
+        cli = DiagnosticCLI(args=mock_args, diagnostic_name="test_diagnostic", default_config="config_test.yaml")
+        cli._setup_logging()
+
+        # Same formatter as the AQUA loggers, whose output is scanned by the aqua analysis report
+        stream = io.StringIO()
+        handler = logging.StreamHandler(stream)
+        handler.setFormatter(CustomLogColors())
+        cli.logger.addHandler(handler)
+        try:
+            try:
+                raise error
+            except Exception as e:
+                cli.log_failure(e, "variable %s in region %s", "2t", "global")
+        finally:
+            cli.logger.removeHandler(handler)
+
+        output = stream.getvalue()
+        assert f"{level:<8} -> Skipping variable 2t in region global: {type(error).__name__}: {error}" in output
+        assert ("Traceback (most recent call last):" in output) is traceback

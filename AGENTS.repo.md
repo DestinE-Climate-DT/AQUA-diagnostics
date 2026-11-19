@@ -88,7 +88,11 @@ def main(argv=None):
     cli.open_dask_cluster()
     tool_dict = cli.config_dict["diagnostics"].get("mydiag", {})
     if tool_dict.get("run", False):
-        ...  # loop over variables: catch NoDataError/NotEnoughDataError/KeyError/ValueError, log a warning, continue
+        for var in tool_dict.get("variables", []):  # same for regions, datasets, references, ...
+            try:
+                ...
+            except Exception as e:
+                cli.log_failure(e, "variable %s", var)  # and continue with the next one
     cli.close_dask_cluster()
 
 
@@ -99,6 +103,11 @@ if __name__ == "__main__":
 - `prepare()` loads the YAML, merges CLI flags, sets the logger and `cli.outputdir/rebuild/save_format/save_netcdf/plot_only/dpi`
 - CLI flags override **only `datasets[0]`**; `cli.dataset_args()` applies CLI regrid/dates, `cli.reference_args()` never does
 - Per-variable settings: `load_var_config()` with precedence `params.default < params.<var> < inline dict`
+- Failure policy: whatever can fail on its own (variable, region, dataset, reference, sub-diagnostic, ...) gets its own
+  `try/except Exception`, reported with `cli.log_failure(e, "<what is skipped>", *args)`: `NoDataError` and
+  `NotEnoughDataError` are logged as a warning, anything else as an error with its traceback, which the `aqua analysis`
+  report collects. A failing dataset is skipped and the others are plotted; a failing reference is not plotted.
+  Configuration errors that hold for the whole run may still raise
 - `--reader_kwargs` takes JSON and rejects keys that have a dedicated flag
 - Always pass `--config`: the `default_config` fallback points to `$AQUA_CONFIG/collections/<tool>/`, which no longer exists
 - `.j2` files contain unrendered `{{ ... }}` dates: for standalone runs use the `legacy/` YAML or a custom config
