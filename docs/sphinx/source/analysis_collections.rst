@@ -87,7 +87,7 @@ The content of ``default`` is:
 
 The kind name is also passed to the jinja files as ``kind``. This name is reserved and cannot be defined in the kind file.
 
-.. note::
+.. warning::
 
     The deep merge only completes a kind starting from ``default``. It acts *inside* each ``period`` block
     (a kind can override only ``period.standard.enddate`` and keep the other three keys),
