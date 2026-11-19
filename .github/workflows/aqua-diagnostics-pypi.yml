@@ -47,7 +47,7 @@ jobs:
 
   report-failure:
     needs: aqua-diagnostics-pypi-tests
-    if: ${{ always() && needs.aqua-diagnostics-pypi-tests.result == 'failure' }}
+    if: ${{ always() && (needs.aqua-diagnostics-pypi-tests.result == 'failure' || needs.aqua-diagnostics-pypi-tests.result == 'success') }}
     permissions:
       contents: read
       actions: read
@@ -55,3 +55,4 @@ jobs:
     uses: DestinE-Climate-DT/AQUA/.github/workflows/report-failure-reusable.yml@main
     with:
       test-name: PyPI
+      result: ${{ needs.aqua-diagnostics-pypi-tests.result }}

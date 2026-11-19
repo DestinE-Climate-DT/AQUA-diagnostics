@@ -1,11 +1,14 @@
 """Tests for the centralized region lookup in the ``Diagnostic`` base class."""
 
+import os
 import shutil
 from textwrap import dedent
 
 import geopandas as gpd
+import numpy as np
 import pytest
 import shapely
+import xarray as xr
 
 from aqua.diagnostics.base import Diagnostic, region_sources
 from tests.shared_constants import LOGLEVEL
@@ -108,18 +111,48 @@ def test_set_region_user_file_does_not_see_centralized_entries(tmp_path):
         diag._set_region(region="nh", regions_file_path=path)
 
 
+@pytest.mark.parametrize("lon", [[-11, -10, -9, 39, 40, 41], [349, 350, 351, 39, 40, 41]])
+def test_select_europe_keeps_boundary_centres(lon):
+    """Europe includes boundary centres in both longitude conventions without polygon masks."""
+    regions_file = os.path.join(
+        os.path.dirname(__file__), "..", "..", "aqua", "diagnostics", "config", "definitions", "regions.yaml"
+    )
+    data = xr.DataArray(
+        np.arange(36).reshape(6, 6),
+        dims=("lat", "lon"),
+        coords={"lat": [29.5, 30, 30.5, 72.5, 72.6, 73.5], "lon": lon},
+        name="2t",
+    )
+    result = _make_diag().select_region(data, region="europe", regions_file_path=regions_file)
+    expected = data.isel(lat=slice(1, 5), lon=slice(1, 5)).assign_coords(lon=[-10, -9, 39, 40])
+    xr.testing.assert_equal(result["data"], expected)
+    assert result["region_object"] is None
+    assert result["data"].attrs["AQUA_region"] == "Europe"
+    assert "Area selection:" in result["data"].attrs["history"]
+
+
 # _resolve_regionmask_object
-def test_resolve_regionmask_object_reads_shipped_copy(tmp_path):
-    """Polygons in regions/ next to the regions file (as in the container) are read without downloading."""
+@pytest.mark.parametrize(
+    "threshold_entry, expected_threshold, expected_columns",
+    [
+        ("", None, [1, 2]),
+        (", frac_threshold: null", None, [1, 2]),
+        (", frac_threshold: 0.0", 0.0, [0, 1, 2]),
+        (", frac_threshold: 0.5", 0.5, [1, 2]),
+    ],
+    ids=["default-centres", "explicit-centres", "any-coverage", "half-coverage"],
+)
+def test_resolve_regionmask_object_reads_shipped_copy(tmp_path, threshold_entry, expected_threshold, expected_columns):
+    """Select from local polygons with cell centres by default, preserving explicit fractional thresholds."""
     path = _write_yaml(
         tmp_path / "user.yaml",
         """
         sources:
           box: {url: "https://invalid.invalid/box.zip", names: name, simplify: 0}
         regions:
-          mybox: {longname: My Box, regionmask: box, regionmask_names: [Box]}
+          mybox: {longname: My Box, regionmask: box, regionmask_names: [Box]THRESHOLD}
           centres: {longname: Box, regionmask: box, frac_threshold: null}
-    """,
+    """.replace("THRESHOLD", threshold_entry),
     )
     (tmp_path / "regions").mkdir()
     box = gpd.GeoDataFrame({"name": ["Box"]}, geometry=[shapely.box(0, 0, 10, 10)], crs="EPSG:4326")
@@ -127,8 +160,18 @@ def test_resolve_regionmask_object_reads_shipped_copy(tmp_path):
     diag = _make_diag()
     region_object, region_sel, frac_threshold = diag._resolve_regionmask_object("mybox", regions_file_path=path)
     assert region_object.names == ["Box"]
-    assert (region_sel, frac_threshold) == (["Box"], 0.0)  # any touching cell by default
+    assert (region_sel, frac_threshold) == (["Box"], expected_threshold)
     assert diag._resolve_regionmask_object("centres", regions_file_path=path)[1:] == ("Box", None)
+    data = xr.DataArray(
+        [[1, 2, 3], [4, 5, 6]],
+        dims=("lat", "lon"),
+        coords={"lat": [0.5, 1.5], "lon": [-0.25, 0.75, 1.75]},
+    )
+    # The first column's centres are outside, but its cells have 25% coverage.
+    selected = diag.select_region(data, region="mybox", regions_file_path=path)["data"]
+    xr.testing.assert_equal(selected, data.isel(lon=expected_columns))
+    assert selected.attrs["AQUA_region"] == "My Box"
+    assert "Regionmask selection: Box" in selected.attrs["history"]
 
 
 # fetch_region_sources
