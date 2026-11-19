@@ -47,14 +47,14 @@ All tools of a collection share the output folder: that is why `diagnostic_name`
 | Folder in the repo | Installed as | Used for |
 |---|---|---|
 | `templates/collections/config-<name>.yaml` | `$AQUA_CONFIG/templates/collections/` | Standalone template, the starting point for a user. |
-| `config/collections/jinja/<collection>/*.j2` | `$AQUA_CONFIG/collections/jinja/` | Configs run by `aqua analysis`, rendered with the dates of the experiment kind (`{{ default.startdate }}`, `{{ timeseries.std_startdate }}`) from `config/analysis/climatedt-experiment-kind.yaml`. One file can configure several tools of a collection against one reference. |
-| `config/collections/legacy/<collection>/*.yaml` | `$AQUA_CONFIG/collections/legacy/` | Plain-YAML versions without Jinja. |
+| `config/collections/jinja/<collection>/*.j2` | `$AQUA_CONFIG/collections/jinja/` | Configs run by `aqua analysis`, rendered with the experiment kind (`{{ references.<collection>_<quantity>.model }}`, `{{ period.standard.startdate }}`, `{{ period.timeseries.std_startdate }}`) from `config/analysis/climatedt-experiment-kind.yaml`. One file can configure several tools of a collection. |
+| `config/collections/legacy/<collection>/*.yaml` | `$AQUA_CONFIG/collections/legacy/` | The `.j2` files rendered with the `default` kind (checked by a test). |
 | `config/tools/<name>/` | `$AQUA_CONFIG/tools/<name>/` | Lookup files of one tool. |
 | `config/definitions/regions.yaml` | `$AQUA_CONFIG/definitions/` | Shared region registry. |
 | `config/analysis/` | `$AQUA_CONFIG/analysis/` | `aqua analysis` orchestration. |
 
 Helpers: `get_diagnostic_configpath(diagnostic, folder=...)`, `load_diagnostic_config(...)`. `.j2` files are only
-rendered by `aqua analysis`: a standalone run with a `.j2` keeps the literal `'{{ default.startdate }}'`.
+rendered by `aqua analysis`: a standalone run with a `.j2` keeps the literal `'{{ period.standard.startdate }}'`.
 Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for most tools: pass `--config`.
 
 ## aqua-core functions worth knowing
@@ -90,14 +90,17 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 Example, `trends` in the `atmosphere2d` collection (`config/collections/`):
 
 ```
-jinja/atmosphere2d/config-atmosphere2d-trends.j2       # run by aqua analysis, dates as '{{ default.startdate }}'
-legacy/atmosphere2d/config-atmosphere2d-trends.yaml    # same keys, fixed dates ('1990-01-01', '19900101')
+jinja/atmosphere2d/config-atmosphere2d-surface.j2      # run by aqua analysis, kind values as '{{ period.standard.startdate }}'
+legacy/atmosphere2d/config-atmosphere2d-surface.yaml   # the .j2 rendered with the default kind, values written out
 ```
 
-The two files differ only in the dates: `'{{ default.startdate }}'`, `'{{ default.std_startdate }}'`,
-`'{{ <tool>.std_startdate }}'` in the `.j2` become literal dates in the `legacy` YAML. A `.j2` has the same top-level
-blocks as the standalone template (`datasets`, `references`, `setup`, `output`, `diagnostics`) and one block per
-tool of the collection, all with `diagnostic_name: '<collection>'`. In `config.aqua-analysis.yaml`:
+The legacy file is the `.j2` rendered with the `default` kind: every `{{ ... }}` (reference dataset, dates, `regrid`,
+`loglevel`, `output` settings) becomes the value of `default` in the kind file. `tests/config/test_analysis_config_contract.py`
+fails if they differ, so make every change in both. A `.j2` reads the reference of its own slot,
+`references.<collection>_<quantity>` (`config-atmosphere2d-surface.j2` → `references.atmosphere2d_surface`), and the
+dates of one `period` block (`standard`, `radiation` or `timeseries`). A `.j2` has the same top-level blocks as the
+standalone template (`datasets`, `references`, `setup`, `output`, `diagnostics`) and one block per tool of the
+collection, all with `diagnostic_name: '<collection>'`. In `config.aqua-analysis.yaml`:
 
 ```yaml
 cli:
@@ -106,13 +109,14 @@ cli:
 diagnostics:
   atmosphere2d:                       # an existing collection, listed in one of the `run:` groups
     <name>:
-      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2",
-               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"]   # one per reference
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]   # the CLI runs once per file
       # optional: outname, nworkers, extra, nocluster
 ```
 
-A tool without a reference needs one `.j2` only, and its `references` block stays out. The `legacy` and `jinja`
-sets are not generated from each other yet (guidelines, "What is not homogeneous yet", point 16): edit both.
+A tool without a reference needs no slot, and its `references` block stays out. A new `.j2` with a reference needs
+a new slot in `default.references` of the kind file, pointing to an anchor of `default.sources`
+(see `docs/sphinx/source/analysis_collections.rst`, "Creating a new collection" and "Naming scheme").
 
 ## References and std dates
 
@@ -131,9 +135,11 @@ significance test, a normalised difference), it needs the standard deviation of 
   (`ref.get("std_startdate") or var_config.get("std_startdate")`), and pass them to the constructor of the reference
   instance. See `lat_lon_profiles/cli_lat_lon_profiles.py`.
 - **Config**: `std_startdate`/`std_enddate` are computation options, so they go in `params` (`default` or per
-  variable) or in the reference entry. In a `.j2` they are Jinja variables (`'{{ default.std_startdate }}'` or
-  `'{{ <tool>.std_startdate }}'`, defined in `config/analysis/climatedt-experiment-kind.yaml`), in the `legacy` YAML
-  literal dates. A new `<tool>.std_*` variable must exist for every experiment kind, or the rendering test fails.
+  variable) or in the reference entry. In a `.j2` they are Jinja variables of one `period` block
+  (`'{{ period.standard.std_startdate }}'`, `'{{ period.timeseries.std_enddate }}'`, defined in
+  `config/analysis/climatedt-experiment-kind.yaml`), in the `legacy` YAML literal dates. Reuse an existing block:
+  a new one must be added to `default` (other kinds inherit it), and every kind that changes the dates of all the
+  analyses must override it too, since the blocks do not inherit from each other.
 - **Plot class**: takes the standard deviation next to the reference (`ref_std_data`), reads its period from the
   attributes, and says in the caption what the shading is (for example "shading: +/- 2 standard deviations of
   ERA5 over 1990-2020").

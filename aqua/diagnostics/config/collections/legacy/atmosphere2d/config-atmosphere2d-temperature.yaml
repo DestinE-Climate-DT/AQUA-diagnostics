@@ -1,3 +1,6 @@
+# Legacy configuration: config-atmosphere2d-temperature.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
 datasets:
   - catalog: null
@@ -21,8 +24,8 @@ references:
     exp: 'aqua-filled'
     source: 'r100-monthly'
     regrid: 'r100'
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '1990-01-01'
+    enddate: '2014-12-31'
 
 setup:
   loglevel: 'WARNING'
@@ -68,8 +71,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '{{ timeseries.std_startdate }}'
-        std_enddate: '{{ timeseries.std_enddate }}'
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
       2t:
         regions: ['nh', 'sh', 'europe']
 
@@ -80,8 +83,8 @@ diagnostics:
     center_time: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
       2t:
         regions: ['nh', 'sh', 'europe']
 
@@ -96,8 +99,8 @@ diagnostics:
     longterm: true
     params:
       default:
-        std_startdate: '{{ default.std_startdate }}'
-        std_enddate: '{{ default.std_enddate }}'
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
     variables:
       - name: '2t'
         regions: [null, 'tropics']  # global and tropics
