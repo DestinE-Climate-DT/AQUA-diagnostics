@@ -73,7 +73,9 @@ if __name__ == "__main__":
     dpi = config_dict["output"].get("dpi", 600)
 
     if "sshVariability" in config_dict["diagnostics"]:
-        if config_dict["diagnostics"]["sshVariability"]["run"]:
+        if config_dict["diagnostics"]["sshVariability"]["run"] and not config_dict.get("references"):
+            logger.warning("No reference dataset available: skipping sshVariability diagnostic.")
+        elif config_dict["diagnostics"]["sshVariability"]["run"]:
             logger.info("sshVariability module is used.")
 
             # Model data

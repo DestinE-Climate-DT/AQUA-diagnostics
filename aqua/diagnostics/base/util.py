@@ -44,6 +44,12 @@ def template_parse_arguments(
     parser.add_argument("--outputdir", type=str, required=False, help="output directory")
     parser.add_argument("--startdate", type=str, required=False, help="start date (YYYY-MM-DD)")
     parser.add_argument("--enddate", type=str, required=False, help="end date (YYYY-MM-DD)")
+    parser.add_argument(
+        "--no-reference",
+        action="store_true",
+        default=False,
+        help="run without any reference/observational dataset (default: False)",
+    )
 
     # argparse's `type` callable only ever receives the raw string value, so we bind
     # extra_parser_options via partial; `wraps` keeps a readable __name__ for error messages.
@@ -246,6 +252,15 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     logger = log_configure(log_name="merge_config_args", log_level=loglevel)
     datasets = config["datasets"]
 
+    # A reference dataset can be dropped either via --no-reference or via setup.no_reference in the config,
+    # so that diagnostics can be tested/run on machines without observational data available.
+    setup = config.setdefault("setup", {})
+    no_reference = get_arg(args, "no_reference", False) or setup.get("no_reference", False)
+    setup["no_reference"] = no_reference
+    if no_reference and config.get("references"):
+        logger.info("no_reference option is set: reference dataset(s) will be ignored.")
+        config["references"] = []
+
     # Override the first dataset in the config file if provided in the command line
     datasets[0]["catalog"] = get_arg(args, "catalog", datasets[0]["catalog"])
     datasets[0]["model"] = get_arg(args, "model", datasets[0]["model"])
@@ -270,7 +285,7 @@ def merge_config_args(config: dict, args: argparse.Namespace, loglevel: str = "W
     for model in config["datasets"]:
         logger.debug(f"  - {model['catalog']} {model['model']} {model['exp']} {model['source']}")
 
-    if "references" in config:
+    if config.get("references"):
         logger.debug("Using reference data:")
         for ref in config["references"]:
             logger.debug(f"  - {ref['catalog']} {ref['model']} {ref['exp']} {ref['source']}")
