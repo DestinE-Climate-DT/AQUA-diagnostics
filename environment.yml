@@ -17,7 +17,7 @@ dependencies:
   - python-dateutil<3 # botocore requires python-dateutil<3: with 3.0.0 conda-lock backtracks through all boto3 releases
   # z3fdb (pip, fdb extra) requires zarr~=3.1.6: conda installs zarr through aqua-core,
   # so pin it here or pip later replaces the conda zarr with its own
-  - zarr>=3.1.6,<3.2
+  - zarr>=3.1.6,<3.5.0
   # grpcio 1.85.2 is on conda-forge but not on PyPI: the pip solve of conda-lock fails on it
   - grpcio!=1.85.2
   # ecmean depends on esmpy binary, so we need to install it first
