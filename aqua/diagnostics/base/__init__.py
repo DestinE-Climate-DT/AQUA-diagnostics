@@ -8,8 +8,10 @@ from .cli_base import DiagnosticCLI
 from .profiler import DiagnosticProfiler, format_bytes
 from .title import TitleBuilder
 from .defaults import SAVE_FORMAT
+from .plot_base import PlotBase
 
 __all__ = ['Diagnostic',
+           'PlotBase',
            'start_end_dates', 'round_startdate', 'round_enddate',
            'template_parse_arguments', 'open_cluster', 'close_cluster',
            'load_diagnostic_config', 'merge_config_args', 'get_diagnostic_configpath',

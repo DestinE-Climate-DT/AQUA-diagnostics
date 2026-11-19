@@ -80,7 +80,7 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 `plot_lat_lon_profiles`, `plot_seasonal_lat_lon_profiles`, `plot_vertical_lines`, `plot_histogram`, `boxplot`,
 `index_plot`, `indexes_plot`, `plot_gregory_monthly`, `plot_gregory_annual`, `ConfigStyle`.
 
-**`aqua.diagnostics.base`**: `Diagnostic`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`,
+**`aqua.diagnostics.base`**: `Diagnostic`, `PlotBase`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`,
 `template_parse_arguments`, `load_diagnostic_config`, `merge_config_args`, `get_diagnostic_configpath`,
 `load_var_config`, `find_vert_coord`, `open_cluster/close_cluster`, `start_end_dates`,
 `round_startdate/round_enddate`, `SAVE_FORMAT`; `DEFAULT_OCEAN_VERT_COORD` in `base/defaults.py`.

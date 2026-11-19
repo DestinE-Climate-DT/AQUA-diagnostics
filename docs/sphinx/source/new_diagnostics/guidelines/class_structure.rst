@@ -75,13 +75,33 @@ Each diagnostic module should also include a dedicated class for eventually comp
 
 .. code-block:: python
 
-    class MyDiagnosticPlot():
-        def __init__(self, *args, **kwargs):
+    from aqua.diagnostics.base import PlotBase
+
+    class MyDiagnosticPlot(PlotBase):
+        def __init__(self, data, ref_data=None, diagnostic_name='mydiagnostic', outputdir='.', loglevel='WARNING'):
+            super().__init__(diagnostic_name=diagnostic_name, outputdir=outputdir, loglevel=loglevel)
+            self.data = data
+            self.get_data_info(data, ref_data)
 
 In this case, it may not fit the usage of the ``Diagnostic`` class, as it does not support multiple models.
 It should provide methods for dataset comparison and plotting.
 It should as much as possible rely on the available AQUA plotting functions.
 Details about the plot should be deduced from the xarray attributes, if available.
+
+The ``PlotBase`` class, available in ``aqua.diagnostics.base``, is the plotting counterpart of ``Diagnostic``.
+It holds what the plot classes have in common around their figure, so that a plot class contains only what is specific to it:
+
+- ``get_data_info(data, ref_data=None)`` reads catalog, model, experiment, realization, region and period from the ``AQUA_*`` attributes
+  of the results and of the references. They are stored as lists with one entry per dataset
+  (``catalogs``, ``models``, ``exps``, ``realizations``, ``startdates``, ``enddates`` and the ``ref_`` ones), plus the ``region``.
+  The results themselves are not stored, so the method can be called in the constructor or in the plot method.
+- ``set_title(**kwargs)`` fills a ``TitleBuilder`` with the region, models, experiments and references.
+  The keyword arguments add what is specific to the figure (``diagnostic``, ``variable``, ``startyear``, ...) or replace a default.
+- ``save_plot(fig, diagnostic_product, ...)`` saves the figure through a single ``OutputSaver`` built with all the plotted datasets
+  and references, stores the caption in the metadata under the key ``description`` and closes the figure.
+  ``rebuild``, ``save_format`` and ``dpi`` default to the values given to the constructor.
+
+The description of the figure and a common ``run()`` method are not part of ``PlotBase``: they are left to each plot class.
 
 Command-Line Interface (CLI)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
