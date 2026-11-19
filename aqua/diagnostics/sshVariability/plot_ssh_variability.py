@@ -14,8 +14,6 @@ from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
 from .base import PlotBaseMixin
 
-xr.set_options(keep_attrs=True)
-
 
 class SshVariabilityPlot(PlotBaseMixin):
     """
