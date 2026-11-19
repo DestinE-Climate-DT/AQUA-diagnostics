@@ -9,8 +9,6 @@ from aqua.core.util import DEFAULT_REALIZATION
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
-xr.set_options(keep_attrs=True)
-
 
 class Trends(Diagnostic):
     """Class to compute trends over time."""

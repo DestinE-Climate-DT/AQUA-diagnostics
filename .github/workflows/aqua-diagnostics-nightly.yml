@@ -75,7 +75,7 @@ jobs:
 
   report-failure:
     needs: aqua-diagnostics-nightly-tests
-    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.aqua-diagnostics-nightly-tests.result == 'failure' }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && (needs.aqua-diagnostics-nightly-tests.result == 'failure' || needs.aqua-diagnostics-nightly-tests.result == 'success') }}
     permissions:
       contents: read
       actions: read
@@ -83,3 +83,4 @@ jobs:
     uses: DestinE-Climate-DT/AQUA/.github/workflows/report-failure-reusable.yml@main
     with:
       test-name: Nightly
+      result: ${{ needs.aqua-diagnostics-nightly-tests.result }}

@@ -9,6 +9,13 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- Remove module-level `xr.set_options(keep_attrs=True)` calls from tools and the `new-aqua-diagnostic` skeleton, which silently changed xarray's global state on import; xarray already keeps attrs by default (#566).
+- Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments (#579)
+- Regions: default to cell-centre selection (`frac_threshold: null`) to avoid expensive approximate fractional masks; retain numeric thresholds as explicit overrides. Define Europe as an inclusive lon/lat box (10°W–40°E, 30°N–72.6°N) to retain its western boundary cells without polygon masks (#569).
+- CI: the Conda, PyPI, nightly and release workflows call the aqua-core failure report also on success and pass the test result, so a passing scheduled run closes the open failure issue of that suite (#574)
+- DiagnosticCLI: a `Profiler` logger reports wall time, CPU time, maximum memory and dask graph size of each tool, and the memory of the dask cluster when used, at the end of the run (#558)
+- CI: the labeled run that Dependabot starts when opening its PR also runs the tests, so a skipped run no longer hides the passed required check and blocks the PR (#573)
+- CI: the AQUA-diagnostics tests workflow also runs on `merge_group` events, so its required check reports in the merge queue.
 - Agents: split instructions into a small `AGENTS.md` entry point reading AQUA's shared `AGENTS.common.md` directly from GitHub and local diagnostics-specific `AGENTS.repo.md`; AQUA common rules take precedence and stricter materialisation timing remains local to diagnostics (#562).
 - Skill: new `new-aqua-diagnostic` skill (`.claude/skills/new-aqua-diagnostic/`), the open choices to settle before starting and a tested skeleton tool (analysis class, plot class with optional reference, CLI, config template, tests, `.rst` page); `AGENTS.md` points to it (#527)
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)

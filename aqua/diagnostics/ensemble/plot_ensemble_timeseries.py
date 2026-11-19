@@ -1,5 +1,4 @@
 import pandas as pd
-import xarray as xr
 
 from aqua.core.graphics import plot_timeseries
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
@@ -7,8 +6,6 @@ from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 # from aqua.logger import log_configure
 # from aqua.exceptions import NoDataError
 from .base import BaseMixin
-
-xr.set_options(keep_attrs=True)
 
 
 class PlotEnsembleTimeseries(BaseMixin):

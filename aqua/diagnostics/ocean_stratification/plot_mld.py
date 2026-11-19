@@ -12,8 +12,6 @@ from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .mld_profiles import plot_maps
 
-xr.set_options(keep_attrs=True)
-
 
 class PlotMLD:
     """Class for plotting Mixed Layer Depth (MLD) maps."""

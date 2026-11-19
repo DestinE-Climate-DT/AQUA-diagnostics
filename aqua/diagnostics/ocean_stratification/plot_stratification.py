@@ -12,8 +12,6 @@ from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 from .multiple_vertical_line import plot_multi_vertical_lines
 
-xr.set_options(keep_attrs=True)
-
 
 class PlotStratification:
     """Class for plotting ocean stratification vertical profiles."""
