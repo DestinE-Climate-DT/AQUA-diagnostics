@@ -9,6 +9,7 @@ from matplotlib import ticker
 
 from aqua.core.graphics import ConfigStyle, plot_hovmoller
 from aqua.core.logger import log_configure
+from aqua.core.util import grid_figure_size
 
 from .util import add_row_label, set_depth_axis, set_year_ticks
 
@@ -71,7 +72,7 @@ def plot_multi_hovmoller(
     if all(isinstance(data_map, xr.Dataset) for data_map in maps):
         nrows = len(maps)
         ncols = len(variables)
-        figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
+        figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols, panel_ratio=0.9)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize, layout="constrained")
@@ -107,8 +108,6 @@ def plot_multi_hovmoller(
             if i > 0:
                 # Same depth axis as the first column: its label would only crowd the colorbar on the left
                 ax.set_ylabel("")
-            if titles and titles[k]:
-                ax.title.set_fontsize(13)
             if text and text[k]:
                 add_row_label(ax, text[k])
             # Retrieve last plotted object for colorbar (QuadMesh or ContourSet)
@@ -137,7 +136,7 @@ def plot_multi_hovmoller(
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10)
+        fig.suptitle(title)
 
     if return_fig:
         return fig
