@@ -63,7 +63,7 @@ The content of ``default`` is:
 
 ``output``
     Output settings shared by all the jinja files: ``rebuild``, ``save_netcdf``, ``save_format`` and ``dpi``.
-    Only ``outputdir`` is written in each file.
+    Only ``outputdir`` is written in each file. Each format will create a subfolder of the output directory.
 
 ``sources``
     Every observational dataset available, listed once as ``{catalog, model, exp, source}``
