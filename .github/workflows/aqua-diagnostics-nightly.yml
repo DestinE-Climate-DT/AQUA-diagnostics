@@ -63,6 +63,8 @@ jobs:
       enable-coverage: false
       install-mode: ${{ matrix.install-mode }}
       aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+      # cross-check: composite CI actions from the tested aqua-core ref
+      aqua-actions-ref: ${{ matrix.install-mode == 'cross-check' && (inputs.aqua_core_ref || 'main') || 'main' }}
       test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}
