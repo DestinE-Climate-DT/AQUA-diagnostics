@@ -44,7 +44,7 @@ The same environment is available in the AQUA-diagnostics GitHub repository in t
     CDO is not shipped with the conda-forge packages on MacOS: install it with Homebrew (``brew install cdo``)
     before creating the environment. On Linux CDO is installed together with ``aqua-core`` (via ``smmregrid``).
 
-Once the package is installed, set up AQUA with ``aqua install <machine>`` and ``aqua add <catalog>``
+Once the package is installed, set up AQUA with ``aqua install <machine>`` and ``aqua catalog add <catalog>``
 as described in :ref:`getting_started`.
 
 .. note::
@@ -122,7 +122,7 @@ Finally, activate the environment:
 
 At this point, you should have successfully installed the AQUA-diagnostics package and its dependencies
 in the newly created aqua-diagnostics environment.
-Now set up AQUA with ``aqua install <machine>`` and ``aqua add <catalog>`` as described in :ref:`getting_started`.
+Now set up AQUA with ``aqua install <machine>`` and ``aqua catalog add <catalog>`` as described in :ref:`getting_started`.
 
 
 .. note::
@@ -139,7 +139,7 @@ HPC Installation
 .. note::
 
     On all the HPC systems, once the installation is completed remember to set up AQUA with
-    ``aqua install <machine>`` and ``aqua add <catalog>`` as described in :ref:`getting_started`.
+    ``aqua install <machine>`` and ``aqua catalog add <catalog>`` as described in :ref:`getting_started`.
 
 Installation on LUMI HPC
 ^^^^^^^^^^^^^^^^^^^^^^^^

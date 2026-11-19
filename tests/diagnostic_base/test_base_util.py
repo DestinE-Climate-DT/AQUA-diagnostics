@@ -133,7 +133,7 @@ def test_load_diagnostic_config():
 
 @pytest.fixture
 def aqua_configdir(tmp_path, monkeypatch):
-    """Return a factory of AQUA config folders with or without the ``project`` key (pre-project layout)."""
+    """Return a factory of AQUA config folders, with or without the ``project`` key (pre-project installation)."""
     monkeypatch.delenv("AQUA_PROJECT", raising=False)
 
     def _make(project):
@@ -151,16 +151,25 @@ def aqua_configdir(tmp_path, monkeypatch):
     return _make
 
 
-@pytest.mark.parametrize("project", ["diagnostics", None], ids=["project", "pre-project"])
-def test_get_diagnostic_configpath(aqua_configdir, project):
+def test_get_diagnostic_configpath(aqua_configdir):
     """Tools are looked up in the active project folder, templates in the flat templates folder."""
-    configdir, tools = aqua_configdir(project)
+    configdir, tools = aqua_configdir("diagnostics")
 
     assert get_diagnostic_configpath("teleconnections", folder="tools") == str(tools / "teleconnections")
     assert get_diagnostic_configpath("timeseries") == str(configdir / "templates" / "collections")
 
     with pytest.raises(ValueError, match="Invalid folder name"):
         get_diagnostic_configpath("timeseries", folder="collections")
+
+
+def test_get_diagnostic_configpath_pre_project(aqua_configdir, monkeypatch):
+    """An installation without the project key is refused for tools, also with AQUA_PROJECT set."""
+    configdir, _ = aqua_configdir(None)
+    monkeypatch.setenv("AQUA_PROJECT", "diagnostics")
+
+    with pytest.raises(FileNotFoundError, match="predates project support"):
+        get_diagnostic_configpath("teleconnections", folder="tools")
+    assert get_diagnostic_configpath("timeseries") == str(configdir / "templates" / "collections")
 
 
 def test_get_diagnostic_configpath_env_project(aqua_configdir, monkeypatch):
@@ -176,10 +185,9 @@ def test_get_diagnostic_configpath_env_project(aqua_configdir, monkeypatch):
     assert get_diagnostic_configpath("teleconnections", folder="tools") == str(expected)
 
 
-@pytest.mark.parametrize("project", ["diagnostics", None], ids=["project", "pre-project"])
-def test_teleconnections_definition_from_tools(aqua_configdir, project):
+def test_teleconnections_definition_from_tools(aqua_configdir):
     """Teleconnections read their default definitions from the tools folder of the active project."""
-    _, tools = aqua_configdir(project)
+    _, tools = aqua_configdir("diagnostics")
     (tools / "teleconnections" / "definitions").mkdir()
     dump_yaml(outfile=str(tools / "teleconnections" / "definitions" / "test.yaml"), cfg={"NAO": {"ok": True}})
     mixin = BaseMixin.__new__(BaseMixin)

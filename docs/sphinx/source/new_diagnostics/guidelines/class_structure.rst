@@ -182,7 +182,7 @@ so with the limits alone the mean would silently be global.
 The ``tools/`` folder contains a subfolder only for the diagnostics that need settings or lookup files
 *specific to that diagnostic* (e.g. custom index definitions for teleconnections).
 Read it with ``get_diagnostic_configpath("<diagnostic>", folder="tools")``, which returns the folder of the active
-project (``tools/<diagnostic>`` in installations predating project support).
+project.
 A command line interface run without ``--config`` reads its ``default_config`` from ``templates/collections``.
 
 .. note::

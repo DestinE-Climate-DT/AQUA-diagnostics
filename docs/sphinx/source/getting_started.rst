@@ -19,9 +19,9 @@ Before you start
    .. code-block:: bash
 
        aqua install <machine>
-       aqua add <catalog>
+       aqua catalog add <catalog>
 
-   For example ``aqua install lumi`` and ``aqua add climatedt-gen2``.
+   For example ``aqua install lumi`` and ``aqua catalog add climatedt-gen2``.
    The details are described in the AQUA-core
    `Getting Started <https://aqua.readthedocs.io/en/latest/getting_started.html>`_
    and `console <https://aqua.readthedocs.io/en/latest/aqua_console.html>`_ pages.

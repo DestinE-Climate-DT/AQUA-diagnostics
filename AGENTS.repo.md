@@ -170,7 +170,7 @@ collection in a `run` group → `config.grouping.yaml` entry. New `<tool_key>`s 
 
 ## Testing
 
-- Data: `AQUA_tests/` at the repo root (DVC/HTTP download) plus the `ci` catalog (`aqua add ci`); test experiments are loaded via
+- Data: `AQUA_tests/` at the repo root (DVC/HTTP download) plus the `ci` catalog (`aqua catalog add ci`); test experiments are loaded via
   session fixtures in `tests/conftest.py` (IFS `test-tco79`, FESOM `test-pi`, ICON `test-healpix`, NEMO `test-e_orca1`, ...).
 - Two layers (details and template in `CONTRIBUTING.md`):
   - `tests/<tool>/`: tool logic on real `ci` data, no CLI

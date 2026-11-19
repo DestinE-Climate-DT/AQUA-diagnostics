@@ -120,12 +120,15 @@ def get_diagnostic_configpath(diagnostic: str, folder="templates", loglevel="WAR
     Args:
         diagnostic (str): diagnostic name
         folder (str): "templates" (default) for the blank collection templates in ``templates/collections``,
-            or "tools" for the static files of the tool in ``tools/<project>/<diagnostic>``
-            (flat ``tools/<diagnostic>`` for installations predating project support).
+            or "tools" for the static files of the tool in ``tools/<project>/<diagnostic>``.
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:
         str: path to the diagnostic configuration directory
+
+    Raises:
+        ValueError: if ``folder`` is not "templates" or "tools".
+        FileNotFoundError: for "tools", if the installation has no project or its tools folder is missing.
     """
     if folder == "tools":
         return os.path.join(ConfigContext(loglevel=loglevel).get_project_folder("tools"), diagnostic)
