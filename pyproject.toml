@@ -39,7 +39,7 @@ dependencies = [
     "cartopy",
     "dask",
     "distributed",
-    "ecmean>=0.2.2",
+    "ecmean==0.2.2",  # Temporary: 0.3.0 rejects AQUA's 2t variable (oloapinivad/ecmean#179).
     "filelock",
     "geopandas",
     "matplotlib",
