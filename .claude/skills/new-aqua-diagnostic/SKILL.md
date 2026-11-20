@@ -159,9 +159,9 @@ clashes, e.g. the ocean `Trends` are re-exported as `OceanTrends`).
   (a mismatch only breaks plot-only runs, silently); `load()` takes the same identifying arguments as `run()`,
   sets `self.realization`, resolves the region with `_set_region`, passes `startdate/enddate`; a missing file
   leaves the attribute untouched.
-- Gotcha: `load_netcdf()` compares `startdate/enddate` with the **dataset-level** attributes, but a saved bare
-  `DataArray` keeps them on the variable, so loading with dates returns `None`. The skeleton saves
-  `result.to_dataset()` with the attributes copied to `ds.attrs`; keep that, and keep `test_load_checks_the_period`.
+- `load_netcdf()` compares `startdate/enddate` with the `AQUA_startdate/enddate` of the file, and a standard deviation
+  with its `AQUA_std_*` when called with `std=True`. The skeleton saves `result.to_dataset()` with the attributes
+  copied to `ds.attrs`; keep that, and keep `test_load_checks_the_period`.
 - Do not create a new instance or `AQUA_*` attribute unless strictly needed: reuse an existing one first
   (`grep -rhoE "AQUA_[a-zA-Z_]+" aqua/diagnostics | sort -u`).
 - Mutable defaults: use `reader_kwargs: dict = None`, never `{}`.
