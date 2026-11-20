@@ -10,6 +10,10 @@ Main changes:
 
 Complete list:
 - ECmean: temporarily pin to 0.2.2 to preserve support for AQUA's `2t` variable and check that its global mean is finite (#583).
+- Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed) (#519)
+- Remove module-level `xr.set_options(keep_attrs=True)` (#566)
+- Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments (#579)
+- Regions: default to cell-centre selection (`frac_threshold: null`) to avoid expensive approximate fractional masks; retain numeric thresholds as explicit overrides. Define Europe as an inclusive lon/lat box (10°W–40°E, 30°N–72.6°N) to retain its western boundary cells without polygon masks (#569).
 - CI: the Conda, PyPI, nightly and release workflows call the aqua-core failure report also on success and pass the test result, so a passing scheduled run closes the open failure issue of that suite (#574)
 - DiagnosticCLI: a `Profiler` logger reports wall time, CPU time, maximum memory and dask graph size of each tool, and the memory of the dask cluster when used, at the end of the run (#558)
 - CI: the labeled run that Dependabot starts when opening its PR also runs the tests, so a skipped run no longer hides the passed required check and blocks the PR (#573)
