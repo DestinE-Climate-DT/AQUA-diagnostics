@@ -403,9 +403,11 @@ class TestLatLonProfilesLoad:
         diagnostic.std_annual = self._profile(10.5)
         return diagnostic
 
-    def _consumer(self, region=None):
+    def _consumer(self, region=None, **dates):
         """A LatLonProfiles that never retrieved and does not even know its catalog"""
-        return LatLonProfiles(model="IFS", exp="test-tco79", source="teleconnections", region=region, loglevel=loglevel)
+        return LatLonProfiles(
+            model="IFS", exp="test-tco79", source="teleconnections", region=region, loglevel=loglevel, **dates
+        )
 
     @pytest.mark.parametrize("region", [None, "tropics"])
     def test_load_roundtrip(self, tmp_path, region):
@@ -426,6 +428,28 @@ class TestLatLonProfilesLoad:
         # The attributes the plot classes read survived the round trip
         assert consumer.longterm.attrs["AQUA_mean_type"] == "zonal"
         assert consumer.longterm.attrs["units"] == "K"
+
+    @pytest.mark.parametrize(
+        "enddate, std_enddate, mean_loaded, std_loaded",
+        [
+            ("1992-12-31", "1993-12-31", True, True),
+            ("1992-11-30", "1993-12-31", False, True),
+            ("1992-12-31", "1994-12-31", True, False),
+        ],
+        ids=["same_periods", "other_mean_period", "other_std_period"],
+    )
+    def test_load_checks_the_period(self, tmp_path, enddate, std_enddate, mean_loaded, std_loaded):
+        """Only the results of the requested period are loaded, and the std has its own period"""
+        producer = self._producer()
+        producer.longterm.attrs.update({"AQUA_startdate": "1991-01-01", "AQUA_enddate": "1992-12-31"})
+        producer.std_annual.attrs.update({"AQUA_std_startdate": "1990-01-01", "AQUA_std_enddate": "1993-12-31"})
+        producer.save_netcdf(freq="longterm", outputdir=str(tmp_path))
+
+        consumer = self._consumer(startdate="1991-01-01", enddate=enddate, std_startdate="1990-01-01", std_enddate=std_enddate)
+        consumer.load(var="skt", std=True, freq="longterm", outputdir=str(tmp_path))
+
+        assert (consumer.longterm is not None) == mean_loaded
+        assert (consumer.std_annual is not None) == std_loaded
 
     def test_load_nothing_on_disk(self, tmp_path):
         """With no files to read, the results are left as they are instead of being wiped"""
