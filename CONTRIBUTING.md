@@ -99,6 +99,10 @@ Comparing the two nightly modes separates aqua-core regressions (`cross-check` f
 Once a label is set, the corresponding suite runs again at every push. Adding a label triggers a run only for the label
 just added: adding an unrelated label does not restart running tests. Labels are matched by prefix.
 
+The relock workflow can also be launched manually from the GitHub Actions tab (`workflow_dispatch`): it relocks the branch
+selected in *Use workflow from* and opens the PR against it. Use it when the `conda-lock` label does not start the workflow:
+GitHub does not run `pull_request` workflows on a PR with merge conflicts.
+
 > **Note:** every label added to a PR starts a run of each suite, skipped when the label is not the suite's own.
 > The PR checks panel shows only the most recent run of each workflow, so when several labels are added at once,
 > or a label is added after the tests ran, a suite may appear as *skipped* even though its real run is running or
