@@ -4,6 +4,7 @@ This function is custom for the Ocean Drift diagnostics in AQUA.
 """
 
 import matplotlib.pyplot as plt
+import numpy as np
 import xarray as xr
 
 from aqua.core.graphics import ConfigStyle, plot_timeseries
@@ -65,12 +66,20 @@ def plot_multi_timeseries(
         figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
+    # Yearly means once the record is longer than 5 years, so the lines stay readable.
+    span = maps[0].time.values[-1].astype("datetime64[M]") - maps[0].time.values[0].astype("datetime64[M]")
+    if span > np.timedelta64(60, "M"):
+        logger.info("Series is longer than 5 years, plotting yearly means")
+        maps = [data.resample(time="1YE").mean(keep_attrs=True) for data in maps]
+
     fig = plt.figure(figsize=figsize)
-    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.5)
+    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.28, hspace=0.55)
 
     data_labels = [str(x) for x in levels]
+    row_axes = []
 
     for j in range(nrows):
+        axes_in_row = []
         for i, var in enumerate(variables):
             k = j * len(variables) + i
             ax = fig.add_subplot(spec[j, i])
@@ -78,25 +87,58 @@ def plot_multi_timeseries(
 
             fig, ax = plot_timeseries(
                 [maps[j][var].sel({vert_coord: level}) for level in maps[j][var][vert_coord]],
-                data_labels=data_labels if k == 0 else None,
+                data_labels=data_labels if i == 0 else None,
+                legend=False,
                 title=titles[k] if titles else None,
                 ax=ax,
                 fig=fig,
                 loglevel=loglevel,
                 colors=line_plot_colours,
             )
-            if ylabels is not None:
-                ax.set_ylabel(ylabels[k] or "")
-            set_year_ticks(ax)
+            drift_type = maps[j].attrs.get("AQUA_ocean_drift_type", "full")
+            if drift_type != "full":
+                limit = np.nanmax(np.abs(maps[j][var].values))
+                ax.set_ylim(-limit, limit)
+            ax.set_xticks(ax.get_xticks())
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
 
             if titles and titles[k]:
                 ax.title.set_fontsize(13)
 
             if text and text[k]:
-                add_row_label(ax, text[k])
-    # Adjust overall layout
-    fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
+                logger.debug("Setting text position for %s", text[k])
+                ax.text(
+                    -0.3,
+                    0.5,
+                    text[k],
+                    fontsize=15,
+                    color="dimgray",
+                    rotation=90,
+                    transform=ax.transAxes,
+                    ha="center",
+                    va="center",
+                )
+            axes_in_row.append(ax)
+        row_axes.append(axes_in_row)
+
+    # Layout first, then place one legend under each row using the final axes positions.
+    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.08, top=0.92)
+    for axes_in_row in row_axes:
+        handles, labels = axes_in_row[0].get_legend_handles_labels()
+        boxes = [row_ax.get_position() for row_ax in axes_in_row]
+        row_width = boxes[0].x1 - boxes[0].x0
+        x_center = ((boxes[0].x0 + boxes[-1].x1) / 2 - boxes[0].x0) / row_width
+        axes_in_row[0].legend(
+            handles,
+            labels,
+            loc="upper center",
+            bbox_to_anchor=(x_center, -0.28),
+            bbox_transform=axes_in_row[0].transAxes,
+            ncol=len(labels),
+            frameon=False,
+            fontsize=9,
+            borderaxespad=0,
+        )
 
     if title:
         logger.debug("Setting super title to %s", title)
