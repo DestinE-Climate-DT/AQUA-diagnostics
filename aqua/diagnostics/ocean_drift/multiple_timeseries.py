@@ -90,6 +90,10 @@ def plot_multi_timeseries(
                 loglevel=loglevel,
                 colors=line_plot_colours,
             )
+            drift_type = maps[j].attrs.get("AQUA_ocean_drift_type", "full")
+            if drift_type != "full":
+                limit = np.nanmax(np.abs(maps[j][var].values))
+                ax.set_ylim(-limit, limit)
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
 
