@@ -18,8 +18,9 @@ dependencies:
   # z3fdb (pip, fdb extra) requires zarr~=3.1.6: conda installs zarr through aqua-core,
   # so pin it here or pip later replaces the conda zarr with its own
   - zarr>=3.1.6,<3.2
-  # grpcio 1.85.2 is on conda-forge but not on PyPI: the pip solve of conda-lock fails on it
-  - grpcio!=1.85.2
+  # conda-forge ships grpcio versions that are not on PyPI (1.85.2, 1.85.4): the pip solve of conda-lock
+  # fails on them. Raise the cap only to a version available on both
+  - grpcio<=1.85.3,!=1.85.2
   # ecmean depends on esmpy binary, so we need to install it first
   - esmpy<=8.9.1
   - pip
