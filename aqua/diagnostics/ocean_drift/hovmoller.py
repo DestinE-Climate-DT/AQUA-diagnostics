@@ -289,6 +289,9 @@ class Hovmoller(Diagnostic):
         """
         data = data / data.std(dim=dim)
         data.attrs["units"] = "Stand. Units"
+        for var in data.data_vars:
+            data[var].attrs["long_name"] = "Standardised anomalies"
+            data[var].attrs.pop("units", None)
         data.attrs["AQUA_standardise"] = f"Standardised with {dim}"
         return data
 
