@@ -107,7 +107,6 @@ diagnostics:
   europe:
     biases:
       config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-land.yaml",
-               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-surface.yaml",
                "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml"]
     timeseries:
       config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-surface.yaml",

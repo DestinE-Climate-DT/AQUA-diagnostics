@@ -71,7 +71,7 @@ default:
     climate_metrics_gregory_t2m: *berkeley_earth  # gregory plot, 2m temperature reference
     climate_metrics_gregory_toa: *ceres_toa       # gregory plot, net TOA radiation reference
     europe_land: *eobs                            # 2m temperature and precipitation maps over European land
-    europe_surface: *era5                         # 10m wind speed maps, timeseries over Europe (land and sea)
+    europe_surface: *era5                         # timeseries over Europe (land and sea)
     europe_sst: *esacci_sst                       # sea surface temperature of the European seas
   period:
     standard:

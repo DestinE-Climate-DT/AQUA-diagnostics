@@ -110,7 +110,6 @@ diagnostics:
   europe:
     biases:
       config: ["${AQUA_CONFIG}/collections/jinja/europe/config-europe-land.j2",
-               "${AQUA_CONFIG}/collections/jinja/europe/config-europe-surface.j2",
                "${AQUA_CONFIG}/collections/jinja/europe/config-europe-sst.j2"]
     timeseries:
       config: ["${AQUA_CONFIG}/collections/jinja/europe/config-europe-surface.j2",
