@@ -106,10 +106,12 @@ diagnostics:
 
   europe:
     biases:
-      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-land.yaml",
+      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-temperature.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-precipitation.yaml",
                "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml"]
     timeseries:
-      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-surface.yaml",
+      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-temperature.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-precipitation.yaml",
                "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml",
                "${AQUA_CONFIG}/collections/legacy/europe/config-europe-salinity.yaml"]
 
