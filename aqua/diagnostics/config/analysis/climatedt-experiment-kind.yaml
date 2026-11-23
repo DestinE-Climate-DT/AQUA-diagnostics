@@ -49,6 +49,7 @@ default:
     piomas: &piomas {catalog: obs, model: PSC, exp: PIOMAS, source: monthly}
     giomas: &giomas {catalog: obs, model: PSC, exp: GIOMAS, source: monthly}
     mswep: &mswep {catalog: obs, model: MSWEP, exp: v2.8, source: monthly}
+    eobs: &eobs {catalog: obs, model: E-OBS, exp: v33.0e, source: monthly-netcdf}
   references:
     atmosphere2d_surface: *era5                   # surface fields: biases, seasonal cycles, timeseries
     atmosphere2d_temperature: *berkeley_earth     # 2m temperature
@@ -69,6 +70,9 @@ default:
     teleconnections_nao: *era5                    # NAO index, regressions and correlations
     climate_metrics_gregory_t2m: *berkeley_earth  # gregory plot, 2m temperature reference
     climate_metrics_gregory_toa: *ceres_toa       # gregory plot, net TOA radiation reference
+    europe_land: *eobs                            # 2m temperature and precipitation maps over European land
+    europe_surface: *era5                         # 10m wind speed maps, timeseries over Europe (land and sea)
+    europe_sst: *esacci_sst                       # sea surface temperature of the European seas
   period:
     standard:
       startdate: "1990-01-01"
@@ -109,7 +113,7 @@ climatedt-hist-cmip7:
 
 # HighResMIP historical runs start in 1950: references cover the whole run.
 # Satellite-era datasets (CERES, ESA-CCI, MSWEP, OSI-SAF) are replaced by ERA5 (1940-2025).
-# Berkeley Earth and EN4 cover the period; PIOMAS/GIOMAS (from 1979) have no alternative
+# Berkeley Earth, E-OBS and EN4 cover the period; PIOMAS/GIOMAS (from 1979) have no alternative
 # and only cover the available years.
 highresmip-hist-cmip6:
   references: &highresmip-references
@@ -120,6 +124,7 @@ highresmip-hist-cmip6:
     seaice_concentration_sh: *era5
     water_cycle_precipitation: *era5
     climate_metrics_gregory_toa: *era5
+    europe_sst: *era5
   period:
     standard: &highresmip-cmip6-dates
       startdate: "1950-01-01"
