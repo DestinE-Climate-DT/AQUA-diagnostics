@@ -1,0 +1,68 @@
+# Sea surface temperature of the European seas.
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+references:
+  - catalog: '{{ references.europe_sst.catalog }}'
+    model: '{{ references.europe_sst.model }}'
+    exp: '{{ references.europe_sst.exp }}'
+    source: '{{ references.europe_sst.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
+
+setup:
+  loglevel: '{{ loglevel }}'
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  biases:
+    run: true
+    diagnostic_name: 'europe'
+    region: 'europe'
+    variables: ['tos']
+    params:
+      default:
+        seasons: true
+        seasons_stat: 'mean' # May become a list
+        vertical: false     # Vertical profile if variable 3d
+    plot_params:
+      default:
+        projection_params: {}  # no projection: zoomed plate carree on the region
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05  # 95% confidence level
+      # vmin/vmax multiples of 1.1: the 11 colour levels have round steps and readable colorbar labels
+      tos:
+        vmin: -3.3
+        vmax: 3.3
+        cmap: 'RdBu_r'
+
+  timeseries:
+    run: true
+    diagnostic_name: 'europe'
+    variables: ['tos']
+    center_time: true
+    include_global: false  # only the regions below
+    params:
+      default:
+        hourly: False
+        daily: False
+        monthly: True
+        annual: True
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'
+        regions: ['europe']

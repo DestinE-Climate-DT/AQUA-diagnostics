@@ -1,0 +1,35 @@
+# Sea surface salinity of the European seas, model only: no observational dataset with sos is available yet.
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+setup:
+  loglevel: '{{ loglevel }}'
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  timeseries:
+    run: true
+    diagnostic_name: 'europe'
+    variables: ['sos']
+    center_time: true
+    include_global: false  # only the regions below
+    params:
+      default:
+        hourly: False
+        daily: False
+        monthly: True
+        annual: True
+        regions: ['europe']
