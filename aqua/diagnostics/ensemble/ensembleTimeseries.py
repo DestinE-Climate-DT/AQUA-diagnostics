@@ -1,13 +1,10 @@
 # ruff: noqa: N999
-import xarray as xr
 
 from aqua.core.logger import log_configure
 
 # from aqua.exceptions import NoDataError
 from .base import BaseMixin
 from .util import compute_statistics
-
-xr.set_options(keep_attrs=True)
 
 
 class EnsembleTimeseries(BaseMixin):
@@ -170,19 +167,22 @@ class EnsembleTimeseries(BaseMixin):
         else:
             self.logger.info("No daily ensemble data is provided")
 
+        self.logger.info(f"timeseries data before the ensemble computation: {self.monthly_data}")
         # For Monthly data
         if self.monthly_data is not None:
             self.monthly_data_mean, self.monthly_data_std = compute_statistics(
                 variable=self.var, ds=self.monthly_data, ens_dim=self.dim, loglevel=self.loglevel
             )
+            self.logger.info(f"monthly timeseries to be saved: {self.monthly_data}")
             self.save_netcdf(
                 var=self.var,
                 freq="monthly",
                 data_name="mean",
                 data=self.monthly_data_mean,
                 description=self.description,
-                startdate=self.monthly_data_mean.time.values[0],
-                enddate=self.monthly_data_mean.time.values[-1],
+                # TODO check the dates
+                # startdate=self.monthly_data_mean.time.values[0],
+                # enddate=self.monthly_data_mean.time.values[-1],
             )
             self.save_netcdf(
                 var=self.var,
@@ -190,8 +190,9 @@ class EnsembleTimeseries(BaseMixin):
                 data_name="std",
                 data=self.monthly_data_std,
                 description=self.description,
-                startdate=self.monthly_data_std.time.values[0],
-                enddate=self.monthly_data_std.time.values[-1],
+                # TODO: check the dates
+                # startdate=self.monthly_data_std.time.values[0],
+                # enddate=self.monthly_data_std.time.values[-1],
             )
         else:
             self.logger.info("No monthly ensemble data is provided")

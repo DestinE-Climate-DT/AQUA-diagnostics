@@ -1,12 +1,8 @@
 """Timeseries class for retrieve and netcdf saving of a single experiment"""
 
-import xarray as xr
-
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, to_list
 
 from .base import BaseMixin
-
-xr.set_options(keep_attrs=True)
 
 
 class Timeseries(BaseMixin):
@@ -154,7 +150,15 @@ class Timeseries(BaseMixin):
         data = self.data
 
         # Field and time average
-        data = self.reader.fldmean(data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits)
+        data = self.reader.fldmean(
+            data,
+            box_brd=box_brd,
+            lon_limits=self.lon_limits,
+            lat_limits=self.lat_limits,
+            region=self.region_object,
+            region_sel=self.region_sel,
+            frac_threshold=self.frac_threshold,
+        )
         data = self.reader.timmean(data, freq=freq, exclude_incomplete=exclude_incomplete, center_time=center_time)
 
         # If no data is available after the time mean, return

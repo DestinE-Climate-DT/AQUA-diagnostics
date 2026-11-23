@@ -11,6 +11,8 @@ from aqua.core.graphics import ConfigStyle, plot_timeseries
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
+from .util import add_row_label, set_year_ticks
+
 
 def plot_multi_timeseries(
     maps: list,
@@ -25,6 +27,7 @@ def plot_multi_timeseries(
     text: list[float] = None,
     title: str = None,
     titles: list[str] = None,
+    ylabels: list[str] = None,
     return_fig=True,
     loglevel="WARNING",
     **kwargs,
@@ -44,6 +47,8 @@ def plot_multi_timeseries(
         text (list, optional): List of text annotations for each subplot.
         title (str, optional): Title for the entire figure.
         titles (list of str, optional): List of titles for each subplot. If None, no titles will be set.
+        ylabels (list of str, optional): List of y-axis labels for each subplot, replacing the default
+            ones built from the data attributes. A None entry leaves the y-axis of that subplot unlabelled.
         return_fig (bool, optional): If True, return the matplotlib Figure object.
         loglevel (str, optional): Logging level for the function.
         **kwargs: Additional keyword arguments passed to the plotting function.

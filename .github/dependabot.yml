@@ -8,29 +8,54 @@ updates:
   - package-ecosystem: "conda"
     directory: "/"
     schedule:
-      interval: "daily"
-      day: "monday"           # You can pick any day
+      interval: "weekly"
+      day: "wednesday"
       time: "06:00"
     commit-message:
       prefix: "[Dependabot-conda]"
+    labels:
+      - "dependabot :dependabot:"
+    groups:
+      netcdf:
+        patterns:
+          - "netcdf4"
+          - "hdf5"
+          - "h5py"
 
-  - package-ecosystem: "pip" # See documentation for possible values
+  - package-ecosystem: "pip"
     directory: "/" # Location of package manifests
     schedule:
-      interval: "daily"
-      day: "monday"           # You can pick any day
+      interval: "weekly"
+      day: "wednesday"
       time: "08:00"
     commit-message:
       prefix: "[Dependabot-pip]"
+    labels:
+      - "dependabot :dependabot:"
+    groups:
+      eccodes:
+        patterns:
+          - "eccodes"
+          - "eccodeslib"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       # Check for updates to GitHub Actions every week
       interval: "weekly"
+    commit-message:
+      prefix: "[Dependabot-github-actions]"
+    labels:
+      - "dependabot :dependabot:"
 
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:
       # Check for updates to pre-commit hooks every week
       interval: "weekly"
+      day: "wednesday"
+      time: "08:00"
+    commit-message:
+      prefix: "[Dependabot-pre-commit]"
+    labels:
+      - "dependabot :dependabot:"

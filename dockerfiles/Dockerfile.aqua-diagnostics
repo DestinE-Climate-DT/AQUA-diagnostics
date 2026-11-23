@@ -87,3 +87,8 @@ WORKDIR /app/AQUA-diagnostics/
 
 ENV PATH "$MAMBA_ROOT_PREFIX/bin:$PATH"
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
+
+# Polygons of the regions file (its sources), fetched from their official links at every build and stored in
+# regions/ next to it, where the diagnostics look first
+RUN python -c "from aqua.diagnostics.base.region_sources import fetch_region_sources; \
+    fetch_region_sources('aqua/diagnostics/config/definitions/regions.yaml')"

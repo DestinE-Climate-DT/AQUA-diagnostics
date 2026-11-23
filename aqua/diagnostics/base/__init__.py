@@ -5,6 +5,7 @@ from .util import load_diagnostic_config, merge_config_args, get_diagnostic_conf
 from .util import load_var_config, find_vert_coord
 from .output_saver import OutputSaver
 from .cli_base import DiagnosticCLI
+from .profiler import DiagnosticProfiler, format_bytes
 from .title import TitleBuilder
 from .defaults import SAVE_FORMAT
 
@@ -15,6 +16,7 @@ __all__ = ['Diagnostic',
            'load_var_config',
            'OutputSaver',
            'DiagnosticCLI',
+           'DiagnosticProfiler', 'format_bytes',
            'TitleBuilder',
            'find_vert_coord',
            'SAVE_FORMAT']

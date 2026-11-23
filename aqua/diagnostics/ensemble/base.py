@@ -2,13 +2,10 @@ from collections import Counter
 from typing import Union
 
 import pandas as pd
-import xarray as xr
 
 from aqua.core.logger import log_configure
 from aqua.core.util import pandas_freq_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver
-
-xr.set_options(keep_attrs=True)
 
 
 class BaseMixin(Diagnostic):
@@ -276,6 +273,7 @@ class BaseMixin(Diagnostic):
                 exp=self.exp,
                 model_ref=self.ref_model,
                 exp_ref=self.ref_exp,
+                realization="ensemble",
                 outputdir=self.outputdir,
                 loglevel=self.loglevel,
             )
@@ -369,6 +367,7 @@ class BaseMixin(Diagnostic):
                 exp=self.exp,
                 model_ref=self.ref_model,
                 exp_ref=self.ref_exp,
+                realization="ensemble",
                 outputdir=self.outputdir,
                 loglevel=self.loglevel,
             )

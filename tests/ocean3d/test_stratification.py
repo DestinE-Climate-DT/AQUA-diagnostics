@@ -16,12 +16,14 @@ dpi = DPI
 # --- Constants ---
 # Expected values valid with aqua-core >=1.0.0a6, which renames the FESOM/NEMO
 # vertical coordinate 'level' -> 'depth' (CoordIdentifier NEMO-layers rule).
-# They refer to the DJF climatology, the season config-ocean3d-en4-stratification pairs
+# They refer to the DJF climatology, the season config-ocean3d-stratification pairs
 # with both regions used here (Labrador Sea for the profiles, Arctic for the MLD map).
 # EXPECTED_MLD_MEAN is the flat average of the 2D MLD field, not the fldmean scalar the
 # dim_mean run used to produce: MLD is now taken from the map branch, as in production.
+# EXPECTED_RHO uses cell centres in the IHO Labrador Sea polygon ('ls', default frac_threshold null).
+# Verified on main with explicit null; explicit 0.0 reproduces the previous reference, 26.77830879.
 EXPECTED_MLD_MEAN = 45.12769451
-EXPECTED_RHO = 26.82583261
+EXPECTED_RHO = 26.85266771
 # The climatology comes before the region in the filenames, lower cased as all the keys
 PLOT_STEM = "ocean_stratification.{product}.ci.FESOM.hpz3.r1.djf.{region}"
 NC_STEM = "stratification.{product}.ci.FESOM.hpz3.r1.djf.{region}"

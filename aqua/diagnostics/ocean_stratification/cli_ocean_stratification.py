@@ -35,7 +35,7 @@ def main(argv=None):
     cli = DiagnosticCLI(
         args,
         diagnostic_name="ocean3d",
-        default_config="config-ocean3d-en4-stratification.yaml",
+        default_config="config-ocean3d-stratification.yaml",
         log_name="OceanStratification CLI",
     ).prepare()
     cli.open_dask_cluster()

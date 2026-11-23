@@ -1,0 +1,26 @@
+# Model-only trend maps. The analysis wrapper supplies the dataset and analysis dates.
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    reader_kwargs: {chunks: {"time": 12}}
+    startdate: null
+    enddate: null
+
+setup:
+  loglevel: '{{ loglevel }}'
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  trends:
+    run: true
+    diagnostic_name: 'ocean2d'
+    var: ['tos']

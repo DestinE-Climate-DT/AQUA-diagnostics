@@ -27,3 +27,10 @@ diagnostics:
       var: ['thetao', 'so']
       regions: ['io', 'ao', 'so', 'arc_o', 'po', 'go']
       # dim_mean: ['lat']
+
+  trends:
+    run: true
+    diagnostic_name: 'trends'  # distinct from the ocean3d output prefix above
+    var: ['thetao', 'so']
+    regions: ['io', 'ao', 'so', 'arc_o', 'po', 'go']
+    plot: false  # Generic plotting currently supports horizontal 2D fields only.
