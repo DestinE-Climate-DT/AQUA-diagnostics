@@ -4,6 +4,7 @@ This function is custom for the Ocean Drift diagnostics in AQUA.
 """
 
 import matplotlib.pyplot as plt
+import numpy as np
 import xarray as xr
 
 from aqua.core.graphics import ConfigStyle, plot_timeseries
@@ -59,6 +60,12 @@ def plot_multi_timeseries(
         ncols = len(variables)
         figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
+
+    # Yearly means once the record is longer than 5 years, so the lines stay readable.
+    span = maps[0].time.values[-1].astype("datetime64[M]") - maps[0].time.values[0].astype("datetime64[M]")
+    if span > np.timedelta64(60, "M"):
+        logger.info("Series is longer than 5 years, plotting yearly means")
+        maps = [data.resample(time="1YE").mean(keep_attrs=True) for data in maps]
 
     fig = plt.figure(figsize=figsize)
     spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.28, hspace=0.55)
