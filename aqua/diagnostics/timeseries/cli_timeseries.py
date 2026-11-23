@@ -51,13 +51,14 @@ def main(argv=None):
             diagnostic_name = cli.config_dict["diagnostics"]["timeseries"].get("diagnostic_name", "timeseries")
             center_time = cli.config_dict["diagnostics"]["timeseries"].get("center_time", True)
             exclude_incomplete = cli.config_dict["diagnostics"]["timeseries"].get("exclude_incomplete", True)
+            include_global = cli.config_dict["diagnostics"]["timeseries"].get("include_global", True)
 
             for var in cli.config_dict["diagnostics"]["timeseries"].get("variables", []):
                 var_config, regions = load_var_config(
                     cli.config_dict,
                     var,
                     diagnostic="timeseries",
-                    prepend_global=True,
+                    prepend_global=include_global,
                     collapse_freq_keys=_TIMESERIES_FREQ_KEYS,
                 )
                 cli.logger.info(
@@ -101,9 +102,9 @@ def main(argv=None):
                         enddate = round_enddate(pd.Timestamp(max(t.enddate for t in ts)))
                         cli.logger.info(f"Total start date: {startdate}, end date: {enddate}")
 
-                        # Initialize a list of len from the number of references
+                        # Initialize a list of len from the number of references (empty without references)
+                        ts_ref = [None] * len(cli.config_dict.get("references", []))
                         if "references" in cli.config_dict:
-                            ts_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference)
@@ -206,7 +207,7 @@ def main(argv=None):
                     cli.config_dict,
                     var,
                     diagnostic="timeseries",
-                    prepend_global=True,
+                    prepend_global=include_global,
                     collapse_freq_keys=_TIMESERIES_FREQ_KEYS,
                 )
                 cli.logger.info(f"Running Timeseries diagnostic for variable {var} with config {var_config}")
@@ -250,9 +251,9 @@ def main(argv=None):
                         startdate = pd.Timestamp(min(t.startdate for t in ts))
                         enddate = pd.Timestamp(max(t.enddate for t in ts))
 
-                        # Initialize a list of len from the number of references
+                        # Initialize a list of len from the number of references (empty without references)
+                        ts_ref = [None] * len(cli.config_dict.get("references", []))
                         if "references" in cli.config_dict:
-                            ts_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference)
@@ -357,6 +358,7 @@ def main(argv=None):
             diagnostic_name = cli.config_dict["diagnostics"]["seasonalcycles"].get("diagnostic_name", "seasonalcycles")
             center_time = cli.config_dict["diagnostics"]["seasonalcycles"].get("center_time", True)
             exclude_incomplete = cli.config_dict["diagnostics"]["seasonalcycles"].get("exclude_incomplete", True)
+            include_global = cli.config_dict["diagnostics"]["seasonalcycles"].get("include_global", True)
 
             for var in cli.config_dict["diagnostics"]["seasonalcycles"].get("variables", []):
                 try:
@@ -364,7 +366,7 @@ def main(argv=None):
                         cli.config_dict,
                         var,
                         diagnostic="seasonalcycles",
-                        prepend_global=True,
+                        prepend_global=include_global,
                     )
                     cli.logger.info(f"Running SeasonalCycles diagnostic for variable {var} with config {var_config}")
 
@@ -402,9 +404,9 @@ def main(argv=None):
                         startdate = pd.Timestamp(min(s.startdate for s in sc))
                         enddate = pd.Timestamp(max(s.enddate for s in sc))
 
-                        # Initialize a list of len from the number of references
+                        # Initialize a list of len from the number of references (empty without references)
+                        sc_ref = [None] * len(cli.config_dict.get("references", []))
                         if "references" in cli.config_dict:
-                            sc_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference)
