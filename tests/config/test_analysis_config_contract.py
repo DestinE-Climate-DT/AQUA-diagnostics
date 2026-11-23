@@ -208,6 +208,7 @@ def test_highresmip_references_cover_1950(kind_name):
         "seaice_concentration_sh",
         "water_cycle_precipitation",
         "climate_metrics_gregory_toa",
+        "europe_sst",
     )
     for slot in satellite_slots:
         assert references[slot] == resolved["sources"]["era5"], slot

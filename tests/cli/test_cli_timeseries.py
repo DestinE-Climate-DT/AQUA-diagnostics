@@ -3,6 +3,7 @@
 import pandas as pd
 import pytest
 
+from aqua.core.util import dump_yaml, load_yaml
 from aqua.diagnostics.timeseries.cli_timeseries import main, parse_arguments
 from tests.cli.conftest import DEFAULT_REFERENCE
 
@@ -165,6 +166,23 @@ class TestMainExecutionFlow:
 
         mock_ts["PlotSeasonalCycles"].assert_called_once()
         mock_ts["PlotSeasonalCycles"].return_value.plot_seasonalcycles.assert_called_once()
+
+    def test_regions_only_without_references(self, build_config, mock_cluster, mock_ts):
+        """``include_global: false`` runs only the listed regions; without references only the datasets are plotted."""
+        params = {"default": {**BASE_TIMESERIES["params"]["default"], "regions": ["europe"]}}
+        block = {"include_global": False, "params": params}
+        config_file = build_config(
+            {"timeseries": {**BASE_TIMESERIES, **block}, "seasonalcycles": {**BASE_SEASONALCYCLES, **block}}
+        )
+        config = load_yaml(config_file)
+        del config["references"]
+        dump_yaml(config_file, config)
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        for diagnostic, plot in (("Timeseries", "PlotTimeseries"), ("SeasonalCycles", "PlotSeasonalCycles")):
+            assert [call.kwargs["region"] for call in mock_ts[diagnostic].call_args_list] == ["europe"]
+            assert mock_ts[plot].call_args.kwargs["ref_monthly_data"] is None
 
     def test_gregory_full_pipeline(self, build_config, mock_cluster, mock_ts):
         """
