@@ -61,11 +61,13 @@ def plot_multi_timeseries(
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
-    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.2)
+    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.28, hspace=0.55)
 
     data_labels = [str(x) for x in levels]
+    row_axes = []
 
     for j in range(nrows):
+        axes_in_row = []
         for i, var in enumerate(variables):
             k = j * len(variables) + i
             ax = fig.add_subplot(spec[j, i])
@@ -73,7 +75,8 @@ def plot_multi_timeseries(
 
             fig, ax = plot_timeseries(
                 [maps[j][var].sel({vert_coord: level}) for level in maps[j][var][vert_coord]],
-                data_labels=data_labels if k == 0 else None,
+                data_labels=data_labels if i == 0 else None,
+                legend=False,
                 title=titles[k] if titles else None,
                 ax=ax,
                 fig=fig,
@@ -99,9 +102,27 @@ def plot_multi_timeseries(
                     ha="center",
                     va="center",
                 )
-    # Adjust overall layout
-    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.06, top=0.92)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
+            axes_in_row.append(ax)
+        row_axes.append(axes_in_row)
+
+    # Layout first, then place one legend under each row using the final axes positions.
+    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.08, top=0.92)
+    for axes_in_row in row_axes:
+        handles, labels = axes_in_row[0].get_legend_handles_labels()
+        boxes = [row_ax.get_position() for row_ax in axes_in_row]
+        row_width = boxes[0].x1 - boxes[0].x0
+        x_center = ((boxes[0].x0 + boxes[-1].x1) / 2 - boxes[0].x0) / row_width
+        axes_in_row[0].legend(
+            handles,
+            labels,
+            loc="upper center",
+            bbox_to_anchor=(x_center, -0.28),
+            bbox_transform=axes_in_row[0].transAxes,
+            ncol=len(labels),
+            frameon=False,
+            fontsize=9,
+            borderaxespad=0,
+        )
 
     if title:
         logger.debug("Setting super title to %s", title)
