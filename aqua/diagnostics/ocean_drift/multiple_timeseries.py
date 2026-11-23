@@ -61,7 +61,7 @@ def plot_multi_timeseries(
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
-    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.5)
+    spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.2)
 
     data_labels = [str(x) for x in levels]
 
@@ -100,7 +100,7 @@ def plot_multi_timeseries(
                     va="center",
                 )
     # Adjust overall layout
-    fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)
+    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.06, top=0.92)
     fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
 
     if title:
