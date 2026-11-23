@@ -201,8 +201,8 @@ class PlotHovmoller:
     def set_line_plot_colours(self):
         """Set the color list for line plots based on the number of levels."""
         nlev = len(self.levels)
-        cmap = plt.cm.plasma_r
-        self.line_plot_colours = [cmap(0.3 + 0.7 * i / (nlev - 1)) for i in range(nlev)]
+        cmap = plt.cm.RdBu
+        self.line_plot_colours = [cmap(i / (nlev - 1)) for i in range(nlev)]
 
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
