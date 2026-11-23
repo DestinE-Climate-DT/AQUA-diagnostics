@@ -1,3 +1,6 @@
+# Legacy configuration: config-atmosphere3d-plev.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
 datasets:
   - catalog: null
@@ -15,8 +18,8 @@ references:
     exp: 'era5'
     source: 'monthly'
     regrid: 'r100'
-    startdate: "1990-01-01"
-    enddate: "2020-12-31"
+    startdate: '1990-01-01'
+    enddate: '2014-12-31'
 
 setup:
   loglevel: 'WARNING'
@@ -35,7 +38,7 @@ diagnostics:
     variables: ['t', 'u', 'v', 'q']
     params:
       default:
-        plev: [85000, 20000] # Level plot for 2D bias map if variable 3d
+        plev: [85000, 25000] # Level plot for 2D bias map if variable 3d
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: true     # Vertical profile if variable 3d
@@ -50,19 +53,19 @@ diagnostics:
       t:
         vmin: -8
         vmax: 8
-        vmin_v: -20
-        vmax_v: 20
+        vmin_v: -12
+        vmax_v: 12
         cmap: 'RdBu_r'
       u:
         vmin: -10
         vmax: 10
-        vmin_v: -25
-        vmax_v: 25
+        vmin_v: -12
+        vmax_v: 12
       v:
         vmin: -3
         vmax: 3
-        vmin_v: -3
-        vmax_v: 3
+        vmin_v: -1
+        vmax_v: 1
       #q:
       #  vmin: -0.002
       #  vmax: 0.002

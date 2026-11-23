@@ -9,7 +9,8 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
-- Remove module-level `xr.set_options(keep_attrs=True)` calls from tools and the `new-aqua-diagnostic` skeleton, which silently changed xarray's global state on import; xarray already keeps attrs by default (#566).
+- Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed) (#519)
+- Remove module-level `xr.set_options(keep_attrs=True)` (#566)
 - Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments (#579)
 - Regions: default to cell-centre selection (`frac_threshold: null`) to avoid expensive approximate fractional masks; retain numeric thresholds as explicit overrides. Define Europe as an inclusive lon/lat box (10°W–40°E, 30°N–72.6°N) to retain its western boundary cells without polygon masks (#569).
 - CI: the Conda, PyPI, nightly and release workflows call the aqua-core failure report also on success and pass the test result, so a passing scheduled run closes the open failure issue of that suite (#574)
@@ -22,6 +23,7 @@ Complete list:
 - CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
 - Major documentation update (#473)
 - Centralize title size and fig size (#540)
+- Tropical Cyclones: forward configured `reader_kwargs`, including `config_fdb`, to catalog-based orography reads (#505)
 
 ## [v0.26.0]
 

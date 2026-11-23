@@ -15,6 +15,7 @@ DIAGNOSTICS_ROOT = REPO_ROOT / "aqua" / "diagnostics"
 ANALYSIS_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "config.aqua-analysis.yaml"
 EXPERIMENT_KIND_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "climatedt-experiment-kind.yaml"
 JINJA_COLLECTIONS_DIR = DIAGNOSTICS_ROOT / "config" / "collections" / "jinja"
+LEGACY_COLLECTIONS_DIR = DIAGNOSTICS_ROOT / "config" / "collections" / "legacy"
 
 
 def _load_analysis_config():
@@ -103,6 +104,39 @@ def test_analysis_config_collection_files_exist():
 _STRICT_JINJA_ENV = Environment(undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
 
 
+# Kind resolution: use the production code from aqua-core when available.
+# TODO(aqua-core #3266): drop the fallback mirror once the pinned aqua-core ships resolve_experiment_kind.
+try:
+    from aqua.core.analysis import resolve_experiment_kind
+except ImportError:
+
+    def _deep_merge(base, override):
+        """Recursively merge ``override`` on top of ``base`` without modifying the inputs."""
+        merged = dict(base)
+        for key, value in (override or {}).items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key] = _deep_merge(merged[key], value)
+            else:
+                merged[key] = value
+        return merged
+
+    def resolve_experiment_kind(kinds, kind):
+        """Mirror of ``aqua.core.analysis.resolve_experiment_kind`` for older aqua-core."""
+        if kind not in kinds:
+            raise KeyError(f"Experiment kind '{kind}' not found.")
+        resolved = _deep_merge(kinds["default"], kinds[kind])
+        if "kind" in resolved:
+            raise ValueError("'kind' is a reserved key in the experiment kind file.")
+        resolved["kind"] = kind
+        return resolved
+
+
+def _resolved_experiment_kinds():
+    """Resolve every kind of the experiment kind file, as passed to the templates by ``aqua analysis``."""
+    experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
+    return {name: resolve_experiment_kind(experiment_kinds, name) for name in experiment_kinds}
+
+
 def _render_template_strict(template_path, definitions):
     """Render a jinja template with StrictUndefined and parse the result as YAML."""
     rendered = _STRICT_JINJA_ENV.from_string(template_path.read_text()).render(definitions)
@@ -116,7 +150,7 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
     ``UndefinedError``, only logged, which silently skips the collection at runtime. Guards
     render-ability and YAML validity, not the rendered values.
     """
-    experiment_kinds = load_yaml(str(EXPERIMENT_KIND_CONFIG))
+    experiment_kinds = _resolved_experiment_kinds()
     templates = sorted(JINJA_COLLECTIONS_DIR.glob("**/*.j2"))
     assert templates, f"No jinja templates found under {JINJA_COLLECTIONS_DIR}."
 
@@ -135,3 +169,107 @@ def test_jinja_collection_templates_render_with_experiment_kinds():
                 render_failures.append(f"{label}: rendered to {type(rendered).__name__}, not a mapping")
 
     assert not render_failures, "Jinja templates failed to render to a valid config:\n" + "\n".join(render_failures)
+
+
+def _assert_same_keys(resolved, default, label):
+    """Recursively check that ``resolved`` has exactly the keys of ``default``."""
+    assert resolved.keys() == default.keys(), label
+    for key, value in default.items():
+        if isinstance(value, dict):
+            _assert_same_keys(resolved[key], value, f"{label}.{key}")
+
+
+def test_experiment_kinds_define_same_keys_as_default():
+    """Overrides must not introduce keys unknown to ``default`` (typos would be silently unused)."""
+    default = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]
+    for kind_name, resolved in _resolved_experiment_kinds().items():
+        assert resolved.pop("kind") == kind_name
+        _assert_same_keys(resolved, default, kind_name)
+
+
+def test_sea_ice_concentration_reference_per_kind():
+    """Storylines use OSI-SAF AMSR, HighResMIP ERA5 (back to 1950), the other kinds OSI-SAF SSMIS."""
+    expected_exp = {"storyline": "osi-saf-amsr", "highresmip-hist-cmip6": "era5", "highresmip-hist-cmip7": "era5"}
+    for kind_name, resolved in _resolved_experiment_kinds().items():
+        for slot in ("seaice_concentration_nh", "seaice_concentration_sh"):
+            assert resolved["references"][slot]["exp"] == expected_exp.get(kind_name, "osi-saf-ssmis"), f"{kind_name}.{slot}"
+
+
+@pytest.mark.parametrize("kind_name", ["highresmip-hist-cmip6", "highresmip-hist-cmip7"])
+def test_highresmip_references_cover_1950(kind_name):
+    """HighResMIP kinds start in 1950 and replace the satellite-era references with ERA5."""
+    resolved = _resolved_experiment_kinds()[kind_name]
+    references = resolved["references"]
+    satellite_slots = (
+        "ocean2d_sst",
+        "radiation_toa_radiative",
+        "radiation_surface_radiative",
+        "seaice_concentration_nh",
+        "seaice_concentration_sh",
+        "water_cycle_precipitation",
+        "climate_metrics_gregory_toa",
+    )
+    for slot in satellite_slots:
+        assert references[slot] == resolved["sources"]["era5"], slot
+    for block in ("standard", "radiation", "timeseries"):
+        dates = resolved["period"][block]
+        assert dates["startdate"] == dates["std_startdate"] == "1950-01-01", block
+
+
+def test_references_point_to_sources():
+    """Every reference slot of every kind must be one of the datasets listed in ``sources``."""
+    for kind_name, resolved in _resolved_experiment_kinds().items():
+        sources = list(resolved["sources"].values())
+        for slot, dataset in resolved["references"].items():
+            assert dataset in sources, f"{kind_name}.{slot}"
+
+
+def test_reference_slots_used_by_templates():
+    """Every reference slot must be read by at least one template (no stale slots)."""
+    template_text = "".join(template.read_text() for template in JINJA_COLLECTIONS_DIR.glob("**/*.j2"))
+    default = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]
+    unused = [slot for slot in default["references"] if f"references.{slot}." not in template_text]
+    assert not unused, f"Reference slots not used by any template: {unused}."
+
+
+@pytest.mark.parametrize("collection", ["radiation_toa", "radiation_surface"])
+def test_boxplots_skip_duplicate_reference(collection):
+    """Boxplots list the satellite reference only when it differs from the atmosphere one (ERA5)."""
+    template = JINJA_COLLECTIONS_DIR / collection / f"config-{collection}-boxplots.j2"
+    for kind_name, resolved in _resolved_experiment_kinds().items():
+        references = _render_template_strict(template, resolved)["references"]
+        expected = 1 if kind_name.startswith("highresmip") else 2
+        assert len(references) == expected, kind_name
+        assert references[0]["exp"] == "era5", kind_name
+
+
+def test_legacy_collections_match_default_jinja_rendering():
+    """Every jinja template has a legacy file with the same name that is its rendering with the ``default`` kind.
+
+    Legacy files are the explicit version of the default jinja case: if this fails after changing a template
+    or the ``default`` kind, regenerate the legacy file by rendering the template with the ``default`` kind.
+    """
+    default_kind = _resolved_experiment_kinds()["default"]
+    mismatches = []
+    for template in sorted(JINJA_COLLECTIONS_DIR.glob("**/*.j2")):
+        legacy = LEGACY_COLLECTIONS_DIR / template.parent.name / f"{template.stem}.yaml"
+        if not legacy.is_file():
+            mismatches.append(f"{legacy.relative_to(DIAGNOSTICS_ROOT)}: missing")
+            continue
+        rendered = _STRICT_JINJA_ENV.from_string(template.read_text()).render(default_kind)
+        if YAML(typ="safe").load(legacy.read_text()) != YAML(typ="safe").load(rendered):
+            mismatches.append(f"{legacy.relative_to(DIAGNOSTICS_ROOT)}: differs from {template.name} rendered with 'default'")
+    assert not mismatches, "Legacy files out of sync with the jinja templates:\n" + "\n".join(mismatches)
+
+
+def test_output_settings_are_centralised():
+    """Every template reads the shared output settings from the kind, only ``outputdir`` is local."""
+    output_keys = load_yaml(str(EXPERIMENT_KIND_CONFIG))["default"]["output"]
+    assert set(output_keys) == {"rebuild", "save_netcdf", "save_format", "dpi"}
+    missing = [
+        f"{template.name}: output.{key}"
+        for template in sorted(JINJA_COLLECTIONS_DIR.glob("**/*.j2"))
+        for key in output_keys
+        if f"output.{key}" not in template.read_text()
+    ]
+    assert not missing, f"Templates not reading the centralised output settings: {missing}"
