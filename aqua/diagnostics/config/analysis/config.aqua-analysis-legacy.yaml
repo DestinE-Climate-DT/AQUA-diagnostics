@@ -66,7 +66,7 @@ cli:
 run:
     - ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
     - ["atmosphere2d", "atmosphere3d", "ocean3d-part1", "ocean3d-part2", "water_cycle"]
-    - ["seaice", "radiation-toa",  "radiation-surface"]
+    - ["seaice", "radiation-toa",  "radiation-surface", "europe"]
 
   # List of diagnostics
 
@@ -103,6 +103,16 @@ diagnostics:
       source_oce: true  # if a --source_oce argument was passed use it
     gregory:
       config: "${AQUA_CONFIG}/collections/legacy/climate_metrics/config-climate_metrics-gregory.yaml"
+
+  europe:
+    biases:
+      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-land.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-surface.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml"]
+    timeseries:
+      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-surface.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-salinity.yaml"]
 
   ocean2d:
     biases:

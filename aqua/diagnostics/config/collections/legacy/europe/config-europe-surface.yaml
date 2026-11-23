@@ -1,0 +1,73 @@
+# Legacy configuration: config-europe-surface.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
+# Surface fields over Europe (land and sea): 10m wind speed maps and timeseries of the European mean.
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+references:
+  - catalog: 'obs'
+    model: 'ECMWF'
+    exp: 'era5'
+    source: 'monthly'
+    regrid: 'r100'
+    startdate: '1990-01-01'
+    enddate: '2014-12-31'
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  biases:
+    run: true
+    diagnostic_name: 'europe'
+    region: 'europe'
+    variables: ['10si']
+    params:
+      default:
+        seasons: true
+        seasons_stat: 'mean' # May become a list
+        vertical: false     # Vertical profile if variable 3d
+    plot_params:
+      default:
+        projection_params: {}  # no projection: zoomed plate carree on the region
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05  # 95% confidence level
+      # vmin/vmax multiples of 1.1: the 11 colour levels have round steps and readable colorbar labels
+      10si:
+        vmin: -2.2
+        vmax: 2.2
+        cmap: 'RdBu_r'
+
+  timeseries:
+    run: true
+    diagnostic_name: 'europe'
+    variables: ['2t', 'tprate', '10si']
+    center_time: true
+    include_global: false  # only the regions below
+    params:
+      default:
+        hourly: False
+        daily: False
+        monthly: True
+        annual: True
+        std_startdate: '1990-01-01'
+        std_enddate: '2014-12-31'
+        regions: ['europe']
+      tprate:
+        units: 'mm/day'
