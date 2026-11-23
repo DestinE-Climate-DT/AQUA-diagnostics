@@ -202,7 +202,12 @@ class PlotHovmoller:
         """Set the color list for line plots based on the number of levels."""
         nlev = len(self.levels)
         cmap = plt.cm.RdBu
-        self.line_plot_colours = [cmap(i / (nlev - 1)) for i in range(nlev)]
+        # RdBu is white at 0.5. Keep the shallow half in the reds and the deep half in the blues.
+        n_red = nlev // 2
+        n_blue = nlev - n_red
+        positions = [0.5 * i / n_red for i in range(n_red)]
+        positions += [0.5 + 0.5 * (i + 1) / n_blue for i in range(n_blue)]
+        self.line_plot_colours = [cmap(p) for p in positions]
 
     def set_suptitle(self, content: str = None):
         """Set the suptitle for the Hovmoller plot."""
