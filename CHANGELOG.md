@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.27.0):
 Main changes:
 
 Complete list:
+- New Europe collection (#595)
 - Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed) (#519)
 - Remove module-level `xr.set_options(keep_attrs=True)` (#566)
 - Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments (#579)
