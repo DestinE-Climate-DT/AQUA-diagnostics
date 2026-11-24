@@ -1,3 +1,6 @@
+# Legacy configuration: config-ocean3d-stratification.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 # Template according to #1613
 # The first model in this block can be overridden
 # in the command line by using:
@@ -13,14 +16,14 @@ datasets:
     # enddate: 1990-12
 
 references:
-  - catalog: null
-    model: EN4
-    exp: v4.2.2
-    source: monthly-netcdf
-    regrid: r100  # EN4 is on 1x1 grid different from r100
+  - catalog: 'obs'
+    model: 'EN4'
+    exp: 'v4.2.2'
+    source: 'monthly-netcdf'
+    regrid: 'r100'  # EN4 is on 1x1 grid different from r100
     reader_kwargs: {chunks: {"time": 1, "depth": 42}}  # it can be a dictionary with reader kwargs
-    startdate: '{{ default.startdate }}'
-    enddate: '{{ default.enddate }}'
+    startdate: '1990-01-01'
+    enddate: '2014-12-31'
 
 output:
   outputdir: "./"

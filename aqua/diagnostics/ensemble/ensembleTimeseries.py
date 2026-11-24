@@ -1,13 +1,10 @@
 # ruff: noqa: N999
-import xarray as xr
 
 from aqua.core.logger import log_configure
 
 # from aqua.exceptions import NoDataError
 from .base import BaseMixin
 from .util import compute_statistics
-
-xr.set_options(keep_attrs=True)
 
 
 class EnsembleTimeseries(BaseMixin):

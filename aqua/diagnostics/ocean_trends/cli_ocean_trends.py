@@ -30,7 +30,7 @@ def main(argv=None):
     """Run the OceanTrends diagnostic CLI."""
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
-    cli = DiagnosticCLI(args, "ocean3d", "config-ocean3d-en4-trend-drift.yaml", log_name="OceanTrends CLI").prepare()
+    cli = DiagnosticCLI(args, "ocean3d", "config-ocean3d-trend-drift.yaml", log_name="OceanTrends CLI").prepare()
     cli.open_dask_cluster()
 
     config_dict = cli.config_dict

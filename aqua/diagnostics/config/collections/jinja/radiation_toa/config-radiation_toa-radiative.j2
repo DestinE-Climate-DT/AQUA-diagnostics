@@ -19,20 +19,21 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: 'obs'
-    model: 'CERES'
-    exp: 'ebaf-toa421'
-    source: 'monthly'
-    regrid: 'r100'
+  - catalog: '{{ references.radiation_toa_radiative.catalog }}'
+    model: '{{ references.radiation_toa_radiative.model }}'
+    exp: '{{ references.radiation_toa_radiative.exp }}'
+    source: '{{ references.radiation_toa_radiative.source }}'
+    regrid: '{{ regrid }}'
     reader_kwargs: null
-    startdate: '2001-01-01'
-    enddate: '2024-12-31'
+    startdate: '{{ period.radiation.startdate }}'
+    enddate: '{{ period.radiation.enddate }}'
 
 output:
   outputdir: "./"
-  rebuild: true
-  save_format: ['png', 'pdf', 'svg']
-  dpi: 300
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
 
 diagnostics:
   timeseries:
@@ -47,8 +48,8 @@ diagnostics:
         daily: False
         monthly: True
         annual: True
-        std_startdate: '20010101'
-        std_enddate: '20241231'
+        std_startdate: '{{ period.radiation.std_startdate }}'
+        std_enddate: '{{ period.radiation.std_enddate }}'
       tnlwrf+tnswrf:
         standard_name: "top_net_radiation"
         long_name: "Top net radiation"
@@ -64,10 +65,6 @@ diagnostics:
         seasons: true
         seasons_stat: 'mean' # May become a list
         vertical: false     # Vertical profile if variable 3d
-        startdate_data: null
-        enddate_data: null
-        startdate_obs: "2001-01-01"
-        enddate_obs: "2024-12-31"
       tnlwrf+tnswrf:
         short_name: "tnr"
         long_name: "Top net radiation"
