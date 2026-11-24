@@ -14,14 +14,12 @@ from aqua.core.util import (
     DEFAULT_REALIZATION,
     convert_units,
     load_yaml,
-    pandas_freq_to_string,
     time_to_string,
-    xarray_to_pandas_freq,
 )
 
 from .output_saver import OutputSaver
 from .region_sources import load_region_source
-from .time_util import round_enddate, round_startdate, start_end_dates
+from .time_util import effective_bounds, start_end_dates
 
 
 class Diagnostic:
@@ -119,66 +117,65 @@ class Diagnostic:
         if self.regrid is not None:
             self.logger.info(f"Regridded data to {self.regrid} grid")
 
-        # Effective data bounds (what the catalog actually delivered)
-        eff_start = data.time.values[0]
-        eff_end = data.time.values[-1]
+        # Cut the analysis and std periods out of the single retrieved window
+        self.data, self.startdate, self.enddate = self._select_period(data, self.startdate, self.enddate)
 
-        # Avoid clipping when the user specifies e.g. an end-of-month date.
-        freq = pandas_freq_to_string(xarray_to_pandas_freq(data))
-        if freq in ("monthly", "annual"):
-            start_bound = round_startdate(pd.Timestamp(eff_start), freq=freq)
-            end_bound = round_enddate(pd.Timestamp(eff_end), freq=freq)
-        else:
-            start_bound = pd.Timestamp(eff_start)
-            end_bound = pd.Timestamp(eff_end)
-
-        # Resolve user-requested dates against effective bounds
-        if self.startdate is None:
-            self.startdate = eff_start
-        elif pd.Timestamp(self.startdate) < start_bound:
-            self.logger.warning(
-                "Requested startdate %s not available; using %s instead.",
-                time_to_string(self.startdate),
-                time_to_string(eff_start),
+        # Cut the std period out of the single retrieved window, if requested. The std period is optional and may be None.
+        if self.std_startdate is not None or self.std_enddate is not None:
+            self.std_data, self.std_startdate, self.std_enddate = self._select_period(
+                data, self.std_startdate, self.std_enddate, label="std_"
             )
-            self.startdate = eff_start
-        self.logger.info(("Start date: %s "), time_to_string(self.startdate))
-
-        if self.enddate is None:
-            self.enddate = eff_end
-        elif pd.Timestamp(self.enddate) > end_bound:
-            self.logger.warning(
-                "Requested enddate %s not available; using %s instead.",
-                time_to_string(self.enddate),
-                time_to_string(eff_end),
-            )
-            self.enddate = eff_end
-        self.logger.info(("End date: %s "), time_to_string(self.enddate))
-
-        if self.std_startdate is not None and pd.Timestamp(self.std_startdate) < start_bound:
-            self.logger.warning(
-                "Requested std_startdate %s not available; using %s instead.",
-                time_to_string(self.std_startdate),
-                time_to_string(eff_start),
-            )
-            self.std_startdate = eff_start
-            self.logger.info(("Std start date: %s "), time_to_string(self.std_startdate))
-
-        if self.std_enddate is not None and pd.Timestamp(self.std_enddate) > end_bound:
-            self.logger.warning(
-                "Requested std_enddate %s not available; using %s instead.",
-                time_to_string(self.std_enddate),
-                time_to_string(eff_end),
-            )
-            self.std_enddate = eff_end
-            self.logger.info(("Std end date: %s "), time_to_string(self.std_enddate))
-
-        self.data = data.aqua.seldate(self.startdate, self.enddate)
-        if self.std_startdate is not None and self.std_enddate is not None:
-            self.std_data = data.aqua.seldate(self.std_startdate, self.std_enddate)
 
         # Attach date attributes to the retrieved dataset
         self._set_date_attrs()
+
+    def _select_period(self, data, startdate=None, enddate=None, label=""):
+        """
+        Select a period from the retrieved data, resolving the requested dates
+        against what the catalog actually delivered.
+        Unset dates are replaced by the data bounds, dates outside the bounds are
+        clipped to them with a warning.
+
+        Args:
+            data (xarray Dataset or DataArray): The retrieved data.
+            startdate (str | None): The requested start date.
+            enddate (str | None): The requested end date.
+            label (str): Prefix for the log messages, e.g. '' or 'std_'.
+
+        Returns:
+            tuple: ``(selected, startdate, enddate)``, the data restricted to the period
+            and the resolved dates.
+        """
+        eff_start, eff_end, start_bound, end_bound = effective_bounds(data)
+
+        if startdate is not None and pd.Timestamp(startdate) < start_bound:
+            self.logger.warning(
+                "Requested %sstartdate %s not available; using %s instead.",
+                label,
+                time_to_string(startdate),
+                time_to_string(eff_start),
+            )
+            startdate = None
+        if enddate is not None and pd.Timestamp(enddate) > end_bound:
+            self.logger.warning(
+                "Requested %senddate %s not available; using %s instead.",
+                label,
+                time_to_string(enddate),
+                time_to_string(eff_end),
+            )
+            enddate = None
+
+        startdate = eff_start if startdate is None else startdate
+        enddate = eff_end if enddate is None else enddate
+        self.logger.info("%sstartdate: %s, %senddate: %s", label, time_to_string(startdate), label, time_to_string(enddate))
+
+        selected = data.aqua.seldate(startdate, enddate)
+        if selected.time.size == 0:
+            raise NotEnoughDataError(
+                f"No data between {label}startdate {time_to_string(startdate)} "
+                f"and {label}enddate {time_to_string(enddate)} for {self.model} {self.exp} {self.source}"
+            )
+        return selected, startdate, enddate
 
     def save_netcdf(
         self,

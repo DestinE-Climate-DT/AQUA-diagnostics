@@ -2,6 +2,8 @@
 
 import pandas as pd
 
+from aqua.core.util import pandas_freq_to_string, xarray_to_pandas_freq
+
 
 def start_end_dates(startdate=None, enddate=None, start_std=None, end_std=None):
     """
@@ -74,3 +76,32 @@ def round_enddate(enddate, freq="monthly"):
         )
     else:
         raise ValueError(f"Unsupported frequency '{freq}'. Only 'monthly' and 'annual' are supported.")
+
+
+def effective_bounds(data):
+    """
+    Evaluate the time bounds of the data actually available.
+    For monthly and annual data the comparison bounds are widened to the
+    whole first/last period, to avoid clipping when the user asks e.g. for
+    an end-of-month date while the timestamps are at the start of the month.
+
+    Args:
+        data (xarray.Dataset or xarray.DataArray): data with a time coordinate
+
+    Returns:
+        tuple: ``(eff_start, eff_end, start_bound, end_bound)``, where ``eff_*`` are
+        the first and last timestamps of the data and ``*_bound`` the
+        ``pandas.Timestamp`` to compare the requested dates with.
+    """
+    eff_start = data.time.values[0]
+    eff_end = data.time.values[-1]
+
+    freq = pandas_freq_to_string(xarray_to_pandas_freq(data))
+    if freq in ("monthly", "annual"):
+        start_bound = round_startdate(pd.Timestamp(eff_start), freq=freq)
+        end_bound = round_enddate(pd.Timestamp(eff_end), freq=freq)
+    else:
+        start_bound = pd.Timestamp(eff_start)
+        end_bound = pd.Timestamp(eff_end)
+
+    return eff_start, eff_end, start_bound, end_bound
