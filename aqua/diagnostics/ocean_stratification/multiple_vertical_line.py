@@ -71,7 +71,7 @@ def plot_multi_vertical_lines(
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
-    # wspace: room for the depth axis labels of the following panel (tight_layout is skipped with this gridspec)
+    # wspace: room for the depth axis labels of the following panel (margins set by subplots_adjust below)
     spec = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.4, hspace=0.1)
 
     for j in range(nrows):
@@ -116,9 +116,8 @@ def plot_multi_vertical_lines(
                     ha="center",
                 )
 
-    # Adjust overall layout
+    # Adjust overall layout (tight_layout is skipped with a gridspec setting wspace/hspace)
     fig.subplots_adjust(bottom=0.1, top=0.9, left=0.08, right=0.95)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
 
     if title:
         logger.debug("Setting super title to %s", title)
