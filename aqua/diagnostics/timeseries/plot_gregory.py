@@ -131,8 +131,10 @@ class PlotGregory(PlotBaseMixin):
         # Create a single legend at the bottom
         fig.legend(handles_common, labels_common, loc="lower center", ncol=2)
 
-        # Adjust layout to make space (wspace also keeps the panels narrow enough to have few x ticks)
-        fig.subplots_adjust(left=0.08, right=0.97, bottom=0.24, top=0.84, wspace=0.4)
+        # Bottom and top margins in inches, equal for the one- and two-panel figures (different heights);
+        # wspace keeps the two panels narrow enough to have few x ticks
+        h = fig.get_figheight()
+        fig.subplots_adjust(left=0.08, right=0.97, bottom=1.2 / h, top=1 - 0.8 / h, wspace=0.4)
 
         if title:
             fig.suptitle(title)
