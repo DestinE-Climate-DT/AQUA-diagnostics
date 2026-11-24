@@ -92,9 +92,8 @@ def plot_multi_timeseries(
 
             if text and text[k]:
                 add_row_label(ax, text[k])
-    # Adjust overall layout
+    # Adjust overall layout (tight_layout is skipped with a gridspec setting wspace/hspace)
     fig.subplots_adjust(bottom=0.1, top=0.9, left=0.14, right=0.95)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
 
     if title:
         logger.debug("Setting super title to %s", title)
