@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from aqua.core.graphics import plot_vertical_profile
 from aqua.core.graphics.styles import ConfigStyle
 from aqua.core.logger import log_configure
-from aqua.core.util import evaluate_colorbar_limits, plot_box
+from aqua.core.util import evaluate_colorbar_limits, grid_figure_size, plot_box
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 
 
@@ -76,13 +76,14 @@ def plot_multivars_vertical_profile(
     # try to make a square figure with a reasonable aspect ratio
     if not nrows and not ncols:
         nrows, ncols = plot_box(len(maps))
-    figsize = figsize if figsize is not None else (ncols * 6 + 1, nrows * 5 + 1)
+    figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols, panel_ratio=1)
     logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
 
     # Adjust the location of the subplots on the page to make room for the colorbar
-    fig.subplots_adjust(bottom=0.25, top=0.9, left=0.05, right=0.95, wspace=0.3, hspace=0.8)
+    # (wspace: room for each colorbar label next to the depth axis of the following panel)
+    fig.subplots_adjust(bottom=0.25, top=0.9, left=0.08, right=0.9, wspace=0.7, hspace=0.8)
 
     for i in range(len(maps)):
         vmin, vmax = evaluate_colorbar_limits(maps=maps[i], sym=sym)
@@ -106,7 +107,7 @@ def plot_multivars_vertical_profile(
         )
         if ytext:
             logger.debug("Adding text in the plot: %s", ytext[i])
-            ax.text(-0.3, 0.33, ytext[i], fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
+            ax.text(-0.3, 0.33, ytext[i], fontsize="large", color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
 
         # Retrieve last plotted object for colorbar (QuadMesh or ContourSet)
         if ax.collections:
@@ -126,12 +127,12 @@ def plot_multivars_vertical_profile(
         cax = divider.append_axes("right", size="5%", pad=0.15, axes_class=plt.Axes)
         cbar = fig.colorbar(mappable, cax=cax, orientation="vertical")
         if cbar_labels and i < len(cbar_labels):
-            cbar.set_label(cbar_labels[i], fontsize=12)
+            cbar.set_label(cbar_labels[i])
 
     # Add a super title
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 9, y=1.1)
+        fig.suptitle(title, y=1.1)
 
     if return_fig:
         return fig

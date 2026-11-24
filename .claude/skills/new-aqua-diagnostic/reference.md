@@ -69,7 +69,7 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 `int_month_name`, `select_season`, `convert_units`, `unit_to_latex`, `DEFAULT_REALIZATION`, `get_realizations`,
 `format_realization`, `merge_attrs`, `extract_attrs`, `update_metadata`, `lon_to_180/360`, `add_cyclic_lon`,
 `evaluate_colorbar_limits`, `cbar_get_label`, `generate_colorbar_ticks`, `get_projection`, `plot_box`,
-`strlist_to_phrase`, `lat_to_phrase`, `create_folder`, `clean_filename`.
+`figure_size`, `grid_figure_size`, `strlist_to_phrase`, `lat_to_phrase`, `create_folder`, `clean_filename`.
 
 **Logging, config, exceptions**: `aqua.core.logger.log_configure(log_level, log_name)` and `log_history(data, msg)`;
 `aqua.core.configurer.ConfigLocator().configdir`, `ConfigCatalog`; `aqua.core.exceptions`: `NoDataError`,
