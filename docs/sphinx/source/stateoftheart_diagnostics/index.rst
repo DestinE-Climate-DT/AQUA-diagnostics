@@ -112,20 +112,21 @@ The diagnostics that can work on a region refer to it by its key in the centrali
 of the AQUA configuration folder (by default ``$HOME/.aqua/``).
 For example, ``regions: ['io', 'sss']`` in the configuration file of the ocean drift, or ``region: 'europe'`` in the one of the biases.
 
-Regions are polygons whenever possible: the `IPCC AR6 reference regions <https://doi.org/10.5194/essd-12-2959-2020>`_
-for land and atmosphere (e.g. ``europe``) and the `IHO sea areas <https://doi.org/10.14284/323>`_ for oceans and seas
+Oceans and seas use polygons from the `IHO sea areas <https://doi.org/10.14284/323>`_
 (e.g. ``io``, ``ao``, ``so``, ``arc_o``, ``ls``, ``ms``).
-The regions with no equivalent in either collection are lon/lat boxes.
+Europe, latitude bands and regions without a polygon equivalent use lon/lat boxes.
+Europe spans 10°W–40°E and 30°N–72.6°N. Its coordinate limits include cell centres on the boundary,
+retaining the centres at 10°W without constructing polygon masks.
 
 A lon/lat box gives the limits of the region, while a polygon region names a polygon collection and the polygons to merge:
 
 .. code-block:: yaml
 
     regions:
-      nh:
-        longname: North Midlatitudes
-        lon_limits: [-180, 180]
-        lat_limits: [30, 90]
+      europe:
+        longname: Europe
+        lon_limits: [-10, 40]
+        lat_limits: [30, 72.6]
       gs:
         regionmask: iho
         regionmask_names: [Greenland Sea, Norwegian Sea]
@@ -138,9 +139,12 @@ A lon/lat box gives the limits of the region, while a polygon region names a pol
 * ``regionmask_names``: the polygons of the collection merged into the region, with their names in the collection
   (default: the ``longname``).
 * ``frac_threshold``: a grid cell is selected if the region covers more than this fraction of it.
-  The default, ``0.0``, keeps every cell the region touches: on coarse grids (e.g. the 1° LRA) many coastal ocean cells
-  have their centre on land, and they would be lost otherwise. ``null`` keeps only the cells whose centre is inside the region.
-  Any value other than ``null`` needs data on a regular lon/lat grid, such as the LRA or regridded data.
+  The default, ``null``, keeps only cells whose centre is inside the region and avoids constructing expensive approximate
+  fractional masks. Set ``0.0`` explicitly to select every cell with nonzero sampled coverage, preserving the previous
+  default. This can retain coastal ocean cells whose centres lie on land, particularly on coarse grids (e.g. the 1° LRA).
+  Numeric thresholds need data on a regular lon/lat grid, such as the LRA or regridded data.
+  Changing between these rules can change regional results at boundary cells; fractional selection does not scale
+  cell-area weights by coverage.
 
 The polygon collections are listed in the ``sources`` section of the regions file, with these keys:
 
@@ -204,6 +208,43 @@ The following command line arguments are available for all the diagnostics:
 
 Only the first dataset in the ``datasets`` list is affected by these CLI overrides.
 If a diagnostic has extra arguments, these will be described in the individual diagnostic documentation.
+
+.. _diagnostics-profiling:
+
+Profiling line
+++++++++++++++
+
+Every CLI built on ``DiagnosticCLI`` logs at the end of its run, at INFO level and through a logger named
+``Profiler``, one line with the wall time, the CPU time, the maximum memory and the dask graph size of the tool, so it can be found
+with ``grep`` in the log files written by ``aqua analysis``:
+
+.. code-block:: text
+
+   ... :: Profiler :: INFO -> walltime=312.4s cputime=95.1s max_memory=4.2GiB dask_graphs=87 dask_tasks=123456 max_graph_tasks=4321 cluster_max_memory=18.3GiB/99.2GiB (shared cluster, 32 workers)
+   ... :: Profiler :: INFO -> walltime=312.4s cputime=290.0s max_memory=4.2GiB dask_graphs=87 dask_tasks=123456 max_graph_tasks=4321 (no dask cluster: all computation in this process)
+
+- ``walltime``: time between the opening and the closing of the dask cluster, in seconds.
+- ``cputime``: CPU time (user plus system) used by the CLI process in the same interval. Well below ``walltime``,
+  the tool waits for the dask workers or for I/O; above ``walltime``, several threads compute in the process.
+- ``max_memory``: maximum memory of the CLI process itself. It is exact for the tool, whatever else runs at the
+  same time. Without a dask cluster (no ``--nworkers`` and no ``--cluster``) dask computes inside this process,
+  so this number is the whole footprint of the tool, as the line states.
+- ``dask_graphs``, ``dask_tasks``, ``max_graph_tasks``: number of dask computations (``compute``, ``load``,
+  ``persist``) of the tool, total number of tasks sent to the scheduler and number of tasks of the largest graph.
+  With a dask cluster they are counted on the scheduler for the client of the tool only, so they belong to the tool
+  also on a shared cluster. Large graphs (hundreds of thousands of tasks) slow down the scheduler before any
+  computation starts: rechunking or computing fewer, larger steps helps. ``n/a`` when the scheduler does not accept
+  the counting plugin.
+- ``cluster_max_memory``: maximum of the total memory of the dask workers, sampled once per second while the
+  tool runs, followed by the sum of the memory limits of the workers. A value close to the limit means that
+  the workers spill to disk or risk being killed. With a ``shared cluster`` the workers also hold the tasks of
+  the other tools running on the same cluster, so this number belongs to the tool only when tools run one at a
+  time (``aqua analysis --nmaxprocesses 1``). With a ``private cluster`` (``--nworkers`` without ``--cluster``)
+  it belongs to the tool.
+
+The line follows ``--loglevel``: it is not shown at ``WARNING``. A tool that raises before closing the cluster
+leaves no line. The line is produced by ``aqua.diagnostics.base.DiagnosticProfiler``, which can also be used
+directly as a context manager.
 
 .. _diagnostics-plot-only:
 

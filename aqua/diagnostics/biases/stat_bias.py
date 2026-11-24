@@ -6,8 +6,6 @@ from aqua.core.fldstat import FldStat
 from aqua.core.logger import log_configure
 from aqua.core.timstat import TimStat
 
-xr.set_options(keep_attrs=True)
-
 
 class StatBias:
     """

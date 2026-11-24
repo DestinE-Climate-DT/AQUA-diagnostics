@@ -2,14 +2,10 @@
 
 from typing import Union
 
-import xarray as xr
-
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
-
-xr.set_options(keep_attrs=True)
 
 
 class BaseMixin(Diagnostic):

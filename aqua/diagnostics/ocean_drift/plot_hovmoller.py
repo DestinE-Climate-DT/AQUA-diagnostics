@@ -11,8 +11,6 @@ from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from .multiple_hovmoller import plot_multi_hovmoller
 from .multiple_timeseries import plot_multi_timeseries
 
-xr.set_options(keep_attrs=True)
-
 # Fixed color limits of the Hovmoller panels
 DEFAULT_CBAR_LIMITS = {
     "thetao": {

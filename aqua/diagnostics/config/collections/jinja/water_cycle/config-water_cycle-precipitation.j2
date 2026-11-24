@@ -1,0 +1,121 @@
+# Currently, the diagnostic supports comparing one dataset against one reference dataset at a time.
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+  # Possible second/third/fourth datasets here, no present by default
+  # - catalog: 'obs'
+  #   model: 'ECMWF'
+  #   exp: 'era5'
+  #   source: 'monthly'
+  #   regrid: r100
+
+references:
+  - catalog: '{{ references.water_cycle_precipitation.catalog }}'
+    model: '{{ references.water_cycle_precipitation.model }}'
+    exp: '{{ references.water_cycle_precipitation.exp }}'
+    source: '{{ references.water_cycle_precipitation.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
+
+setup:
+  loglevel: '{{ loglevel }}'
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  biases:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
+    params:
+      default:
+        seasons: true
+        seasons_stat: 'mean' # May become a list
+        vertical: false     # Vertical profile if variable 3d
+      tprate:
+        units: 'mm/day'
+    plot_params:
+      default:
+        projection: 'robinson'
+        projection_params: {}
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05
+      tprate:
+        vmin: -5
+        vmax: 5
+        cmap: 'BrBG'
+
+  timeseries:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
+    center_time: true
+    params:
+      default:
+        hourly: False
+        daily: False
+        monthly: True
+        annual: True
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'
+      tprate:
+        regions: ['nh', 'sh', 'europe']
+
+  seasonalcycles:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
+    center_time: true
+    params:
+      default:
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
+      tprate:
+        regions: ['nh', 'sh', 'europe']
+
+  histogram:
+    run: true
+    diagnostic_name: 'water_cycle'
+    variables: ['tprate']
+    center_time: true
+    bins: 50              # Override only if different from 100
+    density: true         # already default
+    ylogscale: true       # already default
+    params:
+      default:
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
+      tprate:
+        units: 'mm/day'
+        regions: [null, 'tropics']  # global and tropics; MUST be a list
+
+  lat_lon_profiles:
+    run: true
+    diagnostic_name: 'water_cycle'
+    mean_type: 'zonal'
+    center_time: true
+    exclude_incomplete: true
+    box_brd: true
+    seasonal: true
+    longterm: true
+    params:
+      default:
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
+    variables:
+      - name: 'tprate'
+        units: 'mm/day'
+        regions: [null, 'tropics']  # global and tropics

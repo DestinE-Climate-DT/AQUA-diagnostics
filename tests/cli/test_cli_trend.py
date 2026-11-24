@@ -6,7 +6,7 @@ import pytest
 import xarray as xr
 
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
-from aqua.core.util import load_yaml
+from aqua.core.util import dump_yaml, load_yaml
 from aqua.diagnostics.base import DiagnosticCLI
 from aqua.diagnostics.ocean_trends.cli_ocean_trends import main as ocean_main
 from aqua.diagnostics.trends import Trends
@@ -171,6 +171,12 @@ def test_collection_uses_model_period_and_output_prefix(
     mock_cluster, mock_trend, tmp_path, kind, suffix, collection, variables
 ):
     config = REPO_ROOT / f"aqua/diagnostics/config/collections/{kind}/{collection}/config-{collection}-trends.{suffix}"
+    if kind == "jinja":
+        # render the template with the default experiment kind, as aqua analysis does
+        kinds = load_yaml(str(REPO_ROOT / "aqua/diagnostics/config/analysis/climatedt-experiment-kind.yaml"))
+        rendered = tmp_path / f"config-{collection}-trends.yaml"
+        dump_yaml(str(rendered), load_yaml(str(config), definitions=kinds["default"]))
+        config = rendered
     trend_cls, plot_cls = mock_trend
     trend_cls.return_value.diagnostic_name = collection
     main(
