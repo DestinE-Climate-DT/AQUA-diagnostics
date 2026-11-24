@@ -33,6 +33,7 @@ Complete list:
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
 - CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
 - Major documentation update (#473)
+- Centralize title size and fig size (#540)
 - Tropical Cyclones: forward configured `reader_kwargs`, including `config_fdb`, to catalog-based orography reads (#504)
 - LUMI installation: `lumi_install.sh` works from any directory and removes its temporary environment files (#543)
 - Ocean3D: EN4 trend/drift configs no longer set time chunks in `reader_kwargs` (#472)
