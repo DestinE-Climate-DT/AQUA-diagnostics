@@ -18,6 +18,7 @@ Main changes:
 3. Wall time, CPU time and memory of each tool logged at the end of the run
 4. Require aqua-core>=1.2.4
 5. New `new-aqua-diagnostic` agent skill and major documentation update
+6. All diagnostic figures share the same width and title size, so text looks equally large on the dashboard
 
 Complete list:
 - Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed) (#519)
