@@ -69,7 +69,7 @@ def process_dataset(cli, dataset, var_name, var_config, diag_config, region, is_
         density=diag_config.get("density", True),
         outputdir=cli.outputdir,
         rebuild=cli.rebuild,
-        reader_kwargs=dataset.get("reader_kwargs") or cli.reader_kwargs or {},
+        reader_kwargs=dataset.get("reader_kwargs") or {},
     )
 
     return histogram

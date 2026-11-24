@@ -33,7 +33,8 @@ DEFAULT_OUTPUT = {
     "save_format": ["pdf"],
     "save_netcdf": True,
     "dpi": 50,
-    "create_catalog_entry": False,
+    # DEPRECATED
+    # "create_catalog_entry": False,
 }
 
 
@@ -79,7 +80,7 @@ def _build_config(
     Args:
         tmp_path: pytest tmp_path fixture.
         diagnostics: mapping of diagnostic keys to their config dicts,
-            e.g. ``{"globalbiases": {...}}`` or
+            e.g. ``{"biases": {...}}`` or
             ``{"seaice_timeseries": {...}, "seaice_2d_bias": {...}}``.
         datasets: list of dataset dicts (override template datasets).
         references: list of reference dicts (override template references).
@@ -116,7 +117,7 @@ def build_config(tmp_path):
 
     Usage::
 
-        config_file = build_config({"globalbiases": {...}})
+        config_file = build_config({"biases": {...}})
         config_file = build_config({"seaice_timeseries": {...}, "seaice_2d_bias": {...}})
     """
 

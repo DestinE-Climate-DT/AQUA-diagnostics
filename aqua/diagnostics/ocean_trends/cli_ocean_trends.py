@@ -10,6 +10,7 @@ import argparse
 import sys
 
 from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
 from aqua.diagnostics.ocean_trends import PlotTrends, Trends
 
 
@@ -29,7 +30,7 @@ def main(argv=None):
     """Run the OceanTrends diagnostic CLI."""
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
-    cli = DiagnosticCLI(args, "ocean3d", "config-ocean3d-en4-trend-drift.yaml", log_name="OceanTrends CLI").prepare()
+    cli = DiagnosticCLI(args, "ocean3d", "config-ocean3d-trend-drift.yaml", log_name="OceanTrends CLI").prepare()
     cli.open_dask_cluster()
 
     config_dict = cli.config_dict
@@ -38,7 +39,7 @@ def main(argv=None):
     dataset_args = cli.dataset_args(dataset)
 
     # Output options (from cli_base)
-    reader_kwargs = cli.reader_kwargs
+    reader_kwargs = dataset.get("reader_kwargs") or {}
     outputdir = cli.outputdir
     rebuild = cli.rebuild
     save_format = cli.save_format
@@ -52,7 +53,7 @@ def main(argv=None):
             diagnostic_name = trends_config.get("diagnostic_name", "ocean_trends")
             var = trends_config.get("var", None)
             # dim_mean = trends_config.get("dim_mean", None)
-            vert_coord = trends_config.get("vert_coord", None)
+            vert_coord = trends_config.get("vert_coord", DEFAULT_OCEAN_VERT_COORD)
             # Add the global region if not present
             # if regions != [None] or 'go' not in regions:
             #     regions.append('go')
@@ -60,41 +61,68 @@ def main(argv=None):
             # Calculating Trend on whole dataset
 
             data_trends = Trends(**dataset_args, diagnostic_name=diagnostic_name, vert_coord=vert_coord, loglevel=cli.loglevel)
-            data_trends.run(
-                # region=region,
-                var=var,
-                # dim_mean=dim_mean,
-                outputdir=outputdir,
-                rebuild=rebuild,
-                reader_kwargs=reader_kwargs,
-            )
+            if not cli.plot_only:
+                data_trends.run(
+                    # region=region,
+                    var=var,
+                    # dim_mean=dim_mean,
+                    outputdir=outputdir,
+                    rebuild=rebuild,
+                    reader_kwargs=reader_kwargs,
+                    save_netcdf=cli.save_netcdf,
+                )
 
-            for region in regions:
-                try:
-                    cli.logger.info("Processing region: %s", region)
-                    data_trends_region, region = data_trends.select_region(data=data_trends.trend_coef, region=region)
+            # Populate from the netcdf file, written just now or by a previous run. Results computed
+            # without saving them are already in memory, and an older file must not replace them.
+            if cli.plot_only or cli.save_netcdf:
+                data_trends.load(outputdir=outputdir, reader_kwargs=reader_kwargs)
 
-                    trends_plot = PlotTrends(
-                        data=data_trends_region,
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        outputdir=outputdir,
-                        rebuild=rebuild,
-                        loglevel=cli.loglevel,
-                    )
-                    trends_plot.plot_multilevel(save_format=save_format, dpi=dpi)
+            if data_trends.trend_coef is None:
+                reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+                cli.logger.warning("No trend results found in %s%s, skipping the plots", outputdir, reason)
+            else:
+                for region in regions:
+                    try:
+                        cli.logger.info("Processing region: %s", region)
+                        data_trends_region, region = data_trends.select_region(data=data_trends.trend_coef, region=region)
 
-                    zonal_trend_plot = PlotTrends(
-                        data=data_trends_region.mean("lon"),
-                        diagnostic_name=diagnostic_name,
-                        vert_coord=vert_coord,
-                        outputdir=outputdir,
-                        rebuild=rebuild,
-                        loglevel=cli.loglevel,
-                    )
-                    zonal_trend_plot.plot_zonal(save_format=save_format, dpi=dpi)
-                except Exception as e:
-                    cli.logger.error("Error processing region %s: %s", region, e)
+                        trends_plot = PlotTrends(
+                            data=data_trends_region,
+                            diagnostic_name=diagnostic_name,
+                            vert_coord=vert_coord,
+                            outputdir=outputdir,
+                            rebuild=rebuild,
+                            loglevel=cli.loglevel,
+                        )
+
+                        trends_plot.plot_multilevel(
+                            levels=[10, 100, 500, 1000],
+                            cbar_limits={
+                                "thetao": {
+                                    "vmin": -0.7,
+                                    "vmax": 0.7,
+                                },
+                                "so": {
+                                    "vmin": -0.12,
+                                    "vmax": 0.12,
+                                },
+                            },
+                            sym=True,
+                            save_format=save_format,
+                            dpi=dpi,
+                        )
+
+                        zonal_trend_plot = PlotTrends(
+                            data=data_trends_region.mean("lon"),
+                            diagnostic_name=diagnostic_name,
+                            vert_coord=vert_coord,
+                            outputdir=outputdir,
+                            rebuild=rebuild,
+                            loglevel=cli.loglevel,
+                        )
+                        zonal_trend_plot.plot_zonal(save_format=save_format, dpi=dpi)
+                    except Exception as e:
+                        cli.logger.error("Error processing region %s: %s", region, e)
 
     cli.close_dask_cluster()
 

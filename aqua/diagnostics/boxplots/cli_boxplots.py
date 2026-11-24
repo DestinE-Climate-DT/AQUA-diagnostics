@@ -74,7 +74,10 @@ def main(argv=None):
                     loglevel=cli.loglevel,
                 )
                 try:
-                    boxplots.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                    boxplots.run(
+                        var=variables,
+                        reader_kwargs=dataset.get("reader_kwargs") or {},
+                    )
                 except NotEnoughDataError:
                     cli.logger.error(
                         "Skipping %s (%s, %s): not enough data", dataset["model"], dataset["exp"], dataset["source"]
@@ -99,7 +102,7 @@ def main(argv=None):
                     loglevel=cli.loglevel,
                 )
                 try:
-                    boxplots_ref.run(var=variables, reader_kwargs=cli.reader_kwargs)
+                    boxplots_ref.run(var=variables, reader_kwargs=reference.get("reader_kwargs") or {})
                 except NotEnoughDataError:
                     cli.logger.error(
                         "Skipping reference %s (%s, %s): not enough data",

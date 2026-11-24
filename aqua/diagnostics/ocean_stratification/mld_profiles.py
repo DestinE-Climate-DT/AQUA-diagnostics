@@ -14,6 +14,7 @@ from aqua.core.util import (
     cbar_get_label,
     evaluate_colorbar_limits,
     generate_colorbar_ticks,
+    grid_figure_size,
     plot_box,
 )
 
@@ -56,7 +57,7 @@ def plot_maps(
         proj (cartopy.crs.Projection,opt): projection, default is ccrs.Robinson()
         extent (list,opt):    extent of the map, default is None
         style (str,opt):      style for the plot, default is the AQUA style
-        figsize (tuple,opt):  figure size, default is (6,6) for each map. Here the full figure size is set.
+        figsize (tuple,opt):  full figure size, default is grid_figure_size(nrows, ncols), with the common width
         nrows (int,opt):      number of rows in the subplot grid, default is None (auto)
         ncols (int,opt):      number of columns in the subplot grid, default is None (auto)
         vmin (float,opt):     minimum value for the colorbar, default is None
@@ -94,7 +95,7 @@ def plot_maps(
     # Generate the figure
     if not nrows and not ncols:
         nrows, ncols = plot_box(len(maps))
-    figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
+    figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols)
     logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
@@ -143,7 +144,7 @@ def plot_maps(
             fig=fig,
             loglevel=loglevel,
             ax_pos=(nrows, ncols, i + 1),
-            gridlines=False,
+            gridlines=True,
             **kwargs,
         )
 
@@ -201,7 +202,7 @@ def plot_maps(
                 -0.3,
                 0.33,
                 ytext[i],
-                fontsize=15,
+                fontsize="large",
                 color="dimgray",
                 rotation=90,
                 transform=ax.transAxes,
@@ -273,6 +274,6 @@ def plot_maps(
     # Add a super title
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 6, y=1.1)
+        fig.suptitle(title, y=1.1)
     if return_fig:
         return fig

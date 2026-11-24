@@ -23,7 +23,7 @@ output:
 diagnostics:
   ensemble:
     run: true
-    diagnostic_name: 'EnsembleLatLon'
+    diagnostic_name: 'EnsembleMaps'
     variable: ['2t', 'msl']
     params:
       default:

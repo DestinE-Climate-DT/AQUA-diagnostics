@@ -177,6 +177,8 @@ class TestMainExecutionFlow:
         # compute_seaice invoked; the thickness one is skipped.
         # Calls: 1 dataset + 1 matching ref = 2
         assert mock_seaice_cls.return_value.compute_seaice.call_count == 2
+        first_compute = mock_seaice_cls.return_value.compute_seaice.call_args_list[0]
+        assert first_compute.kwargs["reader_kwargs"] == {"realization": "r1"}
 
     def test_seasonal_cycle_with_references(self, build_config, mock_cluster, mock_si, mocker):
         """Enable the seasonal-cycle block with references + calc_ref_std."""

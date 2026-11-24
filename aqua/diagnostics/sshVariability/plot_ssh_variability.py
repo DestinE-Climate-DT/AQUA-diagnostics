@@ -14,8 +14,6 @@ from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
 from .base import PlotBaseMixin
 
-xr.set_options(keep_attrs=True)
-
 
 class SshVariabilityPlot(PlotBaseMixin):
     """
@@ -52,7 +50,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         startdate=None,
         enddate=None,
         plot_options={},
-        figsize: tuple = (11, 8.5),
+        figsize: tuple = None,
         ax_pos: tuple = (1, 1, 1),
         vmin=None,
         vmax=None,
@@ -146,7 +144,6 @@ class SshVariabilityPlot(PlotBaseMixin):
             diagnostic="SSH Variability",
             variable=long_name,
             regions=region,
-            catalog=catalog,
             model=model,
             exp=exp,
             startyear=startdate,
@@ -196,6 +193,8 @@ class SshVariabilityPlot(PlotBaseMixin):
             vmax = float(dataset_std.max(skipna=True))
 
         proj = get_projection(proj, **proj_params)
+        # a figsize given in plot_options still wins
+        plot_options = {"figsize": figsize, **plot_options}
         # fig = plt.figure(figsize=figsize)
         # ax = fig.add_subplot(ax_pos[0], ax_pos[1], ax_pos[2], projection=proj)
         if vmin == vmax:
@@ -270,7 +269,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         exp_ref=None,
         startdate_ref=None,
         enddate_ref=None,
-        figsize: tuple = (11, 8.5),
+        figsize: tuple = None,
         ax_pos: tuple = (1, 1, 1),
         plot_options={},
         vmin_diff=None,
@@ -405,13 +404,11 @@ class SshVariabilityPlot(PlotBaseMixin):
             diagnostic="The difference of the SSH Variability",
             variable=long_name,
             regions=region,
-            catalog=catalog,
             model=model,
             exp=exp,
             startyear=startdate,
             endyear=enddate,
             comparison="relative to",
-            ref_catalog=catalog_ref,
             ref_model=model_ref,
             ref_exp=exp_ref,
             ref_startyear=startdate_ref,
@@ -475,6 +472,7 @@ class SshVariabilityPlot(PlotBaseMixin):
                 # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
+                figsize=figsize,
                 loglevel=self.loglevel,
                 # cbar_label=cbar_label
             )
@@ -492,6 +490,7 @@ class SshVariabilityPlot(PlotBaseMixin):
                 # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
+                figsize=figsize,
                 loglevel=self.loglevel,
                 # cbar_label=cbar_label
             )

@@ -28,6 +28,9 @@ dist/
 *.pdf
 *.svg
 
+# polygons of the regions file
+aqua/diagnostics/config/definitions/regions/
+
 # tests
 AQUA_tests/
 AQUA_testsv*
@@ -36,9 +39,9 @@ AQUA_tests_teleconnections*
 .env
 
 # coverage and vscode
-###.coverage
-###coverage.xml
-###coverage/
+.coverage
+coverage.xml
+coverage/
 .vscode/*
 
 # diagnostic specific

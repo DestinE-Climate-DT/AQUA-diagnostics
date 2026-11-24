@@ -42,7 +42,7 @@ The following example demonstrates how to initialize the ``OutputSaver`` class:
 
 .. code-block:: python
 
-    from aqua.diagnostics.core import OutputSaver
+    from aqua.diagnostics.base import OutputSaver
 
     # Initializing with the system-defined default catalog
     outputsaver = OutputSaver(diagnostic='dummy',
@@ -107,6 +107,25 @@ Here is an example of saving a NetCDF file with metadata. The metadata includes 
     If the ``history`` metadata field is provided, the ``OutputSaver`` class will append
     the current message to the existing history.
 
+Loading a NetCDF File
+^^^^^^^^^^^^^^^^^^^^^
+
+``load_netcdf()`` is the complementary method of ``save_netcdf()``: it builds the same filename from the same
+parameters and opens the file if it exists. A missing file is not an error, ``None`` is returned, so that a
+diagnostic can populate its results from disk when they are there and recompute them when they are not.
+
+.. code-block:: python
+
+    dataset = outputsaver.load_netcdf('test', extra_keys=extra_keys)
+
+The ``extra_keys`` must be the same used when saving, otherwise the generated filename points to a different file.
+The file is read eagerly and closed before returning, so the caller can safely overwrite it afterwards.
+
+.. note::
+    Writing a DataArray to NetCDF stores all its attributes at variable level, while writing a Dataset keeps the
+    ``OutputSaver`` metadata at dataset level. Pass ``as_dataarray=True`` when the data was saved as a DataArray:
+    the single variable of the file is returned as a DataArray, with the dataset attributes merged into it.
+
 Saving a Plot with Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -137,16 +156,42 @@ This example demonstrates saving multiple plot formats (e.g. PNG/PDF/SVG) with m
     We suggest using the metadata field ``/Caption`` to store the plot description.
     This is currently used by the AQUA dashboard to generate plot descriptions.
 
-Opening a PDF File and Displaying Metadata
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Figure Size
+^^^^^^^^^^^
 
-To open a PDF file and display its metadata:
+All figures share the same width, ``DEFAULT_FIGURE_WIDTH`` in ``aqua.core.default``.
+Font sizes are fixed in points by the AQUA style, so with a common width the text looks equally large in every figure
+once they are shown at the same width, as the AQUA dashboard does.
+
+The plotting functions of AQUA-core already create their figures with the common width and a height suited to
+each kind of plot (e.g. maps, timeseries, seasonal cycles), with margins fitted to the labels by a layout engine:
+do not pass ``figsize`` to them unless a different shape is really needed.
+When a diagnostic builds its own figure, use the helpers of ``aqua.core.util`` and choose only the height,
+as a fraction of the width:
 
 .. code-block:: python
 
-    from aqua.core.util import open_image
+    from aqua.core.util import figure_size, grid_figure_size
 
-    open_image("/path/to/my/file/dummy.mean.climatedt-phase1.IFS-NEMO.historical-1990.obs.ERA5.era5.pdf")
+    fig = plt.figure(figsize=figure_size(0.5), layout="constrained")  # a single panel
+    fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.55))  # a grid of maps
+
+``OutputSaver.save_figure`` saves a figure created with the common width exactly ``DEFAULT_FIGURE_WIDTH`` wide:
+the image is cropped to the content only vertically, so keep the content within the figure sides
+(e.g. with a layout engine or suitable ``subplots_adjust`` margins).
+If something sticks out, the image is saved wider and a warning is logged.
+Figures with any other width are cropped to their content, as with ``bbox_inches="tight"``.
+
+Opening a PDF File and Displaying Metadata
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To display the metadata of a PDF file you can use ``pypdf``, which is installed with AQUA-diagnostics:
+
+.. code-block:: python
+
+    from pypdf import PdfReader
+
+    PdfReader("/path/to/my/file/dummy.mean.climatedt-phase1.IFS-NEMO.historical-1990.obs.ERA5.era5.pdf").metadata
 
 Generating a Filename for Multimodel or Multireference Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -168,16 +213,16 @@ Complete information about the datasets is preserved in the output file's metada
     filename = outputsaver.generate_name(diagnostic_product='test')
     # Output: 'dummy.test.multimodel.obs.ERA5.era5'
 
-Creating a catalog entry
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. Creating a catalog entry
+.. ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``save_netcdf`` method allows for the creation of a catalog entry for the saved NetCDF file.
-This entry is created in the same experiment file of the input dataset.
+.. The ``save_netcdf`` method allows for the creation of a catalog entry for the saved NetCDF file.
+.. This entry is created in the same experiment file of the input dataset.
 
-In order to enable the catalog entry creation, the method should include as arguments:
+.. In order to enable the catalog entry creation, the method should include as arguments:
 
-- ``create_catalog_entry`` (*bool*, optional): Set as ``True`` to create a catalog entry for the saved NetCDF file.
-- ``dict_catalog_entry`` (*dict*, optional): A dictionary containing the catalog entry information.
-  The catalog can specify a ``jinjalist`` (by default ``['freq', 'stat', 'region', 'realization']``) and a ``wildcardlist`` (by default ``['var']``).
-  For each matching ``extra_keys``, the code will create an intake parameter for the first list and a wildcard for the second.
-  This allows for catalog entry which can access the relevant NetCDF files when used with the ``Reader``.
+.. - ``create_catalog_entry`` (*bool*, optional): Set as ``True`` to create a catalog entry for the saved NetCDF file.
+.. - ``dict_catalog_entry`` (*dict*, optional): A dictionary containing the catalog entry information.
+..   The catalog can specify a ``jinjalist`` (by default ``['freq', 'stat', 'region', 'realization']``) and a ``wildcardlist`` (by default ``['var']``).
+..   For each matching ``extra_keys``, the code will create an intake parameter for the first list and a wildcard for the second.
+..   This allows for catalog entry which can access the relevant NetCDF files when used with the ``Reader``.

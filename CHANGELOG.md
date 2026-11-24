@@ -4,17 +4,134 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
+Unreleased in the current development version (target v0.27.0):
 
-Unreleased in the current development version (target v0.24.0):
+Main changes:
 
 Complete list:
+- Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed) (#519)
+- Remove module-level `xr.set_options(keep_attrs=True)` (#566)
+- Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments (#579)
+- Regions: default to cell-centre selection (`frac_threshold: null`) to avoid expensive approximate fractional masks; retain numeric thresholds as explicit overrides. Define Europe as an inclusive lon/lat box (10°W–40°E, 30°N–72.6°N) to retain its western boundary cells without polygon masks (#569).
+- CI: the Conda, PyPI, nightly and release workflows call the aqua-core failure report also on success and pass the test result, so a passing scheduled run closes the open failure issue of that suite (#574)
+- DiagnosticCLI: a `Profiler` logger reports wall time, CPU time, maximum memory and dask graph size of each tool, and the memory of the dask cluster when used, at the end of the run (#558)
+- CI: the labeled run that Dependabot starts when opening its PR also runs the tests, so a skipped run no longer hides the passed required check and blocks the PR (#573)
+- CI: the AQUA-diagnostics tests workflow also runs on `merge_group` events, so its required check reports in the merge queue.
+- Agents: split instructions into a small `AGENTS.md` entry point reading AQUA's shared `AGENTS.common.md` directly from GitHub and local diagnostics-specific `AGENTS.repo.md`; AQUA common rules take precedence and stricter materialisation timing remains local to diagnostics (#562).
+- Skill: new `new-aqua-diagnostic` skill (`.claude/skills/new-aqua-diagnostic/`), the open choices to settle before starting and a tested skeleton tool (analysis class, plot class with optional reference, CLI, config template, tests, `.rst` page); `AGENTS.md` points to it (#527)
+- Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
+- CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
+- Major documentation update (#473)
+- Centralize title size and fig size (#540)
+- Tropical Cyclones: forward configured `reader_kwargs`, including `config_fdb`, to catalog-based orography reads (#505)
+
+## [v0.26.0]
+
+Main changes:
+- Temporary pin `pytest<9.2` in the `tests` extra: pytest 9.2.0 breaks `--dist loadgroup` of pytest-xdist 3.8.0, so `xdist_group` tests run in parallel and DROP tests fail; remove once pytest-xdist >3.8.0 is released (pytest-dev/pytest-xdist#1386) (#534)
+- CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels (`CONTRIBUTING.md` updated)
+- CI: `aqua-diagnostics.yml` tests are triggered only by the `run tests` label; `ready for review` and `ready to merge` no longer start the tests (#511)
+- CI: labels aligned with aqua-core; Dependabot PRs get the `dependabot :dependabot:` label, relock PRs only `run tests :runner:` (as in aqua-core), issue templates use the emoji label names, bug and feature templates set the issue type instead of labels
+- Tropical Cyclones: retrieve atmospheric fields once and iterate over finite lazy windows, fixing repeated detection of the requested period (#508).
+- Remove the `collapse_era5_duplicate` function for ERA5 handling (#459)
+
+Complete list:
+- Regions: polygon-based regions with `regionmask`, from the IPCC AR6 regions (land and atmosphere) and the IHO sea areas (oceans and seas) (#287)
+- Environment: `environment.yml` and `environment-dev.yml` build on the aqua-core conda-forge package instead of listing its binaries; `environment-pypi.yml` takes aqua-core from conda-forge too, so the PyPI and release tests install only AQUA-diagnostics with pip (#532)
+- Environment aligned with aqua-core 1.2.3: `aqua-core>=1.2.3`, `eccodes>=2.50.0,<2.51`, `smmregrid==0.2.0` replaces the `cdo` pin (CDO comes with smmregrid), `python-dateutil<3` for conda-lock; CDO installed with Homebrew on macOS CI runners; relock with `--filter-extras` as in aqua-core; new `conda` install mode and manual-only `aqua-diagnostics-conda.yml`; `test_trends` tolerance relaxed for macOS (#524)
+- Drop support to Python 3.11, as in aqua-core (#491)
+- New CI testing strategy aligned with aqua-core (see `CONTRIBUTING.md`): PR tests, nightly against released and `main` aqua-core on Ubuntu/macOS, release matrix (replaces the monthly tests), PyPI matrix, label-driven cross-check and relock, automatic failure issues; `environment-pypi.yml` holds only conda dependencies (#491)
+- `pytest-timeout` added to the `tests` extra; `aqua-core[fdb]` listed in `environment.yml` to keep it in the lock file (#491)
+- Fix flaky `test_select_region_without_retrieve` (#491)
+- Setup checker: use absolute imports so it runs as a script from `aqua analysis` (#520)
+- Configuration file for the new aqua-core `aqua analysis ensemble` entry point (#443)
+- Use new exposed generic trends, preserve lazy fit, add CLI and atmosphere2d, water_cycle, ocean2d trends in analysis (#469, #507)
+- Ocean3D: Hovmoller graphical improvements (#478)
+- Implementation of load netcdf and plot only in ocean drift CLI (#457)
+- CI test runner uses the aqua-core composite actions `setup-test-data`, `setup-fdb`, `setup-aqua` and `pytest-reports` (#490)
+- Implementation of load netcdf and plot only in ocean trend CLI (#454)
+- `Diagnostic.select_region()` now works without a `retrieve()` (#454)
+- Deprecate the `create_catalog_entry` option in the diagnostics (#471)
+- Update to aqua-core v1.2.1 (#466)
+- Adopt new seldate() method for robust date selection (#403)
+- Ocean3D: Stratification refactor to improve performance (#462) and netCDF loading (#484)
+- Update the deprecated `ConfigPath` (#451)
+- Remove parenthesis and capitalise regions (#456)
+- OutputSaver: `load_netcdf` can take the `expect_netcdf` argument to log missing files as errors instead of info. It also use start and end dates to check need of eventually recomputing results. (#452)
+- Reorganise OSI-SAF data and update source call from osi-saf-aqua to osi-saf-ssmis (#448)
+- Unpin matplotlib and list all directly imported packages as dependencies (#446)
+- reader_kwargs in default parser (#442)
+- Ocean3D: Drift refactor to improve performance (#413)
+- Move and update the cli_checker using diagnosticCLI (#401)
+- Unified CLI for ensemble timeseries and global biases (#327)
+- Teleconnections: NAO and ENSO support for additional variables for regression and correlation (#396)
+- lumi_install.sh does not need a separate copy of the env file (#435)
+- Update GSV paths for lumi_install (#433)
+- conda-lock is now used for tests, all actions are being revised to align with aqua-core (#412)
+- OutputSaver: `load_netcdf` method to read back the files written by `save_netcdf` (#392)
+- Diagnostic: `load_netcdf` method (#392)
+- LatLonProfiles: `load` method and `plot_only` option to plot from previous netCDF files (#392)
+- Simplify enforcement of minimum number of months for diagnostics (#406)
+- Rename model:'ERA5' in model='ECMWF' in collection entries (#399)
+- Ocean3d: tests related to ocean drift, trends and startifications are updated (#108)
+
+## [v0.25.1]
+
+Complete list:
+- Timeseries: support no overlap between observations and model data (#370)
+
+## [v0.25.0]
+
+Main changes:
+1. Biases & Climatology refactor
+2. Centralize CLI arguments management via `reader_kwargs`
+3. Implement new DVC remote from ECMWF
+4. Specify min and max allowed versions for all dependencies
+
+Complete list:
+- Ocean3D: corrected the drift plots along with adjustments in trends and stratification plots (#298)
+- Dependencies update (#368)
+- `reader_kwargs` centralization management of cli arguments (#264)
+- Biases & Climatology refactor (#331)
+- Add bokeh as dependency (#365)
+- Dependabot and sync bot adjustments (#347)
+- Implement new DVC remote from ECMWF (#1392)
+- LatLonProfiles: std dates selection fix (#345)
+- Update outputsaver notebook (#351)
+- GlobalBiases: seasonal biases test fix (#346)
+- Introducing `get_install_dirs` utility function to retrieve installation directories (#321)
+- Removing dask tokenization for non-local clusters (#337)
+- Specify min and max allowed versions for all dependencies (#333)
+- Change dask load order in LonLatProfiles (#338)
+
+## [v0.24.1]
+
+Complete list:
+- Fix micromamba setup broken by setup-micromamba v3.2.0 (#328)
+- Set as default pyfdb/GSV during installation (#326)
+
+## [v0.24.0]
+
+Complete list:
+- Dashboard review: title/description aesthetic fixes across diagnostics (#290)
+- Setting up aqua-like fixed environment (#314)
+- Update image to latest core container (#308)
+- Fix loglevel setup from YAML in DiagnosticCLI (#304)
+- GlobalBiases: add target spacing option for stippling (#305)
+- Global Biases: fix titles and descriptions (#284)
+- CI/CD: improve temporary folders handling (#302)
+- LatLonProfiles: seasonal profiles computation fix (#288)
+- Environment LUMI dependencies update (#297)
+- Porting of config.aqua-analysis.yaml adjustments for ocean2d (#282)
+- Bug report template update (#283)
+- Upgrade to aqua-core==1.0.0a5, to python <=3.14 and to eccodes<=2.47 (#254)
+- Porting of config.grouping.yaml adjustments (#280)
 - Teleconnections: added the possibility to override default labels in the plot_index method (#273)
 - Regions config file centralization (#267)
-- Jinja templates for configuration files for collections (#230)
 - Fallback test download from wilma (#269)
-- Jinja templates for configuration files for collections (#230, #270)
+- Jinja templates for configuration files for collections (#230, #270, #271, #281)
 - Histogram: diagnostic updates (#255)
-- Seaice: Port changes from Dashboard v0.19-op  (#190)
+- Seaice: Port changes from Dashboard v0.19-op (#190)
 - ECmean: prevent creation of default empty dirs (#263)
 - Remove `healpy` dependency (#248)
 - Timeseries: backporting of dashboard updates (#250)
@@ -126,6 +243,11 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...HEAD
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.26.0...HEAD
+[v0.26.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.1...v0.26.0
+[v0.25.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.0...v0.25.1
+[v0.25.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...v0.25.0
+[v0.24.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.0...v0.24.1
+[v0.24.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.23.0...v0.24.0
 [v0.23.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.22.0...v0.23.0
 [v0.22.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.21.0...v0.22.0

@@ -74,6 +74,9 @@ class Histogram(Diagnostic):
             lon_limits=lon_limits,
             lat_limits=lat_limits,
         )
+        self.region_object, self.region_sel, self.frac_threshold = self._resolve_regionmask_object(
+            region=region, regions_file_path=regions_file_path
+        )
 
         # Histogram parameters
         self.bins = bins
@@ -155,8 +158,16 @@ class Histogram(Diagnostic):
         data = self.data
 
         # Select region if specified
-        if self.lon_limits is not None or self.lat_limits is not None:
-            data = self.reader.select_area(data, lon=self.lon_limits, lat=self.lat_limits, box_brd=box_brd)
+        if self.region_object is not None or self.lon_limits is not None or self.lat_limits is not None:
+            data = self.reader.select_area(
+                data,
+                lon=self.lon_limits,
+                lat=self.lat_limits,
+                box_brd=box_brd,
+                region=self.region_object,
+                region_sel=self.region_sel,
+                frac_threshold=self.frac_threshold,
+            )
 
         # If range is not specified, compute it from the data
         hist_range = self.range

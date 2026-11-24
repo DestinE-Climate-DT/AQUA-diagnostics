@@ -58,7 +58,7 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/seaice`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-seaice.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-seaice.yaml``
 * Regional definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/seaice`` directory and contain examples of how to use the diagnostic.
 
@@ -110,14 +110,14 @@ The basic structure of the analysis is the following:
 
     # Compute reference data
     # For Arctic region:
-    si_ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua',
+    si_ref_nh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis',
                        source='nh-monthly', regrid='r100',
                        regions=['arctic'],
                        loglevel="DEBUG")
     ref_nh = si_ref_nh.compute_seaice(method='fraction', var='siconc', stat='mean', freq='monthly')
 
     # For Antarctic region:
-    si_ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-aqua',
+    si_ref_sh = SeaIce(catalog='obs', model='OSI-SAF', exp='osi-saf-ssmis',
                        source='sh-monthly', regrid='r100',
                        regions=['antarctic'],
                        loglevel="DEBUG")
@@ -147,12 +147,11 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/seaice
-    python cli_seaice.py --config <path_to_config_file>
+    python -m aqua.diagnostics.seaice.cli_seaice --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
-- ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/diagnostics/seaice/config_seaice-osi.yaml`` and ``config_seaice-psc.yaml``.
+- ``--config``, ``-c``: Path to the configuration file. Default are ``aqua/diagnostics/config/collections/legacy/seaice/config-seaice-concentration.yaml`` and ``config-seaice-thickness.yaml``.
 - ``--nworkers``, ``-n``: Number of workers to use for parallel processing.
 - ``--cluster``: Cluster to use for parallel processing. By default a local cluster is used.
 - ``--loglevel``, ``-l``: Logging level. Default is ``WARNING``.
@@ -195,7 +194,7 @@ The sea ice configuration file is organized into several main sections:
       - &ref_osi_nh
         catalog: 'obs'             # mandatory
         model: 'OSI-SAF'           # mandatory
-        exp: 'osi-saf-aqua'        # mandatory
+        exp: 'osi-saf-ssmis'        # mandatory
         source: 'nh-monthly'       # mandatory
         regrid: 'r100'
         domain: "nh"
@@ -211,7 +210,7 @@ The reference datasets are defined using YAML anchors (``&ref_osi_nh``) and can 
 
 **Diagnostic Blocks:**
 
-Each diagnostic block in ``config-seaice-osi.yaml``:
+Each diagnostic block in ``config-seaice-concentration.yaml``:
 
 - ``seaice_timeseries``
 - ``seaice_seasonal_cycle``
@@ -296,7 +295,7 @@ The default reference datasets are:
 
 Details are available on the `OSI-SAF website <https://osi-saf.eumetsat.int/>`_.
 
-An updated OSI-SAF version is available in the AQUA ``obs`` catalog (``exp=osi-saf-aqua``), which concatenates OSI-SAF osi-450-a1 (1979-2021) and OSI-SAF osi-430 (2022-2024) datasets.
+An updated OSI-SAF version is available in the AQUA ``obs`` catalog (``exp=osi-saf-ssmis``), which concatenates OSI-SAF osi-450-a1 (1979-2021) and OSI-SAF osi-430 (2022-2025) datasets.
 
 Custom reference datasets can be configured in the configuration file.
 

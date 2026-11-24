@@ -116,7 +116,7 @@ class PlotHistogram:
                 break
 
         title = TitleBuilder(
-            diagnostic=None, variable=variable, regions=self.region, catalog=self.catalogs, model=self.models, exp=self.exps
+            diagnostic=None, variable=variable, regions=self.region, model=self.models, exp=self.exps
         ).generate()
 
         self.logger.debug("Title: %s", title)
@@ -137,12 +137,8 @@ class PlotHistogram:
             if name is not None:
                 # Remove "Pdf of" or "Histogram of" prefix if present
                 name_clean = name.replace("Pdf of ", "").replace("Histogram of ", "")
-                description += f"{name_clean} "
+                description += f"{name_clean.lower()} "
                 break
-
-        # Units
-        if self.units is not None:
-            description += f"[{self.units}] "
 
         # Short name in parentheses (if different from what was already used)
         if self.short_name is not None and self.long_name is not None:
@@ -173,16 +169,18 @@ class PlotHistogram:
                 description += f"for {self.models[0]}/{self.exps[0]}"
                 if ref_item is not None:
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f" vs {ref_model}"
-                description += f" from {data_pair[0]} to {data_pair[1]}"
+                    ref_exp = getattr(ref_item, "AQUA_exp", "reference")
+                    description += f" compared to {ref_model} {ref_exp}"
+                description += f" (from {data_pair[0]} to {data_pair[1]})"
             else:
                 # Different periods
                 if data_pair != (None, None):
                     description += f"for {self.models[0]}/{self.exps[0]} "
-                    description += f"from {data_pair[0]} to {data_pair[1]}"
+                    description += f"(from {data_pair[0]} to {data_pair[1]})"
                 if ref_pair != (None, None):
+                    ref_exp = getattr(ref_item, "AQUA_exp", "reference")
                     ref_model = getattr(ref_item, "AQUA_model", "reference")
-                    description += f", {ref_model} from {ref_pair[0]} to {ref_pair[1]}"
+                    description += f", {ref_model} {ref_exp} (from {ref_pair[0]} to {ref_pair[1]})"
         else:
             # Multiple datasets
             description += f"comparing {self.len_data} datasets: "
@@ -194,7 +192,8 @@ class PlotHistogram:
 
             if self.ref_data is not None:
                 ref_model = getattr(self.ref_data, "AQUA_model", "reference")
-                description += f" vs {ref_model}"
+                ref_exp = getattr(self.ref_data, "AQUA_exp", "reference")
+                description += f" compared to {ref_model} {ref_exp}"
 
             # Add common date range if all datasets share it
             if self.data:
@@ -204,7 +203,7 @@ class PlotHistogram:
                     time_to_string(first_item.AQUA_enddate, format="%Y-%m") if first_item is not None else None,
                 )
                 if first_dates != (None, None):
-                    description += f" from {first_dates[0]} to {first_dates[1]}"
+                    description += f" (from {first_dates[0]} to {first_dates[1]})"
 
         description += "."
 
@@ -264,6 +263,7 @@ class PlotHistogram:
             smooth=smooth,
             smooth_window=smooth_window,
             labelsize=labelsize,
+            legend_fontsize="medium",  # single-panel figure: larger legend than in panels of a grid
             loglevel=self.loglevel,
         )
 

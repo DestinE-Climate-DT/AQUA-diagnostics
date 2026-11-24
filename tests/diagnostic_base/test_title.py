@@ -20,10 +20,11 @@ pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
                 "exp": "era5-hpz3",
                 "timeseason": "climatology",
             },
-            "MLD [global] for ci ERA5 era5-hpz3 climatology",
+            "MLD in Global for ci ERA5 era5-hpz3 climatology",
         ),
         ({}, ""),  # Empty result
         ({"variable": "Temperature"}, "Temperature"),
+        ({"variable": "Sea Surface Temperature"}, "Sea surface temperature"),
         ({"diagnostic": "Test", "startyear": 2020}, "Test 2020"),
         ({"diagnostic": "Test", "endyear": 2021}, "Test 2021"),
         ({"diagnostic": "Bias", "realizations": ["r1", "r2"]}, "Bias Multi-realization"),
@@ -46,7 +47,7 @@ def test_title_references():
         variable="Temperature",
         model="IFS",
         exp="test-exp",
-        ref_model="ERA5",
+        ref_model="ECMWF",
         ref_exp="era5",
         ref_startyear=1980,
         ref_endyear="1990",
@@ -54,9 +55,9 @@ def test_title_references():
         conjunction="in",
     ).generate()
     assert "  " not in result
-    assert "Bias of Temperature" in result
+    assert "Bias of temperature" in result
     assert "in IFS" in result
-    assert "vs ERA5 era5" in result
+    assert "vs ECMWF era5" in result
     assert "1980-1990" in result
 
 
@@ -79,7 +80,7 @@ def test_title_complex():
         extra_info="info",
     ).generate()
     assert result == (
-        "Stratification [global] for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
+        "Stratification in Global for ci ERA5 era5-hpz3 r1 1990-1991 relative to IFS test 1980-1990 climatology info"
     )
     assert "  " not in result
 
@@ -92,7 +93,7 @@ def test_title_models_edge_cases():
     result2 = TitleBuilder(diagnostic="Bias", extra_info=["info1", "info2"]).generate()
     assert "info1 info2" in result2
 
-    assert TitleBuilder(diagnostic="Bias", regions=[""]).generate() == "Bias"
+    assert TitleBuilder(diagnostic="Bias", regions=[""]).generate() == "Bias in"
 
 
 def test_title_wrap_not_triggered():
@@ -108,7 +109,7 @@ def test_title_wrap_not_triggered():
     "title,max_chars,split_on,expected",
     [
         # Two different markers used in sequence
-        ("Bias in IFS historical vs ERA5 era5", 20, ["vs", "in"], None),
+        ("Bias in IFS historical vs ECMWF era5", 20, ["vs", "in"], None),
         # Tail short enough after a single split – loop must stop
         ("AAAA for BBB", 9, ["for"], "AAAA\nfor BBB"),
         # Later marker handles what the earlier marker could not
@@ -150,15 +151,24 @@ def test_title_explicit_title_is_stripped_and_wrapped():
     assert result == "Bias for Model\nrelative to Reference"
 
 
+def test_title_wrap_existing_newlines():
+    """Lines already broken by the caller are checked and wrapped one by one."""
+    short = "Short line for model\nrelative to ref"
+    assert TitleBuilder(title=short).generate(max_chars=30) == short
+    long_first = "Seasonal difference of a long variable for Model exp\nrelative to Ref"
+    result = TitleBuilder(title=long_first).generate(max_chars=40, split_on=["relative to", "for"])
+    assert result == "Seasonal difference of a long variable\nfor Model exp\nrelative to Ref"
+
+
 def test_title_format_helpers_and_unique_refs():
     """Cover helper formatting behavior: years and duplicate reference removal."""
     tb = TitleBuilder(
         ref_catalog=["obs", "obs"],
-        ref_model=["ERA5", "ERA5"],
+        ref_model=["ECMWF", "ECMWF"],
         ref_exp=["era5", "era5"],
     )
     # Duplicates from harmonized reference parts are removed in output.
-    assert tb._format_refs() == "obs ERA5 era5"
+    assert tb._format_refs() == "obs ECMWF era5"
 
     # Year helper handles all partial combinations.
     assert tb._format_years(startyear="1990", endyear="1991") == "1990-1991"
@@ -169,5 +179,6 @@ def test_title_format_helpers_and_unique_refs():
 
 def test_title_models_multi_model_when_harmonized_list_has_multiple_entries():
     """_format_models returns 'Multi-model ' when more than one model tuple exists."""
-    title = TitleBuilder(catalog=["ci", "ci"], model=["IFS", "FESOM"], exp=["historical", "historical"]).generate()
+    tb = TitleBuilder(catalog=["ci", "ci"], model=["IFS", "FESOM"], exp=["historical", "historical"])
+    title = tb.generate()
     assert title == "Multi-model"

@@ -183,7 +183,7 @@ class PlotLatLonProfiles:
         """
         if self.data_type == "seasonal":
             # For seasonal plots, delegate to the specialized seasonal method
-            return self.plot_seasonal_lines(data_labels=data_labels, title=title)
+            return self.plot_seasonal_lines(data_labels=data_labels, ref_label=ref_label, title=title)
 
         data_to_plot = self.data
         ref_to_plot = self.ref_data
@@ -197,6 +197,7 @@ class PlotLatLonProfiles:
             ref_label=ref_label,
             title=title,
             style=style,
+            legend_fontsize="medium",  # single-panel figure: larger legend than in panels of a grid
             loglevel=self.loglevel,
         )
 
@@ -297,11 +298,18 @@ class PlotLatLonProfiles:
                 variable = name
                 break
 
+        if not self.mean_type:
+            diagnostic = "Profile"
+        elif self.data_type == "seasonal":
+            # e.g. "Seasonal zonal profiles" (lower-case mean type, plural)
+            diagnostic = f"Seasonal {self.mean_type.lower()} profiles"
+        else:
+            diagnostic = f"{self.mean_type.capitalize()} profile"
+
         title = TitleBuilder(
-            diagnostic=f"{self.mean_type.capitalize()} profile" if self.mean_type else "Profile",
+            diagnostic=diagnostic,
             variable=variable,
             regions=self.region,
-            catalog=self.catalogs,
             model=self.models,
             exp=self.exps,
         ).generate()
@@ -380,7 +388,7 @@ class PlotLatLonProfiles:
 
         # Data dates
         if data_pair != (None, None):
-            description += f" from {data_pair[0]} to {data_pair[1]}"
+            description += f" (from {data_pair[0]} to {data_pair[1]})"
 
         # Reference data description
         if self.len_ref > 0 and ref_item is not None:
@@ -457,7 +465,7 @@ class PlotLatLonProfiles:
         description = self.set_description()
         title = self.set_title()
 
-        fig, _ = self.plot_seasonal_lines(data_labels=data_labels, title=title, style=style)
+        fig, _ = self.plot_seasonal_lines(data_labels=data_labels, ref_label=self.set_ref_label(), title=title, style=style)
 
         self.save_plot(
             fig,
@@ -476,13 +484,14 @@ class PlotLatLonProfiles:
 
         self.logger.info("PlotLatLonProfiles completed successfully")
 
-    def plot_seasonal_lines(self, data_labels=None, title=None, style=None):
+    def plot_seasonal_lines(self, data_labels=None, ref_label=None, title=None, style=None):
         """
         Plot seasonal means using plot_seasonal_lat_lon_profiles.
         Creates a 4-panel plot with DJF, MAM, JJA, SON only.
 
         Args:
             data_labels (list): List of data labels.
+            ref_label (str): Label for the reference data in the legend.
             title (str): Title of the plot.
             style (str): Plotting style. Default is the AQUA style
 
@@ -504,6 +513,7 @@ class PlotLatLonProfiles:
             ref_data=seasonal_ref_only,
             ref_std_data=self.ref_std_data,
             data_labels=data_labels,
+            ref_label=ref_label,
             title=title,
             style=style,
             loglevel=self.loglevel,

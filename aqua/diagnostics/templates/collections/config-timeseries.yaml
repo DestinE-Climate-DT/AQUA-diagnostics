@@ -11,14 +11,14 @@ datasets:
     reader_kwargs: null # it can be a dictionary with reader kwargs
   # Possible second/third/fourth datasets here, no present by default
   # - catalog: 'obs'
-  #   model: 'ERA5'
+  #   model: 'ECMWF'
   #   exp: 'era5'
   #   source: 'monthly'
   #   regrid: r100
 
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
     regrid: null
@@ -26,8 +26,8 @@ references:
 output:
   outputdir: "./"
   rebuild: true
+  save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
-  create_catalog_entry: true
   dpi: 300
 
 diagnostics:
@@ -77,7 +77,7 @@ diagnostics:
     std_enddate: '20201231'
     # Gregory needs 2 datasets and do not care about the references block above
     t2m_ref: {'catalog': 'obs', 'model': 'BERKELEY-EARTH', 'exp': 'aqua-filled', 'source': 'r100-monthly'}
-    net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa42', 'source': 'monthly'}
+    net_toa_ref: {'catalog': 'obs', 'model': 'CERES', 'exp': 'ebaf-toa421', 'source': 'monthly'}
   seasonalcycles:
     run: true
     diagnostic_name: 'atmosphere'

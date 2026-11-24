@@ -1,15 +1,10 @@
 from typing import Union
 
-import xarray as xr
-
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver
 
 from .base import BaseMixin
-
-# set default options for xarray
-xr.set_options(keep_attrs=True)
 
 
 class MJO(BaseMixin):
@@ -28,6 +23,7 @@ class MJO(BaseMixin):
         regrid: str = None,
         startdate: str = None,
         enddate: str = None,
+        var: str = None,
         configdir: str = None,
         definition: str = "teleconnections-destine",
         loglevel: str = "WARNING",
@@ -43,8 +39,10 @@ class MJO(BaseMixin):
             regrid (str): Regrid method.
             startdate (str): Start date for data retrieval.
             enddate (str): End date for data retrieval.
-            configdir (str): Configuration directory. Default is the installation directory.
-            definition (str): definition filename. Default is 'teleconnections-destine'.
+            var (str): Variable to be used. If None, the variable will be determined by the definition.
+            configdir (str): The directory where the definition file is located.
+                             If None, the default directory will be used.
+            definition (str): The filename of the definition file. Default is 'teleconnections-destine'.
             loglevel (str): Logging level. Default is 'WARNING'.
         """
         super().__init__(
@@ -56,13 +54,13 @@ class MJO(BaseMixin):
             regrid=regrid,
             startdate=startdate,
             enddate=enddate,
+            var=var,
             configdir=configdir,
             definition=definition,
             loglevel=loglevel,
         )
         self.logger = log_configure(log_name="MJO", log_level=loglevel)
 
-        self.var = self.definition.get("field")
         self.data_hovmoller = None
 
         # Delete the self.index attribute if it exists

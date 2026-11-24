@@ -50,11 +50,21 @@ class PlotENSO(PlotBaseMixin):
         labels = super().set_labels() if labels is None else labels
 
         title = TitleBuilder(
-            diagnostic="Niño 3.4 index", model=self.models, exp=self.exps, ref_model=self.ref_models, ref_exp=self.ref_exps
+            diagnostic="Niño 3.4 index",
+            model=self.models,
+            exp=self.exps,
+            comparison="compared to" if self.ref_models else None,
+            ref_model=self.ref_models,
+            ref_exp=self.ref_exps,
         ).generate()
 
         fig, axs = indexes_plot(
-            indexes=indexes, thresh=thresh, suptitle=title, ylabel="Niño 3.4 index", labels=labels, loglevel=self.loglevel
+            indexes=indexes,
+            thresh=thresh,
+            suptitle=title,
+            ylabel="Niño 3.4 index",
+            labels=labels,
+            loglevel=self.loglevel,
         )
 
         if isinstance(axs, plt.Axes):
@@ -69,9 +79,13 @@ class PlotENSO(PlotBaseMixin):
 
             textoffset = 0.08
 
-            ax.text(x=ax.get_xlim()[1], y=2.0 + textoffset, s="El Niño", color="red", fontsize=10, ha="right", va="center")
+            ax.text(
+                x=ax.get_xlim()[1], y=2.0 + textoffset, s="El Niño", color="red", fontsize="small", ha="right", va="center"
+            )
 
-            ax.text(x=ax.get_xlim()[1], y=-2.0 + textoffset, s="La Niña", color="blue", fontsize=10, ha="right", va="center")
+            ax.text(
+                x=ax.get_xlim()[1], y=-2.0 + textoffset, s="La Niña", color="blue", fontsize="small", ha="right", va="center"
+            )
 
         return fig, axs
 
@@ -87,6 +101,7 @@ class PlotENSO(PlotBaseMixin):
         vmax: float = None,
         vmin_diff: float = None,
         vmax_diff: float = None,
+        cmap: str = "RdBu_r",
         **kwargs,
     ):
         """
@@ -100,39 +115,53 @@ class PlotENSO(PlotBaseMixin):
             vmax (float): Maximum value for the color value. Default is None.
             vmin_diff (float): Minimum value for the color value for the difference. Default is None.
             vmax_diff (float): Maximum value for the color value for the difference. Default is None.
+            cmap (str): Colormap to use for the plots. Default is 'RdBu_r'.
             **kwargs: Additional arguments for the plotting function.
 
         Returns:
             fig: Figure object.
         """
         map_to_check = maps if isinstance(maps, xr.DataArray) else maps[0]
+
+        # This var is used by _homogeneize_maps to eventually convert units.
+        # The label for title and colorbar is set by _homogeneize_maps, which returns var_label.
         var = map_to_check.shortName if hasattr(map_to_check, "shortName") else map_to_check.long_name
-        if statistic == "correlation" and vmin is None and vmax is None:
+        if statistic == "correlation":
             vmin = -1.0
             vmax = 1.0
             vmin_diff = -0.5
             vmax_diff = 0.5
-        elif statistic == "regression" and vmin is None and vmax is None and var == "tos":
+        elif statistic == "regression" and vmin is None and vmax is None:
             vmin = -1.0
             vmax = 1.0
             vmin_diff = -1.0
             vmax_diff = 1.0
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, var_label = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Case 1: no reference maps
         if maps is not None and ref_maps is None:
             # Case 1a: single map
             if isinstance(maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(maps, "AQUA_season", None),
+                )
 
                 fig, _ = plot_single_map(
-                    data=maps, vmin=vmin, vmax=vmax, title=title, return_fig=True, loglevel=self.loglevel, **kwargs
+                    data=maps,
+                    vmin=vmin,
+                    vmax=vmax,
+                    cmap=cmap,
+                    cbar_label=var_label,
+                    title=title,
+                    return_fig=True,
+                    loglevel=self.loglevel,
+                    **kwargs,
                 )
                 return fig
 
@@ -140,15 +169,25 @@ class PlotENSO(PlotBaseMixin):
             elif isinstance(maps, list):
                 titles = []
                 for map in maps:
-                    title = TitleBuilder(
-                        diagnostic=f"Niño 3.4 {statistic} map ({var})",
+                    title = self.set_map_title(
+                        telecname="Niño 3.4",
+                        statistic=statistic,
+                        var=var_label,
                         model=map.AQUA_model,
                         exp=map.AQUA_exp,
-                        timeseason=getattr(map, "AQUA_season", None),
-                    ).generate()
+                        season=getattr(map, "AQUA_season", None),
+                    )
                     titles.append(title)
                 fig = plot_maps(
-                    maps=maps, vmin=vmin, vmax=vmax, titles=titles, return_fig=True, loglevel=self.loglevel, **kwargs
+                    maps=maps,
+                    vmin=vmin,
+                    vmax=vmax,
+                    titles=titles,
+                    cmap=cmap,
+                    cbar_label=var_label,
+                    return_fig=True,
+                    loglevel=self.loglevel,
+                    **kwargs,
                 )
                 return fig
 
@@ -156,14 +195,16 @@ class PlotENSO(PlotBaseMixin):
         if ref_maps is not None:
             # Case 2a: both maps and ref_maps are only one (we consider only both lists of one or both xarrays)
             if isinstance(maps, xr.DataArray) and isinstance(ref_maps, xr.DataArray):
-                title = TitleBuilder(
-                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
+                    season=getattr(maps, "AQUA_season", None),
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                )
                 fig, _ = plot_single_map_diff(
                     data=maps,
                     data_ref=ref_maps,
@@ -173,6 +214,8 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     title=title,
                     return_fig=True,
                     loglevel=self.loglevel,
@@ -186,12 +229,14 @@ class PlotENSO(PlotBaseMixin):
                 for map in maps:
                     title = f"{map.AQUA_model} {map.AQUA_exp}"
                     titles.append(title)
-                title = TitleBuilder(
-                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
+                    var=var_label,
                     ref_model=ref_maps.AQUA_model,
                     ref_exp=ref_maps.AQUA_exp,
-                    timeseason=getattr(ref_maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(ref_maps, "AQUA_season", None),
+                )
 
                 # plot_maps_diff wants a list of reference maps of the same length as maps
                 maps_ref = [ref_maps] * len(maps)
@@ -204,6 +249,8 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     titles=titles,
                     title=title,
                     return_fig=True,
@@ -219,12 +266,14 @@ class PlotENSO(PlotBaseMixin):
                 for map in ref_maps:
                     title = f"Compared to {map.AQUA_model} {map.AQUA_exp}"
                     titles.append(title)
-                title = TitleBuilder(
-                    diagnostic=f"Niño 3.4 {statistic} map ({var})",
+                title = self.set_map_title(
+                    telecname="Niño 3.4",
+                    statistic=statistic,
+                    var=var_label,
                     model=maps.AQUA_model,
                     exp=maps.AQUA_exp,
-                    timeseason=getattr(maps, "AQUA_season", None),
-                ).generate()
+                    season=getattr(maps, "AQUA_season", None),
+                )
 
                 # plot_maps_diff wants a list of reference maps of the same length as maps
                 maps = [maps] * len(ref_maps)
@@ -237,6 +286,8 @@ class PlotENSO(PlotBaseMixin):
                     vmax_fill=vmax_diff if vmax_diff is not None else None,
                     sym=True if vmax_diff is None and vmin_diff is None else False,
                     sym_contour=True if vmax is None and vmin is None else False,
+                    cmap=cmap,
+                    cbar_label=var_label,
                     titles=titles,
                     title=title,
                     return_fig=True,

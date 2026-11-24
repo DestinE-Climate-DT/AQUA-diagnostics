@@ -1,3 +1,6 @@
+# Legacy configuration: config-teleconnections-enso.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
 datasets:
   - catalog: null
     model: null
@@ -10,17 +13,17 @@ datasets:
     enddate: null
   # Possible second/third/fourth datasets here, no present by default
   # - catalog: 'obs'
-  #   model: 'ERA5'
+  #   model: 'ECMWF'
   #   exp: 'era5'
   #   source: 'monthly'
   #   regrid: r100
 
 references:
   - catalog: 'obs'
-    model: 'ERA5'
+    model: 'ECMWF'
     exp: 'era5'
     source: 'monthly'
-    regrid: null
+    regrid: 'r100'
 
 output:
   outputdir: "./"
@@ -36,4 +39,18 @@ diagnostics:
       diagnostic_name: 'enso'
       months_window: 3
       seasons: ['annual']
-      cbar_range: [-2, 2]
+      statistics_var: ['tos', 'tprate']
+      plot_params:
+        default:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1
+          vmax_diff: 1
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2.5
+          vmax: 2.5
+          vmin_diff: -4
+          vmax_diff: 4
+          cmap: 'BrBG'
+          units: 'mm/day'

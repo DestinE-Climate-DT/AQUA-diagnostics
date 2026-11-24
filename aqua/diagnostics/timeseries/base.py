@@ -2,14 +2,10 @@
 
 from typing import Union
 
-import xarray as xr
-
 from aqua.core.fixer import EvaluateFormula
 from aqua.core.logger import log_configure
 from aqua.core.util import frequency_string_to_pandas, pandas_freq_to_string, time_to_string
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
-
-xr.set_options(keep_attrs=True)
 
 
 class BaseMixin(Diagnostic):
@@ -75,6 +71,7 @@ class BaseMixin(Diagnostic):
         self.region, self.lon_limits, self.lat_limits = self._set_region(
             region=region, lon_limits=lon_limits, lat_limits=lat_limits
         )
+        self.region_object, self.region_sel, self.frac_threshold = self._resolve_regionmask_object(region=region)
         self.logger.debug(f"Region: {self.region}, Lon limits: {self.lon_limits}, Lat limits: {self.lat_limits}")
 
         # Initialize the possible results
@@ -221,7 +218,15 @@ class BaseMixin(Diagnostic):
         }
 
         data = self.std_data
-        data = self.reader.fldmean(data, box_brd=box_brd, lon_limits=self.lon_limits, lat_limits=self.lat_limits)
+        data = self.reader.fldmean(
+            data,
+            box_brd=box_brd,
+            lon_limits=self.lon_limits,
+            lat_limits=self.lat_limits,
+            region=self.region_object,
+            region_sel=self.region_sel,
+            frac_threshold=self.frac_threshold,
+        )
         data = self.reader.timmean(data, freq=freq, exclude_incomplete=exclude_incomplete, center_time=center_time)
 
         # Check that after data reduction we still have data
@@ -258,7 +263,8 @@ class BaseMixin(Diagnostic):
         freq: str,
         outputdir: str = "./",
         rebuild: bool = True,
-        create_catalog_entry: bool = False,
+        # DEPRECATED
+        # create_catalog_entry: bool = False,
         dict_catalog_entry: dict = {"jinjalist": ["freq", "realization", "region"], "wildcardlist": ["var"]},
     ):
         """
@@ -269,7 +275,6 @@ class BaseMixin(Diagnostic):
             freq (str): The frequency of the data.
             outputdir (str): The directory to save the data.
             rebuild (bool): If True, rebuild the data from the original files.
-            create_catalog_entry (bool): If True, create a catalog entry for the data. Default is False.
             dict_catalog_entry (dict): A dictionary with catalog entry information.
                 Default is {'jinjalist': ['freq', 'region', 'realization'], 'wildcardlist': ['var']}.
         """
@@ -311,7 +316,8 @@ class BaseMixin(Diagnostic):
             outputdir=outputdir,
             rebuild=rebuild,
             extra_keys=extra_keys,
-            create_catalog_entry=create_catalog_entry,
+            # DEPRECATED
+            # create_catalog_entry=create_catalog_entry,
             dict_catalog_entry=dict_catalog_entry,
         )
         if data_std is not None:
@@ -420,10 +426,9 @@ class PlotBaseMixin:
             diagnostic=diagnostic,
             variable=self.long_name,
             regions=self.region,
-            catalog=self.catalogs,
             model=self.models,
             exp=self.exps,
-            ref_catalog=self.ref_catalogs if self.ref_catalogs else None,
+            comparison="compared to" if self.ref_models else None,
             ref_model=self.ref_models if self.ref_models else None,
             ref_exp=self.ref_exps if self.ref_exps else None,
         ).generate()
@@ -447,11 +452,8 @@ class PlotBaseMixin:
 
         description = f"{diagnostic} "
 
-        description += f"of {self.long_name} "
-        if self.units is not None:
-            description += f"[{self.units}] "
-        if self.short_name is not None:
-            description += f"({self.short_name}) "
+        long_name = self.long_name.lower() if self.long_name else self.long_name
+        description += f"of {long_name} "
 
         if self.region is not None:
             description += f"for {self.region} "
@@ -479,10 +481,6 @@ class PlotBaseMixin:
                         ref_start_str = time_to_string(self.ref_startdate, format="%Y-%m")
                         ref_end_str = time_to_string(self.ref_enddate, format="%Y-%m")
                         description += f" (from {ref_start_str} to {ref_end_str})"
-                # HACK: rename ERA5 with a more readable name in the description,
-                # since it is the most common reference dataset for timeseries and seasonal cycles diagnostics
-                if "ERA5 era5" in description:
-                    description = description.replace("ERA5 era5", "ERA5")
         description += ". "
 
         # TODO: info on yearly and montlhly data should be controlled if the data are actually plotted

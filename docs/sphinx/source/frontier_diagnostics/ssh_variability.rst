@@ -179,8 +179,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/src/aqua_diagnostics/sshVariability
-    python cli_sshVariability.py --config_file <path_to_config_file>
+    python -m aqua.diagnostics.sshVariability.cli_sshVariability --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

@@ -7,7 +7,7 @@
 from importlib import resources
 from typing import Optional, Union
 
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigContext
 from aqua.core.logger import log_configure
 
 from .src.tropical_rainfall_main import MainClass
@@ -17,9 +17,8 @@ from .src.tropical_rainfall_tools import ToolsClass
 
 full_path_to_config = resources.files("tropical_rainfall") / "config-tropical-rainfall.yml"
 config = ToolsClass().get_config()
-machine = ConfigPath().get_machine()
-
 loglevel = ToolsClass().get_config_value(config, "loglevel", default="WARNING")
+machine = ConfigContext(loglevel=loglevel).machine
 trop_lat = ToolsClass().get_config_value(config, "class_attributes", "trop_lat", default=10)
 num_of_bins = ToolsClass().get_config_value(config, "class_attributes", "num_of_bins", default=1000)
 first_edge = ToolsClass().get_config_value(config, "class_attributes", "first_edge", default=0)

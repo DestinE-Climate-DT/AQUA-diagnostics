@@ -10,6 +10,7 @@ import xarray as xr
 
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.util import dump_yaml
+from aqua.diagnostics import get_install_dirs
 from aqua.diagnostics.base import (
     Diagnostic,
     close_cluster,
@@ -129,11 +130,11 @@ def test_load_diagnostic_config():
 def test_get_diagnostic_configpath(monkeypatch):
     """Path resolver handles collections/tools/templates and rejects invalid folder names."""
 
-    class _RepoConfigPath:
-        def __init__(self, loglevel=None):
+    class _RepoConfigLocator:
+        def __init__(self, logger=None):
             self.configdir = str(REAL_CONFIG_DIR)
 
-    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigPath", _RepoConfigPath)
+    monkeypatch.setattr("aqua.diagnostics.base.util.ConfigLocator", _RepoConfigLocator)
 
     assert get_diagnostic_configpath("timeseries", folder="collections") == str(REAL_CONFIG_DIR / "collections" / "timeseries")
     assert get_diagnostic_configpath("timeseries", folder="tools") == str(REAL_CONFIG_DIR / "tools" / "timeseries")
@@ -141,6 +142,19 @@ def test_get_diagnostic_configpath(monkeypatch):
 
     with pytest.raises(ValueError, match="Invalid folder name"):
         get_diagnostic_configpath("timeseries", folder="invalid")
+
+
+def test_get_diagnostic_configpath_without_catalogs(tmp_path, monkeypatch):
+    """Diagnostic path resolution does not require catalog configuration."""
+    configdir = tmp_path / "config"
+    configdir.mkdir()
+    dump_yaml(
+        outfile=str(configdir / "config-aqua.yaml"),
+        cfg={"machine": "test-machine"},
+    )
+    monkeypatch.setenv("AQUA_CONFIG", str(configdir))
+
+    assert get_diagnostic_configpath("timeseries") == str(configdir / "collections" / "timeseries")
 
 
 def test_load_diagnostic_config_default_filename(monkeypatch):
@@ -193,6 +207,40 @@ def test_merge_config_args():
         {"catalog": "test_catalog", "exp": "test_exp", "model": "test_model", "source": "test_source"}
     ]
     assert merged_config["output"]["outputdir"] == "test_outputdir"
+
+
+@pytest.mark.parametrize("configured_kwargs", [None, {"chunks": {"time": 12}}])
+def test_merge_config_args_normalizes_and_preserves_reader_kwargs(configured_kwargs):
+    """CLI realization is merged into the first dataset without leaking to others."""
+    parser = argparse.ArgumentParser()
+    args = template_parse_arguments(parser).parse_args(["--realization", "r2"])
+    config = {
+        "datasets": [
+            {
+                "catalog": "test",
+                "model": "Model1",
+                "exp": "exp1",
+                "source": "source1",
+                "reader_kwargs": configured_kwargs,
+            },
+            {
+                "catalog": "test",
+                "model": "Model2",
+                "exp": "exp2",
+                "source": "source2",
+                "reader_kwargs": {"realization": "r3"},
+            },
+        ],
+        "output": {"outputdir": "./"},
+    }
+
+    merged_config = merge_config_args(config=config, args=args, loglevel=loglevel)
+
+    expected = {"realization": "r2"}
+    if configured_kwargs:
+        expected["chunks"] = {"time": 12}
+    assert merged_config["datasets"][0]["reader_kwargs"] == expected
+    assert merged_config["datasets"][1]["reader_kwargs"] == {"realization": "r3"}
 
 
 def test_close_private_cluster_when_flag_true():
@@ -312,9 +360,29 @@ def test_minimum_months_enough(mock_reader_class):
     assert len(result.time) == 12
 
 
+@patch("aqua.diagnostics.base.diagnostic.Reader")
+def test_minimum_months_enough_1month(mock_reader_class):
+    """No error when available months >= months_required."""
+    mock_reader_class.return_value.retrieve.return_value = _make_monthly_dataset(1)
+    mock_reader_class.return_value.catalog = "test"
+
+    diag = Diagnostic(model="M", exp="E", source="S")
+    result, _, _ = diag._retrieve(model="M", exp="E", source="S", months_required=1)
+    assert len(result.time) == 1
+
+
 def test_minimum_months_required_class_attribute():
     """Concrete diagnostics expose MINIMUM_MONTHS_REQUIRED as a positive int class attribute."""
     # LatLonProfiles is selected since is one of the easiest diagnostics on this perspective
     assert hasattr(LatLonProfiles, "MINIMUM_MONTHS_REQUIRED")
     assert isinstance(LatLonProfiles.MINIMUM_MONTHS_REQUIRED, int)
     assert LatLonProfiles.MINIMUM_MONTHS_REQUIRED > 0
+
+
+def test_get_install_dirs():
+    """Test that get_install_dirs returns a list of directories."""
+    dirs = get_install_dirs()
+    assert isinstance(dirs, dict)
+    # Check it is not empty and contains expected keys
+    assert "config" in dirs
+    assert "templates" in dirs

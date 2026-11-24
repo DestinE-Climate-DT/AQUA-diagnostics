@@ -44,7 +44,7 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/lat_lon_profiles`` directory, which contains both the source code and
   the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-lat_lon_profiles.yaml``.
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-lat_lon_profiles.yaml``.
 * Regional definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml``.
 * Notebooks are available in the ``notebooks/diagnostics/lat_lon_profiles`` directory and contain examples of how to use the diagnostic.
 
@@ -99,6 +99,18 @@ The basic structure of the analysis is the following:
     Start/end dates and reference dataset can be customized.
     If not specified otherwise, plots will be saved in PNG and PDF format in the current working directory.
 
+Instead of calling ``run()``, the results of a previous run can be read back from its NetCDF files
+(see :ref:`diagnostics-plot-only`):
+
+.. code-block:: python
+
+    lonlat_dataset.load(var='tprate', outputdir='/path/to/previous/output')
+
+.. note::
+
+    The ``standard_name``, if one was used, takes part in the filenames as well and must be given to ``load()``.
+    The seasonal profiles are loaded only if all four seasons are found.
+
 CLI usage
 ---------
 
@@ -106,8 +118,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/lat_lon_profiles
-    python cli_lat_lon_profiles.py --config <path_to_config_file>
+    python -m aqua.diagnostics.lat_lon_profiles.cli_lat_lon_profiles --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 

@@ -84,5 +84,5 @@ def compute_mld_cont(rho, vert_coord=DEFAULT_OCEAN_VERT_COORD, loglevel="WARNING
 
     mld.mld.attrs["long_name"] = "Mixed Layer Depth"
     mld.mld.attrs["standard_name"] = "ocean_mixed_layer_depth"
-    # mld.mld.attrs["units"] = "m"
+    mld.mld.attrs["units"] = "m"
     return mld
