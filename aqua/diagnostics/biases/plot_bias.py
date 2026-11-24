@@ -279,7 +279,7 @@ class PlotBias:
             comparison="\nrelative to",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
-            timeseason="climatology ",
+            timeseason="climatology",
             extra_info=extra_info,
         ).generate()
 
@@ -460,7 +460,7 @@ class PlotBias:
             exp=data.AQUA_exp,
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
-            timeseason="climatology ",
+            timeseason="climatology",
             extra_info=extra_info,
         ).generate(max_chars=90, split_on=["for"])  # a single break before "for": two lines within the figure width
 
@@ -553,7 +553,7 @@ class PlotBias:
             comparison="\nrelative to",
             ref_model=data_ref.AQUA_model,
             ref_exp=data_ref.AQUA_exp,
-            timeseason="climatology ",
+            timeseason="climatology",
         ).generate()
 
         description = (

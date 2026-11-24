@@ -57,7 +57,7 @@ def plot_maps(
         proj (cartopy.crs.Projection,opt): projection, default is ccrs.Robinson()
         extent (list,opt):    extent of the map, default is None
         style (str,opt):      style for the plot, default is the AQUA style
-        figsize (tuple,opt):  figure size, default is (6,6) for each map. Here the full figure size is set.
+        figsize (tuple,opt):  full figure size, default is grid_figure_size(nrows, ncols), with the common width
         nrows (int,opt):      number of rows in the subplot grid, default is None (auto)
         ncols (int,opt):      number of columns in the subplot grid, default is None (auto)
         vmin (float,opt):     minimum value for the colorbar, default is None
