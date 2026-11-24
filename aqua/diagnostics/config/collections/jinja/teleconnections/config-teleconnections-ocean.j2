@@ -16,10 +16,10 @@ datasets:
   #   regrid: r100
 
 references:
-  - catalog: '{{ references.teleconnections_enso.catalog }}'
-    model: '{{ references.teleconnections_enso.model }}'
-    exp: '{{ references.teleconnections_enso.exp }}'
-    source: '{{ references.teleconnections_enso.source }}'
+  - catalog: '{{ references.teleconnections_ocean.catalog }}'
+    model: '{{ references.teleconnections_ocean.model }}'
+    exp: '{{ references.teleconnections_ocean.exp }}'
+    source: '{{ references.teleconnections_ocean.source }}'
     regrid: '{{ regrid }}'
 
 output:
@@ -51,3 +51,7 @@ diagnostics:
           vmax_diff: 4
           cmap: 'BrBG'
           units: 'mm/day'
+    DMI:
+      run: true
+      diagnostic_name: 'dmi'
+      seasons: ['annual']

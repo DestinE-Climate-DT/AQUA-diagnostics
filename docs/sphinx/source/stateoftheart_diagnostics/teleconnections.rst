@@ -41,6 +41,9 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/collections/config-teleconnections.yaml``
+* The configuration files run by ``aqua analysis`` are in ``aqua/diagnostics/config/collections/jinja/teleconnections``
+  (``legacy`` for the version with hard-coded dates): ``config-teleconnections-nao`` for the NAO and
+  ``config-teleconnections-ocean`` for ENSO and DMI.
 * Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
 * Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
 
@@ -155,7 +158,7 @@ Here we describe only the specific settings for the teleconnections diagnostic.
 
     ``DMI``: a block, nested in the ``teleconnections`` block, that contains the details required for the DMI teleconnection.
 
-    All blocks contain the following options:
+    The ``NAO`` and ``ENSO`` blocks contain the following options:
 
         * ``run``: Whether to run the diagnostic.
         * ``diagnostic_name``: Name of the diagnostic.
@@ -163,6 +166,9 @@ Here we describe only the specific settings for the teleconnections diagnostic.
         * ``seasons``: List of seasons to consider for the analysis.
         * ``statistics_var``: List of variables over which to compute the regression and correlation.
         * ``plot_params``: A dictionary containing the parameters for the plots, such as the color bar range and the colormap.
+
+    The ``DMI`` block supports ``run``, ``diagnostic_name`` and ``seasons``: the regression and correlation maps
+    are computed on the index variable (``tos``) with fixed color bar ranges.
 
 .. code-block:: yaml
 
@@ -205,7 +211,6 @@ Here we describe only the specific settings for the teleconnections diagnostic.
                 run: true
                 diagnostic_name: 'dmi'
                 seasons: ['annual']
-                cbar_range: [-2, 2]
 
 Output
 ------

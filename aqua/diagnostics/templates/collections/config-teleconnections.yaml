@@ -64,3 +64,7 @@ diagnostics:
           vmax_diff: 4
           cmap: 'BrBG'
           units: 'mm/day'
+    DMI:
+      run: true
+      diagnostic_name: 'dmi'
+      seasons: ['annual']

@@ -54,11 +54,11 @@ cli:
   boxplots: "boxplots/cli_boxplots.py"
   drift: "ocean_drift/cli_ocean_drift.py"
   ecmean: "ecmean/cli_ecmean.py"
-  enso: "teleconnections/cli_teleconnections.py"
   gregory: "timeseries/cli_timeseries.py"
   histogram: "histogram/cli_histogram.py"
   lat_lon_profiles: "lat_lon_profiles/cli_lat_lon_profiles.py"
   nao: "teleconnections/cli_teleconnections.py"
+  ocean: "teleconnections/cli_teleconnections.py"
   seaice: "seaice/cli_seaice.py"
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
   stratification: "ocean_stratification/cli_ocean_stratification.py"
@@ -156,8 +156,8 @@ diagnostics:
   teleconnections:
     nao:
       config: "${AQUA_CONFIG}/collections/jinja/teleconnections/config-teleconnections-nao.j2"
-    enso:
-      config: "${AQUA_CONFIG}/collections/jinja/teleconnections/config-teleconnections-enso.j2"
+    ocean:
+      config: "${AQUA_CONFIG}/collections/jinja/teleconnections/config-teleconnections-ocean.j2"
 
   water_cycle:
     lat_lon_profiles:

@@ -31,6 +31,7 @@ diagnostics:
 
     Teleconnections, NAO: [teleconnections.nao, teleconnections.NAO, nao.]
     Teleconnections, ENSO: [teleconnections.enso, teleconnections.ENSO, enso.]
+    Teleconnections, DMI: [teleconnections.dmi, teleconnections.DMI, dmi.]
 
     Ocean 2D, Time series: [ocean2d.timeseries, ocean.timeseries]
     Ocean 2D, Seasonal cycles: ocean2d.seasonalcycles

@@ -1,4 +1,4 @@
-# Legacy configuration: config-teleconnections-enso.j2 rendered with the 'default' experiment kind.
+# Legacy configuration: config-teleconnections-ocean.j2 rendered with the 'default' experiment kind.
 # Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
 
 datasets:
@@ -54,3 +54,7 @@ diagnostics:
           vmax_diff: 4
           cmap: 'BrBG'
           units: 'mm/day'
+    DMI:
+      run: true
+      diagnostic_name: 'dmi'
+      seasons: ['annual']
