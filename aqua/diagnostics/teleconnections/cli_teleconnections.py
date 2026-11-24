@@ -507,7 +507,7 @@ def main(argv=None):
                     logger.info(f"Running dataset: {dataset_args}")
 
                     dmi[i] = DMI(**dataset_args, **init_args)
-                    dmi[i].retrieve(reader_kwargs=cli.reader_kwargs)
+                    dmi[i].retrieve(reader_kwargs=dataset.get("reader_kwargs") or {})
                     dmi[i].compute_index(rebuild=cli.rebuild)
 
                     dmi[i].save_netcdf(
@@ -550,7 +550,7 @@ def main(argv=None):
                     logger.info(f"Running reference: {reference_args}")
 
                     dmi_ref[i] = DMI(**reference_args, **init_args)
-                    dmi_ref[i].retrieve()
+                    dmi_ref[i].retrieve(reader_kwargs=reference.get("reader_kwargs") or {})
                     dmi_ref[i].compute_index(rebuild=cli.rebuild)
 
                     dmi_ref[i].save_netcdf(

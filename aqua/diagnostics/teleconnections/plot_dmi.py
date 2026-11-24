@@ -112,7 +112,7 @@ class PlotDMI(PlotBaseMixin):
             vmin_diff = -1.0
             vmax_diff = 1.0
 
-        maps, ref_maps = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
+        maps, ref_maps, _ = _homogeneize_maps(maps=maps, ref_maps=ref_maps, var=var)
 
         # Case 1: no reference maps
         if maps is not None and ref_maps is None:
