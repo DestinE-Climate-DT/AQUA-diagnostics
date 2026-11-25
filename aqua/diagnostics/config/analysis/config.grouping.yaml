@@ -53,6 +53,7 @@ diagnostics:
     Sea Ice, Differences: [seaice.bias, PlotSeaIce.bias]
 
     Europe, Time series: europe.timeseries
+    Europe, Seasonal cycles: europe.seasonalcycles
     Europe, Annual differences: europe.bias
     Europe, Seasonal differences: europe.seasonal_bias
 

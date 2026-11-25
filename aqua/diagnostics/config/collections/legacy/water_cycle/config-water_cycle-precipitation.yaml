@@ -87,7 +87,7 @@ diagnostics:
         std_startdate: '1990-01-01'
         std_enddate: '2014-12-31'
       tprate:
-        regions: ['nh', 'sh', 'europe']
+        regions: ['nh', 'sh']
 
   histogram:
     run: true

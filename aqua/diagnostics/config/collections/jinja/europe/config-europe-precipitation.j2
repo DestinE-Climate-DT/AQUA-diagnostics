@@ -1,4 +1,4 @@
-# Precipitation over Europe: bias maps and timeseries of the European mean.
+# Precipitation over Europe: bias maps, timeseries and seasonal cycle of the European mean.
 datasets:
   - catalog: null
     model: null
@@ -67,6 +67,20 @@ diagnostics:
         annual: True
         std_startdate: '{{ period.timeseries.std_startdate }}'
         std_enddate: '{{ period.timeseries.std_enddate }}'
+        regions: ['europe']
+      tprate:
+        units: 'mm/day'
+
+  seasonalcycles:
+    run: true
+    diagnostic_name: 'europe'
+    variables: ['tprate']
+    center_time: true
+    include_global: false  # only the regions below
+    params:
+      default:
+        std_startdate: '{{ period.standard.std_startdate }}'
+        std_enddate: '{{ period.standard.std_enddate }}'
         regions: ['europe']
       tprate:
         units: 'mm/day'
