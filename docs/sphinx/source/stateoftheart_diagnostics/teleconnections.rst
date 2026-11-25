@@ -22,7 +22,7 @@ There are four classes for the analysis:
 
 * **ENSO**: computes the ENSO index based on sea surface temperature (tos) using the Niño3.4 region, and computes regression and correlation maps with respect to the ENSO index.
 
-* **DMI**: computes the Dipole Mode Index based on the difference between western and eastern Indian Ocean SST anomaly boxes, and computes regression and correlation maps with respect to the DMI index.
+* **DMI**: computes the Dipole Mode Index as the difference between the SST anomalies of the western (10S-10N, 50E-70E) and eastern (10S-0, 90E-110E) equatorial Indian Ocean, as in Saji et al. (1999), and computes regression and correlation maps with respect to the DMI index.
 
 * **MJO**: computes the MJO Hovmoeller plots based on the top net thermal radiation flux (tnlwrf) variable.
 
@@ -61,8 +61,7 @@ By default, the diagnostic compares against the ERA5 dataset, with the index eva
 The necessary variables for the default evaluation are:
 
 * ``msl`` (mean sea level pressure) for NAO
-* ``tos`` (sea surface temperature) for ENSO
-* ``tos`` (sea surface temperature) for DMI
+* ``tos`` (sea surface temperature) for ENSO and DMI, and ``tprate`` (total precipitation rate) for their regression and correlation maps
 * ``tnlwrf`` (top net thermal radiation flux) for MJO
 
 Other variables can be used for the regression and correlation maps.
@@ -158,17 +157,17 @@ Here we describe only the specific settings for the teleconnections diagnostic.
 
     ``DMI``: a block, nested in the ``teleconnections`` block, that contains the details required for the DMI teleconnection.
 
-    The ``NAO`` and ``ENSO`` blocks contain the following options:
+    The ``NAO``, ``ENSO`` and ``DMI`` blocks contain the following options:
 
         * ``run``: Whether to run the diagnostic.
         * ``diagnostic_name``: Name of the diagnostic.
-        * ``months_window``: Number of months to use for the rolling mean.
+        * ``months_window``: Number of months to use for the rolling mean (``NAO`` and ``ENSO`` only).
         * ``seasons``: List of seasons to consider for the analysis.
         * ``statistics_var``: List of variables over which to compute the regression and correlation.
         * ``plot_params``: A dictionary containing the parameters for the plots, such as the color bar range and the colormap.
-
-    The ``DMI`` block supports ``run``, ``diagnostic_name`` and ``seasons``: the regression and correlation maps
-    are computed on the index variable (``tos``) with fixed color bar ranges.
+          The ``default`` entry applies to all variables and is overridden by the entry of each variable,
+          which can also set the ``units`` of the regression maps. The color bar range of the correlation maps
+          is fixed (-1 to 1, and -0.5 to 0.5 for the difference) for ENSO and DMI.
 
 .. code-block:: yaml
 
@@ -210,7 +209,22 @@ Here we describe only the specific settings for the teleconnections diagnostic.
             DMI:
                 run: true
                 diagnostic_name: 'dmi'
-                seasons: ['annual']
+                seasons: ['SON']
+                statistics_var: ['tos', 'tprate']
+                plot_params:
+                    default:
+                        vmin: -1
+                        vmax: 1
+                        vmin_diff: -0.5
+                        vmax_diff: 0.5
+                        cmap: 'RdBu_r'
+                    tprate:
+                        vmin: -2
+                        vmax: 2
+                        vmin_diff: -1.5
+                        vmax_diff: 1.5
+                        cmap: 'BrBG'
+                        units: 'mm/day'
 
 Output
 ------
