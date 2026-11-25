@@ -57,4 +57,21 @@ diagnostics:
     DMI:
       run: true
       diagnostic_name: 'dmi'
-      seasons: ['annual']
+      # SON is the peak of IOD events. JJA, their developing phase during the Indian summer monsoon,
+      # can be added (seasons: ['JJA', 'SON']) if it proves scientifically useful.
+      seasons: ['SON']
+      statistics_var: ['tos', 'tprate']
+      plot_params:  # limits close to the 99th percentile of |value| in SON, see notebooks/diagnostics/teleconnections/DMI.ipynb
+        default:
+          vmin: -1
+          vmax: 1
+          vmin_diff: -0.5
+          vmax_diff: 0.5
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1.5
+          vmax_diff: 1.5
+          cmap: 'BrBG'
+          units: 'mm/day'

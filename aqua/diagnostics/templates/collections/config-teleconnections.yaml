@@ -67,4 +67,19 @@ diagnostics:
     DMI:
       run: true
       diagnostic_name: 'dmi'
-      seasons: ['annual']
+      seasons: ['SON']
+      statistics_var: ['tos', 'tprate']
+      plot_params:
+        default:
+          vmin: -1
+          vmax: 1
+          vmin_diff: -0.5
+          vmax_diff: 0.5
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1.5
+          vmax_diff: 1.5
+          cmap: 'BrBG'
+          units: 'mm/day'
