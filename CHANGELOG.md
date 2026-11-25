@@ -4,12 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
-Unreleased in the current development version (target v0.27.0):
+Unreleased in the current development version (target v0.28.0):
 
 Main changes:
 
 Complete list:
 - New Europe collection (#595)
+
+## [v0.27.0]
+
+Main changes:
+1. Experiment kinds of `aqua analysis --kind` rewritten as `default` + overrides, with new CMIP6/CMIP7 and HighResMIP kinds; `scenario` removed
+2. Polygon regions use cell-centre selection by default
+3. Wall time, CPU time and memory of each tool logged at the end of the run
+4. Require aqua-core>=1.2.4
+5. New `new-aqua-diagnostic` agent skill and major documentation update
+6. All diagnostic figures share the same width and title size, so text looks equally large on the dashboard
+
+Complete list:
+- CI: conda relock PRs list the changed packages in their description (#578)
 - Experiment kinds (`aqua analysis --kind`) rewritten as `default` + overrides, with new CMIP6/CMIP7 historical/projection and HighResMIP kinds (`scenario` removed) (#519)
 - Remove module-level `xr.set_options(keep_attrs=True)` (#566)
 - Env: require aqua-core>=1.2.4 and a single `z3fdb>=5.25.0.33` pin on every platform (the Linux pin was a PROJ workaround, fixed by `findlibs>=0.1.4`); clarify why `zarr` is pinned in the conda environments (#579)
@@ -23,6 +36,10 @@ Complete list:
 - Timeseries: Gregory plot colours the trajectories by time by default (`cmap="plasma_r"`), disabled when more than one dataset is plotted (#450)
 - CI: run tests with `--max-worker-restart=0`, so a crashed pytest-xdist worker fails the job at once instead of hanging until the 40-minute step timeout (#547)
 - Major documentation update (#473)
+- Centralize title size and fig size (#540)
+- Tropical Cyclones: forward configured `reader_kwargs`, including `config_fdb`, to catalog-based orography reads (#504)
+- LUMI installation: `lumi_install.sh` works from any directory and removes its temporary environment files (#543)
+- Ocean3D: EN4 trend/drift configs no longer set time chunks in `reader_kwargs` (#472)
 
 ## [v0.26.0]
 
@@ -242,7 +259,8 @@ Complete list:
 ## Previous versions
 Please notice that before v0.21.0 (i.e. up to v0.20.0) aqua-core and aqua-diagnostics have been developed in the same repository. Please refer to AQUA main repo for past changelog
 
-[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.26.0...HEAD
+[unreleased]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.27.0...HEAD
+[v0.27.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.26.0...v0.27.0
 [v0.26.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.1...v0.26.0
 [v0.25.1]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.25.0...v0.25.1
 [v0.25.0]: https://github.com/DestinE-Climate-DT/AQUA-diagnostics/compare/v0.24.1...v0.25.0
