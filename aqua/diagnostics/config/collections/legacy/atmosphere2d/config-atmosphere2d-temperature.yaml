@@ -74,8 +74,7 @@ diagnostics:
         std_startdate: '1990-01-01'
         std_enddate: '2014-12-31'
       2t:
-        regions: ['nh', 'sh', 'europe']
-
+        regions: ['nh', 'sh']
   seasonalcycles:
     run: true
     diagnostic_name: 'atmosphere2d'
