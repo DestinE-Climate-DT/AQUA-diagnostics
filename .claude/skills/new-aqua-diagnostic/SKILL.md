@@ -177,6 +177,11 @@ clashes, e.g. the ocean `Trends` are re-exported as `OceanTrends`).
 - Draw with `aqua.core.graphics` (`plot_timeseries`, `plot_hovmoller`, `plot_single_map`, ... they take and return
   `fig, ax`). If the plot does not exist, write a **generic** function (data in, `fig, ax` out, no
   diagnostic-specific logic), say so in the PR and open an issue on AQUA to move it to the core.
+- Figure size and fonts: do not pass `figsize` to `aqua.core.graphics`, which already uses the common width. A new
+  plot function starts with `ConfigStyle(style=style)`, creates its figure with `figure_size(height_ratio)` or
+  `grid_figure_size(...)` and a layout engine, and keeps the content within the figure sides. Font sizes come from
+  the AQUA style: when a text must differ, use relative sizes (`"small"`, `"medium"`), never points
+  (see `output_management.rst`, Figure Size).
 - Save through one `OutputSaver` initialised with **all** plotted models and references:
   `save_figure(fig, diagnostic_product, extra_keys, metadata={"description": ...}, extension=save_format,
   dpi=dpi, rebuild=rebuild)`. Pass a single realization as a value, not a one-element list (the filename would
