@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.28.0):
 Main changes:
 
 Complete list:
+- OutputSaver: load_netcdf date check fix (#593)
 
 ## [v0.27.0]
 
