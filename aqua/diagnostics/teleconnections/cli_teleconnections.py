@@ -495,10 +495,18 @@ def main(argv=None):
                 dmi = [None] * len(config_dict["datasets"])
 
                 dmi_config = config_dict["diagnostics"]["teleconnections"]["DMI"]
-                seasons = dmi_config.get("seasons", "annual")
+                # We create lists for the seasons and statistics_var to handle multiple seasons and variables.
+                seasons = to_list(dmi_config.get("seasons", ["annual"]))
+                statistics_var = to_list(dmi_config.get("statistics_var", "tos"))
+                all_plot_params = dmi_config.get("plot_params", {})
 
-                dmi_regressions = {season: [None] * len(config_dict["datasets"]) for season in seasons}
-                dmi_correlations = {season: [None] * len(config_dict["datasets"]) for season in seasons}
+                # Nested dictionaries {statistics_var: {season: [None] * len(datasets)}}, as for ENSO.
+                dmi_regressions = {
+                    var: {season: [None] * len(config_dict["datasets"]) for season in seasons} for var in statistics_var
+                }
+                dmi_correlations = {
+                    var: {season: [None] * len(config_dict["datasets"]) for season in seasons} for var in statistics_var
+                }
 
                 init_args = {"loglevel": cli.loglevel}
 
@@ -518,32 +526,43 @@ def main(argv=None):
                         rebuild=cli.rebuild,
                     )
 
-                    for season in seasons:
-                        dmi_regressions[season][i] = dmi[i].compute_regression(season=season)
-                        dmi_correlations[season][i] = dmi[i].compute_correlation(season=season)
+                    for var in statistics_var:
+                        # Units of the variable from the plot_params, if defined
+                        var_units = all_plot_params.get(var, {}).get("units")
 
-                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
-                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+                        for season in seasons:
+                            dmi_regressions[var][season][i] = dmi[i].compute_regression(
+                                var=var, season=season, units=var_units
+                            )
+                            dmi_correlations[var][season][i] = dmi[i].compute_correlation(var=var, season=season)
 
-                        dmi[i].save_netcdf(
-                            dmi_regressions[season][i],
-                            diagnostic="dmi",
-                            diagnostic_product=diagnostic_product_reg,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
-                        dmi[i].save_netcdf(
-                            dmi_correlations[season][i],
-                            diagnostic="dmi",
-                            diagnostic_product=diagnostic_product_cor,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
+
+                            dmi[i].save_netcdf(
+                                dmi_regressions[var][season][i],
+                                diagnostic="dmi",
+                                diagnostic_product="regression",
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
+                            )
+                            dmi[i].save_netcdf(
+                                dmi_correlations[var][season][i],
+                                diagnostic="dmi",
+                                diagnostic_product="correlation",
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
+                            )
 
                 dmi_ref = [None] * len(config_dict["references"])
 
-                dmi_ref_regressions = {season: [None] * len(config_dict["references"]) for season in seasons}
-                dmi_ref_correlations = {season: [None] * len(config_dict["references"]) for season in seasons}
+                dmi_ref_regressions = {
+                    var: {season: [None] * len(config_dict["references"]) for season in seasons} for var in statistics_var
+                }
+                dmi_ref_correlations = {
+                    var: {season: [None] * len(config_dict["references"]) for season in seasons} for var in statistics_var
+                }
 
                 for i, reference in enumerate(config_dict["references"]):
                     reference_args = cli.reference_args(reference)
@@ -561,27 +580,33 @@ def main(argv=None):
                         rebuild=cli.rebuild,
                     )
 
-                    for season in seasons:
-                        dmi_ref_regressions[season][i] = dmi_ref[i].compute_regression(season=season)
-                        dmi_ref_correlations[season][i] = dmi_ref[i].compute_correlation(season=season)
+                    for var in statistics_var:
+                        var_units = all_plot_params.get(var, {}).get("units")
 
-                        diagnostic_product_reg = f"regression_{season}" if season != "annual" else "regression"
-                        diagnostic_product_cor = f"correlation_{season}" if season != "annual" else "correlation"
+                        for season in seasons:
+                            dmi_ref_regressions[var][season][i] = dmi_ref[i].compute_regression(
+                                var=var, season=season, units=var_units
+                            )
+                            dmi_ref_correlations[var][season][i] = dmi_ref[i].compute_correlation(var=var, season=season)
 
-                        dmi_ref[i].save_netcdf(
-                            dmi_ref_regressions[season][i],
-                            diagnostic="dmi",
-                            diagnostic_product=diagnostic_product_reg,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
-                        dmi_ref[i].save_netcdf(
-                            dmi_ref_correlations[season][i],
-                            diagnostic="dmi",
-                            diagnostic_product=diagnostic_product_cor,
-                            outputdir=cli.outputdir,
-                            rebuild=cli.rebuild,
-                        )
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
+
+                            dmi_ref[i].save_netcdf(
+                                dmi_ref_regressions[var][season][i],
+                                diagnostic="dmi",
+                                diagnostic_product="regression",
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
+                            )
+                            dmi_ref[i].save_netcdf(
+                                dmi_ref_correlations[var][season][i],
+                                diagnostic="dmi",
+                                diagnostic_product="correlation",
+                                outputdir=cli.outputdir,
+                                rebuild=cli.rebuild,
+                                extra_keys=extra_keys,
+                            )
 
                 if cli.save_format:
                     logger.info("Plotting DMI with formats: %s", cli.save_format)
@@ -605,44 +630,69 @@ def main(argv=None):
                         dpi=cli.dpi,
                     )
 
-                    for season in seasons:
-                        for i in range(len(dmi)):
-                            dmi_regressions[season][i].load(keep_attrs=True)
-                            dmi_ref_regressions[season][i].load(keep_attrs=True)
-                            dmi_correlations[season][i].load(keep_attrs=True)
-                            dmi_ref_correlations[season][i].load(keep_attrs=True)
+                    # The default plot parameters are overridden field by field by the ones of each variable.
+                    default_params = all_plot_params.get("default", {})
 
-                        fig_reg = plot_dmi.plot_maps(
-                            maps=dmi_regressions[season], ref_maps=dmi_ref_regressions[season], statistic="regression"
-                        )
-                        fig_cor = plot_dmi.plot_maps(
-                            maps=dmi_correlations[season], ref_maps=dmi_ref_correlations[season], statistic="correlation"
-                        )
+                    for var in statistics_var:
+                        var_plot_params = {**default_params, **all_plot_params.get(var, {})}
+                        map_params = {
+                            "vmin": var_plot_params.get("vmin"),
+                            "vmax": var_plot_params.get("vmax"),
+                            "vmin_diff": var_plot_params.get("vmin_diff"),
+                            "vmax_diff": var_plot_params.get("vmax_diff"),
+                            "cmap": var_plot_params.get("cmap", "RdBu_r"),
+                        }
+                        for season in seasons:
+                            for i in range(len(dmi)):
+                                dmi_regressions[var][season][i].load(keep_attrs=True)
+                                dmi_correlations[var][season][i].load(keep_attrs=True)
+                            for i in range(len(dmi_ref)):
+                                dmi_ref_regressions[var][season][i].load(keep_attrs=True)
+                                dmi_ref_correlations[var][season][i].load(keep_attrs=True)
 
-                        regression_description = plot_dmi.set_map_description(
-                            maps=dmi_regressions[season], ref_maps=dmi_ref_regressions[season], statistic="regression"
-                        )
-                        correlation_description = plot_dmi.set_map_description(
-                            maps=dmi_correlations[season], ref_maps=dmi_ref_correlations[season], statistic="correlation"
-                        )
+                            fig_reg = plot_dmi.plot_maps(
+                                maps=dmi_regressions[var][season],
+                                ref_maps=dmi_ref_regressions[var][season],
+                                statistic="regression",
+                                **map_params,
+                            )
+                            # Correlation colour bar limits are fixed by PlotDMI, only the colormap is used
+                            fig_cor = plot_dmi.plot_maps(
+                                maps=dmi_correlations[var][season],
+                                ref_maps=dmi_ref_correlations[var][season],
+                                statistic="correlation",
+                                **map_params,
+                            )
 
-                        reg_product = f"regression_{season}" if season != "annual" else "regression"
-                        cor_product = f"correlation_{season}" if season != "annual" else "correlation"
+                            regression_description = plot_dmi.set_map_description(
+                                maps=dmi_regressions[var][season],
+                                ref_maps=dmi_ref_regressions[var][season],
+                                statistic="regression",
+                            )
+                            correlation_description = plot_dmi.set_map_description(
+                                maps=dmi_correlations[var][season],
+                                ref_maps=dmi_ref_correlations[var][season],
+                                statistic="correlation",
+                            )
 
-                        plot_dmi.save_plot(
-                            fig_reg,
-                            diagnostic_product=reg_product,
-                            format=cli.save_format,
-                            metadata={"description": regression_description},
-                            dpi=cli.dpi,
-                        )
-                        plot_dmi.save_plot(
-                            fig_cor,
-                            diagnostic_product=cor_product,
-                            format=cli.save_format,
-                            metadata={"description": correlation_description},
-                            dpi=cli.dpi,
-                        )
+                            extra_keys = {"var": var, "season": season} if season != "annual" else {"var": var}
+
+                            plot_dmi.save_plot(
+                                fig_reg,
+                                diagnostic_product="regression",
+                                format=cli.save_format,
+                                metadata={"description": regression_description},
+                                extra_keys=extra_keys,
+                                dpi=cli.dpi,
+                            )
+                            plot_dmi.save_plot(
+                                fig_cor,
+                                diagnostic_product="correlation",
+                                format=cli.save_format,
+                                metadata={"description": correlation_description},
+                                extra_keys=extra_keys,
+                                dpi=cli.dpi,
+                            )
 
     cli.close_dask_cluster()
 

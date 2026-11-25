@@ -1,5 +1,7 @@
 """Tests for the Teleconnections CLI (parse_arguments + main orchestration)."""
 
+from unittest.mock import ANY
+
 import pytest
 
 from aqua.diagnostics.teleconnections.cli_teleconnections import main, parse_arguments
@@ -157,9 +159,15 @@ class TestMainExecutionFlow:
         compute_index + compute_regression + compute_correlation are called,
         and PlotDMI produces the index and map plots.
         """
+        dmi_block = {
+            **BASE_DMI_BLOCK,
+            "seasons": ["JJA"],
+            "statistics_var": ["tos", "tprate"],
+            "plot_params": {"default": {"vmin": -1, "vmax": 1}, "tprate": {"vmin": -2, "vmax": 2, "units": "mm/day"}},
+        }
         config_file = build_config(
             {
-                "teleconnections": {"DMI": BASE_TC["DMI"]},
+                "teleconnections": {"DMI": dmi_block},
             }
         )
 
@@ -167,12 +175,27 @@ class TestMainExecutionFlow:
 
         dmi_instance = mock_tc["DMI"].return_value
         assert mock_tc["DMI"].call_count == 2
-        assert dmi_instance.compute_regression.call_count == 2
-        assert dmi_instance.compute_correlation.call_count == 2
+        # 2 variables * 1 season * 2 (dataset + reference)
+        assert dmi_instance.compute_regression.call_count == 4
+        assert dmi_instance.compute_correlation.call_count == 4
+        dmi_instance.compute_regression.assert_any_call(var="tprate", season="JJA", units="mm/day")
+        dmi_instance.compute_regression.assert_any_call(var="tos", season="JJA", units=None)
+        dmi_instance.save_netcdf.assert_any_call(
+            dmi_instance.compute_regression.return_value,
+            diagnostic="dmi",
+            diagnostic_product="regression",
+            outputdir=ANY,
+            rebuild=ANY,
+            extra_keys={"var": "tprate", "season": "JJA"},
+        )
 
         mock_tc["PlotDMI"].assert_called_once()
         plot_dmi_instance = mock_tc["PlotDMI"].return_value
         plot_dmi_instance.plot_index.assert_called_once()
-        assert plot_dmi_instance.plot_maps.call_count == 2
+        # regression + correlation for each variable and season
+        assert plot_dmi_instance.plot_maps.call_count == 4
+        tprate_reg = plot_dmi_instance.plot_maps.call_args_list[2].kwargs
+        assert tprate_reg["statistic"] == "regression"
+        assert (tprate_reg["vmin"], tprate_reg["vmax"]) == (-2, 2)
         mock_tc["NAO"].assert_not_called()
         mock_tc["ENSO"].assert_not_called()
