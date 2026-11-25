@@ -134,6 +134,7 @@ class TitleBuilder:
         """Wrap a (long) title by iteratively splitting on markers.
         Splits the title into multiple lines for each marker,
         only if the line is longer than ``max_chars``.
+        Lines already separated by newlines in the title are checked and wrapped one by one.
 
         Args:
             title (str): Input title to wrap.
@@ -143,10 +144,10 @@ class TitleBuilder:
         Returns:
             str: Wrapped title with newline separators.
         """
-        if not title or len(title) <= max_chars:
+        lines = title.split("\n") if title else []
+        if all(len(line) <= max_chars for line in lines):
             return title
 
-        lines = [title]
         for marker in split_on:
             new_lines = []
             separator = f" {marker} "

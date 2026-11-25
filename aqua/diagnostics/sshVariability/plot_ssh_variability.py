@@ -50,7 +50,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         startdate=None,
         enddate=None,
         plot_options={},
-        figsize: tuple = (11, 8.5),
+        figsize: tuple = None,
         ax_pos: tuple = (1, 1, 1),
         vmin=None,
         vmax=None,
@@ -193,6 +193,8 @@ class SshVariabilityPlot(PlotBaseMixin):
             vmax = float(dataset_std.max(skipna=True))
 
         proj = get_projection(proj, **proj_params)
+        # a figsize given in plot_options still wins
+        plot_options = {"figsize": figsize, **plot_options}
         # fig = plt.figure(figsize=figsize)
         # ax = fig.add_subplot(ax_pos[0], ax_pos[1], ax_pos[2], projection=proj)
         if vmin == vmax:
@@ -267,7 +269,7 @@ class SshVariabilityPlot(PlotBaseMixin):
         exp_ref=None,
         startdate_ref=None,
         enddate_ref=None,
-        figsize: tuple = (11, 8.5),
+        figsize: tuple = None,
         ax_pos: tuple = (1, 1, 1),
         plot_options={},
         vmin_diff=None,
@@ -470,6 +472,7 @@ class SshVariabilityPlot(PlotBaseMixin):
                 # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
+                figsize=figsize,
                 loglevel=self.loglevel,
                 # cbar_label=cbar_label
             )
@@ -487,6 +490,7 @@ class SshVariabilityPlot(PlotBaseMixin):
                 # transform_first=True,
                 proj=proj,
                 gridlines=gridlines,
+                figsize=figsize,
                 loglevel=self.loglevel,
                 # cbar_label=cbar_label
             )
