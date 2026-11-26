@@ -18,7 +18,7 @@ from pathlib import Path
 
 from aqua.core.exceptions import NoDataError, NotEnoughDataError
 from aqua.core.util import DEFAULT_REALIZATION, to_list
-from aqua.diagnostics.base import DiagnosticCLI, get_diagnostic_configpath, template_parse_arguments
+from aqua.diagnostics.base import DiagnosticCLI, get_diagnostic_configpath, load_var_config, template_parse_arguments
 from aqua.diagnostics.trends import PlotTrends, Trends
 
 
@@ -50,12 +50,11 @@ def _save_and_plot(cli, diagnostic, coefficients, config):
         rebuild=cli.rebuild,
         loglevel=cli.loglevel,
     )
-    plotter.plot_trend(
-        **(config.get("plot_params") or {}),
-        rebuild=cli.rebuild,
-        save_format=cli.save_format,
-        dpi=cli.dpi,
-    )
+    plot_params = config.get("plot_params") or {}
+    default_params = plot_params.get("default") or {}
+    for var in coefficients.data_vars:
+        var_params = {**default_params, **(plot_params.get(var) or {})}
+        plotter.plot_trend(var=var, **var_params, rebuild=cli.rebuild, save_format=cli.save_format, dpi=cli.dpi)
 
 
 def _process_dataset(cli, dataset, config):
@@ -97,7 +96,12 @@ def _process_dataset(cli, dataset, config):
             _save_and_plot(cli, diagnostic, coefficients[variables], config)
         return
 
-    diagnostic.retrieve(var=variables, reader_kwargs=reader_kwargs)
+    units = {}
+    for var in variables:
+        var_config, _ = load_var_config(cli.config_dict, var, diagnostic="trends")
+        if var_config.get("units"):
+            units[var] = var_config["units"]
+    diagnostic.retrieve(var=variables, reader_kwargs=reader_kwargs, units=units)
     if dim_mean is None:
         coefficients = diagnostic.compute_trend()
         # Execute once at output time; regional selection also gets concrete coordinates.
