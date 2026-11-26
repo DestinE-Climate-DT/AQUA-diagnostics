@@ -114,8 +114,7 @@ diagnostics:
       config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-temperature.yaml",
                "${AQUA_CONFIG}/collections/legacy/europe/config-europe-precipitation.yaml",
                "${AQUA_CONFIG}/collections/legacy/europe/config-europe-wind.yaml",
-               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml",
-               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-salinity.yaml"]
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml"]
 
   ocean2d:
     biases:
