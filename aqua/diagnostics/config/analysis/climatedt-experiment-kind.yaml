@@ -69,6 +69,10 @@ default:
     teleconnections_nao: *era5                    # NAO index, regressions and correlations
     climate_metrics_gregory_t2m: *berkeley_earth  # gregory plot, 2m temperature reference
     climate_metrics_gregory_toa: *ceres_toa       # gregory plot, net TOA radiation reference
+    europe_temperature: *berkeley_earth           # 2m temperature over Europe
+    europe_precipitation: *mswep                  # precipitation over Europe
+    europe_wind: *era5                            # 10m wind speed over Europe
+    europe_sst: *esacci_sst                       # sea surface temperature of the European seas
   period:
     standard:
       startdate: "1990-01-01"
@@ -120,6 +124,8 @@ highresmip-hist-cmip6:
     seaice_concentration_sh: *era5
     water_cycle_precipitation: *era5
     climate_metrics_gregory_toa: *era5
+    europe_precipitation: *era5
+    europe_sst: *era5
   period:
     standard: &highresmip-cmip6-dates
       startdate: "1950-01-01"
