@@ -53,4 +53,9 @@ diagnostics:
     Sea Ice, Seasonal cycles: [seaice.seasonalcycle, seaice.seasonal_cycles, PlotSeaIce.seasonalcycle]
     Sea Ice, Differences: [seaice.bias, PlotSeaIce.bias]
 
+    Europe, Time series: europe.timeseries
+    Europe, Seasonal cycles: europe.seasonalcycles
+    Europe, Annual differences: europe.bias
+    Europe, Seasonal differences: europe.seasonal_bias
+
     Global maps: [Statistics_maps, atmglobalmean.statistics_maps]  # these apply only to old results, not produced anymore by AQUA

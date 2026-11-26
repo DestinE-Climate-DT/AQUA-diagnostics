@@ -47,6 +47,7 @@ diagnostics:
                 ]
     formulae: ['tnlwrf+tnswrf']
     center_time: true
+    include_global: true  # run the global mean before the regions; false runs only the regions
     params:
       default:
         hourly: False

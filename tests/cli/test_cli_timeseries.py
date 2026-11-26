@@ -166,6 +166,19 @@ class TestMainExecutionFlow:
         mock_ts["PlotSeasonalCycles"].assert_called_once()
         mock_ts["PlotSeasonalCycles"].return_value.plot_seasonalcycles.assert_called_once()
 
+    def test_include_global_false_runs_only_regions(self, build_config, mock_cluster, mock_ts):
+        """With ``include_global: false`` timeseries and seasonal cycles run only the listed regions, not the global mean."""
+        params = {"default": {**BASE_TIMESERIES["params"]["default"], "regions": ["europe"]}}
+        block = {"include_global": False, "params": params}
+        config_file = build_config(
+            {"timeseries": {**BASE_TIMESERIES, **block}, "seasonalcycles": {**BASE_SEASONALCYCLES, **block}}
+        )
+
+        main(["--config", config_file, "--loglevel", "WARNING"])
+
+        for diagnostic in ("Timeseries", "SeasonalCycles"):
+            assert {call.kwargs["region"] for call in mock_ts[diagnostic].call_args_list} == {"europe"}
+
     def test_gregory_full_pipeline(self, build_config, mock_cluster, mock_ts):
         """
         With the gregory block enabled (std=True), verify Gregory is created
