@@ -59,7 +59,12 @@ class PlotENSO(PlotBaseMixin):
         ).generate()
 
         fig, axs = indexes_plot(
-            indexes=indexes, thresh=thresh, suptitle=title, ylabel="Niño 3.4 index", labels=labels, loglevel=self.loglevel
+            indexes=indexes,
+            thresh=thresh,
+            suptitle=title,
+            ylabel="Niño 3.4 index",
+            labels=labels,
+            loglevel=self.loglevel,
         )
 
         if isinstance(axs, plt.Axes):
@@ -74,9 +79,13 @@ class PlotENSO(PlotBaseMixin):
 
             textoffset = 0.08
 
-            ax.text(x=ax.get_xlim()[1], y=2.0 + textoffset, s="El Niño", color="red", fontsize=10, ha="right", va="center")
+            ax.text(
+                x=ax.get_xlim()[1], y=2.0 + textoffset, s="El Niño", color="red", fontsize="small", ha="right", va="center"
+            )
 
-            ax.text(x=ax.get_xlim()[1], y=-2.0 + textoffset, s="La Niña", color="blue", fontsize=10, ha="right", va="center")
+            ax.text(
+                x=ax.get_xlim()[1], y=-2.0 + textoffset, s="La Niña", color="blue", fontsize="small", ha="right", va="center"
+            )
 
         return fig, axs
 

@@ -1,15 +1,10 @@
 from typing import Union
 
-import xarray as xr
-
 from aqua.core.graphics import plot_hovmoller
 from aqua.core.logger import log_configure
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver
 
 from .base import BaseMixin
-
-# set default options for xarray
-xr.set_options(keep_attrs=True)
 
 
 class MJO(BaseMixin):

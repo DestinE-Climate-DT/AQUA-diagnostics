@@ -1,10 +1,13 @@
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import pytest
 import xarray as xr
 
+from aqua.core.default import DEFAULT_FIGURE_WIDTH
+from aqua.core.util import figure_size
 from aqua.diagnostics.base import OutputSaver
 from tests.shared_constants import DPI, LOGLEVEL
 
@@ -121,21 +124,23 @@ def test_load_netcdf_roundtrip(base_saver, tmp_path):
 
 
 @pytest.mark.aqua
-def test_load_netcdf_date_match(base_saver):
-    """Requested dates must match the corresponding file metadata exactly."""
+@pytest.mark.parametrize("std, prefix", [(False, "AQUA_"), (True, "AQUA_std_")])
+def test_load_netcdf_date_match(base_saver, std, prefix):
+    """Requested dates must match the file metadata, whatever the format; a standard deviation has its own dates."""
     data = xr.Dataset({"data": ("x", [1, 2])})
-    metadata = {"AQUA_startdate": "1991-01-01", "AQUA_enddate": "1992-12-31"}
+    metadata = {prefix + "startdate": "1991-01-01", prefix + "enddate": "1992-12-31T00:00:00"}
     base_saver.save_netcdf(dataset=data, diagnostic_product="mean", metadata=metadata)
 
-    loaded = base_saver.load_netcdf(diagnostic_product="mean", startdate="19910101", enddate="1992-12-31")
+    loaded = base_saver.load_netcdf(diagnostic_product="mean", startdate="19910101", enddate="1992-12-31", std=std)
     assert isinstance(loaded, xr.Dataset)
 
-    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1992-01-01") is None
-    assert base_saver.load_netcdf(diagnostic_product="mean", enddate="1991-12-31") is None
+    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1992-01-01", std=std) is None
+    assert base_saver.load_netcdf(diagnostic_product="mean", enddate="1991-12-31", std=std) is None
+    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01", std=not std) is None
 
     # Each boundary can be checked independently.
-    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01"), xr.Dataset)
-    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", enddate="1992-12-31"), xr.Dataset)
+    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01", std=std), xr.Dataset)
+    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", enddate="1992-12-31", std=std), xr.Dataset)
 
 
 @pytest.mark.aqua
@@ -145,6 +150,17 @@ def test_load_netcdf_date_match_requires_metadata(base_saver):
 
     assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01") is None
     assert base_saver.load_netcdf(diagnostic_product="mean", enddate="1992-12-31") is None
+
+
+@pytest.mark.aqua
+def test_load_netcdf_date_match_on_variable(base_saver):
+    """A file written from a DataArray, as LatLonProfiles does, keeps the dates on its variable: they are checked there."""
+    filepath = base_saver._build_filepath(diagnostic_product="mean", file_format="nc")
+    os.makedirs(os.path.dirname(filepath))
+    xr.DataArray([1, 2], dims="x", name="data", attrs={"AQUA_startdate": "1991-01-01"}).to_netcdf(filepath)
+
+    assert isinstance(base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01"), xr.Dataset)
+    assert base_saver.load_netcdf(diagnostic_product="mean", startdate="1992-01-01") is None
 
 
 @pytest.mark.aqua
@@ -158,6 +174,21 @@ def test_load_netcdf_missing_file(base_saver, tmp_path):
         dataset=xr.Dataset({"data": ("x", [1, 2])}), diagnostic_product="mean", extra_keys={"var": "tprate"}
     )
     assert base_saver.load_netcdf(diagnostic_product="mean", extra_keys={"var": "2t"}) is None
+
+
+@pytest.mark.aqua
+def test_load_netcdf_expect_netcdf(base_saver):
+    """With expect_netcdf a missing or discarded file is an error, a successful load is not."""
+    base_saver.save_netcdf(dataset=xr.Dataset({"data": ("x", [1, 2])}), diagnostic_product="mean")
+
+    # AQUA loggers do not propagate, so caplog cannot see them: spy on the logger instead
+    with patch.object(base_saver.logger, "error") as error:
+        base_saver.load_netcdf(diagnostic_product="mean", expect_netcdf=True)
+        error.assert_not_called()
+
+        base_saver.load_netcdf(diagnostic_product="mean", startdate="1991-01-01", expect_netcdf=True)
+        base_saver.load_netcdf(diagnostic_product="other", expect_netcdf=True)
+        assert error.call_count == 2
 
 
 @pytest.mark.aqua
@@ -239,6 +270,22 @@ def test_save_figure_single_and_multiple_formats(base_saver, tmp_path):
     base_saver.save_figure(fig=fig, diagnostic_product="mean", extra_keys=extra_keys, extension=["png", "pdf"], dpi=DPI)
     pdf = os.path.join(tmp_path, "pdf", "dummy.mean.ci.IFS-NEMO.historical.r1.tprate.pdf")
     assert os.path.exists(pdf)
+
+
+@pytest.mark.aqua
+def test_save_figure_fixed_width(base_saver, tmp_path):
+    """Figures with the common width are saved exactly that wide, wider (with a warning) if the content sticks out."""
+    fig, _ = plt.subplots(figsize=figure_size(0.5))
+    base_saver.save_figure(fig=fig, diagnostic_product="width", extension="png", dpi=DPI)
+    image = plt.imread(os.path.join(tmp_path, "png", "dummy.width.ci.IFS-NEMO.historical.r1.png"))
+    assert image.shape[1] == pytest.approx(DEFAULT_FIGURE_WIDTH * DPI, abs=1)  # with "tight" it would be narrower
+
+    fig.text(1.02, 0.5, "outside the figure")
+    # AQUA loggers do not propagate, so caplog cannot see them: spy on the logger instead
+    with patch.object(base_saver.logger, "warning") as warning:
+        assert base_saver._fixed_width_bbox(fig).width > DEFAULT_FIGURE_WIDTH
+    warning.assert_called_once()
+    plt.close(fig)
 
 
 # @pytest.mark.aqua

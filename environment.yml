@@ -12,10 +12,14 @@ dependencies:
   # aqua-core from conda-forge brings python, smmregrid (and CDO on Linux), eccodes, cartopy, netcdf4, hdf5, h5py
   # with the pins of the aqua-core release; on macOS install CDO with Homebrew (brew install cdo)
   # keep the version in sync with pyproject.toml
-  - aqua-core>=1.2.3,<1.3.0
+  - aqua-core>=1.2.4,<1.3.0
   - cartopy_offlinedata # this is needed for MN5 HPC
   - python-dateutil<3 # botocore requires python-dateutil<3: with 3.0.0 conda-lock backtracks through all boto3 releases
-  - zarr>=3.1.6,<3.2 # z3fdb requires zarr~=3.1.6: keeps pip from replacing the conda zarr
+  # z3fdb (pip, fdb extra) requires zarr~=3.1.6: conda installs zarr through aqua-core,
+  # so pin it here or pip later replaces the conda zarr with its own
+  - zarr>=3.1.6,<3.2
+  # grpcio 1.85.2 is on conda-forge but not on PyPI: the pip solve of conda-lock fails on it
+  - grpcio!=1.85.2
   # ecmean depends on esmpy binary, so we need to install it first
   - esmpy<=8.9.1
   - pip
@@ -27,5 +31,4 @@ dependencies:
     - pyfdb
     - polytope-client
     - gsv-interface>=2.18.0
-    - z3fdb==5.23.2.27; sys_platform == "linux"
-    - z3fdb>=5.23.2.27; sys_platform != "linux"
+    - z3fdb>=5.25.0.33

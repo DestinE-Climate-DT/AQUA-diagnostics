@@ -1,5 +1,4 @@
 import pandas as pd
-import xarray as xr
 
 from aqua.core.graphics import plot_timeseries
 from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
@@ -7,8 +6,6 @@ from aqua.diagnostics.base import SAVE_FORMAT, TitleBuilder
 # from aqua.logger import log_configure
 # from aqua.exceptions import NoDataError
 from .base import BaseMixin
-
-xr.set_options(keep_attrs=True)
 
 
 class PlotEnsembleTimeseries(BaseMixin):
@@ -220,6 +217,7 @@ class PlotEnsembleTimeseries(BaseMixin):
             ens_label=model_str,
             figsize=figure_size,
             title=title,
+            legend_fontsize="medium",  # single-panel figure: larger legend than in panels of a grid
             loglevel=self.loglevel,
         )
         # Loop over if need to plot the ensemble members

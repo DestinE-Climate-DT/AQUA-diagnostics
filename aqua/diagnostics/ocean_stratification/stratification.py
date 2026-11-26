@@ -13,8 +13,6 @@ from .compute_mld import compute_mld_cont
 from .compute_rho import compute_rho
 from .convert_variables import convert_so, convert_thetao
 
-xr.set_options(keep_attrs=True)
-
 
 class Stratification(Diagnostic):
     """Diagnostic class for analyzing ocean stratification.

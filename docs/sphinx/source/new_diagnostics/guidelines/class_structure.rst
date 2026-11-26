@@ -65,7 +65,7 @@ Each diagnostic class must:
   round-trip test, which saves the results and reads them back with a new instance that never retrieved any data.
   When building the keys takes some logic, put it in a single helper shared by the two methods.
   Pass the ``startdate`` and ``enddate`` of the instance to ``load_netcdf()``, so that results computed over another period
-  are not loaded in place of the requested ones.
+  are not loaded in place of the requested ones. A standard deviation has its own period: pass its dates with ``std=True``.
   Results with no file on disk should be left untouched, so that ``load()`` can be called both before and after ``run()``.
 
 Comparison and Plot Classes

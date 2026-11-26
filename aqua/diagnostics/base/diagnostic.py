@@ -247,6 +247,7 @@ class Diagnostic:
         startdate: str = None,
         enddate: str = None,
         expect_netcdf: bool = False,
+        std: bool = False,
     ):
         """
         Load from a netcdf file previously written by save_netcdf.
@@ -266,6 +267,8 @@ class Diagnostic:
             startdate (str): The start date of the data. Default is None.
             enddate (str): The end date of the data. Default is None.
             expect_netcdf (bool): If True, a missing file is logged as an error instead of info. Default is False.
+            std (bool): If True, the file holds a standard deviation and the dates are matched against
+                        AQUA_std_startdate and AQUA_std_enddate. Default is False.
 
         Returns:
             xarray Dataset, DataArray or None: The data read from disk, None if there is no file.
@@ -284,6 +287,7 @@ class Diagnostic:
             enddate=enddate,
             extra_keys=extra_keys,
             expect_netcdf=expect_netcdf,
+            std=std,
         )
 
     def _outputsaver(self, diagnostic: str, outputdir: str = "."):
