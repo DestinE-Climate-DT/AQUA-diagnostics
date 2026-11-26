@@ -420,17 +420,24 @@ class LatLonProfiles(Diagnostic):
         seasons = SEASONS if freq == "seasonal" else [None]
         profiles = []
 
+        # A standard deviation can cover its own period. With none set, retrieve uses the analysis one.
+        startdate, enddate = self.startdate, self.enddate
+        if std:
+            startdate = self.std_startdate if self.std_startdate is not None else self.startdate
+            enddate = self.std_enddate if self.std_enddate is not None else self.enddate
+
         # Check every file, so that all the missing ones are reported and not only the first
         for season in seasons:
             data = self.load_netcdf(
                 diagnostic=self.diagnostic_name,
                 diagnostic_product=f"{self.mean_type}_profile",
                 outputdir=outputdir,
-                startdate=self.startdate,
-                enddate=self.enddate,
+                startdate=startdate,
+                enddate=enddate,
                 as_dataarray=True,
                 extra_keys=self._extra_keys(freq=freq, var=var, season=season, std=std),
                 expect_netcdf=expect_netcdf,
+                std=std,
             )
             if data is None:
                 self.logger.info("No file found for the %s %s profile", freq, season or var)

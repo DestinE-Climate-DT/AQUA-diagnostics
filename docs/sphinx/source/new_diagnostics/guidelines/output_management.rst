@@ -121,6 +121,10 @@ diagnostic can populate its results from disk when they are there and recompute 
 The ``extra_keys`` must be the same used when saving, otherwise the generated filename points to a different file.
 The file is read eagerly and closed before returning, so the caller can safely overwrite it afterwards.
 
+If ``startdate`` or ``enddate`` is given, a file whose ``AQUA_startdate`` or ``AQUA_enddate`` attributes do not match is not loaded.
+They are read at dataset level and, in a file with a single variable, also on that variable.
+With ``std=True`` the dates are matched against ``AQUA_std_startdate`` and ``AQUA_std_enddate``, for a file holding a standard deviation.
+
 .. note::
     Writing a DataArray to NetCDF stores all its attributes at variable level, while writing a Dataset keeps the
     ``OutputSaver`` metadata at dataset level. Pass ``as_dataarray=True`` when the data was saved as a DataArray:
