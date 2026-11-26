@@ -85,16 +85,13 @@ class DMI(BaseMixin):
         if self.data is None:
             raise NotEnoughDataError("Data not retrieved")
 
-        # Extract coordinates from definitions and convert longitudes to 0-360 if necessary
+        # Box limits from the definition. Both boxes lie in 50E-110E, where the 0-360 and -180/180
+        # longitude conventions coincide, so no conversion is needed.
         weio_coords = self.definition.get("weio")
         eeio_coords = self.definition.get("eeio")
 
-        # if self.data[self.var].lon.min() >= 0: # we need to convert to 0-360 if the data is in -180,180
-        # weio_lon = [lon_to_360(weio_coords["lon_limits"][i]) for i in range(2)]
-        # eeio_lon = [lon_to_360(eeio_coords["lon_limits"][i]) for i in range(2)]
-
-        self.logger.debug(f"WEIO coordinates: {weio_coords}")
-        self.logger.debug(f"EEIO coordinates: {eeio_coords}")
+        self.logger.debug("WEIO coordinates: %s", weio_coords)
+        self.logger.debug("EEIO coordinates: %s", eeio_coords)
 
         # Evaluation of the individual monthly climatology (globally) and then on the two regions separately
         clim = self.data[self.var].groupby("time.month").mean(dim="time")
