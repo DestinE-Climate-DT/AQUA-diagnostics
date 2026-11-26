@@ -21,7 +21,10 @@ from .ocean_trends import Trends as OceanTrends
 from .trends import Trends, PlotTrends
 
 
-DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "tools", "collections", "definitions"]
+# Folders installed in the AQUA configuration folder (plugin contract version 2 of aqua-core):
+# project-scoped in ~/.aqua/<dir>/diagnostics, flat in ~/.aqua/<dir>, templates in ~/.aqua/templates/<dir>
+DIAGNOSTIC_CONFIG_DIRECTORIES = ["analysis", "collections", "tools"]
+DIAGNOSTIC_FLAT_DIRECTORIES = ["definitions"]
 DIAGNOSTIC_TEMPLATE_DIRECTORIES = ["collections"]
 
 __all__ = ["__version__", "NAO", "ENSO", "MJO",
@@ -40,7 +43,15 @@ __all__ = ["__version__", "NAO", "ENSO", "MJO",
            "Boxplots", "PlotBoxplots", "extract_realizations",
            "Hovmoller", "PlotHovmoller", "Stratification", "PlotStratification", "PlotMLD",
            "Trends", "PlotTrends", "PlotOceanTrends", "OceanTrends",
-           "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
+           "DIAGNOSTIC_CONFIG_DIRECTORIES", "DIAGNOSTIC_FLAT_DIRECTORIES", "DIAGNOSTIC_TEMPLATE_DIRECTORIES"]
+
 
 def get_install_dirs():
-    return {"config": DIAGNOSTIC_CONFIG_DIRECTORIES, "templates": DIAGNOSTIC_TEMPLATE_DIRECTORIES}
+    """Folders installed by ``aqua install`` (entry point ``diagnostics`` of ``aqua.plugins``, contract version 2)."""
+    return {
+        "contract": 2,
+        "config": DIAGNOSTIC_CONFIG_DIRECTORIES,
+        "flat": DIAGNOSTIC_FLAT_DIRECTORIES,
+        "templates": DIAGNOSTIC_TEMPLATE_DIRECTORIES,
+        "files": [],
+    }

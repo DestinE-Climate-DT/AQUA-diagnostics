@@ -57,11 +57,11 @@ aqua install <machine>
 
 Final step is to add [AQUA catalogs](https://aqua.readthedocs.io/en/latest/getting_started.html#catalog-installation)
 ```bash
-aqua add <catalog>
+aqua catalog add <catalog>
 ```
 For example, to add the catalog for `climatedt-phase1`, run:
 ```bash
-aqua add climatedt-phase1
+aqua catalog add climatedt-phase1
 ```
 
 > **Note:** The AQUA-core is installed via pypi dependency. AQUA-core can also be installed in an editable mode.

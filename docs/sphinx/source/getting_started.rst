@@ -19,9 +19,9 @@ Before you start
    .. code-block:: bash
 
        aqua install <machine>
-       aqua add <catalog>
+       aqua catalog add <catalog>
 
-   For example ``aqua install lumi`` and ``aqua add climatedt-gen2``.
+   For example ``aqua install lumi`` and ``aqua catalog add climatedt-gen2``.
    The details are described in the AQUA-core
    `Getting Started <https://aqua.readthedocs.io/en/latest/getting_started.html>`_
    and `console <https://aqua.readthedocs.io/en/latest/aqua_console.html>`_ pages.
@@ -30,8 +30,9 @@ Before you start
    the files used by the diagnostics:
 
    - ``templates/collections``: one template configuration file for each diagnostic (the starting point to write your own);
-   - ``collections`` and ``analysis``: the configuration files used by ``aqua analysis`` (see :ref:`first-diagnostic-analysis`);
-   - ``definitions`` and ``tools``: shared definitions, such as the regions, and diagnostic-specific settings.
+   - ``collections/diagnostics`` and ``analysis/diagnostics``: the configuration files used by ``aqua analysis``
+     (see :ref:`first-diagnostic-analysis`);
+   - ``definitions`` and ``tools/diagnostics``: shared definitions, such as the regions, and diagnostic-specific settings.
 
 3. **Find your data.** Diagnostics read data through the AQUA ``Reader``, so you need the *catalog*,
    *model*, *experiment* and *source* of your dataset. You can list what is available with:

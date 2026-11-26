@@ -35,7 +35,7 @@ def main(argv=None):
     cli = DiagnosticCLI(
         args,
         diagnostic_name=TOOLNAME_KEY,
-        default_config="config_radiation-boxplots.yaml",
+        default_config="config-boxplots.yaml",
     )
 
     # Prepare CLI (load config, setup logging, etc.)

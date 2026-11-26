@@ -201,16 +201,16 @@ and, for each CLI, to the jinja file(s) to read:
 .. code-block:: yaml
 
     job:
-      experiment_kind: "${AQUA_CONFIG}/analysis/climatedt-experiment-kind.yaml"
+      experiment_kind: "${AQUA_CONFIG}/analysis/${AQUA_PROJECT}/climatedt-experiment-kind.yaml"
 
     diagnostics:
       atmosphere2d:
         biases:
-          config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
-                   "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]
+          config: ["${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
+                   "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]
         timeseries:
-          config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
-                   "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]
+          config: ["${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
+                   "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]
 
 A list of files runs the CLI once for each file.
 The analysis file is given with ``--config`` and the kind with ``--kind``:
@@ -370,9 +370,9 @@ and add its name to one of the lists of ``run``:
     diagnostics:
       snow:
         biases:
-          config: "${AQUA_CONFIG}/collections/jinja/snow/config-snow-cover.j2"
+          config: "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/snow/config-snow-cover.j2"
         timeseries:
-          config: "${AQUA_CONFIG}/collections/jinja/snow/config-snow-cover.j2"
+          config: "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/jinja/snow/config-snow-cover.j2"
 
 **5. Create the legacy file.**
 Create ``config/collections/legacy/snow/config-snow-cover.yaml`` with the same name.
@@ -442,7 +442,7 @@ Copy the jinja file and replace every ``{{ ... }}`` with the value it has in the
             std_enddate: '2014-12-31'
 
 Then register it in ``config.aqua-analysis-legacy.yaml`` exactly as in step 4,
-with the path ``${AQUA_CONFIG}/collections/legacy/snow/config-snow-cover.yaml``.
+with the path ``${AQUA_CONFIG}/collections/${AQUA_PROJECT}/legacy/snow/config-snow-cover.yaml``.
 
 **6. Check and run.**
 The test ``tests/config/test_analysis_config_contract.py`` renders every jinja file with every kind, checks that the slot

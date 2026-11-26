@@ -12,7 +12,16 @@ pytestmark = [pytest.mark.aqua, pytest.mark.diagnostics]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DIAGNOSTICS_ROOT = REPO_ROOT / "aqua" / "diagnostics"
-ANALYSIS_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "config.aqua-analysis.yaml"
+ANALYSIS_DIR = DIAGNOSTICS_ROOT / "config" / "analysis"
+ANALYSIS_CONFIG = ANALYSIS_DIR / "config.aqua-analysis.yaml"
+ANALYSIS_CONFIGS = [
+    ANALYSIS_CONFIG,
+    ANALYSIS_DIR / "config.aqua-analysis-legacy.yaml",
+    pytest.param(
+        ANALYSIS_DIR / "config.aqua-analysis-ensemble.yaml",
+        marks=pytest.mark.xfail(strict=True, reason="ensemble_ocean2d points to a missing config-ocean2d-ensemble.yaml"),
+    ),
+]
 EXPERIMENT_KIND_CONFIG = DIAGNOSTICS_ROOT / "config" / "analysis" / "climatedt-experiment-kind.yaml"
 JINJA_COLLECTIONS_DIR = DIAGNOSTICS_ROOT / "config" / "collections" / "jinja"
 LEGACY_COLLECTIONS_DIR = DIAGNOSTICS_ROOT / "config" / "collections" / "legacy"
@@ -32,12 +41,19 @@ def _as_list(value):
     return [value]
 
 
-def _resolve_collection_path(path_value):
-    prefix = "${AQUA_CONFIG}/collections/"
+# Project name of aqua-diagnostics: its entry point name in the aqua.plugins group
+PROJECT = "diagnostics"
+
+
+def _resolve_config_path(path_value):
+    """Map ``${AQUA_CONFIG}/<folder>/${AQUA_PROJECT}/<file>`` to the repository, None for other paths."""
+    prefix = "${AQUA_CONFIG}/"
     if not isinstance(path_value, str) or not path_value.startswith(prefix):
         return None
-    relative_path = path_value[len(prefix) :]
-    return DIAGNOSTICS_ROOT / "config" / "collections" / relative_path
+    folder, project, relative_path = path_value[len(prefix) :].split("/", 2)
+    if project.replace("${AQUA_PROJECT}", PROJECT) != PROJECT:
+        return Path(path_value)  # no project level: reported as missing
+    return DIAGNOSTICS_ROOT / "config" / folder / relative_path
 
 
 def test_analysis_config_run_groups_reference_existing_diagnostics():
@@ -77,9 +93,10 @@ def test_analysis_config_cli_paths_exist():
     assert not missing_paths, f"CLI aliases point to missing scripts: {missing_paths}."
 
 
-def test_analysis_config_collection_files_exist():
-    """Collection config references in diagnostics must exist."""
-    cfg = _load_analysis_config()
+@pytest.mark.parametrize("analysis_config", ANALYSIS_CONFIGS, ids=["default", "legacy", "ensemble"])
+def test_analysis_config_collection_files_exist(analysis_config):
+    """Collection config references in diagnostics must exist in the project folder."""
+    cfg = load_yaml(str(analysis_config))
 
     missing_collection_files = []
     for diagnostic_group, diagnostic_entries in cfg["diagnostics"].items():
@@ -89,11 +106,18 @@ def test_analysis_config_collection_files_exist():
                 continue
 
             for config_path in _as_list(config_option):
-                resolved_path = _resolve_collection_path(config_path)
+                resolved_path = _resolve_config_path(config_path)
                 if resolved_path is not None and not resolved_path.is_file():
                     missing_collection_files.append((diagnostic_group, cli_alias, str(config_path)))
 
     assert not missing_collection_files, f"Diagnostics reference missing collection config files: {missing_collection_files}."
+
+
+def test_analysis_config_experiment_kind_exists():
+    """The experiment kind file is read from the analysis folder of the project."""
+    experiment_kind = _load_analysis_config()["job"]["experiment_kind"]
+    assert _resolve_config_path(experiment_kind) == EXPERIMENT_KIND_CONFIG
+    assert EXPERIMENT_KIND_CONFIG.is_file()
 
 
 # TODO(aqua-core #2834): this local renderer exists only because the CI-pinned aqua-core (from PyPI)

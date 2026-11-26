@@ -47,7 +47,7 @@ def main(argv=None):
 
     # Initialize and prepare CLI
     cli = DiagnosticCLI(
-        args=args, diagnostic_name="seaice", default_config="config_seaice.yaml", log_name="SeaIce CLI"
+        args=args, diagnostic_name="seaice", default_config="config-seaice.yaml", log_name="SeaIce CLI"
     ).prepare()
     cli.open_dask_cluster()
 

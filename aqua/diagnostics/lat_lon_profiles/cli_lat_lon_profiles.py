@@ -315,7 +315,7 @@ def main(argv=None):
 
     # Initialize and prepare CLI
     cli = DiagnosticCLI(
-        args, diagnostic_name="lat_lon_profiles", default_config="config_lat_lon_profiles.yaml", log_name="LatLonProfiles CLI"
+        args, diagnostic_name="lat_lon_profiles", default_config="config-lat_lon_profiles.yaml", log_name="LatLonProfiles CLI"
     ).prepare()
 
     cli.open_dask_cluster()

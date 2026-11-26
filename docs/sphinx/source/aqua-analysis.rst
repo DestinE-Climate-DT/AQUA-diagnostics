@@ -151,6 +151,8 @@ The configuration file is divided in three main sections:
 
     The configuration file allows for the definition of a custom folder path where the individual diagnostics configuration files are stored.
     This is done by setting an environment variable ``AQUA_CONFIG``.
+    Paths use ``${AQUA_CONFIG}/collections/${AQUA_PROJECT}/...``: ``aqua analysis`` sets ``AQUA_PROJECT`` to the active project
+    (``diagnostics`` for AQUA-diagnostics), so the same file works for every project.
 
 Job
 ^^^

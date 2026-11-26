@@ -39,6 +39,8 @@ jobs:
       enable-coverage: false
       install-mode: 'cross-check'
       aqua-core-ref: ${{ inputs.aqua_core_ref || 'main' }}
+      # composite CI actions from the same ref, so they match the console of the aqua-core under test
+      aqua-actions-ref: ${{ inputs.aqua_core_ref || 'main' }}
       test-data-source: 'auto'
     secrets:
       AQUA_GITHUB_PAT: ${{ secrets.AQUA_GITHUB_PAT }}

@@ -33,7 +33,7 @@ def main(argv=None):
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     cli = DiagnosticCLI(
-        args, diagnostic_name="ocean3d", default_config="config-ocean3d-trend-drift.yaml", log_name="OceanDrift CLI"
+        args, diagnostic_name="ocean3d", default_config="config-drift.yaml", log_name="OceanDrift CLI"
     ).prepare()
     cli.open_dask_cluster()
 

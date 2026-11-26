@@ -39,7 +39,7 @@ def main(argv=None):
     args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
-    cli = DiagnosticCLI(args=args, diagnostic_name="timeseries", default_config="config_timeseries_atm.yaml")
+    cli = DiagnosticCLI(args=args, diagnostic_name="timeseries", default_config="config-timeseries.yaml")
     cli.prepare()
     cli.open_dask_cluster()
 

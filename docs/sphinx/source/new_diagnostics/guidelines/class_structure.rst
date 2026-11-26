@@ -131,8 +131,12 @@ The configuration files shipped with AQUA-diagnostics are copied in the AQUA con
 (by default ``$HOME/.aqua``) by the ``aqua install`` command of the AQUA console (see :ref:`getting_started`).
 The console finds them through the ``aqua.plugins`` entry point declared in the ``pyproject.toml`` of the package,
 which points to the ``get_install_dirs()`` function of ``aqua.diagnostics``.
-This function returns the folders to be installed (``DIAGNOSTIC_CONFIG_DIRECTORIES`` and
-``DIAGNOSTIC_TEMPLATE_DIRECTORIES`` in ``aqua/diagnostics/__init__.py``).
+This function returns the folders to be installed following the plugin contract version 2 of AQUA-core
+(``DIAGNOSTIC_CONFIG_DIRECTORIES``, ``DIAGNOSTIC_FLAT_DIRECTORIES`` and ``DIAGNOSTIC_TEMPLATE_DIRECTORIES``
+in ``aqua/diagnostics/__init__.py``).
+AQUA-diagnostics is the ``diagnostics`` project (the name of its entry point; the term "project" is provisional):
+``analysis``, ``collections`` and ``tools`` are installed in a ``diagnostics`` subfolder,
+so that other projects can install their own next to them, while ``definitions`` and the templates stay flat.
 The mechanism is described in the AQUA-core
 `documentation <https://aqua.readthedocs.io/en/latest/aqua_console.html#how-aqua-discovers-installable-components>`_.
 
@@ -153,14 +157,17 @@ After the installation the folder structure is:
 
     $HOME/.aqua/
         ├── analysis/
+        │   └── diagnostics/
         ├── collections/
+        │   └── diagnostics/
         ├── definitions/
         │   └── regions.yaml
         ├── templates/
         │   └── collections/
         │       └── config-<diagnostic>.yaml
         └── tools/
-            └── <diagnostic>/
+            └── diagnostics/
+                └── <diagnostic>/
 
 The ``definitions/`` folder contains shared lookup files used by all diagnostics.
 ``regions.yaml`` is the centralized registry of all available geographic regions:
@@ -174,6 +181,9 @@ so with the limits alone the mean would silently be global.
 
 The ``tools/`` folder contains a subfolder only for the diagnostics that need settings or lookup files
 *specific to that diagnostic* (e.g. custom index definitions for teleconnections).
+Read it with ``get_diagnostic_configpath("<diagnostic>", folder="tools")``, which returns the folder of the active
+project.
+A command line interface run without ``--config`` reads its ``default_config`` from ``templates/collections``.
 
 .. note::
     If AQUA-diagnostics is installed in editable mode, with ``aqua install <machine> --diagnostics <path/to/AQUA-diagnostics>``,
