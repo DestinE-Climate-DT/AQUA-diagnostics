@@ -102,9 +102,9 @@ def main(argv=None):
                         enddate = round_enddate(pd.Timestamp(max(t.enddate for t in ts)))
                         cli.logger.info(f"Total start date: {startdate}, end date: {enddate}")
 
-                        # Initialize a list of len from the number of references (empty without references)
-                        ts_ref = [None] * len(cli.config_dict.get("references", []))
+                        # Initialize a list of len from the number of references
                         if "references" in cli.config_dict:
+                            ts_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference)
@@ -251,9 +251,9 @@ def main(argv=None):
                         startdate = pd.Timestamp(min(t.startdate for t in ts))
                         enddate = pd.Timestamp(max(t.enddate for t in ts))
 
-                        # Initialize a list of len from the number of references (empty without references)
-                        ts_ref = [None] * len(cli.config_dict.get("references", []))
+                        # Initialize a list of len from the number of references
                         if "references" in cli.config_dict:
+                            ts_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference)
@@ -404,9 +404,9 @@ def main(argv=None):
                         startdate = pd.Timestamp(min(s.startdate for s in sc))
                         enddate = pd.Timestamp(max(s.enddate for s in sc))
 
-                        # Initialize a list of len from the number of references (empty without references)
-                        sc_ref = [None] * len(cli.config_dict.get("references", []))
+                        # Initialize a list of len from the number of references
                         if "references" in cli.config_dict:
+                            sc_ref = [None] * len(cli.config_dict["references"])
                             for i, reference in enumerate(cli.config_dict["references"]):
                                 cli.logger.info(f"Running reference: {reference}, variable: {var}")
                                 reference_args = cli.reference_args(reference)

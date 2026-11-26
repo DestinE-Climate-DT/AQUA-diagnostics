@@ -112,7 +112,6 @@ Here we describe only the specific settings for the time series diagnostic.
   The parameters specific to a single variable are merged with the default parameters, giving priority to the specific ones.
   The global mean is always computed before the ``regions`` of each variable, unless ``include_global: false`` is set
   (the same key is available in the ``seasonalcycles`` block).
-  Without a ``references`` block, only the datasets are plotted.
 
 .. code-block:: yaml
 
