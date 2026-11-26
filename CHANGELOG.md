@@ -10,6 +10,7 @@ Main changes:
 
 Complete list:
 - New Europe collection (#595)
+- OutputSaver: load_netcdf date check fix (#593)
 
 ## [v0.27.0]
 
