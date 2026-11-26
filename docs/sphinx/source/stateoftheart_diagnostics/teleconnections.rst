@@ -7,7 +7,7 @@ Description
 -----------
 
 The teleconnections diagnostic is a set of tools to compute the most relevant teleconnections.
-NAO (North Atlantic Oscillation), ENSO (El Niño Southern Oscillation) and MJO (Madden-Julian Oscillation) are the teleconnections currently implemented.
+NAO (North Atlantic Oscillation), ENSO (El Niño Southern Oscillation), DMI (Dipole Mode Index) and MJO (Madden-Julian Oscillation) are the teleconnections currently implemented.
 The diagnostic is built to evaluate the teleconnections indices and to compute regression and correlation maps with respect to the teleconnection index.
 
 .. note::
@@ -16,19 +16,23 @@ The diagnostic is built to evaluate the teleconnections indices and to compute r
 Classes
 -------
 
-There are three classes for the analysis:
+There are four classes for the analysis:
 
 * **NAO**: computes the NAO index based on mean sea level pressure (msl) using the station-based method, and computes regression and correlation maps with respect to the NAO index.
 
 * **ENSO**: computes the ENSO index based on sea surface temperature (tos) using the Niño3.4 region, and computes regression and correlation maps with respect to the ENSO index.
 
+* **DMI**: computes the Dipole Mode Index as the difference between the SST anomalies of the western (10S-10N, 50E-70E) and eastern (10S-0, 90E-110E) equatorial Indian Ocean, as in Saji et al. (1999), and computes regression and correlation maps with respect to the DMI index.
+
 * **MJO**: computes the MJO Hovmoeller plots based on the top net thermal radiation flux (tnlwrf) variable.
 
-There are three other classes for the plots:
+There are four other classes for the plots:
 
 * **PlotNAO**: produces the NAO index time series and the regression and correlation maps.
 
 * **PlotENSO**: produces the ENSO index time series and the regression and correlation maps.
+
+* **PlotDMI**: produces the DMI index time series and the regression and correlation maps.
 
 * **PlotMJO**: produces the MJO Hovmoeller plots.
 
@@ -37,6 +41,9 @@ File structure
 
 * The diagnostic is located in the ``aqua/diagnostics/teleconnections`` directory, which contains the source code and the command line interface (CLI) script.
 * A template configuration file is available at ``aqua/diagnostics/templates/collections/config-teleconnections.yaml``
+* The configuration files run by ``aqua analysis`` are in ``aqua/diagnostics/config/collections/jinja/teleconnections``
+  (``legacy`` for the version with hard-coded dates): ``config-teleconnections-nao`` for the NAO and
+  ``config-teleconnections-ocean`` for ENSO and DMI.
 * Notebooks are available in the ``notebooks/diagnostics/teleconnections`` directory and contain examples of how to use the diagnostic.
 * Interface files to specify custom regions or other variable names for the index evaluation are available in the ``aqua/diagnostics/config/tools/teleconnections/definitions`` directory.
 
@@ -54,7 +61,7 @@ By default, the diagnostic compares against the ERA5 dataset, with the index eva
 The necessary variables for the default evaluation are:
 
 * ``msl`` (mean sea level pressure) for NAO
-* ``tos`` (sea surface temperature) for ENSO
+* ``tos`` (sea surface temperature) for ENSO and DMI, and ``tprate`` (total precipitation rate) for their regression and correlation maps
 * ``tnlwrf`` (top net thermal radiation flux) for MJO
 
 Other variables can be used for the regression and correlation maps.
@@ -148,14 +155,19 @@ Here we describe only the specific settings for the teleconnections diagnostic.
 
     ``ENSO``: a block, nested in the ``teleconnections`` block, that contains the details required for the ENSO teleconnection.
 
-    Both blocks contain the following options:
+    ``DMI``: a block, nested in the ``teleconnections`` block, that contains the details required for the DMI teleconnection.
+
+    The ``NAO``, ``ENSO`` and ``DMI`` blocks contain the following options:
 
         * ``run``: Whether to run the diagnostic.
         * ``diagnostic_name``: Name of the diagnostic.
-        * ``months_window``: Number of months to use for the rolling mean.
+        * ``months_window``: Number of months to use for the rolling mean (``NAO`` and ``ENSO`` only).
         * ``seasons``: List of seasons to consider for the analysis.
         * ``statistics_var``: List of variables over which to compute the regression and correlation.
         * ``plot_params``: A dictionary containing the parameters for the plots, such as the color bar range and the colormap.
+          The ``default`` entry applies to all variables and is overridden by the entry of each variable,
+          which can also set the ``units`` of the regression maps. The color bar range of the correlation maps
+          is fixed (-1 to 1, and -0.5 to 0.5 for the difference) for ENSO and DMI.
 
 .. code-block:: yaml
 
@@ -194,6 +206,25 @@ Here we describe only the specific settings for the teleconnections diagnostic.
                         vmax_diff: 4
                         cmap: 'BrBG'
                         units: 'mm/day'
+            DMI:
+                run: true
+                diagnostic_name: 'dmi'
+                seasons: ['SON']
+                statistics_var: ['tos', 'tprate']
+                plot_params:
+                    default:
+                        vmin: -1
+                        vmax: 1
+                        vmin_diff: -0.5
+                        vmax_diff: 0.5
+                        cmap: 'RdBu_r'
+                    tprate:
+                        vmin: -2
+                        vmax: 2
+                        vmin_diff: -1.5
+                        vmax_diff: 1.5
+                        cmap: 'BrBG'
+                        units: 'mm/day'
 
 Output
 ------
@@ -202,6 +233,7 @@ The diagnostic produces the following outputs:
 
 * NAO: North Atlantic Oscillation index, regression and correlation maps.
 * ENSO: El Niño Southern Oscillation index, regression and correlation maps.
+* DMI: Dipole Mode Index, regression and correlation maps.
 * MJO: Madden-Julian Oscillation Hovmoeller plots of the Mean top net thermal radiation flux variable.
 
 Plots are saved in both PDF and PNG format.
@@ -238,6 +270,7 @@ Notebooks are stored in ``notebooks/diagnostics/teleconnections``:
 
 - `NAO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/NAO.ipynb>`_
 - `ENSO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/ENSO.ipynb>`_
+- `DMI <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/DMI.ipynb>`_
 - `statistical_validation <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/statistical_validation.ipynb>`_
 - `MJO <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/tree/main/notebooks/diagnostics/teleconnections/MJO.ipynb>`_
 

@@ -52,11 +52,11 @@ cli:
   boxplots: "boxplots/cli_boxplots.py"
   drift: "ocean_drift/cli_ocean_drift.py"
   ecmean: "ecmean/cli_ecmean.py"
-  enso: "teleconnections/cli_teleconnections.py"
   gregory: "timeseries/cli_timeseries.py"
   histogram: "histogram/cli_histogram.py"
   lat_lon_profiles: "lat_lon_profiles/cli_lat_lon_profiles.py"
   nao: "teleconnections/cli_teleconnections.py"
+  ocean: "teleconnections/cli_teleconnections.py"
   seaice: "seaice/cli_seaice.py"
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
   stratification: "ocean_stratification/cli_ocean_stratification.py"
@@ -167,8 +167,8 @@ diagnostics:
   teleconnections:
     nao:
       config: "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/legacy/teleconnections/config-teleconnections-nao.yaml"
-    enso:
-      config: "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/legacy/teleconnections/config-teleconnections-enso.yaml"
+    ocean:
+      config: "${AQUA_CONFIG}/collections/${AQUA_PROJECT}/legacy/teleconnections/config-teleconnections-ocean.yaml"
 
   water_cycle:
     timeseries:
