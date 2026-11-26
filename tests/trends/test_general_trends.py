@@ -45,6 +45,19 @@ def test_trends_region_dim_mean():
 
 
 @pytest.mark.diagnostics
+def test_trends_units_conversion():
+    """Units requested at retrieval are converted before the fit."""
+    trend = Trends(catalog="ci", model="FESOM", exp="hpz3", source="monthly-2d", regrid="r100", loglevel=loglevel)
+    trend.retrieve(var="sithick")
+    reference = trend.compute_trend()
+    trend.retrieve(var="sithick", units={"sithick": "cm"})
+    converted = trend.compute_trend()
+
+    assert converted.sithick.attrs["units"] == "cm/year"
+    xr.testing.assert_allclose(converted.sithick, reference.sithick * 100)
+
+
+@pytest.mark.diagnostics
 def test_lazy_trend_metadata_and_save(icon_test_r2b0_short_reader, icon_test_r2b0_short_data, tmp_path):
     """Fit without execution, then preserve the known slope and provenance through writing."""
     source = icon_test_r2b0_short_data
