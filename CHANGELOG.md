@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.28.0):
 Main changes:
 
 Complete list:
+- Trends: improvements of the current settings (#602)
 - New Europe collection (#595)
 - OutputSaver: load_netcdf date check fix (#593)
 
