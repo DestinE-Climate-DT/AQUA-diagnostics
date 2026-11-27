@@ -65,8 +65,11 @@ def main(argv=None):
                 expected=config.get("expected", 0.0),
                 diagnostic_name=diagnostic_name,
                 outputdir=cli.outputdir,
+                rebuild=cli.rebuild,
+                save_format=cli.save_format,
+                dpi=cli.dpi,
                 loglevel=cli.loglevel,
-            ).plot(save_format=cli.save_format, dpi=cli.dpi, rebuild=cli.rebuild)
+            ).plot()
     finally:
         cli.close_dask_cluster()
 

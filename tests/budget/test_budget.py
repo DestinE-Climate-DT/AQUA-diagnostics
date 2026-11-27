@@ -131,11 +131,13 @@ def test_load_checks_the_period(diag, tmp_path):
 def test_plot(diag, tmp_path):
     """The plot class works from the result alone and writes the two figures, showing the expected value."""
     diag.compute_result(**OCEAN)
-    plot = PlotBudget(data=diag.result, name="ocean", expected=0.5, outputdir=str(tmp_path), loglevel=LOGLEVEL)
+    plot = PlotBudget(
+        data=diag.result, name="ocean", expected=0.5, outputdir=str(tmp_path), save_format="png", dpi=DPI, loglevel=LOGLEVEL
+    )
     assert "ERA5" in plot.set_title()
     assert "0.5" in plot.set_description(difference=True)
     np.testing.assert_allclose(plot.difference, NET_FLUX - TENDENCY, rtol=APPROX_REL)
-    figures = plot.plot(save_format="png", dpi=DPI)
+    figures = plot.plot()
     _, ax = figures[1]
     assert 0.5 in [line.get_ydata()[0] for line in ax.get_lines()]
     pngs = sorted(tmp_path.rglob("*.png"))
