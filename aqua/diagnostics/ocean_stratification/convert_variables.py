@@ -1,9 +1,10 @@
+"""Functions to convert ocean variables to TEOS-10 standard quantities."""
+
 import xarray as xr
 
 
 def convert_so(so):
-    """
-    Convert practical salinity to absolute salinity using a TEOS-10 approximation.
+    """Convert practical salinity to absolute salinity using a TEOS-10 approximation.
 
     Args:
         so (dask.array.core.Array): masked array containing the practical salinity
@@ -16,14 +17,14 @@ def convert_so(so):
         Uses an approximation from TEOS-10 equations and may yield different results,
         particularly in the Baltic Sea.
         Reference: http://www.teos-10.org/pubs/gsw/pdf/SA_from_SP.pdf
+
     """
     abs_so = so / 0.99530670233846
     return abs_so
 
 
 def convert_thetao(abs_so, thetao):
-    """
-    Convert potential temperature to conservative temperature.
+    """Convert potential temperature to conservative temperature.
 
     Args:
         abs_so (dask.array.core.Array): masked array containing the absolute
@@ -38,6 +39,7 @@ def convert_thetao(abs_so, thetao):
     Notes:
         Uses an approximation based on TEOS-10.
         Reference: http://www.teos-10.org/pubs/gsw/html/gsw_CT_from_pt.html
+
     """
     x = xr.ufuncs.sqrt(0.0248826675584615 * abs_so)
     y = thetao * 0.025e0

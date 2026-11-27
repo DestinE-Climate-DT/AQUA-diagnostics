@@ -7,7 +7,7 @@ from dask.distributed import Client, LocalCluster
 from tropical_rainfall import TropicalRainfall
 
 from aqua import Reader
-from aqua.core.configurer import ConfigPath
+from aqua.core.configurer import ConfigContext
 from aqua.core.logger import log_configure
 from aqua.core.util import add_pdf_metadata, create_folder, get_arg
 
@@ -50,7 +50,7 @@ class TropicalRainfallCLI:
         self.nproc = get_arg(args, "nproc", config["compute_resources"]["nproc"])
         self.xmax = get_arg(args, "xmax", config["plot"]["xmax"])
 
-        machine = ConfigPath().get_machine()
+        machine = ConfigContext(loglevel=self.loglevel).machine
         path_to_output = get_arg(args, "outputdir", config["output"][machine])
         path_to_buffer = get_arg(args, "bufferdir", config["buffer"][machine])
 

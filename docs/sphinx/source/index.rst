@@ -8,6 +8,8 @@ Welcome to AQUA-diagnostics' documentation!
    installation
    getting_started
    container
+   aqua-analysis
+   analysis_collections
    stateoftheart_diagnostics/index
    frontier_diagnostics/index
    ensemble/index

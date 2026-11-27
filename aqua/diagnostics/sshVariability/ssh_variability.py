@@ -1,15 +1,11 @@
 import gc
 import sys
 
-import xarray as xr
-
 from .base import BaseMixin
 
 # import pandas as pd
 # from aqua.fldstat import AreaSelection
 # from aqua.exceptions import NoDataError, NoObservationError, NotEnoughDataError
-
-xr.set_options(keep_attrs=True)
 
 
 class SshVariabilityCompute(BaseMixin):
@@ -45,13 +41,14 @@ class SshVariabilityCompute(BaseMixin):
         Initialize the 'SshVariabilityCompute' class.
 
         This class is designed to load an xarray.Dataset and computes STD.
+
         Args:
             diagnostic_name (str): Default is 'sshVariability'.
             catalog (str): catalog. It is Mandatory, if 'save_netcdf=True'.
             model (str): Name of the data
             exp (str): Name of the experiment
-            source (str): the source.
-            It is important to give these dates and input. Otherwise the whole dataset is retrieved.
+            source (str): the source. It is important to give these dates and input.
+                Otherwise the whole dataset is retrieved.
             startdate (str): Start date.
             enddate  (str): End date.
             freq (str): Frequency of the data. In the TODO list. This becomes important when
@@ -115,9 +112,6 @@ class SshVariabilityCompute(BaseMixin):
 
     def run(self):
         """
-        Args:
-            create_catalog_entry (bool): Option for creating catalog entry. Default is 'False'.
-
         This function performs following three functions:
         a) Retrieve data and regrid if given then
         b) Compute STD
@@ -139,7 +133,7 @@ class SshVariabilityCompute(BaseMixin):
             # Save STD as netcdf
             if self.save_netcdf:
                 self.logger.info(f"Output std netcdf file is saved at {self.outputdir}.")
-                self.netcdf_save(data=self.data_std, create_catalog_entry=True)
+                self.netcdf_save(data=self.data_std)  # create_catalog_entry=True
             else:
                 self.logger.info("Output in netcdf is not saved.")
         except Exception as e:

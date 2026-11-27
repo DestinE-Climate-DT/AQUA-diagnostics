@@ -76,14 +76,16 @@ At the foundation lies the **Base Diagnostic Class** (`Diagnostic`), which provi
 - Standardized output saving procedures
 
 Each specific diagnostic class inherits from `Diagnostic` and extends its capabilities by implementing diagnostic-specific parameters and methods.
-For example, the Global Biases diagnostic in its own class `GlobalBiases` introduces specialized methods like `compute_climatology()` while leveraging the core retrieval and saving functionalities provided by the base class.
+For example, the Biases diagnostic in its own class `Climatology` introduces specialized methods like `compute_climatology()` while leveraging the core retrieval and saving functionalities provided by the base class.
 This inheritance pattern ensures that all diagnostics follow consistent implementation conventions, reducing code redundancy and improving long-term maintainability.
-Additionally, each diagnostic incorporates comparison classes, e.g `PlotGlobalBiases` that handle visualization tasks.
+Additionally, each diagnostic incorporates comparison classes, e.g `PlotClimatology`, `PlotBias` that handle visualization tasks.
 These classes provide methods for cross-dataset comparisons (such as `plot_bias()` and `plot_seasonal_bias()`) and integrate configurable options including multiple output formats via a single `save_format` setting (default is SAVE_FORMAT, i.e. `['png', 'pdf', 'svg']`) in addition to `save_netcdf`.
 Where applicable, comparison classes utilize existing AQUA-core plotting functions to maintain visualization consistency across the entire diagnostic suite.
 This structured, modular design enables efficient implementation of new diagnostics with minimal development effort while ensuring scalability and coherence throughout the framework.
 Although this standardization has not yet been fully extended to frontier diagnostics, it establishes a robust foundation for future enhancements.
 
+
+.. _running-diagnostics:
 
 Running Diagnostics
 --------------------
@@ -103,7 +105,7 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
    Configuration file templates for all available diagnostics are provided in `aqua/diagnostics/templates`, serving as starting points that users can customize according to their specific requirements.
    This approach ensures reproducibility, as the configuration file documents all analysis settings and can be version-controlled alongside results.
 
-3. **Level 3: Diagnostic collections via AQUA Analysis Wrapper**
+3. **Diagnostic collections via AQUA Analysis Wrapper (advanced):**
 
    For comprehensive model evaluation involving multiple diagnostics, AQUA provides the `aqua-analysis` wrapper, which orchestrates the execution of **diagnostic-collections**.
    Users construct a master configuration file that combines multiple diagnostics, defining which analyses to run and how they should be coordinated.
@@ -115,7 +117,25 @@ AQUA-diagnostics provides three flexible approaches for executing analyses, desi
    - Integrated result organization consolidating outputs from multiple diagnostics
 
 Examples of diagnostic-collections configuration files are provided in `aqua/diagnostics/config/collections`.
-The aqua-analysis functionality is fully documented at ref:`aqua_analysis`.
+The aqua-analysis functionality is fully documented at :ref:`aqua_analysis`.
+
+Community resources
+-------------------
+
+Additional examples and shared resources from the ClimateDT community are collected in the
+`climatedt-community-resources <https://github.com/DestinE-Climate-DT/climatedt-community-resources>`_
+repository.
+
+In particular, the
+`example_aqua <https://github.com/DestinE-Climate-DT/climatedt-community-resources/tree/main/example_aqua>`_
+folder provides a notebook demonstrating how to open and access ClimateDT data using AQUA.
+This is a useful starting point for new users who want to familiarise themselves with the
+AQUA ``Reader`` interface and the ClimateDT data catalog.
+
+.. seealso::
+
+   `ClimateDT external user guide <https://github.com/DestinE-Climate-DT/climatedt-external-user-guide>`_
+   for additional documentation on accessing ClimateDT data.
 
 
 Contributing

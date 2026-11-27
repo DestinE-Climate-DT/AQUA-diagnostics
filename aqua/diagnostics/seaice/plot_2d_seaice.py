@@ -13,6 +13,7 @@ from aqua.core.util import (
     generate_colorbar_ticks,
     get_projection,
     get_realizations,
+    grid_figure_size,
     int_month_name,
     plot_box,
     set_map_title,
@@ -23,8 +24,6 @@ from aqua.core.util import (
 from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
 
 from .util import _check_list_regions_type
-
-xr.set_options(keep_attrs=True)
 
 
 class Plot2DSeaIce:
@@ -157,7 +156,8 @@ class Plot2DSeaIce:
 
         for reg_mod in reg_models:
             nrows, ncols = len(self.months), 3
-            fig = plt.figure(figsize=(ncols * 5.1, nrows * 4.8))
+            # Constrained layout keeps titles, colorbars and gridline labels from overlapping
+            fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.9), layout="constrained")
             subfigs = fig.subfigures(nrows=nrows, ncols=1)
 
             for jmon, (month, subfig) in enumerate(zip(self.months, subfigs)):
@@ -171,7 +171,7 @@ class Plot2DSeaIce:
                     regions=reg_ref.attrs.get("AQUA_region"),
                     timeseason=f"Month: {int_month_name(month)}",
                 ).generate()
-                subfig.suptitle(title, fontsize=14, y=1.02)
+                subfig.suptitle(title)
 
                 # plot ref
                 setup = self._get_cmap(monref)
@@ -289,16 +289,16 @@ class Plot2DSeaIce:
                         apply_circular_window(ax, extent=ext_coords)
 
         description = (
-            f"Spatial map and total bias of the sea ice {monmod.attrs.get('AQUA_method', '')} climatology "
+            f"Climatology and differences against the reference dataset for sea ice {monmod.attrs.get('AQUA_method', '')} "
             f"in the {monmod.attrs.get('AQUA_region', 'geographic')} region. "
-            f"The model data is {monmod.attrs.get('AQUA_model')} with experiment {monmod.attrs.get('AQUA_exp')} "
-            f"spanning from {time_to_string(monmod.attrs.get('AQUA_startdate', ''))} "
-            f"to {time_to_string(monmod.attrs.get('AQUA_enddate', ''))}. "
-            f"The reference dataset is {monref.attrs.get('AQUA_model')} with experiment {monref.attrs.get('AQUA_exp')} "
-            f"spanning from {time_to_string(monref.attrs.get('AQUA_startdate', ''))} "
-            f"to {time_to_string(monref.attrs.get('AQUA_enddate', ''))}. "
+            f"Model data is {monmod.attrs.get('AQUA_model')}, experiment {monmod.attrs.get('AQUA_exp')} "
+            f"(from {time_to_string(monmod.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(monmod.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
+            f"Reference dataset is {monref.attrs.get('AQUA_model')}, experiment {monref.attrs.get('AQUA_exp')} "
+            f"(from {time_to_string(monref.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(monref.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
             + (
-                "The red contour line represents the regional sea ice fraction equal to 0.2."
+                "The red contour line represents where the sea ice fraction is equal to 0.2."
                 if self.method == "fraction"
                 else ""
             )
@@ -343,7 +343,7 @@ class Plot2DSeaIce:
         self.logger.info(f"Processing {data_type} data: {datarr.name}")
 
         nrows, ncols = plot_box(num_plots=len(self.months))
-        fig = plt.figure(figsize=(ncols * 4.5, nrows * 4))
+        fig = plt.figure(figsize=grid_figure_size(nrows, ncols, panel_ratio=0.9))
         fig.subplots_adjust(bottom=0.2, hspace=0.9)
 
         setup = self._get_cmap(datarr)
@@ -375,7 +375,7 @@ class Plot2DSeaIce:
                 ext_coords = self.extent_regions.get(region, None)
                 ax = apply_circular_window(ax, extent=ext_coords)
 
-            ax.set_title(f"Month: {int_month_name(month)}", fontsize=12)
+            ax.set_title(f"Month: {int_month_name(month)}")
 
         # Adjust the location of the subplots on the page to make room for the colorbar
         fig.subplots_adjust(bottom=0.25, top=0.8, left=0.15, right=0.85, wspace=0.03, hspace=0.5)
@@ -392,16 +392,16 @@ class Plot2DSeaIce:
             **{"shrink": 0.3, "pad": 0.07},
         )
 
-        fig.suptitle(f"{set_map_title(datarr)}", fontsize=13)
+        fig.suptitle(f"{set_map_title(datarr)}")
 
         description = (
             f"Spatial map of the sea ice {mondat.attrs.get('AQUA_method', '')} climatology "
             f"for the {mondat.attrs.get('AQUA_model', '')} model, experiment {mondat.attrs.get('AQUA_exp', '')} "
-            f"over {mondat.attrs.get('AQUA_region', 'geographic')} region "
-            f"from {time_to_string(mondat.attrs.get('AQUA_startdate', ''))} "
-            f"to {time_to_string(mondat.attrs.get('AQUA_enddate', ''))}. "
+            f"in the {mondat.attrs.get('AQUA_region', 'geographic')} region "
+            f"(from {time_to_string(mondat.attrs.get('AQUA_startdate', ''), format='%Y-%m')} "
+            f"to {time_to_string(mondat.attrs.get('AQUA_enddate', ''), format='%Y-%m')}). "
             + (
-                "The red contour line represent the regional sea ice fraction equal to 0.2."
+                "The red contour line represent where the sea ice fraction is equal to 0.2."
                 if self.method == "fraction" and self.plot_ref_contour
                 else ""
             )
@@ -497,7 +497,7 @@ class Plot2DSeaIce:
         else:
             units = ""
 
-        cb.set_label(f"Sea-ice {data.attrs.get('AQUA_method', '')}{units}", fontsize=11)
+        cb.set_label(f"Sea-ice {data.attrs.get('AQUA_method', '')}{units}")
         return cb
 
     def _get_cmap(self, datarr):
@@ -526,7 +526,7 @@ class Plot2DSeaIce:
             norm = None
             boundaries = None
         else:
-            # Define boundaries for a discrete normalization using the 'turbo' colormap
+            # Define custom boundaries for a discrete normalization
             boundaries = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8.0, 10, 15, 20, 30]
             colormap = plt.get_cmap("turbo")
             norm = mcolors.BoundaryNorm(boundaries, ncolors=colormap.N, clip=True)

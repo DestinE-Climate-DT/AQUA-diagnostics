@@ -37,8 +37,13 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the SeaIce diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
     cli = DiagnosticCLI(
@@ -49,17 +54,11 @@ if __name__ == "__main__":
     # Diagnostic-specific options
     projection = get_arg(args, "proj", "orthographic")
 
-    # Load region dict through dummy method access
-    regions_dict = SeaIce(model="", exp="", source="")._load_regions_from_file(diagnostic="seaice")
+    # Load region definitions from the centralized regions file. The downstream
+    # helpers (filter_region_list, plotting) expect the ``{"regions": {name: spec}}`` shape.
+    regions_dict = {"regions": SeaIce(model="", exp="", source="")._load_regions_from_file()}
 
-    regrid = get_arg(args, "regrid", None)
-
-    realization = get_arg(args, "realization", None)
-    if realization:
-        cli.logger.info(f"Realization option is set to: {realization}")
-        reader_kwargs = {"realization": realization}
-    else:
-        reader_kwargs = {}
+    regrid = get_arg(args, "regrid", None)  # noqa: F841
 
     # Use the top-level datasets
     datasets = cli.config_dict["datasets"]
@@ -91,7 +90,11 @@ if __name__ == "__main__":
                 # Integrate by method the model data and store them in a list.
                 seaice = SeaIce(**dataset_args, regions=regions, outputdir=cli.outputdir, loglevel=cli.loglevel)
 
-                monthly_mod[i] = seaice.compute_seaice(method=method, var=varname, reader_kwargs=reader_kwargs)
+                monthly_mod[i] = seaice.compute_seaice(
+                    method=method,
+                    var=varname,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
+                )
 
                 seaice.save_netcdf(
                     monthly_mod[i],
@@ -137,8 +140,11 @@ if __name__ == "__main__":
 
                     if conf_dict_ts["calc_ref_std"]:
                         monthly_ref[i], monthly_std_ref[i] = seaice_ref.compute_seaice(
-                            method=method, var=varname, calc_std_freq=calc_std_freq
-                        )  # , reader_kwargs=reader_kwargs)
+                            method=method,
+                            var=varname,
+                            calc_std_freq=calc_std_freq,
+                            reader_kwargs=reference.get("reader_kwargs") or {},
+                        )
 
                         seaice_ref.save_netcdf(
                             monthly_std_ref[i],
@@ -152,8 +158,10 @@ if __name__ == "__main__":
                         )
                     else:
                         monthly_ref[i] = seaice_ref.compute_seaice(
-                            method=method, var=varname
-                        )  # , reader_kwargs=reader_kwargs)
+                            method=method,
+                            var=varname,
+                            reader_kwargs=reference.get("reader_kwargs") or {},
+                        )
 
                     seaice_ref.save_netcdf(
                         monthly_ref[i],
@@ -218,7 +226,10 @@ if __name__ == "__main__":
                 seaice = SeaIce(**dataset_args, outputdir=cli.outputdir, loglevel=cli.loglevel)
 
                 monthly_mod[i] = seaice.compute_seaice(
-                    method=method, var=varname, get_seasonal_cycle=True, reader_kwargs=reader_kwargs
+                    method=method,
+                    var=varname,
+                    get_seasonal_cycle=True,
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
                 )
 
                 seaice.save_netcdf(
@@ -265,8 +276,12 @@ if __name__ == "__main__":
 
                     if conf_dict_ts["calc_ref_std"]:
                         monthly_ref[i], monthly_std_ref[i] = seaice_ref.compute_seaice(
-                            method=method, var=varname, calc_std_freq=calc_std_freq, get_seasonal_cycle=True
-                        )  # , reader_kwargs=reader_kwargs)
+                            method=method,
+                            var=varname,
+                            calc_std_freq=calc_std_freq,
+                            get_seasonal_cycle=True,
+                            reader_kwargs=reference.get("reader_kwargs") or {},
+                        )
                         seaice_ref.save_netcdf(
                             monthly_std_ref[i],
                             "seaice",
@@ -278,8 +293,12 @@ if __name__ == "__main__":
                             },
                         )
                     else:
-                        monthly_ref[i] = seaice_ref.compute_seaice(method=method, var=varname, get_seasonal_cycle=True)  # ,
-                        # reader_kwargs=reader_kwargs)
+                        monthly_ref[i] = seaice_ref.compute_seaice(
+                            method=method,
+                            var=varname,
+                            get_seasonal_cycle=True,
+                            reader_kwargs=reference.get("reader_kwargs") or {},
+                        )
 
                     seaice_ref.save_netcdf(
                         monthly_ref[i],
@@ -343,7 +362,11 @@ if __name__ == "__main__":
 
                 # Compute 2D data for each region
                 clims_mod[i] = seaice.compute_seaice(
-                    method=method, var=varname, stat="mean", freq="monthly", reader_kwargs=reader_kwargs
+                    method=method,
+                    var=varname,
+                    stat="mean",
+                    freq="monthly",
+                    reader_kwargs=dataset.get("reader_kwargs") or {},
                 )
 
                 seaice.save_netcdf(
@@ -389,8 +412,12 @@ if __name__ == "__main__":
                     seaice_ref = SeaIce(**reference_args, outputdir=cli.outputdir, loglevel=cli.loglevel)
 
                     clims_ref[i] = seaice_ref.compute_seaice(
-                        method=method, var=varname, stat="mean", freq="monthly"
-                    )  # , reader_kwargs=reader_kwargs)
+                        method=method,
+                        var=varname,
+                        stat="mean",
+                        freq="monthly",
+                        reader_kwargs=reference.get("reader_kwargs") or {},
+                    )
 
                     seaice_ref.save_netcdf(
                         clims_ref[i],
@@ -435,3 +462,7 @@ if __name__ == "__main__":
     cli.close_dask_cluster()
 
     cli.logger.info("Sea Ice diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

@@ -7,6 +7,7 @@ from aqua.core.util import get_arg
 from aqua.core.version import __version__ as aqua_version
 
 from .defaults import SAVE_FORMAT
+from .profiler import DiagnosticProfiler
 from .util import close_cluster, load_diagnostic_config, merge_config_args, open_cluster
 
 
@@ -55,18 +56,19 @@ class DiagnosticCLI:
         self.client = None
         self.cluster = None
         self.private_cluster = None
+        self.profiler = None
         self.config_dict = None
         self.regrid = None
         self.startdate = None
         self.enddate = None
-        self.realization = None
-        self.reader_kwargs = None
         self.outputdir = None
         self.rebuild = None
         self.save_format = None
         self.save_netcdf = None
+        self.plot_only = None
         self.dpi = None
-        self.create_catalog_entry = None  # Default behavior; can be overridden in prepare()
+        # DEPRECATED
+        # self.create_catalog_entry = None  # Default behavior; can be overridden in prepare()
 
     def prepare(self, **overrides):
         """
@@ -84,8 +86,8 @@ class DiagnosticCLI:
         Returns:
             self: For method chaining
         """
-        self._setup_logging()
         self._load_config()
+        self._setup_logging()
         self._extract_options()
 
         # option to override arguments
@@ -95,21 +97,28 @@ class DiagnosticCLI:
 
         return self
 
-    def _setup_logging(self):
-        """Setup logger."""
-        self.loglevel = get_arg(self.args, "loglevel", "WARNING")
-        self.logger = log_configure(log_level=self.loglevel, log_name=self.log_name)
-        self.logger.info("Running %s diagnostic with AQUA version %s", self.diagnostic_name, aqua_version)
-
     def _load_config(self):
         """Load diagnostic config and merge with CLI args."""
+        loglevel = get_arg(self.args, "loglevel", "WARNING")
         self.config_dict = load_diagnostic_config(
             diagnostic=self.diagnostic_name,
             config=self.args.config,
             default_config=self.default_config,
-            loglevel=self.loglevel,
+            loglevel=loglevel,
         )
-        self.config_dict = merge_config_args(config=self.config_dict, args=self.args, loglevel=self.loglevel)
+        self.config_dict = merge_config_args(config=self.config_dict, args=self.args, loglevel=loglevel)
+
+    def _setup_logging(self):
+        """Setup logger.
+
+        Precedence: ``--loglevel`` from CLI, then ``setup.loglevel`` from config YAML, then ``WARNING``.
+        """
+        config_loglevel = None
+        if self.config_dict:
+            config_loglevel = self.config_dict.get("setup", {}).get("loglevel")
+        self.loglevel = get_arg(self.args, "loglevel", config_loglevel or "WARNING")
+        self.logger = log_configure(log_level=self.loglevel, log_name=self.log_name)
+        self.logger.info("Running %s diagnostic with AQUA version %s", self.diagnostic_name, aqua_version)
 
     def _extract_options(self):
         """Extract common options from config and args."""
@@ -125,21 +134,16 @@ class DiagnosticCLI:
         if self.enddate:
             self.logger.info("End date is set to %s", self.enddate)
 
-        # Realization option and reader_kwargs
-        self.reader_kwargs = self.config_dict.get("datasets", [{}])[0].get("reader_kwargs") or {}
-        self.realization = get_arg(self.args, "realization", None)
-        if self.realization:
-            self.logger.info("Realization option is set to: %s", self.realization)
-            self.reader_kwargs.update({"realization": self.realization})
-
         # Output options
         output_config = self.config_dict.get("output", {})
         self.outputdir = output_config.get("outputdir", "./")
         self.rebuild = output_config.get("rebuild", True)
         self.save_format = output_config.get("save_format", SAVE_FORMAT)
         self.save_netcdf = output_config.get("save_netcdf", True)
+        self.plot_only = output_config.get("plot_only", False)
         self.dpi = output_config.get("dpi", 300)
-        self.create_catalog_entry = output_config.get("create_catalog_entry", False)
+        # DEPRECATED
+        # self.create_catalog_entry = output_config.get("create_catalog_entry", False)
 
     def dataset_args(self, dataset):
         """
@@ -186,12 +190,32 @@ class DiagnosticCLI:
         self.client, self.cluster, self.private_cluster = open_cluster(
             nworkers=nworkers, cluster=cluster_arg, loglevel=self.loglevel
         )
+        self.start_profiler()
+        return self
+
+    def start_profiler(self):
+        """
+        Start the profiler measuring wall time, peak memory of this process and,
+        when a dask client is available, the memory of the dask workers.
+        Called by open_dask_cluster(); call it directly when the CLI does not use a cluster.
+
+        Returns:
+            self: For method chaining
+        """
+        self.profiler = DiagnosticProfiler(
+            client=self.client,
+            private_cluster=bool(self.private_cluster),
+            loglevel=self.loglevel,
+        )
+        self.profiler.start()
         return self
 
     def close_dask_cluster(self):
         """
-        Close the dask cluster if it was opened.
+        Close the dask cluster if it was opened and log the profiling summary.
         """
+        if self.profiler is not None:
+            self.profiler.stop()
         if self.client or self.cluster:
             close_cluster(
                 client=self.client, cluster=self.cluster, private_cluster=self.private_cluster, loglevel=self.loglevel

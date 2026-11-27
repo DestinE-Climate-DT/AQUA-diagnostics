@@ -9,9 +9,9 @@ single or multiple experiments.
 import argparse
 import sys
 
-from aqua.diagnostics.base import DiagnosticCLI, template_parse_arguments
+from aqua.core.exceptions import NotEnoughDataError
+from aqua.diagnostics.base import DiagnosticCLI, load_var_config, template_parse_arguments
 from aqua.diagnostics.lat_lon_profiles import LatLonProfiles, PlotLatLonProfiles
-from aqua.diagnostics.lat_lon_profiles.util_cli import load_var_config
 
 
 def parse_arguments(args):
@@ -40,6 +40,18 @@ def _create_plot(cli, profiles, profile_ref, freq_type, diagnostic_name):
         diagnostic_name (str): Name of the diagnostic
     """
     cli.logger.info(f"Creating {freq_type} plot")
+
+    # A plot only run reads the results from disk, where some of them may be missing:
+    # keep the datasets that have the ones this plot needs.
+    attribute = "longterm" if freq_type == "longterm" else "seasonal"
+    profiles = [profile for profile in profiles if getattr(profile, attribute) is not None]
+    if not profiles:
+        reason = ", and plot_only is true so nothing was computed" if cli.plot_only else ""
+        cli.logger.warning("No %s results found in %s%s, skipping the plot", freq_type, cli.outputdir, reason)
+        return
+    if profile_ref is not None and getattr(profile_ref, attribute) is None:
+        cli.logger.warning("No %s results available for the reference, plotting without it", freq_type)
+        profile_ref = None
 
     if freq_type == "longterm":
         # For longterm: single profile per dataset
@@ -125,97 +137,181 @@ def process_variable(
     var_units = var_config.get("units")
     var_long_name = var_config.get("long_name")
     var_standard_name = var_config.get("standard_name")
+    # Std period taken from the merged var config (params.default or per-variable)
+    var_std_startdate = var_config.get("std_startdate")
+    var_std_enddate = var_config.get("std_enddate")
 
     cli.logger.info(f"Processing {'formula' if formula else 'variable'}: {var_name}")
 
     # Loop over regions
     for region in regions:
-        cli.logger.info(f"Region: {region}")
+        try:
+            cli.logger.info(f"Region: {region if region else 'global'}")
 
-        # Process datasets
-        profiles = []
-        for dataset in datasets:
-            cli.logger.info(f"Processing dataset: {dataset['model']}/{dataset['exp']}")
+            # Process datasets
+            profiles = []
+            for dataset in datasets:
+                cli.logger.info(f"Processing dataset: {dataset['model']}/{dataset['exp']}")
 
-            dataset_args = cli.dataset_args(dataset)
+                dataset_args = cli.dataset_args(dataset)
+                # Std dates: explicit dataset-specific override
+                std_startdate = dataset.get("std_startdate")
+                std_enddate = dataset.get("std_enddate")
 
-            profile = LatLonProfiles(
-                **dataset_args,
-                region=region,
-                regions_file_path=regions_file_path,
-                mean_type=mean_type,
-                diagnostic_name=diagnostic_name,
-                loglevel=cli.loglevel,
-            )
+                profile = LatLonProfiles(
+                    **dataset_args,
+                    std_startdate=std_startdate,
+                    std_enddate=std_enddate,
+                    region=region,
+                    regions_file_path=regions_file_path,
+                    mean_type=mean_type,
+                    diagnostic_name=diagnostic_name,
+                    loglevel=cli.loglevel,
+                )
 
-            profile.run(
-                var=var_name,
-                formula=formula,
-                long_name=var_long_name,
-                units=var_units,
-                standard_name=var_standard_name,
-                std=compute_std,
-                freq=freq,
-                exclude_incomplete=exclude_incomplete,
-                center_time=center_time,
-                box_brd=box_brd,
-                outputdir=cli.outputdir,
-                rebuild=cli.rebuild,
-                reader_kwargs=cli.reader_kwargs,
-            )
+                if not cli.plot_only:
+                    try:
+                        profile.run(
+                            var=var_name,
+                            formula=formula,
+                            long_name=var_long_name,
+                            units=var_units,
+                            standard_name=var_standard_name,
+                            std=compute_std,
+                            freq=freq,
+                            exclude_incomplete=exclude_incomplete,
+                            center_time=center_time,
+                            box_brd=box_brd,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                            save_netcdf=cli.save_netcdf,
+                            reader_kwargs=dataset.get("reader_kwargs") or {},
+                        )
+                    except NotEnoughDataError:
+                        cli.logger.warning(
+                            "Skipping %s (%s, %s): not enough data",
+                            dataset["model"],
+                            dataset["exp"],
+                            dataset["source"],
+                        )
+                        continue
+                    except Exception as e:
+                        cli.logger.error(
+                            "Unexpected error for %s (%s, %s): %s",
+                            dataset["model"],
+                            dataset["exp"],
+                            dataset["source"],
+                            e,
+                        )
+                        continue
 
-            profiles.append(profile)
+                # Populate from the netcdf files, written just now or by a previous run. Results computed
+                # without saving them are already in memory, and older files must not replace them.
+                if cli.plot_only or cli.save_netcdf:
+                    profile.load(
+                        var=var_name,
+                        standard_name=var_standard_name,
+                        std=compute_std,
+                        freq=freq,
+                        outputdir=cli.outputdir,
+                        reader_kwargs=dataset.get("reader_kwargs") or {},
+                        expect_netcdf=True,
+                    )
 
-        # Process reference dataset (if any)
-        profile_ref = None
-        if references:
-            ref = references[0]  # Take first reference
-            cli.logger.info(f"Processing reference: {ref['model']}/{ref['exp']}")
+                profiles.append(profile)
 
-            # Get base reference args
-            ref_args = cli.dataset_args(ref)
+            if not profiles:
+                cli.logger.warning("No datasets available for region %s, variable %s. Skipping.", region, var_name)
+                continue
 
-            # For reference, use std dates if specified
-            if ref.get("std_startdate"):
-                ref_args["startdate"] = ref["std_startdate"]
-            if ref.get("std_enddate"):
-                ref_args["enddate"] = ref["std_enddate"]
+            # Process reference dataset (if any)
+            profile_ref = None
+            if references:
+                ref = references[0]  # Take first reference
+                cli.logger.info(f"Processing reference: {ref['model']}/{ref['exp']}")
 
-            profile_ref = LatLonProfiles(
-                **ref_args,
-                region=region,
-                regions_file_path=regions_file_path,
-                mean_type=mean_type,
-                diagnostic_name=diagnostic_name,
-                loglevel=cli.loglevel,
-            )
+                ref_args = cli.reference_args(ref)
+                # Std dates for the reference: reference-specific override > variable/default config
+                ref_std_startdate = ref.get("std_startdate") or var_std_startdate
+                ref_std_enddate = ref.get("std_enddate") or var_std_enddate
 
-            profile_ref.run(
-                var=var_name,
-                formula=formula,
-                long_name=var_long_name,
-                units=var_units,
-                standard_name=var_standard_name,
-                std=True,  # Always compute std for reference
-                freq=freq,
-                exclude_incomplete=exclude_incomplete,
-                center_time=center_time,
-                box_brd=box_brd,
-                outputdir=cli.outputdir,
-                rebuild=cli.rebuild,
-                reader_kwargs={},  # No custom reader_kwargs for reference
-            )
+                profile_ref = LatLonProfiles(
+                    **ref_args,
+                    std_startdate=ref_std_startdate,
+                    std_enddate=ref_std_enddate,
+                    region=region,
+                    regions_file_path=regions_file_path,
+                    mean_type=mean_type,
+                    diagnostic_name=diagnostic_name,
+                    loglevel=cli.loglevel,
+                )
 
-        # Create plots using helper function
-        if compute_longterm and "longterm" in freq:
-            _create_plot(cli, profiles, profile_ref, "longterm", diagnostic_name)
+                if not cli.plot_only:
+                    try:
+                        profile_ref.run(
+                            var=var_name,
+                            formula=formula,
+                            long_name=var_long_name,
+                            units=var_units,
+                            standard_name=var_standard_name,
+                            std=True,  # Always compute std for reference
+                            freq=freq,
+                            exclude_incomplete=exclude_incomplete,
+                            center_time=center_time,
+                            box_brd=box_brd,
+                            outputdir=cli.outputdir,
+                            rebuild=cli.rebuild,
+                            save_netcdf=cli.save_netcdf,
+                            reader_kwargs=ref.get("reader_kwargs") or {},
+                        )
+                    except NotEnoughDataError:
+                        cli.logger.warning(
+                            "Skipping reference %s (%s, %s): not enough data",
+                            ref["model"],
+                            ref["exp"],
+                            ref["source"],
+                        )
+                        profile_ref = None
+                    except Exception as e:
+                        cli.logger.error(
+                            "Unexpected error for reference %s (%s, %s): %s",
+                            ref["model"],
+                            ref["exp"],
+                            ref["source"],
+                            e,
+                        )
+                        profile_ref = None
 
-        if compute_seasonal and "seasonal" in freq:
-            _create_plot(cli, profiles, profile_ref, "seasonal", diagnostic_name)
+                if profile_ref is not None and (cli.plot_only or cli.save_netcdf):
+                    profile_ref.load(
+                        var=var_name,
+                        standard_name=var_standard_name,
+                        std=True,  # The reference std is always used by the plots
+                        freq=freq,
+                        outputdir=cli.outputdir,
+                        expect_netcdf=True,
+                        reader_kwargs=ref.get("reader_kwargs") or {},
+                    )
+
+            # Create plots using helper function
+            if compute_longterm and "longterm" in freq:
+                _create_plot(cli, profiles, profile_ref, "longterm", diagnostic_name)
+
+            if compute_seasonal and "seasonal" in freq:
+                _create_plot(cli, profiles, profile_ref, "seasonal", diagnostic_name)
+
+        except Exception as e:
+            var_type = "formula" if formula else "variable"
+            cli.logger.error(f"Error processing {var_type} '{var_name}' in region '{region if region else 'global'}': {e}")
 
 
-if __name__ == "__main__":
-    args = parse_arguments(sys.argv[1:])
+def main(argv=None):
+    """Run the LatLonProfiles diagnostic CLI.
+
+    Args:
+        argv (list, optional): command-line arguments. Defaults to sys.argv[1:].
+    """
+    args = parse_arguments(argv if argv is not None else sys.argv[1:])
 
     # Initialize and prepare CLI
     cli = DiagnosticCLI(
@@ -283,3 +379,7 @@ if __name__ == "__main__":
 
     cli.close_dask_cluster()
     cli.logger.info("LatLonProfiles diagnostic completed.")
+
+
+if __name__ == "__main__":
+    main()

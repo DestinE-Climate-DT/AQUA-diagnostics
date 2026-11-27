@@ -9,21 +9,26 @@ channels:
   - nodefaults
 # please note that some of these dependencies are made explicit on purpose, but are not directly required by conda/mamba
 dependencies:
-  - python>=3.10,<3.13
-  - cdo>=2.5.0 #for smmregrid compatibility
-  - eccodes==2.41.0
-  # for eccodes see issues #252, #634, #870, #1282
-  # PR #36 catalog repo
+  # aqua-core from conda-forge brings python, smmregrid (and CDO on Linux), eccodes, cartopy, netcdf4, hdf5, h5py
+  # with the pins of the aqua-core release; on macOS install CDO with Homebrew (brew install cdo)
+  # keep the version in sync with pyproject.toml
+  - aqua-core>=1.2.4,<1.3.0
   - cartopy_offlinedata # this is needed for MN5 HPC
+  - python-dateutil<3 # botocore requires python-dateutil<3: with 3.0.0 conda-lock backtracks through all boto3 releases
+  # z3fdb (pip, fdb extra) requires zarr~=3.1.6: conda installs zarr through aqua-core,
+  # so pin it here or pip later replaces the conda zarr with its own
+  - zarr>=3.1.6,<3.2
+  # grpcio 1.85.2 is on conda-forge but not on PyPI: the pip solve of conda-lock fails on it
+  - grpcio!=1.85.2
+  # ecmean depends on esmpy binary, so we need to install it first
+  - esmpy<=8.9.1
   - pip
-  - hdf5 #explicitly to avoid issues with pypi version
-  - tempest-extremes # for TCs
-  - xesmf # for ECmean
-  - netcdf4
-  - imagemagick
-  - healpy
   - pip:
-    - -e ./frontier-diagnostics/tropical_cyclones/ # pip install -e of tropical cyclones
-    - -e ./frontier-diagnostics/tropical_rainfall/ # pip install -e of tropical_rainfall
     # pip install -e of AQUA itself
-    - -e .[all]
+    - -e .[core-fdb,tests]
+    # fdb extra of aqua-core, listed explicitly: aqua-core comes from conda-forge,
+    # so pip does not resolve aqua-core[fdb] (keep in sync with aqua-core pyproject.toml)
+    - pyfdb
+    - polytope-client
+    - gsv-interface>=2.18.0
+    - z3fdb>=5.25.0.33

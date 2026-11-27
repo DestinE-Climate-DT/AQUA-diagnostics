@@ -1,0 +1,49 @@
+# Template according to #1613
+# The first model in this block can be overridden
+# in the command line by using:
+# --model, --exp, --source, --outputdir, --catalog
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+  # Possible second/third/fourth datasets here, no present by default
+  # - catalog: 'obs'
+  #   model: 'ECMWF'
+  #   exp: 'era5'
+  #   source: 'monthly'
+  #   regrid: r100
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  gregory:
+    run: true
+    diagnostic_name: 'climate_metrics'
+    t2m: '2t'
+    net_toa_name: 'tnlwrf+tnswrf'
+    monthly: true
+    annual: true
+    std: true
+    std_startdate: '{{ period.radiation.std_startdate }}'
+    std_enddate: '{{ period.radiation.std_enddate }}'
+    # Gregory needs 2 datasets and do not care about the references block above
+    t2m_ref:
+      catalog: '{{ references.climate_metrics_gregory_t2m.catalog }}'
+      model: '{{ references.climate_metrics_gregory_t2m.model }}'
+      exp: '{{ references.climate_metrics_gregory_t2m.exp }}'
+      source: '{{ references.climate_metrics_gregory_t2m.source }}'
+    net_toa_ref:
+      catalog: '{{ references.climate_metrics_gregory_toa.catalog }}'
+      model: '{{ references.climate_metrics_gregory_toa.model }}'
+      exp: '{{ references.climate_metrics_gregory_toa.exp }}'
+      source: '{{ references.climate_metrics_gregory_toa.source }}'

@@ -1,0 +1,56 @@
+# Template according to #1613
+# The first model in this block can be overridden
+# in the command line by using:
+# --model, --exp, --source, --outputdir, --catalog
+datasets:
+  - catalog: null
+    model: IFS-NEMO
+    exp: ssp370
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+  # Possible second/third/fourth datasets here, no present by default
+  # - catalog: 'obs'
+  #   model: 'ECMWF'
+  #   exp: 'era5'
+  #   source: 'monthly'
+  #   regrid: r100
+
+references:
+  - catalog: '{{ references.radiation_surface_boxplots.catalog }}'
+    model: '{{ references.radiation_surface_boxplots.model }}'
+    exp: '{{ references.radiation_surface_boxplots.exp }}'
+    source: '{{ references.radiation_surface_boxplots.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
+{# skipped when the kind uses the same dataset for both references (e.g. HighResMIP: ERA5) #}
+{% if references.radiation_surface_radiative != references.radiation_surface_boxplots %}
+  - catalog: '{{ references.radiation_surface_radiative.catalog }}'
+    model: '{{ references.radiation_surface_radiative.model }}'
+    exp: '{{ references.radiation_surface_radiative.exp }}'
+    source: '{{ references.radiation_surface_radiative.source }}'
+    regrid: '{{ regrid }}'
+    reader_kwargs: null
+    startdate: '{{ period.radiation.startdate }}'
+    enddate: '{{ period.radiation.enddate }}'
+{% endif %}
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  boxplots:
+    run: true
+    diagnostic_name: 'radiation_surface'
+    variables:
+      - vars: ['-snlwrf', 'snswrf', 'slhtf', 'ishf']
+        anomalies: true
+        add_mean_line: true
+        ref_number: 0 # use ERA5 as reference for anomalies

@@ -1,5 +1,5 @@
-"""
-Module to plot multiple Hovmoller data.
+"""Module to plot multiple timeseries data.
+
 This function is custom for the Ocean Drift diagnostics in AQUA.
 """
 
@@ -8,7 +8,10 @@ import xarray as xr
 
 from aqua.core.graphics import ConfigStyle, plot_timeseries
 from aqua.core.logger import log_configure
+from aqua.core.util import grid_figure_size
 from aqua.diagnostics.base.defaults import DEFAULT_OCEAN_VERT_COORD
+
+from .util import add_row_label, set_year_ticks
 
 
 def plot_multi_timeseries(
@@ -24,12 +27,12 @@ def plot_multi_timeseries(
     text: list[float] = None,
     title: str = None,
     titles: list[str] = None,
+    ylabels: list[str] = None,
     return_fig=True,
     loglevel="WARNING",
     **kwargs,
 ):
-    """
-    Plot multiple time series (e.g., at different levels or for different variables) in a grid layout.
+    """Plot multiple time series (e.g., at different levels or for different variables) in a grid layout.
 
     Args:
         maps (list): List of xarray datasets containing the data to be plotted.
@@ -44,12 +47,15 @@ def plot_multi_timeseries(
         text (list, optional): List of text annotations for each subplot.
         title (str, optional): Title for the entire figure.
         titles (list of str, optional): List of titles for each subplot. If None, no titles will be set.
+        ylabels (list of str, optional): List of y-axis labels for each subplot, replacing the default
+            ones built from the data attributes. A None entry leaves the y-axis of that subplot unlabelled.
         return_fig (bool, optional): If True, return the matplotlib Figure object.
         loglevel (str, optional): Logging level for the function.
         **kwargs: Additional keyword arguments passed to the plotting function.
 
     Returns:
         matplotlib.figure.Figure or None: The matplotlib Figure object if return_fig is True, otherwise None.
+
     """
     logger = log_configure(loglevel, "plot_multi_hovmoller")
     ConfigStyle(style=style, loglevel=loglevel)
@@ -57,7 +63,7 @@ def plot_multi_timeseries(
     if all(isinstance(data_map, xr.Dataset) for data_map in maps):
         nrows = len(maps)
         ncols = len(variables)
-        figsize = figsize if figsize is not None else (ncols * 6, nrows * 5 + 1)
+        figsize = figsize if figsize is not None else grid_figure_size(nrows, ncols, panel_ratio=0.9)
         logger.debug("Creating a %d x %d grid with figsize %s", nrows, ncols, figsize)
 
     fig = plt.figure(figsize=figsize)
@@ -80,20 +86,18 @@ def plot_multi_timeseries(
                 loglevel=loglevel,
                 colors=line_plot_colours,
             )
-            ax.set_xticks(ax.get_xticks())
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
+            if ylabels is not None:
+                ax.set_ylabel(ylabels[k] or "")
+            set_year_ticks(ax)
 
-            if text:
-                logger.debug("Adding text in the plot: %s", text)
-                ax.text(-0.3, 0.33, text[k], fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center")
-
-    # Adjust overall layout
-    fig.subplots_adjust(bottom=0.1, top=0.9, left=0.05, right=0.95)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Leave space for title
+            if text and text[k]:
+                add_row_label(ax, text[k])
+    # Adjust overall layout (tight_layout is skipped with a gridspec setting wspace/hspace)
+    fig.subplots_adjust(bottom=0.1, top=0.9, left=0.14, right=0.95)
 
     if title:
         logger.debug("Setting super title to %s", title)
-        fig.suptitle(title, fontsize=ncols * 10, fontweight="bold")
+        fig.suptitle(title)
 
     if return_fig:
         return fig

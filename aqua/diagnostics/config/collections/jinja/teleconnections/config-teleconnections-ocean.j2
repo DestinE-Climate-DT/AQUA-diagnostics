@@ -1,0 +1,74 @@
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    freq: null # if the diagnostic supports it
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+  # Possible second/third/fourth datasets here, no present by default
+  # - catalog: 'obs'
+  #   model: 'ECMWF'
+  #   exp: 'era5'
+  #   source: 'monthly'
+  #   regrid: r100
+
+references:
+  - catalog: '{{ references.teleconnections_ocean.catalog }}'
+    model: '{{ references.teleconnections_ocean.model }}'
+    exp: '{{ references.teleconnections_ocean.exp }}'
+    source: '{{ references.teleconnections_ocean.source }}'
+    regrid: '{{ regrid }}'
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  teleconnections:
+    ENSO:
+      run: true
+      diagnostic_name: 'enso'
+      months_window: 3
+      seasons: ['annual']
+      statistics_var: ['tos', 'tprate']
+      plot_params:
+        default:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1
+          vmax_diff: 1
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2.5
+          vmax: 2.5
+          vmin_diff: -4
+          vmax_diff: 4
+          cmap: 'BrBG'
+          units: 'mm/day'
+    DMI:
+      run: true
+      diagnostic_name: 'dmi'
+      # SON is the peak of IOD events. JJA, their developing phase during the Indian summer monsoon,
+      # can be added (seasons: ['JJA', 'SON']) if it proves scientifically useful.
+      seasons: ['SON']
+      statistics_var: ['tos', 'tprate']
+      plot_params:  # limits close to the 99th percentile of |value| in SON, see notebooks/diagnostics/teleconnections/DMI.ipynb
+        default:
+          vmin: -1
+          vmax: 1
+          vmin_diff: -0.5
+          vmax_diff: 0.5
+          cmap: 'RdBu_r'
+        tprate:
+          vmin: -2
+          vmax: 2
+          vmin_diff: -1.5
+          vmax_diff: 1.5
+          cmap: 'BrBG'
+          units: 'mm/day'

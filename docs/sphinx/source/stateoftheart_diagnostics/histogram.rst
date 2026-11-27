@@ -36,8 +36,8 @@ File structure
 --------------
 
 * The diagnostic is located in the ``aqua/diagnostics/histogram/`` directory, which contains both the source code and the command line interface (CLI) script.
-* A template configuration file is available at ``aqua/diagnostics/templates/diagnostics/config-histogram.yaml``
-* Region definitions are available in ``aqua/diagnostics/config/tools/histogram/definitions/regions.yaml``
+* A template configuration file is available at ``aqua/diagnostics/templates/collections/config-histogram.yaml``
+* Region definitions are available in ``aqua/diagnostics/config/definitions/regions.yaml``
 * Notebooks are available in the ``notebooks/diagnostics/histogram/`` directory and contain examples of how to use the diagnostic.
 
 Input variables and datasets
@@ -109,8 +109,7 @@ The diagnostic can be run from the command line interface (CLI) by running the f
 
 .. code-block:: bash
 
-    cd $AQUA/aqua/diagnostics/histogram
-    python cli_histogram.py --config <path_to_config_file>
+    python -m aqua.diagnostics.histogram.cli_histogram --config <path_to_config_file>
 
 Additionally, the CLI can be run with the following optional arguments:
 
@@ -188,15 +187,15 @@ Other common reference datasets include MSWEP (Multi-Source Weighted-Ensemble Pr
 
 Custom reference datasets can be configured in the configuration file.
 
-Example Plots
--------------
-
-.. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
-   :align: center
-   :width: 100%
-
-   Probability density function (PDF) of precipitation rate (mm/day) for the global region,
-   showing ICON model output compared to ERA5 reference data.
+.. Example Plots
+.. -------------
+..
+.. .. figure:: figures/histogram.histogram_pdf.climatedt-phase1.ICON.historical-1990.r1.tprate.png
+..    :align: center
+..    :width: 100%
+..
+..    Probability density function (PDF) of precipitation rate (mm/day) for the global region,
+..    showing ICON model output compared to ERA5 reference data.
 
 
 Available demo notebooks
