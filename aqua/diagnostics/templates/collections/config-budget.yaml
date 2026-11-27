@@ -1,0 +1,46 @@
+# Configuration file for the Budget tool
+# It compares the global means of two quantities (formulae or variables of the same source) and their difference.
+# The second quantity can be replaced by its time derivative (tendency: true), e.g. to compare a flux with a heat content.
+
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: null
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  plot_only: false # redo the figures from the saved NetCDF files, without recomputing
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  budget:
+    run: true                 # mandatory: switches the tool on or off
+    diagnostic_name: 'budget' # mandatory: prefix of every output file (the collection name in aqua analysis)
+    budgets: ['ocean_heat', 'atmosphere_energy'] # one comparison each, configured in params.<name>
+    params:
+      default:
+        units: 'W m-2'        # both quantities are converted to these units
+        expected: 0.0         # expected value of first minus second (0 for a leak check)
+      ocean_heat:
+        # Net surface heat flux into the ocean, minus the latent heat of fusion (3.34e5 J kg-1) of the snowfall
+        first: 'slhtf+snlwrf+snswrf+ishf-3.34e5*tsrwe'
+        second: 'hc700m'      # ocean heat content (J m-2): hc300m, hc700m or hcbtm
+        tendency: true        # compare with the time derivative of the second quantity
+        mask: 'tos'           # average over the points where tos is defined (the ocean)
+        long_names: ['Net surface heat flux', 'Heat content tendency (0-700 m)']
+      atmosphere_energy:
+        first: 'tnlwrf+tnswrf'                # net radiation at the top of the atmosphere
+        # Net heat flux at the surface; the snowfall term is the latent heat of fusion released in the atmosphere
+        second: 'slhtf+snlwrf+snswrf+ishf-3.34e5*tsrwe'
+        long_names: ['Net TOA radiation', 'Net surface heat flux']

@@ -14,6 +14,7 @@ COLLECTIONS_DIR = Path(__file__).resolve().parents[2] / "aqua" / "diagnostics" /
 # This allowlist does not verify that corresponding CLI tests exist.
 KNOWN_DIAGNOSTIC_KEYS = {
     "boxplots",
+    "budget",
     "ecmean",
     "ensemble",
     "biases",
