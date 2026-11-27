@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.28.0):
 Main changes:
 
 Complete list:
+- Teleconnections: simplification of the cli to avoid code redundancy (#181)
 - PlotBase: first centralised plot class version (#577)
 - Teleconnections: new DMI (Indian Ocean Dipole) index with regression and correlation maps, run by `aqua analysis` together with ENSO in the renamed `config-teleconnections-ocean` collection config (#276)
 - New Europe collection (#595)
