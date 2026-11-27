@@ -151,6 +151,15 @@ def test_title_explicit_title_is_stripped_and_wrapped():
     assert result == "Bias for Model\nrelative to Reference"
 
 
+def test_title_wrap_existing_newlines():
+    """Lines already broken by the caller are checked and wrapped one by one."""
+    short = "Short line for model\nrelative to ref"
+    assert TitleBuilder(title=short).generate(max_chars=30) == short
+    long_first = "Seasonal difference of a long variable for Model exp\nrelative to Ref"
+    result = TitleBuilder(title=long_first).generate(max_chars=40, split_on=["relative to", "for"])
+    assert result == "Seasonal difference of a long variable\nfor Model exp\nrelative to Ref"
+
+
 def test_title_format_helpers_and_unique_refs():
     """Cover helper formatting behavior: years and duplicate reference removal."""
     tb = TitleBuilder(

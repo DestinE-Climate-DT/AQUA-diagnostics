@@ -247,6 +247,7 @@ class Diagnostic:
         startdate: str = None,
         enddate: str = None,
         expect_netcdf: bool = False,
+        std: bool = False,
     ):
         """
         Load from a netcdf file previously written by save_netcdf.
@@ -266,6 +267,8 @@ class Diagnostic:
             startdate (str): The start date of the data. Default is None.
             enddate (str): The end date of the data. Default is None.
             expect_netcdf (bool): If True, a missing file is logged as an error instead of info. Default is False.
+            std (bool): If True, the file holds a standard deviation and the dates are matched against
+                        AQUA_std_startdate and AQUA_std_enddate. Default is False.
 
         Returns:
             xarray Dataset, DataArray or None: The data read from disk, None if there is no file.
@@ -284,6 +287,7 @@ class Diagnostic:
             enddate=enddate,
             extra_keys=extra_keys,
             expect_netcdf=expect_netcdf,
+            std=std,
         )
 
     def _outputsaver(self, diagnostic: str, outputdir: str = "."):
@@ -551,8 +555,8 @@ class Diagnostic:
           (e.g. ``iho``) or a collection shipped with regionmask (e.g. ``srex``, i.e. ``regionmask.defined_regions.srex``).
         - ``regionmask_names``: the polygons of the collection merged into the region (default: the ``longname``).
         - ``frac_threshold``: a grid cell is selected if the region covers more than this fraction of it
-          (default: 0.0, every cell the region touches; null: only the cells whose centre is inside it).
-          Any value other than null needs a regular lon/lat grid.
+          (default: null, only cells whose centre is inside it; 0.0: every cell with nonzero sampled coverage).
+          Numeric thresholds construct approximate fractional masks and need a regular lon/lat grid.
 
         Args:
             region (str): The region key in the regions file.
@@ -562,7 +566,7 @@ class Diagnostic:
         Returns:
             region_object (regionmask.Regions): The polygon collection, or None for a lon/lat box.
             region_sel (str | list): The name(s) of the polygons to select from it, or None for a lon/lat box.
-            frac_threshold (float): The ``frac_threshold`` of the region, or None for a lon/lat box.
+            frac_threshold (float | None): The coverage threshold, or None for cell centres or a lon/lat box.
         """
         regions_file_path = regions_file_path or self._get_default_regions_file()
         regions_content = self._read_regions_file(regions_file_path)
@@ -583,7 +587,7 @@ class Diagnostic:
         long_name = spec.get("longname", region)
         region_sel = spec.get("regionmask_names", long_name)
 
-        return region_object, region_sel, spec.get("frac_threshold", 0.0)
+        return region_object, region_sel, spec.get("frac_threshold", None)
 
     def select_region(self, data: xr.Dataset, region: str = None, regions_file_path: str = None, drop: bool = True, **kwargs):
         """

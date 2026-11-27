@@ -8,7 +8,9 @@ datasets:
     source3d: "hourly-hpz10-atm3d"
     engine: "fdb"
     #reader_kwargs: {chunks: {"time": 1, "level": 1}}
-    reader_kwargs: {chunks: {"time": '6h', "level": 1}}
+    reader_kwargs:
+      chunks: {"time": '6h', "level": 1}
+      # config_fdb: "/path/to/config-z3fdb.yaml"  # FDB configuration file or directory
 
 # folders for regridded data, temprorary and stored high res data
 output:

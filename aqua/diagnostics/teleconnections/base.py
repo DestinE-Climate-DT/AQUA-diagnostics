@@ -8,8 +8,6 @@ from aqua.core.logger import log_configure
 from aqua.core.util import convert_data_units, get_realizations, load_yaml, select_season, time_to_string, to_list
 from aqua.diagnostics.base import SAVE_FORMAT, Diagnostic, OutputSaver, TitleBuilder
 
-xr.set_options(keep_attrs=True)
-
 
 class BaseMixin(Diagnostic):
     def __init__(
@@ -422,7 +420,7 @@ class PlotBaseMixin:
             ref_model=ref_model,
             ref_exp=ref_exp,
             timeseason=f"({season})" if season else None,
-        ).generate()
+        ).generate(max_chars=70)
 
     def set_map_description(self, maps=None, ref_maps=None, statistic: str = None, telecname: str = None):
         """

@@ -12,7 +12,7 @@ Paths are relative to `aqua/diagnostics/` unless stated otherwise. Signatures ca
 | `retrieve(var=None, reader_kwargs={}, months_required=None)` | Builds the `Reader`, retrieves the widest window covering analysis and std period in one call, regrids if `regrid` is set, fills `self.data`, `self.std_data`, `self.reader`, `self.catalog`, `self.realization`. Dates outside the data are **clipped with a warning**. Raises `NotEnoughDataError` below `months_required`. Sets `AQUA_startdate/enddate` (and `AQUA_std_*`). `self.data` is a Dataset: index it with `[var]`. |
 | `_retrieve(model, exp, source, var, catalog, startdate, enddate, regrid, months_required, reader_kwargs, loglevel)` | Engine behind `retrieve()` for complex retrievals (several sources, an extra dataset). Same checks, **populates no attribute**, returns `(data, reader, catalog)`. |
 | `save_netcdf(data, diagnostic, diagnostic_product, outputdir, rebuild, extra_keys)` | Writes through `OutputSaver`; restores a missing `DataArray.name` from `short_name`/`standard_name` with a warning. |
-| `load_netcdf(diagnostic, diagnostic_product, outputdir, extra_keys, as_dataarray, startdate, enddate, expect_netcdf)` | Rebuilds the same filename and opens it, or returns `None`. Works without `retrieve()`. A file whose **dataset-level** `AQUA_startdate/enddate` do not match the requested ones is not loaded (see the gotcha in SKILL.md). |
+| `load_netcdf(diagnostic, diagnostic_product, outputdir, extra_keys, as_dataarray, startdate, enddate, expect_netcdf, std)` | Rebuilds the same filename and opens it, or returns `None`. Works without `retrieve()`. A file whose `AQUA_startdate/enddate` (`AQUA_std_*` with `std=True`), at dataset level or on its single variable, do not match the requested ones is not loaded. |
 | `_set_region(region, regions_file_path=None, lon_limits=None, lat_limits=None)` | Resolves a region name against `config/definitions/regions.yaml`, returns `(longname, lon_limits, lat_limits)`. No data needed. |
 | `select_region(data, region, drop=True)` | Area selection; sets `AQUA_region`; returns a **dict** `data, region, lon_limits, lat_limits`. |
 | `_check_data(data, var, units)` | Unit conversion (factor and offset), updates `units`. |
@@ -47,14 +47,14 @@ All tools of a collection share the output folder: that is why `diagnostic_name`
 | Folder in the repo | Installed as | Used for |
 |---|---|---|
 | `templates/collections/config-<name>.yaml` | `$AQUA_CONFIG/templates/collections/` | Standalone template, the starting point for a user. |
-| `config/collections/jinja/<collection>/*.j2` | `$AQUA_CONFIG/collections/jinja/` | Configs run by `aqua analysis`, rendered with the dates of the experiment kind (`{{ default.startdate }}`, `{{ timeseries.std_startdate }}`) from `config/analysis/climatedt-experiment-kind.yaml`. One file can configure several tools of a collection against one reference. |
-| `config/collections/legacy/<collection>/*.yaml` | `$AQUA_CONFIG/collections/legacy/` | Plain-YAML versions without Jinja. |
+| `config/collections/jinja/<collection>/*.j2` | `$AQUA_CONFIG/collections/jinja/` | Configs run by `aqua analysis`, rendered with the experiment kind (`{{ references.<collection>_<quantity>.model }}`, `{{ period.standard.startdate }}`, `{{ period.timeseries.std_startdate }}`) from `config/analysis/climatedt-experiment-kind.yaml`. One file can configure several tools of a collection. |
+| `config/collections/legacy/<collection>/*.yaml` | `$AQUA_CONFIG/collections/legacy/` | The `.j2` files rendered with the `default` kind (checked by a test). |
 | `config/tools/<name>/` | `$AQUA_CONFIG/tools/<name>/` | Lookup files of one tool. |
 | `config/definitions/regions.yaml` | `$AQUA_CONFIG/definitions/` | Shared region registry. |
 | `config/analysis/` | `$AQUA_CONFIG/analysis/` | `aqua analysis` orchestration. |
 
 Helpers: `get_diagnostic_configpath(diagnostic, folder=...)`, `load_diagnostic_config(...)`. `.j2` files are only
-rendered by `aqua analysis`: a standalone run with a `.j2` keeps the literal `'{{ default.startdate }}'`.
+rendered by `aqua analysis`: a standalone run with a `.j2` keeps the literal `'{{ period.standard.startdate }}'`.
 Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for most tools: pass `--config`.
 
 ## aqua-core functions worth knowing
@@ -69,7 +69,7 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 `int_month_name`, `select_season`, `convert_units`, `unit_to_latex`, `DEFAULT_REALIZATION`, `get_realizations`,
 `format_realization`, `merge_attrs`, `extract_attrs`, `update_metadata`, `lon_to_180/360`, `add_cyclic_lon`,
 `evaluate_colorbar_limits`, `cbar_get_label`, `generate_colorbar_ticks`, `get_projection`, `plot_box`,
-`strlist_to_phrase`, `lat_to_phrase`, `create_folder`, `clean_filename`.
+`figure_size`, `grid_figure_size`, `strlist_to_phrase`, `lat_to_phrase`, `create_folder`, `clean_filename`.
 
 **Logging, config, exceptions**: `aqua.core.logger.log_configure(log_level, log_name)` and `log_history(data, msg)`;
 `aqua.core.configurer.ConfigLocator().configdir`, `ConfigCatalog`; `aqua.core.exceptions`: `NoDataError`,
@@ -80,7 +80,7 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 `plot_lat_lon_profiles`, `plot_seasonal_lat_lon_profiles`, `plot_vertical_lines`, `plot_histogram`, `boxplot`,
 `index_plot`, `indexes_plot`, `plot_gregory_monthly`, `plot_gregory_annual`, `ConfigStyle`.
 
-**`aqua.diagnostics.base`**: `Diagnostic`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`,
+**`aqua.diagnostics.base`**: `Diagnostic`, `PlotBase`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`,
 `template_parse_arguments`, `load_diagnostic_config`, `merge_config_args`, `get_diagnostic_configpath`,
 `load_var_config`, `find_vert_coord`, `open_cluster/close_cluster`, `start_end_dates`,
 `round_startdate/round_enddate`, `SAVE_FORMAT`; `DEFAULT_OCEAN_VERT_COORD` in `base/defaults.py`.
@@ -90,14 +90,17 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 Example, `trends` in the `atmosphere2d` collection (`config/collections/`):
 
 ```
-jinja/atmosphere2d/config-atmosphere2d-trends.j2       # run by aqua analysis, dates as '{{ default.startdate }}'
-legacy/atmosphere2d/config-atmosphere2d-trends.yaml    # same keys, fixed dates ('1990-01-01', '19900101')
+jinja/atmosphere2d/config-atmosphere2d-surface.j2      # run by aqua analysis, kind values as '{{ period.standard.startdate }}'
+legacy/atmosphere2d/config-atmosphere2d-surface.yaml   # the .j2 rendered with the default kind, values written out
 ```
 
-The two files differ only in the dates: `'{{ default.startdate }}'`, `'{{ default.std_startdate }}'`,
-`'{{ <tool>.std_startdate }}'` in the `.j2` become literal dates in the `legacy` YAML. A `.j2` has the same top-level
-blocks as the standalone template (`datasets`, `references`, `setup`, `output`, `diagnostics`) and one block per
-tool of the collection, all with `diagnostic_name: '<collection>'`. In `config.aqua-analysis.yaml`:
+The legacy file is the `.j2` rendered with the `default` kind: every `{{ ... }}` (reference dataset, dates, `regrid`,
+`loglevel`, `output` settings) becomes the value of `default` in the kind file. `tests/config/test_analysis_config_contract.py`
+fails if they differ, so make every change in both. A `.j2` reads the reference of its own slot,
+`references.<collection>_<quantity>` (`config-atmosphere2d-surface.j2` → `references.atmosphere2d_surface`), and the
+dates of one `period` block (`standard`, `radiation` or `timeseries`). A `.j2` has the same top-level blocks as the
+standalone template (`datasets`, `references`, `setup`, `output`, `diagnostics`) and one block per tool of the
+collection, all with `diagnostic_name: '<collection>'`. In `config.aqua-analysis.yaml`:
 
 ```yaml
 cli:
@@ -106,13 +109,14 @@ cli:
 diagnostics:
   atmosphere2d:                       # an existing collection, listed in one of the `run:` groups
     <name>:
-      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-era5.j2",
-               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-berkeley.j2"]   # one per reference
+      config: ["${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-temperature.j2",
+               "${AQUA_CONFIG}/collections/jinja/atmosphere2d/config-atmosphere2d-surface.j2"]   # the CLI runs once per file
       # optional: outname, nworkers, extra, nocluster
 ```
 
-A tool without a reference needs one `.j2` only, and its `references` block stays out. The `legacy` and `jinja`
-sets are not generated from each other yet (guidelines, "What is not homogeneous yet", point 16): edit both.
+A tool without a reference needs no slot, and its `references` block stays out. A new `.j2` with a reference needs
+a new slot in `default.references` of the kind file, pointing to an anchor of `default.sources`
+(see `docs/sphinx/source/analysis_collections.rst`, "Creating a new collection" and "Naming scheme").
 
 ## References and std dates
 
@@ -131,9 +135,11 @@ significance test, a normalised difference), it needs the standard deviation of 
   (`ref.get("std_startdate") or var_config.get("std_startdate")`), and pass them to the constructor of the reference
   instance. See `lat_lon_profiles/cli_lat_lon_profiles.py`.
 - **Config**: `std_startdate`/`std_enddate` are computation options, so they go in `params` (`default` or per
-  variable) or in the reference entry. In a `.j2` they are Jinja variables (`'{{ default.std_startdate }}'` or
-  `'{{ <tool>.std_startdate }}'`, defined in `config/analysis/climatedt-experiment-kind.yaml`), in the `legacy` YAML
-  literal dates. A new `<tool>.std_*` variable must exist for every experiment kind, or the rendering test fails.
+  variable) or in the reference entry. In a `.j2` they are Jinja variables of one `period` block
+  (`'{{ period.standard.std_startdate }}'`, `'{{ period.timeseries.std_enddate }}'`, defined in
+  `config/analysis/climatedt-experiment-kind.yaml`), in the `legacy` YAML literal dates. Reuse an existing block:
+  a new one must be added to `default` (other kinds inherit it), and every kind that changes the dates of all the
+  analyses must override it too, since the blocks do not inherit from each other.
 - **Plot class**: takes the standard deviation next to the reference (`ref_std_data`), reads its period from the
   attributes, and says in the caption what the shading is (for example "shading: +/- 2 standard deviations of
   ERA5 over 1990-2020").

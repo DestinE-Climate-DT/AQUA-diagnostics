@@ -9,8 +9,6 @@ from aqua.core.util import merge_attrs, time_to_string, to_list
 from aqua.diagnostics.base import Diagnostic
 from aqua.diagnostics.seaice.util import ensure_istype
 
-xr.set_options(keep_attrs=True)
-
 
 class SeaIce(Diagnostic):
     """

@@ -26,6 +26,7 @@ references:
 output:
   outputdir: "./"
   rebuild: true
+  save_netcdf: true
   save_format: ['png', 'pdf', 'svg']
   dpi: 300
 
@@ -46,6 +47,7 @@ diagnostics:
                 ]
     formulae: ['tnlwrf+tnswrf']
     center_time: true
+    include_global: true  # run the global mean before the regions; false runs only the regions
     params:
       default:
         hourly: False
