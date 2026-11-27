@@ -4,12 +4,16 @@ in various formats (netcdf, pdf, png) for basic
 AQUA diagnostics.
 """
 
+import math
 import os
 from typing import Optional, Union
 
 import xarray as xr
+from matplotlib import rcParams
 from matplotlib.figure import Figure
+from matplotlib.transforms import Bbox
 
+from aqua.core.default import DEFAULT_FIGURE_WIDTH
 from aqua.core.logger import log_configure, log_history
 from aqua.core.util import (
     create_folder,
@@ -312,14 +316,16 @@ class OutputSaver:
         startdate: Optional[str] = None,
         enddate: Optional[str] = None,
         expect_netcdf: bool = False,
+        std: bool = False,
     ):
         """
         Load a NetCDF file previously written by save_netcdf.
 
         The filename is built exactly as save_netcdf builds it. A missing file is not an error:
         None is returned. The file is read eagerly and closed, so that it can then be overwritten.
-        If startdate or enddate is provided, the corresponding file metadata must exactly match
-        the requested date. If it does not, or the metadata is missing, None is returned.
+        If startdate or enddate is provided, the corresponding attribute of the file, at dataset level
+        or on its single variable, must match the requested date. If it does not, or the attribute
+        is missing, None is returned.
 
         Args:
             diagnostic_product (str): Product of the diagnostic analysis.
@@ -331,6 +337,8 @@ class OutputSaver:
             startdate (str, optional): Start date to match against the file's AQUA_startdate metadata.
             enddate (str, optional): End date to match against the file's AQUA_enddate metadata.
             expect_netcdf (bool, optional): If True a missing file is logged as an error instead of info.
+            std (bool, optional): If True, the file holds a standard deviation and the dates are matched
+                against AQUA_std_startdate and AQUA_std_enddate instead. Defaults to False.
 
         Returns:
             xr.Dataset, xr.DataArray or None: The data read from disk, None if the file does not exist.
@@ -350,29 +358,27 @@ class OutputSaver:
         with xr.open_dataset(filepath) as dataset:
             data = dataset.load()
 
-        loginfo("Loaded NetCDF: %s", filepath)
+        self.logger.info("Loaded NetCDF: %s", filepath)
 
-        # Compare only requested boundaries; date strings are normalized before comparison.
-        if startdate or enddate:
-            startdate = time_to_string(startdate) if startdate else None
-            enddate = time_to_string(enddate) if enddate else None
-            file_startdate = data.attrs.get("AQUA_startdate")
-            file_enddate = data.attrs.get("AQUA_enddate")
+        # A file written from a DataArray keeps the dates on its single variable, not on the Dataset
+        attrs = dict(data.attrs)
+        if len(data.data_vars) == 1:
+            name = list(data.data_vars)[0]
+            attrs = {**data[name].attrs, **attrs}
 
-            if startdate and (file_startdate is None or startdate != file_startdate):
-                logwarning(
-                    "Requested startdate %s does not match the file's startdate %s. Returning None.",
-                    startdate,
-                    file_startdate,
-                )
-                return None
+        # A standard deviation has its own period, stored in its own attributes
+        if std:
+            requested_dates = {"AQUA_std_startdate": startdate, "AQUA_std_enddate": enddate}
+        else:
+            requested_dates = {"AQUA_startdate": startdate, "AQUA_enddate": enddate}
 
-            if enddate and (file_enddate is None or enddate != file_enddate):
-                logwarning(
-                    "Requested enddate %s does not match the file's enddate %s. Returning None.",
-                    enddate,
-                    file_enddate,
-                )
+        # Check only the requested dates, normalized on both sides: not all diagnostics write the same format
+        for key, requested in requested_dates.items():
+            if requested is None:
+                continue
+            file_date = attrs.get(key)
+            if file_date is None or time_to_string(requested) != time_to_string(file_date):
+                logwarning("Requested %s %s does not match the file's %s. Returning None.", key, requested, file_date)
                 return None
 
         if not as_dataarray:
@@ -429,6 +435,7 @@ class OutputSaver:
         extra_keys: Optional[dict] = None,
         metadata: Optional[dict] = None,
         dpi: Optional[int] = None,
+        bbox_inches: Union[str, Bbox] = "tight",
     ):
         """
         Internal method to save a Matplotlib figure in a single format with common logic for PDF, SVG and PNG.
@@ -441,6 +448,7 @@ class OutputSaver:
             extra_keys (dict): Extra keys for filename generation.
             metadata (dict): Metadata to embed.
             dpi (int): DPI setting for raster formats like PNG.
+            bbox_inches (str or Bbox): Region of the figure to save, passed to savefig. Default is 'tight'.
         """
 
         filepath = self._core_save(diagnostic_product=diagnostic_product, file_format=file_format, extra_keys=extra_keys)
@@ -449,7 +457,7 @@ class OutputSaver:
             self.logger.info("File already exists and rebuild=False, skipping: %s", filepath)
             return filepath
 
-        save_kwargs = {"format": file_format, "bbox_inches": "tight"}
+        save_kwargs = {"format": file_format, "bbox_inches": bbox_inches}
         if file_format == "png" and dpi is not None:
             save_kwargs["dpi"] = dpi
 
@@ -492,12 +500,31 @@ class OutputSaver:
         if not set(extensions).issubset(FIGURE_FORMAT):
             raise ValueError(f"format must be one of {FIGURE_FORMAT}, got '{extensions}'")
 
+        # Figures with the common width are saved exactly that wide; any other figure is cropped as before
+        if math.isclose(fig.get_figwidth(), DEFAULT_FIGURE_WIDTH, abs_tol=0.01):
+            bbox = self._fixed_width_bbox(fig, diagnostic_product)
+        else:
+            bbox = "tight"
         for ext in extensions:
             ext = ext.lower().lstrip(".")
             if ext in VECTORIAL_FORMAT:
-                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata)
+                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, bbox_inches=bbox)
             else:
-                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, dpi)
+                self._save_figure_format(fig, diagnostic_product, ext, rebuild, extra_keys, metadata, dpi, bbox_inches=bbox)
+
+    def _fixed_width_bbox(self, fig: Figure, diagnostic_product: str = None) -> Bbox:
+        """
+        Region to save, in inches: cropped to the content vertically, as bbox_inches='tight', but as wide as the figure.
+        Content sticking out of the figure sides is still saved, making the image wider (with a warning).
+        """
+        fig.draw_without_rendering()  # apply the layout engine before measuring the content
+        content = fig.get_tightbbox()
+        width = fig.get_figwidth()
+        pad = rcParams["savefig.pad_inches"]
+        x0, x1 = min(0, content.x0), max(width, content.x1)
+        if x1 - x0 > width:
+            self.logger.warning("%s: content exceeds the figure width by %.2f in", diagnostic_product, x1 - x0 - width)
+        return Bbox.from_extents(x0, content.y0 - pad, x1, content.y1 + pad)
 
     def create_metadata(
         self, diagnostic_product: str, extra_keys: Optional[dict] = None, metadata: Optional[dict] = None

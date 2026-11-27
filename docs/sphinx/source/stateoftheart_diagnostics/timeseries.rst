@@ -110,6 +110,8 @@ Here we describe only the specific settings for the time series diagnostic.
 
 * ``timeseries``: a block, nested in the ``diagnostics`` block, that contains the details required for the time series.
   The parameters specific to a single variable are merged with the default parameters, giving priority to the specific ones.
+  The global mean is always computed before the ``regions`` of each variable, unless ``include_global: false`` is set
+  (the same key is available in the ``seasonalcycles`` block).
 
 .. code-block:: yaml
 
@@ -121,6 +123,7 @@ Here we describe only the specific settings for the time series diagnostic.
         formulae: ['tnlwrf+tnswrf']
         center_time: true # center the time axis of the time series
         exclude_incomplete: true # check if all chunks are complete present before computing the time average
+        include_global: true # run the global mean before the regions (default); false runs only the regions
         params:
           default:
             hourly: false # Frequency to enable

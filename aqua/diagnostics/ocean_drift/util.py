@@ -34,7 +34,7 @@ def add_row_label(ax, text: str):
         ax (matplotlib.axes.Axes): First panel of the row.
         text (str): Label of the row.
     """
-    ax.text(-0.3, 0.5, text, fontsize=15, color="dimgray", rotation=90, transform=ax.transAxes, ha="center", va="center")
+    ax.text(-0.3, 0.5, text, fontsize="large", color="dimgray", rotation=90, transform=ax.transAxes, ha="center", va="center")
 
 
 def set_depth_axis(ax):
