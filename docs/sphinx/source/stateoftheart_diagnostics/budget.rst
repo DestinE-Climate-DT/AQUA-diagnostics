@@ -101,6 +101,15 @@ Every budget listed in ``budgets`` is configured in ``params.<name>``, on top of
             second: 'slhtf+snlwrf+snswrf+ishf-3.34e5*tsrwe'
             long_names: ['Net TOA radiation', 'Net surface heat flux']
 
+Collections
+-----------
+
+The tool runs in ``aqua analysis`` within the ``climate_metrics`` collection, configured by
+``aqua/diagnostics/config/collections/jinja/climate_metrics/config-climate_metrics-budget.j2``
+(``legacy/climate_metrics/config-climate_metrics-budget.yaml`` for standalone runs, see :ref:`analysis_collections`).
+It checks the ocean heat budget with the full-depth heat content ``hcbtm`` and the atmosphere energy budget, over the
+whole period of the experiment. The figures are in the "Climate metrics, Energy budgets" section of the dashboard.
+
 Output
 ------
 

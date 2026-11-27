@@ -52,6 +52,7 @@ cli:
   # setup_checker: "cli_checker/cli_setup_check.py"  # specify path of the setup checker if you want
   biases: "biases/cli_biases.py"
   boxplots: "boxplots/cli_boxplots.py"
+  budget: "budget/cli_budget.py"
   drift: "ocean_drift/cli_ocean_drift.py"
   ecmean: "ecmean/cli_ecmean.py"
   gregory: "timeseries/cli_timeseries.py"
@@ -106,6 +107,8 @@ diagnostics:
       source_oce: true  # if a --source_oce argument was passed use it
     gregory:
       config: "${AQUA_CONFIG}/collections/jinja/climate_metrics/config-climate_metrics-gregory.j2"
+    budget:
+      config: "${AQUA_CONFIG}/collections/jinja/climate_metrics/config-climate_metrics-budget.j2"
 
   europe:
     biases:

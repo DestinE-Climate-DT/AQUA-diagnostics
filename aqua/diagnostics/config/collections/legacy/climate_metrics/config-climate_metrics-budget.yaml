@@ -1,0 +1,47 @@
+# Legacy configuration: config-climate_metrics-budget.j2 rendered with the 'default' experiment kind.
+# Keep it in sync with the jinja template (checked by tests/config/test_analysis_config_contract.py).
+
+# Energy budgets of the climate_metrics collection: global means of two quantities that should balance each other.
+# The first model in this block can be overridden
+# in the command line by using:
+# --model, --exp, --source, --outputdir, --catalog
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+setup:
+  loglevel: 'WARNING'
+
+output:
+  outputdir: "./"
+  rebuild: true
+  save_netcdf: true
+  save_format: ['png', 'pdf', 'svg']
+  dpi: 300
+
+diagnostics:
+  budget:
+    run: true
+    diagnostic_name: 'climate_metrics'
+    budgets: ['ocean_heat', 'atmosphere_energy']
+    params:
+      default:
+        units: 'W m-2'
+        expected: 0.0
+      ocean_heat:
+        # Net surface heat flux into the ocean, minus the latent heat of fusion (3.34e5 J kg-1) of the snowfall
+        first: 'slhtf+snlwrf+snswrf+ishf-3.34e5*tsrwe'
+        second: 'hcbtm'  # full-depth ocean heat content (J m-2)
+        tendency: true
+        mask: 'tos'
+        long_names: ['Net surface heat flux', 'Heat content tendency (full depth)']
+      atmosphere_energy:
+        first: 'tnlwrf+tnswrf'
+        second: 'slhtf+snlwrf+snswrf+ishf-3.34e5*tsrwe'
+        long_names: ['Net TOA radiation', 'Net surface heat flux']

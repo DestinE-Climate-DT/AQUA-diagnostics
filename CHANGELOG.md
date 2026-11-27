@@ -9,7 +9,7 @@ Unreleased in the current development version (target v0.28.0):
 Main changes:
 
 Complete list:
-- Budget: new tool comparing the global means of two quantities (formulae, optionally the time derivative of the second) and their difference with an expected value, e.g. ocean heat and atmosphere energy budgets (#561)
+- Budget: new tool checking that two global means balance (e.g. ocean heat and atmosphere energy budgets), run in the `climate_metrics` collection (#561)
 - PlotBase: first centralised plot class version (#577)
 - Teleconnections: new DMI (Indian Ocean Dipole) index with regression and correlation maps, run by `aqua analysis` together with ENSO in the renamed `config-teleconnections-ocean` collection config (#276)
 - New Europe collection (#595)
