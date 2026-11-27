@@ -10,7 +10,7 @@ from functools import partial, wraps
 import xarray as xr
 from dask.distributed import Client, LocalCluster
 
-from aqua.core.configurer import ConfigContext, ConfigLocator
+from aqua.core.configurer import ConfigLocator
 from aqua.core.data_model.coordidentifier import CoordIdentifier
 from aqua.core.logger import log_configure
 from aqua.core.util import get_arg, load_yaml
@@ -120,7 +120,8 @@ def get_diagnostic_configpath(diagnostic: str, folder="templates", loglevel="WAR
     Args:
         diagnostic (str): diagnostic name
         folder (str): "templates" (default) for the blank collection templates in ``templates/collections``,
-            or "tools" for the static files of the tool in ``tools/<project>/<diagnostic>``.
+            or "tools" for the static files of the tool in ``tools/<diagnostic>``. Both are shared folders of the
+            AQUA configuration folder: they do not depend on the active project.
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:
@@ -128,14 +129,14 @@ def get_diagnostic_configpath(diagnostic: str, folder="templates", loglevel="WAR
 
     Raises:
         ValueError: if ``folder`` is not "templates" or "tools".
-        FileNotFoundError: for "tools", if the installation has no project or its tools folder is missing.
     """
+    if folder not in ("tools", "templates"):
+        raise ValueError(f"Invalid folder name: {folder}. Must be 'tools' or 'templates'.")
+    logger = log_configure(log_name="get_diagnostic_configpath", log_level=loglevel)
+    configdir = ConfigLocator(logger=logger).configdir
     if folder == "tools":
-        return os.path.join(ConfigContext(loglevel=loglevel).get_project_folder("tools"), diagnostic)
-    if folder == "templates":
-        logger = log_configure(log_name="get_diagnostic_configpath", log_level=loglevel)
-        return os.path.join(ConfigLocator(logger=logger).configdir, "templates", "collections")
-    raise ValueError(f"Invalid folder name: {folder}. Must be 'tools' or 'templates'.")
+        return os.path.join(configdir, "tools", diagnostic)
+    return os.path.join(configdir, "templates", "collections")
 
 
 def load_diagnostic_config(
@@ -149,7 +150,7 @@ def load_diagnostic_config(
         config (str): configuration file. If provided, it is loaded and the other arguments are ignored.
         default_config (str): file loaded from ``folder`` when ``config`` is not provided.
             Defaults to "config-{diagnostic}.yaml".
-        folder (str): "templates" (default, ``templates/collections``) or "tools" (``tools/<project>/<diagnostic>``).
+        folder (str): "templates" (default, ``templates/collections``) or "tools" (``tools/<diagnostic>``).
         loglevel (str): logging level. Default is 'WARNING'.
 
     Returns:

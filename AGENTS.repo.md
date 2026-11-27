@@ -46,8 +46,10 @@ Anything generic (not tied to one tool) belongs in aqua-core, not here.
 | `notebooks/diagnostics/<tool>/`, `docs/sphinx/source/` | Usage examples and per-tool documentation |
 
 `config/` and `templates/` are installed into `$AQUA_CONFIG` (default `~/.aqua`) by `aqua install <machine>` through the
-`aqua.plugins` entry point (`get_install_dirs()`, plugin contract v2): `analysis`, `collections` and `tools` go to the
-`diagnostics` project subfolder (`~/.aqua/tools/diagnostics/<tool>`), `definitions` and templates stay flat.
+`aqua.plugins` entry point (`get_install_dirs()`, plugin contract v2, keys by owner): `project` folders `analysis` and
+`collections` go to the `diagnostics` subfolder (`~/.aqua/analysis/diagnostics`), the `exclusive` folder `definitions`
+is owned by diagnostics alone, the `shared` folders `tools` and `templates` get one entry each next to those of core
+and of other projects (`~/.aqua/tools/<tool>`, `~/.aqua/templates/collections`), whatever the active project.
 Analysis configs refer to them as `${AQUA_CONFIG}/collections/${AQUA_PROJECT}/...`. Repo edits are visible at runtime only with an editable install
 (`aqua install <machine> --diagnostics <repo-path>`, which symlinks); otherwise reinstall.
 

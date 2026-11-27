@@ -49,7 +49,7 @@ All tools of a collection share the output folder: that is why `diagnostic_name`
 | `templates/collections/config-<name>.yaml` | `$AQUA_CONFIG/templates/collections/` | Standalone template, the starting point for a user. |
 | `config/collections/jinja/<collection>/*.j2` | `$AQUA_CONFIG/collections/diagnostics/jinja/` | Configs run by `aqua analysis`, rendered with the experiment kind (`{{ references.<collection>_<quantity>.model }}`, `{{ period.standard.startdate }}`, `{{ period.timeseries.std_startdate }}`) from `config/analysis/climatedt-experiment-kind.yaml`. One file can configure several tools of a collection. |
 | `config/collections/legacy/<collection>/*.yaml` | `$AQUA_CONFIG/collections/diagnostics/legacy/` | The `.j2` files rendered with the `default` kind (checked by a test). |
-| `config/tools/<name>/` | `$AQUA_CONFIG/tools/diagnostics/<name>/` | Lookup files of one tool. |
+| `config/tools/<name>/` | `$AQUA_CONFIG/tools/<name>/` | Lookup files of one tool, in the shared tools folder: the name must be unique. |
 | `config/definitions/regions.yaml` | `$AQUA_CONFIG/definitions/` | Shared region registry. |
 | `config/analysis/` | `$AQUA_CONFIG/analysis/diagnostics/` | `aqua analysis` orchestration. |
 

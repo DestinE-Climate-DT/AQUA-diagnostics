@@ -9,7 +9,7 @@ Unreleased in the current development version (target v0.28.0):
 Main changes:
 
 Complete list:
-- Projects: install as the `diagnostics` project (plugin contract v2 of aqua-core 1.3): tool files are read from `tools/<project>`, analysis configs use `${AQUA_PROJECT}`, CLIs without `--config` read their template from `templates/collections` (#589)
+- Projects: install as the `diagnostics` project (plugin contract v2 of aqua-core 1.3): the folders are declared by owner (`project`, `exclusive`, `shared`), tool files are read from the shared `tools/<tool>` whatever the active project, analysis configs use `${AQUA_PROJECT}`, CLIs without `--config` read their template from `templates/collections` (#589)
 - Teleconnections: new DMI (Indian Ocean Dipole) index with regression and correlation maps, run by `aqua analysis` together with ENSO in the renamed `config-teleconnections-ocean` collection config (#276)
 - New Europe collection (#595)
 - OutputSaver: load_netcdf date check fix (#593)

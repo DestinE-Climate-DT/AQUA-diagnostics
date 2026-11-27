@@ -32,7 +32,8 @@ Before you start
    - ``templates/collections``: one template configuration file for each diagnostic (the starting point to write your own);
    - ``collections/diagnostics`` and ``analysis/diagnostics``: the configuration files used by ``aqua analysis``
      (see :ref:`first-diagnostic-analysis`);
-   - ``definitions`` and ``tools/diagnostics``: shared definitions, such as the regions, and diagnostic-specific settings.
+   - ``definitions`` and ``tools``: shared definitions, such as the regions, and the settings specific to one
+     diagnostic (e.g. ``tools/ecmean``).
 
 3. **Find your data.** Diagnostics read data through the AQUA ``Reader``, so you need the *catalog*,
    *model*, *experiment* and *source* of your dataset. You can list what is available with:

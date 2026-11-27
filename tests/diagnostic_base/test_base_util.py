@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
+from aqua.core.console.components import validate_install_dirs
 from aqua.core.exceptions import NotEnoughDataError
 from aqua.core.logger import log_configure
 from aqua.core.util import dump_yaml
@@ -141,7 +142,7 @@ def aqua_configdir(tmp_path, monkeypatch):
         cfg = {"machine": "test-machine"}
         if project:
             cfg["project"] = project
-        tools = configdir / "tools" / project if project else configdir / "tools"
+        tools = configdir / "tools"
         (tools / "teleconnections").mkdir(parents=True)
         (configdir / "templates" / "collections").mkdir(parents=True)
         dump_yaml(outfile=str(configdir / "config-aqua.yaml"), cfg=cfg)
@@ -152,7 +153,7 @@ def aqua_configdir(tmp_path, monkeypatch):
 
 
 def test_get_diagnostic_configpath(aqua_configdir):
-    """Tools are looked up in the active project folder, templates in the flat templates folder."""
+    """Tools and templates are looked up in the shared tools and templates folders of the configuration folder."""
     configdir, tools = aqua_configdir("diagnostics")
 
     assert get_diagnostic_configpath("teleconnections", folder="tools") == str(tools / "teleconnections")
@@ -162,31 +163,20 @@ def test_get_diagnostic_configpath(aqua_configdir):
         get_diagnostic_configpath("timeseries", folder="collections")
 
 
-def test_get_diagnostic_configpath_pre_project(aqua_configdir, monkeypatch):
-    """An installation without the project key is refused for tools, also with AQUA_PROJECT set."""
-    configdir, _ = aqua_configdir(None)
-    monkeypatch.setenv("AQUA_PROJECT", "diagnostics")
+@pytest.mark.parametrize("project, env", [("diagnostics", "other"), ("other", None), (None, "diagnostics")])
+def test_get_diagnostic_configpath_does_not_depend_on_the_project(aqua_configdir, monkeypatch, project, env):
+    """Fails if the tool files are looked up per project: with another active project (in config-aqua.yaml or in
+    AQUA_PROJECT, as exported by aqua analysis) a diagnostic would not find them."""
+    configdir, tools = aqua_configdir(project)
+    if env:
+        monkeypatch.setenv("AQUA_PROJECT", env)
 
-    with pytest.raises(FileNotFoundError, match="predates project support"):
-        get_diagnostic_configpath("teleconnections", folder="tools")
+    assert get_diagnostic_configpath("teleconnections", folder="tools") == str(tools / "teleconnections")
     assert get_diagnostic_configpath("timeseries") == str(configdir / "templates" / "collections")
 
 
-def test_get_diagnostic_configpath_env_project(aqua_configdir, monkeypatch):
-    """AQUA_PROJECT (exported by aqua analysis) selects the tools folder of another project."""
-    configdir, _ = aqua_configdir("diagnostics")
-    monkeypatch.setenv("AQUA_PROJECT", "other")
-
-    with pytest.raises(FileNotFoundError, match="other"):
-        get_diagnostic_configpath("teleconnections", folder="tools")
-
-    (configdir / "tools" / "other").mkdir()
-    expected = configdir / "tools" / "other" / "teleconnections"
-    assert get_diagnostic_configpath("teleconnections", folder="tools") == str(expected)
-
-
 def test_teleconnections_definition_from_tools(aqua_configdir):
-    """Teleconnections read their default definitions from the tools folder of the active project."""
+    """Teleconnections read their default definitions from the shared tools folder."""
     _, tools = aqua_configdir("diagnostics")
     (tools / "teleconnections" / "definitions").mkdir()
     dump_yaml(outfile=str(tools / "teleconnections" / "definitions" / "test.yaml"), cfg={"NAO": {"ok": True}})
@@ -440,14 +430,16 @@ def test_minimum_months_required_class_attribute():
 
 
 def test_get_install_dirs():
-    """get_install_dirs follows the plugin contract version 2 of aqua-core."""
-    assert get_install_dirs() == {
+    """get_install_dirs follows the plugin contract version 2 of aqua-core, which accepts it, and every folder it
+    declares is in the package: the shared templates folder next to the config one, the others inside it."""
+    declared = get_install_dirs()
+    assert declared == {
         "contract": 2,
-        "config": ["analysis", "collections", "tools"],
-        "flat": ["definitions"],
-        "templates": ["collections"],
-        "files": [],
+        "project": ["analysis", "collections"],
+        "exclusive": ["definitions"],
+        "shared": ["tools", "templates"],
     }
-    for key in ("config", "flat"):
-        for folder in get_install_dirs()[key]:
-            assert (REAL_CONFIG_DIR / folder).is_dir()
+    assert validate_install_dirs("diagnostics", declared) == {key: declared[key] for key in ("project", "exclusive", "shared")}
+    for folder in (*declared["project"], *declared["exclusive"], "tools"):
+        assert (REAL_CONFIG_DIR / folder).is_dir()
+    assert (REAL_CONFIG_DIR.parent / "templates" / "collections").is_dir()
