@@ -1,8 +1,20 @@
-"""Budget tool: compare two global mean quantities, optionally the time derivative of the second one."""
+"""Budget tool: compare two global mean quantities, optionally the time derivative of the second one.
+
+Example:
+    >>> diag = Budget(catalog="climatedt-gen2", model="IFS-NEMO-5km", exp="baseline-hist", source="lra-r100-monthly-zarr")
+    >>> diag.run(
+    ...     name="ocean_heat",
+    ...     first="slhtf+snlwrf+snswrf+ishf-3.34e5*tsrwe",
+    ...     second="hc700m",
+    ...     tendency=True,
+    ...     mask="tos",
+    ...     units="W m-2",
+    ... )
+    >>> PlotBudget(data=diag.result, name="ocean_heat").plot()
+"""
 
 import re
 
-import numpy as np
 import xarray as xr
 
 from aqua.core.fixer import EvaluateFormula
@@ -143,16 +155,14 @@ class Budget(Diagnostic):
         ocean = self.data[mask].isel(time=0).notnull() if mask else None
 
         first_mean = self._global_mean(first, first_name, ocean)
+        second_mean = self._global_mean(second, second_name, ocean)
         if tendency:
-            second_mean = self._global_mean(second, second_name, ocean)
             # The derivative adds s**-1 to the units (J m**-2 becomes J m**-2 s**-1, i.e. W m**-2)
             attrs = {**second_mean.attrs, "units": f"{second_mean.attrs.get('units', '')} s**-1"}
             # Forward difference between consecutive steps, labelled at the first one; the last step has none
-            seconds = second_mean.time.diff("time", label="lower") / np.timedelta64(1, "s")
+            seconds = second_mean.time.diff("time", label="lower").dt.total_seconds()
             second_mean = (second_mean.diff("time", label="lower") / seconds).assign_attrs(attrs)
             first_mean = first_mean.sel(time=second_mean.time)
-        else:
-            second_mean = self._global_mean(second, second_name, ocean)
 
         if units:
             # _check_data keeps the original string when no conversion is needed: write the target units anyway

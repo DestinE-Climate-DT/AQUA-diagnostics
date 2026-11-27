@@ -1,3 +1,5 @@
+.. _budget:
+
 Budget
 ======
 
@@ -29,12 +31,22 @@ Classes
 * ``PlotBudget``: plots the two quantities together, then their difference with its mean and its expected value,
   with the aqua-core ``plot_timeseries``.
 
+.. note::
+
+    The minimum amount of data is ``MINIMUM_MONTHS_REQUIRED`` (12 months: one full annual cycle of the budget).
+
 File structure
 --------------
 
 * Source code and CLI: ``aqua/diagnostics/budget/``
 * Template configuration file: ``aqua/diagnostics/templates/collections/config-budget.yaml``
 * Notebook: ``notebooks/diagnostics/budget/``
+
+The source code directory contains the following files:
+
+* ``budget.py``: the analysis class ``Budget``;
+* ``plot_budget.py``: the plot class ``PlotBudget``;
+* ``cli_budget.py``: the command line interface.
 
 Input variables and datasets
 ----------------------------
@@ -123,3 +135,20 @@ Available demo notebooks
 ------------------------
 
 * `budget.ipynb <https://github.com/DestinE-Climate-DT/AQUA-diagnostics/blob/main/notebooks/diagnostics/budget/budget.ipynb>`_
+
+Authors and contributors
+------------------------
+
+This tool is maintained by Matteo Nurisso (`@mnurisso <https://github.com/mnurisso>`_).
+Contributions are welcome, please open an issue or a pull request.
+
+Detailed API
+------------
+
+This section provides a detailed reference for the Application Programming Interface (API) of the ``budget`` tool,
+generated from the function docstrings.
+
+.. automodule:: aqua.diagnostics.budget
+    :members:
+    :undoc-members:
+    :show-inheritance:
