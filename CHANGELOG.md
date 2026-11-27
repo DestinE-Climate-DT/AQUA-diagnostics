@@ -10,6 +10,7 @@ Main changes:
 
 Complete list:
 - Trends: improvements of the current settings (#602)
+- PlotBase: first centralised plot class version (#577)
 - Teleconnections: new DMI (Indian Ocean Dipole) index with regression and correlation maps, run by `aqua analysis` together with ENSO in the renamed `config-teleconnections-ocean` collection config (#276)
 - New Europe collection (#595)
 - OutputSaver: load_netcdf date check fix (#593)

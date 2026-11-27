@@ -6,17 +6,16 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 from aqua.core.graphics import plot_single_map
-from aqua.core.logger import log_configure
-from aqua.core.util import get_realizations, time_to_string, to_list, unit_to_latex
-from aqua.diagnostics.base import SAVE_FORMAT, OutputSaver, TitleBuilder
+from aqua.core.util import time_to_string, to_list, unit_to_latex
+from aqua.diagnostics.base import SAVE_FORMAT, PlotBase
 
 
-class PlotTrends:
+class PlotTrends(PlotBase):
     """
     Class to plot 2D trend maps from a Dataset produced by :class:`Trends`.
 
     One figure per variable is produced through :func:`aqua.core.graphics.plot_single_map`
-    and saved via :class:`aqua.diagnostics.base.OutputSaver`. Multi-variable handling
+    and saved via :class:`aqua.diagnostics.base.PlotBase`. Multi-variable handling
     follows the ocean-style pattern (``self.vars = list(self.data.data_vars)``) used
     by :class:`PlotStratification` and :class:`PlotHovmoller`.
     """
@@ -40,97 +39,44 @@ class PlotTrends:
             rebuild (bool, optional): Overwrite existing files. Defaults to True.
             loglevel (str, optional): Logging level. Defaults to ``'WARNING'``.
         """
-        self.loglevel = loglevel
-        self.logger = log_configure(log_level=loglevel, log_name="PlotTrends")
+        super().__init__(diagnostic_name=diagnostic_name, outputdir=outputdir, rebuild=rebuild, loglevel=loglevel)
 
         if not isinstance(data, xr.Dataset):
             raise TypeError("PlotTrends expects an xarray.Dataset of trend coefficients.")
 
         self.data = data
-        self.diagnostic_name = diagnostic_name
-        self.outputdir = outputdir
-        self.rebuild = rebuild
-
         self.vars = list(self.data.data_vars)
         self.logger.debug("Variables in data: %s", self.vars)
 
-        self.get_data_info()
-
-        self.outputsaver = OutputSaver(
-            diagnostic=self.diagnostic_name,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            outputdir=outputdir,
-            realization=self.realization,
-            loglevel=self.loglevel,
-        )
-
-    def get_data_info(self):
-        """Extract catalog/model/exp/region/realization and analysis period from data attributes."""
-        first_var = self.data[self.vars[0]]
-        self.catalog = first_var.attrs.get("AQUA_catalog")
-        self.model = first_var.attrs.get("AQUA_model")
-        self.exp = first_var.attrs.get("AQUA_exp")
-        self.realization = get_realizations(first_var)
-        self.region = self.data.attrs.get("AQUA_region")
-        self.startdate = self.data.attrs.get("AQUA_startdate")
-        self.enddate = self.data.attrs.get("AQUA_enddate")
-        self.start_year = self.startdate[:4] if self.startdate else None
-        self.end_year = self.enddate[:4] if self.enddate else None
+        self.get_data_info(self.data)
 
     def set_title(self, var: str) -> str:
         """Build the figure title for a given variable."""
         long_name = self.data[var].attrs.get("long_name", var)
-        return TitleBuilder(
+        startdate, enddate = self.startdates[0], self.enddates[0]
+        return super().set_title(
             diagnostic="Trend",
             variable=long_name,
-            regions=self.region,
-            catalog=self.catalog,
-            model=self.model,
-            exp=self.exp,
-            startyear=self.start_year,
-            endyear=self.end_year,
-        ).generate()
+            catalog=self.catalogs,
+            startyear=startdate[:4] if startdate else None,
+            endyear=enddate[:4] if enddate else None,
+        )
 
     def set_description(self, var: str) -> str:
         """Build the figure description metadata for a given variable."""
         long_name = self.data[var].attrs.get("long_name", var)
+        startdate, enddate = self.startdates[0], self.enddates[0]
         period = (
-            f" between {time_to_string(self.startdate, format='%Y-%m')} and {time_to_string(self.enddate, format='%Y-%m')}"
-            if self.startdate is not None and self.enddate is not None
+            f" between {time_to_string(startdate, format='%Y-%m')} and {time_to_string(enddate, format='%Y-%m')}"
+            if startdate is not None and enddate is not None
             else ""
         )
         description = (
             f"Trend of {long_name} in the {self.region or 'global'} region "
-            f"from {self.catalog} {self.model} {self.exp}{period}."
+            f"from {self.catalogs[0]} {self.models[0]} {self.exps[0]}{period}."
         )
         self.logger.info("Description: %s", description)
         return description
-
-    def save_plot(
-        self,
-        fig,
-        var: str,
-        description: str,
-        rebuild: bool,
-        save_format: Union[str, list],
-        dpi: int,
-    ):
-        """Save the trend figure of one variable through the OutputSaver."""
-        short_name = self.data[var].attrs.get("short_name", var)
-        extra_keys = {"var": short_name}
-        if self.region is not None:
-            extra_keys["region"] = self.region
-        self.outputsaver.save_figure(
-            fig,
-            diagnostic_product="map_trend",
-            rebuild=rebuild,
-            extra_keys=extra_keys,
-            metadata={"description": description},
-            extension=save_format,
-            dpi=dpi,
-        )
 
     def plot_trend(
         self,
@@ -164,7 +110,6 @@ class PlotTrends:
             ValueError: When a variable is not a horizontal field with latitude and longitude coordinates.
         """
         vars_to_plot = to_list(var) if var is not None else self.vars
-        rebuild = self.rebuild if rebuild is None else rebuild
 
         for v in vars_to_plot:
             if v not in self.data.data_vars:
@@ -200,9 +145,19 @@ class PlotTrends:
                 loglevel=self.loglevel,
             )
 
-            try:
-                self.save_plot(fig, v, description, rebuild, save_format, dpi)
-                if show:
-                    plt.show()
-            finally:
+            extra_keys = {"var": short_name}
+            if self.region is not None:
+                extra_keys["region"] = self.region
+            self.save_plot(
+                fig,
+                diagnostic_product="map_trend",
+                extra_keys=extra_keys,
+                description=description,
+                rebuild=rebuild,
+                save_format=save_format,
+                dpi=dpi,
+                close=not show,
+            )
+            if show:
+                plt.show()
                 plt.close(fig)

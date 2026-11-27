@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import pytest
 import xarray as xr
+from PIL import Image
 
 from aqua.core.reader import Reader
 from aqua.diagnostics.trends import PlotTrends
@@ -43,6 +44,31 @@ def test_maps_write_per_variable_and_preserve_lazy_input(trend_map_data, tmp_pat
     assert trend_map_data.chunks
 
 
+def test_title_description_filename_and_metadata_are_stable(trend_map_data, tmp_path):
+    """Title, description, file name and metadata of a saved figure are the ones produced before PlotBase."""
+    description = "Trend of Sea ice area fraction in the Southern Ocean region from ci FESOM hpz3 between 1990-01 and 1994-12."
+    plots = PlotTrends(trend_map_data, outputdir=tmp_path)
+    assert plots.set_title("siconc") == "Trend of sea ice area fraction in Southern ocean for ci FESOM hpz3 1990-1994"
+    assert plots.set_description("siconc") == description
+
+    plots.plot_trend(var="siconc", save_format="png", dpi=40)
+    (path,) = (tmp_path / "png").iterdir()
+    assert path.name == "trends.map_trend.ci.FESOM.hpz3.r1.siconc.southern_ocean.png"
+    with Image.open(path) as image:
+        metadata = {key: value for key, value in image.text.items() if key not in ("timestamp", "aqua_version")}
+    assert metadata == {
+        "diagnostic": "trends",
+        "diagnostic_product": "map_trend",
+        "catalog": "ci",
+        "model": "FESOM",
+        "exp": "hpz3",
+        "realization": "r1",
+        "var": "siconc",
+        "region": "Southern Ocean",
+        "description": description,
+    }
+
+
 def test_title_builder_receives_scalar_region(tmp_path, mocker):
     """A regional title passes the region string through without list coercion."""
     data = xr.Dataset(
@@ -50,7 +76,7 @@ def test_title_builder_receives_scalar_region(tmp_path, mocker):
         coords={"lat": [0.0], "lon": [0.0]},
         attrs={"AQUA_region": "Europe"},
     )
-    title_builder = mocker.patch(f"{PLOT_MODULE}.TitleBuilder")
+    title_builder = mocker.patch("aqua.diagnostics.base.plot_base.TitleBuilder")
     title_builder.return_value.generate.return_value = "title"
 
     assert PlotTrends(data, outputdir=tmp_path).set_title("tas") == "title"
