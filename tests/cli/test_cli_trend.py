@@ -55,7 +55,7 @@ def test_regional_computation_and_cli_overrides(build_config, mock_cluster, mock
     assert trend_cls.call_args.kwargs["model"] == "IFS"
     assert trend_cls.call_args.kwargs["regrid"] == "r100"
     instance = trend_cls.return_value
-    instance.retrieve.assert_called_once_with(var=["tas"], reader_kwargs={"realization": "r2"})
+    instance.retrieve.assert_called_once_with(var=["tas"], reader_kwargs={"realization": "r2"}, units={})
     if dim_mean is None:
         instance.compute_trend.assert_called_once_with()
         assert [call.kwargs["region"] for call in instance.select_region.call_args_list] == ["tropics"]
@@ -82,10 +82,30 @@ def test_multiple_datasets_are_independent(build_config, mock_cluster, mock_tren
     main(["--config", config])
     assert [call.kwargs["model"] for call in trend_cls.call_args_list] == ["model1", "model2"]
     for instance in [first, second]:
-        instance.retrieve.assert_called_once_with(var=["tas"], reader_kwargs={})
+        instance.retrieve.assert_called_once_with(var=["tas"], reader_kwargs={}, units={})
         instance.compute_trend.assert_called_once_with()
         instance.save_netcdf.assert_called_once()
         instance.select_region.assert_not_called()
+
+
+def test_per_variable_units_and_plot_params(build_config, mock_cluster, mock_trend):
+    trend_cls, plot_cls = mock_trend
+    coefficients = trend_cls.return_value.compute_trend.return_value
+    trend_cls.return_value.compute_trend.return_value = coefficients.assign(pr=coefficients.tas)
+    trends = {
+        **BASE_CONFIG,
+        "var": ["tas", "pr"],
+        "regions": [None],
+        "params": {"pr": {"units": "mm/day"}},
+        "plot_params": {"default": {"cmap": "RdBu_r", "vmin": -1, "vmax": 1}, "pr": {"cmap": "BrBG"}},
+    }
+    main(["--config", build_config({"trends": trends})])
+    trend_cls.return_value.retrieve.assert_called_once_with(var=["tas", "pr"], reader_kwargs={}, units={"pr": "mm/day"})
+    calls = {call.kwargs["var"]: call.kwargs for call in plot_cls.return_value.plot_trend.call_args_list}
+    assert {var: (kw["cmap"], kw["vmin"], kw["vmax"]) for var, kw in calls.items()} == {
+        "tas": ("RdBu_r", -1, 1),
+        "pr": ("BrBG", -1, 1),
+    }
 
 
 def test_plotting_without_saving_coefficients(build_config, mock_cluster, mock_trend):
@@ -148,7 +168,9 @@ def test_default_shared_template_loads(mock_cluster, mock_trend, mocker):
     default_path = mocker.patch(f"{CLI_MODULE}.get_diagnostic_configpath", return_value=str(config_dir))
     main([])
     default_path.assert_called_once_with("trends", folder="templates", loglevel="WARNING")
-    mock_trend[0].return_value.retrieve.assert_called_once_with(var=["thetao", "so"], reader_kwargs={"chunks": {"time": 12}})
+    mock_trend[0].return_value.retrieve.assert_called_once_with(
+        var=["thetao", "so"], reader_kwargs={"chunks": {"time": 12}}, units={}
+    )
     mock_trend[1].assert_not_called()
 
 
@@ -158,17 +180,19 @@ def test_separate_2d_template_runs_generic_maps(mock_cluster, mock_trend):
     trend_cls, plot_cls = mock_trend
     assert trend_cls.call_args.kwargs["source"] == "monthly-2d"
     assert trend_cls.call_args.kwargs["regrid"] == "r100"
-    trend_cls.return_value.retrieve.assert_called_once_with(var=["siconc", "sithick"], reader_kwargs={"chunks": {"time": 12}})
+    trend_cls.return_value.retrieve.assert_called_once_with(
+        var=["siconc", "sithick"], reader_kwargs={"chunks": {"time": 12}}, units={}
+    )
     plot_cls.return_value.plot_trend.assert_called_once()
 
 
 @pytest.mark.parametrize("kind,suffix", [("jinja", "j2"), ("legacy", "yaml")], ids=["jinja", "legacy"])
 @pytest.mark.parametrize(
-    "collection,variables",
-    [("atmosphere2d", ["2t", "msl"]), ("water_cycle", ["tprate"]), ("ocean2d", ["tos"])],
+    "collection,variables,units",
+    [("atmosphere2d", ["2t", "msl"], {}), ("water_cycle", ["tprate"], {"tprate": "mm/day"}), ("ocean2d", ["tos"], {})],
 )
 def test_collection_uses_model_period_and_output_prefix(
-    mock_cluster, mock_trend, tmp_path, kind, suffix, collection, variables
+    mock_cluster, mock_trend, tmp_path, kind, suffix, collection, variables, units
 ):
     config = REPO_ROOT / f"aqua/diagnostics/config/collections/{kind}/{collection}/config-{collection}-trends.{suffix}"
     if kind == "jinja":
@@ -211,7 +235,7 @@ def test_collection_uses_model_period_and_output_prefix(
         "loglevel": "WARNING",
     }
     instance = trend_cls.return_value
-    instance.retrieve.assert_called_once_with(var=variables, reader_kwargs={"chunks": {"time": 12}})
+    instance.retrieve.assert_called_once_with(var=variables, reader_kwargs={"chunks": {"time": 12}}, units=units)
     instance.compute_trend.assert_called_once_with()
     instance.select_region.assert_not_called()
     instance.save_netcdf.assert_called_once()

@@ -11,8 +11,8 @@ analysis period. It can be used for atmospheric and ocean variables and produces
 horizontal map per variable.
 
 Trend coefficients are obtained from a linear polynomial fit along the time coordinate.
-They are expressed in the original variable units per year, where a year corresponds
-to 365.25 elapsed days. The diagnostic can select geographic regions and compute
+They are expressed in the variable units per year, where a year corresponds
+to 365.25 elapsed days. Variables can be converted to other units before the fit. The diagnostic can select geographic regions and compute
 area-weighted spatial means before fitting.
 
 For multi-level ocean maps and zonal mean vertical sections, see :doc:`ocean_trends`.
@@ -101,6 +101,9 @@ To compute coefficients without saving them, use ``retrieve()`` followed by
     trend.retrieve(var=['2t'])
     coefficients = trend.compute_trend(region='tropics')
 
+    # Convert selected variables before fitting, e.g. a trend in mm/day per year.
+    trend.retrieve(var=['tprate'], units={'tprate': 'mm/day'})
+
     # Average over the selected region before fitting a zonal trend.
     zonal_coefficients = trend.compute_trend(region='tropics', dim_mean='lon')
 
@@ -138,11 +141,15 @@ the ``trends`` block nested under ``diagnostics``:
   for the global domain.
 * ``dim_mean``: dimension or list of dimensions over which to compute an
   area-weighted mean before fitting. Default is ``null`` for pointwise trends.
+* ``params``: optional per-variable settings. ``params.<var>.units`` converts the
+  variable to the given units before the fit.
 * ``plot``: enable maps. Default is ``true``.
 * ``plot_params``: optional plotting arguments, such as ``cmap``, ``vmin``, ``vmax``
-  and ``sym``, applied to all variables. By default, automatic colour limits are
-  symmetric around zero. Supplying explicit limits disables this automatic
-  symmetry unless ``sym`` is also set.
+  and ``sym``. Settings under ``default`` apply to all variables and are overridden
+  by those under ``<var>``. By default, automatic colour limits are symmetric around
+  zero. Supplying explicit limits disables this automatic symmetry unless ``sym`` is
+  also set. Trend magnitudes depend on the length of the analysis period, so fixed
+  limits suit only a given period.
 
 For example, save the following configuration as ``config-trends.yaml``:
 
@@ -165,8 +172,16 @@ For example, save the following configuration as ``config-trends.yaml``:
     diagnostics:
       trends:
         run: true
-        var: ['2t', 'msl']
+        var: ['2t', 'tprate']
         regions: [null, 'tropics']
+        params:
+          tprate:
+            units: 'mm/day'
+        plot_params:
+          default:
+            cmap: 'RdBu_r'
+          tprate:
+            cmap: 'BrBG'
 
 To plot previously saved coefficients, set ``plot_only: true`` in ``output`` and
 use the same output directory, dataset identity, realization, analysis dates,
