@@ -35,7 +35,7 @@ Anything generic (not tied to one tool) belongs in aqua-core, not here.
 
 | Path | Content |
 |---|---|
-| `aqua/diagnostics/base/` | Shared infrastructure: `Diagnostic`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`, `template_parse_arguments`, `load_var_config`, regions, `cli_setup_checker.py` |
+| `aqua/diagnostics/base/` | Shared infrastructure: `Diagnostic`, `PlotBase`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`, `template_parse_arguments`, `load_var_config`, regions, `cli_setup_checker.py` |
 | `aqua/diagnostics/<tool>/` | One package per tool: compute class(es), `plot_*.py`, `cli_<tool>.py`, optional `util.py`. Public classes re-exported in `aqua/diagnostics/__init__.py` with unique names (generic `Trends` vs `OceanTrends`) |
 | `aqua/diagnostics/config/analysis/` | `aqua analysis` setup: `config.aqua-analysis.yaml`, `config.aqua-analysis-ensemble.yaml` (`aqua analysis ensemble`), `climatedt-experiment-kind.yaml` (Jinja values per `--kind`), `config.grouping.yaml` (dashboard grouping) |
 | `aqua/diagnostics/config/collections/` | Run configs grouped by collection (`atmosphere2d`, `ocean3d`, ...): `jinja/*.j2` (used by `aqua analysis`) and `legacy/*.yaml` (same content, hard-coded dates) |
