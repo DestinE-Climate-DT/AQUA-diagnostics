@@ -9,6 +9,7 @@ Unreleased in the current development version (target v0.28.0):
 Main changes:
 
 Complete list:
+- ECmean: temporarily pin to 0.2.2 to preserve support for AQUA's `2t` variable and check that its global mean is finite (#583).
 - PlotBase: first centralised plot class version (#577)
 - Teleconnections: new DMI (Indian Ocean Dipole) index with regression and correlation maps, run by `aqua analysis` together with ENSO in the renamed `config-teleconnections-ocean` collection config (#276)
 - New Europe collection (#595)
