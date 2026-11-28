@@ -12,7 +12,7 @@ Paths are relative to `aqua/diagnostics/` unless stated otherwise. Signatures ca
 | `retrieve(var=None, reader_kwargs={}, months_required=None)` | Builds the `Reader`, retrieves the widest window covering analysis and std period in one call, regrids if `regrid` is set, fills `self.data`, `self.std_data`, `self.reader`, `self.catalog`, `self.realization`. Dates outside the data are **clipped with a warning**. Raises `NotEnoughDataError` below `months_required`. Sets `AQUA_startdate/enddate` (and `AQUA_std_*`). `self.data` is a Dataset: index it with `[var]`. |
 | `_retrieve(model, exp, source, var, catalog, startdate, enddate, regrid, months_required, reader_kwargs, loglevel)` | Engine behind `retrieve()` for complex retrievals (several sources, an extra dataset). Same checks, **populates no attribute**, returns `(data, reader, catalog)`. |
 | `save_netcdf(data, diagnostic, diagnostic_product, outputdir, rebuild, extra_keys)` | Writes through `OutputSaver`; restores a missing `DataArray.name` from `short_name`/`standard_name` with a warning. |
-| `load_netcdf(diagnostic, diagnostic_product, outputdir, extra_keys, as_dataarray, startdate, enddate, expect_netcdf)` | Rebuilds the same filename and opens it, or returns `None`. Works without `retrieve()`. A file whose **dataset-level** `AQUA_startdate/enddate` do not match the requested ones is not loaded (see the gotcha in SKILL.md). |
+| `load_netcdf(diagnostic, diagnostic_product, outputdir, extra_keys, as_dataarray, startdate, enddate, expect_netcdf, std)` | Rebuilds the same filename and opens it, or returns `None`. Works without `retrieve()`. A file whose `AQUA_startdate/enddate` (`AQUA_std_*` with `std=True`), at dataset level or on its single variable, do not match the requested ones is not loaded. |
 | `_set_region(region, regions_file_path=None, lon_limits=None, lat_limits=None)` | Resolves a region name against `config/definitions/regions.yaml`, returns `(longname, lon_limits, lat_limits)`. No data needed. |
 | `select_region(data, region, drop=True)` | Area selection; sets `AQUA_region`; returns a **dict** `data, region, lon_limits, lat_limits`. |
 | `_check_data(data, var, units)` | Unit conversion (factor and offset), updates `units`. |
@@ -80,7 +80,7 @@ Without `--config`, the default lookup of `DiagnosticCLI` does not resolve for m
 `plot_lat_lon_profiles`, `plot_seasonal_lat_lon_profiles`, `plot_vertical_lines`, `plot_histogram`, `boxplot`,
 `index_plot`, `indexes_plot`, `plot_gregory_monthly`, `plot_gregory_annual`, `ConfigStyle`.
 
-**`aqua.diagnostics.base`**: `Diagnostic`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`,
+**`aqua.diagnostics.base`**: `Diagnostic`, `PlotBase`, `DiagnosticCLI`, `OutputSaver`, `TitleBuilder`,
 `template_parse_arguments`, `load_diagnostic_config`, `merge_config_args`, `get_diagnostic_configpath`,
 `load_var_config`, `find_vert_coord`, `open_cluster/close_cluster`, `start_end_dates`,
 `round_startdate/round_enddate`, `SAVE_FORMAT`; `DEFAULT_OCEAN_VERT_COORD` in `base/defaults.py`.

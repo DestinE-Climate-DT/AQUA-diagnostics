@@ -1,0 +1,69 @@
+# 10 metre wind speed over Europe: bias maps and timeseries of the European mean.
+# 10si is not in the climatedt-gen2 LRA yet (AQUA#2891): until it is, biases skip it and timeseries log an error.
+datasets:
+  - catalog: null
+    model: null
+    exp: null
+    source: 'lra-r100-monthly'
+    regrid: null
+    reader_kwargs: null # it can be a dictionary with reader kwargs
+    startdate: null
+    enddate: null
+
+references:
+  - catalog: '{{ references.europe_wind.catalog }}'
+    model: '{{ references.europe_wind.model }}'
+    exp: '{{ references.europe_wind.exp }}'
+    source: '{{ references.europe_wind.source }}'
+    regrid: '{{ regrid }}'
+    startdate: '{{ period.standard.startdate }}'
+    enddate: '{{ period.standard.enddate }}'
+
+setup:
+  loglevel: '{{ loglevel }}'
+
+output:
+  outputdir: "./"
+  rebuild: {{ output.rebuild }}
+  save_netcdf: {{ output.save_netcdf }}
+  save_format: {{ output.save_format }}
+  dpi: {{ output.dpi }}
+
+diagnostics:
+  biases:
+    run: true
+    diagnostic_name: 'europe'
+    region: 'europe'
+    variables: ['10si']
+    params:
+      default:
+        seasons: true
+        seasons_stat: 'mean' # May become a list
+        vertical: false     # Vertical profile if variable 3d
+    plot_params:
+      default:
+        projection_params: {}  # no projection: zoomed plate carree on the region
+        show_stats: true
+        show_significance: true    # Enable significance stippling
+        significance_alpha: 0.05  # 95% confidence level
+      # vmin/vmax multiples of 1.1: the 11 colour levels have round steps and readable colorbar labels
+      10si:
+        vmin: -2.2
+        vmax: 2.2
+        cmap: 'RdBu_r'
+
+  timeseries:
+    run: true
+    diagnostic_name: 'europe'
+    variables: ['10si']
+    center_time: true
+    include_global: false  # only the regions below
+    params:
+      default:
+        hourly: False
+        daily: False
+        monthly: True
+        annual: True
+        std_startdate: '{{ period.timeseries.std_startdate }}'
+        std_enddate: '{{ period.timeseries.std_enddate }}'
+        regions: ['europe']

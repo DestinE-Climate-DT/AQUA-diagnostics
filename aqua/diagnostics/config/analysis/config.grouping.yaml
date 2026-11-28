@@ -31,6 +31,7 @@ diagnostics:
 
     Teleconnections, NAO: [teleconnections.nao, teleconnections.NAO, nao.]
     Teleconnections, ENSO: [teleconnections.enso, teleconnections.ENSO, enso.]
+    Teleconnections, DMI: [teleconnections.dmi, teleconnections.DMI, dmi.]
 
     Ocean 2D, Time series: [ocean2d.timeseries, ocean.timeseries]
     Ocean 2D, Seasonal cycles: ocean2d.seasonalcycles
@@ -51,5 +52,10 @@ diagnostics:
     Sea Ice, Time series: [seaice.timeseries, PlotSeaIce.timeseries]
     Sea Ice, Seasonal cycles: [seaice.seasonalcycle, seaice.seasonal_cycles, PlotSeaIce.seasonalcycle]
     Sea Ice, Differences: [seaice.bias, PlotSeaIce.bias]
+
+    Europe, Time series: europe.timeseries
+    Europe, Seasonal cycles: europe.seasonalcycles
+    Europe, Annual differences: europe.bias
+    Europe, Seasonal differences: europe.seasonal_bias
 
     Global maps: [Statistics_maps, atmglobalmean.statistics_maps]  # these apply only to old results, not produced anymore by AQUA

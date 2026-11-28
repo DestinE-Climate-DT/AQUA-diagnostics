@@ -51,11 +51,11 @@ cli:
   boxplots: "boxplots/cli_boxplots.py"
   drift: "ocean_drift/cli_ocean_drift.py"
   ecmean: "ecmean/cli_ecmean.py"
-  enso: "teleconnections/cli_teleconnections.py"
   gregory: "timeseries/cli_timeseries.py"
   histogram: "histogram/cli_histogram.py"
   lat_lon_profiles: "lat_lon_profiles/cli_lat_lon_profiles.py"
   nao: "teleconnections/cli_teleconnections.py"
+  ocean: "teleconnections/cli_teleconnections.py"
   seaice: "seaice/cli_seaice.py"
   seasonal_cycles: "timeseries/cli_timeseries.py"  # not used
   stratification: "ocean_stratification/cli_ocean_stratification.py"
@@ -66,7 +66,7 @@ cli:
 run:
     - ["teleconnections", "climate_metrics", "ocean2d"] # very fast ones first, a few min
     - ["atmosphere2d", "atmosphere3d", "ocean3d-part1", "ocean3d-part2", "water_cycle"]
-    - ["seaice", "radiation-toa",  "radiation-surface"]
+    - ["seaice", "radiation-toa",  "radiation-surface", "europe"]
 
   # List of diagnostics
 
@@ -103,6 +103,18 @@ diagnostics:
       source_oce: true  # if a --source_oce argument was passed use it
     gregory:
       config: "${AQUA_CONFIG}/collections/legacy/climate_metrics/config-climate_metrics-gregory.yaml"
+
+  europe:
+    biases:
+      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-temperature.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-precipitation.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-wind.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml"]
+    timeseries:
+      config: ["${AQUA_CONFIG}/collections/legacy/europe/config-europe-temperature.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-precipitation.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-wind.yaml",
+               "${AQUA_CONFIG}/collections/legacy/europe/config-europe-sst.yaml"]
 
   ocean2d:
     biases:
@@ -154,8 +166,8 @@ diagnostics:
   teleconnections:
     nao:
       config: "${AQUA_CONFIG}/collections/legacy/teleconnections/config-teleconnections-nao.yaml"
-    enso:
-      config: "${AQUA_CONFIG}/collections/legacy/teleconnections/config-teleconnections-enso.yaml"
+    ocean:
+      config: "${AQUA_CONFIG}/collections/legacy/teleconnections/config-teleconnections-ocean.yaml"
 
   water_cycle:
     timeseries:
